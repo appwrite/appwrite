@@ -72,10 +72,10 @@ $env        = $this->getParam('env', '');
     <?php echo $this->exec($this->getParam('head', [])); ?>
 </head>
 
-<body data-ls-init data-first-from-server="true">
+<body>
     <?php echo $this->exec($this->getParam('header', [])); ?>
 
-    <main data-ls-scope data-acl data-analytics-pageview>
+    <main data-ls-router data-first-from-server="true" data-acl data-analytics-pageview>
         <?php echo $this->exec($this->getParam('body', [])); ?>
     </main>
 

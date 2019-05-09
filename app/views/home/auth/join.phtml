@@ -6,26 +6,26 @@ use Utopia\Locale\Locale;
           data-appwrite="auth.join"
           data-scope="console"
           data-event="submit"
-          data-param-invite-id="{{state.params.inviteId}}"
-          data-param-user-id="{{state.params.userId}}"
-          data-param-secret="{{state.params.secret}}"
+          data-param-invite-id="{{router.params.inviteId}}"
+          data-param-user-id="{{router.params.userId}}"
+          data-param-secret="{{router.params.secret}}"
           data-success="redirect,alert,trigger"
-      data-success-redirect-url="/console?project={{state.params.project}}"
+      data-success-redirect-url="/console?project={{router.params.project}}"
           data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.join.success')); ?>"
           data-success-triggers="account.update"
           data-error="alert"
           data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>">
 
-        <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{state.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
+        <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
 
-        <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console?company={{state.params.company}}">
-        <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?failure=1&company={{state.params.company}}&inviteId={{state.params.inviteId}}&secret={{state.params.secret}}&userId={{state.params.userId}}">
+        <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console?company={{router.params.company}}">
+        <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
 
         <div class=""
              data-appwrite="companies.getPreview"
              data-scope="api"
              data-service="api-company"
-             data-param-id="{{state.params.company}}"
+             data-param-id="{{router.params.company}}"
              data-event="load"
              data-success="render,trigger"
              data-success-triggers="api-company.load"

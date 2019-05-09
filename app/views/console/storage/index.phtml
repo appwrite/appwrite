@@ -6,7 +6,7 @@ $providers = $this->getParam('providers', []);
 
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <a data-ls-href="/console/openings/new?company={{state.params.company}}" class="button icon margin-top-tiny pull-end"><i class="icon-plus"></i> &nbsp;Upload</a>
+        <a data-ls-href="/console/openings/new?company={{router.params.company}}" class="button icon margin-top-tiny pull-end"><i class="icon-plus"></i> &nbsp;Upload</a>
 
         <?php echo Locale::getText('console.storage.title'); ?>
     </h1>
@@ -53,7 +53,7 @@ $providers = $this->getParam('providers', []);
                     <li>
                         <div class="box padding-small margin-bottom">
 
-                            <img data-ls-src="//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{state.params.project}}&mode=admin" class="pull-start avatar margin-end" />
+                            <img data-ls-src="//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar margin-end" />
 
                             <button class="pull-end strip margin-top-tiny"><i class="icon icon-dot-3"></i></button>
                             <div data-ls-echo="{{file.name}}" data-ls-title="{{file.name}}" class="text-one-liner margin-bottom-tiny">&nbsp;</div>

@@ -5,7 +5,7 @@ use Utopia\Locale\Locale;
 <div data-appwrite="users.get"
      data-service="user"
      data-event="load"
-     data-param-user-id="{{state.params.id}}"
+     data-param-user-id="{{router.params.id}}"
      data-success="render,trigger"
      data-error="render"
      data-success-rerender="user.update"
@@ -14,7 +14,7 @@ use Utopia\Locale\Locale;
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-href="/console/users?project={{state.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> <?php echo $this->escape(Locale::getText('console.users.title')); ?></a>
+            <a data-ls-href="/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> <?php echo $this->escape(Locale::getText('console.users.title')); ?></a>
             <br />
 
             <span data-ls-echo="{{user.name}}">&nbsp;</span>
@@ -22,8 +22,8 @@ use Utopia\Locale\Locale;
     </div>
 
     <div class="zone xl">
-        <ul class="phases clear" data-ui-phases data-selected="{{state.params.tab}}">
-            <li data-state="/console/users/view?id={{state.params.id}}&project={{state.params.project}}">
+        <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
+            <li data-state="/console/users/view?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>General</h2>
 
                 <div data-ls-if="'{{user.status}}' === '<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>'" style="display: none" class="box padding-small danger margin-bottom-xxl">
@@ -55,7 +55,7 @@ use Utopia\Locale\Locale;
                              data-appwrite="users.getPrefs"
                              data-service="user-prefs"
                              data-event="load"
-                             data-param-user-id="{{state.params.id}}"
+                             data-param-user-id="{{router.params.id}}"
                              data-success="render,trigger"
                              data-error="render"
                              data-success-rerender=""
@@ -98,7 +98,7 @@ use Utopia\Locale\Locale;
                             <form name="users.updateStatus" class="margin-bottom"
                                   data-appwrite="users.updateStatus"
                                   data-event="submit"
-                                  data-param-user-id="{{state.params.id}}"
+                                  data-param-user-id="{{router.params.id}}"
                                   data-success="alert,trigger"
                                   data-success-alert="Blocked User Successfully"
                                   data-success-triggers="user.update"
@@ -112,7 +112,7 @@ use Utopia\Locale\Locale;
                             <form name="users.updateStatus" class="margin-bottom"
                                   data-appwrite="users.updateStatus"
                                   data-event="submit"
-                                  data-param-user-id="{{state.params.id}}"
+                                  data-param-user-id="{{router.params.id}}"
                                   data-success="alert,trigger"
                                   data-success-alert="Blocked Activated Successfully"
                                   data-success-triggers="user.update"
@@ -125,12 +125,12 @@ use Utopia\Locale\Locale;
                     </div>
                 </div>
             </li>
-            <li data-state="/console/users/view/devices?id={{state.params.id}}&project={{state.params.project}}">
+            <li data-state="/console/users/view/devices?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Devices</h2>
 
                 <div data-appwrite="users.getSessions"
                      data-service="sessions"
-                     data-param-user-id="{{state.params.id}}"
+                     data-param-user-id="{{router.params.id}}"
                      data-event="load"
                      data-success="render"
                      data-error="render"
@@ -152,7 +152,7 @@ use Utopia\Locale\Locale;
                                           data-success-triggers="user.update"
                                           data-error="alert"
                                           data-error-alert="Failed to logout session">
-                                        <input type="hidden" name="userId" data-ls-echo="{{state.params.id}}">
+                                        <input type="hidden" name="userId" data-ls-echo="{{router.params.id}}">
                                         <input type="hidden" name="sessionId" data-ls-echo="{{session.id}}">
                                         <button class="danger">Logout</button>
                                     </form>
@@ -171,7 +171,7 @@ use Utopia\Locale\Locale;
 
                         <form class="inline margin-bottom-large"
                               data-appwrite="users.deleteSessions"
-                              data-param-user-id="{{state.params.id}}"
+                              data-param-user-id="{{router.params.id}}"
                               data-event="submit"
                               data-success="trigger"
                               data-success-triggers="user.update"
@@ -183,12 +183,12 @@ use Utopia\Locale\Locale;
                 </div>
 
             </li>
-            <li data-state="/console/users/view/audit?id={{state.params.id}}&project={{state.params.project}}">
+            <li data-state="/console/users/view/audit?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Audit Log</h2>
 
                 <div data-appwrite="users.getLogs"
                      data-service="logs"
-                     data-param-user-id="{{state.params.id}}"
+                     data-param-user-id="{{router.params.id}}"
                      data-event="load"
                      data-success="render"
                      data-success-rerender="logs.load"

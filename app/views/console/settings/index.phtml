@@ -48,7 +48,7 @@ $scopes = [ // TODO sync with project list
      data-scope="console"
      data-service="console-project"
      data-event="load"
-     data-param-project-id="{{state.params.project}}"
+     data-param-project-id="{{router.params.project}}"
      data-success="render,trigger"
      data-error="render"
      data-success-rerender=""
@@ -56,14 +56,14 @@ $scopes = [ // TODO sync with project list
      data-success-triggers="project.load">
 
     <div class="zone xl">
-        <ul class="phases clear" data-ui-phases data-selected="{{state.params.tab}}">
-            <li data-state="/console/settings?project={{state.params.project}}">
+        <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
+            <li data-state="/console/settings?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.overview.title'); ?></h2>
 
                 <form data-appwrite="projects.update"
                       data-scope="console"
                       data-event="submit"
-                      data-param-project-id="{{state.params.project}}"
+                      data-param-project-id="{{router.params.project}}"
                       data-success="alert,trigger"
                       data-success-alert="Saved project successfully"
                       data-success-triggers="project.update"
@@ -80,7 +80,7 @@ $scopes = [ // TODO sync with project list
 
                                 <label for="name">Project ID</label>
                                 <div class="input-copy">
-                                    <input data-forms-copy type="text" disabled data-ls-echo="{{state.params.project}}" />
+                                    <input data-forms-copy type="text" disabled data-ls-echo="{{router.params.project}}" />
                                 </div>
 
                                 <label for="description">Description &nbsp;<small>(optional)</small></label>
@@ -171,7 +171,7 @@ $scopes = [ // TODO sync with project list
                     </div>
                 </form>
             </li>
-            <li data-state="/console/settings/keys?project={{state.params.project}}">
+            <li data-state="/console/settings/keys?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.keys.title'); ?></h2>
 
                 <div class="zone xl"
@@ -179,7 +179,7 @@ $scopes = [ // TODO sync with project list
                      data-scope="console"
                      data-event="load"
                      data-service="console-keys"
-                     data-param-project-id="{{state.params.project}}"
+                     data-param-project-id="{{router.params.project}}"
                      data-success="render,trigger"
                      data-success-rerender="key.new,key.update,key.delete"
                      data-success-triggers="project.load"
@@ -316,7 +316,7 @@ $scopes = [ // TODO sync with project list
                     </div>
                 </div>
             </li>
-            <li data-state="/console/settings/webhooks?project={{state.params.project}}">
+            <li data-state="/console/settings/webhooks?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.webhooks.title'); ?></h2>
 
                 <div class="zone xl"
@@ -324,7 +324,7 @@ $scopes = [ // TODO sync with project list
                      data-scope="console"
                      data-event="load"
                      data-service="console-webhooks"
-                     data-param-project-id="{{state.params.project}}"
+                     data-param-project-id="{{router.params.project}}"
                      data-success="render,trigger"
                      data-success-rerender="webhook.new,webhook.update,webhook.delete"
                      data-success-triggers="project.load"
@@ -514,7 +514,7 @@ $scopes = [ // TODO sync with project list
                 </div>
 
             </li>
-            <li data-state="/console/settings/tasks?project={{state.params.project}}">
+            <li data-state="/console/settings/tasks?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.tasks.title'); ?></h2>
 
                 <div class="zone xl"
@@ -522,7 +522,7 @@ $scopes = [ // TODO sync with project list
                      data-scope="console"
                      data-event="load"
                      data-service="console-tasks"
-                     data-param-project-id="{{state.params.project}}"
+                     data-param-project-id="{{router.params.project}}"
                      data-success="render,trigger"
                      data-success-rerender="task.new,task.update,task.delete"
                      data-success-triggers="project.load"
@@ -815,7 +815,7 @@ $scopes = [ // TODO sync with project list
                     </div>
                 </div>
             </li>
-            <li data-state="/console/settings/members?project={{state.params.project}}" data-ls-wait="project.load">
+            <li data-state="/console/settings/members?project={{router.params.project}}" data-ls-wait="project.load">
                 <h2><?php echo Locale::getText('console.settings.section.members.title'); ?></h2>
 
                 <div class="zone xl"
@@ -858,7 +858,7 @@ $scopes = [ // TODO sync with project list
                                             data-error="alert"
                                             data-error-alert="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
                                         <input name="inviteId" id="inviteId" type="hidden" data-ls-echo="{{member.inviteId}}">
-                                        <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?project={{state.params.project}}" />
+                                        <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
                                         <button class="reverse"><?php echo Locale::getText('console.settings.section.members.labels.resend'); ?></button>
                                     </form>
@@ -889,7 +889,7 @@ $scopes = [ // TODO sync with project list
                               data-error-alert="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
 
                             <input name="team" id="team" type="hidden" data-ls-echo="{{console-project.teamId}}">
-                            <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?project={{state.params.project}}" />
+                            <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
                             <label for="name"><?php echo Locale::getText('console.settings.section.members.labels.name'); ?> <small>(<?php echo Locale::getText('general.optional'); ?>)</small></label>
                             <input name="name" id="name" type="text" autocomplete="name">

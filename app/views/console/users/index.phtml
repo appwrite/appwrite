@@ -11,8 +11,8 @@ $providers = $this->getParam('providers', []);
 </div>
 
 <div class="zone xl" data-ls-rerender="project.load">
-    <ul class="phases clear" data-ui-phases data-selected="{{state.params.tab}}">
-        <li data-state="/console/users?project={{state.params.project}}">
+    <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
+        <li data-state="/console/users?project={{router.params.project}}">
 
             <h2><?php echo Locale::getText('console.users.section.users.title'); ?></h2>
 
@@ -96,7 +96,7 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ui-gravatar="{{user.email}}" data-name="{{user.name}}" data-size="60" alt="User Avatar" class="avatar pull-start" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <a data-ls-href="/console/users/view?id={{user.$uid}}&project={{state.params.project}}" data-ls-echo="{{user.name}}"></a>
+                                        <a data-ls-href="/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-echo="{{user.name}}"></a>
                                     </td>
                                     <td data-title="Email: ">
                                         <span data-ls-echo="{{user.email}}" class="note"></span>
@@ -141,7 +141,7 @@ $providers = $this->getParam('providers', []);
                 </div>
             </div>
         </li>
-        <li data-state="/console/users/teams?project={{state.params.project}}">
+        <li data-state="/console/users/teams?project={{router.params.project}}">
             <h2><?php echo Locale::getText('console.users.section.teams.title'); ?></h2>
 
             <div>
@@ -265,7 +265,7 @@ $providers = $this->getParam('providers', []);
                 </div>
             </div>
         </li>
-        <li data-state="/console/users/providers?project={{state.params.project}}">
+        <li data-state="/console/users/providers?project={{router.params.project}}">
             <h2><?php echo Locale::getText('console.users.section.providers.title'); ?></h2>
 
             <div class="box margin-bottom margin-top-large">
@@ -278,7 +278,7 @@ $providers = $this->getParam('providers', []);
                                 <form data-appwrite="projects.updateOauth"
                                       data-scope="console"
                                       data-event="submit"
-                                      data-param-project-id="{{state.params.project}}"
+                                      data-param-project-id="{{router.params.project}}"
                                       data-success="alert,trigger"
                                       data-success-alert="Updated project OAuth settings successfully"
                                       data-success-triggers="project.reload,modal-close"
@@ -300,7 +300,7 @@ $providers = $this->getParam('providers', []);
                                             <p>To complete set up, add this OAuth redirect URI to your <?php echo ucfirst($provider); ?> app configuration.</p>
 
                                             <div class="input-copy">
-                                                <input data-forms-copy type="text" disabled data-ls-echo="https://{{env.DOMAIN}}/v1/oauth/callback/<?php echo $provider; ?>/{{state.params.project}}" class="margin-bottom-no" />
+                                                <input data-forms-copy type="text" disabled data-ls-echo="https://{{env.DOMAIN}}/v1/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
                                             </div>
                                         </div>
                                     </div>
@@ -328,7 +328,7 @@ $providers = $this->getParam('providers', []);
                 </ul>
             </div>
         </li>
-        <li data-state="/console/users/templates?project={{state.params.project}}">
+        <li data-state="/console/users/templates?project={{router.params.project}}">
             <h2><?php echo Locale::getText('console.users.section.templates.title'); ?></h2>
         </li>
     </ul>

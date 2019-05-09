@@ -4,7 +4,7 @@ use Utopia\Locale\Locale;
 <header class="clear" data-ls-rerender="project.update">
     &nbsp;&nbsp;&nbsp;
     <div data-ls-wait="projects.load" class="list pull-start project-only">
-        <select data-ls-options="{{projects}}" data-key="{{option.$uid}}" data-label="{{option.name}}" data-ls-echo="{{state.params.project}}" aria-label="<?php echo $this->escape(Locale::getText('console.navigation.switch')); ?>" data-switch=""></select>
+        <select data-ls-options="{{projects}}" data-key="{{option.$uid}}" data-label="{{option.name}}" data-ls-echo="{{router.params.project}}" aria-label="<?php echo $this->escape(Locale::getText('console.navigation.switch')); ?>" data-switch=""></select>
     </div>
 
     <button style="width: 40px; height: 40px; line-height: 40px; overflow: visible;" id="setup" class="tooltip round down project-only" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
@@ -51,7 +51,7 @@ use Utopia\Locale\Locale;
 
             <ul class="links">
                 <li>
-                    <a data-ls-href="/console/home?project={{state.params.project}}">
+                    <a data-ls-href="/console/home?project={{router.params.project}}">
                         <i class="icon-home"></i>
                         Home
                     </a>
@@ -62,19 +62,19 @@ use Utopia\Locale\Locale;
 
             <ul class="links">
                 <li>
-                    <a data-ls-href="/console/database?project={{state.params.project}}">
+                    <a data-ls-href="/console/database?project={{router.params.project}}">
                         <i class="icon-database"></i>
                         Database
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/storage?project={{state.params.project}}">
+                    <a data-ls-href="/console/storage?project={{router.params.project}}">
                         <i class="icon-folder"></i>
                         Storage
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/users?project={{state.params.project}}">
+                    <a data-ls-href="/console/users?project={{router.params.project}}">
                         <i class="icon-users"></i>
                         Users
                     </a>
@@ -85,19 +85,19 @@ use Utopia\Locale\Locale;
 
             <ul class="links">
                 <li>
-                    <a data-ls-href="/console/settings/keys?project={{state.params.project}}">
+                    <a data-ls-href="/console/settings/keys?project={{router.params.project}}">
                         <i class="icon-key-inv"></i>
                         API Keys
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/settings/webhooks?project={{state.params.project}}">
+                    <a data-ls-href="/console/settings/webhooks?project={{router.params.project}}">
                         <i class="icon-link"></i>
                         Webhooks
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/settings/tasks?project={{state.params.project}}">
+                    <a data-ls-href="/console/settings/tasks?project={{router.params.project}}">
                         <i class="icon-clock"></i>
                         Tasks
                     </a>
@@ -106,7 +106,7 @@ use Utopia\Locale\Locale;
 
             <ul class="links bottom project-only">
                 <li>
-                    <a data-ls-href="/console/settings?project={{state.params.project}}"><i class="icon-cog"></i> Settings</a>
+                    <a data-ls-href="/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> Settings</a>
                 </li>
             </ul>
         </div>
@@ -125,11 +125,11 @@ use Utopia\Locale\Locale;
      data-success-triggers="projects.load" data-singleton="true">
 </div>
 
-<div data-ls-if="'{{state.params.project}}' != 'undefined'" data-ls-rerender="project.reload">
+<div data-ls-if="'{{router.params.project}}' != 'undefined'" data-ls-rerender="project.reload">
     <div data-appwrite="projects.get"
          data-event="load"
          data-service="console-project"
-         data-param-project-id="{{state.params.project}}"
+         data-param-project-id="{{router.params.project}}"
          data-success="render,trigger"
          data-success-rerender="platform.new,platform.update,platform.delete"
          data-success-triggers="project.load">

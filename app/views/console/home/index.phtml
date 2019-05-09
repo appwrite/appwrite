@@ -8,11 +8,11 @@
             <p data-ls-echo="{{console-project.description}}" data-default="Update your project description under project settings." class="note text-one-liner margin-bottom-large">&nbsp;</p>
 
             <ul class="margin-top margin-bottom-large clear">
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings?project={{state.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings/keys?project={{state.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings/webhooks?project={{state.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings/tasks?project={{state.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
-                <!--<li class="pull-start margin-end"><a data-ls-href="/console/settings/members?project={{state.params.project}}"><i class="icon-users"></i> &nbsp;Members</a> &nbsp;&nbsp;</li>-->
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
+                <!--<li class="pull-start margin-end"><a data-ls-href="/console/settings/members?project={{router.params.project}}"><i class="icon-users"></i> &nbsp;Members</a> &nbsp;&nbsp;</li>-->
             </ul>
         </div>
     </div>
@@ -23,7 +23,7 @@
                  data-appwrite="projects.getProjectUsage"
                  data-event="load"
                  data-service="usage"
-                 data-param-project-id="{{state.params.project}}"
+                 data-param-project-id="{{router.params.project}}"
                  data-success="render,trigger"
                  data-error="render"
                  data-success-triggers="usage.load">
@@ -126,7 +126,7 @@
             </div>
         </div>
 
-        <a data-ls-href="/console/settings/keys?project={{state.params.project}}" class="pull-end">Manage Your API Keys</a>
+        <a data-ls-href="/console/settings/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
 
         <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" tabindex="1">
             <ul>
