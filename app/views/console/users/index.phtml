@@ -96,10 +96,10 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ui-gravatar="{{user.email}}" data-name="{{user.name}}" data-size="60" alt="User Avatar" class="avatar pull-start" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <a data-ls-href="/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-echo="{{user.name}}"></a>
+                                        <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
                                     </td>
                                     <td data-title="Email: ">
-                                        <span data-ls-echo="{{user.email}}" class="note"></span>
+                                        <span data-ls-bind="{{user.email}}" class="note"></span>
                                     </td>
                                     <td data-title="Status: ">
                                     <span data-ls-if="'{{user.confirm}}' === 'true'">
@@ -114,7 +114,7 @@ $providers = $this->getParam('providers', []);
                                         &nbsp;<span class="tag red">Blocked</span>
                                     </span>
                                     </td>
-                                    <td data-title="Created: "><span data-ls-echo="{{user.registration}}" data-filter="date-text" class="note"></span></td>
+                                    <td data-title="Created: "><span data-ls-bind="{{user.registration}}" data-filter="date-text" class="note"></span></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -227,18 +227,18 @@ $providers = $this->getParam('providers', []);
 
                                                 <label for="name">UID</label>
                                                 <div class="input-copy">
-                                                    <input name="teamId" data-forms-copy type="text" disabled data-ls-echo="{{team.$uid}}" />
+                                                    <input name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$uid}}" />
                                                 </div>
 
                                                 <label for="name">Name</label>
-                                                <input name="name" id="name" type="text" autocomplete="off" data-ls-echo="{{team.name}}">
+                                                <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
 
                                                 <button>Update</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
                                             </form>
                                         </div>
                                     </td>
-                                    <td data-title="Members: "><span data-ls-echo="{{team.sum}}"></span></td>
-                                    <td data-title="Date Created: "><span data-ls-echo="{{team.dateCreated}}" data-filter="date-text" class="note"></span></td>
+                                    <td data-title="Members: "><span data-ls-bind="{{team.sum}}"></span></td>
+                                    <td data-title="Date Created: "><span data-ls-bind="{{team.dateCreated}}" data-filter="date-text" class="note"></span></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -287,10 +287,10 @@ $providers = $this->getParam('providers', []);
                                     <input name="provider" id="provider" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
 
                                     <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>
-                                    <input name="appId" id="oauth<?php echo ucfirst($provider); ?>Appid" type="text" autocomplete="off" data-ls-echo="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}}">
+                                    <input name="appId" id="oauth<?php echo ucfirst($provider); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}}">
 
                                     <label for="oauth<?php echo ucfirst($provider); ?>Secret">App Secret</label>
-                                    <input name="secret" id="oauth<?php echo ucfirst($provider); ?>Secret" type="text" autocomplete="off" data-ls-echo="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}">
+                                    <input name="secret" id="oauth<?php echo ucfirst($provider); ?>Secret" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}">
 
                                     <div class="info row thin margin-bottom margin-top">
                                         <div class="col span-1">
@@ -300,7 +300,7 @@ $providers = $this->getParam('providers', []);
                                             <p>To complete set up, add this OAuth redirect URI to your <?php echo ucfirst($provider); ?> app configuration.</p>
 
                                             <div class="input-copy">
-                                                <input data-forms-copy type="text" disabled data-ls-echo="https://{{env.DOMAIN}}/v1/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
+                                                <input data-forms-copy type="text" disabled data-ls-bind="https://{{env.DOMAIN}}/v1/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
                                             </div>
                                         </div>
                                     </div>

@@ -70,24 +70,24 @@ $scopes = [ // TODO sync with project list
                       data-error="alert"
                       data-error-alert="Failed to update project">
 
-                    <input name="$uid" type="hidden" data-ls-echo="{{console-project.$uid}}" />
+                    <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
 
                     <div class="row">
                         <div class="col span-9">
                             <div class="box">
                                 <label for="name">Name</label>
-                                <input name="name" id="name" type="text" autocomplete="off" data-ls-echo="{{console-project.name}}" data-forms-text-direction required>
+                                <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{console-project.name}}" data-forms-text-direction required>
 
                                 <label for="name">Project ID</label>
                                 <div class="input-copy">
-                                    <input data-forms-copy type="text" disabled data-ls-echo="{{router.params.project}}" />
+                                    <input data-forms-copy type="text" disabled data-ls-bind="{{router.params.project}}" />
                                 </div>
 
                                 <label for="description">Description &nbsp;<small>(optional)</small></label>
-                                <textarea name="description" id="description" autocomplete="off" placeholder="Help us make the world a better place" data-ls-echo="{{console-project.description}}" data-forms-text-direction data-forms-text-count></textarea>
+                                <textarea name="description" id="description" autocomplete="off" placeholder="Help us make the world a better place" data-ls-bind="{{console-project.description}}" data-forms-text-direction data-forms-text-count></textarea>
 
                                 <label for="url">Website &nbsp;<small>(optional)</small></label>
-                                <input name="url" id="url" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-echo="{{console-project.url}}">
+                                <input name="url" id="url" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-bind="{{console-project.url}}">
 
                                 <hr />
 
@@ -99,7 +99,7 @@ $scopes = [ // TODO sync with project list
                                     <div class="margin-bottom-small">
                                         <div data-forms-remove class="row thin">
                                             <div class="col span-9">
-                                                <input name="clients" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-echo="{{client}}" data-cast-to="array">
+                                                <input name="clients" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-bind="{{client}}" data-cast-to="array">
                                             </div>
                                             <div class="col span-3">
                                                 <button type="button" data-remove class="reverse danger pull-end"><i class="icon-cancel"></i></button>
@@ -128,26 +128,26 @@ $scopes = [ // TODO sync with project list
                                 <div class="row thin">
                                     <div class="col span-6">
                                         <label for="legalName">Legal Name</label>
-                                        <input name="legalName" id="legalName" type="text" autocomplete="off" data-ls-echo="{{console-project.legalName}}" data-forms-text-direction>
+                                        <input name="legalName" id="legalName" type="text" autocomplete="off" data-ls-bind="{{console-project.legalName}}" data-forms-text-direction>
 
                                         <div data-ls-rerender="geo-countries-load">
                                             <label for="legalCountry">Country</label>
-                                            <select id="legalCountry" name="legalCountry" data-ls-options="{{geo-countries}}" data-ls-echo="{{console-project.legalCountry}}"></select>
+                                            <select id="legalCountry" name="legalCountry" data-ls-options="{{geo-countries}}" data-ls-bind="{{console-project.legalCountry}}"></select>
                                         </div>
 
                                         <label for="legalCity">City</label>
-                                        <input name="legalCity" id="legalCity" type="text" autocomplete="off" data-ls-echo="{{console-project.legalCity}}" data-forms-text-direction>
+                                        <input name="legalCity" id="legalCity" type="text" autocomplete="off" data-ls-bind="{{console-project.legalCity}}" data-forms-text-direction>
                                     </div>
 
                                     <div class="col span-6">
                                         <label for="legalTaxId">Tax ID</label>
-                                        <input name="legalTaxId" id="legalTaxId" type="text" autocomplete="off" data-ls-echo="{{console-project.legalTaxId}}" data-forms-text-direction>
+                                        <input name="legalTaxId" id="legalTaxId" type="text" autocomplete="off" data-ls-bind="{{console-project.legalTaxId}}" data-forms-text-direction>
 
                                         <label for="legalState">State</label>
-                                        <input name="legalState" id="legalState" type="text" autocomplete="off" data-ls-echo="{{console-project.legalState}}" data-forms-text-direction>
+                                        <input name="legalState" id="legalState" type="text" autocomplete="off" data-ls-bind="{{console-project.legalState}}" data-forms-text-direction>
 
                                         <label for="legalAddress">Address</label>
-                                        <input name="legalAddress" id="legalAddress" type="text" autocomplete="off" data-ls-echo="{{console-project.legalAddress}}" data-forms-text-direction>
+                                        <input name="legalAddress" id="legalAddress" type="text" autocomplete="off" data-ls-bind="{{console-project.legalAddress}}" data-forms-text-direction>
 
                                     </div>
                                 </div>
@@ -161,7 +161,7 @@ $scopes = [ // TODO sync with project list
                         <div class="col span-3 box-aside">
                             <label for="name">Logo</label>
                             <div class="text-center clear">
-                                <input type="hidden" name="logo" data-ls-echo="{{console-project.logo}}"
+                                <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}"
                                        data-read="<?php echo $this->escape(json_encode(['*'])); ?>"
                                        data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>"
                                        data-accept="image/*"
@@ -209,17 +209,17 @@ $scopes = [ // TODO sync with project list
                                           data-error="alert"
                                           data-error-alert="Failed to update API key">
 
-                                        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-                                        <input type="hidden" name="keyId" data-ls-echo="{{key.$uid}}">
+                                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                        <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
 
                                         <label data-ls-for="name-{{key.$uid}}">Name</label>
-                                        <input type="text" class="full-width" data-ls-id="name-{{key.$uid}}" name="name" required autocomplete="off" data-ls-echo="{{key.name}}" />
+                                        <input type="text" class="full-width" data-ls-id="name-{{key.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
 
                                         <label data-ls-for="scopes-{{key.$uid}}">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
                                         <div class="row thin margin-bottom">
                                             <?php foreach ($scopes as $i => $scope): ?>
                                             <div class="col span-6">
-                                                <input type="checkbox" name="scopes" data-ls-echo="<?php echo $scope; ?>" data-default="{{key.scopes}}" /> <?php echo $scope; ?>
+                                                <input type="checkbox" name="scopes" data-ls-bind="<?php echo $scope; ?>" data-default="{{key.scopes}}" /> <?php echo $scope; ?>
                                             </div>
                                             <?php if(($i+1) % 2 === 0): ?>
                                                 </div>
@@ -246,13 +246,13 @@ $scopes = [ // TODO sync with project list
                                       data-error="alert"
                                       data-error-alert="Failed to delete API key">
 
-                                    <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-                                    <input type="hidden" name="keyId" data-ls-echo="{{key.$uid}}">
+                                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                    <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
 
                                     <button class="reverse danger">Delete</button>
                                 </form>
 
-                                <div class="margin-bottom-tiny"><span data-ls-echo="{{key.name}}"></span> <span class="note">(<span data-ls-echo="{{key.scopes.length}}"></span> scopes granted)</span></div>
+                                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <span class="note">(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</span></div>
 
                                 <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link margin-top-small" data-button-icon="icon-right-open">
                                     <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
@@ -261,7 +261,7 @@ $scopes = [ // TODO sync with project list
 
                                     <form>
                                         <div class="input-copy">
-                                            <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-echo="{{key.secret}}"></textarea>
+                                            <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-bind="{{key.secret}}"></textarea>
                                         </div>
                                         <div>
                                             <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
@@ -287,7 +287,7 @@ $scopes = [ // TODO sync with project list
                                   data-error="alert"
                                   data-error-alert="Failed to create API key">
 
-                                <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
+                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 
                                 <label for="name">Name</label>
                                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
@@ -355,17 +355,17 @@ $scopes = [ // TODO sync with project list
                                           data-error="alert"
                                           data-error-alert="Failed to update webhook">
 
-                                        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-                                        <input type="hidden" name="webhookId" data-ls-echo="{{webhook.$uid}}">
+                                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
 
                                         <label data-ls-for="name-{{webhook.$uid}}">Name</label>
-                                        <input type="text" class="full-width" data-ls-id="name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-echo="{{webhook.name}}" />
+                                        <input type="text" class="full-width" data-ls-id="name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
 
                                         <label data-ls-for="events-{{webhook.$uid}}">Events</label>
                                         <div class="row thin margin-bottom">
                                             <?php foreach ($events as $i => $event): ?>
                                             <div class="col span-6">
-                                                <input type="checkbox" name="events" data-ls-echo="<?php echo $event; ?>" data-default="{{webhook.events}}" /> <?php echo $event; ?>
+                                                <input type="checkbox" name="events" data-ls-bind="<?php echo $event; ?>" data-default="{{webhook.events}}" /> <?php echo $event; ?>
                                             </div>
                                             <?php if(($i+1) % 2 === 0): ?>
                                         </div>
@@ -376,14 +376,14 @@ $scopes = [ // TODO sync with project list
                                         </div>
 
                                         <label data-ls-for="url-{{webhook.$uid}}">POST URL</label>
-                                        <input type="url" class="full-width" data-ls-id="url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-echo="{{webhook.url}}" />
+                                        <input type="url" class="full-width" data-ls-id="url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
 
                                         <label data-ls-for="secure-{{webhook.$uid}}">SSL / TLS</label>
                                         <p class="note">Certificate verification</p>
 
-                                        <input name="security" data-ls-id="secure-yes-{{webhook.$uid}}" type="radio" required data-ls-echo="1" data-default="{{webhook.security}}" /> &nbsp; <span>Enabled</span>
+                                        <input name="security" data-ls-id="secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="1" data-default="{{webhook.security}}" /> &nbsp; <span>Enabled</span>
                                         &nbsp;&nbsp;
-                                        <input name="security" data-ls-id="secure-no-{{webhook.$uid}}" type="radio" required data-ls-echo="0" data-default="{{webhook.security}}" /> &nbsp; <span>Disabled</span>
+                                        <input name="security" data-ls-id="secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="0" data-default="{{webhook.security}}" /> &nbsp; <span>Disabled</span>
 
                                         <br />
                                         <br />
@@ -397,11 +397,11 @@ $scopes = [ // TODO sync with project list
                                         <div class="row thin">
                                             <div class="col span-6">
                                                 <label data-ls-for="httpUser-{{webhook.$uid}}">User</label>
-                                                <input type="text" class="full-width" data-ls-id="httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-echo="{{webhook.httpUser}}" />
+                                                <input type="text" class="full-width" data-ls-id="httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                             </div>
                                             <div class="col span-6">
                                                 <label data-ls-for="httpPass-{{webhook.$uid}}">Password</label>
-                                                <input type="password" class="full-width" data-ls-id="httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-echo="{{webhook.httpPass}}" />
+                                                <input type="password" class="full-width" data-ls-id="httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                             </div>
                                         </div>
 
@@ -424,17 +424,17 @@ $scopes = [ // TODO sync with project list
                                       data-error="alert"
                                       data-error-alert="Failed to delete webhook">
 
-                                    <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-                                    <input type="hidden" name="webhookId" data-ls-echo="{{webhook.$uid}}">
+                                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
 
                                     <button class="danger reverse">Delete</button>
                                 </form>
 
-                                <span data-ls-echo="{{webhook.name}}"></span> &nbsp; (<span data-ls-echo="{{webhook.events.length}}"></span> events)
+                                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
                                 <span data-ls-if="0 == {{webhook.security}}" style="display: none;">
                                 &nbsp; <span class="note text-danger">(SSL/TLS Disabled)</span>
                             </span>
-                                <p class="note margin-bottom-no margin-top-small"><span class="tag green">POST</span> <span data-ls-echo="{{webhook.url}}"></span></p>
+                                <p class="note margin-bottom-no margin-top-small"><span class="tag green">POST</span> <span data-ls-bind="{{webhook.url}}"></span></p>
                             </li>
                         </ul>
                     </div>
@@ -454,7 +454,7 @@ $scopes = [ // TODO sync with project list
                                   data-error="alert"
                                   data-error-alert="Failed to create webhook">
 
-                                <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
+                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 
                                 <label for="name">Name</label>
                                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
@@ -550,17 +550,17 @@ $scopes = [ // TODO sync with project list
                                 <tr>
                                     <td>
                                         <div class="margin-bottom-tiny text-one-liner">
-                                            <span data-ls-echo="{{task.name}}"></span>
+                                            <span data-ls-bind="{{task.name}}"></span>
 
                                             <span data-ls-if="0 === {{task.security}}" style="display: none;">
                                                 &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
                                             </span>
                                             <span data-ls-if="0 !== {{task.failures}}" style="display: none;">
-                                                &nbsp; <span class="text-danger" data-ls-echo="({{task.failures}} errors)"></span>
+                                                &nbsp; <span class="text-danger" data-ls-bind="({{task.failures}} errors)"></span>
                                             </span>
                                         </div>
 
-                                        <a data-ls-href="{{task.httpUrl}}" data-ls-echo="{{task.httpUrl}}" target="_blank" class="text-one-liner"></a>
+                                        <a data-ls-attrs="href={{task.httpUrl}}" data-ls-bind="{{task.httpUrl}}" target="_blank" class="text-one-liner"></a>
                                     </td>
                                     <td style="vertical-align: middle">
                                         <span data-ls-if="'play' === '{{task.status}}'" style="display: none;">
@@ -571,14 +571,14 @@ $scopes = [ // TODO sync with project list
                                         </span>
                                     </td>
                                     <td style="vertical-align: middle">
-                                        <span data-ls-echo="{{task.next|date-time}}" class="note"></span>
+                                        <span data-ls-bind="{{task.next|date-time}}" class="note"></span>
                                     </td>
                                     <td style="vertical-align: middle">
                                         <div data-ls-if="'undefined' !== '{{task.previous}}'" class="note">
-                                            <span data-ls-echo="{{task.previous|date-time}}"></span>
+                                            <span data-ls-bind="{{task.previous|date-time}}"></span>
 
                                             <div data-ls-if="'undefined' !== '{{task.delay}}' && 59 < {{task.delay}}" class="note text-danger margin-top-tiny">
-                                                <span data-ls-echo="({{task.delay|ms2hum}} Delay)"></span>
+                                                <span data-ls-bind="({{task.delay|ms2hum}} Delay)"></span>
                                             </div>
                                         </div>
                                         <div data-ls-if="'undefined' === '{{task.previous}}'" class="note">
@@ -600,26 +600,26 @@ $scopes = [ // TODO sync with project list
                                                   data-error="alert"
                                                   data-error-alert="Failed to update task">
 
-                                                <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-                                                <input type="hidden" name="taskId" data-ls-echo="{{task.$uid}}">
+                                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
 
                                                 <label data-ls-for="name-{{task.$uid}}">Name</label>
-                                                <input type="text" class="full-width" data-ls-id="name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-echo="{{task.name}}" />
+                                                <input type="text" class="full-width" data-ls-id="name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
 
                                                 <label data-ls-for="status-{{task.$uid}}" class="margin-bottom">Status
                                                     <div class="margin-top-small">
-                                                        <input name="status" type="radio" checked="checked" required data-ls-echo="play" data-default="{{task.status}}" /> &nbsp; <span>Play</span>
-                                                        <input name="status" type="radio" required data-ls-echo="pause" data-default="{{task.status}}" /> &nbsp; <span>Pause</span>
+                                                        <input name="status" type="radio" checked="checked" required data-ls-bind="play" data-default="{{task.status}}" /> &nbsp; <span>Play</span>
+                                                        <input name="status" type="radio" required data-ls-bind="pause" data-default="{{task.status}}" /> &nbsp; <span>Pause</span>
                                                     </div>
                                                 </label>
 
                                                 <label data-ls-for="schedule-{{task.$uid}}">Schedule (CRON Syntax)</label>
-                                                <input type="text" class="full-width" data-ls-id="schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-echo="{{task.schedule}}" />
+                                                <input type="text" class="full-width" data-ls-id="schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" />
 
                                                 <div class="row thin">
                                                     <div class="col span-4">
                                                         <label data-ls-for="httpMethod-{{task.$uid}}">HTTP Method</label>
-                                                        <select data-ls-id="httpMethod-{{task.$uid}}" name="httpMethod" required data-ls-echo="{{task.httpMethod}}">
+                                                        <select data-ls-id="httpMethod-{{task.$uid}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
                                                             <option value="POST">POST</option>
                                                             <option value="GET">GET</option>
                                                             <option value="PUT">PUT</option>
@@ -633,7 +633,7 @@ $scopes = [ // TODO sync with project list
                                                     </div>
                                                     <div class="col span-8">
                                                         <label data-ls-for="httpUrl-{{task.$uid}}">HTTP URL</label>
-                                                        <input type="url" class="full-width" data-ls-id="httpUrl-{{task.$uid}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-echo="{{task.httpUrl}}" />
+                                                        <input type="url" class="full-width" data-ls-id="httpUrl-{{task.$uid}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
                                                     </div>
                                                 </div>
 
@@ -643,7 +643,7 @@ $scopes = [ // TODO sync with project list
                                                         <div class="margin-bottom-small">
                                                             <div data-forms-remove class="row thin">
                                                                 <div class="col span-10">
-                                                                    <input type="hidden" name="httpHeaders" data-forms-headers data-ls-echo="{{header}}" data-cast-to="array" />
+                                                                    <input type="hidden" name="httpHeaders" data-forms-headers data-ls-bind="{{header}}" data-cast-to="array" />
                                                                 </div>
                                                                 <div class="col span-2">
                                                                     <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
@@ -668,8 +668,8 @@ $scopes = [ // TODO sync with project list
 
                                                 <label data-ls-for="security-{{task.$uid}}" class="margin-bottom">SSL / TLS
                                                     <p class="note">Certificate verification</p>
-                                                    <input name="security" type="radio" required data-ls-echo="1" data-default="{{task.security}}" /> &nbsp; <span>Enabled</span>
-                                                    <input name="security" type="radio" required data-ls-echo="0" data-default="{{task.security}}" /> &nbsp; <span>Disabled</span>
+                                                    <input name="security" type="radio" required data-ls-bind="1" data-default="{{task.security}}" /> &nbsp; <span>Enabled</span>
+                                                    <input name="security" type="radio" required data-ls-bind="0" data-default="{{task.security}}" /> &nbsp; <span>Disabled</span>
                                                 </label>
 
                                                 <p class="note margin-bottom"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
@@ -681,11 +681,11 @@ $scopes = [ // TODO sync with project list
                                                 <div class="row thin">
                                                     <div class="col span-6">
                                                         <label data-ls-for="httpUser-{{task.$uid}}">User</label>
-                                                        <input type="text" class="full-width" data-ls-id="httpUser-{{task.$uid}}" name="httpUser" autocomplete="off" data-ls-echo="{{task.httpUser}}" />
+                                                        <input type="text" class="full-width" data-ls-id="httpUser-{{task.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
                                                     </div>
                                                     <div class="col span-6">
                                                         <label data-ls-for="httpPass-{{task.$uid}}">Password</label>
-                                                        <input type="password" class="full-width" data-ls-id="httpPass-{{task.$uid}}" name="httpPass" autocomplete="off" data-ls-echo="{{task.httpPass}}" />
+                                                        <input type="password" class="full-width" data-ls-id="httpPass-{{task.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
                                                     </div>
                                                 </div>
 
@@ -705,8 +705,8 @@ $scopes = [ // TODO sync with project list
                                                   data-error="alert"
                                                   data-error-alert="Failed to delete task">
 
-                                                <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-                                                <input type="hidden" name="taskId" data-ls-echo="{{task.$uid}}">
+                                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
 
                                                 <button class="danger fill">Delete</button>
                                             </form>
@@ -732,7 +732,7 @@ $scopes = [ // TODO sync with project list
                                   data-error="alert"
                                   data-error-alert="Failed to create task">
 
-                                <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
+                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 
                                 <label for="name">Name</label>
                                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
@@ -842,7 +842,7 @@ $scopes = [ // TODO sync with project list
                                       data-error="alert"
                                       data-error-alert="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
 
-                                    <input name="inviteId" id="inviteId" type="hidden" data-ls-echo="{{member.inviteId}}">
+                                    <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
 
                                     <button class="danger"><?php echo Locale::getText('console.settings.section.members.labels.leave'); ?></button>
                                 </form>
@@ -857,8 +857,8 @@ $scopes = [ // TODO sync with project list
                                             data-success-triggers="auth.invite"
                                             data-error="alert"
                                             data-error-alert="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
-                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-echo="{{member.inviteId}}">
-                                        <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
+                                        <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
                                         <button class="reverse"><?php echo Locale::getText('console.settings.section.members.labels.resend'); ?></button>
                                     </form>
@@ -866,9 +866,9 @@ $scopes = [ // TODO sync with project list
 
                                 <img src="" data-ui-gravatar="{{member.email}}" data-name="{{member.name}}" data-size="100" alt="User Avatar" class="avatar pull-start margin-end" />
                                 <div class="margin-bottom-small">
-                                    <span data-ls-echo="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-echo="{{member.roles.0|id2role}}"></span> &nbsp;&nbsp;<span data-ls-if="'false' == '{{member.confirm}}'" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
+                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0|id2role}}"></span> &nbsp;&nbsp;<span data-ls-if="'false' == '{{member.confirm}}'" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
                                 </div>
-                                <span class="note" data-ls-echo="{{member.email}}"></span>
+                                <span class="note" data-ls-bind="{{member.email}}"></span>
                             </li>
                         </ul>
                     </div>
@@ -888,8 +888,8 @@ $scopes = [ // TODO sync with project list
                               data-error="alert"
                               data-error-alert="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
 
-                            <input name="team" id="team" type="hidden" data-ls-echo="{{console-project.teamId}}">
-                            <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                            <input name="team" id="team" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                            <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
                             <label for="name"><?php echo Locale::getText('console.settings.section.members.labels.name'); ?> <small>(<?php echo Locale::getText('general.optional'); ?>)</small></label>
                             <input name="name" id="name" type="text" autocomplete="name">

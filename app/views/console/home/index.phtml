@@ -2,17 +2,16 @@
     <div class="cover margin-bottom-small">
         <div class="zone xl margin-bottom-large margin-top-small">
             <h1 class="margin-bottom-small">
-                <span class="title" data-ls-echo="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;<span class="tag focus" style="vertical-align: middle">Beta Plan</span>
+                <span class="title" data-ls-bind="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;<span class="tag focus" style="vertical-align: middle">Beta Plan</span>
             </h1>
 
-            <p data-ls-echo="{{console-project.description}}" data-default="Update your project description under project settings." class="note text-one-liner margin-bottom-large">&nbsp;</p>
+            <p data-ls-bind="{{console-project.description}}" class="note text-one-liner margin-bottom-large">&nbsp;</p>
 
             <ul class="margin-top margin-bottom-large clear">
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-href="/console/settings/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
-                <!--<li class="pull-start margin-end"><a data-ls-href="/console/settings/members?project={{router.params.project}}"><i class="icon-users"></i> &nbsp;Members</a> &nbsp;&nbsp;</li>-->
+                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
             </ul>
         </div>
     </div>
@@ -30,7 +29,7 @@
                 <div class="row responsive">
                     <div class="col span-9">
                         <div class="pull-start margin-end">
-                            <div class="value margin-bottom-small"><span class="sum" data-ls-echo="{{usage.requests.total|statsTotal}}">N/A</span></div>
+                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
                             <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
                             <div class="range">Current Month</div>
                         </div>
@@ -40,7 +39,7 @@
                         </div>
                     </div>
                     <div class="col span-3">
-                        <div class="value margin-bottom-small"><span class="sum" data-ls-echo="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
+                        <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
                         <div class="metric margin-bottom-small">Bandwidth</div>
                         <div class="range">Current Month</div>
                         <div class="margin-top dev-feature">
@@ -55,19 +54,19 @@
 
                     <div class="row responsive">
                         <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-echo="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
+                            <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
                             <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
                         </div>
                         <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-echo="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
+                            <div class="value"><span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
                             <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
                         </div>
                         <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-echo="{{usage.users.total}}" data-default="0">0</span></div>
+                            <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
                             <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
                         </div>
                         <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-echo="{{usage.tasks.total}}" data-default="0">0</span></div>
+                            <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
                             <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
                         </div>
                     </div>
@@ -102,18 +101,18 @@
                           data-error="alert"
                           data-error-alert="Failed to delete platform">
 
-                        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-                        <input type="hidden" name="platformId" data-ls-echo="{{platform.$uid}}">
+                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                        <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">
 
                         <button class="reverse danger">Delete</button>
                     </form>
 
                     <div class="margin-bottom-tiny">
-                        <img src="" data-ls-src="/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" />
-                        <span data-ls-echo="{{platform.name}}"></span>
+                        <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" />
+                        <span data-ls-bind="{{platform.name}}"></span>
                     </div>
 
-                    <p class="note margin-bottom-no"><span data-ls-echo="{{platform.domains.0}}"></span></p>
+                    <p class="note margin-bottom-no"><span data-ls-bind="{{platform.domains.0}}"></span></p>
                 </li>
             </ul>
         </div>
@@ -126,7 +125,7 @@
             </div>
         </div>
 
-        <a data-ls-href="/console/settings/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
+        <a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
 
         <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" tabindex="1">
             <ul>
@@ -161,8 +160,8 @@
           data-error="alert"
           data-error-alert="Failed to create platform">
 
-        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-        <input type="hidden" name="type" data-ls-echo="web">
+        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+        <input type="hidden" name="type" data-ls-bind="web">
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
@@ -210,11 +209,11 @@
           data-error="alert"
           data-error-alert="Failed to update platform">
 
-        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
-        <input type="hidden" name="platformId" data-ls-echo="{{platform.$uid}}">
+        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" data-ls-echo="{{platform.name}}" />
+        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />
 
         <label for="domains">Domains <span class="tooltip large" data-tooltip="List the domains your website will use to interact with the <?php echo APP_NAME; ?> API in production or development environments."><i class="icon-question"></i></span></label>
 
@@ -224,7 +223,7 @@
             <div>
                 <div data-forms-remove class="row thin">
                     <div class="col span-10">
-                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-ls-echo="{{domain}}" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
+                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-ls-bind="{{domain}}" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
                     </div>
                     <div class="col span-2">
                         <button type="button" data-remove class="reverse round danger pull-end"><i class="icon-cancel"></i></button>

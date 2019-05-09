@@ -32,8 +32,8 @@ use Utopia\Locale\Locale;
                   data-error="alert"
                   data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?>">
 
-                <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console">
-                <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/signin?failure=1">
+                <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console">
+                <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/signin?failure=1">
 
                 <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $this->escape(Locale::getText('home.auth.signin.labels.email')); ?>" required>
 

@@ -14,10 +14,10 @@ use Utopia\Locale\Locale;
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-href="/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> <?php echo $this->escape(Locale::getText('console.users.title')); ?></a>
+            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> <?php echo $this->escape(Locale::getText('console.users.title')); ?></a>
             <br />
 
-            <span data-ls-echo="{{user.name}}">&nbsp;</span>
+            <span data-ls-bind="{{user.name}}">&nbsp;</span>
         </h1>
     </div>
 
@@ -36,7 +36,7 @@ use Utopia\Locale\Locale;
                             <div class="text-center">
                                 <img src="" data-ui-gravatar="{{user.email}}" data-name="{{user.name}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
 
-                                <div class="margin-top-small note" data-ls-echo="Member since {{user.registration|date-text}}"></div>
+                                <div class="margin-top-small note" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
                                     <span data-ls-if="'{{user.confirm}}' === 'true'" style="display: none;">
                                         <span class="tag green">Verified</span>
@@ -45,7 +45,7 @@ use Utopia\Locale\Locale;
                                         <span class="tag">Unverified</span>
                                     </span>
                                 </div>
-                                <div class="margin-top-small" data-ls-echo="{{user.email}}"></div>
+                                <div class="margin-top-small" data-ls-bind="{{user.email}}"></div>
                             </div>
                         </div>
 
@@ -73,10 +73,10 @@ use Utopia\Locale\Locale;
                                     <tbody data-ls-loop="user-prefs" data-ls-as="pref">
                                     <tr>
                                         <td data-title="Key: ">
-                                            <span data-ls-echo="{{$index}}"></span>
+                                            <span data-ls-bind="{{$index}}"></span>
                                         </td>
                                         <td data-title="Value: ">
-                                            <span data-ls-echo="{{pref}}"></span>
+                                            <span data-ls-bind="{{pref}}"></span>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -91,7 +91,7 @@ use Utopia\Locale\Locale;
                     <div class="col span-4">
                         <label>User ID</label>
                         <div class="input-copy margin-bottom-large">
-                            <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-echo="{{user.$uid}}" disabled data-forms-copy>
+                            <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{user.$uid}}" disabled data-forms-copy>
                         </div>
 
                         <div data-ls-if="'{{user.status}}' !== '<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>'" style="display: none">
@@ -152,18 +152,18 @@ use Utopia\Locale\Locale;
                                           data-success-triggers="user.update"
                                           data-error="alert"
                                           data-error-alert="Failed to logout session">
-                                        <input type="hidden" name="userId" data-ls-echo="{{router.params.id}}">
-                                        <input type="hidden" name="sessionId" data-ls-echo="{{session.id}}">
+                                        <input type="hidden" name="userId" data-ls-bind="{{router.params.id}}">
+                                        <input type="hidden" name="sessionId" data-ls-bind="{{session.id}}">
                                         <button class="danger">Logout</button>
                                     </form>
 
-                                    <img data-ls-src="{{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120" data-ls-title="{{session.client.name}}" data-ls-alt="{{session.client.name}}" class="avatar trans pull-start margin-end" />
+                                    <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120" data-ls-title="{{session.client.name}}" data-ls-alt="{{session.client.name}}" class="avatar trans pull-start margin-end" />
 
-                                    <span data-ls-echo="{{session.client.name}}"></span> <span data-ls-echo="{{session.client.version}}"></span> on <span data-ls-echo="{{session.model}}"></span> <span data-ls-echo="{{session.OS.name}}"></span> <span data-ls-echo="{{session.OS.version}}"></span>
+                                    <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
 
                                     <div class="note info margin-top-small">
-                                        <img data-ls-src="{{env.API}}/v1/avatars/flags/{{session.geo.isoCode}}?width=80&height=80" class="avatar xs margin-end-small inline" />
-                                        <small data-ls-echo="{{session.ip}}"></small> / <small data-ls-echo="{{session.geo.country}}"></small>
+                                        <img data-ls-attrs="src={{env.API}}/v1/avatars/flags/{{session.geo.isoCode}}?width=80&height=80" class="avatar xs margin-end-small inline" />
+                                        <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.geo.country}}"></small>
                                     </div>
                                 </li>
                             </ul>
@@ -211,17 +211,17 @@ use Utopia\Locale\Locale;
                             </thead>
                             <tbody data-ls-loop="logs" data-ls-as="log">
                             <tr>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-echo="{{log.time|date-time}}"></span></td>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-echo="{{log.event}}"></span></td>
+                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
                                 <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.client')); ?>: ">
-                                    <img data-ls-src="{{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80" data-ls-title="{{log.client.name}}" data-ls-alt="{{log.client.name}}" class="avatar xs inline margin-end-small" />
-                                    <span data-ls-echo="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                    <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80" data-ls-title="{{log.client.name}}" data-ls-alt="{{log.client.name}}" class="avatar xs inline margin-end-small" />
+                                    <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                                 </td>
                                 <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.location')); ?>: ">
-                                    <img data-ls-src="{{env.API}}/v1/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
-                                    <span data-ls-echo="{{log.geo.country}}"></span>
+                                    <img data-ls-attrs="src={{env.API}}/v1/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
+                                    <span data-ls-bind="{{log.geo.country}}"></span>
                                 </td>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-echo="{{log.ip}}"></span></td>
+                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
                             </tr>
                             </tbody>
                         </table>

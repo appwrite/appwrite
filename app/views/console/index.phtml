@@ -27,9 +27,9 @@
 
         <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3">
             <li class="margin-bottom">
-                <a data-ls-href="/console/home?project={{project.$uid}}" class="box">
-                    <span data-ls-echo="{{project.name}}" class="text-one-liner">&nbsp;</span>
-                    <p data-ls-echo="{{project.description}}" data-default="No Description.&nbsp;" class="note margin-top-small text-one-liner">&nbsp;</p>
+                <a data-ls-attrs="href=/console/home?project={{project.$uid}}" class="box">
+                    <span data-ls-bind="{{project.name}}" class="text-one-liner">&nbsp;</span>
+                    <p data-ls-bind="{{project.description}}" class="note margin-top-small text-one-liner">&nbsp;</p>
                     <i class="icon-right-open"></i>
                 </a>
             </li>

@@ -38,7 +38,7 @@ use Utopia\Locale\Locale;
 
                                     <div class="row">
                                         <div class="col span-8">
-                                            <input name="name" id="name" type="text" autocomplete="off" data-ls-echo="{{account.name}}" required class="margin-bottom-no">
+                                            <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{account.name}}" required class="margin-bottom-no">
                                         </div>
                                         <div class="col span-4">
                                             <button type="submit" class="fill reverse"><?php echo Locale::getText('console.account.section.overview.actions.update-name'); ?></button>
@@ -65,7 +65,7 @@ use Utopia\Locale\Locale;
                                 <label><?php echo Locale::getText('console.account.section.overview.labels.email'); ?></label>
                                 <div class="row">
                                     <div class="col span-8">
-                                        <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="me@example.com" data-ls-echo="{{account.email}}" required>
+                                        <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="me@example.com" data-ls-bind="{{account.email}}" required>
                                     </div>
                                     <div class="col span-4">
                                         <div data-ui-modal class="modal close width-small height-small" data-button-text="<?php echo $this->escape(Locale::getText('console.account.section.overview.actions.update-email')); ?>" data-button-class="fill reverse">
@@ -191,7 +191,7 @@ use Utopia\Locale\Locale;
                                   data-success-triggers="account.update"
                                   data-error="alert"
                                   data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
-                                <input type="hidden" name="userId" data-ls-echo="{{session.id}}">
+                                <input type="hidden" name="userId" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
                         </span>
@@ -207,22 +207,22 @@ use Utopia\Locale\Locale;
                                   data-success-redirect-url="/"
                                   data-error="alert"
                                   data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
-                                <input type="hidden" name="userId" data-ls-echo="{{session.id}}">
+                                <input type="hidden" name="userId" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
                         </span>
 
-                        <img data-ls-src="{{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowerCase}}?width=120&height=120" data-ls-title="{{session.client.name}}" data-ls-alt="{{session.client.name}}" class="avatar trans pull-start margin-end" />
+                        <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowerCase}}?width=120&height=120" data-ls-title="{{session.client.name}}" data-ls-alt="{{session.client.name}}" class="avatar trans pull-start margin-end" />
 
-                        <span data-ls-echo="{{session.client.name}}"></span> <span data-ls-echo="{{session.client.version}}"></span> on <span data-ls-echo="{{session.model}}"></span> <span data-ls-echo="{{session.OS.name}}"></span> <span data-ls-echo="{{session.OS.version}}"></span>
+                        <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
                         &nbsp;
                         <span data-ls-if="true == {{session.current}}" style="display: none;">
                             <span class="tag green"><?php echo Locale::getText('console.account.section.security.devices.current'); ?></span>
                         </span>
 
                         <div class="note info margin-top-small">
-                            <img data-ls-src="{{env.API}}/v1/avatars/flags/{{session.geo.isoCode}}?width=80&height=80" class="avatar xs margin-end-small inline" />
-                            <small data-ls-echo="{{session.ip}}"></small> / <small data-ls-echo="{{session.geo.country}}"></small>
+                            <img data-ls-attrs="src={{env.API}}/v1/avatars/flags/{{session.geo.isoCode}}?width=80&height=80" class="avatar xs margin-end-small inline" />
+                            <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.geo.country}}"></small>
                         </div>
                     </li>
                 </ul>
@@ -265,17 +265,17 @@ use Utopia\Locale\Locale;
                         </thead>
                         <tbody data-ls-loop="securityLogs" data-ls-as="log">
                         <tr>
-                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-echo="{{log.time|date-time}}"></span></td>
-                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-echo="{{log.event}}"></span></td>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
                             <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.client')); ?>: ">
-                                <img data-ls-src="{{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowerCase}}?width=80&height=80" data-ls-title="{{log.client.name}}" data-ls-alt="{{log.client.name}}" class="avatar xs inline margin-end-small" />
-                                <span data-ls-echo="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowerCase}}?width=80&height=80" data-ls-title="{{log.client.name}}" data-ls-alt="{{log.client.name}}" class="avatar xs inline margin-end-small" />
+                                <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                             </td>
                             <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.location')); ?>: ">
-                                <img data-ls-src="{{env.API}}/v1/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
-                                <span data-ls-echo="{{log.geo.country}}"></span>
+                                <img data-ls-attrs="src={{env.API}}/v1/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
+                                <span data-ls-bind="{{log.geo.country}}"></span>
                             </td>
-                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-echo="{{log.ip}}"></span></td>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
                         </tr>
                         </tbody>
                     </table>

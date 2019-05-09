@@ -21,8 +21,8 @@ use Utopia\Locale\Locale;
           data-error="alert"
           data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.reset.failure')); ?>">
 
-        <input type="hidden" name="userId" data-ls-echo="{{router.params.userId}}">
-        <input type="hidden" name="token" data-ls-echo="{{router.params.token}}">
+        <input type="hidden" name="userId" data-ls-bind="{{router.params.userId}}">
+        <input type="hidden" name="token" data-ls-bind="{{router.params.token}}">
 
         <label><?php echo $this->escape(Locale::getText('home.auth.reset.labels.passwordA')); ?></label>
         <input name="passwordA" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $this->escape(Locale::getText('home.auth.reset.labels.password.validation')); ?>">

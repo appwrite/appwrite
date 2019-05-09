@@ -18,8 +18,8 @@ use Utopia\Locale\Locale;
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
 
-        <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console?company={{router.params.company}}">
-        <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
+        <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console?company={{router.params.company}}">
+        <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
 
         <div class=""
              data-appwrite="companies.getPreview"
@@ -37,7 +37,7 @@ use Utopia\Locale\Locale;
 
             <div data-ls-if="'{{api-company.logo}}' !== '' || '{{api-company.logo}}' !== 'undefined'">
                 <div data-ls-style="background: {{api-company.theme-color}}; color: {{api-company.theme-color-contrast}}; width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto; text-align: center">
-                    <img data-ls-src="{{env.API}}/v1/storage/files/{{api-company.logo}}/preview?project={{env.PROJECT}}&height=120" alt="Logo" style="opacity: 0; line-height: 80px; vertical-align: middle; max-width: 80px; max-height: 80px" />
+                    <img data-ls-attrs="src={{env.API}}/v1/storage/files/{{api-company.logo}}/preview?project={{env.PROJECT}}&height=120" alt="Logo" style="opacity: 0; line-height: 80px; vertical-align: middle; max-width: 80px; max-height: 80px" />
                 </div>
             </div>
         </div>

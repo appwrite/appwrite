@@ -88,10 +88,10 @@ $env        = $this->getParam('env', '');
             <li>
                 <div data-ls-class="{{alert.class}} message">
                     <i class="icon-cancel" data-ls-ui-alerts-delete data-message="{{alert.id}}"></i>
-                    <span data-ls-echo="{{alert.text}}"></span>
+                    <span data-ls-bind="{{alert.text}}"></span>
 
                     <span data-ls-if="'undefined' !== '{{alert.link}}'" style="display: none;">
-                        <a data-ls-href="{{alert.link}}" data-ls-ui-alerts-delete data-message="{{alert.id}}"><?php echo Locale::getText('general.alerts.learn'); ?></a>
+                        <a data-ls-attrs="href={{alert.link}}" data-ls-ui-alerts-delete data-message="{{alert.id}}"><?php echo Locale::getText('general.alerts.learn'); ?></a>
                     </span>
                 </div>
             </li>

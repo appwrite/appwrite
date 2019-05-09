@@ -1,108 +1,108 @@
 window.ls.router
     .add('/auth/signin', {
-        template: '/auth/signin',
+        template: '/auth/signin?version=' + APP_ENV.VERSION,
         scope: 'home'
     })
     .add('/auth/signup', {
-        template: '/auth/signup',
+        template: '/auth/signup?version=' + APP_ENV.VERSION,
         scope: 'home'
     })
     .add('/auth/recovery', {
-        template: '/auth/recovery',
+        template: '/auth/recovery?version=' + APP_ENV.VERSION,
         scope: 'home'
     })
     .add('/auth/recovery/reset', {
-        template: '/auth/recovery/reset',
+        template: '/auth/recovery/reset?version=' + APP_ENV.VERSION,
         scope: 'home'
     })
     .add('/auth/confirm', {
-        template: '/auth/confirm',
+        template: '/auth/confirm?version=' + APP_ENV.VERSION,
         scope: 'home'
     })
     .add('/auth/join', {
-        template: '/auth/join',
+        template: '/auth/join?version=' + APP_ENV.VERSION,
         scope: 'home'
     })
     .add('/console', {
-        template: '/console',
+        template: '/console?version=' + APP_ENV.VERSION,
         scope: 'console'
     })
     .add('/console/account', {
-        template: '/console/account',
+        template: '/console/account?version=' + APP_ENV.VERSION,
         scope: 'console'
     })
     .add('/console/account/:tab', {
-        template: '/console/account',
+        template: '/console/account?version=' + APP_ENV.VERSION,
         scope: 'console'
     })
     .add('/console/home', {
-        template: '/console/home',
+        template: '/console/home?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/home/:tab', {
-        template: '/console/home',
+        template: '/console/home?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/platforms/:platform', {
         template: function (window) {
-            return window.location.pathname;
+            return window.location.pathname + '?version=' + APP_ENV.VERSION;
         },
         scope: 'console',
         project: true
     })
     .add('/console/notifications', {
-        template: '/console/notifications',
+        template: '/console/notifications?version=' + APP_ENV.VERSION,
         scope: 'console'
     })
     .add('/console/settings', {
-        template: '/console/settings',
+        template: '/console/settings?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/settings/:tab', {
-        template: '/console/settings',
+        template: '/console/settings?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/database', {
-        template: '/console/database',
+        template: '/console/database?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/database/:tab', {
-        template: '/console/database',
+        template: '/console/database?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/storage', {
-        template: '/console/storage',
+        template: '/console/storage?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/storage/:tab', {
-        template: '/console/storage',
+        template: '/console/storage?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/users', {
-        template: '/console/users',
+        template: '/console/users?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/users/view', {
-        template: '/console/users/view',
+        template: '/console/users/view?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/users/view/:tab', {
-        template: '/console/users/view',
+        template: '/console/users/view?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })
     .add('/console/users/:tab', {
-        template: '/console/users',
+        template: '/console/users?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })

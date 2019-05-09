@@ -22,14 +22,14 @@ use Utopia\Locale\Locale;
                   data-error="alert"
                   data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.signup.failure')); ?>">
 
-                <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console">
-                <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/signup?failure=1">
+                <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console">
+                <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/signup?failure=1">
 
                 <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.name')); ?></label>
                 <input name="name" type="text" autocomplete="name" placeholder="" required>
 
                 <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.email')); ?></label>
-                <input name="email" type="email" autocomplete="email" placeholder="" required data-ls-echo="{{router.params.email}}">
+                <input name="email" type="email" autocomplete="email" placeholder="" required data-ls-bind="{{router.params.email}}">
 
                 <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.password')); ?></label>
                 <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $this->escape(Locale::getText('home.auth.signup.labels.password.validation')); ?>">
@@ -41,7 +41,7 @@ use Utopia\Locale\Locale;
                     <?php echo $this->escape(Locale::getText('home.auth.signup.labels.agree')); ?><a href="/policy/terms" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.terms')); ?></a><?php echo $this->escape(Locale::getText('home.auth.signup.labels.and')); ?><a href="/policy/privacy" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.privacy')); ?></a>
                 </div>
 
-                <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/confirm" />
+                <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/confirm" />
 
                 <button type="submit"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.action')); ?></button>
             </form>

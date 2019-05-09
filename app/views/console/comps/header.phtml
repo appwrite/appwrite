@@ -4,7 +4,12 @@ use Utopia\Locale\Locale;
 <header class="clear" data-ls-rerender="project.update">
     &nbsp;&nbsp;&nbsp;
     <div data-ls-wait="projects.load" class="list pull-start project-only">
-        <select data-ls-options="{{projects}}" data-key="{{option.$uid}}" data-label="{{option.name}}" data-ls-echo="{{router.params.project}}" aria-label="<?php echo $this->escape(Locale::getText('console.navigation.switch')); ?>" data-switch=""></select>
+<!--        <select data-ls-options="{{projects}}" data-key="{{option.$uid}}" data-label="{{option.name}}" data-ls-bind="{{router.params.project}}" aria-label="<?php /*echo $this->escape(Locale::getText('console.navigation.switch')); */?>" data-switch=""></select>
+-->
+
+        <select data-ls-loop="projects" data-ls-as="option" data-ls-bind="{{router.params.project}}">
+            <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
+        </select>
     </div>
 
     <button style="width: 40px; height: 40px; line-height: 40px; overflow: visible;" id="setup" class="tooltip round down project-only" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
@@ -24,34 +29,22 @@ use Utopia\Locale\Locale;
             <a href="/console">Back to Console &nbsp;<i class="icon-right-open"></i></a>
         </div>
 
-        <a data-ls-href="/console/account" class="account pull-end clear">
-            <img src="" data-ui-gravatar="{{account.email}}" data-name="{{account.name}}" alt="<?php echo $this->escape(Locale::getText('console.navigation.user-avatar')); ?>" class="avatar margin-start pull-end" />
-            <span class="name pull-end" data-ls-echo="{{account.name}}"></span>
+        <a href="/console/account" class="account pull-end clear">
+            <img src="" data-ui-gravatar="{{account.email}}" data-name="{{account.name}}" alt="User Avatar" class="avatar margin-start pull-end" />
+            <span class="name pull-end" data-ls-bind="{{account.name}}"></span>
         </a>
     </div>
-<!--
-    <div class="notifications margin-end-large pull-end">
-        <div class="drop-list bottom" data-ls-ui-open="" data-button-class="link" data-button-icon="icon-bell" tabindex="1">
-            <ul>
-                <ul>
-                    <li><div class="link">Message 1</div></li>
-                    <li><div class="link">Message 2</div></li>
-                    <li><div class="link">Message 3</div></li>
-                </ul>
-            </ul>
-        </div>
-    </div>
--->
+
     <nav data-ls-rerender="project.load,project.update">
         <a class="logo" href="/console">
-            <img src="/images/appwrite-nav.svg" alt="<?php echo Locale::getText('console.navigation.logo'); ?>" />
+            <img src="/images/appwrite-nav.svg" alt="Appwrite Logo" />
         </a>
 
         <div data-ui-highlight class="project-only">
 
             <ul class="links">
                 <li>
-                    <a data-ls-href="/console/home?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/home?project={{router.params.project}}">
                         <i class="icon-home"></i>
                         Home
                     </a>
@@ -62,19 +55,19 @@ use Utopia\Locale\Locale;
 
             <ul class="links">
                 <li>
-                    <a data-ls-href="/console/database?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/database?project={{router.params.project}}">
                         <i class="icon-database"></i>
                         Database
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/storage?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/storage?project={{router.params.project}}">
                         <i class="icon-folder"></i>
                         Storage
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/users?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/users?project={{router.params.project}}">
                         <i class="icon-users"></i>
                         Users
                     </a>
@@ -85,19 +78,19 @@ use Utopia\Locale\Locale;
 
             <ul class="links">
                 <li>
-                    <a data-ls-href="/console/settings/keys?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}">
                         <i class="icon-key-inv"></i>
                         API Keys
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/settings/webhooks?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/settings/webhooks?project={{router.params.project}}">
                         <i class="icon-link"></i>
                         Webhooks
                     </a>
                 </li>
                 <li>
-                    <a data-ls-href="/console/settings/tasks?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/settings/tasks?project={{router.params.project}}">
                         <i class="icon-clock"></i>
                         Tasks
                     </a>
@@ -106,7 +99,7 @@ use Utopia\Locale\Locale;
 
             <ul class="links bottom project-only">
                 <li>
-                    <a data-ls-href="/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> Settings</a>
+                    <a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> Settings</a>
                 </li>
             </ul>
         </div>
