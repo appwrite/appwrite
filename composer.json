@@ -37,6 +37,7 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
+
         "utopia-php/framework": "master",
         "utopia-php/abuse": "master",
         "utopia-php/cache": "master",
