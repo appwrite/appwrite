@@ -56,7 +56,7 @@ $providers = $this->getParam('providers', []);
                             <img data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar margin-end" />
 
                             <button class="pull-end strip margin-top-tiny"><i class="icon icon-dot-3"></i></button>
-                            <div data-ls-bind="{{file.name}}" data-ls-title="{{file.name}}" class="text-one-liner margin-bottom-tiny">&nbsp;</div>
+                            <div data-ls-bind="{{file.name}}" data-ls-attrs="title={{file.name}}" class="text-one-liner margin-bottom-tiny">&nbsp;</div>
                             <div data-ls-bind="{{file.sizeOriginal|humanFileSize}}" class="note text-one-liner">&nbsp;</div>
                         </div>
                     </li>

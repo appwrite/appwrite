@@ -212,10 +212,10 @@ $scopes = [ // TODO sync with project list
                                         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                                         <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
 
-                                        <label data-ls-for="name-{{key.$uid}}">Name</label>
-                                        <input type="text" class="full-width" data-ls-id="name-{{key.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
+                                        <label data-ls-attrs="for=name-{{key.$uid}}">Name</label>
+                                        <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
 
-                                        <label data-ls-for="scopes-{{key.$uid}}">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
+                                        <label data-ls-attrs="for=scopes-{{key.$uid}}">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
                                         <div class="row thin margin-bottom">
                                             <?php foreach ($scopes as $i => $scope): ?>
                                             <div class="col span-6">
@@ -358,10 +358,10 @@ $scopes = [ // TODO sync with project list
                                         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
 
-                                        <label data-ls-for="name-{{webhook.$uid}}">Name</label>
-                                        <input type="text" class="full-width" data-ls-id="name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
+                                        <label data-ls-attrs="for=name-{{webhook.$uid}}">Name</label>
+                                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
 
-                                        <label data-ls-for="events-{{webhook.$uid}}">Events</label>
+                                        <label data-ls-attrs="for=events-{{webhook.$uid}}">Events</label>
                                         <div class="row thin margin-bottom">
                                             <?php foreach ($events as $i => $event): ?>
                                             <div class="col span-6">
@@ -375,15 +375,15 @@ $scopes = [ // TODO sync with project list
                                             <?php endforeach; ?>
                                         </div>
 
-                                        <label data-ls-for="url-{{webhook.$uid}}">POST URL</label>
-                                        <input type="url" class="full-width" data-ls-id="url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
+                                        <label data-ls-attrs="for=url-{{webhook.$uid}}">POST URL</label>
+                                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
 
-                                        <label data-ls-for="secure-{{webhook.$uid}}">SSL / TLS</label>
+                                        <label data-ls-attrs="for=secure-{{webhook.$uid}}">SSL / TLS</label>
                                         <p class="note">Certificate verification</p>
 
-                                        <input name="security" data-ls-id="secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="1" data-default="{{webhook.security}}" /> &nbsp; <span>Enabled</span>
+                                        <input name="security" data-ls-attrs="id=secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="1" data-default="{{webhook.security}}" /> &nbsp; <span>Enabled</span>
                                         &nbsp;&nbsp;
-                                        <input name="security" data-ls-id="secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="0" data-default="{{webhook.security}}" /> &nbsp; <span>Disabled</span>
+                                        <input name="security" data-ls-attrs="id=secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="0" data-default="{{webhook.security}}" /> &nbsp; <span>Disabled</span>
 
                                         <br />
                                         <br />
@@ -396,12 +396,12 @@ $scopes = [ // TODO sync with project list
 
                                         <div class="row thin">
                                             <div class="col span-6">
-                                                <label data-ls-for="httpUser-{{webhook.$uid}}">User</label>
-                                                <input type="text" class="full-width" data-ls-id="httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
+                                                <label data-ls-attrs="for=httpUser-{{webhook.$uid}}">User</label>
+                                                <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                             </div>
                                             <div class="col span-6">
-                                                <label data-ls-for="httpPass-{{webhook.$uid}}">Password</label>
-                                                <input type="password" class="full-width" data-ls-id="httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                                                <label data-ls-attrs="for=httpPass-{{webhook.$uid}}">Password</label>
+                                                <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                             </div>
                                         </div>
 
@@ -479,9 +479,9 @@ $scopes = [ // TODO sync with project list
                                 <label for="secure">SSL / TLS</label>
                                 <p class="note">Certificate verification</p>
 
-                                <input name="security" data-ls-id="secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
+                                <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
                                 &nbsp;&nbsp;
-                                <input name="security" data-ls-id="secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
+                                <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
 
                                 <br />
                                 <br />
@@ -603,23 +603,23 @@ $scopes = [ // TODO sync with project list
                                                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
 
-                                                <label data-ls-for="name-{{task.$uid}}">Name</label>
-                                                <input type="text" class="full-width" data-ls-id="name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
+                                                <label data-ls-attrs="for=name-{{task.$uid}}">Name</label>
+                                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
 
-                                                <label data-ls-for="status-{{task.$uid}}" class="margin-bottom">Status
+                                                <label data-ls-attrs="for=status-{{task.$uid}}" class="margin-bottom">Status
                                                     <div class="margin-top-small">
                                                         <input name="status" type="radio" checked="checked" required data-ls-bind="play" data-default="{{task.status}}" /> &nbsp; <span>Play</span>
                                                         <input name="status" type="radio" required data-ls-bind="pause" data-default="{{task.status}}" /> &nbsp; <span>Pause</span>
                                                     </div>
                                                 </label>
 
-                                                <label data-ls-for="schedule-{{task.$uid}}">Schedule (CRON Syntax)</label>
-                                                <input type="text" class="full-width" data-ls-id="schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" />
+                                                <label data-ls-attrs="for=schedule-{{task.$uid}}">Schedule (CRON Syntax)</label>
+                                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" />
 
                                                 <div class="row thin">
                                                     <div class="col span-4">
-                                                        <label data-ls-for="httpMethod-{{task.$uid}}">HTTP Method</label>
-                                                        <select data-ls-id="httpMethod-{{task.$uid}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
+                                                        <label data-ls-attrs="for=httpMethod-{{task.$uid}}">HTTP Method</label>
+                                                        <select data-ls-attrs="id=httpMethod-{{task.$uid}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
                                                             <option value="POST">POST</option>
                                                             <option value="GET">GET</option>
                                                             <option value="PUT">PUT</option>
@@ -632,8 +632,8 @@ $scopes = [ // TODO sync with project list
                                                         </select>
                                                     </div>
                                                     <div class="col span-8">
-                                                        <label data-ls-for="httpUrl-{{task.$uid}}">HTTP URL</label>
-                                                        <input type="url" class="full-width" data-ls-id="httpUrl-{{task.$uid}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
+                                                        <label data-ls-attrs="for=httpUrl-{{task.$uid}}">HTTP URL</label>
+                                                        <input type="url" class="full-width" data-ls-attrs="id=httpUrl-{{task.$uid}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
                                                     </div>
                                                 </div>
 
@@ -666,7 +666,7 @@ $scopes = [ // TODO sync with project list
                                                     </div>
                                                 </div>
 
-                                                <label data-ls-for="security-{{task.$uid}}" class="margin-bottom">SSL / TLS
+                                                <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom">SSL / TLS
                                                     <p class="note">Certificate verification</p>
                                                     <input name="security" type="radio" required data-ls-bind="1" data-default="{{task.security}}" /> &nbsp; <span>Enabled</span>
                                                     <input name="security" type="radio" required data-ls-bind="0" data-default="{{task.security}}" /> &nbsp; <span>Disabled</span>
@@ -680,12 +680,12 @@ $scopes = [ // TODO sync with project list
 
                                                 <div class="row thin">
                                                     <div class="col span-6">
-                                                        <label data-ls-for="httpUser-{{task.$uid}}">User</label>
-                                                        <input type="text" class="full-width" data-ls-id="httpUser-{{task.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
+                                                        <label data-ls-attrs="for=httpUser-{{task.$uid}}">User</label>
+                                                        <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{task.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
                                                     </div>
                                                     <div class="col span-6">
-                                                        <label data-ls-for="httpPass-{{task.$uid}}">Password</label>
-                                                        <input type="password" class="full-width" data-ls-id="httpPass-{{task.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
+                                                        <label data-ls-attrs="for=httpPass-{{task.$uid}}">Password</label>
+                                                        <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{task.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
                                                     </div>
                                                 </div>
 
@@ -737,7 +737,7 @@ $scopes = [ // TODO sync with project list
                                 <label for="name">Name</label>
                                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
 
-                                <label data-ls-for="status-{{task.$uid}}" class="margin-bottom">Status
+                                <label data-ls-attrs="for=status-{{task.$uid}}" class="margin-bottom">Status
                                     <div class="margin-top-small">
                                         <input name="status" type="radio" value="play" checked="checked" required /> &nbsp; <span>Play</span>
                                         <input name="status" type="radio" value="pause" required /> &nbsp; <span>Pause</span>
@@ -786,8 +786,8 @@ $scopes = [ // TODO sync with project list
 
                                 <label for="secure" class="margin-bottom">SSL / TLS
                                     <p class="note">Certificate verification</p>
-                                    <input name="security" data-ls-id="secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
-                                    <input name="security" data-ls-id="secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
+                                    <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
+                                    <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
                                 </label>
 
                                 <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.

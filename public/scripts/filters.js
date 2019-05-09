@@ -1,22 +1,18 @@
 
-let date        = window.ls.container.get('date');
-let timezone    = window.ls.container.get('timezone');
-let markdown    = window.ls.container.get('markdown');
-
 window.ls.filter
     .add('lowerCase', function ($value) {
         return $value.toLowerCase();
     })
-    .add('date', function ($value) {
+    .add('date', function ($value, date) {
         return date.format('Y-m-d', $value);
     })
-    .add('date-time', function ($value) {
+    .add('date-time', function ($value, date) {
         return date.format('Y-m-d H:i', $value);
     })
-    .add('date-text', function ($value) {
+    .add('date-text', function ($value, date) {
         return date.format('d M Y', $value);
     })
-    .add('date-long', function ($value) {
+    .add('date-long', function ($value, date) {
         return date.format('l, j F, H:i', $value);
     })
     .add('min2hum', function ($value) {
@@ -56,7 +52,7 @@ window.ls.filter
 
         return result;
     })
-    .add('markdown', function ($value) {
+    .add('markdown', function ($value, markdown) {
         return markdown.render($value);
     })
     .add('id2name', function ($value) {

@@ -263,7 +263,7 @@ use Utopia\Locale\Locale;
                             <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
                             <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
                             <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.client')); ?>: ">
-                                <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowerCase}}?width=80&height=80" data-ls-title="{{log.client.name}}" data-ls-alt="{{log.client.name}}" class="avatar xs inline margin-end-small" />
+                                <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowerCase}}?width=80&height=80,title={{log.client.name}},alt={{log.client.name}}" class="avatar xs inline margin-end-small" />
                                 <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                             </td>
                             <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.location')); ?>: ">

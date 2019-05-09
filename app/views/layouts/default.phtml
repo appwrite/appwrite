@@ -86,7 +86,7 @@ $env        = $this->getParam('env', '');
     <section data-ls-ui-alerts="" class="alerts">
         <ul data-ls-loop="alerts.list" data-ls-as="alert">
             <li>
-                <div data-ls-class="{{alert.class}} message">
+                <div data-ls-attrs="class={{alert.class}} message">
                     <i class="icon-cancel" data-ls-ui-alerts-delete data-message="{{alert.id}}"></i>
                     <span data-ls-bind="{{alert.text}}"></span>
 
