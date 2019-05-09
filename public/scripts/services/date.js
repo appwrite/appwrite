@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.set('date', function () {
+    window.ls.container.set('date', function () {
         function format (format, timestamp) {
             //  discuss at: http://locutus.io/php/date/
             // original by: Carlos R. L. Rodrigues (http://www.jsfromhell.com)

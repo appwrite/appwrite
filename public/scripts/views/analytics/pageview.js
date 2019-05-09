@@ -1,15 +1,15 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.get('view').add(
+    window.ls.container.get('view').add(
         {
             'selector': 'data-analytics-pageview',
-            'controller': function (window, state) {
+            'controller': function (window, router) {
                 if(!ga) {
                     console.error('Google Analytics ga object is not available');
                 }
 
-                var company = state.params['company'] || null;
+                var company = router.params['company'] || null;
 
                 if(!company) {
                     //return;

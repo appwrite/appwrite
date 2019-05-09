@@ -1,44 +1,4 @@
-window.Litespeed.container.get('state')
-    .add('/', {
-        template: '/',
-        scope: 'home'
-    })
-    .add('/soon', {
-        template: '/soon',
-        scope: 'soon'
-    })
-    .add('/products/:product', {
-        template: function (window) {
-            return window.location.pathname;
-        },
-        scope: 'home'
-    })
-    .add('/pricing', {
-        template: '/pricing',
-        scope: 'home'
-    })
-    .add('/docs', {
-        template: '/docs',
-        scope: 'home'
-    })
-    .add('/docs/:page', {
-        template: function (window) {
-            return window.location.pathname;
-        },
-        scope: 'home'
-    })
-    .add('/support', {
-        template: '/support',
-        scope: 'home'
-    })
-    .add('/contact', {
-        template: '/contact',
-        scope: 'home'
-    })
-    .add('/contact/thank-you', {
-        template: '/contact/thank-you',
-        scope: 'home'
-    })
+window.ls.router
     .add('/auth/signin', {
         template: '/auth/signin',
         scope: 'home'
@@ -61,30 +21,6 @@ window.Litespeed.container.get('state')
     })
     .add('/auth/join', {
         template: '/auth/join',
-        scope: 'home'
-    })
-    .add('/company/about', {
-        template: '/company/about',
-        scope: 'home'
-    })
-    .add('/policy/security', {
-        template: '/policy/security',
-        scope: 'home'
-    })
-    .add('/policy/terms', {
-        template: '/policy/terms',
-        scope: 'home'
-    })
-    .add('/policy/privacy', {
-        template: '/policy/privacy',
-        scope: 'home'
-    })
-    .add('/policy/sub-processors', {
-        template: '/policy/sub-processors',
-        scope: 'home'
-    })
-    .add('/policy/cookies', {
-        template: '/policy/cookies',
         scope: 'home'
     })
     .add('/console', {
@@ -174,131 +110,119 @@ window.Litespeed.container.get('state')
 
 // Filters
 
-let filter      = window.Litespeed.container.get('filter');
-let date        = window.Litespeed.container.get('date');
-let timezone    = window.Litespeed.container.get('timezone');
-let markdown    = window.Litespeed.container.get('markdown');
+let filter      = window.ls.filter;
+let date        = window.ls.container.get('date');
+let timezone    = window.ls.container.get('timezone');
+let markdown    = window.ls.container.get('markdown');
 
-filter.add('lowerCase', function (value) {
-    return value.toLowerCase();
-});
-
-filter.add('date', function (value, options) {
-    return date.format('Y-m-d', value);
-});
-
-filter.add('date-time', function (value, options) {
-    return date.format('Y-m-d H:i', value);
-});
-
-filter.add('date-text', function (value, options) {
-    return date.format('d M Y', value);
-});
-
-filter.add('date-long', function (value, options) {
-    return date.format('l, j F, H:i', value);
-});
-
-filter.add('min2hum', function (value, options) {
-
-    if(value >= 60) {
-        if(value % 60 === 0) {
-            return Math.ceil(value / 60) + ' hours';
+filter
+    .add('lowerCase', function (value) {
+        return value.toLowerCase();
+    })
+    .add('date', function (value, options) {
+        return date.format('Y-m-d', value);
+    })
+    .add('date-time', function (value, options) {
+        return date.format('Y-m-d H:i', value);
+    })
+    .add('date-text', function (value, options) {
+        return date.format('d M Y', value);
+    })
+    .add('date-long', function (value, options) {
+        return date.format('l, j F, H:i', value);
+    })
+    .add('min2hum', function (value, options) {
+        if(value >= 60) {
+            if(value % 60 === 0) {
+                return Math.ceil(value / 60) + ' hours';
+            }
+            else {
+                return Math.ceil(value / 60) + ' hours and ' + (value % 60) + ' minutes';
+            }
         }
-        else {
-            return Math.ceil(value / 60) + ' hours and ' + (value % 60) + ' minutes';
+
+        return value + ' minutes';
+    })
+    .add('ms2hum', function (value, options) {
+        let temp = value;
+        const years = Math.floor( temp / 31536000 ),
+            days = Math.floor( ( temp %= 31536000 ) / 86400 ),
+            hours = Math.floor( ( temp %= 86400 ) / 3600 ),
+            minutes = Math.floor( ( temp %= 3600 ) / 60 ),
+            seconds = temp % 60;
+
+        if ( days || hours || seconds || minutes ) {
+            return ( years ? years + "y " : "" ) +
+                ( days ? days + "d " : "" ) +
+                ( hours ? hours + "h " : ""  ) +
+                ( minutes ? minutes + "m " : "" ) +
+                Number.parseFloat( seconds ).toFixed(0) + "s";
         }
-    }
 
-    return value + ' minutes';
-});
+        return "< 1s";
+    })
+    .add('nl2p', function (value, options) {
+        let result = "<p>" + value + "</p>";
+        result = result.replace(/\r\n\r\n/g, "</p><p>").replace(/\n\n/g, "</p><p>");
+        result = result.replace(/\r\n/g, "<br />").replace(/\n/g, "<br />");
 
-filter.add('ms2hum', function (value, options) {
-    let temp = value;
-    const years = Math.floor( temp / 31536000 ),
-        days = Math.floor( ( temp %= 31536000 ) / 86400 ),
-        hours = Math.floor( ( temp %= 86400 ) / 3600 ),
-        minutes = Math.floor( ( temp %= 3600 ) / 60 ),
-        seconds = temp % 60;
+        return result;
+    })
+    .add('markdown', function (value, options) {
+        return markdown.render(value);
+    })
+    .add('id2name', function (value, options) {
+        let members = container.get('members');
 
-    if ( days || hours || seconds || minutes ) {
-        return ( years ? years + "y " : "" ) +
-            ( days ? days + "d " : "" ) +
-            ( hours ? hours + "h " : ""  ) +
-            ( minutes ? minutes + "m " : "" ) +
-            Number.parseFloat( seconds ).toFixed(0) + "s";
-    }
+        if(members === null) {
+            return '';
+        }
 
-    return "< 1s";
-});
+        for (let y = 0; y < members.length; y++) {
+            if(members[y]['$uid'] === value) {
+                value = members[y].name;
+            }
+        }
 
-filter.add('nl2p', function (value, options) {
-    let result = "<p>" + value + "</p>";
-    result = result.replace(/\r\n\r\n/g, "</p><p>").replace(/\n\n/g, "</p><p>");
-    result = result.replace(/\r\n/g, "<br />").replace(/\n/g, "<br />");
+        return value;
+    })
+    .add('id2role', function (value, options) {
+        if(APP_ENV.ROLES[value]) {
+            return APP_ENV.ROLES[value];
+        }
 
-    return result;
-});
-
-filter.add('markdown', function (value, options) {
-    return markdown.render(value);
-});
-
-filter.add('id2name', function (value, options) {
-    let members = container.get('members');
-
-    if(members === null) {
         return '';
-    }
-
-    for (let y = 0; y < members.length; y++) {
-        if(members[y]['$uid'] === value) {
-            value = members[y].name;
+    })
+    .add('humanFileSize', function (bytes) {
+        if(!bytes) {
+            return 0;
         }
-    }
 
-    return value;
-});
+        let thresh = 1000;
 
-filter.add('id2role', function (value, options) {
-    if(APP_ENV.ROLES[value]) {
-        return APP_ENV.ROLES[value];
-    }
+        if(Math.abs(bytes) < thresh) {
+            return bytes + ' B';
+        }
 
-    return '';
-});
+        let units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
+        let u = -1;
 
-filter.add('humanFileSize', function (bytes) {
-    if(!bytes) {
-        return 0;
-    }
+        do {
+            bytes /= thresh;
+            ++u;
+        } while(Math.abs(bytes) >= thresh && u < units.length - 1);
 
-    let thresh = 1000;
+        return bytes.toFixed(1) + '<span class="text-size-small unit">' + units[u] + '</span>';
+    })
+    .add('statsTotal', function (value) {
+        if(!value) {
+            return 0;
+        }
 
-    if(Math.abs(bytes) < thresh) {
-        return bytes + ' B';
-    }
+        value = abbreviate(value, 1, false, false);
 
-    let units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
-    let u = -1;
-
-    do {
-        bytes /= thresh;
-        ++u;
-    } while(Math.abs(bytes) >= thresh && u < units.length - 1);
-
-    return bytes.toFixed(1) + '<span class="text-size-small unit">' + units[u] + '</span>';
-});
-
-filter.add('statsTotal', function (value) {
-    if(!value) {
-        return 0;
-    }
-
-    value = abbreviate(value, 1, false, false);
-
-    return (value === '0') ? 'N/A' : value;
-});
+        return (value === '0') ? 'N/A' : value;
+    });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
     number = Number(number);
@@ -359,15 +283,17 @@ function annotate(number, maxPlaces, forcePlaces, abbr) {
 
 // Views
 
-window.Litespeed.container.get('view')
+window.ls.container.get('view')
     .add({
         selector: 'data-acl',
-        controller: function(element, document, state, alerts) {
+        controller: function(element, document, router, alerts) {
             document.body.classList.remove('console');
             document.body.classList.remove('home');
-            document.body.classList.add(state.getCurrent().view.scope);
+            console.log(router.getCurrent());
 
-            if(!state.getCurrent().view.project) {
+            document.body.classList.add(router.getCurrent().view.scope);
+
+            if(!router.getCurrent().view.project) {
                 document.body.classList.add('hide-nav');
                 document.body.classList.remove('show-nav');
             }

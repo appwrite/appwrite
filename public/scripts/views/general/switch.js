@@ -1,7 +1,7 @@
 (function (window) {
-    window.Litespeed.container.get('view').add({
+    window.ls.container.get('view').add({
         selector: 'data-switch',
-        controller: function(element, state, window, di) {
+        controller: function(element, router, window, di) {
             let debug = (element.dataset['debug']);
 
             let init = function () {
@@ -15,12 +15,12 @@
             let fallback = function () {
                 if (debug) { console.log('fallback init', element.value); }
 
-                if(state.getCurrent().view.scope !== 'console' || !state.getCurrent().view.project) {
+                if(router.getCurrent().view.scope !== 'console' || !router.getCurrent().view.project) {
                     if (debug) { console.log('Skip: not console state', element.value); }
                     return;
                 }
 
-                if(state.params['project']) {
+                if(router.params['project']) {
                     return;
                 }
 
@@ -31,14 +31,14 @@
 
                     if (debug) { console.log('last used project', project); }
 
-                    return state.change('/console/home?project=' + project, true);
+                    return router.change('/console/home?project=' + project, true);
                 }
 
                 di.reset();
 
                 if (debug) { console.log('first project from list', element.options, element.$lsSkip); }
 
-                return state.change('/console/home?project=' + element.options[0].value, true);
+                return router.change('/console/home?project=' + element.options[0].value, true);
             };
 
             if (debug) { console.log('switch init', element.options); }
@@ -48,12 +48,12 @@
 
                 fallback();
 
-                if(element.value && element.value !== state.params['project']) {
+                if(element.value && element.value !== router.params['project']) {
                     if (debug) { console.log('Changed: selected project from list');}
 
                     init ();
 
-                    return state.change('/console/home?project=' + element.value);
+                    return router.change('/console/home?project=' + element.value);
                 }
             });
 

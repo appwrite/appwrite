@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.set('markdown', function (window) {
+    window.ls.container.set('markdown', function (window) {
         var md = window.markdownit();
 
         function renderEm (tokens, idx, opts, _, slf) {

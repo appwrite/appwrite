@@ -1,7 +1,7 @@
 (function (window) {
     //"use strict";
 
-    window.Litespeed.container.get('view').add({
+    window.ls.container.get('view').add({
         selector: 'data-forms-filter',
         controller: function(document, container, expression, element, form, di) {
             let name    = element.dataset['formsFilter'] || '';

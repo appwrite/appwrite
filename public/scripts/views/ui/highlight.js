@@ -1,5 +1,5 @@
 (function (window) {
-    window.Litespeed.container.get('view').add({
+    window.ls.container.get('view').add({
         selector: 'data-ui-highlight',
         controller: function(element, state, expression, document) {
 

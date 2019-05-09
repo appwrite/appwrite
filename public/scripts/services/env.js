@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.set('env', function () {
+    window.ls.container.set('env', function () {
         return APP_ENV;
     }, true);
 

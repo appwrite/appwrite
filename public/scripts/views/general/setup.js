@@ -1,5 +1,5 @@
 (function (window) {
-    window.Litespeed.container.get('view').add({
+    window.ls.container.get('view').add({
         selector: 'data-setup',
         controller: function(element, console, form) {
             element.addEventListener('submit', function (event) {
@@ -23,7 +23,7 @@
                             .then(function (data) {
                                 let project= JSON.parse(data);
 
-                                //state.change();
+                                //router.change();
                                 window.location.href = '/console?project=' + project['$uid'];
                             }, function () {
                                 throw new Error('Failed to setup project');

@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.set('di', function () {
+    window.ls.container.set('di', function () {
         var list = {
             'load': true
         };

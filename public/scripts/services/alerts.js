@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.set('alerts', function (window) {
+    window.ls.container.set('alerts', function (window) {
         let service = {};
 
         let counter = 0;

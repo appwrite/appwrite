@@ -1,5 +1,5 @@
 (function (window) {
-    window.Litespeed.container.get('view').add(
+    window.ls.container.get('view').add(
         {
             'selector': 'data-page-title',
             'repeat': true,

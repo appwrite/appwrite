@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.set('timezone', function () {
+    window.ls.container.set('timezone', function () {
         return {
             convert: function (unixTime) {
                 var timezoneMinutes = new Date().getTimezoneOffset();

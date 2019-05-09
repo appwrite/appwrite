@@ -1,7 +1,7 @@
 (function (window) {
     "use strict";
 
-    window.Litespeed.container.set('console', function (window) {
+    window.ls.container.set('console', function (window) {
         var sdk = new window.AppwriteSDK();
 
         sdk.config.domain = 'https://appwrite.io';

@@ -1,5 +1,5 @@
 (function (window) {
-    window.Litespeed.container.get('view').add({
+    window.ls.container.get('view').add({
         selector: 'data-ls-ui-scroll-to',
         repeat: false,
         controller: function(element, document, expression) {
