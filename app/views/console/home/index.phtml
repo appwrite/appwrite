@@ -1,0 +1,253 @@
+<div data-ls-rerender="project.load">
+    <div class="cover margin-bottom-small">
+        <div class="zone xl margin-bottom-large margin-top-small">
+            <h1 class="margin-bottom-small">
+                <span class="title" data-ls-echo="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;<span class="tag focus" style="vertical-align: middle">Beta Plan</span>
+            </h1>
+
+            <p data-ls-echo="{{console-project.description}}" data-default="Update your project description under project settings." class="note text-one-liner margin-bottom-large">&nbsp;</p>
+
+            <ul class="margin-top margin-bottom-large clear">
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings?project={{state.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings/keys?project={{state.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings/webhooks?project={{state.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
+                <li class="pull-start margin-end"><a data-ls-href="/console/settings/tasks?project={{state.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
+                <!--<li class="pull-start margin-end"><a data-ls-href="/console/settings/members?project={{state.params.project}}"><i class="icon-users"></i> &nbsp;Members</a> &nbsp;&nbsp;</li>-->
+            </ul>
+        </div>
+    </div>
+
+    <div class="zone xxl margin-top-negative-large">
+        <div>
+            <div class="box margin-bottom dashboard"
+                 data-appwrite="projects.getProjectUsage"
+                 data-event="load"
+                 data-service="usage"
+                 data-param-project-id="{{state.params.project}}"
+                 data-success="render,trigger"
+                 data-error="render"
+                 data-success-triggers="usage.load">
+                <div class="row responsive">
+                    <div class="col span-9">
+                        <div class="pull-start margin-end">
+                            <div class="value margin-bottom-small"><span class="sum" data-ls-echo="{{usage.requests.total|statsTotal}}">N/A</span></div>
+                            <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
+                            <div class="range">Current Month</div>
+                        </div>
+
+                        <div class="chart" data-ls-wait="usage.load">
+                            <div class="content" data-ls-ui-chart></div>
+                        </div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value margin-bottom-small"><span class="sum" data-ls-echo="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
+                        <div class="metric margin-bottom-small">Bandwidth</div>
+                        <div class="range">Current Month</div>
+                        <div class="margin-top dev-feature">
+                            <a href="">Full Usage Report <i class="icon-right-open"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div>
+
+                    <div class="row responsive">
+                        <div class="col span-3">
+                            <div class="value"><span class="sum" data-ls-echo="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
+                            <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
+                        </div>
+                        <div class="col span-3">
+                            <div class="value"><span class="sum" data-ls-echo="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
+                            <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
+                        </div>
+                        <div class="col span-3">
+                            <div class="value"><span class="sum" data-ls-echo="{{usage.users.total}}" data-default="0">0</span></div>
+                            <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
+                        </div>
+                        <div class="col span-3">
+                            <div class="value"><span class="sum" data-ls-echo="{{usage.tasks.total}}" data-default="0">0</span></div>
+                            <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="zone xl margin-top-xl clear">
+        <h2 class="margin-bottom">Platforms</h2>
+
+        <div class="box margin-bottom" data-ls-if="0 != {{console-project.platforms.length}} && 'undefined' != '{{console-project.platforms}}'" style="display: none;">
+            <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
+                <li class="clear">
+
+                    <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
+                        <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+
+                        <h1>Update Platform</h1>
+
+                        <div data-ls-template="template-{{platform.type}}-update" data-type="script"></div>
+                    </div>
+
+                    <form class="pull-end margin-end"
+                          data-appwrite="projects.platforms.delete"
+                          data-scope="console"
+                          data-event="submit"
+                          data-confirm="Are you sure you want to delete this platform?"
+                          data-success="alert,trigger"
+                          data-success-alert="Deleted platform successfully"
+                          data-success-triggers="platform.delete"
+                          data-error="alert"
+                          data-error-alert="Failed to delete platform">
+
+                        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
+                        <input type="hidden" name="platformId" data-ls-echo="{{platform.$uid}}">
+
+                        <button class="reverse danger">Delete</button>
+                    </form>
+
+                    <div class="margin-bottom-tiny">
+                        <img src="" data-ls-src="/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" />
+                        <span data-ls-echo="{{platform.name}}"></span>
+                    </div>
+
+                    <p class="note margin-bottom-no"><span data-ls-echo="{{platform.domains.0}}"></span></p>
+                </li>
+            </ul>
+        </div>
+
+        <div data-ls-if="'0' === '{{console-project.platforms.length}}' || 'undefined' === '{{console-project.platforms}}'" class="box dashboard margin-bottom" style="display: none;">
+            <div class="margin-bottom margin-top-small margin-end margin-start">
+                <h3 class="margin-bottom">No Platforms Added to Your Project</h3>
+
+                <p class="margin-bottom-no">Add your first platform to start building your new application.</p>
+            </div>
+        </div>
+
+        <a data-ls-href="/console/settings/keys?project={{state.params.project}}" class="pull-end">Manage Your API Keys</a>
+
+        <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" tabindex="1">
+            <ul>
+                <li>
+                    <div class="link" id="web-new"><img src="/images/clients/web.png" alt="Web Platform Logo" class="avatar xs margin-end" /> New Website</div>
+                </li>
+                <li class="disabled">
+                    <div class="link" id="ios-new"><img src="/images/clients/ios.png" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App <span class="note">(soon)</span></div>
+                </li>
+                <li class="disabled">
+                    <div class="link" id="android-new"><img src="/images/clients/android.png" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App <span class="note">(soon)</span></div>
+                </li>
+                <li class="disabled">
+                    <div class="link" id="unity-new"><img src="/images/clients/unity.png" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game <span class="note">(soon)</span></div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div data-ui-modal class="modal close" data-button-alias="web-new">
+    <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+
+    <h1>New Website</h1>
+
+    <form data-appwrite="projects.platforms.create"
+          data-scope="console"
+          data-event="submit"
+          data-success="alert,trigger,reset"
+          data-success-alert="Created new platform successfully"
+          data-success-triggers="platform.new,modal-close"
+          data-error="alert"
+          data-error-alert="Failed to create platform">
+
+        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
+        <input type="hidden" name="type" data-ls-echo="web">
+
+        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+
+        <label for="domains">Domains <span class="tooltip large" data-tooltip="List the domains your website will use to interact with the <?php echo APP_NAME; ?> API in production or development environments."><i class="icon-question"></i></span></label>
+
+        <input name="domains" type="hidden" data-cast-to="array-empty">
+
+        <div data-forms-clone="" data-first="1">
+            <div>
+                <div data-forms-remove class="row thin">
+                    <div class="col span-10">
+                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
+                    </div>
+                    <div class="col span-2">
+                        <button type="button" data-remove class="reverse round danger pull-end"><i class="icon-cancel"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info margin-top-small margin-bottom-small">
+            <div class="text-bold margin-bottom-small">Next Steps</div>
+
+            <p>After adding your new website, install our JS SDK to integrate with your code and read our <a href="/docs/getting-started-for-web" target="_blank">getting started</a> tutorial.</p>
+
+            <div class="margin-bottom-no ide">
+                <pre class="line-numbers"><code class="prism language-bash" data-prism>npm install appwrite</code></pre>
+            </div>
+        </div>
+
+        <div class="margin-top">
+            <button type="submit">Register</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<script type="text/html" id="template-web-update">
+    <form data-appwrite="projects.platforms.update"
+          data-scope="console"
+          data-event="submit"
+          data-success="alert,trigger,reset"
+          data-success-alert="Updated platform successfully"
+          data-success-triggers="platform.update,modal-close"
+          data-error="alert"
+          data-error-alert="Failed to update platform">
+
+        <input type="hidden" name="projectId" data-ls-echo="{{console-project.$uid}}">
+        <input type="hidden" name="platformId" data-ls-echo="{{platform.$uid}}">
+
+        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" data-ls-echo="{{platform.name}}" />
+
+        <label for="domains">Domains <span class="tooltip large" data-tooltip="List the domains your website will use to interact with the <?php echo APP_NAME; ?> API in production or development environments."><i class="icon-question"></i></span></label>
+
+        <input name="domains" type="hidden" data-cast-to="array-empty">
+
+        <div data-ls-loop="platform.domains" data-ls-as="domain" style="overflow: hidden">
+            <div>
+                <div data-forms-remove class="row thin">
+                    <div class="col span-10">
+                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-ls-echo="{{domain}}" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
+                    </div>
+                    <div class="col span-2">
+                        <button type="button" data-remove class="reverse round danger pull-end"><i class="icon-cancel"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div data-forms-clone="" data-first="0">
+            <div>
+                <div data-forms-remove class="row thin">
+                    <div class="col span-10">
+                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
+                    </div>
+                    <div class="col span-2">
+                        <button type="button" data-remove class="reverse round danger pull-end"><i class="icon-cancel"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="margin-top">
+            <button type="submit">Update</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+        </div>
+    </form>
+</script>

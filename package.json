@@ -1,0 +1,15 @@
+{
+  "name": "appwrite",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": "public",
+  "devDependencies": {
+    "gulp": "^4.0.0",
+    "gulp-clean-css": "^4.0.0",
+    "gulp-concat": "2.5.2",
+    "gulp-jsmin": "^0.1.5",
+    "gulp-less": "^4.0.1",
+    "gulp-webserver": "^0.9.1",
+    "jest": "^24.7.1"
+  }
+}

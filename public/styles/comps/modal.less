@@ -1,0 +1,141 @@
+
+.modal-open, .modal-open body {
+  //margin: 0;
+  //height: 100%;
+  //overflow: hidden;
+
+  .modal-bg {
+    position: fixed;
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: #0c0c0c;
+    opacity: 0.5;
+    z-index: 4;
+  }
+}
+
+.modal {
+  overflow: auto;
+  display: none;
+  position: fixed;
+  width: 100%;
+  max-height: 90%;
+  max-width: 640px;
+  background: #ffffff;
+  z-index: 1000;
+  box-shadow: 0 0 4px rgba(0, 0, 0, .25);
+  padding: 30px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  border-radius: 10px;
+  box-sizing: border-box;
+  text-align: @config-start;
+
+  @media @phones, @tablets {
+    width: ~"calc(100% - 20px)";
+  }
+
+  &.padding-small {
+    padding: 15px;
+  }
+
+  &.height-tiny {
+    form {
+      height: 100px;
+    }
+  }
+
+  &.height-small {
+    form {
+      height: 220px;
+    }
+  }
+
+  &.width-small {
+    max-width: 400px;
+  }
+
+  &.width-medium {
+    max-width: 500px;
+  }
+
+  &.width-large {
+    max-width: 800px;
+  }
+
+  &.open {
+    display: block;
+  }
+
+  &.close {
+    display: none;
+  }
+
+  &.fill {
+    height: 95%;
+    max-height: 95%;
+    max-width: 75%;
+  }
+
+  h1 {
+    margin-bottom: 25px;
+    margin-top: 0;
+    font-size: 20px;
+    text-align: @config-start;
+  }
+
+  h1, h2, h3, h4 , h5, h6 {
+    color: inherit;
+  }
+
+  form, .main {
+    position: relative;
+    border-top: solid 1px #e7e7e7;
+    padding: 30px 30px 0 30px;
+    margin: 0 -30px;
+  }
+
+  .separator {
+    margin: 20px -30px;
+  }
+
+  /*iframe {
+    width: ~"calc(100% - 70px)";
+    height: ~"calc(100% - 180px)";
+    border: none;
+    background: #323639;
+    opacity: 1;
+    position: absolute;
+    top: 85px;
+    bottom: 0;
+    right: 35px;
+    left: 35px;
+  }*/
+
+  .info {
+    margin: 0 -30px;
+    padding: 20px 30px;
+    background: #f5fbff;
+    color: #3b5d73;
+    border-top: solid 1px #eaf2f7;
+    border-bottom: solid 1px #eaf2f7;
+  }
+
+  .close {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    padding: 0;
+    margin: 0;
+    background: #1b1b1b;
+    color: #ffffff;
+    border-radius: 50%;
+  }
+}

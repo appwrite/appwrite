@@ -1,0 +1,59 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<div class="zone xl signup">
+    <h1 class="zone xl margin-bottom-large margin-top">
+        <?php echo $this->escape(Locale::getText('home.auth.signup.title')); ?>
+    </h1>
+
+    <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{state.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.signup.failure')); ?></div>
+
+    <div class="row responsive">
+        <div class="col span-6 margin-bottom-large">
+            <small class="pull-end">* <?php echo $this->escape(Locale::getText('home.auth.signup.required')); ?></small>
+
+            <form name="register"
+                  data-appwrite="auth.register"
+                  data-scope="console"
+                  data-event="submit"
+                  data-success="trigger,redirect"
+                  data-success-triggers="signup"
+                  data-success-redirect-url="/console/setup"
+                  data-error="alert"
+                  data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.signup.failure')); ?>">
+
+                <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console">
+                <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/signup?failure=1">
+
+                <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.name')); ?></label>
+                <input name="name" type="text" autocomplete="name" placeholder="" required>
+
+                <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.email')); ?></label>
+                <input name="email" type="email" autocomplete="email" placeholder="" required data-ls-echo="{{state.params.email}}">
+
+                <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.password')); ?></label>
+                <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $this->escape(Locale::getText('home.auth.signup.labels.password.validation')); ?>">
+
+                <div class="note agree margin-top-large margin-bottom-large">
+                    <div class="pull-start margin-end-small margin-bottom">
+                        <input type="checkbox" required />
+                    </div>
+                    <?php echo $this->escape(Locale::getText('home.auth.signup.labels.agree')); ?><a href="/policy/terms" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.terms')); ?></a><?php echo $this->escape(Locale::getText('home.auth.signup.labels.and')); ?><a href="/policy/privacy" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.privacy')); ?></a>
+                </div>
+
+                <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/confirm" />
+
+                <button type="submit"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.action')); ?></button>
+            </form>
+        </div>
+        <div class="col span-6 oauth">
+            <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
+
+            <div>
+                <a href="" data-login-fb data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.facebook')); ?></a>
+                <a href="" data-login-linkedin data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button linkedin fill margin-bottom"><i class="icon-linkedin"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.linkedin')); ?></a>
+                <a href="" data-login-github data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button github fill margin-bottom"><i class="icon-github-circled"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.github')); ?></a>
+            </div>
+        </div>
+    </div>
+</div>

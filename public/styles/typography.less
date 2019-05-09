@@ -1,0 +1,165 @@
+* {
+  font-family: Poppins,sans-serif,Arial;
+  //font-family: Heebo,sans-serif,Arial;
+  -webkit-font-smoothing: antialiased;
+  font-weight: 300;
+}
+
+h1, h2, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+
+h4, h5, h6 {
+  font-weight: 400;
+}
+
+a, .link {
+  color: @config-color-link;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  border-bottom: solid 1px transparent;
+
+  &:hover {
+    border-bottom: dotted 1px @config-color-link;
+  }
+
+  &.disabled {
+    opacity: .5;
+  }
+
+  &.disabled:hover {
+    border-bottom: none;
+  }
+
+  &:visited {
+    //scolor: #4a8c83;
+  }
+
+  &.tag:hover {
+    border-bottom: none;
+    opacity: .9;
+  }
+}
+
+b, strong {
+  font-weight: 500;
+}
+
+p {
+  margin: 0 0 20px 0;
+  line-height: 30px;
+
+  &.note {
+    color: #6f6f6f;
+  }
+}
+
+small, .note {
+  color: #797979;
+}
+
+.text-size-small {
+  font-size: 13px;
+}
+
+.text-size-normal {
+  font-size: 16px;
+}
+
+.text-one-liner {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-bold {
+  font-weight: 400!important;
+}
+
+.text-danger {
+  color: @config-color-danger;
+}
+
+.text-success {
+  color: @config-color-success
+}
+
+.text-upper {
+  text-transform: uppercase;
+}
+
+.text-warning {
+  color: @config-color-warning
+}
+
+.text-focus {
+  color: @config-color-focus;
+}
+
+.text-fade {
+  color: @config-color-fade;
+}
+
+.text-disclaimer {
+  font-size: 11px;
+  color: @config-color-fade;
+}
+
+.text-fade-extra {
+  color: @config-color-fade;
+  opacity: .5;
+}
+
+.text-line-high-large {
+  line-height: 30px;
+}
+
+.text-line-high-xl {
+  line-height: 40px;
+}
+
+.text-sign {
+  margin: 5px 0;
+  font-size: 25px;
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+  display: inline-block;
+}
+
+.text-align-start {
+  text-align: @config-start;
+}
+
+.text-align-end {
+  text-align: @config-end;
+}
+
+.text-align-left {
+  text-align: left;
+}
+
+.text-align-right {
+  text-align: right;
+}
+
+.text-dir-ltr {
+  direction: ltr;
+  display: inline-block;
+}
+
+.text-dir-rtl {
+  direction: rtl;
+  display: inline-block;
+}
+
+// Icon Hacks
+
+.icon-dot-3:before {
+  .func-rotate(90deg);
+}

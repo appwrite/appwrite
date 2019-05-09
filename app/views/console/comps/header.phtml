@@ -1,0 +1,187 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<header class="clear" data-ls-rerender="project.update">
+    &nbsp;&nbsp;&nbsp;
+    <div data-ls-wait="projects.load" class="list pull-start project-only">
+        <select data-ls-options="{{projects}}" data-key="{{option.$uid}}" data-label="{{option.name}}" data-ls-echo="{{state.params.project}}" aria-label="<?php echo $this->escape(Locale::getText('console.navigation.switch')); ?>" data-switch=""></select>
+    </div>
+
+    <button style="width: 40px; height: 40px; line-height: 40px; overflow: visible;" id="setup" class="tooltip round down project-only" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
+
+    <div class="account-box clear pull-end"
+         data-appwrite="account.get"
+         data-service="account"
+         data-scope="console"
+         data-event="load"
+         data-success="render,trigger"
+         data-success-rerender="account.update"
+         data-success-triggers="account.load"
+         data-error="render,trigger"
+         data-error-triggers="logout">
+
+        <div class="pull-end console-back">
+            <a href="/console">Back to Console &nbsp;<i class="icon-right-open"></i></a>
+        </div>
+
+        <a data-ls-href="/console/account" class="account pull-end clear">
+            <img src="" data-ui-gravatar="{{account.email}}" data-name="{{account.name}}" alt="<?php echo $this->escape(Locale::getText('console.navigation.user-avatar')); ?>" class="avatar margin-start pull-end" />
+            <span class="name pull-end" data-ls-echo="{{account.name}}"></span>
+        </a>
+    </div>
+<!--
+    <div class="notifications margin-end-large pull-end">
+        <div class="drop-list bottom" data-ls-ui-open="" data-button-class="link" data-button-icon="icon-bell" tabindex="1">
+            <ul>
+                <ul>
+                    <li><div class="link">Message 1</div></li>
+                    <li><div class="link">Message 2</div></li>
+                    <li><div class="link">Message 3</div></li>
+                </ul>
+            </ul>
+        </div>
+    </div>
+-->
+    <nav data-ls-rerender="project.load,project.update">
+        <a class="logo" href="/console">
+            <img src="/images/appwrite-nav.svg" alt="<?php echo Locale::getText('console.navigation.logo'); ?>" />
+        </a>
+
+        <div data-ui-highlight class="project-only">
+
+            <ul class="links">
+                <li>
+                    <a data-ls-href="/console/home?project={{state.params.project}}">
+                        <i class="icon-home"></i>
+                        Home
+                    </a>
+                </li>
+            </ul>
+
+            <b class="subtitle">DEVELOP</b>
+
+            <ul class="links">
+                <li>
+                    <a data-ls-href="/console/database?project={{state.params.project}}">
+                        <i class="icon-database"></i>
+                        Database
+                    </a>
+                </li>
+                <li>
+                    <a data-ls-href="/console/storage?project={{state.params.project}}">
+                        <i class="icon-folder"></i>
+                        Storage
+                    </a>
+                </li>
+                <li>
+                    <a data-ls-href="/console/users?project={{state.params.project}}">
+                        <i class="icon-users"></i>
+                        Users
+                    </a>
+                </li>
+            </ul>
+
+            <b class="subtitle">MANAGE</b>
+
+            <ul class="links">
+                <li>
+                    <a data-ls-href="/console/settings/keys?project={{state.params.project}}">
+                        <i class="icon-key-inv"></i>
+                        API Keys
+                    </a>
+                </li>
+                <li>
+                    <a data-ls-href="/console/settings/webhooks?project={{state.params.project}}">
+                        <i class="icon-link"></i>
+                        Webhooks
+                    </a>
+                </li>
+                <li>
+                    <a data-ls-href="/console/settings/tasks?project={{state.params.project}}">
+                        <i class="icon-clock"></i>
+                        Tasks
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="links bottom project-only">
+                <li>
+                    <a data-ls-href="/console/settings?project={{state.params.project}}"><i class="icon-cog"></i> Settings</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<div class="list pull-start project-only"
+     data-appwrite="projects.list"
+     data-event="load"
+     data-service="projects"
+     data-scope="console"
+     data-success="render,trigger"
+     data-error="render"
+     data-success-rerender=""
+     data-error-rerender=""
+     data-success-triggers="projects.load" data-singleton="true">
+</div>
+
+<div data-ls-if="'{{state.params.project}}' != 'undefined'" data-ls-rerender="project.reload">
+    <div data-appwrite="projects.get"
+         data-event="load"
+         data-service="console-project"
+         data-param-project-id="{{state.params.project}}"
+         data-success="render,trigger"
+         data-success-rerender="platform.new,platform.update,platform.delete"
+         data-success-triggers="project.load">
+    </div>
+</div>
+
+<div class=""
+     data-appwrite="geo.get"
+     data-service="geo"
+     data-event="load"
+     data-success="render,trigger"
+     data-success-triggers="geo.load"
+     data-error="alert"
+     data-error-triggers="logout" data-singleton="true">
+</div>
+
+<div class=""
+     data-appwrite="geo.countries.list"
+     data-service="geo-countries"
+     data-event="load"
+     data-success="render,trigger"
+     data-success-triggers="geo-countries.load"
+     data-error="trigger"
+     data-error-triggers="logout" data-singleton="true">
+</div>
+
+<div class=""
+     data-appwrite="geo.countries.phones"
+     data-service="geo-countries-phones"
+     data-event="load"
+     data-success="render,trigger"
+     data-success-triggers="geo-countries-phones.load"
+     data-error="trigger"
+     data-error-triggers="logout" data-singleton="true">
+</div>
+
+<div data-ui-modal class="modal close" data-button-alias="setup" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="new-project">
+    <h1>Add Project</h1>
+
+    <form data-setup>
+        <p class="note">Appwrite project is set of services and resources shared across different platforms like Web, iOS or Android.</p>
+
+        <input type="hidden" class="full-width" name="plan" value="" />
+        <input type="hidden" class="full-width" name="vault" value="" />
+
+        <label>Name</label>
+        <input type="text" class="full-width" name="name" required autocomplete="off" />
+
+        <br />
+
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+        </footer>
+    </form>
+</div>

@@ -1,0 +1,34 @@
+.cover {
+  background: @config-color-focus-fade;
+  padding: 30px 50px;
+  margin: 0 -50px;
+  position: relative;
+
+  h1, h2, h3, h4, .title {
+    color: @config-color-focus;
+    font-weight: 600;
+  }
+
+  i:before {
+    margin: 0!important;
+  }
+
+  p {
+    color: #737373;
+  }
+
+  .button {
+    color: #ffffff;
+  }
+
+  a, .link {
+    color: @config-color-focus;
+    border-left: none;
+    border-right: none;
+    cursor: pointer;
+
+    &:hover {
+      border-bottom-color: @config-color-focus;
+    }
+  }
+}

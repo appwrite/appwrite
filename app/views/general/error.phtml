@@ -1,0 +1,21 @@
+<?php
+$code = $this->getParam('code', 500);
+$errorID = $this->getParam('errorID', 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+$message = $this->getParam('message', '');
+$projectName = $this->getParam('projectName', '');
+$projectURL = $this->getParam('projectURL', '');
+?>
+
+<section class="zone large margin-top-xl">
+    <h1 class="margin-bottom">Error <?php echo $code; ?></h1>
+
+    <p><?php echo $message; ?></p>
+
+    <small>Error ID: <?php echo $errorID; ?></small>
+
+    <?php if(!empty($projectURL)): ?>
+        <hr class="margin-top margin-bottom" />
+
+        <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener">Back to <?php echo $projectName; ?></a></p>
+    <?php endif; ?>
+</section>

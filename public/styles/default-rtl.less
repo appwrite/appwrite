@@ -1,0 +1,72 @@
+@config-start: right;
+@config-start-dir: rtl;
+@config-end: left;
+@config-end-dir: ltr;
+
+.func-margin-start(@value) {
+  margin-right: @value;
+}
+
+.func-margin-end(@value) {
+  margin-left: @value;
+}
+
+.func-border-start(@size, @color) {
+  border-right: solid @size @color;
+}
+
+.func-border-end(@size, @color) {
+  border-left: solid @size @color;
+}
+
+.func-padding-start(@value) {
+  padding-right: @value;
+}
+
+.func-padding-end(@value) {
+  padding-left: @value;
+}
+
+.func-start(@value) {
+  right: @value;
+}
+
+.func-end(@value) {
+  left: @value;
+}
+
+.func-border-start(@value) {
+  border-right: solid @value @config-color-fade-light;
+}
+
+.func-border-end(@value) {
+  border-left: solid @value @config-color-fade-light;
+}
+
+.pull-start {
+  float: right;
+}
+
+.pull-end {
+  float: left;
+}
+
+@import "default";
+
+// Overwrite button directions
+.icon-left-open:before { content: '\e814'!important; } /* '' */
+.icon-right-open:before { content: '\e813'!important; } /* '' */
+.icon-link-ext:before {  -moz-transform: scaleX(-1);    /* Gecko */
+  -o-transform: scaleX(-1);      /* Opera */
+  -webkit-transform: scaleX(-1); /* Webkit */
+  transform: scaleX(-1);         /* Standard */
+}
+.icon-article-alt:before {  -moz-transform: scaleX(-1);    /* Gecko */
+  -o-transform: scaleX(-1);      /* Opera */
+  -webkit-transform: scaleX(-1); /* Webkit */
+  transform: scaleX(-1);         /* Standard */
+}
+
+.copy {
+  border-radius: 10px 0 0 10px!important;
+}

@@ -1,0 +1,286 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<div class="cover">
+    <h1 class="zone xl margin-bottom-large margin-top">
+        <?php echo Locale::getText('console.account.title'); ?>
+    </h1>
+</div>
+
+<div class="zone xl">
+    <ul class="phases clear" data-ui-phases data-selected="{{state.params.tab}}">
+        <li data-state="/console/account">
+            <div class=""
+                 data-appwrite="account.get"
+                 data-scope="console"
+                 data-service="account"
+                 data-event="load"
+                 data-success="render"
+                 data-error="trigger"
+                 data-error-triggers="logout">
+
+                <h2><span class="number"><i class="icon-user"></i></span><?php echo Locale::getText('console.account.section.overview.title'); ?></h2>
+                <div class="row responsive">
+                    <div class="col span-9">
+                        <div class="box margin-bottom-xl">
+                            <div>
+                                <form name="account.update" onsubmit="return false;"
+                                      data-appwrite="account.updateName"
+                                      data-scope="console"
+                                      data-event="submit"
+                                      data-success="trigger,alert"
+                                      data-success-alert="Your name was updated successfully"
+                                      data-success-triggers="account.update,modal-close"
+                                      data-error="alert"
+                                      data-error-alert="Failed to update your name">
+
+                                    <label for="name"><?php echo Locale::getText('console.account.section.overview.labels.name'); ?></label>
+
+                                    <div class="row">
+                                        <div class="col span-8">
+                                            <input name="name" id="name" type="text" autocomplete="off" data-ls-echo="{{account.name}}" required class="margin-bottom-no">
+                                        </div>
+                                        <div class="col span-4">
+                                            <button type="submit" class="fill reverse"><?php echo Locale::getText('console.account.section.overview.actions.update-name'); ?></button>
+                                        </div>
+                                    </div>
+
+                                    <footer class="clear">
+                                    </footer>
+                                </form>
+                            </div>
+
+                            <hr />
+
+                            <form name="update-email"
+                                  data-appwrite="account.updateEmail"
+                                  data-scope="console"
+                                  data-event="submit"
+                                  data-success="trigger,alert"
+                                  data-success-alert="Email address updated successfully"
+                                  data-success-triggers="account.update,modal-close"
+                                  data-error="alert"
+                                  data-error-alert="Failed updating email address">
+
+                                <label><?php echo Locale::getText('console.account.section.overview.labels.email'); ?></label>
+                                <div class="row">
+                                    <div class="col span-8">
+                                        <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="me@example.com" data-ls-echo="{{account.email}}" required>
+                                    </div>
+                                    <div class="col span-4">
+                                        <div data-ui-modal class="modal close width-small height-small" data-button-text="<?php echo $this->escape(Locale::getText('console.account.section.overview.actions.update-email')); ?>" data-button-class="fill reverse">
+                                            <label><?php echo Locale::getText('console.account.section.overview.labels.password'); ?></label>
+                                            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
+
+                                            <footer>
+                                                <button type="submit"><?php echo Locale::getText('console.account.section.overview.actions.update'); ?></button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse"><?php echo Locale::getText('console.account.section.overview.actions.cancel'); ?></button>
+                                            </footer>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <hr />
+
+                            <div data-ui-modal class="modal close width-small" data-button-text="<?php echo $this->escape(Locale::getText('console.account.section.overview.actions.update-password')); ?>" data-button-class="reverse">
+                                <h1><?php echo Locale::getText('console.account.section.overview.actions.update-password'); ?></h1>
+
+                                <form name="update-password"
+                                      data-appwrite="account.updatePassword"
+                                      data-scope="console"
+                                      data-event="submit"
+                                      data-success="trigger,alert"
+                                      data-success-triggers="account.update,modal-close"
+                                      data-success-alert="Password updated successfully"
+                                      data-error="alert"
+                                      data-error-alert="Failed updating password">
+
+                                    <label><?php echo Locale::getText('console.account.section.overview.labels.password1'); ?></label>
+                                    <input name="oldPassword" type="password" class="full-width" autocomplete="off" placeholder="" required>
+
+                                    <label><?php echo Locale::getText('console.account.section.overview.labels.password2'); ?></label>
+                                    <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required data-forms-password-meter>
+
+                                    <footer>
+                                        <button type="submit"><?php echo Locale::getText('console.account.section.overview.actions.update-password'); ?></button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse"><?php echo Locale::getText('console.account.section.overview.actions.cancel'); ?></button>
+                                    </footer>
+                                </form>
+                            </div>
+
+                            <hr />
+
+                            <form class="margin-top"
+                                  data-appwrite="auth.logout"
+                                  data-scope="console"
+                                  data-event="submit"
+                                  data-success="trigger"
+                                  data-success-triggers="logout"
+                                  data-error="alert"
+                                  data-error-alert="Logout failed">
+                                <button class="fill danger icon fill"><i class="icon-login"></i> <?php echo Locale::getText('console.account.section.overview.actions.logout'); ?></button>
+                            </form>
+                        </div>
+
+                    </div>
+
+                    <div class="col span-3 text-center">
+                        <img src="" data-ui-gravatar="{{account.email}}" data-name="{{account.name}}" data-size="300" width="150" height="150" alt="User Avatar" class="avatar huge huge margin-bottom-small" />
+
+                        <br />
+
+                        <a href="https://en.gravatar.com/gravatars/new/" rel="noopener" class="button margin-bottom-small" target="_blank"><i class="icon-upload"></i> <?php echo Locale::getText('console.account.section.overview.actions.update-avatar'); ?></a>
+
+                        <br />
+
+                        <small class="text-size-small">(<?php echo Locale::getText('console.account.section.overview.actions.update-avatar-via'); ?> <a href="https://gravatar.com/" target="_blank" rel="noopener">gravatar.com <i class="icon-link-ext"></i></a>)</small>
+                    </div>
+                </div>
+
+                <div class="row responsive">
+                    <div class="col span-9">
+
+                        <h3 class="text-danger"><?php echo Locale::getText('console.account.section.overview.danger.title'); ?></h3>
+
+                        <div class="box danger">
+                            <p><?php echo Locale::getText('console.account.section.overview.danger.subtitle'); ?></p>
+
+                            <p><?php echo Locale::getText('console.account.section.overview.danger.disclaimer'); ?></p>
+
+                            <p><?php echo Locale::getText('console.account.section.overview.danger.note'); ?></p>
+
+                            <form class="inline"
+                                  data-appwrite="account.deactivate"
+                                  data-scope="console"
+                                  data-event="submit"
+                                  data-confirm="Are you sure you want to delete your account?"
+                                  data-success="trigger"
+                                  data-success-triggers="deactivated"
+                                  data-error="alert"
+                                  data-error-alert="Account deactivation failed">
+                                <button class="danger reverse"><?php echo Locale::getText('console.account.section.overview.danger.action'); ?></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col span-3"></div>
+                </div>
+            </div>
+        </li>
+        <li data-state="/console/account/security">
+            <h2><span class="number"><i class="icon-shield"></i></span><?php echo Locale::getText('console.account.section.security.title'); ?></h2>
+
+            <h3><?php echo Locale::getText('console.account.section.security.devices.title'); ?></h3>
+
+            <div class="box margin-bottom"
+                 data-appwrite="account.sessions"
+                 data-scope="console"
+                 data-service="sessions"
+                 data-event="load"
+                 data-success="render"
+                 data-error="render"
+                 data-success-rerender="account.update">
+
+                <ul data-ls-loop="sessions" data-ls-as="session" class="list">
+                    <li class="clear">
+                        <span data-ls-if="true != '{{session.current}}'" style="display: none;"> <!-- From remote session (-logout event) -->
+                            <form class="pull-end"
+                                  data-appwrite="auth.logoutById"
+                                  data-scope="console"
+                                  data-event="submit"
+                                  data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
+                                  data-success="trigger"
+                                  data-success-triggers="account.update"
+                                  data-error="alert"
+                                  data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
+                                <input type="hidden" name="userId" data-ls-echo="{{session.id}}">
+                                <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
+                            </form>
+                        </span>
+
+                        <span data-ls-if="true == '{{session.current}}'" style="display: none;"> <!-- From current session (+logout event) -->
+                            <form class="pull-end"
+                                  data-appwrite="auth.logoutById"
+                                  data-scope="console"
+                                  data-event="submit"
+                                  data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
+                                  data-success="trigger,redirect"
+                                  data-success-triggers="logout"
+                                  data-success-redirect-url="/"
+                                  data-error="alert"
+                                  data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
+                                <input type="hidden" name="userId" data-ls-echo="{{session.id}}">
+                                <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
+                            </form>
+                        </span>
+
+                        <img data-ls-src="{{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowerCase}}?width=120&height=120" data-ls-title="{{session.client.name}}" data-ls-alt="{{session.client.name}}" class="avatar trans pull-start margin-end" />
+
+                        <span data-ls-echo="{{session.client.name}}"></span> <span data-ls-echo="{{session.client.version}}"></span> on <span data-ls-echo="{{session.model}}"></span> <span data-ls-echo="{{session.OS.name}}"></span> <span data-ls-echo="{{session.OS.version}}"></span>
+                        &nbsp;
+                        <span data-ls-if="true == {{session.current}}" style="display: none;">
+                            <span class="tag green"><?php echo Locale::getText('console.account.section.security.devices.current'); ?></span>
+                        </span>
+
+                        <div class="note info margin-top-small">
+                            <img data-ls-src="{{env.API}}/v1/avatars/flags/{{session.geo.isoCode}}?width=80&height=80" class="avatar xs margin-end-small inline" />
+                            <small data-ls-echo="{{session.ip}}"></small> / <small data-ls-echo="{{session.geo.country}}"></small>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <form class="inline margin-bottom-large"
+                  data-appwrite="auth.logoutById"
+                  data-scope="console"
+                  data-event="submit"
+                  data-success="trigger,redirect"
+                  data-success-triggers="account.update"
+                  data-success-redirect-url="/"
+                  data-error="alert"
+                  data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>">
+                <input type="hidden" name="userId" value="0">
+                <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout-all'); ?></button>
+            </form>
+
+            <div class="account"
+                 data-appwrite="account.security"
+                 data-scope="console"
+                 data-service="securityLogs"
+                 data-event="load"
+                 data-success="render"
+                 data-success-rerender="account.update"
+                 data-error="">
+
+                <h3><?php echo Locale::getText('console.account.section.security.recent-activity.title'); ?></h3>
+
+                <div class="box">
+                    <table class="vertical small">
+                        <thead>
+                        <tr>
+                            <th width="140"><?php echo Locale::getText('console.account.section.security.recent-activity.date'); ?></th>
+                            <th width="175"><?php echo Locale::getText('console.account.section.security.recent-activity.event'); ?></th>
+                            <th><?php echo Locale::getText('console.account.section.security.recent-activity.client'); ?></th>
+                            <th width="90"><?php echo Locale::getText('console.account.section.security.recent-activity.location'); ?></th>
+                            <th width="90"><?php echo Locale::getText('console.account.section.security.recent-activity.ip'); ?></th>
+                        </tr>
+                        </thead>
+                        <tbody data-ls-loop="securityLogs" data-ls-as="log">
+                        <tr>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-echo="{{log.time|date-time}}"></span></td>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-echo="{{log.event}}"></span></td>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.client')); ?>: ">
+                                <img data-ls-src="{{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowerCase}}?width=80&height=80" data-ls-title="{{log.client.name}}" data-ls-alt="{{log.client.name}}" class="avatar xs inline margin-end-small" />
+                                <span data-ls-echo="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                            </td>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.location')); ?>: ">
+                                <img data-ls-src="{{env.API}}/v1/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
+                                <span data-ls-echo="{{log.geo.country}}"></span>
+                            </td>
+                            <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-echo="{{log.ip}}"></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>

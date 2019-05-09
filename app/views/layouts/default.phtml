@@ -1,0 +1,118 @@
+<?php
+
+use Utopia\Locale\Locale;
+
+$domain     = $this->getParam('domain', '');
+$api        = $this->getParam('api', '');
+$project    = $this->getParam('project', '');
+$version    = $this->getParam('version', 'v0.0.0');
+$isDev      = $this->getParam('isDev', false);
+$litespeed  = $this->getParam('litespeed', true);
+$analytics  = $this->getParam('analytics', 'UA-26264668-9');
+$env        = $this->getParam('env', '');
+?>
+<!DOCTYPE html><!--
+<?php echo Locale::getText('settings.inspire'); ?>
+
+--><html lang="<?php echo Locale::getText('settings.locale'); ?>" class="<?php echo $this->getParam('class', 'none'); ?>  <?php echo $env; ?>">
+<head>
+    <link rel="manifest" href="/manifest.json">
+    <title><?php echo $this->getParam('title', ''); ?></title>
+    <meta name="description" content="<?php echo $this->getParam('description', ''); ?>" />
+    <link rel="stylesheet" media="all" type="text/css" href="/dist/styles/default-<?php echo Locale::getText('settings.direction'); ?>.css?v=<?php echo $version; ?>" />
+    <link rel="icon" type="image/png" href="<?php echo $this->escape($this->getParam('icon', '')); ?>" />
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,300,400,500,600" rel="stylesheet">
+    <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="theme-color" content="#24f4d4">
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="<?php echo $this->getParam('title', ''); ?>" />
+    <meta property="og:description" content="<?php echo $this->getParam('description', ''); ?>" />
+    <meta property="og:image"  content="<?php echo APP_PROTOCOL;?>://<?php echo $domain; ?>/logo.png?v=1" />
+    <!--<meta name="referrer" content="never">
+    <meta name="referrer" content="no-referrer">-->
+    <link rel="preconnect" href="<?php echo $api; ?>" />
+    <?php foreach ($this->getParam('prefetch', []) as $prefetch): ?>
+        <link rel="prefetch" href="<?php echo $this->escape($prefetch); ?>" />
+    <?php endforeach; ?>
+    <script src="https://cdn.ravenjs.com/3.26.2/raven.min.js" crossorigin="anonymous"></script>
+    <!--<script src="/dist/scripts/app-dependencies.js"></script>-->
+    <script>
+
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', '<?php echo $analytics; ?>', 'auto', {});
+
+        var APP_ENV = {
+            NAME: '<?php echo APP_NAME; ?>',
+            VERSION: '<?php echo $version; ?>',
+            DOMAIN: '<?php echo $domain; ?>',
+            API: '<?php echo $api; ?>',
+            PROJECT: '<?php echo $project; ?>',
+            LOCALE: '<?php echo $this->escape(Locale::getText('settings.locale')); ?>',
+            PREFIX: '<?php echo $this->escape($this->getParam('prefix')); ?>',
+            ROLES: <?PHP echo json_encode($this->getParam('roles', [])); ?>
+        };
+
+        <?php if($litespeed): ?>
+        document.addEventListener("DOMContentLoaded", function() {
+            var head      = document.getElementsByTagName('head')[0];
+            var script    = document.createElement('script');
+
+            script.type   = 'text/javascript';
+            script.async  = true;
+            script.src    = '/dist/scripts/app-all.js?v=<?php echo $version; ?>';
+            script.onload = function() {
+                window.Litespeed.run(window);
+            };
+
+            head.appendChild(script);
+        });
+        <?php endif; ?>
+
+        window.recaptchaCallback = function () {
+            window.grecaptchaReady = true;
+            document.dispatchEvent(new CustomEvent('recaptcha-loaded', {
+                bubbles: false,
+                cancelable: true
+            }));
+        };
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js?onload=recaptchaCallback&render=explicit&hl=<?php echo Locale::getText('settings.recaptcha'); ?>" async defer></script>
+    <?php echo $this->exec($this->getParam('head', [])); ?>
+</head>
+
+<body data-ls-init data-first-from-server="true">
+    <?php echo $this->exec($this->getParam('header', [])); ?>
+
+    <main data-ls-scope data-acl data-analytics-pageview>
+        <?php echo $this->exec($this->getParam('body', [])); ?>
+    </main>
+
+    <div class="loader"></div>
+
+    <div data-cookie-policy="<?php echo Locale::getText('general.alerts.cookie'); ?>"></div>
+
+    <section data-ls-ui-alerts="" class="alerts">
+        <ul data-ls-loop="alerts.list" data-ls-as="alert">
+            <li>
+                <div data-ls-class="{{alert.class}} message">
+                    <i class="icon-cancel" data-ls-ui-alerts-delete data-message="{{alert.id}}"></i>
+                    <span data-ls-echo="{{alert.text}}"></span>
+
+                    <span data-ls-if="'undefined' !== '{{alert.link}}'" style="display: none;">
+                        <a data-ls-href="{{alert.link}}" data-ls-ui-alerts-delete data-message="{{alert.id}}"><?php echo Locale::getText('general.alerts.learn'); ?></a>
+                    </span>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <?php echo $this->exec($this->getParam('footer', [])); ?>
+
+    <!-- Version <?php echo VERSION; ?> -->
+</body>
+</html>

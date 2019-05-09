@@ -1,0 +1,31 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<div class="zone medium">
+    <h1 class="zone xl margin-bottom-large margin-top">
+        <?php echo $this->escape(Locale::getText('home.auth.recovery.title')); ?>
+    </h1>
+
+    <small class="pull-end">* <?php echo $this->escape(Locale::getText('home.auth.recovery.required')); ?></small>
+
+    <form name="recovery"
+          data-appwrite="auth.recovery"
+          data-scope="console"
+          data-event="submit"
+          data-success="alert"
+          data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.recovery.success')); ?>"
+          data-error="alert"
+          data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.recovery.failure')); ?>">
+
+        <label><?php echo $this->escape(Locale::getText('home.auth.recovery.labels.email')); ?></label>
+        <input name="email" type="email" class="full-width" autocomplete="email" placeholder="me@example.com" required>
+
+        <input name="redirect" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/recovery/reset" />
+
+        <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i> <?php echo $this->escape(Locale::getText('home.auth.recovery.action')); ?></button>
+    </form>
+</div>
+
+<div class="zone medium">
+    <a href="/auth/signin"><?php echo $this->escape(Locale::getText('home.auth.recovery.back')); ?></a>
+</div>

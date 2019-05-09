@@ -1,0 +1,59 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<section class="zone medium">
+    <form class="box margin-top-large"
+          data-appwrite="auth.join"
+          data-scope="console"
+          data-event="submit"
+          data-param-invite-id="{{state.params.inviteId}}"
+          data-param-user-id="{{state.params.userId}}"
+          data-param-secret="{{state.params.secret}}"
+          data-success="redirect,alert,trigger"
+      data-success-redirect-url="/console?project={{state.params.project}}"
+          data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.join.success')); ?>"
+          data-success-triggers="account.update"
+          data-error="alert"
+          data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>">
+
+        <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{state.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
+
+        <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console?company={{state.params.company}}">
+        <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/join?failure=1&company={{state.params.company}}&inviteId={{state.params.inviteId}}&secret={{state.params.secret}}&userId={{state.params.userId}}">
+
+        <div class=""
+             data-appwrite="companies.getPreview"
+             data-scope="api"
+             data-service="api-company"
+             data-param-id="{{state.params.company}}"
+             data-event="load"
+             data-success="render,trigger"
+             data-success-triggers="api-company.load"
+             data-error="render">
+
+            <h2 class="margin-bottom-small"><?php echo $this->escape(Locale::getText('home.auth.join.title')); ?></h2>
+
+            <p class="note"><?php echo sprintf($this->escape(Locale::getText('home.auth.join.subtitle')), '<span data-ls-echo="{{api-company.name}}"></span>'); ?></p>
+
+            <div data-ls-if="'{{api-company.logo}}' !== '' || '{{api-company.logo}}' !== 'undefined'">
+                <div data-ls-style="background: {{api-company.theme-color}}; color: {{api-company.theme-color-contrast}}; width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto; text-align: center">
+                    <img data-ls-src="{{env.API}}/v1/storage/files/{{api-company.logo}}/preview?project={{env.PROJECT}}&height=120" alt="Logo" style="opacity: 0; line-height: 80px; vertical-align: middle; max-width: 80px; max-height: 80px" />
+                </div>
+            </div>
+        </div>
+
+        <div class="note agree margin-top margin-bottom">
+            <div class="pull-start margin-end-small margin-bottom">
+                <input type="checkbox" required />
+            </div>
+            <?php echo sprintf($this->escape(Locale::getText('home.auth.join.agree')),
+                '<a href="/policy/terms" target="_blank">' . $this->escape(Locale::getText('home.auth.join.terms')) . '</a>',
+                '<a href="/policy/privacy" target="_blank">' . $this->escape(Locale::getText('home.auth.join.privacy')) . '</a>'); ?>
+        </div>
+
+        <div class="clear">
+            <button class="pull-start margin-end"><?php echo $this->escape(Locale::getText('home.auth.join.accept')); ?></button>
+            <a href="/" class="button reverse pull-start"><?php echo $this->escape(Locale::getText('home.auth.join.cancel')); ?></a>
+        </div>
+    </form>
+</section>

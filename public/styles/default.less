@@ -1,0 +1,96 @@
+@config-width: 910px;
+@config-width-xxl: 1100px;
+@config-width-xl: 910px;
+@config-width-large: 700px;
+@config-width-medium: 550px;
+@config-width-small: 320px;
+@config-color-link: #1e849e;
+@config-color-placeholder: #868686;
+@config-color-normal: #40404c;
+@config-color-focus: #f02e65;
+@config-color-focus-fade: #fff2f6;
+@config-color-focus-glow: #fce5ec;
+@config-color-focus-dark: #c52653;
+@config-color-fade: #9e9e9e;
+@config-color-border: #e6e6e6;
+@config-color-fade-light: #e2e2e2;
+@config-color-fade-super: #f9f9f9;
+@config-color-danger: #f53d3d;
+@config-color-success: #1bbf61;
+@config-color-warning: #ffed4d;
+@config-radius: 10px;
+
+@watch: ~"only screen and (max-width: 260px)";
+@phones: ~"only screen and (max-width: 550px)";
+@tablets: ~"only screen and (min-width: 551px) and (max-width: 970px)";
+@desktops: ~"only screen and (min-width: 971px) and (max-width: 1300px)";
+@big-screens: ~"only screen and (min-width: 970px)";
+
+img[src=""] {
+  visibility: hidden;
+  display: inline-block;
+}
+
+@import "functions";
+@import "typography";
+@import "tabels";
+@import "grid";
+@import "icons";
+@import "polyfills";
+@import "forms";
+@import "scopes/console";
+@import "scopes/home";
+@import "comps/alerts";
+@import "comps/article";
+@import "comps/avatar";
+@import "comps/box";
+@import "comps/cover";
+@import "comps/footer";
+@import "comps/loader";
+@import "comps/modal";
+@import "comps/tabs";
+@import "dependencies/prism";
+
+html {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  direction: @config-start-dir;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f8 no-repeat fixed;
+}
+
+main {
+  min-height: 450px;
+}
+
+ul {
+  padding: 0;
+  margin: 0;
+
+  li {
+    margin: 0;
+    list-style: none;
+  }
+}
+
+.force-left {
+  direction: ltr;
+  text-align: left;
+}
+
+.force-right {
+  direction: rtl;
+  text-align: right;
+}
+
+.pull-left {
+  float: left;
+}
+
+.pull-right {
+  float: right;
+}

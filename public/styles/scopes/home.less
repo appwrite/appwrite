@@ -1,0 +1,901 @@
+.home {
+  padding: 0;
+
+  body {
+    background: #ffffff;
+    color: @config-color-normal;
+    padding: 0 50px;
+
+    @media @phones, @tablets {
+      padding: 0 30px;
+    }
+  }
+
+  h1, h2, h3 {
+    color: @config-color-focus;
+  }
+
+  hr {
+    background: #f5f5f5;
+  }
+
+  header {
+    background: @config-color-focus-fade;
+    height: 53px;
+    padding: 30px  50px;
+    margin: 0 -50px 30px -50px;
+
+    @media @phones, @tablets {
+      padding: 20px  30px;
+      margin: 0 -30px 30px -30px;
+    }
+
+    .selected {
+      font-weight: 500;
+    }
+
+    .clear;
+
+    &.close {
+
+    }
+
+    &.open {
+
+    }
+
+    .icon-btn {
+      display: none;
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
+      background: none;
+      color: @config-color-focus;
+      .pull-end;
+      .func-margin-end(-20px)
+    }
+
+    @media @phones, @tablets {
+      .icon-btn {
+        display: block;
+      }
+
+      nav {
+        .menu {
+          display: none;
+        }
+      }
+
+      &.open {
+        .logo {
+          float: none;
+        }
+
+        nav {
+          background: @config-color-focus-fade;
+          z-index: 1;
+          position: relative;
+          margin: 0 -30px;
+          padding: 0 30px 30px 30px;
+          border-bottom: solid 3px @config-color-focus;
+        }
+
+        .dev-feature {
+          display: none!important;
+        }
+
+        .menu {
+          display: block;
+          float: none;
+          width: 100%;
+
+          &.main {
+            .margin-bottom;
+          }
+
+          li {
+            float: none;
+            width: 100%;
+            margin: 0 0 5px 0!important;
+
+            a {
+              display: block;
+            }
+          }
+        }
+      }
+    }
+
+    a:not(.button) {
+      display: inline-block;
+      line-height: 50px;
+      color: @config-color-focus;
+
+      &:hover {
+        border-bottom-color: @config-color-focus;
+      }
+    }
+
+    nav {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    .logo {
+      .func-margin-end(40px);
+      .func-margin-start(-12px);
+      padding: 11px 0;
+
+      img {
+        height: 30px;
+      }
+
+      @media @watch {
+        img {
+          max-width: 100px;
+        }
+      }
+    }
+
+    ul {
+      .clear;
+
+      li {
+        .pull-start;
+      }
+    }
+  }
+
+  footer {
+    margin: 0 -50px;
+    background-color: transparent;
+    background-image: url("/images/waves-footer.svg");
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: 140px 50px 60px;
+
+    .social {
+      a {
+        display: inline-block;
+        background: @config-color-normal;
+        color: #f1f1f1;
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        border-radius: 40%;
+        font-size: 12px;
+        text-align: center;
+        padding: 0;
+        border: none;
+        .func-margin-end(10px)
+      }
+    }
+
+    @media @phones, @tablets {
+      padding: 50px 30px 12px 30px;
+      margin: 0 -30px;
+    }
+  }
+
+  .sdk {
+    position: relative;
+
+    &.inactive {
+      img {
+        opacity: .25;
+      }
+    }
+
+    .tag {
+      position: absolute;
+      top: -10px;
+      z-index: 2;
+      .func-start(-10px);
+
+      &.soon {
+        background: @config-color-link;
+        color: #fff;
+      }
+
+      &.beta {
+        background: @config-color-danger;
+        color: #fff;
+      }
+    }
+  }
+
+  .hero {
+    overflow: hidden;
+    position: relative;
+    margin-top: -30px;
+    background: @config-color-focus-fade;
+    background: linear-gradient(#fff2f6, #fdf0f4);
+    padding: 50px;
+    margin: -30px -50px -100px -50px;
+    padding-bottom: 300px;
+
+    h1 {
+      font-size: 35px;
+      color: @config-color-focus;
+      font-weight: 600;
+      line-height: 50px;
+    }
+
+    .trailer {
+      display: block;
+      color: @config-color-focus;
+      font-weight: 500;
+      font-size: 20px;
+    }
+
+    .back {
+      .margin-top-negative;
+
+      a {
+        color: @config-color-focus;
+      }
+    }
+
+    p {
+      font-size: 18px;
+      color: @config-color-focus;
+      opacity: .75;
+    }
+
+    &:after {
+      background-image: url("/images/waves.svg");
+      background-repeat: no-repeat;
+      background-size: cover;
+      height: 350px;
+      content: "";
+      display: block;
+      width: ~"calc(100% + 100px)";
+      margin: 0 -50px;
+      position: absolute;
+      bottom: 0;
+      z-index: 0;
+    }
+
+    @media @phones, @tablets {
+      padding-top: 30px;
+      padding-left: 30px;
+      padding-right: 30px;
+      margin: -30px -30px -100px -30px;
+
+      img {
+        display: none;
+      }
+    }
+
+    @media @watch {
+      h1 {
+        font-size: 18px;
+        line-height: 24px;
+      }
+    }
+  }
+
+  .features {
+    z-index: 1;
+    position: relative;
+  }
+
+  .product {
+    width: ~"calc(25% - 38px)";
+    .func-margin-end(50px);
+
+    &:nth-child(4) {
+      .func-margin-end(0);
+    }
+
+    h3 {
+      margin-bottom: 15px;
+      font-weight: 400;
+    }
+
+    .logo {
+      height: 25px;
+      margin-bottom: 10px;
+    }
+
+    i {
+      display: inline-block;
+      font-size: 22px;
+      color: @config-color-focus;
+      margin-bottom: 20px;
+      .func-margin-start(-5px)
+    }
+
+    @media @phones, @tablets {
+      width: 100%;
+    }
+  }
+
+  .products {
+    background: @config-color-focus-fade;
+
+    h1 {
+      font-weight: 900;
+    }
+  }
+
+  .hero-soft {
+    background: #f6f9fc;
+    padding: 50px 0;
+    position: relative;
+    margin-bottom: -80px;
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #6772e5;
+    }
+
+    &:before {
+      content: "";
+      display: block;
+      height: 70px;
+      width: 100%;
+      background: #f6f9fc;
+      margin-top: 0;
+      webkit-transform: skewY(-2deg);
+      -moz-transform: skewY(-2deg);
+      -ms-transform: skewY(-2deg);
+      -o-transform: skewY(-2deg);
+      transform: skewY(-2deg);
+      position: absolute;
+      top: -30px;
+      left: 0;
+    }
+  }
+
+  .docs {
+    .function {
+      h2, h3, h4 {
+        color: inherit;
+      }
+
+      select {
+        width: 100px;
+        background-color: @config-color-fade-super;
+        background-position: right 5px top 50%;
+        margin-bottom: 0;
+        font-size: 12px;
+        line-height: 20px;
+        height: 20px;
+        .func-padding-start(15px);
+        .func-padding-end(20px);
+      }
+    }
+
+    .url {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 30px;
+      line-height: 30px;
+
+      .endpoint {
+        opacity: .8;
+        display: inline-block;
+
+        @media @phones {
+          display: none;
+        }
+      }
+
+      .path {
+        font-weight: 400;
+        display: inline-block;
+        .func-padding-start(2px);
+      }
+
+      .method {
+        width: 60px;
+        color: #ffffff;
+        background-color: #373737;
+        padding: 10px 20px;
+        margin: -12px;
+        display: inline-block;
+        font-weight: 400;
+        text-align: center;
+        .func-margin-end(20px);
+
+        &.get {
+          background-color: #009cde;
+        }
+
+        &.post {
+          background-color: #00b680;
+        }
+
+        &.patch, &.put {
+          background-color: #640487;
+        }
+
+        &.delete {
+          background-color: #d4005e;
+        }
+      }
+    }
+
+    nav {
+      ul {
+        li {
+          margin-bottom: 10px;
+
+          a {
+            &.selected {
+              color: @config-color-focus;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .support {
+    .status {
+      position: relative;
+      padding: 15px 0;
+      line-height: 30px;
+      box-sizing: border-box;
+
+      &.success {
+        color: @config-color-success;
+
+        .link {
+          color: @config-color-success;
+        }
+      }
+
+      &.warning {
+        color: @config-color-danger;
+
+        .link {
+          color: @config-color-danger;
+        }
+      }
+
+      .link {
+        .func-margin-start(15px);
+
+        i {
+          font-size: 13px;
+        }
+      }
+    }
+
+    .more {
+      i {
+        font-size: 26px;
+        display: inline-block;
+        .pull-start;
+        .margin-bottom-xl;
+        .margin-end;
+      }
+    }
+
+    .last-update {
+      color: #a5a5a5;
+      font-size: 13px;
+    }
+
+    .zone {
+      max-width: @config-width-xl;
+      margin: 0 auto 30px auto;
+
+      &.xxl {
+        max-width: @config-width-xxl;
+      }
+
+      &.xl {
+        max-width: @config-width-xl;
+      }
+
+      &.large {
+        max-width: @config-width-large;
+      }
+
+      &.medium {
+        max-width: @config-width-medium;
+      }
+
+      &.small {
+        max-width: @config-width-small;
+      }
+    }
+  }
+
+  .pricing {
+    .plan {
+      position: relative;
+      text-align: center;
+      width: ~"calc(25% - 23px)";
+      box-sizing: border-box;
+      margin: 15px;
+
+      h2 {
+        text-transform: uppercase;
+      }
+
+      &:nth-child(1) {
+        h2 {
+          color: #299cf3;
+        }
+
+        .button, .popular {
+          background: #299cf3!important;
+        }
+
+        .feature-list {
+          i {
+            color: #299cf3!important;
+          }
+        }
+      }
+
+      &:nth-child(4) {
+        h2 {
+          color: #696fd7;
+        }
+
+        .button, .popular {
+          background: #696fd7!important;
+        }
+
+        .feature-list {
+          i {
+            color: #696fd7!important;
+          }
+        }
+      }
+
+      &:nth-child(2) {
+        h2 {
+          color: #ff7d6c;
+        }
+
+        .button, .popular {
+          background: #ff7d6c!important;
+        }
+
+        .feature-list {
+          i {
+            color: #ff7d6c!important;
+          }
+        }
+      }
+
+      &:nth-child(3) {
+        h2 {
+          color: #2fbe80;
+        }
+
+        .box {
+          background: #f6fffb;
+        }
+
+        .button, .popular {
+          background: #2fbe80!important;
+        }
+
+        .feature-list {
+          i {
+            color: #2fbe80!important;
+          }
+        }
+      }
+
+      &:first-child {
+        .func-margin-start(0);
+      }
+
+      &:last-child {
+        .func-margin-end(0);
+      }
+
+      @media @phones, @tablets {
+        width: ~"calc(50% - 10px)";
+
+        &:nth-child(even) {
+          .func-margin-end(0);
+        }
+
+        &:nth-child(odd) {
+          .func-margin-start(0);
+        }
+
+        .box {
+          padding: 30px 15px 15px 15px!important;
+        }
+
+        .feature-list {
+          padding: 0 5px!important;
+
+          li {
+            font-size: 14px;
+            line-height: 30px;
+            max-height: 30px;
+          }
+        }
+
+        .desc {
+          font-size: 14px;
+        }
+      }
+
+      h2 {
+        margin-bottom: 30px;
+      }
+
+      .box {
+        padding: 30px 10px;
+        //border: solid 1px #f1f1f1;
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(218,218,218,.5);
+      }
+
+      .feature-list {
+        margin-top: 20px;
+        padding: 0 15px;
+        font-size: 15px;
+        .clear;
+
+        li {
+          padding: 10px 0;
+          text-align: @config-start;
+
+          i {
+            color: @config-color-focus;
+            position: absolute;
+            top: 0;
+            font-size: 14px;
+            .func-start(0);
+          }
+
+          b {
+            .func-padding-start(30px);
+            position: relative;
+            display: block;
+            line-height: 22px;
+            min-height: 44px;
+            font-weight: 300;
+            color: #1f1f1f;
+          }
+
+          &:nth-child(1) {
+            i {
+              opacity: .95;
+            }
+          }
+
+          &:nth-child(2) {
+            i {
+              opacity: .9;
+            }
+          }
+
+          &:nth-child(3) {
+            i {
+              opacity: .85;
+            }
+          }
+
+          &:nth-child(4) {
+            i {
+              opacity: .8;
+            }
+          }
+
+          &:nth-child(5) {
+            i {
+              opacity: .75;
+            }
+          }
+        }
+      }
+
+      .popular {
+        background: @config-color-focus;
+        color: #ffffff;
+        position: absolute;
+        display: inline-block;
+        top: -12px;
+        left: 50%;
+        transform: translate(-50%, 0);
+        white-space: nowrap;
+        border-radius: 15px;
+        font-size: 13px;
+        padding: 5px 15px;
+      }
+
+      .button {
+        display: inline-block;
+        margin-bottom: 0;
+      }
+
+      .price {
+        margin-bottom: 30px;
+        margin-top: 30px;
+
+        .sum {
+          font-size: 30px;
+          font-weight: lighter;
+          margin-bottom: 15px;
+          display: block;
+
+          &.free {
+            font-weight: 100;
+          }
+        }
+      }
+    }
+
+    .faq {
+      color: #1f1f1f;
+
+      li {
+        margin-bottom: 30px;
+
+        b {
+          display: block;
+          margin-bottom: 15px;
+        }
+      }
+    }
+  }
+
+  .grid-container {
+    display: grid;
+    grid-template-columns: 200px 1fr 400px;
+    grid-template-rows: auto;
+    grid-template-areas: "menu content examples";
+  }
+
+  .menu { grid-area: menu; }
+
+  .content { grid-area: content; }
+
+  .examples { grid-area: examples; }
+
+  .promo {
+    h2 {
+      font-weight: 600;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: @config-color-normal;
+      font-size: 16px;
+    }
+  }
+
+  .sdks {
+    .tech-logo {
+      margin: 0 auto;
+      width: 60px;
+      height: 60px;
+      line-height: 60px;
+      border: solid 1px #f2f2f2;
+      border-radius: 50%;
+      padding: 30px;
+      //box-shadow: 0 0 6px rgba(0, 0, 0, 0.05);
+
+      @media @phones {
+        width: 35px;
+        height: 35px;
+        line-height: 35px;
+        padding: 15px;
+      }
+
+      img {
+        opacity: .9;
+      }
+    }
+  }
+
+
+  .console {
+    margin: 0 -50px;
+    overflow: hidden;
+    width: ~"calc(100% + 100px)";
+
+    .stripe {
+      position: relative;
+      z-index: 1;
+      padding: 0 30px 80px 30px;
+
+      img {
+        margin: 0 auto;
+        border-radius: 10px;
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.15);
+        display: block;
+      }
+
+      .console-main {
+        width: 90%;
+      }
+
+      .console-start {
+        z-index: -1;
+        position: absolute;
+        top: 23%;
+        .func-start(-200px);
+        height: 55%;
+        //transform: rotate3d(0,1,0,-35deg);
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.15);
+      }
+
+      .console-end {
+        z-index: -1;
+        position: absolute;
+        top: 23%;
+        .func-end(-200px);
+        height: 55%;
+        //transform: rotate3d(0,1,0,35deg);
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    @media @phones, @tablets {
+      padding-top: 30px;
+      margin: 0 -30px;
+      width: ~"calc(100% + 60px)";
+    }
+  }
+
+  .stripe-bottom {
+    border-top: solid 1px #f5f5f5;
+    padding: 130px 30px 90px 30px;
+    margin: 0 -50px 0 -50px;
+    position: relative;
+    margin-bottom: -80px!important;
+
+    > h2 {
+      color: #52575d;
+    }
+
+    &:after {
+      content: "";
+      display: block;
+      height: 70px;
+      width: 100%;
+      background: #ffffff;
+      margin-top: 0;
+      webkit-transform: skewY(2deg);
+      -moz-transform: skewY(2deg);
+      -ms-transform: skewY(2deg);
+      -o-transform: skewY(2deg);
+      transform: skewY(2deg);
+      position: absolute;
+      top: -30px;
+      left: 0;
+      border-bottom: solid 1px #f1f1f1;
+    }
+
+    @media @phones, @tablets {
+      margin: 0 -30px 0 -30px;
+    }
+  }
+}
+
+.flowchart {
+  .clear;
+
+  > li {
+    .pull-start;
+
+    .phase {
+      width: 120px;
+      vertical-align: bottom;
+      padding: 15px;
+      font-weight: 500;
+      font-size: 16px;
+      border-radius: 30px;
+      margin-bottom: 20px;
+      background: @config-color-focus;
+      color: @config-color-focus-fade;
+    }
+  }
+}

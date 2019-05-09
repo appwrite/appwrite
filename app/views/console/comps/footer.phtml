@@ -1,0 +1,22 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<footer class="clear margin-top-xl">
+    <ul class="copyright pull-start">
+        <li>
+            <?php echo Locale::getText('footer.copyright'); ?> © <?php echo date('Y') . ' ' . APP_NAME; ?>
+        </li>
+        <li>
+            <?php echo VERSION; ?>
+        </li>
+        <li>
+            <a href="/policy/terms"><?php echo Locale::getText('footer.terms'); ?></a>
+        </li>
+        <li>
+            <a href="/policy/privacy"><?php echo Locale::getText('footer.privacy'); ?></a>
+        </li>
+        <li>
+            <a href="/policy/cookies"><?php echo Locale::getText('footer.cookies'); ?></a>
+        </li>
+    </ul>
+</footer>

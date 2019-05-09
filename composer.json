@@ -1,0 +1,66 @@
+{
+    "name": "Appwrite/Appwrite",
+    "description": "End to end backend server for frontend and mobile apps.",
+    "type": "project",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Eldad Fux",
+            "email": "eldad@appwrite.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Audit\\": "src/Audit",
+            "Auth\\": "src/Auth",
+            "ClamAV\\": "src/ClamAV",
+            "Database\\": "src/Database",
+            "Event\\": "src/Event",
+            "OpenSSL\\": "src/OpenSSL",
+            "Resize\\": "src/Resize",
+            "Storage\\": "src/Storage",
+            "Task\\": "src/Task",
+            "Template\\": "src/Template"
+        }
+    },
+    "require": {
+        "php": ">=7.2.0",
+        "ext-mysqlnd": "*",
+        "ext-curl": "*",
+        "ext-imagick": "*",
+        "ext-mbstring": "*",
+        "ext-json": "*",
+        "ext-dom": "*",
+        "ext-newrelic": "*",
+        "ext-redis": "*",
+        "ext-pdo": "*",
+        "ext-openssl": "*",
+        "ext-zlib": "*",
+        "ext-sockets": "*",
+        "utopia-php/framework": "master",
+        "utopia-php/abuse": "master",
+        "utopia-php/cache": "master",
+        "utopia-php/cli": "master",
+        "utopia-php/locale": "master",
+        "utopia-php/registry": "master",
+
+        "chrisboulton/php-resque": "*",
+        "chrisboulton/php-resque-scheduler": "*",
+        "geoip2/geoip2": "2.9.0",
+        "piwik/device-detector": "3.5.1",
+        "eldadfux/mailgun-lite": "master",
+        "dragonmantank/cron-expression": "2.2.0",
+        "sentry/sentry": "1.9.*",
+        "domnikl/statsd": "2.0.*",
+        "influxdb/influxdb-php": "1.14.*",
+        "bacon/bacon-qr-code": "2.0.0",
+        "erusev/parsedown": "1.7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.0"
+    },
+    "provide": {
+        "ext-phpiredis": "*"
+    },
+    "minimum-stability": "dev"
+}

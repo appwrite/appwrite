@@ -1,0 +1,158 @@
+table {
+  width: ~"calc(100% + 60px)";
+  font-size: 14px;
+  border-collapse: collapse;
+  margin: -30px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  table-layout: fixed;
+
+  thead {
+    box-shadow: 0 0 2px rgba(0,0,0,.25);
+    border-bottom: solid 1px #e7e7e7;
+
+    th {
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  &.small {
+    font-size: 12px;
+  }
+
+  &.open-end {
+    tbody tr:last-child {
+      border-bottom: none;
+      font-weight: bold;
+      background: #f7fbf7;
+    }
+  }
+
+  &.full {
+    tbody td, tbody th {
+      vertical-align: top;
+      white-space: normal;
+      overflow: auto;
+      line-height: 24px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      height: auto;
+    }
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  tr {
+    border-bottom: solid 1px #e7e7e7;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  tr:nth-child(even) {
+    background: #fbfbfb;
+  }
+
+  tr:nth-child(odd) {
+  }
+
+  th {
+    text-align: @config-start;
+    font-weight: normal;
+
+    i {
+      color: @config-color-fade;
+      font-size: 10px;
+      display: inline-block;
+      vertical-align: top;
+      line-height: 16px;
+      padding: 0 3px;
+    }
+  }
+
+  td, th {
+    height: 65px;
+    padding: 0 15px;
+    line-height: 50px;
+
+    &:first-child {
+      .func-padding-start(30px);
+    }
+
+    &:last-child {
+      .func-padding-end(30px);
+    }
+  }
+
+  td:first-child, th:first-child {
+    @media @phones {
+      width: auto;
+    }
+  }
+
+  td, th {
+    //text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  &.vertical {
+    @media @phones, @tablets {
+      display: block;
+      overflow: hidden;
+      border-top: solid 1px #e7e7e7;
+      padding-top: 12px;
+
+      thead, tbody, tr, td, th {
+        width:100%;
+        display: block;
+      }
+
+      tr, th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+
+        &:first-child {
+          padding-top: 0;
+        }
+      }
+
+      td, th {
+        padding: 0 10px!important;
+        min-height: 35px;
+        line-height: 35px;
+        text-overflow: ellipsis;
+        white-space: normal;
+
+        &:first-child, &:last-child {
+          padding: 0 10px;
+        }
+
+        &:last-child {
+          padding-bottom: 0;
+        }
+
+        p {
+          display: inline-block;
+          width: ~"calc(100% - 40px)";
+        }
+      }
+
+      td:before {
+        content: attr(data-title);
+        margin-right: 4px;
+        font-weight: 400;
+      }
+
+      thead {
+        display: none;
+      }
+    }
+  }
+}

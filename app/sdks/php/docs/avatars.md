@@ -1,0 +1,84 @@
+# Avatars Service
+
+## Get Browser Icon
+
+```http request
+GET https://appwrite.io/v1/avatars/browsers/{code}
+```
+
+** You can use this endpoint to show different browser icons to your users, The code argument receives the browser code as appear in your user /account/sessions endpoint. Use width, height and quality arguments to change the output settings. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| code | string | **Required** Browser Code. |  |
+| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
+| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
+| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100 | 100 |
+
+## Get Credit Card Icon
+
+```http request
+GET https://appwrite.io/v1/avatars/credit-cards/{code}
+```
+
+** Need to display your users with your billing method or there payment methods? The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| code | string | **Required** Credit Card Code. Possible values: amex, argencard, cabal, censosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa. |  |
+| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
+| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
+| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100 | 100 |
+
+## Get Favicon
+
+```http request
+GET https://appwrite.io/v1/avatars/favicon
+```
+
+** Use this endpoint to fetch the favorite icon (AKA favicon) of a  any remote website URL. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| url | string | **Required** Website URL which you want to fetch the favicon from. |  |
+
+## Get Country Flag
+
+```http request
+GET https://appwrite.io/v1/avatars/flags/{code}
+```
+
+** You can use this endpoint to show different country flags icons to your users, The code argument receives the a 2 letter country code. Use width, height and quality arguments to change the output settings. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| code | string | **Required** Country Code. ISO Alpha-2 country code format. |  |
+| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
+| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
+| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100 | 100 |
+
+## Text to QR Generator
+
+```http request
+GET https://appwrite.io/v1/avatars/qr
+```
+
+** Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| text | string | **Required** Plain text to be converted to QR code image |  |
+| size | integer | QR code size. Pass an integer between 0 to 1000. Defaults to 400. | 400 |
+| margin | integer | Margin From Edge. Pass an integer between 0 to 10. Defaults to 1. | 1 |
+| download | integer | Return resulting image with &#039;Content-Disposition: attachment &#039; headers for the browser to start downloading the image. Pass 0 for no header, or 1 for otherwise. Default value is set to 0. | 0 |
+

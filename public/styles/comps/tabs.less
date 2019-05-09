@@ -1,0 +1,101 @@
+
+.phases {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  li {
+    display: none;
+
+    li {
+      display: block;
+    }
+
+    &.selected {
+      display: block;
+    }
+  }
+
+  .number {
+    display: none;
+  }
+
+  h2, h3, h4, h5, h6 {
+    margin: 0 0 30px 0;
+    text-align: inherit;
+  }
+}
+
+.container {
+  position: relative;
+
+  .tabs {
+    height: 60px;
+    line-height: 60px;
+    list-style: none;
+    padding: 0;
+    .clear;
+    .margin-bottom-large;
+    margin-top: -60px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    .selected {
+      font-weight: 400;
+      color: @config-color-focus;
+      position: relative;
+      opacity: 1;
+
+      &:after {
+        content: "";
+        display: block;
+        height: 2px;
+        background: @config-color-focus;
+        width: ~"calc(100% - 46px)";
+        position: absolute;
+        bottom: 0;
+        border-radius: 2px;
+        .func-start(-2px);
+      }
+    }
+
+    .number {
+      display: none;
+    }
+
+    li {
+      .pull-start;
+      .func-padding-end(50px);
+      color: @config-color-focus;
+      opacity: .9;
+      cursor: pointer;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+  .icon {
+    display: none;
+  }
+
+  @media @phones, @tablets {
+    .tabs {
+      width: auto;
+      overflow-x: scroll;
+      overflow-y: hidden;
+      white-space: nowrap;
+
+      li {
+        display: inline-block;
+        float: none;
+      }
+    }
+  }
+}

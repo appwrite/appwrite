@@ -1,0 +1,40 @@
+<div class="cover" style="xbackground-image: url('/images/developer-opacity.png'); background-position: 90% top; background-size: 400px 400px; background-repeat: no-repeat;">
+    <div class="zone xl">
+        <div class="margin-top margin-bottom"><a href="/"><img src="/images/appwrite.svg" height="30" alt="Logo" /></a></div>
+
+        <h1 class="margin-bottom">Welcome to Appwrite Console</h1>
+
+        <p class="margin-bottom">Start creating projects and take advantage of Appwrite development tools</p>
+
+        <ul class="margin-bottom-xl clear">
+            <li class="pull-start margin-end"><a href="/features"><i class="icon-lamp"></i> &nbsp;Learn More</a></li>
+            <li class="pull-start margin-end"><a href="/docs"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
+            <li class="pull-start margin-end"><a href="/support"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
+        </ul>
+    </div>
+</div>
+
+<section class="zone xl margin-bottom-large margin-top-negative-large">
+    <div data-appwrite="projects.list"
+         data-scope="console"
+         data-event="load"
+         data-service="console-projects"
+         data-success="render,trigger"
+         data-error="render"
+         data-success-rerender="project.new"
+         data-error-rerender=""
+         data-success-triggers="projects.load">
+
+        <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3">
+            <li class="margin-bottom">
+                <a data-ls-href="/console/home?project={{project.$uid}}" class="box">
+                    <span data-ls-echo="{{project.name}}" class="text-one-liner">&nbsp;</span>
+                    <p data-ls-echo="{{project.description}}" data-default="No Description.&nbsp;" class="note margin-top-small text-one-liner">&nbsp;</p>
+                    <i class="icon-right-open"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <button data-ls-trigger="new-project">Add Project</button>
+</section>

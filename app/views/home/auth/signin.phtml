@@ -1,0 +1,53 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<div class="zone xl">
+    <h1 class="zone xl margin-bottom-large margin-top">
+        <?php echo $this->escape(Locale::getText('home.auth.signin.title')); ?>
+    </h1>
+
+    <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{state.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?></div>
+
+    <div class="row responsive force-reverse">
+        <div class="col span-6 oauth margin-bottom-large">
+            <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
+
+            <div>
+                <a href="" data-login-fb data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.facebook')); ?></a>
+                <a href="" data-login-linkedin data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button linkedin fill margin-bottom"><i class="icon-linkedin"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.linkedin')); ?></a>
+                <a href="" data-login-github data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button github fill margin-bottom"><i class="icon-github-circled"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.github')); ?></a>
+            </div>
+        </div>
+
+        <div class="col span-6">
+            <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.regular.title')); ?></p>
+
+            <form name="login"
+                  data-appwrite="auth.login"
+                  data-scope="console"
+                  data-event="submit"
+                  data-success="trigger,redirect"
+                  data-success-triggers="login"
+                  data-success-redirect-url="/console"
+                  data-error="alert"
+                  data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?>">
+
+                <input name="success" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/console">
+                <input name="failure" type="hidden" data-ls-echo="https://{{env.DOMAIN}}/auth/signin?failure=1">
+
+                <input name="email" type="email" class="full-width" autocomplete="email" placeholder="<?php echo $this->escape(Locale::getText('home.auth.signin.labels.email')); ?>" required>
+
+                <input name="password" type="password" class="full-width" autocomplete="off" placeholder="<?php echo $this->escape(Locale::getText('home.auth.signin.labels.password')); ?>" required pattern=".{6,}" title="<?php echo $this->escape(Locale::getText('home.auth.signin.labels.password.validation')); ?>">
+
+                <button><?php echo $this->escape(Locale::getText('home.auth.signin.labels.action1')); ?></button>
+            </form>
+        </div>
+    </div>
+
+    <br />
+    <br />
+
+    <div class="text-line-high-large">
+        <a href="/auth/recovery"><?php echo $this->escape(Locale::getText('home.auth.signin.labels.action2')); ?></a> <?php echo $this->escape(Locale::getText('home.auth.signin.labels.or')); ?> <b><a href="/auth/signup"><?php echo $this->escape(Locale::getText('home.auth.signin.labels.action3')); ?></a></b>
+    </div>
+</div>

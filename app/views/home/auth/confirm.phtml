@@ -1,0 +1,20 @@
+<?php
+use Utopia\Locale\Locale;
+?>
+<section class="zone xl">
+    <form data-appwrite="auth.confirm"
+      data-scope="console"
+      data-event="load"
+      data-param-token="{{state.params.token}}"
+      data-param-user-id="{{state.params.userId}}"
+      data-success="redirect,alert,trigger"
+      data-success-redirect-url="/console"
+      data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.confirm.success')); ?>"
+      data-success-triggers="account.update"
+      data-error="alert"
+      data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.confirm.failure')); ?>">
+
+        <h2 class="margin-bottom-small"><?php echo $this->escape(Locale::getText('home.auth.confirm.title')); ?></h2>
+        <p class="note"><?php echo $this->escape(Locale::getText('home.auth.confirm.subtitle')); ?></p>
+    </form>
+</section>
