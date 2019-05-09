@@ -174,10 +174,7 @@ use Utopia\Locale\Locale;
                  data-appwrite="account.sessions"
                  data-scope="console"
                  data-service="sessions"
-                 data-event="load"
-                 data-success="render"
-                 data-error="render"
-                 data-success-rerender="account.update">
+                 data-event="load">
 
                 <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                     <li class="clear">
@@ -212,7 +209,7 @@ use Utopia\Locale\Locale;
                             </form>
                         </span>
 
-                        <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowerCase}}?width=120&height=120" data-ls-title="{{session.client.name}}" data-ls-alt="{{session.client.name}}" class="avatar trans pull-start margin-end" />
+                        <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowerCase}}?width=120&height=120,title={{session.client.name}},alt={{session.client.name}}" class="avatar trans pull-start margin-end" />
 
                         <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
                         &nbsp;
@@ -245,10 +242,8 @@ use Utopia\Locale\Locale;
                  data-appwrite="account.security"
                  data-scope="console"
                  data-service="securityLogs"
-                 data-event="load"
-                 data-success="render"
-                 data-success-rerender="account.update"
-                 data-error="">
+                 data-event="load">
+                <span data-ls-bind="{{securityLogs}}"></span>
 
                 <h3><?php echo Locale::getText('console.account.section.security.recent-activity.title'); ?></h3>
 

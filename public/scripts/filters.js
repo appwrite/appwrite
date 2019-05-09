@@ -4,35 +4,35 @@ let timezone    = window.ls.container.get('timezone');
 let markdown    = window.ls.container.get('markdown');
 
 window.ls.filter
-    .add('lowerCase', function (value) {
-        return value.toLowerCase();
+    .add('lowerCase', function ($value) {
+        return $value.toLowerCase();
     })
-    .add('date', function (value, options) {
-        return date.format('Y-m-d', value);
+    .add('date', function ($value) {
+        return date.format('Y-m-d', $value);
     })
-    .add('date-time', function (value, options) {
-        return date.format('Y-m-d H:i', value);
+    .add('date-time', function ($value) {
+        return date.format('Y-m-d H:i', $value);
     })
-    .add('date-text', function (value, options) {
-        return date.format('d M Y', value);
+    .add('date-text', function ($value) {
+        return date.format('d M Y', $value);
     })
-    .add('date-long', function (value, options) {
-        return date.format('l, j F, H:i', value);
+    .add('date-long', function ($value) {
+        return date.format('l, j F, H:i', $value);
     })
-    .add('min2hum', function (value, options) {
-        if(value >= 60) {
-            if(value % 60 === 0) {
-                return Math.ceil(value / 60) + ' hours';
+    .add('min2hum', function ($value) {
+        if($value >= 60) {
+            if($value % 60 === 0) {
+                return Math.ceil($value / 60) + ' hours';
             }
             else {
-                return Math.ceil(value / 60) + ' hours and ' + (value % 60) + ' minutes';
+                return Math.ceil($value / 60) + ' hours and ' + ($value % 60) + ' minutes';
             }
         }
 
-        return value + ' minutes';
+        return $value + ' minutes';
     })
-    .add('ms2hum', function (value, options) {
-        let temp = value;
+    .add('ms2hum', function ($value) {
+        let temp = $value;
         const years = Math.floor( temp / 31536000 ),
             days = Math.floor( ( temp %= 31536000 ) / 86400 ),
             hours = Math.floor( ( temp %= 86400 ) / 3600 ),
@@ -49,17 +49,17 @@ window.ls.filter
 
         return "< 1s";
     })
-    .add('nl2p', function (value, options) {
-        let result = "<p>" + value + "</p>";
+    .add('nl2p', function ($value) {
+        let result = "<p>" + $value + "</p>";
         result = result.replace(/\r\n\r\n/g, "</p><p>").replace(/\n\n/g, "</p><p>");
         result = result.replace(/\r\n/g, "<br />").replace(/\n/g, "<br />");
 
         return result;
     })
-    .add('markdown', function (value, options) {
-        return markdown.render(value);
+    .add('markdown', function ($value) {
+        return markdown.render($value);
     })
-    .add('id2name', function (value, options) {
+    .add('id2name', function ($value) {
         let members = container.get('members');
 
         if(members === null) {
@@ -67,16 +67,16 @@ window.ls.filter
         }
 
         for (let y = 0; y < members.length; y++) {
-            if(members[y]['$uid'] === value) {
-                value = members[y].name;
+            if(members[y]['$uid'] === $value) {
+                $value = members[y].name;
             }
         }
 
-        return value;
+        return $value;
     })
-    .add('id2role', function (value, options) {
-        if(APP_ENV.ROLES[value]) {
-            return APP_ENV.ROLES[value];
+    .add('id2role', function ($value) {
+        if(APP_ENV.ROLES[$value]) {
+            return APP_ENV.ROLES[$value];
         }
 
         return '';
@@ -102,14 +102,14 @@ window.ls.filter
 
         return bytes.toFixed(1) + '<span class="text-size-small unit">' + units[u] + '</span>';
     })
-    .add('statsTotal', function (value) {
-        if(!value) {
+    .add('statsTotal', function ($value) {
+        if(!$value) {
             return 0;
         }
 
-        value = abbreviate(value, 1, false, false);
+        $value = abbreviate($value, 1, false, false);
 
-        return (value === '0') ? 'N/A' : value;
+        return ($value === '0') ? 'N/A' : $value;
     });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

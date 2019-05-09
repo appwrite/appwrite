@@ -1,13 +1,10 @@
 <?php
 use Utopia\Locale\Locale;
 ?>
-<header class="clear" data-ls-rerender="project.update">
+<header class="clear">
     &nbsp;&nbsp;&nbsp;
     <div data-ls-wait="projects.load" class="list pull-start project-only">
-<!--        <select data-ls-options="{{projects}}" data-key="{{option.$uid}}" data-label="{{option.name}}" data-ls-bind="{{router.params.project}}" aria-label="<?php /*echo $this->escape(Locale::getText('console.navigation.switch')); */?>" data-switch=""></select>
--->
-
-        <select data-ls-loop="projects" data-ls-as="option" data-ls-bind="{{router.params.project}}">
+        <select data-ls-loop="projects" data-ls-as="option" data-ls-bind="{{router.params.project}}" data-switch>
             <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
         </select>
     </div>
@@ -18,12 +15,7 @@ use Utopia\Locale\Locale;
          data-appwrite="account.get"
          data-service="account"
          data-scope="console"
-         data-event="load"
-         data-success="render,trigger"
-         data-success-rerender="account.update"
-         data-success-triggers="account.load"
-         data-error="render,trigger"
-         data-error-triggers="logout">
+         data-event="load">
 
         <div class="pull-end console-back">
             <a href="/console">Back to Console &nbsp;<i class="icon-right-open"></i></a>
@@ -35,7 +27,7 @@ use Utopia\Locale\Locale;
         </a>
     </div>
 
-    <nav data-ls-rerender="project.load,project.update">
+    <nav>
         <a class="logo" href="/console">
             <img src="/images/appwrite-nav.svg" alt="Appwrite Logo" />
         </a>
@@ -111,21 +103,14 @@ use Utopia\Locale\Locale;
      data-event="load"
      data-service="projects"
      data-scope="console"
-     data-success="render,trigger"
-     data-error="render"
-     data-success-rerender=""
-     data-error-rerender=""
-     data-success-triggers="projects.load" data-singleton="true">
+     data-singleton="true">
 </div>
 
-<div data-ls-if="'{{router.params.project}}' != 'undefined'" data-ls-rerender="project.reload">
+<div data-ls-if="({{router.params.project}} != undefined)" data-debug="1">
     <div data-appwrite="projects.get"
          data-event="load"
          data-service="console-project"
-         data-param-project-id="{{router.params.project}}"
-         data-success="render,trigger"
-         data-success-rerender="platform.new,platform.update,platform.delete"
-         data-success-triggers="project.load">
+         data-param-project-id="{{router.params.project}}">
     </div>
 </div>
 
@@ -133,30 +118,21 @@ use Utopia\Locale\Locale;
      data-appwrite="geo.get"
      data-service="geo"
      data-event="load"
-     data-success="render,trigger"
-     data-success-triggers="geo.load"
-     data-error="alert"
-     data-error-triggers="logout" data-singleton="true">
+     data-singleton="true">
 </div>
 
 <div class=""
      data-appwrite="geo.countries.list"
      data-service="geo-countries"
      data-event="load"
-     data-success="render,trigger"
-     data-success-triggers="geo-countries.load"
-     data-error="trigger"
-     data-error-triggers="logout" data-singleton="true">
+     data-singleton="true">
 </div>
 
 <div class=""
      data-appwrite="geo.countries.phones"
      data-service="geo-countries-phones"
      data-event="load"
-     data-success="render,trigger"
-     data-success-triggers="geo-countries-phones.load"
-     data-error="trigger"
-     data-error-triggers="logout" data-singleton="true">
+     data-singleton="true">
 </div>
 
 <div data-ui-modal class="modal close" data-button-alias="setup" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="new-project">
