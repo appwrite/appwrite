@@ -1,8 +1,8 @@
 <p align="center">
     <a href="https://appwrite.io" target="_blank"><img height="60" src="https://appwrite.io/v1/images/github-logo.png" alt="Appwrite Logo"></a>
-    
-**Simple Backend Server**
-
+    <br />
+    <br />
+    <b>Simple Backend Server for your [Vue / Angular / React / iOS / Android / Flutter / *ANY*] Frontend App</b>
 </p>
 
 [![Chat With Us](https://img.shields.io/gitter/room/appwrite/community.svg)](https://gitter.im/appwrite/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
