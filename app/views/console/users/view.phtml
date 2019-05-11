@@ -26,7 +26,7 @@ use Utopia\Locale\Locale;
             <li data-state="/console/users/view?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>General</h2>
 
-                <div data-ls-if="'{{user.status}}' === '<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>'" style="display: none" class="box padding-small danger margin-bottom-xxl">
+                <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl">
                     This user account is blocked.
                 </div>
 
@@ -38,10 +38,10 @@ use Utopia\Locale\Locale;
 
                                 <div class="margin-top-small note" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
-                                    <span data-ls-if="'{{user.confirm}}' === 'true'" style="display: none;">
+                                    <span data-ls-if="{{user.confirm}} === true" style="display: none;">
                                         <span class="tag green">Verified</span>
                                     </span>
-                                    <span data-ls-if="'{{user.confirm}}' !== 'true'" style="display: none;">
+                                    <span data-ls-if="{{user.confirm}} !== true" style="display: none;">
                                         <span class="tag">Unverified</span>
                                     </span>
                                 </div>
@@ -94,7 +94,7 @@ use Utopia\Locale\Locale;
                             <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{user.$uid}}" disabled data-forms-copy>
                         </div>
 
-                        <div data-ls-if="'{{user.status}}' !== '<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>'" style="display: none">
+                        <div data-ls-if="{{user.status}} !== <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                   data-appwrite="users.updateStatus"
                                   data-event="submit"
@@ -108,7 +108,7 @@ use Utopia\Locale\Locale;
                             </form>
                         </div>
 
-                        <div data-ls-if="'{{user.status}}' === '<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>'" style="display: none">
+                        <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                   data-appwrite="users.updateStatus"
                                   data-event="submit"
@@ -136,11 +136,11 @@ use Utopia\Locale\Locale;
                      data-error="render"
                      data-success-rerender="user.update">
 
-                    <div data-ls-if="'{{sessions.length}}' === '0'" style="display: none" class="margin-top-xl margin-bottom-xl">
+                    <div data-ls-if="{{sessions.length}} === 0" style="display: none" class="margin-top-xl margin-bottom-xl">
                         No sessions available
                     </div>
 
-                    <div data-ls-if="'{{sessions.length}}' !== '0'" style="display: none">
+                    <div data-ls-if="{{sessions.length}} !== 0" style="display: none">
                         <div class="box margin-bottom">
                             <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                                 <li class="clear">
@@ -194,11 +194,11 @@ use Utopia\Locale\Locale;
                      data-success-rerender="logs.load"
                      data-error="">
 
-                    <div data-ls-if="'{{logs.length}}' === '0'" style="display: none" class="margin-top-xl margin-bottom-xl">
+                    <div data-ls-if="{{logs.length}} === 0" style="display: none" class="margin-top-xl margin-bottom-xl">
                         No logs available
                     </div>
 
-                    <div class="box" data-ls-if="'{{logs.length}}' !== '0'" style="display: none">
+                    <div class="box" data-ls-if="{{logs.length}} !== 0" style="display: none">
                         <table class="vertical small">
                             <thead>
                             <tr>

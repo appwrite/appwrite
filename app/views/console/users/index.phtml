@@ -102,15 +102,15 @@ $providers = $this->getParam('providers', []);
                                         <span data-ls-bind="{{user.email}}" class="note"></span>
                                     </td>
                                     <td data-title="Status: ">
-                                    <span data-ls-if="'{{user.confirm}}' === 'true'">
+                                    <span data-ls-if="{{user.confirm}} === true">
                                         &nbsp;<span class="tag green">Verified</span>
                                     </span>
 
-                                    <span data-ls-if="'{{user.confirm}}' !== 'true'">
+                                    <span data-ls-if="{{user.confirm}} !== true">
                                         &nbsp;<span class="tag">Unverified</span>
                                     </span>
 
-                                    <span data-ls-if="'{{user.status}}' === '<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>'">
+                                    <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
                                         &nbsp;<span class="tag red">Blocked</span>
                                     </span>
                                     </td>
@@ -315,7 +315,7 @@ $providers = $this->getParam('providers', []);
 
                             <span>
                             <?php echo ucfirst($provider); ?>
-                                <span data-ls-if="'{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}}' == '' || '{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}' == '' || '{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}}' == 'undefined' || '{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}' == 'undefined'">
+                                <span data-ls-if="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} === '' || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}} == '' || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} === undefined || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}} === undefined">
                                 &nbsp;<span class="tag red">Disabled</span>
                             </span>
                         </span>

@@ -178,7 +178,7 @@ use Utopia\Locale\Locale;
 
                 <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                     <li class="clear">
-                        <span data-ls-if="true != '{{session.current}}'" style="display: none;"> <!-- From remote session (-logout event) -->
+                        <span data-ls-if="true != {{session.current}}" style="display: none;"> <!-- From remote session (-logout event) -->
                             <form class="pull-end"
                                   data-appwrite="auth.logoutById"
                                   data-scope="console"
@@ -193,7 +193,7 @@ use Utopia\Locale\Locale;
                             </form>
                         </span>
 
-                        <span data-ls-if="true == '{{session.current}}'" style="display: none;"> <!-- From current session (+logout event) -->
+                        <span data-ls-if="true == {{session.current}}" style="display: none;"> <!-- From current session (+logout event) -->
                             <form class="pull-end"
                                   data-appwrite="auth.logoutById"
                                   data-scope="console"

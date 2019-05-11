@@ -529,7 +529,7 @@ $scopes = [ // TODO sync with project list
                      data-error="render"
                      data-error-rerender="">
 
-                    <div data-ls-if="0 === {{console-tasks.length}} || 'undefined' === '{{console-tasks.length}}'" class="box margin-top margin-bottom" style="display: none;">
+                    <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom" style="display: none;">
                         <h3>No Tasks Found</h3>
 
                         <p class="margin-bottom-no">You haven't created any task to your project yet.</p>
@@ -563,10 +563,10 @@ $scopes = [ // TODO sync with project list
                                         <a data-ls-attrs="href={{task.httpUrl}}" data-ls-bind="{{task.httpUrl}}" target="_blank" class="text-one-liner"></a>
                                     </td>
                                     <td style="vertical-align: middle">
-                                        <span data-ls-if="'play' === '{{task.status}}'" style="display: none;">
+                                        <span data-ls-if="'play' === {{task.status}}" style="display: none;">
                                             <span class="tag green"><i class="icon-play"></i> Running &nbsp;</span>
                                         </span>
-                                        <span data-ls-if="'play' !== '{{task.status}}'" style="display: none;">
+                                        <span data-ls-if="'play' !== {{task.status}}" style="display: none;">
                                             <span class="tag red"><i class="icon-pause"></i> Paused &nbsp;</span>
                                         </span>
                                     </td>
@@ -574,14 +574,14 @@ $scopes = [ // TODO sync with project list
                                         <span data-ls-bind="{{task.next|date-time}}" class="note"></span>
                                     </td>
                                     <td style="vertical-align: middle">
-                                        <div data-ls-if="'undefined' !== '{{task.previous}}'" class="note">
+                                        <div data-ls-if="'undefined' !== {{task.previous}}" class="note">
                                             <span data-ls-bind="{{task.previous|date-time}}"></span>
 
-                                            <div data-ls-if="'undefined' !== '{{task.delay}}' && 59 < {{task.delay}}" class="note text-danger margin-top-tiny">
+                                            <div data-ls-if="'undefined' !== {{task.delay}} && 59 < {{task.delay}}" class="note text-danger margin-top-tiny">
                                                 <span data-ls-bind="({{task.delay|ms2hum}} Delay)"></span>
                                             </div>
                                         </div>
-                                        <div data-ls-if="'undefined' === '{{task.previous}}'" class="note">
+                                        <div data-ls-if="'undefined' === {{task.previous}}" class="note">
                                             None.
                                         </div>
                                     </td>
@@ -847,7 +847,7 @@ $scopes = [ // TODO sync with project list
                                     <button class="danger"><?php echo Locale::getText('console.settings.section.members.labels.leave'); ?></button>
                                 </form>
 
-                                <div data-ls-if="'false' == '{{member.confirm}}'" class="pull-end margin-end" style="display: none;">
+                                <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
                                     <form
                                             data-appwrite="auth.inviteResend"
                                             data-scope="console"
@@ -866,7 +866,7 @@ $scopes = [ // TODO sync with project list
 
                                 <img src="" data-ui-gravatar="{{member.email}}" data-name="{{member.name}}" data-size="100" alt="User Avatar" class="avatar pull-start margin-end" />
                                 <div class="margin-bottom-small">
-                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0|id2role}}"></span> &nbsp;&nbsp;<span data-ls-if="'false' == '{{member.confirm}}'" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
+                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0|id2role}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
                                 </div>
                                 <span class="note" data-ls-bind="{{member.email}}"></span>
                             </li>
