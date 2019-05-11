@@ -10,6 +10,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
+use Appwrite\ClamAV\Network;
 use Database\Database;
 use Database\Validator\UID;
 use Storage\Storage;
@@ -18,7 +19,6 @@ use Storage\Validators\File;
 use Storage\Validators\FileSize;
 use Storage\Compression\Algorithms\GZIP;
 use Resize\Resize;
-use LibreOffice\LibreOffice;
 use OpenSSL\OpenSSL;
 
 Storage::addDevice('local', new Local('app-' . $project->getUid()));
@@ -529,7 +529,7 @@ $utopia->post('/v1/storage/files')
                 }
             }
 
-            $antiVirus = new \ClamAV\Network('clamav', 3310);
+            $antiVirus = new Network('clamav', 3310);
 
             /**
              * Models
@@ -680,7 +680,7 @@ $utopia->get('/v1/storage/files/:fileId/scan')
 
             $source = $compressor->decompress($source);
 
-            $antiVirus = new \ClamAV\Network('clamav', 3310);
+            $antiVirus = new Network('clamav', 3310);
 
             //var_dump($antiVirus->ping());
             //var_dump($antiVirus->version());
@@ -701,7 +701,7 @@ $utopia->get('/v1/storage/scan')
         {
             $device = Storage::getDevice('local');
 
-            $antiVirus = new \ClamAV\Network('clamav', 3310);
+            $antiVirus = new Network('clamav', 3310);
             //var_dump($antiVirus->ping());
             //var_dump($antiVirus->version());
             //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));

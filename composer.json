@@ -13,7 +13,6 @@
         "psr-4": {
             "Audit\\": "src/Audit",
             "Auth\\": "src/Auth",
-            "ClamAV\\": "src/ClamAV",
             "Database\\": "src/Database",
             "Event\\": "src/Event",
             "OpenSSL\\": "src/OpenSSL",
@@ -37,6 +36,8 @@
         "ext-openssl": "*",
         "ext-zlib": "*",
         "ext-sockets": "*",
+
+        "appwrite/php-clamav": "master",
 
         "utopia-php/framework": "master",
         "utopia-php/abuse": "master",

@@ -4,8 +4,53 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "57d614ec24a3ebc4cee0e6fd1f4cebfb",
+    "content-hash": "c1d8468f36e74c0212272b585e01ffaf",
     "packages": [
+        {
+            "name": "appwrite/php-clamav",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/appwrite/php-clamav.git",
+                "reference": "9298a2d490e064f0c72d86ecc9f4792a49f4288f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/php-clamav/zipball/9298a2d490e064f0c72d86ecc9f4792a49f4288f",
+                "reference": "9298a2d490e064f0c72d86ecc9f4792a49f4288f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Appwrite\\ClamAV\\": "src/ClamAV"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "ClamAV network and pipe client for PHP",
+            "keywords": [
+                "anti virus",
+                "appwrite",
+                "clamav",
+                "php"
+            ],
+            "time": "2019-05-11 15:12:28"
+        },
         {
             "name": "bacon/bacon-qr-code",
             "version": "2.0.0",

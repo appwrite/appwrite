@@ -97,7 +97,7 @@ services:
     - redis
 
   clamav:
-    image: registry.gitlab.com/appwrite/appwrite/clamav:v1.0.0
+    image: appwrite/clamav:v1.0.2
     restart: unless-stopped
     networks:
     - clamav
