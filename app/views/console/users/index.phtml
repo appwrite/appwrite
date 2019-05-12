@@ -267,6 +267,8 @@ $providers = $this->getParam('providers', []);
                     <?php foreach ($providers as $provider => $data):?>
                         <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
                             <div data-ui-modal class="modal close" data-button-text="Settings" data-button-class="pull-end">
+                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
                                 <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
 
                                 <form data-service="projects.updateOauth"
@@ -322,8 +324,8 @@ $providers = $this->getParam('providers', []);
                 </ul>
             </div>
         </li>
-        <li data-state="/console/users/templates?project={{router.params.project}}">
+<!--        <li data-state="/console/users/templates?project={{router.params.project}}">
             <h2>Templates</h2>
-        </li>
+        </li>-->
     </ul>
 </div>
