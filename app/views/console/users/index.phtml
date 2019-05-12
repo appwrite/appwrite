@@ -9,7 +9,7 @@ $providers = $this->getParam('providers', []);
         <?php echo Locale::getText('console.users.title'); ?>
     </h1>
 </div>
-
+<span data-ls-bind="{{project-users.sum}}">xxxxx</span>
 <div class="zone xl" data-ls-rerender="project.load">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/users?project={{router.params.project}}">
@@ -60,18 +60,14 @@ $providers = $this->getParam('providers', []);
                 </div>
 
                 <div data-service="users.list"
-                     data-param-search="{{filter-users.keys.search}}"
-                     data-param-limit="{{filter-users.keys.limit}}"
-                     data-param-offset="{{filter-users.keys.offset}}"
+                     data-event="load"
+                     data-param-search=""
+                     data-param-limit="25"
+                     data-param-offset="0"
                      data-scope="sdk"
-                     data-name="project-users"
-                     data-event="filter-users-changed"
-                     data-success="render,trigger"
-                     data-error="render"
-                     data-error-rerender=""
-                     data-success-triggers="users.load">
+                     data-name="project-users">
 
-                    <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom" style="display: none;">
+                    <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom">No Users Found</h3>
 
                         <p class="margin-bottom-no">Create your first user to get started</p>

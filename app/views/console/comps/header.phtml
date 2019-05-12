@@ -22,7 +22,7 @@ use Utopia\Locale\Locale;
         </div>
 
         <a href="/console/account" class="account pull-end clear">
-            <img src="" data-ui-gravatar="{{account.email}}" data-name="{{account.name}}" alt="User Avatar" class="avatar margin-start pull-end" />
+            <img src="" data-ls-attrs="src={{account|gravatar}}" alt="User Avatar" class="avatar margin-start pull-end" />
             <span class="name pull-end" data-ls-bind="{{account.name}}"></span>
         </a>
     </div>
