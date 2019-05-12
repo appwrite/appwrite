@@ -11,15 +11,15 @@
 
 ---
 
-Appwrite is a simple to use backend for frontend and mobile apps. Appwrite provides client side (and server) developers with a set of REST APIs to use for building software projects.
+Appwrite is a simple to use backend for frontend and mobile apps. Appwrite provides client side (and server) developers with a set of REST APIs to speed up app development time.
 
-Using Appwrite you can easily manage user authentication with multiple sign-in methods, database as a service, storage and file uploads, image manipulation and cropping, scheduled cron tasks and many more features to help you get more results in faster time and with a lot less code.
+Using Appwrite you can easily manage user authentication with multiple sign-in methods, database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
 ![Appwrite](public/images/github.png)
 
 ## Installation
 
-Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can run Appwrite on your localhost using docker-compose or on any container orchestration tool like kubernetes or rancher.
+Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Swarm or Rancher.
 
 The easiest way to start running your Appwrite server is by running our docker compose file:
 
