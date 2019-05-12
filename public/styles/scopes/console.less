@@ -18,12 +18,12 @@
     background: #f6f9fc;
 
     .project-only {
-      visibility: hidden;
+      visibility: hidden!important;
     }
 
     &.show-nav {
       .project-only {
-        visibility: visible;
+        visibility: visible!important;
       }
     }
 
@@ -149,18 +149,13 @@
         height: 39px;
         padding: 15px 20px;
         display: block;
-        //text-align: center;
-        //border-bottom: solid 1px #172d3d;
-        //border-bottom: solid 1px #13212b;
-        //margin-bottom: 15px;
+        border-bottom: none;
 
         &:hover {
-          //background: #183142;
-          //border-bottom: none;
+          border-bottom: none;
         }
 
         img {
-          //.func-margin-start(-10px);
           display: inline-block;
           margin-top: 9px;
           width: 75%;
