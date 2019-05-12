@@ -3,7 +3,7 @@ use Utopia\Locale\Locale;
 ?>
 <header class="clear">
     &nbsp;&nbsp;&nbsp;
-    <div data-ls-wait="projects.load" class="list pull-start project-only">
+    <div class="list pull-start project-only">
         <select data-ls-loop="projects" data-ls-as="option" data-ls-bind="{{router.params.project}}" data-switch>
             <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
         </select>

@@ -197,8 +197,6 @@
                                 }
                                 if (debug) console.log('%c[event triggered]: ' + triggers[i], 'color:green');
 
-                                di.report(triggers[i]);
-
                                 document.dispatchEvent(new CustomEvent(triggers[i]));
                             }
                         }
@@ -285,8 +283,6 @@
                                 if('' === triggers[i]) {
                                     continue;
                                 }
-
-                                di.report(triggers[i]);
 
                                 document.dispatchEvent(new CustomEvent(triggers[i]));
                             }
@@ -396,8 +392,6 @@
                             element.setAttribute('data-event', 'none'); // Avoid re-attaching event
                             break;
                         default:
-                            //document.addEventListener(events[y], exec);
-                            di.listen(events[y], exec);
                             element.setAttribute('data-event', 'none'); // Avoid re-attaching event
                     }
 

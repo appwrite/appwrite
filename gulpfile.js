@@ -14,14 +14,11 @@ const configApp  = {
     src: [
         'public/scripts/dependencies/litespeed.js',
 
-        'public/scripts/sdk.js',
-
         'public/scripts/init.js',
 
         'public/scripts/services/alerts.js',
         'public/scripts/services/console.js',
         'public/scripts/services/date.js',
-        'public/scripts/services/di.js',
         'public/scripts/services/env.js',
         'public/scripts/services/markdown.js',
         'public/scripts/services/sdk.js',
@@ -30,10 +27,8 @@ const configApp  = {
         'public/scripts/routes.js',
         'public/scripts/filters.js',
         'public/scripts/app.js',
-        'public/scripts/appwrite.js',
 
-        'public/scripts/views/count.js',
-        'public/scripts/views/wait.js',
+        'public/scripts/views/service.js',
 
         'public/scripts/views/analytics/event.js',
         'public/scripts/views/analytics/pageview.js',
@@ -76,6 +71,7 @@ const configApp  = {
 const configDep = {
     mainFile: 'app-dep.js',
     src: [
+        'public/scripts/dependencies/appwrite.js',
         'public/scripts/dependencies/chart.js',
         'public/scripts/dependencies/markdown-it.js',
         'public/scripts/dependencies/pell.js',

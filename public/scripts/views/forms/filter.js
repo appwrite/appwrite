@@ -104,8 +104,6 @@
                     bubbles: false,
                     cancelable: true
                 }));
-
-                di.report(name + '-changed');
             };
 
             switch (element.tagName) {
@@ -145,14 +143,6 @@
                             }, {once: true});
                         }
                         else {
-                            di.listen(events[y], function (e) {
-                                if(e) {
-                                    e.target.removeEventListener(e.type, arguments.callee);
-                                }
-
-                                apply(form.toJson(element));
-                            });
-
                             //document.addEventListener(events[y], function (e) {
                             //    e.target.removeEventListener(e.type, arguments.callee);
                             //    apply(form.toJson(element));
