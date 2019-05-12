@@ -27,13 +27,13 @@ $providers = $this->getParam('providers', []);
             <div class="col span-4"></div>
         </form>
 
-        <div data-appwrite="storage.files.list"
+        <div data-service="storage.files.list"
              data-param-search="{{filter-files.keys.search}}"
              data-param-limit="{{filter-files.keys.limit}}"
              data-param-offset="{{filter-files.keys.offset}}"
              data-param-order-type="DESC"
              data-scope="sdk"
-             data-service="project-files"
+             data-name="project-files"
              data-event="filter-files-changed"
              data-success="render,trigger"
              data-error="render"

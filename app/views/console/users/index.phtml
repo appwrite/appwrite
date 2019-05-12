@@ -25,7 +25,7 @@ $providers = $this->getParam('providers', []);
 
                                 <h1>Create User</h1>
 
-                                <form data-appwrite="users.create"
+                                <form data-service="users.create"
                                       data-event="submit"
                                       data-success="alert,trigger,reset"
                                       data-success-alert="Created user successfully"
@@ -59,12 +59,12 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div data-appwrite="users.list"
+                <div data-service="users.list"
                      data-param-search="{{filter-users.keys.search}}"
                      data-param-limit="{{filter-users.keys.limit}}"
                      data-param-offset="{{filter-users.keys.offset}}"
                      data-scope="sdk"
-                     data-service="project-users"
+                     data-name="project-users"
                      data-event="filter-users-changed"
                      data-success="render,trigger"
                      data-error="render"
@@ -152,7 +152,7 @@ $providers = $this->getParam('providers', []);
 
                             <h1>Create Team</h1>
 
-                            <form data-appwrite="teams.create"
+                            <form data-service="teams.create"
                                   data-event="submit"
                                   data-success="alert,trigger,reset"
                                   data-success-alert="Created team successfully"
@@ -180,9 +180,9 @@ $providers = $this->getParam('providers', []);
                 </div>
 
                 <div class="zone xl"
-                     data-appwrite="teams.list"
+                     data-service="teams.list"
                      data-scope="sdk"
-                     data-service="project-teams"
+                     data-name="project-teams"
                      data-event="filter-teams-changed"
                      data-param-search="{{filter-teams.keys.search}}"
                      data-param-limit="{{filter-teams.keys.limit}}"
@@ -216,7 +216,7 @@ $providers = $this->getParam('providers', []);
                                         <div data-ui-modal class="modal close" data-button-text="{{team.name}}" data-button-class="link">
                                             <h1>Update Team</h1>
 
-                                            <form data-appwrite="teams.update"
+                                            <form data-service="teams.update"
                                                   data-scope="sdk"
                                                   data-event="submit"
                                                   data-success="alert,trigger"
@@ -275,7 +275,7 @@ $providers = $this->getParam('providers', []);
                             <div data-ui-modal class="modal close" data-button-text="Settings" data-button-class="pull-end">
                                 <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
 
-                                <form data-appwrite="projects.updateOauth"
+                                <form data-service="projects.updateOauth"
                                       data-scope="console"
                                       data-event="submit"
                                       data-param-project-id="{{router.params.project}}"

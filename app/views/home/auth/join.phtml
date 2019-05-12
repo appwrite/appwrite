@@ -3,7 +3,7 @@ use Utopia\Locale\Locale;
 ?>
 <section class="zone medium">
     <form class="box margin-top-large"
-          data-appwrite="auth.join"
+          data-service="auth.join"
           data-scope="console"
           data-event="submit"
           data-param-invite-id="{{router.params.inviteId}}"
@@ -22,9 +22,9 @@ use Utopia\Locale\Locale;
         <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
 
         <div class=""
-             data-appwrite="companies.getPreview"
+             data-service="companies.getPreview"
              data-scope="api"
-             data-service="api-company"
+             data-name="api-company"
              data-param-id="{{router.params.company}}"
              data-event="load"
              data-success="render,trigger"

@@ -11,9 +11,9 @@ use Utopia\Locale\Locale;
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/account">
             <div class=""
-                 data-appwrite="account.get"
+                 data-service="account.get"
                  data-scope="console"
-                 data-service="account"
+                 data-name="account"
                  data-event="load"
                  data-success="render"
                  data-error="trigger"
@@ -25,7 +25,7 @@ use Utopia\Locale\Locale;
                         <div class="box margin-bottom-xl">
                             <div>
                                 <form name="account.update" onsubmit="return false;"
-                                      data-appwrite="account.updateName"
+                                      data-service="account.updateName"
                                       data-scope="console"
                                       data-event="submit"
                                       data-success="trigger,alert"
@@ -53,7 +53,7 @@ use Utopia\Locale\Locale;
                             <hr />
 
                             <form name="update-email"
-                                  data-appwrite="account.updateEmail"
+                                  data-service="account.updateEmail"
                                   data-scope="console"
                                   data-event="submit"
                                   data-success="trigger,alert"
@@ -86,7 +86,7 @@ use Utopia\Locale\Locale;
                                 <h1><?php echo Locale::getText('console.account.section.overview.actions.update-password'); ?></h1>
 
                                 <form name="update-password"
-                                      data-appwrite="account.updatePassword"
+                                      data-service="account.updatePassword"
                                       data-scope="console"
                                       data-event="submit"
                                       data-success="trigger,alert"
@@ -110,7 +110,7 @@ use Utopia\Locale\Locale;
                             <hr />
 
                             <form class="margin-top"
-                                  data-appwrite="auth.logout"
+                                  data-service="auth.logout"
                                   data-scope="console"
                                   data-event="submit"
                                   data-success="trigger"
@@ -149,7 +149,7 @@ use Utopia\Locale\Locale;
                             <p><?php echo Locale::getText('console.account.section.overview.danger.note'); ?></p>
 
                             <form class="inline"
-                                  data-appwrite="account.deactivate"
+                                  data-service="account.deactivate"
                                   data-scope="console"
                                   data-event="submit"
                                   data-confirm="Are you sure you want to delete your account?"
@@ -171,16 +171,16 @@ use Utopia\Locale\Locale;
             <h3><?php echo Locale::getText('console.account.section.security.devices.title'); ?></h3>
 
             <div class="box margin-bottom"
-                 data-appwrite="account.sessions"
+                 data-service="account.sessions"
                  data-scope="console"
-                 data-service="sessions"
+                 data-name="sessions"
                  data-event="load">
 
                 <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                     <li class="clear">
                         <span data-ls-if="true != {{session.current}}" style="display: none;"> <!-- From remote session (-logout event) -->
                             <form class="pull-end"
-                                  data-appwrite="auth.logoutById"
+                                  data-service="auth.logoutById"
                                   data-scope="console"
                                   data-event="submit"
                                   data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
@@ -195,7 +195,7 @@ use Utopia\Locale\Locale;
 
                         <span data-ls-if="true == {{session.current}}" style="display: none;"> <!-- From current session (+logout event) -->
                             <form class="pull-end"
-                                  data-appwrite="auth.logoutById"
+                                  data-service="auth.logoutById"
                                   data-scope="console"
                                   data-event="submit"
                                   data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
@@ -226,7 +226,7 @@ use Utopia\Locale\Locale;
             </div>
 
             <form class="inline margin-bottom-large"
-                  data-appwrite="auth.logoutById"
+                  data-service="auth.logoutById"
                   data-scope="console"
                   data-event="submit"
                   data-success="trigger,redirect"
@@ -239,9 +239,9 @@ use Utopia\Locale\Locale;
             </form>
 
             <div class="account"
-                 data-appwrite="account.security"
+                 data-service="account.security"
                  data-scope="console"
-                 data-service="securityLogs"
+                 data-name="securityLogs"
                  data-event="load">
                 <span data-ls-bind="{{securityLogs}}"></span>
 

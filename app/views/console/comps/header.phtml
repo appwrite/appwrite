@@ -12,8 +12,8 @@ use Utopia\Locale\Locale;
     <button style="width: 40px; height: 40px; line-height: 40px; overflow: visible;" id="setup" class="tooltip round down project-only" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
 
     <div class="account-box clear pull-end"
-         data-appwrite="account.get"
-         data-service="account"
+         data-service="account.get"
+         data-name="account"
          data-scope="console"
          data-event="load">
 
@@ -99,38 +99,38 @@ use Utopia\Locale\Locale;
 </header>
 
 <div class="list pull-start project-only"
-     data-appwrite="projects.list"
+     data-service="projects.list"
      data-event="load"
-     data-service="projects"
+     data-name="projects"
      data-scope="console"
      data-singleton="true">
 </div>
 
 <div data-ls-if="({{router.params.project}} != undefined)">
-    <div data-appwrite="projects.get"
+    <div data-service="projects.get"
          data-event="load"
-         data-service="console-project"
+         data-name="console-project"
          data-param-project-id="{{router.params.project}}">
     </div>
 </div>
 
 <div class=""
-     data-appwrite="geo.get"
-     data-service="geo"
+     data-service="geo.get"
+     data-name="geo"
      data-event="load"
      data-singleton="true">
 </div>
 
 <div class=""
-     data-appwrite="geo.countries.list"
-     data-service="geo-countries"
+     data-service="geo.countries.list"
+     data-name="geo-countries"
      data-event="load"
      data-singleton="true">
 </div>
 
 <div class=""
-     data-appwrite="geo.countries.phones"
-     data-service="geo-countries-phones"
+     data-service="geo.countries.phones"
+     data-name="geo-countries-phones"
      data-event="load"
      data-singleton="true">
 </div>

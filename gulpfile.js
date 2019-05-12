@@ -36,21 +36,18 @@ const configApp  = {
         'public/scripts/views/forms/clone.js',
         'public/scripts/views/forms/color.js',
         'public/scripts/views/forms/copy.js',
-        'public/scripts/views/forms/draft.js',
         'public/scripts/views/forms/filter.js',
         'public/scripts/views/forms/parent-down.js',
         'public/scripts/views/forms/parent-remove.js',
         'public/scripts/views/forms/parent-up.js',
         'public/scripts/views/forms/password-meter.js',
         'public/scripts/views/forms/pell.js',
-        'public/scripts/views/forms/recaptcha.js',
         'public/scripts/views/forms/remove.js',
         'public/scripts/views/forms/switch.js',
         'public/scripts/views/forms/text-count.js',
         'public/scripts/views/forms/text-direction.js',
         'public/scripts/views/forms/text-resize.js',
         'public/scripts/views/forms/upload.js',
-        'public/scripts/views/forms/upload-multi.js',
 
         'public/scripts/views/general/page-title.js',
         'public/scripts/views/general/setup.js',
@@ -62,8 +59,6 @@ const configApp  = {
         'public/scripts/views/ui/open.js',
         'public/scripts/views/ui/paging.js',
         'public/scripts/views/ui/phases.js',
-        'public/scripts/views/ui/scrollTo.js',
-        'public/scripts/views/ui/slide.js'
     ],
     dest: './public/dist/scripts'
 };

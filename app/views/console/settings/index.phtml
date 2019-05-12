@@ -44,9 +44,9 @@ $scopes = [ // TODO sync with project list
 </div>
 
 <div class="zone xl"
-     data-appwrite="projects.get"
+     data-service="projects.get"
      data-scope="console"
-     data-service="console-project"
+     data-name="console-project"
      data-event="load"
      data-param-project-id="{{router.params.project}}"
      data-success="render,trigger"
@@ -60,7 +60,7 @@ $scopes = [ // TODO sync with project list
             <li data-state="/console/settings?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.overview.title'); ?></h2>
 
-                <form data-appwrite="projects.update"
+                <form data-service="projects.update"
                       data-scope="console"
                       data-event="submit"
                       data-param-project-id="{{router.params.project}}"
@@ -175,10 +175,10 @@ $scopes = [ // TODO sync with project list
                 <h2><?php echo Locale::getText('console.settings.section.keys.title'); ?></h2>
 
                 <div class="zone xl"
-                     data-appwrite="projects.keys.list"
+                     data-service="projects.keys.list"
                      data-scope="console"
                      data-event="load"
-                     data-service="console-keys"
+                     data-name="console-keys"
                      data-param-project-id="{{router.params.project}}"
                      data-success="render,trigger"
                      data-success-rerender="key.new,key.update,key.delete"
@@ -200,7 +200,7 @@ $scopes = [ // TODO sync with project list
 
                                     <h1>Update API Key</h1>
 
-                                    <form data-appwrite="projects.keys.update"
+                                    <form data-service="projects.keys.update"
                                           data-scope="console"
                                           data-event="submit"
                                           data-success="alert,trigger,reset"
@@ -236,7 +236,7 @@ $scopes = [ // TODO sync with project list
                                 </div>
 
                                 <form class="pull-end margin-end"
-                                      data-appwrite="projects.keys.delete"
+                                      data-service="projects.keys.delete"
                                       data-scope="console"
                                       data-event="submit"
                                       data-confirm="Are you sure you want to delete this API key?"
@@ -278,7 +278,7 @@ $scopes = [ // TODO sync with project list
 
                             <h1>Add API Keys</h1>
 
-                            <form data-appwrite="projects.keys.create"
+                            <form data-service="projects.keys.create"
                                   data-scope="console"
                                   data-event="submit"
                                   data-success="alert,trigger,reset"
@@ -320,10 +320,10 @@ $scopes = [ // TODO sync with project list
                 <h2><?php echo Locale::getText('console.settings.section.webhooks.title'); ?></h2>
 
                 <div class="zone xl"
-                     data-appwrite="projects.webhooks.list"
+                     data-service="projects.webhooks.list"
                      data-scope="console"
                      data-event="load"
-                     data-service="console-webhooks"
+                     data-name="console-webhooks"
                      data-param-project-id="{{router.params.project}}"
                      data-success="render,trigger"
                      data-success-rerender="webhook.new,webhook.update,webhook.delete"
@@ -346,7 +346,7 @@ $scopes = [ // TODO sync with project list
 
                                     <h1>Update Webhook</h1>
 
-                                    <form data-appwrite="projects.webhooks.update"
+                                    <form data-service="projects.webhooks.update"
                                           data-scope="console"
                                           data-event="submit"
                                           data-success="alert,trigger,reset"
@@ -414,7 +414,7 @@ $scopes = [ // TODO sync with project list
                                 </div>
 
                                 <form class="pull-end margin-end"
-                                      data-appwrite="projects.webhooks.delete"
+                                      data-service="projects.webhooks.delete"
                                       data-scope="console"
                                       data-event="submit"
                                       data-confirm="Are you sure you want to delete this webhook?"
@@ -445,7 +445,7 @@ $scopes = [ // TODO sync with project list
 
                             <h1>Add Webhook</h1>
 
-                            <form data-appwrite="projects.webhooks.create"
+                            <form data-service="projects.webhooks.create"
                                   data-scope="console"
                                   data-event="submit"
                                   data-success="alert,trigger,reset"
@@ -518,10 +518,10 @@ $scopes = [ // TODO sync with project list
                 <h2><?php echo Locale::getText('console.settings.section.tasks.title'); ?></h2>
 
                 <div class="zone xl"
-                     data-appwrite="projects.tasks.list"
+                     data-service="projects.tasks.list"
                      data-scope="console"
                      data-event="load"
-                     data-service="console-tasks"
+                     data-name="console-tasks"
                      data-param-project-id="{{router.params.project}}"
                      data-success="render,trigger"
                      data-success-rerender="task.new,task.update,task.delete"
@@ -591,7 +591,7 @@ $scopes = [ // TODO sync with project list
 
                                             <h1>Update Task</h1>
 
-                                            <form data-appwrite="projects.tasks.update"
+                                            <form data-service="projects.tasks.update"
                                                   data-scope="console"
                                                   data-event="submit"
                                                   data-success="alert,trigger,reset"
@@ -695,7 +695,7 @@ $scopes = [ // TODO sync with project list
                                             </form>
 
                                             <form class="margin-top"
-                                                  data-appwrite="projects.tasks.delete"
+                                                  data-service="projects.tasks.delete"
                                                   data-scope="console"
                                                   data-event="submit"
                                                   data-confirm="Are you sure you want to delete this task?"
@@ -723,7 +723,7 @@ $scopes = [ // TODO sync with project list
 
                             <h1>Add Task</h1>
 
-                            <form data-appwrite="projects.tasks.create"
+                            <form data-service="projects.tasks.create"
                                   data-scope="console"
                                   data-event="submit"
                                   data-success="alert,trigger,reset"
@@ -737,7 +737,7 @@ $scopes = [ // TODO sync with project list
                                 <label for="name">Name</label>
                                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
 
-                                <label data-ls-attrs="for=status-{{task.$uid}}" class="margin-bottom">Status
+                                <label data-ls-attrs="for=status" class="margin-bottom">Status
                                     <div class="margin-top-small">
                                         <input name="status" type="radio" value="play" checked="checked" required /> &nbsp; <span>Play</span>
                                         <input name="status" type="radio" value="pause" required /> &nbsp; <span>Pause</span>
@@ -819,10 +819,10 @@ $scopes = [ // TODO sync with project list
                 <h2><?php echo Locale::getText('console.settings.section.members.title'); ?></h2>
 
                 <div class="zone xl"
-                     data-appwrite="teams.getMembers"
+                     data-service="teams.getMembers"
                      data-scope="console"
                      data-event="load,auth.invite,auth.leave"
-                     data-service="members"
+                     data-name="members"
                      data-param-team-id="{{console-project.teamId}}"
                      data-success="render,trigger"
                      data-success-triggers="members.load"
@@ -833,7 +833,7 @@ $scopes = [ // TODO sync with project list
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
                             <li class="clear">
                                 <form class="pull-end"
-                                      data-appwrite="auth.leave"
+                                      data-service="auth.leave"
                                       data-scope="console"
                                       data-event="submit"
                                       data-success="alert,trigger"
@@ -849,7 +849,7 @@ $scopes = [ // TODO sync with project list
 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
                                     <form
-                                            data-appwrite="auth.inviteResend"
+                                            data-service="auth.inviteResend"
                                             data-scope="console"
                                             data-event="submit"
                                             data-success="alert,trigger"
@@ -879,7 +879,7 @@ $scopes = [ // TODO sync with project list
                         <h1><?php echo Locale::getText('console.settings.section.members.labels.invite'); ?></h1>
 
                         <form name="auth.invite"
-                              data-appwrite="auth.invite"
+                              data-service="auth.invite"
                               data-scope="console"
                               data-event="submit"
                               data-success="alert,trigger,reset"

@@ -3,13 +3,13 @@
 
     window.ls.container.get('view').add(
         {
-            selector: 'data-appwrite',
+            selector: 'data-service',
             repeat: true,
-            controller: function(element, view, container, form, alerts, expression, window, di, state) {
-                let action      = element.dataset['appwrite'];
+            controller: function(element, view, container, form, alerts, expression, window) {
+                let action      = element.dataset['service'];
                 let singleton   = element.dataset['singleton'];
                 let loaded      = element.dataset['loaded'];
-                let service     = element.dataset['service'] || action;
+                let service     = element.dataset['name'] || action;
                 let event       = element.dataset['event'];   // load, click, change, submit
                 let success     = element.dataset['success'] || ''; // render, alert, redirect
                 let error       = element.dataset['error'] || '';  // alert, redirect, page
