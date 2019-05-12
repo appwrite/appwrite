@@ -20,6 +20,7 @@ const configApp  = {
         'public/scripts/services/console.js',
         'public/scripts/services/date.js',
         'public/scripts/services/env.js',
+        'public/scripts/services/form.js',
         'public/scripts/services/markdown.js',
         'public/scripts/services/sdk.js',
         'public/scripts/services/timezone.js',
