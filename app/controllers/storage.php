@@ -208,23 +208,15 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             $algorithm      = $file->getAttribute('algorithm');
             $type           = strtolower(pathinfo($path, PATHINFO_EXTENSION));
             $cipher         = $file->getAttribute('fileOpenSSLCipher');
-            $mimeType       = $file->getAttribute('mimeType', 'unknown');
+            //$mimeType       = $file->getAttribute('mimeType', 'unknown');
 
-            $convertFormat  = LibreOffice::FORMAT_JPG;
-            $convertFile    = pathinfo($file->getAttribute('path'), PATHINFO_FILENAME);
-            $convertExt     = pathinfo($file->getAttribute('path'), PATHINFO_EXTENSION);
-            $convertDir     = '/tmp/';
-            $convertUnique  = uniqid();
-            $convertPath    = "{$convertDir}{$convertFile}-{$convertUnique}.{$convertFormat}";
-            $sourcePath     = "{$convertDir}{$convertFile}-{$convertUnique}.{$convertExt}";
-            $libreOffice    = new LibreOffice();
             $compressor     = new GZIP();
             $device         = Storage::getDevice('local');
 
             if (!file_exists($path)) {
                 throw new Exception('File not found in ' . $path, 404);
             }
-
+/*
             if(1 === 1 || !$libreOffice->supported($convertExt)) {
                 if (array_key_exists($mimeType, $fileLogos)) {
                     $path = realpath('./images/file-types/' . $fileLogos[$mimeType]);
@@ -237,7 +229,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                     $cipher = '';
                     $algorithm = '';
                 }
-            }
+            }*/
 
             $cache  = new Cache(new Filesystem('/storage/cache/app-' . $project->getUid())); // Limit file number or size
             $data   = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
@@ -252,10 +244,6 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                     ->send($data, 0)
                 ;
             }
-
-            // 1. Uncompresss pdf/word/execl/powerpoint from path in /tmp folder
-            // 2. Convert to requested image format (jpg/png)
-            // 3. Change path and type vars to temp image
 
             $source = $device->read($path);
 
@@ -272,22 +260,6 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             if(!empty($algorithm)) {
                 $source = $compressor->decompress($source);
-            }
-
-            if(1 !== 1 && $libreOffice->supported($convertExt)) {
-                $device->write($sourcePath, $source);
-
-                $libreOffice->convert($sourcePath, $convertFormat, $convertDir);
-
-                if(!file_exists($convertPath)) {
-                    throw new Exception('Conversion failed to write or read: "' . $convertPath . '"', 500);
-                }
-
-                $type   = $convertFormat;
-                $source = $device->read($convertPath);
-
-                $device->delete($convertPath);
-                $device->delete($sourcePath);
             }
 
             $resize = new Resize($source);
@@ -393,7 +365,6 @@ $utopia->get('/v1/storage/files/:fileId/view')
                 throw new Exception('File not found in ' . $path, 404);
             }
 
-            $libreOffice    = new LibreOffice();
             $compressor     = new GZIP();
             $device         = Storage::getDevice('local');
 
@@ -419,55 +390,12 @@ $utopia->get('/v1/storage/files/:fileId/view')
             $output     = $compressor->decompress($source);
             $fileName   = $file->getAttribute('name', '');
 
-            $extensions = [
-                'html'  => 'html',
-                'text'  => 'html',
-                'pdf'   => 'pdf',
-            ];
-
             $contentTypes = [
                 'pdf'   => 'application/pdf',
-                'html'  => 'text/plain',
                 'text'  => 'text/plain',
             ];
 
             $contentType = (array_key_exists($as, $contentTypes)) ? $contentTypes[$as] : $contentType;
-
-            if($libreOffice->supported($extensions[$as])) {
-                $convertFile    = pathinfo($path, PATHINFO_FILENAME);
-                $convertExt     = pathinfo($path, PATHINFO_EXTENSION);
-                $convertDir     = '/tmp/';
-                $convertPath    = "{$convertDir}{$convertFile}.{$extensions[$as]}";
-                $sourcePath     = "{$convertDir}{$convertFile}.{$convertExt}";
-
-                if($extensions[$as] !== $convertExt) {
-                    $device->write($sourcePath, $output);
-
-                    $libreOffice->convert($sourcePath, $extensions[$as], $convertDir);
-
-                    if(!file_exists($convertPath)) {
-                        throw new Exception('Conversion failed', 500);
-                    }
-
-                    $output         = $device->read($convertPath);
-                    $fileName       = pathinfo($fileName, PATHINFO_FILENAME) . '.' . $extensions[$as];
-
-                    // Filter Output
-                    switch ($as) {
-                        case 'text':
-                            $html = new \Html2Text\Html2Text($output);
-                            $output = $html->getText();
-                            break;
-                        case 'html':
-                            $output = substr($output, strpos($output, '<body'), strlen($output));
-
-                            break;
-                    }
-
-                    $device->delete($convertPath);
-                    $device->delete($sourcePath);
-                }
-            }
 
             // Response
             $response
@@ -689,7 +617,7 @@ $utopia->get('/v1/storage/files/:fileId/scan')
             //$response->json($antiVirus->continueScan($device->getRoot()));
         }
     );
-
+/*
 $utopia->get('/v1/storage/scan')
     ->desc('Scan Storage')
     ->label('scope', 'storage.scan')
@@ -708,4 +636,4 @@ $utopia->get('/v1/storage/scan')
 
             $response->json($antiVirus->continueScan($device->getRoot()));
         }
-    );
+    );*/
