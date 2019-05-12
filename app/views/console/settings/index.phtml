@@ -194,7 +194,7 @@ $scopes = [ // TODO sync with project list
                         <ul data-ls-loop="console-keys" data-ls-as="key" class="list">
                             <li class="clear">
                                 <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
-                                    <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                     <h1>Update API Key</h1>
 
@@ -228,7 +228,7 @@ $scopes = [ // TODO sync with project list
                                         </div>
 
                                         <div>
-                                            <button type="submit">Save</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                         </div>
                                     </form>
                                 </div>
@@ -253,7 +253,7 @@ $scopes = [ // TODO sync with project list
                                 <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <span class="note">(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</span></div>
 
                                 <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link margin-top-small" data-button-icon="icon-right-open">
-                                    <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                     <h1>API Key Secret</h1>
 
@@ -262,7 +262,7 @@ $scopes = [ // TODO sync with project list
                                             <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-bind="{{key.secret}}"></textarea>
                                         </div>
                                         <div>
-                                            <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                            <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                         </div>
                                     </form>
                                 </div>
@@ -272,7 +272,7 @@ $scopes = [ // TODO sync with project list
 
                     <div class="clear">
                         <div data-ui-modal class="modal close" data-button-text="Add API Key">
-                            <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Add API Keys</h1>
 
@@ -307,7 +307,7 @@ $scopes = [ // TODO sync with project list
                                 <br />
 
                                 <div>
-                                    <button type="submit">Create</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </div>
                             </form>
                         </div>
@@ -340,7 +340,7 @@ $scopes = [ // TODO sync with project list
                             <li class="clear">
 
                                 <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
-                                    <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                     <h1>Update Webhook</h1>
 
@@ -406,7 +406,7 @@ $scopes = [ // TODO sync with project list
                                         <br />
 
                                         <div>
-                                            <button type="submit">Save</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                         </div>
                                     </form>
                                 </div>
@@ -439,7 +439,7 @@ $scopes = [ // TODO sync with project list
 
                     <div class="clear">
                         <div data-ui-modal class="modal close" data-button-text="Add Webhook">
-                            <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Add Webhook</h1>
 
@@ -504,7 +504,7 @@ $scopes = [ // TODO sync with project list
                                 <br />
 
                                 <div>
-                                    <button type="submit">Create</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </div>
                             </form>
                         </div>
@@ -585,7 +585,7 @@ $scopes = [ // TODO sync with project list
                                     </td>
                                     <td>
                                         <div data-ui-modal class="modal close" data-button-text="" data-button-class="pull-end reverse round" data-button-icon="icon-cog">
-                                            <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                             <h1>Update Task</h1>
 
@@ -688,7 +688,7 @@ $scopes = [ // TODO sync with project list
                                                 </div>
 
                                                 <div>
-                                                    <button type="submit">Update</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                                    <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                                 </div>
                                             </form>
 
@@ -717,7 +717,7 @@ $scopes = [ // TODO sync with project list
 
                     <div class="clear">
                         <div data-ui-modal class="modal close" data-button-text="Add Task">
-                            <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Add Task</h1>
 
@@ -806,7 +806,7 @@ $scopes = [ // TODO sync with project list
                                 </div>
 
                                 <div>
-                                    <button type="submit">Create</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </div>
                             </form>
                         </div>
@@ -872,7 +872,7 @@ $scopes = [ // TODO sync with project list
                     </div>
 
                     <div data-ui-modal class="modal close width-small" data-button-text="<?php echo Locale::getText('console.settings.section.members.labels.invite'); ?>" data-button-class="">
-                        <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                        <button type="button" class="close pull-end" data-ui-modal-close><i class="icon-cancel"></i></button>
 
                         <h1><?php echo Locale::getText('console.settings.section.members.labels.invite'); ?></h1>
 
@@ -900,7 +900,7 @@ $scopes = [ // TODO sync with project list
 
                             <div class="clear">
                                 <button><?php echo Locale::getText('console.settings.section.members.labels.send'); ?></button>
-                                &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse"><?php echo Locale::getText('console.settings.section.members.labels.cancel'); ?></button>
+                                &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo Locale::getText('console.settings.section.members.labels.cancel'); ?></button>
                             </div>
                         </form>
                     </div>

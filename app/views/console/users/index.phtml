@@ -19,7 +19,7 @@ $providers = $this->getParam('providers', []);
                     <div class="col span-2">
                         <div class="clear">
                             <div data-ui-modal class="modal close" data-button-text="" data-button-class="pull-end round" data-button-icon="icon-plus">
-                                <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                 <h1>Create User</h1>
 
@@ -40,7 +40,7 @@ $providers = $this->getParam('providers', []);
                                     <label for="user-password">Password</label>
                                     <input type="password" class="full-width" id="user-password" name="password" required autocomplete="off" />
 
-                                    <button type="submit">Create</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </form>
                             </div>
                         </div>
@@ -142,7 +142,7 @@ $providers = $this->getParam('providers', []);
                 <div class="row responsive force-reverse clear margin-bottom-tiny">
                     <div class="col span-2">
                         <div data-ui-modal class="modal close" data-button-text="" data-button-class="pull-end round" data-button-icon="icon-plus">
-                            <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Create Team</h1>
 
@@ -157,7 +157,7 @@ $providers = $this->getParam('providers', []);
                                 <label for="user-name">Name</label>
                                 <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
 
-                                <button type="submit">Create</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </form>
                         </div>
                     </div>
@@ -227,7 +227,7 @@ $providers = $this->getParam('providers', []);
                                                 <label for="name">Name</label>
                                                 <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
 
-                                                <button>Update</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                                <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                             </form>
                                         </div>
                                     </td>
@@ -299,7 +299,7 @@ $providers = $this->getParam('providers', []);
                                         </div>
                                     </div>
 
-                                    <button>Update</button> &nbsp; <button data-ls-trigger="modal-close" type="button" class="reverse">Cancel</button>
+                                    <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </form>
                             </div>
 

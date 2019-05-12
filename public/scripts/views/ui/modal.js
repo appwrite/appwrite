@@ -68,6 +68,13 @@
                     element.classList.remove('close');
                 };
 
+                let close = function () {
+                    document.documentElement.classList.remove('modal-open');
+
+                    element.classList.add('close');
+                    element.classList.remove('open');
+                };
+
                 if(name) {
                     document.querySelectorAll("[data-ui-modal-ref='" + name + "']").forEach(function(elem) {
                         elem.addEventListener('click', open);
@@ -82,26 +89,19 @@
 
                 document.addEventListener('keydown', function(event) {
                     if (event.which === 27) {
-                        document.dispatchEvent(new CustomEvent('modal-close', {
-                            bubbles: false,
-                            cancelable: true
-                        }));
+                        close();
                     }
                 });
 
-                element.addEventListener('blur', function() {
-                    document.dispatchEvent(new CustomEvent('modal-close', {
-                        bubbles: false,
-                        cancelable: true
-                    }));
-                });
+                element.addEventListener('blur', close);
 
-                document.addEventListener('modal-close', function () {
-                    document.documentElement.classList.remove('modal-open');
+                let closeButtons = element.querySelectorAll('[data-ui-modal-close]');
 
-                    element.classList.add('close');
-                    element.classList.remove('open');
-                });
+                for(let i =0; i < closeButtons.length; i++){
+                    closeButtons[i].addEventListener('click', close);
+                }
+
+                document.addEventListener('modal-close', close);
             }
         }
     );
