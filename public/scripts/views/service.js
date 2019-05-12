@@ -57,6 +57,8 @@
                 };
 
                 let exec = function(event) {
+                    element.$lsSkip = true;
+
                     if (debug) console.log('%c[executed]: ' + scope + '.' + action, 'color:yellow', event, element, document.body.contains(element));
 
                     if(!document.body.contains(element)) {
@@ -102,11 +104,15 @@
 
                             try {
                                 container.set(service.replace('.', '-'), JSON.parse(data), true, true);
-                                if (!debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
-                                if (!debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
+                                if (debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
+                                if (debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
                             } catch (e) {
                                 container.set(service.replace('.', '-'), {}, true);
                             }
+
+                            element.$lsSkip = false;
+
+                            view.render(element);
                         }, function (exception) {
                             if(loaderId !== null) { // Remove loader if needed
                                 alerts.remove(loaderId);

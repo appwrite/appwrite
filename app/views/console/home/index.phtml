@@ -1,148 +1,146 @@
-<div data-ls-rerender="project.load">
-    <div class="cover margin-bottom-small">
-        <div class="zone xl margin-bottom-large margin-top-small">
-            <h1 class="margin-bottom-small">
-                <span class="title" data-ls-bind="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;<span class="tag focus" style="vertical-align: middle">Beta Plan</span>
-            </h1>
+<div class="cover margin-bottom-small">
+    <div class="zone xl margin-bottom-large margin-top-small">
+        <h1 class="margin-bottom-small">
+            <span class="title" data-ls-bind="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;<span class="tag focus" style="vertical-align: middle">Beta Plan</span>
+        </h1>
 
-            <p data-ls-bind="{{console-project.description}}" class="note text-one-liner margin-bottom-large">&nbsp;</p>
+        <p data-ls-bind="{{console-project.description}}" class="note text-one-liner margin-bottom-large">&nbsp;</p>
 
-            <ul class="margin-top margin-bottom-large clear">
-                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-                <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
-            </ul>
-        </div>
+        <ul class="margin-top margin-bottom-large clear">
+            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
+        </ul>
     </div>
+</div>
 
-    <div class="zone xxl margin-top-negative-large">
-        <div>
-            <div class="box margin-bottom dashboard"
-                 data-service="projects.getProjectUsage"
-                 data-event="load"
-                 data-name="usage"
-                 data-param-project-id="{{router.params.project}}"
-                 data-success="render,trigger"
-                 data-error="render"
-                 data-success-triggers="usage.load">
+<div class="zone xxl margin-top-negative-large">
+    <div>
+        <div class="box margin-bottom dashboard"
+             data-service="projects.getProjectUsage"
+             data-event="load"
+             data-name="usage"
+             data-param-project-id="{{router.params.project}}"
+             data-success="render,trigger"
+             data-error="render"
+             data-success-triggers="usage.load">
+            <div class="row responsive">
+                <div class="col span-9">
+                    <div class="pull-start margin-end">
+                        <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
+                        <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
+                        <div class="range">Current Month</div>
+                    </div>
+
+                    <div class="chart">
+                        <div class="content" data-ls-ui-chart></div>
+                    </div>
+                </div>
+                <div class="col span-3">
+                    <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
+                    <div class="metric margin-bottom-small">Bandwidth</div>
+                    <div class="range">Current Month</div>
+                    <div class="margin-top dev-feature">
+                        <a href="">Full Usage Report <i class="icon-right-open"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div>
+
                 <div class="row responsive">
-                    <div class="col span-9">
-                        <div class="pull-start margin-end">
-                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
-                            <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
-                            <div class="range">Current Month</div>
-                        </div>
-
-                        <div class="chart">
-                            <div class="content" data-ls-ui-chart></div>
-                        </div>
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
                     </div>
                     <div class="col span-3">
-                        <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
-                        <div class="metric margin-bottom-small">Bandwidth</div>
-                        <div class="range">Current Month</div>
-                        <div class="margin-top dev-feature">
-                            <a href="">Full Usage Report <i class="icon-right-open"></i></a>
-                        </div>
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
                     </div>
-                </div>
-
-                <hr />
-
-                <div>
-
-                    <div class="row responsive">
-                        <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
-                            <div class="margin-top-small"><b class="text-size-small unit">Documents</b></div>
-                        </div>
-                        <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-bind="{{usage.storage.total|humanFileSize}}" data-default="0">0</span></div>
-                            <div class="margin-top-small"><b class="text-size-small unit">Storage</b></div>
-                        </div>
-                        <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
-                            <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
-                        </div>
-                        <div class="col span-3">
-                            <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
-                            <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
-                        </div>
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.users.total}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Users</b></div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value"><span class="sum" data-ls-bind="{{usage.tasks.total}}" data-default="0">0</span></div>
+                        <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="zone xl margin-top-xl clear">
-        <h2 class="margin-bottom">Platforms</h2>
+<div class="zone xl margin-top-xl clear">
+    <h2 class="margin-bottom">Platforms</h2>
 
-        <div class="box margin-bottom" data-ls-if="0 != {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}" style="display: none;">
-            <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
-                <li class="clear">
+    <div data-debug="1" class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}" style="display: none;">
+        <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
+            <li class="clear">
 
-                    <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
-                        <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
+                <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
+                    <button type="button" class="close pull-end" data-ls-trigger="modal-close"><i class="icon-cancel"></i></button>
 
-                        <h1>Update Platform</h1>
+                    <h1>Update Platform</h1>
 
-                        <div data-ls-template="template-{{platform.type}}-update" data-type="script"></div>
-                    </div>
+                    <div data-ls-template="template-{{platform.type}}-update" data-type="script"></div>
+                </div>
 
-                    <form class="pull-end margin-end"
-                          data-service="projects.platforms.delete"
-                          data-scope="console"
-                          data-event="submit"
-                          data-confirm="Are you sure you want to delete this platform?"
-                          data-success="alert,trigger"
-                          data-success-alert="Deleted platform successfully"
-                          data-success-triggers="platform.delete"
-                          data-error="alert"
-                          data-error-alert="Failed to delete platform">
+                <form class="pull-end margin-end"
+                      data-service="projects.platforms.delete"
+                      data-scope="console"
+                      data-event="submit"
+                      data-confirm="Are you sure you want to delete this platform?"
+                      data-success="alert,trigger"
+                      data-success-alert="Deleted platform successfully"
+                      data-success-triggers="platform.delete"
+                      data-error="alert"
+                      data-error-alert="Failed to delete platform">
 
-                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                        <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">
+                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                    <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">
 
-                        <button class="reverse danger">Delete</button>
-                    </form>
+                    <button class="reverse danger">Delete</button>
+                </form>
 
-                    <div class="margin-bottom-tiny">
-                        <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" />
-                        <span data-ls-bind="{{platform.name}}"></span>
-                    </div>
+                <div class="margin-bottom-tiny">
+                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" />
+                    <span data-ls-bind="{{platform.name}}"></span>
+                </div>
 
-                    <p class="note margin-bottom-no"><span data-ls-bind="{{platform.domains.0}}"></span></p>
-                </li>
-            </ul>
+                <p class="note margin-bottom-no"><span data-ls-bind="{{platform.domains.0}}"></span></p>
+            </li>
+        </ul>
+    </div>
+
+    <div data-ls-if="!!({{console-project.platforms}})" class="box dashboard margin-bottom" style="display: none;">
+        <div class="margin-bottom margin-top-small margin-end margin-start">
+            <h3 class="margin-bottom">No Platforms Added to Your Project</h3>
+
+            <p class="margin-bottom-no">Add your first platform to start building your new application.</p>
         </div>
+    </div>
 
-        <div data-ls-if="0 === {{console-project.platforms.length}} || undefined === {{console-project.platforms}}" class="box dashboard margin-bottom" style="display: none;">
-            <div class="margin-bottom margin-top-small margin-end margin-start">
-                <h3 class="margin-bottom">No Platforms Added to Your Project</h3>
+    <a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
 
-                <p class="margin-bottom-no">Add your first platform to start building your new application.</p>
-            </div>
-        </div>
-
-        <a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
-
-        <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" tabindex="1">
-            <ul>
-                <li>
-                    <div class="link" id="web-new"><img src="/images/clients/web.png" alt="Web Platform Logo" class="avatar xs margin-end" /> New Website</div>
-                </li>
-                <li class="disabled">
-                    <div class="link" id="ios-new"><img src="/images/clients/ios.png" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App <span class="note">(soon)</span></div>
-                </li>
-                <li class="disabled">
-                    <div class="link" id="android-new"><img src="/images/clients/android.png" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App <span class="note">(soon)</span></div>
-                </li>
-                <li class="disabled">
-                    <div class="link" id="unity-new"><img src="/images/clients/unity.png" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game <span class="note">(soon)</span></div>
-                </li>
-            </ul>
-        </div>
+    <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" tabindex="1">
+        <ul>
+            <li>
+                <div class="link" id="web-new"><img src="/images/clients/web.png" alt="Web Platform Logo" class="avatar xs margin-end" /> New Website</div>
+            </li>
+            <li class="disabled">
+                <div class="link" id="ios-new"><img src="/images/clients/ios.png" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App <span class="note">(soon)</span></div>
+            </li>
+            <li class="disabled">
+                <div class="link" id="android-new"><img src="/images/clients/android.png" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App <span class="note">(soon)</span></div>
+            </li>
+            <li class="disabled">
+                <div class="link" id="unity-new"><img src="/images/clients/unity.png" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game <span class="note">(soon)</span></div>
+            </li>
+        </ul>
     </div>
 </div>
 

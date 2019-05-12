@@ -130,10 +130,8 @@ $scopes = [ // TODO sync with project list
                                         <label for="legalName">Legal Name</label>
                                         <input name="legalName" id="legalName" type="text" autocomplete="off" data-ls-bind="{{console-project.legalName}}" data-forms-text-direction>
 
-                                        <div data-ls-rerender="geo-countries-load">
-                                            <label for="legalCountry">Country</label>
-                                            <select id="legalCountry" name="legalCountry" data-ls-options="{{geo-countries}}" data-ls-bind="{{console-project.legalCountry}}"></select>
-                                        </div>
+                                        <label for="legalCountry">Country</label>
+                                        <select id="legalCountry" name="legalCountry" data-ls-options="{{geo-countries}}" data-ls-bind="{{console-project.legalCountry}}"></select>
 
                                         <label for="legalCity">City</label>
                                         <input name="legalCity" id="legalCity" type="text" autocomplete="off" data-ls-bind="{{console-project.legalCity}}" data-forms-text-direction>

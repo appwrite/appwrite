@@ -2191,7 +2191,7 @@ element.innerHTML='';element.appendChild(child);container.set('chart',new Chart(
 if(element.dataset['param'+value.charAt(0).toUpperCase()+value.slice(1)]){result=expression.parse(element.dataset['param'+value.charAt(0).toUpperCase()+value.slice(1)]);}
 if(data[value]){result=data[value];}
 if(!result){result='';}
-if(debug)console.log('%c[param resolved]: ('+service+') '+value+'='+result,'color:#808080');return result;}));};let exec=function(event){if(debug)console.log('%c[executed]: '+scope+'.'+action,'color:yellow',event,element,document.body.contains(element));if(!document.body.contains(element)){element=undefined;return false;}
+if(debug)console.log('%c[param resolved]: ('+service+') '+value+'='+result,'color:#808080');return result;}));};let exec=function(event){element.$lsSkip=true;if(debug)console.log('%c[executed]: '+scope+'.'+action,'color:yellow',event,element,document.body.contains(element));if(!document.body.contains(element)){element=undefined;return false;}
 if(event){event.preventDefault();}
 if(confirm){if(window.confirm(confirm)!==true){return false;}}
 if(loading){loaderId=alerts.send({text:loading,class:''},0);}
@@ -2199,7 +2199,8 @@ let method=container.path(scope+'.'+action);if(!method){throw new Error('Method 
 let result=resolve(method);if(!result){return;}
 result.then(function(data){if(loaderId!==null){alerts.remove(loaderId);}
 if(!element){return;}
-try{container.set(service.replace('.','-'),JSON.parse(data),true,true);if(!debug)console.log('%cservice ready: "'+service.replace('.','-')+'"','color:green');if(!debug)console.log('%cservice:','color:blue',container.get(service.replace('.','-')));}catch(e){container.set(service.replace('.','-'),{},true);}},function(exception){if(loaderId!==null){alerts.remove(loaderId);}
+try{container.set(service.replace('.','-'),JSON.parse(data),true,true);if(debug)console.log('%cservice ready: "'+service.replace('.','-')+'"','color:green');if(debug)console.log('%cservice:','color:blue',container.get(service.replace('.','-')));}catch(e){container.set(service.replace('.','-'),{},true);}
+element.$lsSkip=false;view.render(element);},function(exception){if(loaderId!==null){alerts.remove(loaderId);}
 if(!element){return;}});};let events=event.trim().split(',');for(let y=0;y<events.length;y++){if(''===events[y]){continue;}
 switch(events[y].trim()){case'load':exec();break;case'none':break;case'click':case'change':case'keypress':case'keydown':case'keyup':case'input':case'submit':element.addEventListener(events[y],exec);break;default:}
 if(debug)console.log('%cregistered: "'+events[y].trim()+'" ('+service+')','color:blue');}}});})(window);(function(window){"use strict";window.ls.container.get('view').add({'selector':'data-analytics-event','controller':function(element){var action=element.getAttribute('data-event-action')||'click';element.addEventListener(action,function(){var category=element.getAttribute('data-event-category')||'undefined';var label=element.getAttribute('data-event-label')||'undefined';if(!ga){console.error('Google Analytics ga object is not available');}
