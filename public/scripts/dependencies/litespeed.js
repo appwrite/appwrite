@@ -88,7 +88,7 @@ catch(error){let handler=window.ls.container.resolve(this.error);handler(error);
             if(bind){element.addEventListener('change',function(){for(let i=0;i<paths.length;i++){container.path(paths[i],element.checked,$as,$prefix);}});}}
             return;}
         if(element.value!==value){element.value=value;}
-        if(bind){element.addEventListener('input',sync);}}
+        if(bind){element.addEventListener('input',sync);element.addEventListener('change',sync);}}
     else{if(element.innerText!==value){element.innerHTML=value;}}};let sync=(function(as,prefix){return function(){for(let i=0;i<paths.length;i++){container.path(paths[i],element.value,as,prefix);}}})($as,$prefix);let syntax=element.getAttribute('data-ls-bind');let result=expression.parse(syntax,null,$as,$prefix);let paths=expression.getPaths();echo(result,true);for(let i=0;i<paths.length;i++){container.bind(element,paths[i],function(){echo(expression.parse(syntax,null,$as,$prefix),false);});}}});window.ls.container.get('view').add({selector:'data-ls-if',controller:function(element,expression,container,$as,$prefix){let result='';let syntax=element.getAttribute('data-ls-if')||'';let debug=element.getAttribute('data-debug')||false;let paths=[];let check=function(){if(debug){console.info('debug-ls-if',expression.parse(syntax,'undefined',$as,$prefix));}
         try{result=!!(eval(expression.parse(syntax,'undefined',$as,$prefix,true).replace(/(\r\n|\n|\r)/gm,' ')));}
         catch(error){throw new Error('Failed to evaluate expression "'+syntax+' (resulted with: "'+result+'")": '+error);}

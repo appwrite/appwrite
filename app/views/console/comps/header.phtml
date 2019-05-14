@@ -1,9 +1,18 @@
+
+<div data-service="projects.get"
+     data-event="project-load"
+     data-name="console-project"
+     data-param-project-id="{{router.params.project}}">
+</div>
+
 <header class="clear">
     &nbsp;&nbsp;&nbsp;
     <div class="list pull-start">
-        <select data-ls-loop="projects" data-ls-as="option" data-ls-bind="{{router.params.project}}" data-switch class="project-only">
-            <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
-        </select>
+        <label>
+            <select data-switch data-ls-bind="{{console-project.$uid}}" data-ls-loop="projects" data-ls-as="option" class="project-only">
+                <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
+            </select>
+        </label>
     </div>
 
     <button style="width: 40px; height: 40px; line-height: 40px; overflow: visible;" id="setup" class="tooltip round down project-only" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
@@ -33,7 +42,7 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/home?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/home?project={{console-project.$uid}}">
                         <i class="icon-home"></i>
                         Home
                     </a>
@@ -44,19 +53,19 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/database?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/database?project={{console-project.$uid}}">
                         <i class="icon-database"></i>
                         Database
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/storage?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/storage?project={{console-project.$uid}}">
                         <i class="icon-folder"></i>
                         Storage
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/users?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/users?project={{console-project.$uid}}">
                         <i class="icon-users"></i>
                         Users
                     </a>
@@ -67,19 +76,19 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/settings/keys?project={{console-project.$uid}}">
                         <i class="icon-key-inv"></i>
                         API Keys
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/settings/webhooks?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/settings/webhooks?project={{console-project.$uid}}">
                         <i class="icon-link"></i>
                         Webhooks
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/settings/tasks?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/settings/tasks?project={{console-project.$uid}}">
                         <i class="icon-clock"></i>
                         Tasks
                     </a>
@@ -88,7 +97,7 @@
 
             <ul class="links bottom project-only">
                 <li>
-                    <a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> Settings</a>
+                    <a data-ls-attrs="href=/console/settings?project={{console-project.$uid}}"><i class="icon-cog"></i> Settings</a>
                 </li>
             </ul>
         </div>
@@ -101,14 +110,6 @@
      data-name="projects"
      data-scope="console"
      data-singleton="true">
-</div>
-
-<div data-ls-if="({{router.params.project}} != undefined)">
-    <div data-service="projects.get"
-         data-event="load"
-         data-name="console-project"
-         data-param-project-id="{{router.params.project}}">
-    </div>
 </div>
 
 <div class=""
