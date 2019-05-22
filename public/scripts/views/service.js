@@ -148,7 +148,6 @@
                             break;
                         default:
                             document.addEventListener(events[y], exec);
-                            console.log('def', events[y].trim());
                     }
 
                     if (debug) console.log('%cregistered: "' + events[y].trim() + '" (' + service + ')', 'color:blue');

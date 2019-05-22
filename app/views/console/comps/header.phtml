@@ -1,4 +1,3 @@
-
 <div data-service="projects.get"
      data-event="project-load"
      data-name="console-project"
@@ -9,7 +8,7 @@
     &nbsp;&nbsp;&nbsp;
     <div class="list pull-start">
         <label>
-            <select data-switch data-ls-bind="{{console-project.$uid}}" data-ls-loop="projects" data-ls-as="option" class="project-only">
+            <select id="test" data-switch data-ls-loop="projects" data-ls-as="option" data-ls-bind="{{console-project.$uid}}" class="project-only">
                 <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
             </select>
         </label>

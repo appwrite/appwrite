@@ -104,6 +104,48 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ## SDKs
 
+Currently we are supporting a few SDK libraries and we are constantly working on adding new ones.
+
+Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [PHP SDK Generator](https://github.com/appwrite/php-sdk-generator) project and view our contribution guide.
+
+
+<table width="100%">
+  <thead>
+    <tr>
+        <td><b>Framework</b></td>
+        <td><b>Language / Platform</b></td>
+        <td><b>Maintainers</b></td>
+        <td><b>Official?</b></td>
+    </tr>
+  </thead>
+    <tbody>
+        <tr>
+            <td>*</td>
+            <td>[PHP](https://github.com/appwrite/sdk-for-php)</td>
+            <td>Appwrite Team</td>
+            <td>√</td>
+        </tr>
+        <tr>
+            <td>*</td>
+            <td>[Javascript](https://github.com/appwrite/sdk-for-js)</td>
+            <td>Appwrite Team</td>
+            <td>√</td>
+        </tr>
+        <tr>
+            <td>*</td>
+            <td>[Ruby](https://github.com/appwrite/sdk-for-ruby)</td>
+            <td>Appwrite Team</td>
+            <td>√</td>
+        </tr>
+        <tr>
+            <td>*</td>
+            <td>[Python](https://github.com/appwrite/sdk-for-python)</td>
+            <td>Appwrite Team</td>
+            <td>√</td>
+        </tr> 
+    </tbody>
+</table>
+
 ## Contributing
 
 All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.

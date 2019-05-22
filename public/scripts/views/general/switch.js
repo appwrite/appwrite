@@ -1,7 +1,7 @@
 (function (window) {
     window.ls.container.get('view').add({
         selector: 'data-switch',
-        controller: function(element, router, window) {
+        controller: function(element, router, document) {
             let debug = (element.dataset['debug']);
 
             let project = router.params.project || null;
