@@ -121,27 +121,27 @@ Below is a list of currently supported platforms and languages. If you wish to h
     <tbody>
         <tr>
             <td>*</td>
-            <td>[PHP](https://github.com/appwrite/sdk-for-php)</td>
+            <td><a href="https://github.com/appwrite/sdk-for-php">PHP</a></td>
             <td>Appwrite Team</td>
-            <td>√</td>
+            <td>✅</td>
         </tr>
         <tr>
             <td>*</td>
-            <td>[Javascript](https://github.com/appwrite/sdk-for-js)</td>
+            <td><a href="https://github.com/appwrite/sdk-for-js">Javascript</a></td>
             <td>Appwrite Team</td>
-            <td>√</td>
+            <td>✅</td>
         </tr>
         <tr>
             <td>*</td>
-            <td>[Ruby](https://github.com/appwrite/sdk-for-ruby)</td>
+            <td><a href="https://github.com/appwrite/sdk-for-ruby">Ruby</a></td>
             <td>Appwrite Team</td>
-            <td>√</td>
+            <td>✅</td>
         </tr>
         <tr>
             <td>*</td>
-            <td>[Python](https://github.com/appwrite/sdk-for-python)</td>
+            <td><a href="https://github.com/appwrite/sdk-for-python">Python</a></td>
             <td>Appwrite Team</td>
-            <td>√</td>
+            <td>✅</td>
         </tr> 
     </tbody>
 </table>
