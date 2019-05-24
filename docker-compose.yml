@@ -18,7 +18,7 @@ services:
     - _APP_REDIS_PORT=6379
     - _APP_DB_HOST=mariadb
     - _APP_DB_PORT=3306
-    - _APP_DB_SCHEMA=data-3
+    - _APP_DB_SCHEMA=appwrite
     - _APP_DB_USER=root
     - _APP_DB_PASS=password
     - _APP_INFLUXDB_HOST=influxdb
@@ -35,7 +35,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
     volumes:
     - ./storage/db:/var/lib/mysql:rw
-    - ./app/db/SQL:/docker-entrypoint-initdb.d:rw
+    - ./app/db/SQL:/docker-entrypoint-initdb.d/:rw
     ports:
     - 3306:3306/tcp
 
