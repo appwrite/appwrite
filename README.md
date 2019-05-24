@@ -30,7 +30,7 @@ The easiest way to start running your Appwrite server is by running our docker c
 ```bash
 mkdir appwrite
     && cd appwrite
-    && curl -o docker-compose.yml https://raw.githubusercontent.com/appwrite/appwrite/master/README.md
+    && curl -o docker-compose.yml https://raw.githubusercontent.com/appwrite/appwrite/master/docker-compose.yml
     && docker-compose up -d --remove-orphans
 ```
 

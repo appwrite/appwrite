@@ -35,7 +35,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
     volumes:
     - ./storage/db:/var/lib/mysql:rw
-    - ./app/db/SQL:/docker-entrypoint-initdb.d
+    - ./app/db/SQL:/docker-entrypoint-initdb.d:rw
     ports:
     - 3306:3306/tcp
 
@@ -51,12 +51,6 @@ services:
     image: influxdb:1.6
     volumes:
     - ./storage/influxdb:/var/lib/influxdb
-
-  kapacitor:
-    image: kapacitor:1.5
-    environment:
-    - KAPACITOR_HOSTNAME=kapacitor
-    - KAPACITOR_INFLUXDB_0_URLS_0=http://influxdb:8086
 
   #telegraf-statsd:
   #  image: registry.gitlab.com/appwrite/appwrite/telegraf-statsd
