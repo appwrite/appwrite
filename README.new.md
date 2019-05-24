@@ -106,7 +106,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 Currently we are supporting a few SDK libraries and we are constantly working on adding new ones.
 
-Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [PHP SDK Generator](https://github.com/appwrite/php-sdk-generator) project and view our contribution guide.
+Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
 
 <table width="100%">
