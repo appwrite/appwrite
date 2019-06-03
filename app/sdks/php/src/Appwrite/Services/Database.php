@@ -11,7 +11,10 @@ class Database extends Service
     /**
      * List Collections
      *
-     * Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/modes).
+     * Get a list of all the user collections. You can use the query params to
+     * filter your results. On admin mode, this endpoint will return a list of all
+     * of the project collections. [Learn more about different API
+     * modes](/docs/modes).
      *
      * @param string $search
      * @param integer $limit
@@ -63,7 +66,10 @@ class Database extends Service
     /**
      * List Documents
      *
-     * Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/modes).
+     * Get a list of all the user documents. You can use the query params to
+     * filter your results. On admin mode, this endpoint will return a list of all
+     * of the project documents. [Learn more about different API
+     * modes](/docs/modes).
      *
      * @param string $collectionId
      * @param array $filters
@@ -104,18 +110,22 @@ class Database extends Service
      *
      * @param string $collectionId
      * @param string $data
+     * @param array $read
+     * @param array $write
      * @param string $parentDocument
      * @param string $parentProperty
      * @param string $parentPropertyType
      * @throws Exception
      * @return array
      */
-    public function createDocument($collectionId, $data, $parentDocument = '', $parentProperty = '', $parentPropertyType = 'assign')
+    public function createDocument($collectionId, $data, $read = [], $write = [], $parentDocument = '', $parentProperty = '', $parentPropertyType = 'assign')
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
         $params = [];
 
         $params['data'] = $data;
+        $params['read'] = $read;
+        $params['write'] = $write;
         $params['parentDocument'] = $parentDocument;
         $params['parentProperty'] = $parentProperty;
         $params['parentPropertyType'] = $parentPropertyType;
@@ -127,7 +137,8 @@ class Database extends Service
     /**
      * Delete Collection
      *
-     * Delete a collection by its unique ID. Only users with write permissions have access to delete this resource.
+     * Delete a collection by its unique ID. Only users with write permissions
+     * have access to delete this resource.
      *
      * @param string $collectionId
      * @throws Exception
@@ -146,7 +157,8 @@ class Database extends Service
     /**
      * Get Document
      *
-     * Get document by its unique ID. This endpoint response returns a JSON object with the document data.
+     * Get document by its unique ID. This endpoint response returns a JSON object
+     * with the document data.
      *
      * @param string $collectionId
      * @param string $documentId
@@ -169,15 +181,19 @@ class Database extends Service
      * @param string $collectionId
      * @param string $documentId
      * @param string $data
+     * @param array $read
+     * @param array $write
      * @throws Exception
      * @return array
      */
-    public function updateDocument($collectionId, $documentId, $data)
+    public function updateDocument($collectionId, $documentId, $data, $read = [], $write = [])
     {
         $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/{documentId}');
         $params = [];
 
         $params['data'] = $data;
+        $params['read'] = $read;
+        $params['write'] = $write;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
         ], $params);
@@ -186,7 +202,9 @@ class Database extends Service
     /**
      * Delete Document
      *
-     * Delete document by its unique ID. This endpoint deletes only the parent documents, his attributes and relations to other documents. Child documents **will not** be deleted.
+     * Delete document by its unique ID. This endpoint deletes only the parent
+     * documents, his attributes and relations to other documents. Child documents
+     * **will not** be deleted.
      *
      * @param string $collectionId
      * @param string $documentId

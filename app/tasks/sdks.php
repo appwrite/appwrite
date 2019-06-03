@@ -9,6 +9,7 @@ use Appwrite\Spec\Swagger2;
 use Appwrite\SDK\SDK;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\JS;
+use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 
@@ -52,6 +53,14 @@ $cli
                 'gitRepoName'   => 'sdk-for-js',
                 'gitUserName'   => 'appwrite',
             ],
+            'node' => [
+                'version'       => 'v1.0.7',
+                'result'        => __DIR__ . '/../sdks/node/',
+                'gitURL'        => 'https://github.com/appwrite/sdk-for-node.git',
+                'gitRepo'       => 'git@github.com:appwrite/sdk-for-node.git',
+                'gitRepoName'   => 'sdk-for-node',
+                'gitUserName'   => 'appwrite',
+            ],
             'python' => [
                 'version'       => 'v1.0.0',
                 'result'        => __DIR__ . '/../sdks/python/',
@@ -83,6 +92,13 @@ $cli
                     $language = new JS();
                     $language
                         ->setNPMPackage('appwrite')
+                        ->setBowerPackage('appwrite')
+                    ;
+                    break;
+                case 'node':
+                    $language = new Node();
+                    $language
+                        ->setNPMPackage('node-appwrite')
                         ->setBowerPackage('appwrite')
                     ;
                     break;

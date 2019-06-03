@@ -25,6 +25,7 @@
 @tablets: ~"only screen and (min-width: 551px) and (max-width: 970px)";
 @desktops: ~"only screen and (min-width: 971px) and (max-width: 1300px)";
 @big-screens: ~"only screen and (min-width: 970px)";
+@dark: ~"(prefers-color-scheme: dark)";
 
 img[src=""] {
   visibility: hidden;
@@ -61,6 +62,14 @@ html {
 body {
   margin: 0;
   background: #f6f7f8 no-repeat fixed;
+
+  @media @dark {
+    background: #0c0c0c;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: red;
+  }
 }
 
 main {

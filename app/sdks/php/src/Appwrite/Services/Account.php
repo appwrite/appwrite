@@ -47,7 +47,10 @@ class Account extends Service
     /**
      * Update Account Email
      *
-     * Update currently logged in user account email address. After changing user address, user confirmation status is being reset and a new confirmation mail is sent. For security measures, user password is required to complete this request.
+     * Update currently logged in user account email address. After changing user
+     * address, user confirmation status is being reset and a new confirmation
+     * mail is sent. For security measures, user password is required to complete
+     * this request.
      *
      * @param string $email
      * @param string $password
@@ -89,7 +92,8 @@ class Account extends Service
     /**
      * Update Account Password
      *
-     * Update currently logged in user password. For validation, user is required to pass the password twice.
+     * Update currently logged in user password. For validation, user is required
+     * to pass the password twice.
      *
      * @param string $password
      * @param string $oldPassword
@@ -129,7 +133,8 @@ class Account extends Service
     /**
      * Update Account Prefs
      *
-     * Update currently logged in user account preferences. You can pass only the specific settings you wish to update.
+     * Update currently logged in user account preferences. You can pass only the
+     * specific settings you wish to update.
      *
      * @param string $prefs
      * @throws Exception
@@ -149,7 +154,8 @@ class Account extends Service
     /**
      * Get Account Security Log
      *
-     * Get currently logged in user list of latest security activity logs. Each log returns user IP address, location and date and time of log.
+     * Get currently logged in user list of latest security activity logs. Each
+     * log returns user IP address, location and date and time of log.
      *
      * @throws Exception
      * @return array
@@ -167,7 +173,8 @@ class Account extends Service
     /**
      * Get Account Active Sessions
      *
-     * Get currently logged in user list of active sessions across different devices.
+     * Get currently logged in user list of active sessions across different
+     * devices.
      *
      * @throws Exception
      * @return array
