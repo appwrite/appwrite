@@ -8,55 +8,113 @@ class Apple extends OAuth
 {
     //READ THE DOCS HERE: https://developer.apple.com/documentation/signinwithapplerestapi
 
+//https://appleid.apple.com/auth/token
+    /**
+     * @var string
+     */
+    protected $version = 'v2.8';
+
+    /**
+     * @var array
+     */
+    protected $user = [];
+
     /**
      * @return string
      */
-    public function getName(): string
+    public function getName():string
     {
-        // TODO: Implement getName() method.
+        return 'facebook';
     }
 
     /**
      * @return string
      */
-    public function getLoginURL(): string
+    public function getLoginURL():string
     {
-        // TODO: Implement getLoginURL() method.
+        return '?client_id=' . urlencode($this->appID) . '&redirect_uri=' . urlencode($this->callback) . '&scope=email&state=' . urlencode(json_encode($this->state));
     }
 
     /**
      * @param string $code
      * @return string
      */
-    public function getAccessToken(string $code): string
+    public function getAccessToken(string $code):string
     {
-        // TODO: Implement getAccessToken() method.
+        $accessToken = $this->request('GET', 'https://appleid.apple.com/auth/token' .
+            'client_id=' . urlencode($this->appID) .
+            '&client_secret=' . urlencode($this->appSecret) .
+            '&redirect_uri=' . urlencode($this->callback) .
+            '&code=' . urlencode($code) .
+            '&grant_type=authorization_token'
+        );
+
+        $accessToken = json_decode($accessToken, true); //
+
+        if(isset($accessToken['access_token'])) {
+            return $accessToken['access_token'];
+        }
+
+        return '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      * @return string
      */
-    public function getUserID(string $accessToken): string
+    public function getUserID(string $accessToken):string
     {
-        // TODO: Implement getUserID() method.
+        $user = $this->getUser($accessToken);
+
+        if(isset($user['id'])) {
+            return $user['id'];
+        }
+
+        return '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      * @return string
      */
-    public function getUserEmail(string $accessToken): string
+    public function getUserEmail(string $accessToken):string
     {
-        // TODO: Implement getUserEmail() method.
+        $user = $this->getUser($accessToken);
+
+        if(isset($user['email'])) {
+            return $user['email'];
+        }
+
+        return '';
     }
 
     /**
-     * @param $accessToken
+     * @param string $accessToken
      * @return string
      */
-    public function getUserName(string $accessToken): string
+    public function getUserName(string $accessToken):string
     {
-        // TODO: Implement getUserName() method.
+        $user = $this->getUser($accessToken);
+
+        if(isset($user['name'])) {
+            return $user['name'];
+        }
+
+        return '';
+    }
+
+    /**
+     * @param string $accessToken
+     * @return array
+     */
+    protected function getUser(string $accessToken):array
+    {
+        if(empty($this->user)) {
+            $user = $this->request('GET', 'https://graph.facebook.com/' . $this->version . '/me?fields=email,name&access_token=' . urlencode($accessToken));
+
+            $this->user = json_decode($user, true);
+        }
+
+        return $this->user;
     }
 }

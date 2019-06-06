@@ -57,12 +57,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "a345962813f3e5d64f18e7f733a2d77b8fd85603"
+                "reference": "541dae92637c36668b7e0a78e248f6aec4630bd3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/a345962813f3e5d64f18e7f733a2d77b8fd85603",
-                "reference": "a345962813f3e5d64f18e7f733a2d77b8fd85603",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/541dae92637c36668b7e0a78e248f6aec4630bd3",
+                "reference": "541dae92637c36668b7e0a78e248f6aec4630bd3",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +94,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-06-05 06:46:55"
+            "time": "2019-06-06 06:22:01"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -741,12 +741,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "dd1ba1de1234e5e8939809bbd9e103e7aeebf0d5"
+                "reference": "c5aea30ff82a3565e6d3decd18d74257c033daf6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/dd1ba1de1234e5e8939809bbd9e103e7aeebf0d5",
-                "reference": "dd1ba1de1234e5e8939809bbd9e103e7aeebf0d5",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/c5aea30ff82a3565e6d3decd18d74257c033daf6",
+                "reference": "c5aea30ff82a3565e6d3decd18d74257c033daf6",
                 "shasum": ""
             },
             "require": {
@@ -804,7 +804,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2019-05-26 12:43:51"
+            "time": "2019-06-05 23:31:57"
         },
         {
             "name": "influxdb/influxdb-php",
