@@ -11,7 +11,7 @@
 
 ---
 
-![Status](https://img.shields.io/badge/-STATUS-green.svg)  **WORK IN PROGRESS - NOT READY FOR USAGE**
+**WORK IN PROGRESS - NOT READY FOR USAGE**
 
 ---
 
