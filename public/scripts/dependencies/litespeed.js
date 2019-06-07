@@ -80,13 +80,30 @@ window.ls.container = function () {
     };
     let resolve = function (target) {
         if (!target) {
-            return function () {
+            return () => {
             };
         }
         let self = this;
-        let FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
-        let text = target.toString() || '';
-        let args = text.match(FN_ARGS)[1].split(',');
+        const REGEX_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+        const REGEX_FUNCTION_PARAMS = /(?:\s*(?:function\s*[^(]*)?\s*)((?:[^'"]|(?:(?:(['"])(?:(?:.*?[^\\]\2)|\2))))*?)\s*(?=(?:=>)|{)/m;
+        const REGEX_PARAMETERS_VALUES = /\s*([\w\\$]+)\s*(?:=\s*((?:(?:(['"])(?:\3|(?:.*?[^\\]\3)))((\s*\+\s*)(?:(?:(['"])(?:\6|(?:.*?[^\\]\6)))|(?:[\w$]*)))*)|.*?))?\s*(?:,|$)/gm;
+
+        function getParams(func) {
+            let functionAsString = func.toString();
+            let params = [];
+            let match;
+            functionAsString = functionAsString.replace(REGEX_COMMENTS, '');
+            functionAsString = functionAsString.match(REGEX_FUNCTION_PARAMS)[1];
+            if (functionAsString.charAt(0) === '(') {
+                functionAsString = functionAsString.slice(1, -1);
+            }
+            while (match = REGEX_PARAMETERS_VALUES.exec(functionAsString)) {
+                params.push(match[1]);
+            }
+            return params;
+        }
+
+        let args = getParams(target);
         return target.apply(target, args.map(function (value) {
             return self.get(value.trim());
         }));
@@ -126,7 +143,7 @@ window.ls.container = function () {
         let service = event.split('.').slice(0, 1).pop();
         listeners[service] = listeners[service] || {};
         listeners[service][event] = true;
-        let printer = function () {
+        let printer = () => {
             if (!document.body.contains(element)) {
                 element = null;
                 document.removeEventListener(event, printer, false);
@@ -342,17 +359,13 @@ window.ls.container.set('router', function (window) {
     let states = [];
     let current = null;
     let previous = null;
-    let getPrevious = function () {
-        return previous;
-    };
-    let setPrevious = function (value) {
+    let getPrevious = () => previous;
+    let getCurrent = () => current;
+    let setPrevious = (value) => {
         previous = value;
         return this;
     };
-    let getCurrent = function () {
-        return current;
-    };
-    let setCurrent = function (value) {
+    let setCurrent = (value) => {
         current = value;
         return this;
     };
@@ -479,14 +492,13 @@ window.ls.container.set('router', function (window) {
     };
     return state;
 }, true, true);
-window.ls.container.set('expression', function (container, filter, $as, $prefix) {
-    let reg = /(\{{.*?\}})/gi;
+window.ls.container.set('expression', function (container, filter) {
     let paths = [];
     return {
-        parse: function (string, def, as, prefix, cast = false) {
+        regex: /(\{{.*?\}})/gi, parse: function (string, def, as, prefix, cast = false) {
             def = def || '';
             paths = [];
-            return string.replace(reg, function (match) {
+            return string.replace(this.regex, match => {
                 let reference = match.substring(2, match.length - 2).replace('[\'', '.').replace('\']', '').trim();
                 reference = reference.split('|');
                 let path = (reference[0] || '');
@@ -504,9 +516,7 @@ window.ls.container.set('expression', function (container, filter, $as, $prefix)
                 }
                 return result;
             });
-        }, getPaths: function () {
-            return paths;
-        },
+        }, getPaths: () => paths,
     }
 }, true, false);
 window.ls.container.set('filter', function (container) {
@@ -516,25 +526,25 @@ window.ls.container.set('filter', function (container) {
         return this;
     };
     let apply = function (name, value) {
-        container.set('$value', value, true, false, false);
+        container.set('$value', value, true, false);
         return container.resolve(filters[name]);
     };
-    add('uppercase', function ($value) {
+    add('uppercase', ($value) => {
         return $value.toUpperCase();
     });
-    add('lowercase', function ($value) {
+    add('lowercase', ($value) => {
         return $value.toLowerCase();
     });
     return {add: add, apply: apply}
 }, true, false);
-window.ls.container.get('filter').add('escape', function (value) {
+window.ls.container.get('filter').add('escape', value => {
     if (typeof value !== 'string') {
         return value;
     }
     return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/\'/g, '&#39;').replace(/\//g, '&#x2F;');
 });
 window.ls = window.ls || {};
-window.ls.container.set('window', window, true, false, false).set('document', window.document, true, false, false).set('element', window.document, true, false, false);
+window.ls.container.set('window', window, true, false).set('document', window.document, true, false).set('element', window.document, true, false);
 window.ls.run = function (window) {
     try {
         this.view.render(window.document);
@@ -543,8 +553,8 @@ window.ls.run = function (window) {
         handler(error);
     }
 };
-window.ls.error = function () {
-    return function (error) {
+window.ls.error = () => {
+    return error => {
         console.error('ls-error', error.message, error.stack, error.toString());
     }
 };
@@ -640,7 +650,7 @@ window.ls.container.get('view').add({
     selector: 'data-ls-attrs', controller: function (element, expression, container, $as, $prefix) {
         let attrs = element.getAttribute('data-ls-attrs').trim().split(',');
         let paths = [];
-        let check = function () {
+        let check = () => {
             for (let i = 0; i < attrs.length; i++) {
                 let attr = attrs[i];
                 let key = expression.parse(attr.substring(0, attr.indexOf('=')), null, $as, $prefix) || null;
@@ -681,12 +691,25 @@ window.ls.container.get('view').add({
                             element.checked = false;
                         }
                         if (bind) {
-                            element.addEventListener('change', function () {
+                            element.addEventListener('change', () => {
                                 for (let i = 0; i < paths.length; i++) {
                                     container.path(paths[i], element.checked, $as, $prefix);
                                 }
                             });
                         }
+                    } else {
+                        try {
+                            value = JSON.parse(value);
+
+                            element.checked = (Array.isArray(value) && (value.indexOf(element.value) > -1));
+                        }
+                        catch {
+                            return null;
+                        }
+
+                        console.log(value, element.value);
+                        console.log(value.indexOf(element.value));
+                        console.log(Array.isArray(value));
                     }
                     return;
                 }
@@ -703,8 +726,8 @@ window.ls.container.get('view').add({
                 }
             }
         };
-        let sync = (function (as, prefix) {
-            return function () {
+        let sync = ((as, prefix) => {
+            return () => {
                 for (let i = 0; i < paths.length; i++) {
                     container.path(paths[i], element.value, as, prefix);
                 }
@@ -715,7 +738,7 @@ window.ls.container.get('view').add({
         let paths = expression.getPaths();
         echo(result, true);
         for (let i = 0; i < paths.length; i++) {
-            container.bind(element, paths[i], function () {
+            container.bind(element, paths[i], () => {
                 echo(expression.parse(syntax, null, $as, $prefix), false);
             });
         }
@@ -727,7 +750,7 @@ window.ls.container.get('view').add({
         let syntax = element.getAttribute('data-ls-if') || '';
         let debug = element.getAttribute('data-debug') || false;
         let paths = [];
-        let check = function () {
+        let check = () => {
             if (debug) {
                 console.info('debug-ls-if', expression.parse(syntax, 'undefined', $as, $prefix));
             }
@@ -764,7 +787,6 @@ window.ls.container.get('view').add({
         let expr = element.getAttribute('data-ls-loop');
         let as = element.getAttribute('data-ls-as');
         let echo = function () {
-            let value = element.value || null;
             let array = container.path(expr);
             array = (!array) ? [] : array;
             while (element.hasChildNodes()) {
@@ -783,7 +805,7 @@ window.ls.container.get('view').add({
                 }
                 children[prop] = template.cloneNode(true);
                 element.appendChild(children[prop]);
-                (function (index) {
+                (index => {
                     let context = expr + '.' + index;
                     container.set(as, container.path(context), true);
                     container.set('$index', index, true, false, false);
@@ -792,11 +814,6 @@ window.ls.container.get('view').add({
                     view.render(children[prop]);
                 })(prop);
             }
-
-            if(value) {
-                element.value = value;
-            }
-
             container.set('$index', null, true, false, false);
             container.set('$prefix', '', true, false, false);
             container.set('$as', '', true, false, false);
@@ -815,7 +832,7 @@ window.ls.container.get('view').add({
         let template = expression.parse(element.getAttribute('data-ls-template'));
         let type = element.getAttribute('data-type') || 'url';
         element.innerHTML = '';
-        let parse = function (data, element) {
+        let parse = (data, element) => {
             element.innerHTML = data;
             view.render(element);
             element.dispatchEvent(new CustomEvent('template-loaded', {bubbles: true, cancelable: false}));
