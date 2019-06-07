@@ -102,6 +102,7 @@
                 }
 
                 document.addEventListener('modal-close', close);
+                element.addEventListener('submit', close);
             }
         }
     );
