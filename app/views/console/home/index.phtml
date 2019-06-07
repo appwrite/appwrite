@@ -84,7 +84,7 @@
 
                     <h1>Update Platform</h1>
 
-                    <div data-ls-template="template-{{platform.type}}-update" data-type="script"></div>
+                    <div xdata-ls-template="template-{{platform.type}}-update" data-type="script"></div>
                 </div>
 
                 <form class="pull-end margin-end"
@@ -114,7 +114,7 @@
         </ul>
     </div>
 
-    <div data-ls-if="!!({{console-project.platforms}})" class="box dashboard margin-bottom" style="display: none;">
+    <div data-ls-if="({{console-project.platforms.length}} === undefined)" class="box dashboard margin-bottom" style="display: none;">
         <div class="margin-bottom margin-top-small margin-end margin-start">
             <h3 class="margin-bottom">No Platforms Added to Your Project</h3>
 
