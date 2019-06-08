@@ -18,12 +18,12 @@
     background: #f6f9fc;
 
     .project-only {
-      visibility: hidden!important;
+      display: none!important;
     }
 
     &.show-nav {
       .project-only {
-        visibility: visible!important;
+        display: block!important;
       }
     }
 
@@ -82,6 +82,12 @@
     margin: 0 -50px;
     z-index: 2;
     font-size: 14px;
+
+    .new {
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+    }
 
     .list {
       width: 240px;
