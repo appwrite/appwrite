@@ -24,12 +24,12 @@ const ROLE_ALL              = '*';
  * projects.read
  * projects.write
  *
- * database.read
- * database.write
+ * documents.read
+ * documents.write
  *
- * storage.files.read
- * storage.files.write
- * storage.scan
+ * files.read
+ * files.write
+ * files.scan
  *
  * billing.currencies.read
  * billing.vaults.read
@@ -59,10 +59,10 @@ $logged = [
     'account',
     'teams.read',
     'teams.write',
-    'database.read',
-    'database.write',
-    'storage.files.read',
-    'storage.files.write',
+    'documents.read',
+    'documents.write',
+    'files.read',
+    'files.write',
     'billing.currencies.read',
     'billing.vaults.read',
     'billing.vaults.write',
@@ -80,8 +80,8 @@ $logged = [
 $admins = [
     'users.read',
     'users.write',
-    'database.collections.read',
-    'database.collections.write',
+    'collections.read',
+    'collections.write',
     'billing.plans.write',
 ];
 
@@ -93,7 +93,7 @@ return [
             'home',
             'console',
             'auth',
-            'storage.files.read',
+            'files.read',
             'locale.read',
             'avatars.read',
             'health.read',

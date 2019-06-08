@@ -271,6 +271,8 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
         ->setParam('{url}', $request->getServer('HTTP_HOST', '') . $route->getURL())
     ;
 
+    //TODO make sure we get array here
+
     foreach($request->getParams() as $key => $value) { // Set request params as potential abuse keys
         $timeLimit->setParam('{param-' . $key . '}', (is_array($value)) ? json_encode($value) : $value);
     }

@@ -56,7 +56,7 @@ $utopia
 
 $utopia->get('/v1/database')
     ->desc('List Collections')
-    ->label('scope', 'database.collections.read')
+    ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', 'Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/modes).')
@@ -67,7 +67,7 @@ $utopia->get('/v1/database')
     ->action(
         function($search, $limit, $offset, $orderType) use ($response, $projectDB)
         {
-            $vl = new Structure($projectDB);
+            /*$vl = new Structure($projectDB);
 
             var_dump($vl->isValid(new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
@@ -84,7 +84,7 @@ $utopia->get('/v1/database')
                 'options' => [Database::SYSTEM_COLLECTION_PLATFORMS],
             ])));
 
-            var_dump($vl->getDescription());
+            var_dump($vl->getDescription());*/
 
             $results = $projectDB->getCollection([
                 'limit' => $limit,
@@ -104,7 +104,7 @@ $utopia->get('/v1/database')
 
 $utopia->get('/v1/database/:collectionId')
     ->desc('Get Collection')
-    ->label('scope', 'database.collections.read')
+    ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', 'Get collection by its unique ID. This endpoint response returns a JSON object with the collection metadata.')
@@ -124,7 +124,7 @@ $utopia->get('/v1/database/:collectionId')
 $utopia->post('/v1/database')
     ->desc('Create Collection')
     ->label('webhook', 'database.collections.create')
-    ->label('scope', 'database.collections.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', 'Create a new Collection.')
@@ -179,7 +179,7 @@ $utopia->post('/v1/database')
 
 $utopia->put('/v1/database/:collectionId')
     ->desc('Update Team')
-    ->label('scope', 'teams.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateTeam')
     ->label('sdk.description', 'Update team by its unique ID. Only team owners have write access for this resource.')
@@ -217,7 +217,7 @@ $utopia->put('/v1/database/:collectionId')
 
 $utopia->delete('/v1/database/:collectionId')
     ->desc('Delete Collection')
-    ->label('scope', 'database.collections.write')
+    ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', 'Delete a collection by its unique ID. Only users with write permissions have access to delete this resource.')
@@ -246,7 +246,7 @@ $utopia->delete('/v1/database/:collectionId')
 
 $utopia->get('/v1/database/:collectionId')
     ->desc('List Documents')
-    ->label('scope', 'database.read')
+    ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', 'Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/modes).')
@@ -315,7 +315,7 @@ $utopia->get('/v1/database/:collectionId')
 
 $utopia->get('/v1/database/:collectionId/:documentId')
     ->desc('Get Document')
-    ->label('scope', 'database.read')
+    ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', 'Get document by its unique ID. This endpoint response returns a JSON object with the document data.')
@@ -363,7 +363,7 @@ $utopia->get('/v1/database/:collectionId/:documentId')
 $utopia->post('/v1/database/:collectionId')
     ->desc('Create Document')
     ->label('webhook', 'database.documents.create')
-    ->label('scope', 'database.write')
+    ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', 'Create a new Document.')
@@ -468,7 +468,7 @@ $utopia->post('/v1/database/:collectionId')
 $utopia->patch('/v1/database/:collectionId/:documentId')
     ->desc('Update Document')
     ->label('webhook', 'database.documents.patch')
-    ->label('scope', 'database.write')
+    ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateDocument')
     ->label('abuse-limit', 200)
@@ -543,7 +543,7 @@ $utopia->patch('/v1/database/:collectionId/:documentId')
 
 $utopia->delete('/v1/database/:collectionId/:documentId')
     ->desc('Delete Document')
-    ->label('scope', 'database.write')
+    ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', 'Delete document by its unique ID. This endpoint deletes only the parent documents, his attributes and relations to other documents. Child documents **will not** be deleted.')
