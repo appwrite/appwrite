@@ -190,7 +190,7 @@ class Structure extends Validator
                 case 'key':
                     $validator = new Key();
                     break;
-                case 'documents':
+                case 'document':
                     $validator = new Validator\Multiple(
                         new Collection((isset($ruleOptions['whitelist'])) ? $ruleOptions['whitelist'] : []),
                         new self($this->database));

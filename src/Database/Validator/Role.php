@@ -38,7 +38,7 @@ class Role extends Validator
             '$collection' => self::SYSTEM_COLLECTION_RULES,
             'label' => 'Platforms',
             'key' => 'platforms',
-            'type' => 'documents',
+            'type' => 'document',
             'default' => [],
             'required' => false,
             'array' => true,

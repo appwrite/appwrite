@@ -77,7 +77,7 @@ $utopia->get('/v1/database')
                 ],
                 'label' => 'Platforms',
                 'key' => 'platforms',
-                'type' => 'documents',
+                'type' => 'document',
                 'default' => [],
                 'required' => false,
                 'array' => true,
