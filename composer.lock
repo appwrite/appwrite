@@ -57,12 +57,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "541dae92637c36668b7e0a78e248f6aec4630bd3"
+                "reference": "83655bde18a4186b3212d4eb8ce291521243cef4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/541dae92637c36668b7e0a78e248f6aec4630bd3",
-                "reference": "541dae92637c36668b7e0a78e248f6aec4630bd3",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/83655bde18a4186b3212d4eb8ce291521243cef4",
+                "reference": "83655bde18a4186b3212d4eb8ce291521243cef4",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +94,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-06-06 06:22:01"
+            "time": "2019-06-08 13:19:14"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -741,12 +741,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "c5aea30ff82a3565e6d3decd18d74257c033daf6"
+                "reference": "5ce1cec1a26c5d2ccd259157f58a32b7facd545a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/c5aea30ff82a3565e6d3decd18d74257c033daf6",
-                "reference": "c5aea30ff82a3565e6d3decd18d74257c033daf6",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/5ce1cec1a26c5d2ccd259157f58a32b7facd545a",
+                "reference": "5ce1cec1a26c5d2ccd259157f58a32b7facd545a",
                 "shasum": ""
             },
             "require": {
@@ -804,7 +804,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2019-06-05 23:31:57"
+            "time": "2019-06-06 09:22:35"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -1502,12 +1502,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "5f517f0b80c0396228251881bc5c816323f79a0e"
+                "reference": "d18cba7d84855055dcbd4b72334da281c4e418cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/5f517f0b80c0396228251881bc5c816323f79a0e",
-                "reference": "5f517f0b80c0396228251881bc5c816323f79a0e",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d18cba7d84855055dcbd4b72334da281c4e418cb",
+                "reference": "d18cba7d84855055dcbd4b72334da281c4e418cb",
                 "shasum": ""
             },
             "require": {
@@ -1561,7 +1561,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-06-05 11:17:48"
+            "time": "2019-06-06 08:28:59"
         },
         {
             "name": "utopia-php/abuse",
@@ -2425,12 +2425,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-timer.git",
-                "reference": "e826e3ab11b1ca789b10a00b1a2188feb381beb5"
+                "reference": "1038454804406b0b5f5f520358e78c1c2f71501e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-timer/zipball/e826e3ab11b1ca789b10a00b1a2188feb381beb5",
-                "reference": "e826e3ab11b1ca789b10a00b1a2188feb381beb5",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-timer/zipball/1038454804406b0b5f5f520358e78c1c2f71501e",
+                "reference": "1038454804406b0b5f5f520358e78c1c2f71501e",
                 "shasum": ""
             },
             "require": {
@@ -2466,7 +2466,7 @@
             "keywords": [
                 "timer"
             ],
-            "time": "2019-05-24T06:37:41+00:00"
+            "time": "2019-06-07T04:22:29+00:00"
         },
         {
             "name": "phpunit/php-token-stream",
@@ -2523,12 +2523,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "9ba59817745b0fe0c1a5a3032dfd4a6d2994ad1c"
+                "reference": "56a5c2f7d205328a655d685ebd2490ad1606446b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/9ba59817745b0fe0c1a5a3032dfd4a6d2994ad1c",
-                "reference": "9ba59817745b0fe0c1a5a3032dfd4a6d2994ad1c",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/56a5c2f7d205328a655d685ebd2490ad1606446b",
+                "reference": "56a5c2f7d205328a655d685ebd2490ad1606446b",
                 "shasum": ""
             },
             "require": {
@@ -2599,7 +2599,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-05-28T11:59:40+00:00"
+            "time": "2019-06-07T04:29:50+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
