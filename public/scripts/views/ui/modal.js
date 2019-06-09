@@ -9,7 +9,7 @@
                 let buttonIcon      = element.dataset['buttonIcon'] || null;
                 let buttonEvent     = element.dataset['buttonEvent'] || '';
                 let buttonAlias     = element.dataset['buttonAlias'] || '';
-                let buttonElement   = (!buttonAlias) ? document.createElement('button') : document.getElementById(buttonAlias);
+                let buttonElements  = (!buttonAlias) ? [document.createElement('button')] : document.querySelectorAll(buttonAlias);
                 let openEvent       = element.dataset['openEvent'] || null; // When event triggers modal will open
                 let background      = document.getElementById('modal-bg');
 
@@ -29,31 +29,38 @@
                 }
 
                 if(!buttonAlias) {
-                    buttonElement.innerText = buttonText;
-                    buttonElement.className = buttonClass;
-                    buttonElement.type = 'button';
+                    buttonElements.forEach((button) => {
 
-                    if(buttonIcon) {
-                        let iconElement = document.createElement('i');
-                        iconElement.className  = buttonIcon;
+                        button.innerText = buttonText;
+                        button.className = buttonClass;
+                        button.type = 'button';
 
-                        buttonElement.insertBefore(iconElement, buttonElement.firstChild);
-                    }
+                        if(buttonIcon) {
+                            let iconElement = document.createElement('i');
+                            iconElement.className  = buttonIcon;
+
+                            button.insertBefore(iconElement, button.firstChild);
+                        }
+                    });
                 }
 
                 if(buttonEvent) {
-                    buttonElement.addEventListener('click', function () {
-                        document.dispatchEvent(new CustomEvent(buttonEvent, {
-                            bubbles: false,
-                            cancelable: true
-                        }));
+                    buttonElements.forEach((button) => {
+                        button.addEventListener('click', function () {
+                            document.dispatchEvent(new CustomEvent(buttonEvent, {
+                                bubbles: false,
+                                cancelable: true
+                            }));
+                        });
                     });
                 }
 
                 element.classList.add('modal');
 
                 if(!buttonAlias) { // Add to DOM when not alias
-                    element.parentNode.insertBefore(buttonElement, element);
+                    buttonElements.forEach((button) => {
+                        element.parentNode.insertBefore(button, element);
+                    });
                 }
 
                 let open = function () {
@@ -85,7 +92,9 @@
                     document.addEventListener(openEvent, open);
                 }
 
-                buttonElement.addEventListener('click', open);
+                buttonElements.forEach((button) => {
+                    button.addEventListener('click', open);
+                });
 
                 document.addEventListener('keydown', function(event) {
                     if (event.which === 27) {
