@@ -19,7 +19,7 @@ class Locale extends Service
      * @throws Exception
      * @return array
      */
-    public function get()
+    public function getLocale()
     {
         $path   = str_replace([], [], '/locale');
         $params = [];

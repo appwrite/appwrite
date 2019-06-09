@@ -1,27 +1,9 @@
 # Teams Service
 
-## Update Team
-
-```http request
-PUT https://appwrite.io/v1/database/{collectionId}
-```
-
-** Update team by its unique ID. Only team owners have write access for this resource. **
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| collectionId | string | **Required** Collection unique ID. |  |
-| name | string | Collection name. |  |
-| read | array | An array of read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| rules | array | Array of collection structure rules. Each rule define a collection field name, data type and validation | [] |
-
 ## List Teams
 
 ```http request
-GET https://appwrite.io/v1/teams
+GET https://appwrite.test/v1/teams
 ```
 
 ** Get a list of all the current user teams. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project teams. [Learn more about different API modes](/docs/modes). **
@@ -38,7 +20,7 @@ GET https://appwrite.io/v1/teams
 ## Create Team
 
 ```http request
-POST https://appwrite.io/v1/teams
+POST https://appwrite.test/v1/teams
 ```
 
 ** Create a new team. The user who creates the team will automatically be assigned as the owner of the team. The team owner can invite new members, who will be able add new owners and update or delete the team from your project. **
@@ -53,7 +35,7 @@ POST https://appwrite.io/v1/teams
 ## Get Team
 
 ```http request
-GET https://appwrite.io/v1/teams/{teamId}
+GET https://appwrite.test/v1/teams/{teamId}
 ```
 
 ** Get team by its unique ID. All team members have read access for this resource. **
@@ -67,7 +49,7 @@ GET https://appwrite.io/v1/teams/{teamId}
 ## Update Team
 
 ```http request
-PUT https://appwrite.io/v1/teams/{teamId}
+PUT https://appwrite.test/v1/teams/{teamId}
 ```
 
 ** Update team by its unique ID. Only team owners have write access for this resource. **
@@ -82,7 +64,7 @@ PUT https://appwrite.io/v1/teams/{teamId}
 ## Delete Team
 
 ```http request
-DELETE https://appwrite.io/v1/teams/{teamId}
+DELETE https://appwrite.test/v1/teams/{teamId}
 ```
 
 ** Delete team by its unique ID. Only team owners have write access for this resource. **
@@ -96,7 +78,7 @@ DELETE https://appwrite.io/v1/teams/{teamId}
 ## Get Team Members
 
 ```http request
-GET https://appwrite.io/v1/teams/{teamId}/members
+GET https://appwrite.test/v1/teams/{teamId}/members
 ```
 
 ** Get team members by the team unique ID. All team members have read access for this list of resources. **
@@ -110,7 +92,7 @@ GET https://appwrite.io/v1/teams/{teamId}/members
 ## Create Team Membership
 
 ```http request
-POST https://appwrite.io/v1/teams/{teamId}/memberships
+POST https://appwrite.test/v1/teams/{teamId}/memberships
 ```
 
 ** Use this endpoint to invite a new member to your team. An email with a link to join the team will be sent to the new member email address. If member doesn&#039;t exists in the project it will be automatically created.
@@ -132,7 +114,7 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 ## Delete Team Membership
 
 ```http request
-DELETE https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
+DELETE https://appwrite.test/v1/teams/{teamId}/memberships/{inviteId}
 ```
 
 ** This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member. **
@@ -147,7 +129,7 @@ DELETE https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
 ## Create Team Membership (Resend Invitation Email)
 
 ```http request
-POST https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/resend
+POST https://appwrite.test/v1/teams/{teamId}/memberships/{inviteId}/resend
 ```
 
 ** Use this endpoint to resend your invitation email for a user to join a team. **
@@ -163,7 +145,7 @@ POST https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/resend
 ## Update Team Membership Status
 
 ```http request
-PATCH https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/status
+PATCH https://appwrite.test/v1/teams/{teamId}/memberships/{inviteId}/status
 ```
 
 ** Use this endpoint to let user accept an invitation to join a team after he is being redirect back to your app from the invitation email. Use the success and failure URL&#039;s to redirect users back to your application after the request completes.

@@ -14,6 +14,7 @@ use Database\Document;
 use Database\Validator\UID;
 use Database\Validator\Key;
 use Database\Validator\Structure;
+use Database\Validator\Collection;
 use Database\Validator\Authorization;
 use Database\Exception\Authorization as AuthorizationException;
 use Database\Exception\Structure as StructureException;
@@ -133,7 +134,7 @@ $utopia->post('/v1/database')
     ->param('name', '', function () {return new Text(256);}, 'Collection name.')
     ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () {return new ArrayList(new Text(64));}, 'Array of collection structure rules. Each rule define a collection field name, data type and validation', true)
+    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of collection structure rules. Each rule define a collection field name, data type and validation', true)
     ->action(
         function($name, $read, $write, $rules) use ($response, $projectDB, &$output, $webhook, $audit, $isDev)
         {
@@ -182,16 +183,16 @@ $utopia->post('/v1/database')
     );
 
 $utopia->put('/v1/database/:collectionId')
-    ->desc('Update Team')
+    ->desc('Update Collection')
     ->label('scope', 'collections.write')
-    ->label('sdk.namespace', 'teams')
+    ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', 'Update collection by its unique ID.')
     ->param('collectionId', '', function () {return new UID();}, 'Collection unique ID.')
     ->param('name', null, function () {return new Text(256);}, 'Collection name.')
     ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () {return new ArrayList(new Text(64));}, 'Array of collection structure rules. Each rule define a collection field name, data type and validation', true)
+    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of collection structure rules. Each rule define a collection field name, data type and validation', true)
     ->action(
         function($collectionId, $name, $read, $write, $rules) use ($response, $projectDB)
         {
@@ -227,7 +228,7 @@ $utopia->delete('/v1/database/:collectionId')
     ->label('sdk.description', 'Delete a collection by its unique ID. Only users with write permissions have access to delete this resource.')
     ->param('collectionId', '', function () {return new UID();}, 'Collection unique ID.')
     ->action(
-        function($collectionId) use ($response, $projectDB, $audit, $usage) {
+        function($collectionId) use ($response, $projectDB, $audit) {
             $collection = $projectDB->getDocument($collectionId, false);
 
             if(empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {

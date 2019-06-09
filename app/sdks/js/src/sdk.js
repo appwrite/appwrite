@@ -2,7 +2,7 @@
     window.Appwrite = function () {
 
         let config = {
-            endpoint: 'https://appwrite.io/v1',
+            endpoint: 'https://appwrite.test/v1',
             project: '',
             key: '',
             locale: '',
@@ -22,6 +22,9 @@
         /**
          * Set Project
          *
+         * Your Appwrite project ID. You can find your project ID in your Appwrite
+\         * console project settings.
+         *
          * @param value string
          *
          * @return this
@@ -37,6 +40,9 @@
 
         /**
          * Set Key
+         *
+         * Your Appwrite project secret key. You can can create a new API key from
+\         * your Appwrite console API keys dashboard.
          *
          * @param value string
          *
@@ -1123,6 +1129,40 @@
             },
 
             /**
+             * Update Team
+             *
+             * Update collection by its unique ID.
+             *
+             * @param {string} collectionId
+             * @param {string} name
+             * @param {array} read
+             * @param {array} write
+             * @param {array} rules
+             * @throws {Error}
+             * @return {Array}
+             */
+            updateCollection: function(collectionId, name, read = [], write = [], rules = []) {
+                if(collectionId === undefined) {
+                    throw new Error('Missing required parameter: "collectionId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+
+                return http
+                    .put(path, {'Content-type': 'application/json'},
+                        {
+                            'name': name, 
+                            'read': read, 
+                            'write': write, 
+                            'rules': rules
+                        });
+            },
+
+            /**
              * Delete Collection
              *
              * Delete a collection by its unique ID. Only users with write permissions
@@ -1239,42 +1279,275 @@
             }
         };
 
-        let teams = {
+        let locale = {
 
             /**
-             * Update Team
+             * Get User Locale
              *
-             * Update team by its unique ID. Only team owners have write access for this
-             * resource.
+             * Get the current user location based on IP. Returns an object with user
+             * country code, country name, continent name, continent code, ip address and
+             * suggested currency. You can use the locale header to get the data in
+             * supported language.
              *
-             * @param {string} collectionId
-             * @param {string} name
-             * @param {array} read
-             * @param {array} write
-             * @param {array} rules
              * @throws {Error}
              * @return {Array}
              */
-            updateTeam: function(collectionId, name, read = [], write = [], rules = []) {
-                if(collectionId === undefined) {
-                    throw new Error('Missing required parameter: "collectionId"');
-                }
-                
-                if(name === undefined) {
-                    throw new Error('Missing required parameter: "name"');
-                }
-                
-                let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+            getLocale: function() {
+                let path = '/locale';
 
                 return http
-                    .put(path, {'Content-type': 'application/json'},
+                    .get(path, {'Content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'read': read, 
-                            'write': write, 
-                            'rules': rules
                         });
             },
+
+            /**
+             * List Countries
+             *
+             * List of all countries. You can use the locale header to get the data in
+             * supported language.
+             *
+             * @throws {Error}
+             * @return {Array}
+             */
+            getCountries: function() {
+                let path = '/locale/countries';
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                        });
+            },
+
+            /**
+             * List EU Countries
+             *
+             * List of all countries that are currently members of the EU. You can use the
+             * locale header to get the data in supported language.
+             *
+             * @throws {Error}
+             * @return {Array}
+             */
+            getCountriesEU: function() {
+                let path = '/locale/countries/eu';
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                        });
+            },
+
+            /**
+             * List Countries Phone Codes
+             *
+             * List of all countries phone codes. You can use the locale header to get the
+             * data in supported language.
+             *
+             * @throws {Error}
+             * @return {Array}
+             */
+            getCountriesPhones: function() {
+                let path = '/locale/countries/phones';
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                        });
+            }
+        };
+
+        let storage = {
+
+            /**
+             * List Files
+             *
+             * Get a list of all the user files. You can use the query params to filter
+             * your results. On admin mode, this endpoint will return a list of all of the
+             * project files. [Learn more about different API modes](/docs/modes).
+             *
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Array}
+             */
+            listFiles: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                let path = '/storage/files';
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                            'search': search, 
+                            'limit': limit, 
+                            'offset': offset, 
+                            'orderType': orderType
+                        });
+            },
+
+            /**
+             * Create File
+             *
+             * Create a new file. The user who creates the file will automatically be
+             * assigned to read and write access unless he has passed custom values for
+             * read and write arguments.
+             *
+             * @param {File} files
+             * @param {array} read
+             * @param {array} write
+             * @param {string} folderId
+             * @throws {Error}
+             * @return {Array}
+             */
+            createFile: function(files, read = [], write = [], folderId = '') {
+                if(files === undefined) {
+                    throw new Error('Missing required parameter: "files"');
+                }
+                
+                let path = '/storage/files';
+
+                return http
+                    .post(path, {'Content-type': 'application/json'},
+                        {
+                            'files': files, 
+                            'read': read, 
+                            'write': write, 
+                            'folderId': folderId
+                        });
+            },
+
+            /**
+             * Get File
+             *
+             * Get file by its unique ID. This endpoint response returns a JSON object
+             * with the file metadata.
+             *
+             * @param {string} fileId
+             * @throws {Error}
+             * @return {Array}
+             */
+            getFile: function(fileId) {
+                if(fileId === undefined) {
+                    throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                        });
+            },
+
+            /**
+             * Delete File
+             *
+             * Delete a file by its unique ID. Only users with write permissions have
+             * access to delete this resource.
+             *
+             * @param {string} fileId
+             * @throws {Error}
+             * @return {Array}
+             */
+            deleteFile: function(fileId) {
+                if(fileId === undefined) {
+                    throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
+
+                return http
+                    .delete(path, {'Content-type': 'application/json'},
+                        {
+                        });
+            },
+
+            /**
+             * Download File
+             *
+             * Get file content by its unique ID. The endpoint response return with a
+             * 'Content-Disposition: attachment' header that tells the browser to start
+             * downloading the file to user downloads directory.
+             *
+             * @param {string} fileId
+             * @throws {Error}
+             * @return {Array}
+             */
+            getFileDownload: function(fileId) {
+                if(fileId === undefined) {
+                    throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                let path = '/storage/files/{fileId}/download'.replace(new RegExp('{fileId}', 'g'), fileId);
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                        });
+            },
+
+            /**
+             * Preview File
+             *
+             * Get file preview image. Currently, this method supports preview for image
+             * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
+             * and spreadsheets will return file icon image. You can also pass query
+             * string arguments for cutting and resizing your preview image.
+             *
+             * @param {string} fileId
+             * @param {number} width
+             * @param {number} height
+             * @param {number} quality
+             * @param {string} background
+             * @param {string} output
+             * @throws {Error}
+             * @return {Array}
+             */
+            getFilePreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
+                if(fileId === undefined) {
+                    throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                let path = '/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}', 'g'), fileId);
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                            'width': width, 
+                            'height': height, 
+                            'quality': quality, 
+                            'background': background, 
+                            'output': output
+                        });
+            },
+
+            /**
+             * View File
+             *
+             * Get file content by its unique ID. This endpoint is similar to the download
+             * method but returns with no  'Content-Disposition: attachment' header.
+             *
+             * @param {string} fileId
+             * @param {string} as
+             * @throws {Error}
+             * @return {Array}
+             */
+            getFileView: function(fileId, as = '') {
+                if(fileId === undefined) {
+                    throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                let path = '/storage/files/{fileId}/view'.replace(new RegExp('{fileId}', 'g'), fileId);
+
+                return http
+                    .get(path, {'Content-type': 'application/json'},
+                        {
+                            'as': as
+                        });
+            }
+        };
+
+        let teams = {
 
             /**
              * List Teams
@@ -1603,274 +1876,6 @@
             }
         };
 
-        let locale = {
-
-            /**
-             * Get User Locale
-             *
-             * Get the current user location based on IP. Returns an object with user
-             * country code, country name, continent name, continent code, ip address and
-             * suggested currency. You can use the locale header to get the data in
-             * supported language.
-             *
-             * @throws {Error}
-             * @return {Array}
-             */
-            get: function() {
-                let path = '/locale';
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                        });
-            },
-
-            /**
-             * List Countries
-             *
-             * List of all countries. You can use the locale header to get the data in
-             * supported language.
-             *
-             * @throws {Error}
-             * @return {Array}
-             */
-            getCountries: function() {
-                let path = '/locale/countries';
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                        });
-            },
-
-            /**
-             * List EU Countries
-             *
-             * List of all countries that are currently members of the EU. You can use the
-             * locale header to get the data in supported language.
-             *
-             * @throws {Error}
-             * @return {Array}
-             */
-            getCountriesEU: function() {
-                let path = '/locale/countries/eu';
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                        });
-            },
-
-            /**
-             * List Countries Phone Codes
-             *
-             * List of all countries phone codes. You can use the locale header to get the
-             * data in supported language.
-             *
-             * @throws {Error}
-             * @return {Array}
-             */
-            getCountriesPhones: function() {
-                let path = '/locale/countries/phones';
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                        });
-            }
-        };
-
-        let storage = {
-
-            /**
-             * List Files
-             *
-             * Get a list of all the user files. You can use the query params to filter
-             * your results. On admin mode, this endpoint will return a list of all of the
-             * project files. [Learn more about different API modes](/docs/modes).
-             *
-             * @param {string} search
-             * @param {number} limit
-             * @param {number} offset
-             * @param {string} orderType
-             * @throws {Error}
-             * @return {Array}
-             */
-            listFiles: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
-                let path = '/storage/files';
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                            'search': search, 
-                            'limit': limit, 
-                            'offset': offset, 
-                            'orderType': orderType
-                        });
-            },
-
-            /**
-             * Create File
-             *
-             * Create a new file. The user who creates the file will automatically be
-             * assigned to read and write access unless he has passed custom values for
-             * read and write arguments.
-             *
-             * @param {File} files
-             * @param {array} read
-             * @param {array} write
-             * @param {string} folderId
-             * @throws {Error}
-             * @return {Array}
-             */
-            createFile: function(files, read = [], write = [], folderId = '') {
-                if(files === undefined) {
-                    throw new Error('Missing required parameter: "files"');
-                }
-                
-                let path = '/storage/files';
-
-                return http
-                    .post(path, {'Content-type': 'application/json'},
-                        {
-                            'files': files, 
-                            'read': read, 
-                            'write': write, 
-                            'folderId': folderId
-                        });
-            },
-
-            /**
-             * Get File
-             *
-             * Get file by its unique ID. This endpoint response returns a JSON object
-             * with the file metadata.
-             *
-             * @param {string} fileId
-             * @throws {Error}
-             * @return {Array}
-             */
-            getFile: function(fileId) {
-                if(fileId === undefined) {
-                    throw new Error('Missing required parameter: "fileId"');
-                }
-                
-                let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                        });
-            },
-
-            /**
-             * Delete File
-             *
-             * Delete a file by its unique ID. Only users with write permissions have
-             * access to delete this resource.
-             *
-             * @param {string} fileId
-             * @throws {Error}
-             * @return {Array}
-             */
-            deleteFile: function(fileId) {
-                if(fileId === undefined) {
-                    throw new Error('Missing required parameter: "fileId"');
-                }
-                
-                let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
-
-                return http
-                    .delete(path, {'Content-type': 'application/json'},
-                        {
-                        });
-            },
-
-            /**
-             * Download File
-             *
-             * Get file content by its unique ID. The endpoint response return with a
-             * 'Content-Disposition: attachment' header that tells the browser to start
-             * downloading the file to user downloads directory.
-             *
-             * @param {string} fileId
-             * @throws {Error}
-             * @return {Array}
-             */
-            getFileDownload: function(fileId) {
-                if(fileId === undefined) {
-                    throw new Error('Missing required parameter: "fileId"');
-                }
-                
-                let path = '/storage/files/{fileId}/download'.replace(new RegExp('{fileId}', 'g'), fileId);
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                        });
-            },
-
-            /**
-             * Preview File
-             *
-             * Get file preview image. Currently, this method supports preview for image
-             * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
-             * and spreadsheets will return file icon image. You can also pass query
-             * string arguments for cutting and resizing your preview image.
-             *
-             * @param {string} fileId
-             * @param {number} width
-             * @param {number} height
-             * @param {number} quality
-             * @param {string} background
-             * @param {string} output
-             * @throws {Error}
-             * @return {Array}
-             */
-            getFilePreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
-                if(fileId === undefined) {
-                    throw new Error('Missing required parameter: "fileId"');
-                }
-                
-                let path = '/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}', 'g'), fileId);
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                            'width': width, 
-                            'height': height, 
-                            'quality': quality, 
-                            'background': background, 
-                            'output': output
-                        });
-            },
-
-            /**
-             * View File
-             *
-             * Get file content by its unique ID. This endpoint is similar to the download
-             * method but returns with no  'Content-Disposition: attachment' header.
-             *
-             * @param {string} fileId
-             * @param {string} as
-             * @throws {Error}
-             * @return {Array}
-             */
-            getFileView: function(fileId, as = '') {
-                if(fileId === undefined) {
-                    throw new Error('Missing required parameter: "fileId"');
-                }
-                
-                let path = '/storage/files/{fileId}/view'.replace(new RegExp('{fileId}', 'g'), fileId);
-
-                return http
-                    .get(path, {'Content-type': 'application/json'},
-                        {
-                            'as': as
-                        });
-            }
-        };
-
         let users = {
 
             /**
@@ -2069,7 +2074,7 @@
             },
 
             /**
-             * Block User
+             * Update user status
              *
              * Update user status by its unique ID.
              *
@@ -2107,9 +2112,9 @@
             auth: auth,
             avatars: avatars,
             database: database,
-            teams: teams,
             locale: locale,
             storage: storage,
+            teams: teams,
             users: users
         };
     };

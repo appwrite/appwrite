@@ -131,7 +131,7 @@ class Structure extends Validator
             return false;
         }
 
-        $collection = $this->database->getDocument($document->getCollection());
+        $collection = $this->getCollection($document->getCollection());
 
         if(is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             $this->message = 'Collection not found';
@@ -189,9 +189,7 @@ class Structure extends Validator
                     $validator = new Key();
                     break;
                 case 'document':
-                    $validator = new Validator\Multiple(
-                        new Collection((isset($ruleOptions['whitelist'])) ? $ruleOptions['whitelist'] : []),
-                        new self($this->database));
+                    $validator = new Collection($this->database, (isset($ruleOptions['whitelist'])) ? $ruleOptions['whitelist'] : []);
                     $value = $document->getAttribute($key);
                     break;
             }
@@ -247,5 +245,10 @@ class Structure extends Validator
         }
 
         return true;
+    }
+
+    protected function getCollection($uid)
+    {
+        return $this->database->getDocument($uid);
     }
 }

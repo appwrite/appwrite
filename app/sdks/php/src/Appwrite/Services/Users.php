@@ -176,7 +176,7 @@ class Users extends Service
     }
 
     /**
-     * Block User
+     * Update user status
      *
      * Update user status by its unique ID.
      *
