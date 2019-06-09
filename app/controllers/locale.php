@@ -10,7 +10,7 @@ $utopia->get('/v1/locale')
     ->desc('Get User Locale')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'get')
+    ->label('sdk.method', 'getLocale')
     ->label('sdk.description', 'Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in supported language.')
     ->action(
         function() use ($response, $request, $utopia)

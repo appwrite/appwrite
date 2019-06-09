@@ -3,6 +3,7 @@
 global $utopia, $request, $response, $register, $user, $audit, $usage, $project, $projectDB;
 
 use Utopia\Exception;
+use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
@@ -527,7 +528,10 @@ $utopia->post('/v1/storage/files')
                 $list[] = $file->getArrayCopy();
             }
 
-            $response->json($list);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($list)
+            ;
         }
     );
 

@@ -4,6 +4,7 @@ global $utopia, $register, $request, $response, $webhook, $audit, $projectDB;
 
 use Utopia\App;
 use Utopia\Exception;
+use Utopia\Response;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -173,7 +174,10 @@ $utopia->post('/v1/database')
             /**
              * View
              */
-            $response->json($data);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($data)
+            ;
         }
     );
 
@@ -181,8 +185,8 @@ $utopia->put('/v1/database/:collectionId')
     ->desc('Update Team')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'updateTeam')
-    ->label('sdk.description', 'Update team by its unique ID. Only team owners have write access for this resource.')
+    ->label('sdk.method', 'updateCollection')
+    ->label('sdk.description', 'Update collection by its unique ID.')
     ->param('collectionId', '', function () {return new UID();}, 'Collection unique ID.')
     ->param('name', null, function () {return new Text(256);}, 'Collection name.')
     ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
@@ -461,7 +465,10 @@ $utopia->post('/v1/database/:collectionId')
             /**
              * View
              */
-            $response->json($data);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($data)
+            ;
         }
     );
 

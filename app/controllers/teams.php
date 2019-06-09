@@ -3,6 +3,7 @@
 global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mode;
 
 use Utopia\Exception;
+use Utopia\Response;
 use Utopia\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Host;
@@ -174,7 +175,10 @@ $utopia->post('/v1/teams')
                 }
             }
 
-            $response->json($team->getArrayCopy());
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($team->getArrayCopy())
+            ;
         }
     );
 
@@ -385,7 +389,9 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('event', 'auth.invite')
             ;
 
-            $response->noContent();
+            $response
+                //->setStatusCode(Response::STATUS_CODE_CREATED) TODO change response of this endpoint
+                ->noContent();
         }
     );
 
@@ -462,7 +468,10 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
                 ->setParam('event', 'auth.invite.resend')
             ;
 
-            $response->noContent();
+            $response
+            //    ->setStatusCode(Response::STATUS_CODE_CREATED) TODO change response of this endpoint
+                ->noContent()
+            ;
         }
     );
 

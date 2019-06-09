@@ -126,8 +126,6 @@ class Structure extends Validator
 
         $this->id = $document->getUid();
 
-        $original = (!empty($this->id)) ? $this->database->getDocument($document->getUid()) : new Document([]);
-
         if(is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
             return false;

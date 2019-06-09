@@ -166,6 +166,10 @@ $utopia->get('/v1/health/stats')
 
             $response
                 ->json([
+                    'server' => [
+                        'name' => 'nginx',
+                        'version' => shell_exec('nginx -v 2>&1'),
+                    ],
                     'storage' => [
                         'used'              => $device->human($device->getDirectorySize($device->getRoot() . '/')),
                         'partitionTotal'    => $device->human($device->getPartitionTotalSpace()),

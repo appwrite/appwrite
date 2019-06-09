@@ -5,6 +5,7 @@ global $utopia, $response, $projectDB;
 use Auth\Auth;
 use Auth\Validator\Password;
 use Utopia\Exception;
+use Utopia\Response;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Email;
 use Utopia\Validator\Text;
@@ -318,37 +319,39 @@ $utopia->post('/v1/users')
                 'name' => $name,
             ]);
 
-            $response->json(array_merge($user->getArrayCopy([
-                '$uid',
-                'status',
-                'email',
-                'registration',
-                'confirm',
-                'name',
-                'oauthBitbucket',
-                'oauthBitBucketAccessToken',
-                'oauthFacebook',
-                'oauthFacebookAccessToken',
-                'oauthGithub',
-                'oauthGithubAccessToken',
-                'oauthGitlab',
-                'oauthGitlabAccessToken',
-                'oauthGoogle',
-                'oauthGoogleAccessToken',
-                'oauthInstagram',
-                'oauthInstagramAccessToken',
-                'oauthLinkedin',
-                'oauthLinkedinAccessToken',
-                'oauthMicrosoft',
-                'oauthMicrosoftAccessToken',
-                'oauthTwitter',
-                'oauthTwitterAccessToken',
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json(array_merge($user->getArrayCopy([
+                    '$uid',
+                    'status',
+                    'email',
+                    'registration',
+                    'confirm',
+                    'name',
+                    'oauthBitbucket',
+                    'oauthBitBucketAccessToken',
+                    'oauthFacebook',
+                    'oauthFacebookAccessToken',
+                    'oauthGithub',
+                    'oauthGithubAccessToken',
+                    'oauthGitlab',
+                    'oauthGitlabAccessToken',
+                    'oauthGoogle',
+                    'oauthGoogleAccessToken',
+                    'oauthInstagram',
+                    'oauthInstagramAccessToken',
+                    'oauthLinkedin',
+                    'oauthLinkedinAccessToken',
+                    'oauthMicrosoft',
+                    'oauthMicrosoftAccessToken',
+                    'oauthTwitter',
+                    'oauthTwitterAccessToken',
             ]), ['roles' => Authorization::getRoles()]));
         }
     );
 
 $utopia->patch('/v1/users/:userId/status')
-    ->desc('Block User')
+    ->desc('Update user status')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserStatus')

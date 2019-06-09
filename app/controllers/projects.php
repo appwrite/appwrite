@@ -3,6 +3,7 @@
 global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $providers;
 
 use Utopia\Exception;
+use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -286,7 +287,10 @@ $utopia->post('/v1/projects')
 
             $consoleDB->createNamespace($project->getUid());
 
-            $response->json($project->getArrayCopy());
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($project->getArrayCopy())
+            ;
         }
     );
 
@@ -527,7 +531,10 @@ $utopia->post('/v1/projects/:projectId/webhooks')
                 throw new Exception('Failed saving project to DB', 500);
             }
 
-            $response->json($webhook->getArrayCopy());
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($webhook->getArrayCopy())
+            ;
         }
     );
 
@@ -703,7 +710,10 @@ $utopia->post('/v1/projects/:projectId/keys')
                 throw new Exception('Failed saving project to DB', 500);
             }
 
-            $response->json($key->getArrayCopy());
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($key->getArrayCopy())
+            ;
         }
     );
 
@@ -917,7 +927,10 @@ $utopia->post('/v1/projects/:projectId/tasks')
                 ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
             }
 
-            $response->json($task->getArrayCopy());
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($task->getArrayCopy())
+            ;
         }
     );
 
@@ -1117,7 +1130,10 @@ $utopia->post('/v1/projects/:projectId/platforms')
                 throw new Exception('Failed saving project to DB', 500);
             }
 
-            $response->json($platform->getArrayCopy());
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($platform->getArrayCopy())
+            ;
         }
     );
 
