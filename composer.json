@@ -1,5 +1,5 @@
 {
-    "name": "Appwrite/Appwrite",
+    "name": "Appwrite/Server",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",
     "license": "BSD-3-Clause",
