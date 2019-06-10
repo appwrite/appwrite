@@ -2,7 +2,7 @@
     "name": "Appwrite/Appwrite",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",
-    "license": "proprietary",
+    "license": "BSD-3-Clause",
     "authors": [
         {
             "name": "Eldad Fux",
