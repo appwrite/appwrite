@@ -1129,7 +1129,7 @@
             },
 
             /**
-             * Update Team
+             * Update Collection
              *
              * Update collection by its unique ID.
              *

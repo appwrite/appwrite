@@ -135,7 +135,7 @@ class Database extends Service
     }
 
     /**
-     * Update Team
+     * Update Collection
      *
      * Update collection by its unique ID.
      *

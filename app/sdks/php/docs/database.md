@@ -77,7 +77,7 @@ POST https://appwrite.test/v1/database/{collectionId}
 | parentProperty | string | Parent document property name. Use when you want your new document to be a child of a parent document. |  |
 | parentPropertyType | string | Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document. | assign |
 
-## Update Team
+## Update Collection
 
 ```http request
 PUT https://appwrite.test/v1/database/{collectionId}

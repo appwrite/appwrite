@@ -550,7 +550,7 @@ $utopia->get('/v1/open-api-2.json')
                         'email' => APP_EMAIL_TEAM,
                     ],
                     'license' => [
-                        'name' => 'BSD 3-Clause',
+                        'name' => 'BSD-3-Clause',
                         'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                     ],
                 ],

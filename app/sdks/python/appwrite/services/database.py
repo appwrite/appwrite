@@ -74,7 +74,7 @@ class Database(Service):
 =[], writestring(4) ""[]""
 =[], rulesstring(4) ""[]""
 =[]):
-        """Update Team"""
+        """Update Collection"""
 
         params = {}
         path = '/database/{collectionId}'

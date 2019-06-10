@@ -23,4 +23,4 @@ npm install appwrite --save
 
 ## License
 
-Please see the [BSD 3-Clause license](https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE) file for more information.
+Please see the [BSD-3-Clause license](https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE) file for more information.
