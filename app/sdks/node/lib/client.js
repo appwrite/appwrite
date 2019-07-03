@@ -7,7 +7,7 @@ class Client {
         this.endpoint = 'https://appwrite.test/v1';
         this.headers = {
             'content-type': '',
-            'x-sdk-version': 'appwrite:nodejs:v1.0.15',
+            'x-sdk-version': 'appwrite:nodejs:v1.0.16',
         };
         this.selfSigned = false;
     }
@@ -109,9 +109,9 @@ class Client {
         let options = {
             method: method.toUpperCase(),
             uri: this.endpoint + path,
-            qs: (method.toUpperCase === 'GET') ? params : {},
+            qs: (method.toUpperCase() === 'GET') ? params : {},
             headers: headers,
-            body: (method.toUpperCase === 'GET') ? '' : params,
+            body: (method.toUpperCase() === 'GET') ? '' : params,
             json: (headers['content-type'].toLowerCase().startsWith('application/json')),
         };
 

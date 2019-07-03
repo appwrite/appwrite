@@ -119,7 +119,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 throw new Exception('Project not found', 404);
             }
 
-            $client     = new InfluxDB\Client('influxdb', '8086');
+            /*$client     = new InfluxDB\Client('influxdb', '8086');
             $start      = DateTime::createFromFormat('U', strtotime('first day of this month'));
             $start      = $start->format(DateTime::RFC3339);
             $end        = DateTime::createFromFormat('U', strtotime('last day of this month'));
@@ -151,7 +151,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                     'date'  => strtotime($point['time']),
                 ];
             }
-
+            */
             // Users
 
             $projectDB->getCollection([
@@ -195,22 +195,20 @@ $utopia->get('/v1/projects/:projectId/usage')
 
             $response->json([
                 'requests' => [
-                    'data'  => $requests,
-                    'total' => array_sum(array_map(function($item) {
-                        return $item['value'];
-                    }, $requests)),
+                    //'data'  => $requests,
+                    //'total' => array_sum(array_map(function($item) {return $item['value'];}, $requests)),
                 ],
                 'network' => [
-                    'data'  => $network,
-                    'total' => array_sum(array_map(function($item) {
-                        return $item['value'];
-                    }, $network)),
+                    //'data'  => $network,
+                    //'total' => array_sum(array_map(function($item) {return $item['value'];}, $network)),
+                ],
+                'collections' => [
+                    'data'  => $collections,
+                    'total' => $collectionsTotal,
                 ],
                 'documents' => [
                     'data'  => $documents,
-                    'total' => array_sum(array_map(function($item) {
-                        return $item['total'];
-                    }, $documents)),
+                    'total' => array_sum(array_map(function($item) {return $item['total'];}, $documents)),
                 ],
                 'users' => [
                     'data'  => [],

@@ -1585,6 +1585,7 @@ class Database
         $document   = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($id));
         $validator  = new Authorization($document, 'read');
 
+
         if(!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
             return new Document([]);
         }

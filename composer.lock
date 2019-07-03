@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "3c90b0bc44a105e53789f468c0060682",
+    "content-hash": "4da6c815200ff864152d70447fc4b83e",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -57,12 +57,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "83655bde18a4186b3212d4eb8ce291521243cef4"
+                "reference": "40a69ef4a10b8d80c98d30622778a89ab809f866"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/83655bde18a4186b3212d4eb8ce291521243cef4",
-                "reference": "83655bde18a4186b3212d4eb8ce291521243cef4",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/40a69ef4a10b8d80c98d30622778a89ab809f866",
+                "reference": "40a69ef4a10b8d80c98d30622778a89ab809f866",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +94,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-06-08 13:19:14"
+            "time": "2019-06-22 18:53:17"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -690,19 +690,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "926eaa3ff73cde2becf652b785831bcb7618568a"
+                "reference": "e6d006f1ced100d81755966f09625d71ce6a7dca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/926eaa3ff73cde2becf652b785831bcb7618568a",
-                "reference": "926eaa3ff73cde2becf652b785831bcb7618568a",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/e6d006f1ced100d81755966f09625d71ce6a7dca",
+                "reference": "e6d006f1ced100d81755966f09625d71ce6a7dca",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.5.0"
+                "php": ">=5.6"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.8.36"
+                "phpunit/phpunit": "^5.7.27 || ^7.5"
             },
             "type": "library",
             "extra": {
@@ -733,7 +733,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2018-10-30 00:20:04"
+            "time": "2019-06-11 17:44:31"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -741,12 +741,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "5ce1cec1a26c5d2ccd259157f58a32b7facd545a"
+                "reference": "e113254d23b24c548f0b4d8f671828c4eeb876d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/5ce1cec1a26c5d2ccd259157f58a32b7facd545a",
-                "reference": "5ce1cec1a26c5d2ccd259157f58a32b7facd545a",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/e113254d23b24c548f0b4d8f671828c4eeb876d2",
+                "reference": "e113254d23b24c548f0b4d8f671828c4eeb876d2",
                 "shasum": ""
             },
             "require": {
@@ -767,7 +767,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.5-dev"
+                    "dev-master": "1.6-dev"
                 }
             },
             "autoload": {
@@ -804,7 +804,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2019-06-06 09:22:35"
+            "time": "2019-06-17 23:10:01"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -1502,12 +1502,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d18cba7d84855055dcbd4b72334da281c4e418cb"
+                "reference": "fb5a1f43e653ba4af08333e8ba3f6330b1017d34"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d18cba7d84855055dcbd4b72334da281c4e418cb",
-                "reference": "d18cba7d84855055dcbd4b72334da281c4e418cb",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/fb5a1f43e653ba4af08333e8ba3f6330b1017d34",
+                "reference": "fb5a1f43e653ba4af08333e8ba3f6330b1017d34",
                 "shasum": ""
             },
             "require": {
@@ -1561,7 +1561,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-06-06 08:28:59"
+            "time": "2019-06-20 11:56:08"
         },
         {
             "name": "utopia-php/abuse",
@@ -2208,12 +2208,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/prophecy.git",
-                "reference": "7e272180527c34a97680de85eb5aba0847a664e0"
+                "reference": "1927e75f4ed19131ec9bcc3b002e07fb1173ee76"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/7e272180527c34a97680de85eb5aba0847a664e0",
-                "reference": "7e272180527c34a97680de85eb5aba0847a664e0",
+                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/1927e75f4ed19131ec9bcc3b002e07fb1173ee76",
+                "reference": "1927e75f4ed19131ec9bcc3b002e07fb1173ee76",
                 "shasum": ""
             },
             "require": {
@@ -2263,7 +2263,7 @@
                 "spy",
                 "stub"
             ],
-            "time": "2018-12-18T15:40:51+00:00"
+            "time": "2019-06-13T12:50:23+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -2425,12 +2425,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-timer.git",
-                "reference": "1038454804406b0b5f5f520358e78c1c2f71501e"
+                "reference": "29995fbf33aabda1b53b65ada13737d42ccaf53a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-timer/zipball/1038454804406b0b5f5f520358e78c1c2f71501e",
-                "reference": "1038454804406b0b5f5f520358e78c1c2f71501e",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-timer/zipball/29995fbf33aabda1b53b65ada13737d42ccaf53a",
+                "reference": "29995fbf33aabda1b53b65ada13737d42ccaf53a",
                 "shasum": ""
             },
             "require": {
@@ -2466,7 +2466,7 @@
             "keywords": [
                 "timer"
             ],
-            "time": "2019-06-07T04:22:29+00:00"
+            "time": "2019-06-10T14:27:16+00:00"
         },
         {
             "name": "phpunit/php-token-stream",
@@ -2523,12 +2523,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "56a5c2f7d205328a655d685ebd2490ad1606446b"
+                "reference": "1477fe424dc8ba0b252b1262f91f40139e0f889b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/56a5c2f7d205328a655d685ebd2490ad1606446b",
-                "reference": "56a5c2f7d205328a655d685ebd2490ad1606446b",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/1477fe424dc8ba0b252b1262f91f40139e0f889b",
+                "reference": "1477fe424dc8ba0b252b1262f91f40139e0f889b",
                 "shasum": ""
             },
             "require": {
@@ -2599,7 +2599,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-06-07T04:29:50+00:00"
+            "time": "2019-06-20T14:04:28+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -3169,16 +3169,16 @@
         },
         {
             "name": "theseer/tokenizer",
-            "version": "1.1.2",
+            "version": "1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/theseer/tokenizer.git",
-                "reference": "1c42705be2b6c1de5904f8afacef5895cab44bf8"
+                "reference": "11336f6f84e16a720dae9d8e6ed5019efa85a0f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/theseer/tokenizer/zipball/1c42705be2b6c1de5904f8afacef5895cab44bf8",
-                "reference": "1c42705be2b6c1de5904f8afacef5895cab44bf8",
+                "url": "https://api.github.com/repos/theseer/tokenizer/zipball/11336f6f84e16a720dae9d8e6ed5019efa85a0f9",
+                "reference": "11336f6f84e16a720dae9d8e6ed5019efa85a0f9",
                 "shasum": ""
             },
             "require": {
@@ -3205,7 +3205,7 @@
                 }
             ],
             "description": "A small library for converting tokenized PHP source code into XML and potentially other formats",
-            "time": "2019-04-04T09:56:43+00:00"
+            "time": "2019-06-13T22:48:21+00:00"
         },
         {
             "name": "webmozart/assert",

@@ -14,7 +14,6 @@
 
                 console.teams.create(formData['name'] || '')
                     .then(function (data) {
-
                         let team = JSON.parse(data)['$uid'];
 
                         formData = JSON.parse(JSON.stringify(formData).replace(new RegExp('{{teamId}}', 'g'), team)); //convert to JSON string
