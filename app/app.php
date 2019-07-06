@@ -311,9 +311,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
 });
 
 $utopia->options(function() use ($request, $response, $domain, $project) {
-    $origin = (!in_array($request->getServer('HTTP_ORIGIN'), $project->getAttribute('clients', [])))
-        ? APP_PROTOCOL . '://console.' . $domain //TODO CHECK WHY DO WE REFERENCE THIS SUB-DOMAIN
-        : $request->getServer('HTTP_ORIGIN');
+    $origin = $request->getServer('HTTP_ORIGIN');
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
@@ -484,9 +482,9 @@ $utopia->get('/v1/server') // This is only visible to gods
 $utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('extension', 0 , function () {return new Range(0, 1);}, 'Show extra data.', true)
+    ->param('extensions', 0 , function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->action(
-        function($extension) use ($response, $utopia, $domain, $version, $services, $consoleDB) {
+        function($extensions) use ($response, $utopia, $domain, $version, $services, $consoleDB) {
 
             function fromCamelCase($input) {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -679,7 +677,7 @@ $utopia->get('/v1/open-api-2.json')
                         ],
                     ];
 
-                    if($extension) {
+                    if($extensions) {
                         $temp['extensions'] = [
                             'weight' => $route->getOrder(),
                             'cookies' => $route->getLabel('sdk.cookies', false),
