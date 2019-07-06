@@ -192,7 +192,7 @@ $utopia->get('/v1/avatars/favicon')
                     case 'icon':
                     case 'shortcut icon':
                     //case 'apple-touch-icon':
-                        $ext = pathinfo($absolute, PATHINFO_EXTENSION);
+                        $ext = pathinfo(parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
 
                         switch ($ext) {
                             case 'ico':
@@ -218,11 +218,18 @@ $utopia->get('/v1/avatars/favicon')
             }
 
             if(empty($outputHref) || empty($outputExt)) {
-                throw new Exception('Favicon not found', 404);
+                $default = parse_url($url);
+
+                $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
+                $outputExt = 'ico';
             }
 
             if('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
-                $data = file_get_contents($outputHref, false);
+                $data = @file_get_contents($outputHref, false);
+
+                if(empty($data) || (mb_substr($data, 0, 5) === '<html') || mb_substr($data, 0, 5) === '<!doc') {
+                    throw new Exception('Favicon not found', 404);
+                }
 
                 $cache->save($key, $data);
 
