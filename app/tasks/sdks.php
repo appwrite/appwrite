@@ -33,8 +33,8 @@ $cli
 
         Console::success('Fetching API Spec');
 
-        $spec   = getSSLPage('https://appwrite.io/v1/open-api-2.json');
-        $spec   = getSSLPage('https://appwrite.test/v1/open-api-2.json');
+        $spec   = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1');
+        $spec   = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1');
 
         $clients = [
             'php' => [
@@ -46,7 +46,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'js' => [
-                'version'       => 'v1.0.1',
+                'version'       => 'v1.0.4',
                 'result'        => __DIR__ . '/../sdks/js/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-js.git',
