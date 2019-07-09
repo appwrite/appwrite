@@ -72,8 +72,8 @@ $register->set('db', function() use ($request) { // Register DB connection
     $dbPass     = $request->getServer('_APP_DB_PASS', '');
     $dbScheme   = $request->getServer('_APP_DB_SCHEMA', '');
 
-    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme}", $dbUser, $dbPass, array(
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
         PDO::ATTR_TIMEOUT => 5 // Seconds
     ));
 

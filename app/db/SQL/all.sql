@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS `appwrite` /*!40100 DEFAULT CHARACTER SET utf8 */;
+CREATE DATABASE IF NOT EXISTS `appwrite` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;
 
 USE `appwrite`;
 
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `template.abuse.abuse` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique1` (`_key`,`_time`),
   KEY `index1` (`_key`,`_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;;
 
 CREATE TABLE IF NOT EXISTS `template.audit.audit` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `template.audit.audit` (
   KEY `index_1` (`userId`,`userType`),
   KEY `index_2` (`event`),
   KEY `index_3` (`resource`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;;
 
 CREATE TABLE IF NOT EXISTS `template.database.documents` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Unique ID for each node',
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `template.database.documents` (
   UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `index2` (`uid`),
   KEY `index3` (`signature`,`uid`,`revision`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;;
 
 CREATE TABLE IF NOT EXISTS `template.database.properties` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Primary Key',
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS `template.database.properties` (
   KEY `index1` (`documentUid`),
   KEY `index2` (`key`,`value`(5)),
   FULLTEXT KEY `index3` (`value`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;;
 
 CREATE TABLE IF NOT EXISTS `template.database.relationships` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `template.database.relationships` (
   PRIMARY KEY (`id`),
   KEY `relationships_start_nodes_id_idx` (`start`),
   KEY `relationships_end_nodes_id_idx` (`end`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;;
 
 /* Default App */
 
