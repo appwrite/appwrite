@@ -122,6 +122,75 @@ $utopia->get('/v1/avatars/flags/:code')
     ->label('sdk.description', 'You can use this endpoint to show different country flags icons to your users, The code argument receives the a 2 letter country code. Use width, height and quality arguments to change the output settings.')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {return $avatarCallback('flags', $code, $width, $height, $quality);});
 
+$utopia->get('/v1/avatars/image')
+    ->desc('Get image from and HTTP URL and crop to any size.')
+    ->param('url', '', function () {return new URL();}, 'Image URL which you want to crop.')
+    ->param('width', 400,  function () {return new Range(0, 2000);}, 'Resize preview image width, Pass an integer between 0 to 4000', true)
+    ->param('height', 400, function () {return new Range(0, 2000);}, 'Resize preview image height, Pass an integer between 0 to 4000', true)
+    ->label('scope', 'avatars.read')
+    ->label('sdk.namespace', 'avatars')
+    ->label('sdk.method', 'getImage')
+    ->label('sdk.description', 'Use this endpoint to fetch a remote image URL and crop it to any image size you want.')
+    ->action(
+        function($url, $width, $height) use ($response, $request, $version)
+        {
+            $quality    = 80;
+            $output     = 'png';
+            $date       = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
+            $key        = md5('/v2/avatars/images-' . $url . '-' . $width . '/' . $height . '/' . $quality);
+            $type 	    = 'png';
+            $cache      = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
+            $data       = $cache->load($key, 60 * 60 * 24 * 7 /* 1 week */);
+
+            if($data) {
+                $response
+                    ->setContentType('image/png')
+                    ->addHeader('Expires', $date)
+                    ->addHeader('X-Appwrite-Cache', 'hit')
+                    ->send($data, 0)
+                ;
+            }
+
+            if (!extension_loaded('imagick')) {
+                throw new Exception('Imagick extension is missing', 500);
+            }
+
+            $fetch = @file_get_contents($url, false);
+
+            if(!$fetch) {
+                throw new Exception('Image not found', 404);
+            }
+
+            try {
+                $resize = new Resize($fetch);
+            }
+            catch (\Exception $exception) {
+                throw new Exception('Unable to parse image', 500);
+            }
+
+            $resize->crop((int)$width, (int)$height);
+
+            $output = (empty($output)) ? $type : $output;
+
+            $response
+                ->setContentType('image/png')
+                ->addHeader('Expires', $date)
+                ->addHeader('X-Appwrite-Cache', 'miss')
+                ->send('', null)
+            ;
+
+            $data = $resize->output($output, $quality);
+
+            $cache->save($key, $data);
+
+            echo $data;
+
+            unset($resize);
+
+            exit(0);
+        }
+    );
+
 $utopia->get('/v1/avatars/favicon')
     ->desc('Get Favicon')
     ->param('url', '', function () {return new URL();}, 'Website URL which you want to fetch the favicon from.')
@@ -191,7 +260,7 @@ $utopia->get('/v1/avatars/favicon')
                 switch (strtolower($rel)) {
                     case 'icon':
                     case 'shortcut icon':
-                    //case 'apple-touch-icon':
+                        //case 'apple-touch-icon':
                         $ext = pathinfo(parse_url($absolute, PHP_URL_PATH), PATHINFO_EXTENSION);
 
                         switch ($ext) {
@@ -210,10 +279,10 @@ $utopia->get('/v1/avatars/favicon')
                                     $outputExt   = $ext;
                                 }
 
-                            break;
+                                break;
                         }
 
-                    break;
+                        break;
                 }
             }
 
