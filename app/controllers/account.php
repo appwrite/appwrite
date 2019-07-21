@@ -7,6 +7,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Email;
 use Auth\Auth;
 use Auth\Validator\Password;
+use Database\Database;
 use Database\Document;
 use Database\Validator\Authorization;
 use DeviceDetector\DeviceDetector;
@@ -273,6 +274,19 @@ $utopia->patch('/v1/account/email')
         {
             if(!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
+            }
+
+            $profile = $projectDB->getCollection([ // Get user by email address
+                'limit' => 1,
+                'first' => true,
+                'filters' => [
+                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
+                    'email=' . $email
+                ]
+            ]);
+
+            if(!empty($profile)) {
+                throw new Exception('User already registered', 400);
             }
 
             // TODO after this user needs to confirm mail again

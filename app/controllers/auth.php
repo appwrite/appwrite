@@ -410,21 +410,21 @@ $utopia->delete('/v1/auth/logout')
         }
     );
 
-$utopia->delete('/v1/auth/logout/:userId')
+$utopia->delete('/v1/auth/logout/:id')
     ->desc('Logout Specific Session')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'auth')
     ->label('sdk.method', 'logoutBySession')
     ->label('sdk.description', 'Use this endpoint to log out the currently logged in user from all his account sessions across all his different devices. When using the option id argument, only the session unique ID provider will be deleted.')
     ->label('abuse-limit', 100)
-    ->param('userId', null, function () {return new UID();}, 'User specific session unique ID number. if 0 delete all sessions.')
+    ->param('id', null, function () {return new UID();}, 'User specific session unique ID number. if 0 delete all sessions.')
     ->action(
-        function($userId) use ($response, $request, $user, $projectDB, $audit)
+        function($id) use ($response, $request, $user, $projectDB, $audit)
         {
             $tokens = $user->getAttribute('tokens', []);
 
             foreach($tokens as $token) { /* @var $token Document */
-                if(($userId == $token->getUid() || ($userId == 0)) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
+                if(($id == $token->getUid() || ($id == 0)) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
 
                     if(!$projectDB->deleteDocument($token->getUid())) {
                         throw new Exception('Failed to remove token from DB', 500);
