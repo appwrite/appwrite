@@ -54,6 +54,19 @@ module Appwrite
             }, params);
         end
 
+        def get_image(url:, width: 400, height: 400)
+            path = '/avatars/image'
+
+            params = {
+                'url': url, 
+                'width': width, 
+                'height': height
+            }
+
+            return @client.call('get', path, {
+            }, params);
+        end
+
         def get_q_r(text:, size: 400, margin: 1, download: 0)
             path = '/avatars/qr'
 

@@ -64,12 +64,12 @@ class Auth extends Service {
      * account sessions across all his different devices. When using the option id
      * argument, only the session unique ID provider will be deleted.
      *
-     * @param string userId
+     * @param string id
      * @throws Exception
      * @return {}
      */
-    async logoutBySession(userId) {
-        let path = '/auth/logout/{userId}'.replace(new RegExp('{userId}', 'g'), userId);
+    async logoutBySession(id) {
+        let path = '/auth/logout/{id}'.replace(new RegExp('{id}', 'g'), id);
         
         return await this.client.call('delete', path, {'content-type': 'application/json'},
             {

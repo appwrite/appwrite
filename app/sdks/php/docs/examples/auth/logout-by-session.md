@@ -12,4 +12,4 @@ $client
 
 $auth = new Auth($client);
 
-$result = $auth->logoutBySession('[USER_ID]');
+$result = $auth->logoutBySession('[ID]');

@@ -5,7 +5,7 @@ sdk
     setKey('')
 ;
 
-let promise = sdk.auth.logoutBySession('[USER_ID]');
+let promise = sdk.auth.logoutBySession('[ID]');
 
 promise.then(function (response) {
     console.log(response);

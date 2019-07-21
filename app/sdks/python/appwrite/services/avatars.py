@@ -52,6 +52,18 @@ class Avatars(Service):
         return self.client.call('get', path, {
         }, params)
 
+    def get_image(self, url, width=400, height=400):
+        """Get image from and HTTP URL and crop to any size."""
+
+        params = {}
+        path = '/avatars/image'
+        params['url'] = url
+        params['width'] = width
+        params['height'] = height
+
+        return self.client.call('get', path, {
+        }, params)
+
     def get_q_r(self, text, size=400, margin=1, download=0):
         """Text to QR Generator"""
 

@@ -99,6 +99,29 @@ class Avatars extends Service {
     }
 
     /**
+     * Get image from and HTTP URL and crop to any size.
+     *
+     * Use this endpoint to fetch a remote image URL and crop it to any image size
+     * you want.
+     *
+     * @param string url
+     * @param number width
+     * @param number height
+     * @throws Exception
+     * @return {}
+     */
+    async getImage(url, width = 400, height = 400) {
+        let path = '/avatars/image';
+        
+        return await this.client.call('get', path, {'content-type': 'application/json'},
+            {
+                'url': url,
+                'width': width,
+                'height': height
+            });
+    }
+
+    /**
      * Text to QR Generator
      *
      * Converts a given plain text to a QR code image. You can use the query

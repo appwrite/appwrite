@@ -32,7 +32,7 @@ DELETE https://appwrite.test/v1/auth/logout
 ## Logout Specific Session
 
 ```http request
-DELETE https://appwrite.test/v1/auth/logout/{userId}
+DELETE https://appwrite.test/v1/auth/logout/{id}
 ```
 
 ** Use this endpoint to log out the currently logged in user from all his account sessions across all his different devices. When using the option id argument, only the session unique ID provider will be deleted. **
@@ -41,7 +41,7 @@ DELETE https://appwrite.test/v1/auth/logout/{userId}
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| userId | string | **Required** User specific session unique ID number. if 0 delete all sessions. |  |
+| id | string | **Required** User specific session unique ID number. if 0 delete all sessions. |  |
 
 ## Password Recovery
 

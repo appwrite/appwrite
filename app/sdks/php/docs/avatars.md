@@ -65,6 +65,22 @@ GET https://appwrite.test/v1/avatars/flags/{code}
 | height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
 | quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100 | 100 |
 
+## Get image from and HTTP URL and crop to any size.
+
+```http request
+GET https://appwrite.test/v1/avatars/image
+```
+
+** Use this endpoint to fetch a remote image URL and crop it to any image size you want. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| url | string | **Required** Image URL which you want to crop. |  |
+| width | integer | Resize preview image width, Pass an integer between 0 to 4000 | 400 |
+| height | integer | Resize preview image height, Pass an integer between 0 to 4000 | 400 |
+
 ## Text to QR Generator
 
 ```http request

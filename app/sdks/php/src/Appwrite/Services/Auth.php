@@ -74,13 +74,13 @@ class Auth extends Service
      * account sessions across all his different devices. When using the option id
      * argument, only the session unique ID provider will be deleted.
      *
-     * @param string $userId
+     * @param string $id
      * @throws Exception
      * @return array
      */
-    public function logoutBySession($userId)
+    public function logoutBySession($id)
     {
-        $path   = str_replace(['{userId}'], [$userId], '/auth/logout/{userId}');
+        $path   = str_replace(['{id}'], [$id], '/auth/logout/{id}');
         $params = [];
 
 

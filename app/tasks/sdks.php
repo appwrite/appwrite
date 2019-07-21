@@ -46,7 +46,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'js' => [
-                'version'       => 'v1.0.4',
+                'version'       => 'v1.0.5',
                 'result'        => __DIR__ . '/../sdks/js/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-js.git',
@@ -54,7 +54,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'node' => [
-                'version'       => 'v1.0.16',
+                'version'       => 'v1.0.17',
                 'result'        => __DIR__ . '/../sdks/node/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-node.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-node.git',

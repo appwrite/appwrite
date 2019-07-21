@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.4');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.5');
             addGlobalHeader('content-type', '');
 
             /**
@@ -546,15 +546,15 @@
              * account sessions across all his different devices. When using the option id
              * argument, only the session unique ID provider will be deleted.
              *
-             * @param {string} userId
+             * @param {string} id
              * @throws {Error}
              * @return {Promise}             */
-            logoutBySession: function(userId) {
-                if(userId === undefined) {
-                    throw new Error('Missing required parameter: "userId"');
+            logoutBySession: function(id) {
+                if(id === undefined) {
+                    throw new Error('Missing required parameter: "id"');
                 }
                 
-                let path = '/auth/logout/{userId}'.replace(new RegExp('{userId}', 'g'), userId);
+                let path = '/auth/logout/{id}'.replace(new RegExp('{id}', 'g'), id);
 
                 return http
                     .delete(path, {'content-type': 'application/json'},
@@ -929,6 +929,33 @@
                             'width': width, 
                             'height': height, 
                             'quality': quality
+                        });
+            },
+
+            /**
+             * Get image from and HTTP URL and crop to any size.
+             *
+             * Use this endpoint to fetch a remote image URL and crop it to any image size
+             * you want.
+             *
+             * @param {string} url
+             * @param {number} width
+             * @param {number} height
+             * @throws {Error}
+             * @return {Promise}             */
+            getImage: function(url, width = 400, height = 400) {
+                if(url === undefined) {
+                    throw new Error('Missing required parameter: "url"');
+                }
+                
+                let path = '/avatars/image';
+
+                return http
+                    .get(path, {'content-type': 'application/json'},
+                        {
+                            'url': url, 
+                            'width': width, 
+                            'height': height
                         });
             },
 

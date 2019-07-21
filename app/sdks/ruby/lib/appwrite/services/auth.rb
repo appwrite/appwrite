@@ -25,9 +25,9 @@ module Appwrite
             }, params);
         end
 
-        def logout_by_session(user_id:)
-            path = '/auth/logout/{userId}'
-                .gsub('{user_id}', user_id)
+        def logout_by_session(id:)
+            path = '/auth/logout/{id}'
+                .gsub('{id}', id)
 
             params = {
             }

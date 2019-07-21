@@ -25,12 +25,12 @@ class Auth(Service):
         return self.client.call('delete', path, {
         }, params)
 
-    def logout_by_session(self, user_id):
+    def logout_by_session(self, id):
         """Logout Specific Session"""
 
         params = {}
-        path = '/auth/logout/{userId}'
-        path.replace('{userId}', user_id)                
+        path = '/auth/logout/{id}'
+        path.replace('{id}', id)                
 
         return self.client.call('delete', path, {
         }, params)

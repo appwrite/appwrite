@@ -113,6 +113,31 @@ class Avatars extends Service
     }
 
     /**
+     * Get image from and HTTP URL and crop to any size.
+     *
+     * Use this endpoint to fetch a remote image URL and crop it to any image size
+     * you want.
+     *
+     * @param string $url
+     * @param integer $width
+     * @param integer $height
+     * @throws Exception
+     * @return array
+     */
+    public function getImage($url, $width = 400, $height = 400)
+    {
+        $path   = str_replace([], [], '/avatars/image');
+        $params = [];
+
+        $params['url'] = $url;
+        $params['width'] = $width;
+        $params['height'] = $height;
+
+        return $this->client->call(Client::METHOD_GET, $path, [
+        ], $params);
+    }
+
+    /**
      * Text to QR Generator
      *
      * Converts a given plain text to a QR code image. You can use the query
