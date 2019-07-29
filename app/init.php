@@ -84,8 +84,12 @@ $register->set('db', function() use ($request) { // Register DB connection
     return $pdo;
 });
 $register->set('influxdb', function() use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_INFLUXDB_HOST', 'influxdb');
-    $port = $request->getServer('_APP_INFLUXDB_PORT', 8086);
+    $host = $request->getServer('_APP_INFLUXDB_HOST', '');
+    $port = $request->getServer('_APP_INFLUXDB_PORT', '');
+
+    if(empty($host) || empty($port)) {
+        return null;
+    }
 
     $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
 

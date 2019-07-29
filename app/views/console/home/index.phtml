@@ -1,3 +1,7 @@
+<?php
+$graph = $this->getParam('graph', false);
+?>
+
 <div class="cover margin-bottom-small">
     <div class="zone xl margin-bottom-large margin-top-small">
         <h1 class="margin-bottom-small">
@@ -23,29 +27,32 @@
              data-success="render,trigger"
              data-error="render"
              data-success-triggers="usage.load">
-            <div class="row responsive">
-                <div class="col span-9">
-                    <div class="pull-start margin-end">
-                        <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
-                        <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
+
+            <?php if($graph): ?>
+                <div class="row responsive">
+                    <div class="col span-9">
+                        <div class="pull-start margin-end">
+                            <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
+                            <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
+                            <div class="range">Current Month</div>
+                        </div>
+
+                        <div class="chart">
+                            <div class="content" data-ls-ui-chart></div>
+                        </div>
+                    </div>
+                    <div class="col span-3">
+                        <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
+                        <div class="metric margin-bottom-small">Bandwidth</div>
                         <div class="range">Current Month</div>
-                    </div>
-
-                    <div class="chart">
-                        <div class="content" data-ls-ui-chart></div>
-                    </div>
-                </div>
-                <div class="col span-3">
-                    <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
-                    <div class="metric margin-bottom-small">Bandwidth</div>
-                    <div class="range">Current Month</div>
-                    <div class="margin-top dev-feature">
-                        <a href="">Full Usage Report <i class="icon-right-open"></i></a>
+                        <div class="margin-top dev-feature">
+                            <a href="">Full Usage Report <i class="icon-right-open"></i></a>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <hr />
+                <hr />
+            <?php endif; ?>
 
             <div>
 

@@ -444,7 +444,7 @@ $utopia->post('/v1/database/:collectionId')
                 throw new Exception('Bad structure. ' . $exception->getMessage(), 400);
             }
             catch (\Exception $exception) {
-                throw new Exception('Failed saving document to DB', 500);
+                throw new Exception('Failed saving document to DB' . $exception->getMessage(), 500);
             }
 
             $data = $data->getArrayCopy();

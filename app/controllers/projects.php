@@ -119,39 +119,42 @@ $utopia->get('/v1/projects/:projectId/usage')
                 throw new Exception('Project not found', 404);
             }
 
-            /*$client     = new InfluxDB\Client('influxdb', '8086');
-            $start      = DateTime::createFromFormat('U', strtotime('first day of this month'));
-            $start      = $start->format(DateTime::RFC3339);
-            $end        = DateTime::createFromFormat('U', strtotime('last day of this month'));
-            $end        = $end->format(DateTime::RFC3339);
-            $database   = $client->selectDB('telegraf');
+            $client = $register->get('influxdb');
 
-            // Requests
+            if($client) {
+                $start      = DateTime::createFromFormat('U', strtotime('first day of this month'));
+                $start      = $start->format(DateTime::RFC3339);
+                $end        = DateTime::createFromFormat('U', strtotime('last day of this month'));
+                $end        = $end->format(DateTime::RFC3339);
+                $database   = $client->selectDB('telegraf');
 
-            $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
-            $points     = $result->getPoints();
-            $requests = [];
+                // Requests
 
-            foreach ($points as $point) {
-                $requests[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date'  => strtotime($point['time']),
-                ];
+                $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
+                $points     = $result->getPoints();
+                $requests = [];
+
+                foreach ($points as $point) {
+                    $requests[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date'  => strtotime($point['time']),
+                    ];
+                }
+
+                // Network
+
+                $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
+                $points     = $result->getPoints();
+                $network    = [];
+
+                foreach ($points as $point) {
+                    $network[] = [
+                        'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                        'date'  => strtotime($point['time']),
+                    ];
+                }
             }
 
-            // Network
-
-            $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
-            $points     = $result->getPoints();
-            $network    = [];
-
-            foreach ($points as $point) {
-                $network[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                    'date'  => strtotime($point['time']),
-                ];
-            }
-            */
             // Users
 
             $projectDB->getCollection([
