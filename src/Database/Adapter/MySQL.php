@@ -491,43 +491,12 @@ class MySQL extends Adapter
             }
         }
 
-        /**
-         * Workaround for a MySQL bug as reported here:
-         * https://bugs.mysql.com/bug.php?id=78485
-         */
-        $options['search'] = ($options['search'] === '*') ? '' : $options['search'];
-
-        // Search
-        if(!empty($options['search'])) { // Handle free search
-
-            $where[] = "LEFT JOIN `" . $this->getNamespace() . ".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid
-                    LEFT JOIN
-                `" . $this->getNamespace() . ".database.relationships` c_search ON c_search.start = a.uid
-                    LEFT JOIN
-                `" . $this->getNamespace() . ".database.properties` d_search ON d_search.documentUid = c_search.end
-                    LEFT JOIN
-                `" . $this->getNamespace() . ".database.relationships` e_search ON e_search.start = c_search.end
-                    LEFT JOIN
-                `" . $this->getNamespace() . ".database.properties` f_search ON f_search.documentUid = e_search.end
-                \n";
-
-            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-                OR b_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
-                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-                OR d_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
-                OR MATCH (f_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-                OR f_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)})";
-
-            //$where[] = "JOIN `" . $this->getNamespace() . ".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid AND (MATCH (b_search.value)
-            //    AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-            //    OR b_search.value LIKE  {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)})";
-        }
-
         // Sorting
-        $orderPath  = explode('.', $options['orderField']);
-        $len        = count($orderPath);
-        $orderKey   = 'order_b';
-        $part       = $this->getPDO()->quote(implode('', $orderPath), PDO::PARAM_STR);
+        $orderPath      = explode('.', $options['orderField']);
+        $len            = count($orderPath);
+        $orderKey       = 'order_b';
+        $part           = $this->getPDO()->quote(implode('', $orderPath), PDO::PARAM_STR);
+        $orderSelect    = "CASE WHEN {$orderKey}.key = {$part} THEN CAST({$orderKey}.value AS {$orderCastMap[$options['orderCast']]}) END AS sort_ff";
 
         if(1 === $len) {//if($path == "''") { // Handle direct attributes queries
             $sorts[] = "LEFT JOIN `" . $this->getNamespace() . ".database.properties` order_b ON a.uid IS NOT NULL AND order_b.documentUid = a.uid AND (order_b.key = {$part})";
@@ -553,6 +522,43 @@ class MySQL extends Adapter
             }
         }
 
+        /**
+         * Workaround for a MySQL bug as reported here:
+         * https://bugs.mysql.com/bug.php?id=78485
+         */
+        $options['search'] = ($options['search'] === '*') ? '' : $options['search'];
+
+        // Search
+        if(!empty($options['search'])) { // Handle free search
+//            $where[] = "LEFT JOIN `" . $this->getNamespace() . ".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid
+//                    LEFT JOIN
+//                `" . $this->getNamespace() . ".database.relationships` c_search ON c_search.start = a.uid
+//                    LEFT JOIN
+//                `" . $this->getNamespace() . ".database.properties` d_search ON d_search.documentUid = c_search.end
+//                    LEFT JOIN
+//                `" . $this->getNamespace() . ".database.relationships` e_search ON e_search.start = c_search.end
+//                    LEFT JOIN
+//                `" . $this->getNamespace() . ".database.properties` f_search ON f_search.documentUid = e_search.end
+//                \n";
+//            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+//                OR b_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
+//                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+//                OR d_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
+//                OR MATCH (f_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+//                OR f_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)})";
+
+            $where[] = "LEFT JOIN `" . $this->getNamespace() . ".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid  AND b_search.primitive = 'string'
+                    LEFT JOIN
+                `" . $this->getNamespace() . ".database.relationships` c_search ON c_search.start = b_search.documentUid
+                    LEFT JOIN
+                `" . $this->getNamespace() . ".database.properties` d_search ON d_search.documentUid = c_search.end AND d_search.primitive = 'string'
+                \n";
+
+            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+            )";
+        }
+
         $select = 'DISTINCT a.uid';
         $where  = implode("\n", $where);
         $join   = implode("\n", $join);
@@ -568,16 +574,12 @@ class MySQL extends Adapter
             $roles = ['1=1'];
         }
 
-        $query  = "SELECT %s,
-            CASE WHEN {$orderKey}.key = {$part} THEN CAST({$orderKey}.value AS {$orderCastMap[$options['orderCast']]}) END AS sort_ff
+        $query  = "SELECT %s, {$orderSelect}
             FROM `" . $this->getNamespace() . ".database.documents` a {$where}{$join}{$sorts}
             WHERE status = 0
                {$search}
                AND (" . implode('||', $roles) . ")
             ORDER BY sort_ff {$options['orderType']} %s";
-
-
-        //echo sprintf($query, $select, $range); exit();
 
         $st = $this->getPDO()->prepare(sprintf($query, $select, $range));
 
