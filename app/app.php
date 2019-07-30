@@ -406,6 +406,65 @@ $utopia->error(function($error /* @var $error Exception */) use ($request, $resp
     ;
 });
 
+$utopia->get('/manifest.json')
+    ->desc('Progressive app manifest file')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function() use ($response, $project) {
+
+            $response->json([
+                    'name' => APP_NAME,
+                    'short_name' => APP_NAME,
+                    'start_url' => '.',
+                    'url' => 'https://appwrite.io/',
+                    'display' => 'standalone',
+                    'background_color' => '#fff',
+                    'theme_color' => '#f02e65',
+                    'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
+                    'icons' => [
+                    [
+                        'src' => 'images/favicon.png',
+                        'sizes' => '256x256',
+                        'type' => 'image/png'
+                    ]
+                ]
+            ]);
+        }
+    );
+
+$utopia->get('/robots.txt')
+    ->desc('Robots.txt File')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function() use ($response, $project) {
+
+            $response->text("# robotstxt.org/
+
+User-agent: *
+");
+        }
+    );
+
+$utopia->get('/humans.txt')
+    ->desc('Humans.txt File')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function() use ($response, $project) {
+
+            $response->text("# humanstxt.org/
+# The humans responsible & technology colophon
+
+# TEAM
+    <name> -- <role> -- <twitter>
+
+# THANKS
+    <name>");
+        }
+    );
+
 $utopia->get('/v1/info') // This is only visible to gods
     ->label('scope', 'god')
     ->label('docs', false)
