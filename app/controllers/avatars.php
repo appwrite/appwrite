@@ -130,7 +130,7 @@ $utopia->get('/v1/avatars/image')
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getImage')
-    ->label('sdk.description', 'Use this endpoint to fetch a remote image URL and crop it to any image size you want.')
+    ->label('sdk.description', 'Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop a remote image or in cases, you want to make sure a 3rd party image is properly served using a TLS protocol.')
     ->action(
         function($url, $width, $height) use ($response, $request, $version)
         {
