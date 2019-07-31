@@ -24,11 +24,11 @@ $version = array_shift($path);
 switch ($version) { // Switch between API version
     case 'v1':
         $service = $version . '/' . array_shift($path);
-        include '../app/app.php';
+        include __DIR__ . '/../app/app.php';
         break;
     case 'console':
     default:
         $service = $version . '/';
-        include '../app/app.php';
+        include __DIR__ . '/../app/app.php';
         break;
 }

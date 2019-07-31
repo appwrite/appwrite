@@ -11,11 +11,11 @@ $roles = [
     'admin' => Locale::getText('general.roles.admin'),
 ];
 
-$layout = new View('../app/views/layouts/default.phtml');
+$layout = new View(__DIR__ . '/../../views/layouts/default.phtml');
 
 /* AJAX check  */
 if(!empty($request->getQuery('version', ''))) {
-    $layout->setPath('../app/views/layouts/empty.phtml');
+    $layout->setPath(__DIR__ . '/../../views/layouts/empty.phtml');
 }
 
 $layout
