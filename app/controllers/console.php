@@ -13,8 +13,8 @@ $utopia->init(function () use ($layout, $utopia) {
 });
 
 $utopia->shutdown(function() use ($utopia, $response, $request, $layout, $version) {
-    $header = new View(__DIR__ . '/../../views/console/comps/header.phtml');
-    $footer = new View(__DIR__ . '/../../views/console/comps/footer.phtml');
+    $header = new View(__DIR__ . '/../views/console/comps/header.phtml');
+    $footer = new View(__DIR__ . '/../views/console/comps/footer.phtml');
 
     $layout
         ->setParam('header', [$header])
@@ -38,7 +38,7 @@ $utopia->get('/error/:code')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->action(function($code) use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/error.phtml');
+        $page = new View(__DIR__ . '/../views/error.phtml');
 
         $page
             ->setParam('code', $code)
@@ -54,7 +54,7 @@ $utopia->get('/console')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/console/index.phtml');
+        $page = new View(__DIR__ . '/../views/console/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.title'))
@@ -66,9 +66,9 @@ $utopia->get('/console/account')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/console/account/index.phtml');
+        $page = new View(__DIR__ . '/../views/console/account/index.phtml');
 
-        $cc = new View(__DIR__ . '/../../views/console/forms/credit-card.phtml');
+        $cc = new View(__DIR__ . '/../views/console/forms/credit-card.phtml');
 
         $page
             ->setParam('cc', $cc)
@@ -85,7 +85,7 @@ $utopia->get('/console/notifications')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/v1/console/notifications/index.phtml');
+        $page = new View(__DIR__ . '/../views/v1/console/notifications/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.notifications.title'))
@@ -98,7 +98,7 @@ $utopia->get('/console/home')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/console/home/index.phtml');
+        $page = new View(__DIR__ . '/../views/console/home/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.home.title'))
@@ -111,7 +111,7 @@ $utopia->get('/console/platforms/web')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/console/platforms/web.phtml');
+        $page = new View(__DIR__ . '/../views/console/platforms/web.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.home.title'))
@@ -124,7 +124,7 @@ $utopia->get('/console/settings')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/console/settings/index.phtml');
+        $page = new View(__DIR__ . '/../views/console/settings/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.settings.title'))
@@ -137,7 +137,7 @@ $utopia->get('/console/database')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/console/database/index.phtml');
+        $page = new View(__DIR__ . '/../views/console/database/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.database.title'))
@@ -150,7 +150,7 @@ $utopia->get('/console/storage')
     ->label('scope', 'console')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/console/storage/index.phtml');
+        $page = new View(__DIR__ . '/../views/console/storage/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.storage.title'))
@@ -163,7 +163,7 @@ $utopia->get('/console/users')
     ->label('scope', 'console')
     ->action(function() use ($layout, $providers)
     {
-        $page = new View(__DIR__ . '/../../views/console/users/index.phtml');
+        $page = new View(__DIR__ . '/../views/console/users/index.phtml');
 
         $page->setParam('providers', $providers);
 
@@ -178,7 +178,7 @@ $utopia->get('/console/users/view')
     ->label('scope', 'console')
     ->action(function() use ($layout, $providers)
     {
-        $page = new View(__DIR__ . '/../../views/console/users/view.phtml');
+        $page = new View(__DIR__ . '/../views/console/users/view.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.users.title'))

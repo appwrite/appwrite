@@ -33,7 +33,7 @@ $utopia->get('/auth/signin')
     ->label('scope', 'home')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/home/auth/signin.phtml');
+        $page = new View(__DIR__ . '/../views/home/auth/signin.phtml');
 
         $layout
             ->setParam('title', Locale::getText('home.auth.signin.title') . ' - ' . APP_NAME)
@@ -46,7 +46,7 @@ $utopia->get('/auth/signup')
     ->label('scope', 'home')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/home/auth/signup.phtml');
+        $page = new View(__DIR__ . '/../views/home/auth/signup.phtml');
 
         $layout
             ->setParam('title', Locale::getText('home.auth.signup.title') . ' - ' . APP_NAME)
@@ -59,7 +59,7 @@ $utopia->get('/auth/recovery')
     ->label('scope', 'home')
     ->action(function() use ($request, $layout)
     {
-        $page = new View(__DIR__ . '/../../views/home/auth/recovery.phtml');
+        $page = new View(__DIR__ . '/../views/home/auth/recovery.phtml');
 
         $layout
             ->setParam('title', Locale::getText('home.auth.recovery.title') . ' - ' . APP_NAME)
@@ -72,7 +72,7 @@ $utopia->get('/auth/confirm')
     ->label('scope', 'home')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/home/auth/confirm.phtml');
+        $page = new View(__DIR__ . '/../views/home/auth/confirm.phtml');
 
         $layout
             ->setParam('title', Locale::getText('home.auth.confirm.title') . ' - ' . APP_NAME)
@@ -85,7 +85,7 @@ $utopia->get('/auth/join')
     ->label('scope', 'home')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/home/auth/join.phtml');
+        $page = new View(__DIR__ . '/../views/home/auth/join.phtml');
 
         $layout
             ->setParam('title', Locale::getText('home.auth.join.title') . ' - ' . APP_NAME)
@@ -98,7 +98,7 @@ $utopia->get('/auth/recovery/reset')
     ->label('scope', 'home')
     ->action(function() use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/home/auth/recovery/reset.phtml');
+        $page = new View(__DIR__ . '/../views/home/auth/recovery/reset.phtml');
 
         $layout
             ->setParam('title', Locale::getText('home.auth.reset.title') . ' - ' . APP_NAME)
@@ -112,7 +112,7 @@ $utopia->get('/error/:code')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->action(function($code) use ($layout)
     {
-        $page = new View(__DIR__ . '/../../views/error.phtml');
+        $page = new View(__DIR__ . '/../views/error.phtml');
 
         $page
             ->setParam('code', $code)
