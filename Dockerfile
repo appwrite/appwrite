@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
-MAINTAINER Appwrite Team <team@appwrite.io>
+
+LABEL maintainer="team@appwrite.io"
 
 ENV TZ=Asia/Tel_Aviv
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
