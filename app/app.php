@@ -61,7 +61,7 @@ $services = [
     ],
     'v1/avatars'    => [
         'name' => 'Avatars',
-        'description' => 'The avatars service aims to help you complete common and recitative tasks related to your app images, icons and avatars. Using this service we hope to save you some precious time and helping you focus on solving your app real challenges.',
+        'description' => 'The avatars service aims to help you complete common and recitative tasks related to your app images, icons and avatars. Using this service we hope to save you some precious time and help you focus on solving your app real challenges.',
         'controller' => 'controllers/avatars.php',
         'sdk' => true,
     ],
@@ -96,7 +96,7 @@ $services = [
     ],
     'v1/teams'      => [
         'name' => 'Teams',
-        'description' => "The teams' service allows you to group together users of your project and allow them to share read and write access to your project resources.\n\nEach user who creates a team becomes the team owner and can delegate the ownership role by inviting a new team member. Only team owners can invite new users to the team.",
+        'description' => "The teams' service allows you to group together users of your project and allow them to share read and write access to your project resources, such as, database documents or storage files.\n\nEach user who creates a team becomes the team owner and can delegate the ownership role by inviting a new team member. Only team owners can invite new users to the team.",
         'controller' => 'controllers/teams.php',
         'sdk' => true,
     ],
