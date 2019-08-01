@@ -29,7 +29,7 @@ $list = [
     'SE', // Sweden
 ];
 
-if(time() < strtotime('2019-03-19')) { // @see https://en.wikipedia.org/wiki/Brexit
+if(time() < strtotime('2019-10-31')) { // @see https://en.wikipedia.org/wiki/Brexit
     $list[] = 'GB'; // // United Kingdom
 }
 
