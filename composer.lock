@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-clamav.git",
-                "reference": "9298a2d490e064f0c72d86ecc9f4792a49f4288f"
+                "reference": "11595495a4b4f640db4f2376c5beba941ebc0bf9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/php-clamav/zipball/9298a2d490e064f0c72d86ecc9f4792a49f4288f",
-                "reference": "9298a2d490e064f0c72d86ecc9f4792a49f4288f",
+                "url": "https://api.github.com/repos/appwrite/php-clamav/zipball/11595495a4b4f640db4f2376c5beba941ebc0bf9",
+                "reference": "11595495a4b4f640db4f2376c5beba941ebc0bf9",
                 "shasum": ""
             },
             "require": {
@@ -49,7 +49,7 @@
                 "clamav",
                 "php"
             ],
-            "time": "2019-05-11 15:12:28"
+            "time": "2019-07-30 19:07:14"
         },
         {
             "name": "appwrite/sdk-generator",
@@ -284,12 +284,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/ca-bundle.git",
-                "reference": "13a8d67799a4f1c0e6bb0abd788abbe9e95dee8e"
+                "reference": "ec2e24d4fa6a0d50d423794a56605ecec3401b85"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/13a8d67799a4f1c0e6bb0abd788abbe9e95dee8e",
-                "reference": "13a8d67799a4f1c0e6bb0abd788abbe9e95dee8e",
+                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/ec2e24d4fa6a0d50d423794a56605ecec3401b85",
+                "reference": "ec2e24d4fa6a0d50d423794a56605ecec3401b85",
                 "shasum": ""
             },
             "require": {
@@ -332,7 +332,7 @@
                 "ssl",
                 "tls"
             ],
-            "time": "2019-07-30 05:22:27"
+            "time": "2019-08-01 07:52:17"
         },
         {
             "name": "dasprid/enum",
@@ -1443,12 +1443,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "fe5e94c604826c35a32fa832f35bd036b6799609"
+                "reference": "626bb16c799983996863d1243eadf5bcb2cbb5bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/fe5e94c604826c35a32fa832f35bd036b6799609",
-                "reference": "fe5e94c604826c35a32fa832f35bd036b6799609",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/626bb16c799983996863d1243eadf5bcb2cbb5bd",
+                "reference": "626bb16c799983996863d1243eadf5bcb2cbb5bd",
                 "shasum": ""
             },
             "require": {
@@ -1494,7 +1494,7 @@
                 "portable",
                 "shim"
             ],
-            "time": "2019-02-06 07:57:58"
+            "time": "2019-08-01 10:49:16"
         },
         {
             "name": "twig/twig",
@@ -1711,12 +1711,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "8a6feb07d0d8860fa3955cbd7be3910ede020db3"
+                "reference": "fc287847c51b042d1b8baf955181cbbc7eb4d866"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/8a6feb07d0d8860fa3955cbd7be3910ede020db3",
-                "reference": "8a6feb07d0d8860fa3955cbd7be3910ede020db3",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/fc287847c51b042d1b8baf955181cbbc7eb4d866",
+                "reference": "fc287847c51b042d1b8baf955181cbbc7eb4d866",
                 "shasum": ""
             },
             "require": {
@@ -1747,7 +1747,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2019-07-30 07:14:13"
+            "time": "2019-07-31 13:00:25"
         },
         {
             "name": "utopia-php/locale",
@@ -2037,18 +2037,18 @@
             "authors": [
                 {
                     "name": "Arne Blankerts",
-                    "email": "arne@blankerts.de",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "email": "arne@blankerts.de"
                 },
                 {
                     "name": "Sebastian Heuer",
-                    "email": "sebastian@phpeople.de",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "email": "sebastian@phpeople.de"
                 },
                 {
                     "name": "Sebastian Bergmann",
-                    "email": "sebastian@phpunit.de",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "email": "sebastian@phpunit.de"
                 }
             ],
             "description": "Library for handling version information and constraints",
