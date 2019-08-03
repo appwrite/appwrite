@@ -7,7 +7,7 @@
     <br />
 </p>
 
-![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/clamav.svg)
+[![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite.svg)](https://hub.docker.com/r/appwrite/appwrite)
 [![Chat With Us](https://img.shields.io/gitter/room/appwrite/community.svg)](https://gitter.im/appwrite/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
 ---
