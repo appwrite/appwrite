@@ -18,7 +18,6 @@ use Auth\Auth;
 use Database\Document;
 use Database\Validator\Authorization;
 use Event\Event;
-use Services\Services;
 
 /**
  * Configuration files
@@ -26,95 +25,12 @@ use Services\Services;
 $roles      = include __DIR__ . '/config/roles.php'; // User roles and scopes
 $providers  = include __DIR__ . '/config/providers.php'; // OAuth providers list
 $sdks       = include __DIR__ . '/config/sdks.php'; // List of SDK clients
+$services   = include __DIR__ . '/config/services.php'; // List of SDK clients
 
 $utopia     = new App('Asia/Tel_Aviv', $env);
 $webhook    = new Event('v1-webhooks', 'WebhooksV1');
 $audit      = new Event('v1-audits', 'AuditsV1');
 $usage      = new Event('v1-usage', 'UsageV1');
-
-Services::set('/', 'Homepage', '', __DIR__ . '/controllers/home.php', false);
-Services::set('console/', 'Console', '', __DIR__ . '/controllers/console.php', false);
-Services::set(
-    'v1/account',
-    'Account',
-    'The account service allow you to fetch and update information related to the currently logged in user. You can also retrieve a list of all the user sessions across different devices and a security log with the account recent activity.',
-    __DIR__ . '/controllers/account.php',
-    true
-);
-Services::set(
-    'v1/auth',
-    'Auth',
-    "The authentication service allows you to verify users accounts using basic email and password login or with a supported OAuth provider. The auth service also exposes methods to confirm users email account and recover users forgotten passwords.\n\nYou can also learn how to [configure support for our supported OAuth providers](/docs/oauth). You can review our currently available OAuth providers from your project console under the **'users'** menu.",
-    __DIR__ . '/controllers/auth.php',
-    true
-);
-Services::set(
-    'v1/oauth',
-    'Auth',
-    '',
-    __DIR__ . '/controllers/auth.php',
-    true
-);
-Services::set(
-    'v1/avatars',
-    'Avatars',
-    'The avatars service aims to help you complete common and recitative tasks related to your app images, icons and avatars. Using this service we hope to save you some precious time and help you focus on solving your app real challenges.',
-    __DIR__ . '/controllers/avatars.php',
-    true
-);
-Services::set(
-    'v1/database',
-    'Database',
-    "The database service allows you to create structured document collections, query and filter lists of documents and manage an advanced set of read and write access.
-        \n\nAll the data in the database service is stored in JSON format. The service also allows you to nest child documents and use advanced filters to search and query the database just like you would with a classic graph database.
-        \n\nBy leveraging the database permission management you can assign read or write access to the database documents for a specific user, team, user role or even grant public access to all visitors of your project. You can learn more about [how " . APP_NAME . " handles permissions and role access control](/docs/permissions).",
-    __DIR__ . '/controllers/database.php',
-    true
-);
-Services::set(
-    'v1/locale',
-    'Locale',
-    "",
-    __DIR__ . '/controllers/locale.php',
-    true
-);
-Services::set(
-    'v1/health',
-    'Health',
-    "",
-    __DIR__ . '/controllers/locale.php',
-    false
-);
-Services::set(
-    'v1/projects',
-    'Projects',
-    "",
-    __DIR__ . '/controllers/projects.php',
-    false
-);
-Services::set(
-    'v1/storage',
-    'Storage',
-    "The storage service allows you to manage your project files. You can upload, view, download, and query your files and media.\n\nEach file is granted read and write permissions to manage who has access to view or manage it. You can also learn more about how to manage your [resources permissions](/docs/permissions).\n\n You can also use the storage file preview endpoint to show the app users preview images of your files. The preview endpoint also allows you to manipulate the resulting image, so it will fit perfectly inside your app.",
-    __DIR__ . '/controllers/storage.php',
-    true
-);
-Services::set(
-    'v1/teams',
-    'Teams',
-    "The teams' service allows you to group together users of your project and allow them to share read and write access to your project resources, such as, database documents or storage files.\n\nEach user who creates a team becomes the team owner and can delegate the ownership role by inviting a new team member. Only team owners can invite new users to the team.",
-    __DIR__ . '/controllers/teams.php',
-    true
-);
-Services::set(
-    'v1/users',
-    'Users',
-    "",
-    __DIR__ . '/controllers/users.php',
-    true
-);
-
-Services::default('/');
 
 $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $project, $consoleDB, $roles, $webhook, $audit, $usage, $domain) {
 
@@ -423,15 +339,15 @@ $utopia->get('/manifest.json')
         function() use ($response, $project) {
 
             $response->json([
-                    'name' => APP_NAME,
-                    'short_name' => APP_NAME,
-                    'start_url' => '.',
-                    'url' => 'https://appwrite.io/',
-                    'display' => 'standalone',
-                    'background_color' => '#fff',
-                    'theme_color' => '#f02e65',
-                    'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
-                    'icons' => [
+                'name' => APP_NAME,
+                'short_name' => APP_NAME,
+                'start_url' => '.',
+                'url' => 'https://appwrite.io/',
+                'display' => 'standalone',
+                'background_color' => '#fff',
+                'theme_color' => '#f02e65',
+                'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
+                'icons' => [
                     [
                         'src' => 'images/favicon.png',
                         'sizes' => '256x256',
@@ -475,7 +391,7 @@ $utopia->get('/humans.txt')
     );
 
 $utopia->get('/v1/info') // This is only visible to gods
-    ->label('scope', 'god')
+->label('scope', 'god')
     ->label('docs', false)
     ->action(
         function() use ($request, $response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
@@ -539,7 +455,7 @@ $utopia->get('/v1/docs')
     );
 
 $utopia->get('/v1/server') // This is only visible to gods
-    ->label('scope', 'god')
+->label('scope', 'god')
     ->label('docs', false)
     ->action(
         function() use ($response) {
@@ -552,7 +468,7 @@ $utopia->get('/v1/open-api-2.json')
     ->label('docs', false)
     ->param('extensions', 0 , function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->action(
-        function($extensions) use ($response, $utopia, $domain, $version, $consoleDB) {
+        function($extensions) use ($response, $utopia, $domain, $version, $services, $consoleDB) {
 
             function fromCamelCase($input) {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -590,7 +506,7 @@ $utopia->get('/v1/open-api-2.json')
                 ],
             ];*/
 
-            foreach (Services::getAll() as $service) { /** @noinspection PhpIncludeInspection */
+            foreach ($services as $service) { /** @noinspection PhpIncludeInspection */
                 if(!$service['sdk']) {
                     continue;
                 }
@@ -653,59 +569,59 @@ $utopia->get('/v1/open-api-2.json')
                 ],
                 'paths' => [],
                 'definitions' => array (
-                        'Pet' =>
-                            array (
-                                'required' =>
-                                    array (
-                                        0 => 'id',
-                                        1 => 'name',
-                                    ),
-                                'properties' =>
-                                    array (
-                                        'id' =>
-                                            array (
-                                                'type' => 'integer',
-                                                'format' => 'int64',
-                                            ),
-                                        'name' =>
-                                            array (
-                                                'type' => 'string',
-                                            ),
-                                        'tag' =>
-                                            array (
-                                                'type' => 'string',
-                                            ),
-                                    ),
-                            ),
-                        'Pets' =>
-                            array (
-                                'type' => 'array',
-                                'items' =>
-                                    array (
-                                        '$ref' => '#/definitions/Pet',
-                                    ),
-                            ),
-                        'Error' =>
-                            array (
-                                'required' =>
-                                    array (
-                                        0 => 'code',
-                                        1 => 'message',
-                                    ),
-                                'properties' =>
-                                    array (
-                                        'code' =>
-                                            array (
-                                                'type' => 'integer',
-                                                'format' => 'int32',
-                                            ),
-                                        'message' =>
-                                            array (
-                                                'type' => 'string',
-                                            ),
-                                    ),
-                            ),
-                    ),
+                    'Pet' =>
+                        array (
+                            'required' =>
+                                array (
+                                    0 => 'id',
+                                    1 => 'name',
+                                ),
+                            'properties' =>
+                                array (
+                                    'id' =>
+                                        array (
+                                            'type' => 'integer',
+                                            'format' => 'int64',
+                                        ),
+                                    'name' =>
+                                        array (
+                                            'type' => 'string',
+                                        ),
+                                    'tag' =>
+                                        array (
+                                            'type' => 'string',
+                                        ),
+                                ),
+                        ),
+                    'Pets' =>
+                        array (
+                            'type' => 'array',
+                            'items' =>
+                                array (
+                                    '$ref' => '#/definitions/Pet',
+                                ),
+                        ),
+                    'Error' =>
+                        array (
+                            'required' =>
+                                array (
+                                    0 => 'code',
+                                    1 => 'message',
+                                ),
+                            'properties' =>
+                                array (
+                                    'code' =>
+                                        array (
+                                            'type' => 'integer',
+                                            'format' => 'int32',
+                                        ),
+                                    'message' =>
+                                        array (
+                                            'type' => 'string',
+                                        ),
+                                ),
+                        ),
+                ),
                 'externalDocs' => [
                     'description' => 'Full API docs, specs and tutorials',
                     'url' => APP_PROTOCOL . '://' . $domain . '/docs'
@@ -887,16 +803,13 @@ $utopia->get('/v1/open-api-2.json')
 
 $name = APP_NAME;
 
-$service = Services::get($service);
-
-if($service) { /** @noinspection PhpIncludeInspection */
-    include_once $service['controller'];
-    $name = APP_NAME . ' ' . ucfirst($service['name']);
+if(array_key_exists($service, $services)) { /** @noinspection PhpIncludeInspection */
+    include_once $services[$service]['controller'];
+    $name = APP_NAME . ' ' . ucfirst($services[$service]['name']);
 }
 else {
     /** @noinspection PhpIncludeInspection */
-    echo 'All you need is love and a functional router... :)';
-    exit();
+    include_once $services['/']['controller'];
 }
 
 if (extension_loaded('newrelic')) {

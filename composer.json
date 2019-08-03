@@ -17,7 +17,6 @@
             "Event\\": "src/Event",
             "OpenSSL\\": "src/OpenSSL",
             "Resize\\": "src/Resize",
-            "Services\\": "src/Services",
             "Storage\\": "src/Storage",
             "Task\\": "src/Task",
             "Template\\": "src/Template"
