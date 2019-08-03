@@ -2,6 +2,8 @@ app/db/SQL
 docs
 node_modules
 storage
+public/scripts
+public/styles
 .git
 .idea
 .cd .babelrc
