@@ -18,12 +18,12 @@
     background: #f6f9fc;
 
     .project-only {
-      display: none!important;
+      display: none !important;
     }
 
     &.show-nav {
       .project-only {
-        display: block!important;
+        display: block !important;
       }
     }
 
@@ -64,10 +64,6 @@
       z-index: 1000;
       .func-border-start(220px, #132a3b);
     }
-
-    &:after {
-
-    }
   }
 
   header {
@@ -78,7 +74,7 @@
     line-height: 40px;
     padding: 15px 30px;
     background: #fff;
-    box-shadow: 0 0 2px rgba(0, 0, 0, .25);
+    box-shadow: 0 0 2px rgba(0, 0, 0, .05);
     margin: 0 -50px;
     z-index: 2;
     font-size: 14px;
@@ -140,10 +136,10 @@
     }
 
     nav {
-      box-shadow: 0 0 2px rgba(0, 0, 0, .25);
+      //box-shadow: 0 0 2px rgba(0, 0, 0, .05);
       background: #1b3445;
       background: linear-gradient(rgb(19, 42, 59), rgb(48, 40, 57));
-      background: linear-gradient(#143650,#302839);
+      background: linear-gradient(#143650, #302839);
       color: #788c99;
       position: fixed;
       height: 100%;
@@ -188,6 +184,11 @@
             fill: @config-color-focus
           }
         }
+      }
+
+      .container {
+        overflow: scroll;
+        height: ~"calc(100% - 133px)";
       }
 
       .project-box {
@@ -265,7 +266,7 @@
         &.top {
           border: none;
           padding-bottom: 0;
-          margin-bottom: 5px!important;
+          margin-bottom: 5px !important;
         }
 
         &.bottom {
@@ -276,7 +277,7 @@
           //background: #183142;
           padding-bottom: 0;
           border: none;
-          margin-bottom: 0!important;
+          margin-bottom: 0 !important;
 
           a {
             border-bottom: none;
@@ -321,7 +322,8 @@
             display: inline-block;
           }
 
-          &:hover, &.selected {
+          &:hover,
+          &.selected {
             color: #e4e4e4;
             font-weight: 500;
             //background: #142a3a;
@@ -342,7 +344,7 @@
     }
   }
 
-  > footer {
+  >footer {
     width: ~"calc(100% + 100px)";
     margin: 0 -50px;
     box-sizing: border-box;
@@ -360,7 +362,8 @@
       margin-bottom: 50px;
       width: 270px;
 
-      &:nth-child(3n), &.new {
+      &:nth-child(3n),
+      &.new {
         .func-margin-end(0);
       }
     }
@@ -395,7 +398,7 @@
       &:after {
         content: "";
         display: block;
-        width: 3px;
+        width: 2px;
         background: #f6f7f8;
         height: ~"calc(100% + 100px)";
         position: absolute;
@@ -403,7 +406,8 @@
         bottom: -20px;
         .func-end(24px);
 
-        @media @phones, @tablets {
+        @media @phones,
+        @tablets {
           width: ~"calc(100% + 40px)";
           height: 3px;
           position: static;
@@ -470,14 +474,14 @@
       //padding-top: 15px;
       background-color: #ffffff;
       background-image:
-              linear-gradient(transparent 1px, transparent 1px),
-              linear-gradient(90deg, transparent 1px, transparent 1px),
-              linear-gradient(rgb(241,241,241) 1px, transparent 1px),
-              linear-gradient(90deg, rgb(241,241,241) 1px, transparent 1px);
+        linear-gradient(transparent 1px, transparent 1px),
+        linear-gradient(90deg, transparent 1px, transparent 1px),
+        linear-gradient(rgb(241, 241, 241) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(241, 241, 241) 1px, transparent 1px);
       background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
       background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
       background-repeat: round;
-      border: solid 1px rgb(241,241,241);
+      border: solid 1px rgb(241, 241, 241);
       border-right: solid 1px transparent;
       border-bottom: solid 1px transparent;
 
@@ -576,7 +580,7 @@
 
     &.instagram {
       color: #ffffff;
-      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
     }
   }
 
@@ -688,7 +692,7 @@
 .development {
   .dev-feature {
     display: block;
-    opacity: .6!important;
+    opacity: .6 !important;
     outline: solid yellow 3px;
     outline-offset: 3px;
 

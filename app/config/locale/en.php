@@ -251,12 +251,16 @@ return [
     'console.database.title' => 'Database',
 
     'console.storage.title' => 'Storage',
-
+    
     'console.users.title' => 'Users',
     'console.users.section.users.title' => 'Users',
     'console.users.section.teams.title' => 'Teams',
     'console.users.section.providers.title' => 'Providers',
     'console.users.section.templates.title' => 'Templates',
+    
+    'console.webhooks.title' => 'Webhooks',
+    'console.keys.title' => 'API Keys',
+    'console.tasks.title' => 'Tasks',
 
     // Service - Users
     'auth.emails.team' => '%s Team',

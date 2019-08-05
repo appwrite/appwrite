@@ -17,7 +17,7 @@ $utopia->get('/v1/locale')
         {
             $eu         = include __DIR__ . '/../config/eu.php';
             $currencies = include __DIR__ . '/../config/currencies.php';
-            $reader     = new Reader(__DIR__ . '/../app/db/GeoLite2/GeoLite2-Country.mmdb');
+            $reader     = new Reader(__DIR__ . '/../db/GeoLite2/GeoLite2-Country.mmdb');
             $output     = [];
             $ip         = $request->getIP();
             $time       = (60 * 60 * 24 * 45); // 45 days cache

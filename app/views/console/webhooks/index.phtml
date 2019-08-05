@@ -16,12 +16,16 @@ $events = [
 ];
 
 ?>
-<h2><?php echo Locale::getText('console.settings.section.webhooks.title'); ?></h2>
+<div class="cover margin-bottom-large">
+    <h1 class="zone xl margin-bottom-large margin-top">
+        <?php echo Locale::getText('console.webhooks.title'); ?>
+    </h1>
+</div>
 
 <div class="zone xl" data-service="projects.webhooks.list" data-scope="console" data-event="load" data-name="console-webhooks" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="webhook.new,webhook.update,webhook.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
 
     <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom" style="display: none;">
-        <h3>No Webhooks Found</h3>
+        <h3 class="margin-bottom-small">No Webhooks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
     </div>

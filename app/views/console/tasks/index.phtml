@@ -3,12 +3,15 @@
 use Utopia\Locale\Locale;
 
 ?>
-<h2><?php echo Locale::getText('console.settings.section.tasks.title'); ?></h2>
-
+<div class="cover margin-bottom-large">
+    <h1 class="zone xl margin-bottom-large margin-top">
+        <?php echo Locale::getText('console.tasks.title'); ?>
+    </h1>
+</div>
 <div class="zone xl" data-service="projects.tasks.list" data-scope="console" data-event="load" data-name="console-tasks" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="task.new,task.update,task.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
 
     <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom" style="display: none;">
-        <h3>No Tasks Found</h3>
+        <h3 class="margin-bottom-small">No Tasks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any tasks for your project yet.</p>
     </div>

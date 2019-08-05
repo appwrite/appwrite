@@ -26,12 +26,15 @@ $scopes = [ // TODO sync with project list
     //'health.read',
 ];
 ?>
-<h2><?php echo Locale::getText('console.settings.section.keys.title'); ?></h2>
-
+<div class="cover margin-bottom-large">
+    <h1 class="zone xl margin-bottom-large margin-top">
+        <?php echo Locale::getText('console.keys.title'); ?>
+    </h1>
+</div>
 <div class="zone xl" data-service="projects.keys.list" data-scope="console" data-event="load" data-name="console-keys" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="key.new,key.update,key.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
 
     <div data-ls-if="0 == {{console-keys.length}} || undefined == {{console-keys.length}}" class="box margin-top margin-bottom" style="display: none;">
-        <h3>No API Keys Found</h3>
+        <h3 class="margin-bottom-small">No API Keys Found</h3>
 
         <p class="margin-bottom-no">You haven't created any API keys for your project yet.</p>
     </div>

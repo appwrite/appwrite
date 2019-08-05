@@ -28,7 +28,7 @@ $graph = $this->getParam('graph', false);
              data-error="render"
              data-success-triggers="usage.load">
 
-            <?php if($graph): ?>
+            <?php if(!$graph): ?>
                 <div class="row responsive">
                     <div class="col span-9">
                         <div class="pull-start margin-end">
@@ -129,7 +129,7 @@ $graph = $this->getParam('graph', false);
         </div>
     </div>
 
-    <a data-ls-attrs="href=/console/settings/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
+    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
 
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" tabindex="1">
         <ul>
