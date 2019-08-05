@@ -46,66 +46,14 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ## Services
 
-<table width="100%">
-  <thead>
-    <tr>
-        <td><b>Service</b></td>
-        <td><b>Description</b></td>
-        <td><b>Tutotrials</b></td>
-        <td><b>Docs</b></td>
-    </tr>
-  </thead>
-    <tbody>
-        <tr>
-            <td>Auth</td>
-            <td>Manage user authentication using multiple signin methods and account recovery.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/auth" target="_blank">API References</a></td>
-        </tr>
-        <tr>
-            <td>Account</td>
-            <td>Manage current user account. Track and manage the user sessions, devices and security audit log.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/account" target="_blank">API References</a></td>
-        </tr>
-        <tr>
-            <td>Users</td>
-            <td>Manage and list all project users when in admin mode.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/users" target="_blank">API References</a></td>
-        </tr>
-        <tr>
-            <td>Teams</td>
-            <td>Manage and group users in teams. Manage memebrships, invites and users roles within a team.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/teams" target="_blank">API References</a></td>
-        </tr>
-        <tr>
-            <td>Database</td>
-            <td>Manage database collections and document. Read, create, update and delete documents and filter lists of documents colllections using advanced filter with graph like capebilities.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/database" target="_blank">API References</a></td>
-        </tr>
-        <tr>
-            <td>Storage</td>
-            <td>Manage storage files. Read, create, delete and preview files. Manipulate your files preview to fit your app perfectly. All files are scaned by ClamAV and stored in a secure and encrypted way.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/storage" target="_blank">API References</a></td>
-        </tr>
-        <tr>
-            <td>Localisation</td>
-            <td>Track users location, and manage your app locale based data.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/locale" target="_blank">API References</a></td>
-        </tr>
-        <tr>
-            <td>Avatars</td>
-            <td>Manage your users avatars, countries flags, browser icons, credit card symbols and generate QR codes.</td>
-            <td></td>
-            <td><a href="https://appwrite.io/docs/avatars" target="_blank">API References</a></td>
-        </tr>
-    </tbody>
-</table>
+* [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple signin methods and account recovery.
+* [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices and security audit log.
+* [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
+* [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and users roles within a team.
+* [**Database**](https://appwrite.io/docs/database) - Manage database collections and document. Read, create, update and delete documents and filter lists of documents collections using advanced filter with graph like capabilities.
+* [**Storage**](https://appwrite.io/docs/storage) - Manage storage files. Read, create, delete and preview files. Manipulate your files preview to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
+* [**Locale**](https://appwrite.io/docs/locale) - Track users location, and manage your app locale based data.
+* [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users avatars, countries flags, browser icons, credit card symbols and generate QR codes.
 
 ## SDKs
 
