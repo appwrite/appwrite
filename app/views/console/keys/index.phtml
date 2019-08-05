@@ -1,0 +1,138 @@
+<?php
+
+use Utopia\Locale\Locale;
+
+$scopes = [ // TODO sync with project list
+    'users.read',
+    'users.write',
+    'teams.read',
+    'teams.write',
+    'collections.read',
+    'collections.write',
+    'documents.read',
+    'documents.write',
+    'files.read',
+    'files.write',
+    //'billing.vaults.read',
+    //'billing.vaults.write',
+    //'billing.plans.read',
+    //'billing.plans.write',
+    //'billing.subscriptions.read',
+    //'billing.subscriptions.write',
+    //'billing.invoices.read',
+    //'projects.read',
+    //'projects.write',
+    //'locale.read',
+    //'health.read',
+];
+?>
+<h2><?php echo Locale::getText('console.settings.section.keys.title'); ?></h2>
+
+<div class="zone xl" data-service="projects.keys.list" data-scope="console" data-event="load" data-name="console-keys" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="key.new,key.update,key.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
+
+    <div data-ls-if="0 == {{console-keys.length}} || undefined == {{console-keys.length}}" class="box margin-top margin-bottom" style="display: none;">
+        <h3>No API Keys Found</h3>
+
+        <p class="margin-bottom-no">You haven't created any API keys for your project yet.</p>
+    </div>
+
+    <div class="box margin-bottom" data-ls-if="0 != {{console-keys.length}}" style="display: none;">
+        <ul data-ls-loop="console-keys" data-ls-as="key" class="list">
+            <li class="clear">
+                <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Update API Key</h1>
+
+                    <form data-service="projects.keys.update" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Updated API key successfully" data-success-triggers="key.update,modal-close" data-error="alert" data-error-alert="Failed to update API key">
+
+                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                        <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
+
+                        <label data-ls-attrs="for=name-{{key.$uid}}">Name</label>
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
+
+                        <label data-ls-attrs="for=scopes-{{key.$uid}}">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
+                        <div class="row thin margin-bottom">
+                            <?php foreach ($scopes as $i => $scope) : ?>
+                                <div class="col span-6">
+                                    <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" data-default="{{key.scopes}}" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
+                                </div>
+                                <?php if (($i + 1) % 2 === 0) : ?>
+                                </div>
+                                <div class="row thin margin-bottom">
+                                <?php endif; ?>
+
+                            <?php endforeach; ?>
+                        </div>
+
+                        <div>
+                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <form class="pull-end margin-end" data-service="projects.keys.delete" data-scope="console" data-event="submit" data-confirm="Are you sure you want to delete this API key?" data-success="alert,trigger" data-success-alert="Deleted API key successfully" data-success-triggers="key.delete" data-error="alert" data-error-alert="Failed to delete API key">
+
+                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                    <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
+
+                    <button class="reverse danger">Delete</button>
+                </form>
+
+                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <span class="note">(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</span></div>
+
+                <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link margin-top-small" data-button-icon="icon-right-open">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>API Key Secret</h1>
+
+                    <form>
+                        <div class="input-copy">
+                            <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-bind="{{key.secret}}"></textarea>
+                        </div>
+                        <div>
+                            <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="clear">
+        <div data-ui-modal class="modal close" data-button-text="Add API Key">
+            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+            <h1>Add API Keys</h1>
+
+            <form data-service="projects.keys.create" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created API key successfully" data-success-triggers="key.new,modal-close" data-error="alert" data-error-alert="Failed to create API key">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+
+                <label for="name">Name</label>
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+
+                <label for="scopes">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
+                <div class="row thin margin-bottom">
+                    <?php foreach ($scopes as $i => $scope) : ?>
+                        <div class="col span-6">
+                            <input type="checkbox" name="scopes" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
+                        </div>
+                        <?php if (($i + 1) % 2 === 0) : ?>
+                        </div>
+                        <div class="row thin margin-bottom">
+                        <?php endif; ?>
+
+                    <?php endforeach; ?>
+                </div>
+
+                <br />
+
+                <div>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

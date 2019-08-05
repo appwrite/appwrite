@@ -122,12 +122,47 @@ $utopia->get('/console/settings')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function() use ($layout)
-    {
+    ->action(function () use ($layout) {
         $page = new View(__DIR__ . '/../views/console/settings/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.settings.title'))
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/webhooks')
+    ->desc('Platform console project webhooks')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__ . '/../views/console/webhooks/index.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.webhooks.title'))
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/keys')
+    ->desc('Platform console project keys')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__ . '/../views/console/keys/index.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.keys.title'))
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/tasks')
+    ->desc('Platform console project tasks')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__ . '/../views/console/tasks/index.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.tasks.title'))
             ->setParam('body', $page);
     });
 

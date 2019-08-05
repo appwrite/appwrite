@@ -1,0 +1,271 @@
+<?php
+
+use Utopia\Locale\Locale;
+
+?>
+<h2><?php echo Locale::getText('console.settings.section.tasks.title'); ?></h2>
+
+<div class="zone xl" data-service="projects.tasks.list" data-scope="console" data-event="load" data-name="console-tasks" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="task.new,task.update,task.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
+
+    <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom" style="display: none;">
+        <h3>No Tasks Found</h3>
+
+        <p class="margin-bottom-no">You haven't created any tasks for your project yet.</p>
+    </div>
+
+    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.length}}" style="display: none;">
+        <table class="full">
+            <thead>
+                <tr>
+                    <th width="220">Name</th>
+                    <th></th>
+                    <th width="140">Next Run</th>
+                    <th width="140">Prev. Run</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-ls-loop="console-tasks" data-ls-as="task" class="list">
+                <tr>
+                    <td>
+                        <div class="margin-bottom-tiny text-one-liner">
+                            <span data-ls-bind="{{task.name}}"></span>
+
+                            <span data-ls-if="0 === {{task.security}}" style="display: none;">
+                                &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
+                            </span>
+                            <span data-ls-if="0 !== {{task.failures}}" style="display: none;">
+                                &nbsp; <span class="text-danger" data-ls-bind="({{task.failures}} errors)"></span>
+                            </span>
+                        </div>
+
+                        <a data-ls-attrs="href={{task.httpUrl}}" data-ls-bind="{{task.httpUrl}}" target="_blank" class="text-one-liner"></a>
+                    </td>
+                    <td style="vertical-align: middle">
+                        <span data-ls-if="'play' === {{task.status}}" style="display: none;">
+                            <span class="tag green"><i class="icon-play"></i> Running &nbsp;</span>
+                        </span>
+                        <span data-ls-if="'play' !== {{task.status}}" style="display: none;">
+                            <span class="tag red"><i class="icon-pause"></i> Paused &nbsp;</span>
+                        </span>
+                    </td>
+                    <td style="vertical-align: middle">
+                        <span data-ls-bind="{{task.next|date-time}}" class="note"></span>
+                    </td>
+                    <td style="vertical-align: middle">
+                        <div data-ls-if="'undefined' !== {{task.previous}}" class="note">
+                            <span data-ls-bind="{{task.previous|date-time}}"></span>
+
+                            <div data-ls-if="'undefined' !== {{task.delay}} && 59 < {{task.delay}}" class="note text-danger margin-top-tiny">
+                                <span data-ls-bind="({{task.delay|ms2hum}} Delay)"></span>
+                            </div>
+                        </div>
+                        <div data-ls-if="'undefined' === {{task.previous}}" class="note">
+                            None.
+                        </div>
+                    </td>
+                    <td>
+                        <div data-ui-modal class="modal close" data-button-text="" data-button-class="pull-end reverse round" data-button-icon="icon-cog">
+                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                            <h1>Update Task</h1>
+
+                            <form data-service="projects.tasks.update" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Updated task successfully" data-success-triggers="task.update,modal-close" data-error="alert" data-error-alert="Failed to update task">
+
+                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
+
+                                <label data-ls-attrs="for=name-{{task.$uid}}">Name</label>
+                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
+
+                                <label data-ls-attrs="for=status-{{task.$uid}}" class="margin-bottom">Status
+                                    <div class="margin-top-small">
+                                        <input name="status" type="radio" checked="checked" required data-ls-bind="play" data-default="{{task.status}}" /> &nbsp; <span>Play</span>
+                                        <input name="status" type="radio" required data-ls-bind="pause" data-default="{{task.status}}" /> &nbsp; <span>Pause</span>
+                                    </div>
+                                </label>
+
+                                <label data-ls-attrs="for=schedule-{{task.$uid}}">Schedule (CRON Syntax)</label>
+                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" />
+
+                                <div class="row thin">
+                                    <div class="col span-4">
+                                        <label data-ls-attrs="for=httpMethod-{{task.$uid}}">HTTP Method</label>
+                                        <select data-ls-attrs="id=httpMethod-{{task.$uid}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
+                                            <option value="POST">POST</option>
+                                            <option value="GET">GET</option>
+                                            <option value="PUT">PUT</option>
+                                            <option value="PATCH">PATCH</option>
+                                            <option value="DELETE">DELETE</option>
+                                            <option value="CONNECT">CONNECT</option>
+                                            <option value="HEAD">HEAD</option>
+                                            <option value="TRACE">TRACE</option>
+                                            <option value="OPTIONS">OPTIONS</option>
+                                        </select>
+                                    </div>
+                                    <div class="col span-8">
+                                        <label data-ls-attrs="for=httpUrl-{{task.$uid}}">HTTP URL</label>
+                                        <input type="url" class="full-width" data-ls-attrs="id=httpUrl-{{task.$uid}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
+                                    </div>
+                                </div>
+
+                                <label for="httpHeaders">HTTP Headers</label>
+                                <div class="margin-bottom-small">
+                                    <div data-ls-loop="task.httpHeaders" data-ls-as="header" style="overflow: hidden">
+                                        <div class="margin-bottom-small">
+                                            <div data-forms-remove class="row thin">
+                                                <div class="col span-10">
+                                                    <input type="hidden" name="httpHeaders" data-forms-headers data-ls-bind="{{header}}" data-cast-to="array" />
+                                                </div>
+                                                <div class="col span-2">
+                                                    <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div data-forms-clone="" data-label="Add Header" data-first="0">
+                                        <div class="">
+                                            <div data-forms-remove class="row thin margin-bottom-small">
+                                                <div class="col span-10">
+                                                    <input type="hidden" name="httpHeaders" data-forms-headers data-cast-to="array" />
+                                                </div>
+                                                <div class="col span-2">
+                                                    <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom">SSL / TLS
+                                    <p class="note">Certificate verification</p>
+                                    <input name="security" type="radio" required data-ls-bind="1" data-default="{{task.security}}" /> &nbsp; <span>Enabled</span>
+                                    <input name="security" type="radio" required data-ls-bind="0" data-default="{{task.security}}" /> &nbsp; <span>Disabled</span>
+                                </label>
+
+                                <p class="note margin-bottom"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
+                                    <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                                </p>
+
+                                <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+
+                                <div class="row thin">
+                                    <div class="col span-6">
+                                        <label data-ls-attrs="for=httpUser-{{task.$uid}}">User</label>
+                                        <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{task.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
+                                    </div>
+                                    <div class="col span-6">
+                                        <label data-ls-attrs="for=httpPass-{{task.$uid}}">Password</label>
+                                        <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{task.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                </div>
+                            </form>
+
+                            <form class="margin-top" data-service="projects.tasks.delete" data-scope="console" data-event="submit" data-confirm="Are you sure you want to delete this task?" data-success="alert,trigger" data-success-alert="Deleted task successfully" data-success-triggers="task.delete,modal.close" data-error="alert" data-error-alert="Failed to delete task">
+
+                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
+
+                                <button class="danger fill">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="clear">
+        <div data-ui-modal class="modal close" data-button-text="Add Task">
+            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+            <h1>Add Task</h1>
+
+            <form data-service="projects.tasks.create" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created task successfully" data-success-triggers="task.new,modal-close" data-error="alert" data-error-alert="Failed to create task">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+
+                <label for="name">Name</label>
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+
+                <label data-ls-attrs="for=status" class="margin-bottom">Status
+                    <div class="margin-top-small">
+                        <input name="status" type="radio" value="play" checked="checked" required /> &nbsp; <span>Play</span>
+                        <input name="status" type="radio" value="pause" required /> &nbsp; <span>Pause</span>
+                    </div>
+                </label>
+
+                <label for="schedule">Schedule (CRON Syntax)</label>
+                <input type="text" class="full-width" id="schedule" name="schedule" required autocomplete="off" />
+
+                <div class="row thin">
+                    <div class="col span-4">
+                        <label for="httpMethod">HTTP Method</label>
+                        <select id="httpMethod" name="httpMethod" required>
+                            <option value="POST">POST</option>
+                            <option value="GET">GET</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="CONNECT">CONNECT</option>
+                            <option value="HEAD">HEAD</option>
+                            <option value="TRACE">TRACE</option>
+                            <option value="OPTIONS">OPTIONS</option>
+                        </select>
+                    </div>
+                    <div class="col span-8">
+                        <label for="httpUrl">HTTP URL</label>
+                        <input type="url" class="full-width" id="httpUrl" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" />
+                    </div>
+                </div>
+
+                <label for="httpHeaders">HTTP Headers</label>
+                <div class="margin-bottom-small">
+                    <div data-forms-clone="" data-label="Add Header" data-first="0">
+                        <div class="">
+                            <div data-forms-remove class="row thin margin-bottom-small">
+                                <div class="col span-10">
+                                    <input type="hidden" name="httpHeaders" data-forms-headers data-cast-to="array" />
+                                </div>
+                                <div class="col span-2">
+                                    <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <label for="secure" class="margin-bottom">SSL / TLS
+                    <p class="note">Certificate verification</p>
+                    <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
+                    <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
+                </label>
+
+                <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                    <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                </p>
+
+                <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+
+                <div class="row thin">
+                    <div class="col span-6">
+                        <label for="httpUser">User</label>
+                        <input type="text" class="full-width" id="httpUser" name="httpUser" autocomplete="off" />
+                    </div>
+                    <div class="col span-6">
+                        <label for="httpPass">Password</label>
+                        <input type="password" class="full-width" id="httpPass" name="httpPass" autocomplete="off" />
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,180 @@
+<?php
+
+use Utopia\Locale\Locale;
+
+$events = [
+    'database.documents.create',
+    'database.documents.patch',
+    'database.documents.delete',
+    'auth.register',
+    'auth.confirm',
+    'auth.login',
+    'auth.logout',
+    'account.update-name',
+    'account.update-email',
+    'account.update-password',
+];
+
+?>
+<h2><?php echo Locale::getText('console.settings.section.webhooks.title'); ?></h2>
+
+<div class="zone xl" data-service="projects.webhooks.list" data-scope="console" data-event="load" data-name="console-webhooks" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="webhook.new,webhook.update,webhook.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
+
+    <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom" style="display: none;">
+        <h3>No Webhooks Found</h3>
+
+        <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
+    </div>
+
+    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.length}}" style="display: none;">
+        <ul data-ls-loop="console-webhooks" data-ls-as="webhook" class="list">
+            <li class="clear">
+
+                <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Update Webhook</h1>
+
+                    <form data-service="projects.webhooks.update" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Updated webhook successfully" data-success-triggers="webhook.update,modal-close" data-error="alert" data-error-alert="Failed to update webhook">
+
+                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
+
+                        <label data-ls-attrs="for=name-{{webhook.$uid}}">Name</label>
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
+
+                        <label data-ls-attrs="for=events-{{webhook.$uid}}">Events</label>
+                        <div class="row thin margin-bottom">
+                            <?php foreach ($events as $i => $event) : ?>
+                                <div class="col span-6">
+                                    <input type="checkbox" name="events" data-ls-bind="<?php echo $event; ?>" data-default="{{webhook.events}}" /> <?php echo $event; ?>
+                                </div>
+                                <?php if (($i + 1) % 2 === 0) : ?>
+                                </div>
+                                <div class="row thin margin-bottom">
+                                <?php endif; ?>
+
+                            <?php endforeach; ?>
+                        </div>
+
+                        <label data-ls-attrs="for=url-{{webhook.$uid}}">POST URL</label>
+                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
+
+                        <label data-ls-attrs="for=secure-{{webhook.$uid}}">SSL / TLS</label>
+                        <p class="note">Certificate verification</p>
+
+                        <input name="security" data-ls-attrs="id=secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="1" data-default="{{webhook.security}}" /> &nbsp; <span>Enabled</span>
+                        &nbsp;&nbsp;
+                        <input name="security" data-ls-attrs="id=secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="0" data-default="{{webhook.security}}" /> &nbsp; <span>Disabled</span>
+
+                        <br />
+                        <br />
+
+                        <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                            <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                        </p>
+
+                        <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+
+                        <div class="row thin">
+                            <div class="col span-6">
+                                <label data-ls-attrs="for=httpUser-{{webhook.$uid}}">User</label>
+                                <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
+                            </div>
+                            <div class="col span-6">
+                                <label data-ls-attrs="for=httpPass-{{webhook.$uid}}">Password</label>
+                                <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                            </div>
+                        </div>
+
+                        <br />
+
+                        <div>
+                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <form class="pull-end margin-end" data-service="projects.webhooks.delete" data-scope="console" data-event="submit" data-confirm="Are you sure you want to delete this webhook?" data-success="alert,trigger" data-success-alert="Deleted webhook successfully" data-success-triggers="webhook.delete" data-error="alert" data-error-alert="Failed to delete webhook">
+
+                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
+
+                    <button class="danger reverse">Delete</button>
+                </form>
+
+                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
+                <span data-ls-if="0 == {{webhook.security}}" style="display: none;">
+                    &nbsp; <span class="note text-danger">(SSL/TLS Disabled)</span>
+                </span>
+                <p class="note margin-bottom-no margin-top-small"><span class="tag green">POST</span> <span data-ls-bind="{{webhook.url}}"></span></p>
+            </li>
+        </ul>
+    </div>
+
+    <div class="clear">
+        <div data-ui-modal class="modal close" data-button-text="Add Webhook">
+            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+            <h1>Add Webhook</h1>
+
+            <form data-service="projects.webhooks.create" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created webhook successfully" data-success-triggers="webhook.new,modal-close" data-error="alert" data-error-alert="Failed to create webhook">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+
+                <label for="name">Name</label>
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+
+                <label for="events">Events</label>
+                <div class="row thin margin-bottom">
+                    <?php foreach ($events as $i => $event) : ?>
+                        <div class="col span-6">
+                            <input type="checkbox" name="events" value="<?php echo $event; ?>" /> <?php echo $event; ?>
+                        </div>
+                        <?php if (($i + 1) % 2 === 0) : ?>
+                        </div>
+                        <div class="row thin margin-bottom">
+                        <?php endif; ?>
+
+                    <?php endforeach; ?>
+                </div>
+
+                <label for="url">POST URL</label>
+                <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="https://example.com/callback" />
+
+                <label for="secure">SSL / TLS</label>
+                <p class="note">Certificate verification</p>
+
+                <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
+                &nbsp;&nbsp;
+                <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
+
+                <br />
+                <br />
+
+                <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                    <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                </p>
+
+                <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+
+                <div class="row thin">
+                    <div class="col span-6">
+                        <label for="httpUser">User</label>
+                        <input type="text" class="full-width" id="httpUser" name="httpUser" autocomplete="off" />
+                    </div>
+                    <div class="col span-6">
+                        <label for="httpPass">Password</label>
+                        <input type="password" class="full-width" id="httpPass" name="httpPass" autocomplete="off" />
+                    </div>
+                </div>
+
+                <br />
+
+                <div>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

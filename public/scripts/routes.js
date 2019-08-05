@@ -66,6 +66,36 @@ window.ls.router
         scope: 'console',
         project: true
     })
+    .add('/console/webhooks', {
+        template: '/console/webhooks?version=' + APP_ENV.VERSION,
+        scope: 'console',
+        project: true
+    })
+    .add('/console/webhooks/:tab', {
+        template: '/console/webhooks?version=' + APP_ENV.VERSION,
+        scope: 'console',
+        project: true
+    })
+    .add('/console/keys', {
+        template: '/console/keys?version=' + APP_ENV.VERSION,
+        scope: 'console',
+        project: true
+    })
+    .add('/console/keys/:tab', {
+        template: '/console/keys?version=' + APP_ENV.VERSION,
+        scope: 'console',
+        project: true
+    })
+    .add('/console/tasks', {
+        template: '/console/tasks?version=' + APP_ENV.VERSION,
+        scope: 'console',
+        project: true
+    })
+    .add('/console/tasks/:tab', {
+        template: '/console/tasks?version=' + APP_ENV.VERSION,
+        scope: 'console',
+        project: true
+    })
     .add('/console/database', {
         template: '/console/database?version=' + APP_ENV.VERSION,
         scope: 'console',
