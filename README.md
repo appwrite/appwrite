@@ -113,49 +113,11 @@ Currently we are supporting a few SDK libraries and we are constantly working on
 
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
-
-<table width="100%">
-  <thead>
-    <tr>
-        <td><b>Framework</b></td>
-        <td><b>Language / Platform</b></td>
-        <td><b>Maintainers</b></td>
-        <td><b>Official?</b></td>
-    </tr>
-  </thead>
-    <tbody>
-        <tr>
-            <td>[ANY]</td>
-            <td><a href="https://github.com/appwrite/sdk-for-php">PHP</a></td>
-            <td>Appwrite Team</td>
-            <td>✅</td>
-        </tr>
-        <tr>
-            <td>[ANY]</td>
-            <td><a href="https://github.com/appwrite/sdk-for-js">Javascript</a></td>
-            <td>Appwrite Team</td>
-            <td>✅</td>
-        </tr>
-        <tr>
-            <td>[ANY]</td>
-            <td><a href="https://github.com/appwrite/sdk-for-ruby">Ruby</a></td>
-            <td>Appwrite Team</td>
-            <td>✅</td>
-        </tr>
-        <tr>
-            <td>[ANY]</td>
-            <td><a href="https://github.com/appwrite/sdk-for-python">Python</a></td>
-            <td>Appwrite Team</td>
-            <td>✅</td>
-        </tr> 
-        <tr>
-            <td>[ANY]</td>
-            <td><a href="https://github.com/appwrite/sdk-for-node">Node JS</a></td>
-            <td>Appwrite Team</td>
-            <td>✅</td>
-        </tr> 
-    </tbody>
-</table>
+* ✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
+* ✅ [Javascript](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+* ✅ [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
+* ✅ [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
+* ✅ [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
 
 ## Contributing
 
