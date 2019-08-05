@@ -44,7 +44,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * Getting Started for iOS (soon...)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 
-## Services
+### Services
 
 * [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple signin methods and account recovery.
 * [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices and security audit log.
@@ -55,7 +55,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Locale**](https://appwrite.io/docs/locale) - Track users location, and manage your app locale based data.
 * [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users avatars, countries flags, browser icons, credit card symbols and generate QR codes.
 
-## SDKs
+### SDKs
 
 Currently we are supporting a few SDK libraries and we are constantly working on adding new ones.
 
