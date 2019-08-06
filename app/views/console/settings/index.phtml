@@ -131,8 +131,9 @@ use Utopia\Locale\Locale;
                     <div class="box margin-bottom">
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
                             <li class="clear">
-                                <form class="pull-end" data-service="auth.leave" data-scope="console" data-event="submit" data-success="alert,trigger" data-success-alert="<?php echo Locale::getText('console.settings.section.members.leave.success'); ?>" data-success-triggers="auth.leave,project.update" data-error="alert" data-error-alert="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
+                                <form class="pull-end" data-service="team.deleteTeamMembership" data-scope="console" data-event="submit" data-success="alert,trigger" data-success-alert="<?php echo Locale::getText('console.settings.section.members.leave.success'); ?>" data-success-triggers="auth.leave,project.update" data-error="alert" data-error-alert="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
 
+                                    <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
 
                                     <button class="danger"><?php echo Locale::getText('console.settings.section.members.labels.leave'); ?></button>
