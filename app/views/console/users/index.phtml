@@ -23,7 +23,7 @@ $providers = $this->getParam('providers', []);
 
                                 <h1>Create User</h1>
 
-                                <form data-service="users.create" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created user successfully" data-success-triggers="filter-users-changed,user.new,modal-close" data-error="alert" data-error-alert="Failed to create user">
+                                <form data-service="users.createUser" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created user successfully" data-success-triggers="filter-users-changed,user.new,modal-close" data-error="alert" data-error-alert="Failed to create user">
 
                                     <label for="user-name">Name</label>
                                     <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
@@ -51,7 +51,7 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div data-service="users.list" data-event="load" data-param-search="" data-param-limit="25" data-param-offset="0" data-scope="sdk" data-name="project-users">
+                <div data-service="users.listUsers" data-event="load" data-param-search="" data-param-limit="25" data-param-offset="0" data-scope="sdk" data-name="project-users">
 
                     <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom">No Users Found</h3>
@@ -234,8 +234,8 @@ $providers = $this->getParam('providers', []);
 
                                 <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
 
-                                <form data-service="projects.updateOauth" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Updated project OAuth settings successfully" data-success-triggers="project.reload,modal-close" data-error="alert" data-error-alert="Failed to update project OAuth settings">
-                                    <input name="provider" id="provider" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
+                                <form data-service="projects.updateProjectOAuth" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Updated project OAuth settings successfully" data-success-triggers="project.reload,modal-close" data-error="alert" data-error-alert="Failed to update project OAuth settings">
+                                    <input name="provider" id="provider<?php echo ucfirst($provider); ?>" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
 
                                     <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>
                                     <input name="appId" id="oauth<?php echo ucfirst($provider); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}}">

@@ -17,7 +17,7 @@ use Utopia\Locale\Locale;
             <li data-state="/console/settings?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.overview.title'); ?></h2>
 
-                <form data-service="projects.update" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Saved project successfully" data-success-triggers="project.update" data-error="alert" data-error-alert="Failed to update project">
+                <form data-service="projects.updateProject" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Saved project successfully" data-success-triggers="project.update" data-error="alert" data-error-alert="Failed to update project">
 
                     <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
 
@@ -87,7 +87,7 @@ use Utopia\Locale\Locale;
             </li>
             <li data-state="/console/settings/privacy?project={{router.params.project}}">
 
-                <form data-service="projects.update" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Saved project successfully" data-success-triggers="project.update" data-error="alert" data-error-alert="Failed to update project">
+                <form data-service="projects.updateProject" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Saved project successfully" data-success-triggers="project.update" data-error="alert" data-error-alert="Failed to update project">
                     <h2>Privacy & Legal</h2>
 
                     <div class="box margin-bottom">
@@ -124,7 +124,7 @@ use Utopia\Locale\Locale;
             <li data-state="/console/settings/members?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.members.title'); ?></h2>
 
-                <div class="zone xl" data-service="teams.getMembers" data-scope="console" data-event="load,auth.invite,auth.leave" data-name="members" data-param-team-id="{{console-project.teamId}}" data-success="render,trigger" data-success-triggers="members.load" data-error="render" data-error-rerender="">
+                <div class="zone xl" data-service="teams.getTeamMembers" data-scope="console" data-event="load,auth.invite,auth.leave" data-name="members" data-param-team-id="{{console-project.teamId}}" data-success="render,trigger" data-success-triggers="members.load" data-error="render" data-error-rerender="">
 
                     <div class="box margin-bottom">
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
