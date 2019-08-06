@@ -179,6 +179,19 @@ $utopia->get('/console/database')
             ->setParam('body', $page);
     });
 
+$utopia->get('/console/database/collection')
+    ->desc('Platform console project settings')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function() use ($layout)
+    {
+        $page = new View(__DIR__ . '/../views/console/database/collection.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.database.title'))
+            ->setParam('body', $page);
+    });
+
 $utopia->get('/console/storage')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
