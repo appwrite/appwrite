@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.7');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.8');
             addGlobalHeader('content-type', '');
 
             /**
@@ -1049,26 +1049,15 @@
             },
 
             /**
-             * List Documents
+             * Get Collection
              *
-             * Get a list of all the user documents. You can use the query params to
-             * filter your results. On admin mode, this endpoint will return a list of all
-             * of the project documents. [Learn more about different API
-             * modes](/docs/modes).
+             * Get collection by its unique ID. This endpoint response returns a JSON
+             * object with the collection metadata.
              *
              * @param {string} collectionId
-             * @param {array} filters
-             * @param {number} offset
-             * @param {number} limit
-             * @param {string} orderField
-             * @param {string} orderType
-             * @param {string} orderCast
-             * @param {string} search
-             * @param {number} first
-             * @param {number} last
              * @throws {Error}
              * @return {Promise}             */
-            listDocuments: function(collectionId, filters = [], offset = 0, limit = 50, orderField = '$uid', orderType = 'ASC', orderCast = 'string', search = '', first = 0, last = 0) {
+            getCollection: function(collectionId) {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
@@ -1078,52 +1067,6 @@
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'filters': filters, 
-                            'offset': offset, 
-                            'limit': limit, 
-                            'order-field': orderField, 
-                            'order-type': orderType, 
-                            'order-cast': orderCast, 
-                            'search': search, 
-                            'first': first, 
-                            'last': last
-                        });
-            },
-
-            /**
-             * Create Document
-             *
-             * Create a new Document.
-             *
-             * @param {string} collectionId
-             * @param {string} data
-             * @param {array} read
-             * @param {array} write
-             * @param {string} parentDocument
-             * @param {string} parentProperty
-             * @param {string} parentPropertyType
-             * @throws {Error}
-             * @return {Promise}             */
-            createDocument: function(collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
-                if(collectionId === undefined) {
-                    throw new Error('Missing required parameter: "collectionId"');
-                }
-                
-                if(data === undefined) {
-                    throw new Error('Missing required parameter: "data"');
-                }
-                
-                let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
-
-                return http
-                    .post(path, {'content-type': 'application/json'},
-                        {
-                            'data': data, 
-                            'read': read, 
-                            'write': write, 
-                            'parentDocument': parentDocument, 
-                            'parentProperty': parentProperty, 
-                            'parentPropertyType': parentPropertyType
                         });
             },
 
@@ -1183,6 +1126,85 @@
             },
 
             /**
+             * List Documents
+             *
+             * Get a list of all the user documents. You can use the query params to
+             * filter your results. On admin mode, this endpoint will return a list of all
+             * of the project documents. [Learn more about different API
+             * modes](/docs/modes).
+             *
+             * @param {string} collectionId
+             * @param {array} filters
+             * @param {number} offset
+             * @param {number} limit
+             * @param {string} orderField
+             * @param {string} orderType
+             * @param {string} orderCast
+             * @param {string} search
+             * @param {number} first
+             * @param {number} last
+             * @throws {Error}
+             * @return {Promise}             */
+            listDocuments: function(collectionId, filters = [], offset = 0, limit = 50, orderField = '$uid', orderType = 'ASC', orderCast = 'string', search = '', first = 0, last = 0) {
+                if(collectionId === undefined) {
+                    throw new Error('Missing required parameter: "collectionId"');
+                }
+                
+                let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+
+                return http
+                    .get(path, {'content-type': 'application/json'},
+                        {
+                            'filters': filters, 
+                            'offset': offset, 
+                            'limit': limit, 
+                            'order-field': orderField, 
+                            'order-type': orderType, 
+                            'order-cast': orderCast, 
+                            'search': search, 
+                            'first': first, 
+                            'last': last
+                        });
+            },
+
+            /**
+             * Create Document
+             *
+             * Create a new Document.
+             *
+             * @param {string} collectionId
+             * @param {string} data
+             * @param {array} read
+             * @param {array} write
+             * @param {string} parentDocument
+             * @param {string} parentProperty
+             * @param {string} parentPropertyType
+             * @throws {Error}
+             * @return {Promise}             */
+            createDocument: function(collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
+                if(collectionId === undefined) {
+                    throw new Error('Missing required parameter: "collectionId"');
+                }
+                
+                if(data === undefined) {
+                    throw new Error('Missing required parameter: "data"');
+                }
+                
+                let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+
+                return http
+                    .post(path, {'content-type': 'application/json'},
+                        {
+                            'data': data, 
+                            'read': read, 
+                            'write': write, 
+                            'parentDocument': parentDocument, 
+                            'parentProperty': parentProperty, 
+                            'parentPropertyType': parentPropertyType
+                        });
+            },
+
+            /**
              * Get Document
              *
              * Get document by its unique ID. This endpoint response returns a JSON object
@@ -1201,7 +1223,7 @@
                     throw new Error('Missing required parameter: "documentId"');
                 }
                 
-                let path = '/database/{collectionId}/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+                let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 return http
                     .get(path, {'content-type': 'application/json'},
@@ -1233,7 +1255,7 @@
                     throw new Error('Missing required parameter: "data"');
                 }
                 
-                let path = '/database/{collectionId}/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+                let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 return http
                     .patch(path, {'content-type': 'application/json'},
@@ -1264,7 +1286,7 @@
                     throw new Error('Missing required parameter: "documentId"');
                 }
                 
-                let path = '/database/{collectionId}/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+                let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 return http
                     .delete(path, {'content-type': 'application/json'},

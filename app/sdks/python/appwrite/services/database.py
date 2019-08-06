@@ -32,42 +32,14 @@ class Database(Service):
         return self.client.call('post', path, {
         }, params)
 
-    def list_documents(self, collection_id, filtersstring(4) ""[]""
-=[], offset=0, limit=50, order_field='$uid', order_type='ASC', order_cast='string', search='', first=0, last=0):
-        """List Documents"""
+    def get_collection(self, collection_id):
+        """Get Collection"""
 
         params = {}
         path = '/database/{collectionId}'
         path.replace('{collectionId}', collection_id)                
-        params['filters'] = filters
-        params['offset'] = offset
-        params['limit'] = limit
-        params['order-field'] = order_field
-        params['order-type'] = order_type
-        params['order-cast'] = order_cast
-        params['search'] = search
-        params['first'] = first
-        params['last'] = last
 
         return self.client.call('get', path, {
-        }, params)
-
-    def create_document(self, collection_id, data, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], parent_document='', parent_property='', parent_property_type='assign'):
-        """Create Document"""
-
-        params = {}
-        path = '/database/{collectionId}'
-        path.replace('{collectionId}', collection_id)                
-        params['data'] = data
-        params['read'] = read
-        params['write'] = write
-        params['parentDocument'] = parent_document
-        params['parentProperty'] = parent_property
-        params['parentPropertyType'] = parent_property_type
-
-        return self.client.call('post', path, {
         }, params)
 
     def update_collection(self, collection_id, name, readstring(4) ""[]""
@@ -97,11 +69,49 @@ class Database(Service):
         return self.client.call('delete', path, {
         }, params)
 
+    def list_documents(self, collection_id, filtersstring(4) ""[]""
+=[], offset=0, limit=50, order_field='$uid', order_type='ASC', order_cast='string', search='', first=0, last=0):
+        """List Documents"""
+
+        params = {}
+        path = '/database/{collectionId}/documents'
+        path.replace('{collectionId}', collection_id)                
+        params['filters'] = filters
+        params['offset'] = offset
+        params['limit'] = limit
+        params['order-field'] = order_field
+        params['order-type'] = order_type
+        params['order-cast'] = order_cast
+        params['search'] = search
+        params['first'] = first
+        params['last'] = last
+
+        return self.client.call('get', path, {
+        }, params)
+
+    def create_document(self, collection_id, data, readstring(4) ""[]""
+=[], writestring(4) ""[]""
+=[], parent_document='', parent_property='', parent_property_type='assign'):
+        """Create Document"""
+
+        params = {}
+        path = '/database/{collectionId}/documents'
+        path.replace('{collectionId}', collection_id)                
+        params['data'] = data
+        params['read'] = read
+        params['write'] = write
+        params['parentDocument'] = parent_document
+        params['parentProperty'] = parent_property
+        params['parentPropertyType'] = parent_property_type
+
+        return self.client.call('post', path, {
+        }, params)
+
     def get_document(self, collection_id, document_id):
         """Get Document"""
 
         params = {}
-        path = '/database/{collectionId}/{documentId}'
+        path = '/database/{collectionId}/documents/{documentId}'
         path.replace('{collectionId}', collection_id)                
         path.replace('{documentId}', document_id)                
 
@@ -114,7 +124,7 @@ class Database(Service):
         """Update Document"""
 
         params = {}
-        path = '/database/{collectionId}/{documentId}'
+        path = '/database/{collectionId}/documents/{documentId}'
         path.replace('{collectionId}', collection_id)                
         path.replace('{documentId}', document_id)                
         params['data'] = data
@@ -128,7 +138,7 @@ class Database(Service):
         """Delete Document"""
 
         params = {}
-        path = '/database/{collectionId}/{documentId}'
+        path = '/database/{collectionId}/documents/{documentId}'
         path.replace('{collectionId}', collection_id)                
         path.replace('{documentId}', document_id)                
 

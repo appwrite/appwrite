@@ -64,73 +64,22 @@ class Database extends Service
     }
 
     /**
-     * List Documents
+     * Get Collection
      *
-     * Get a list of all the user documents. You can use the query params to
-     * filter your results. On admin mode, this endpoint will return a list of all
-     * of the project documents. [Learn more about different API
-     * modes](/docs/modes).
+     * Get collection by its unique ID. This endpoint response returns a JSON
+     * object with the collection metadata.
      *
      * @param string $collectionId
-     * @param array $filters
-     * @param integer $offset
-     * @param integer $limit
-     * @param string $orderField
-     * @param string $orderType
-     * @param string $orderCast
-     * @param string $search
-     * @param integer $first
-     * @param integer $last
      * @throws Exception
      * @return array
      */
-    public function listDocuments($collectionId, $filters = [], $offset = 0, $limit = 50, $orderField = '$uid', $orderType = 'ASC', $orderCast = 'string', $search = '', $first = 0, $last = 0)
+    public function getCollection($collectionId)
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
         $params = [];
 
-        $params['filters'] = $filters;
-        $params['offset'] = $offset;
-        $params['limit'] = $limit;
-        $params['order-field'] = $orderField;
-        $params['order-type'] = $orderType;
-        $params['order-cast'] = $orderCast;
-        $params['search'] = $search;
-        $params['first'] = $first;
-        $params['last'] = $last;
 
         return $this->client->call(Client::METHOD_GET, $path, [
-        ], $params);
-    }
-
-    /**
-     * Create Document
-     *
-     * Create a new Document.
-     *
-     * @param string $collectionId
-     * @param string $data
-     * @param array $read
-     * @param array $write
-     * @param string $parentDocument
-     * @param string $parentProperty
-     * @param string $parentPropertyType
-     * @throws Exception
-     * @return array
-     */
-    public function createDocument($collectionId, $data, $read = [], $write = [], $parentDocument = '', $parentProperty = '', $parentPropertyType = 'assign')
-    {
-        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
-        $params = [];
-
-        $params['data'] = $data;
-        $params['read'] = $read;
-        $params['write'] = $write;
-        $params['parentDocument'] = $parentDocument;
-        $params['parentProperty'] = $parentProperty;
-        $params['parentPropertyType'] = $parentPropertyType;
-
-        return $this->client->call(Client::METHOD_POST, $path, [
         ], $params);
     }
 
@@ -182,6 +131,77 @@ class Database extends Service
     }
 
     /**
+     * List Documents
+     *
+     * Get a list of all the user documents. You can use the query params to
+     * filter your results. On admin mode, this endpoint will return a list of all
+     * of the project documents. [Learn more about different API
+     * modes](/docs/modes).
+     *
+     * @param string $collectionId
+     * @param array $filters
+     * @param integer $offset
+     * @param integer $limit
+     * @param string $orderField
+     * @param string $orderType
+     * @param string $orderCast
+     * @param string $search
+     * @param integer $first
+     * @param integer $last
+     * @throws Exception
+     * @return array
+     */
+    public function listDocuments($collectionId, $filters = [], $offset = 0, $limit = 50, $orderField = '$uid', $orderType = 'ASC', $orderCast = 'string', $search = '', $first = 0, $last = 0)
+    {
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}/documents');
+        $params = [];
+
+        $params['filters'] = $filters;
+        $params['offset'] = $offset;
+        $params['limit'] = $limit;
+        $params['order-field'] = $orderField;
+        $params['order-type'] = $orderType;
+        $params['order-cast'] = $orderCast;
+        $params['search'] = $search;
+        $params['first'] = $first;
+        $params['last'] = $last;
+
+        return $this->client->call(Client::METHOD_GET, $path, [
+        ], $params);
+    }
+
+    /**
+     * Create Document
+     *
+     * Create a new Document.
+     *
+     * @param string $collectionId
+     * @param string $data
+     * @param array $read
+     * @param array $write
+     * @param string $parentDocument
+     * @param string $parentProperty
+     * @param string $parentPropertyType
+     * @throws Exception
+     * @return array
+     */
+    public function createDocument($collectionId, $data, $read = [], $write = [], $parentDocument = '', $parentProperty = '', $parentPropertyType = 'assign')
+    {
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}/documents');
+        $params = [];
+
+        $params['data'] = $data;
+        $params['read'] = $read;
+        $params['write'] = $write;
+        $params['parentDocument'] = $parentDocument;
+        $params['parentProperty'] = $parentProperty;
+        $params['parentPropertyType'] = $parentPropertyType;
+
+        return $this->client->call(Client::METHOD_POST, $path, [
+        ], $params);
+    }
+
+    /**
      * Get Document
      *
      * Get document by its unique ID. This endpoint response returns a JSON object
@@ -194,7 +214,7 @@ class Database extends Service
      */
     public function getDocument($collectionId, $documentId)
     {
-        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/{documentId}');
+        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
         $params = [];
 
 
@@ -215,7 +235,7 @@ class Database extends Service
      */
     public function updateDocument($collectionId, $documentId, $data, $read = [], $write = [])
     {
-        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/{documentId}');
+        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
         $params = [];
 
         $params['data'] = $data;
@@ -240,7 +260,7 @@ class Database extends Service
      */
     public function deleteDocument($collectionId, $documentId)
     {
-        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/{documentId}');
+        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
         $params = [];
 
 

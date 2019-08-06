@@ -54,69 +54,20 @@ class Database extends Service {
     }
 
     /**
-     * List Documents
+     * Get Collection
      *
-     * Get a list of all the user documents. You can use the query params to
-     * filter your results. On admin mode, this endpoint will return a list of all
-     * of the project documents. [Learn more about different API
-     * modes](/docs/modes).
+     * Get collection by its unique ID. This endpoint response returns a JSON
+     * object with the collection metadata.
      *
      * @param string collectionId
-     * @param array filters
-     * @param number offset
-     * @param number limit
-     * @param string orderField
-     * @param string orderType
-     * @param string orderCast
-     * @param string search
-     * @param number first
-     * @param number last
      * @throws Exception
      * @return {}
      */
-    async listDocuments(collectionId, filters = [], offset = 0, limit = 50, orderField = '$uid', orderType = 'ASC', orderCast = 'string', search = '', first = 0, last = 0) {
+    async getCollection(collectionId) {
         let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
         return await this.client.call('get', path, {'content-type': 'application/json'},
             {
-                'filters': filters,
-                'offset': offset,
-                'limit': limit,
-                'order-field': orderField,
-                'order-type': orderType,
-                'order-cast': orderCast,
-                'search': search,
-                'first': first,
-                'last': last
-            });
-    }
-
-    /**
-     * Create Document
-     *
-     * Create a new Document.
-     *
-     * @param string collectionId
-     * @param string data
-     * @param array read
-     * @param array write
-     * @param string parentDocument
-     * @param string parentProperty
-     * @param string parentPropertyType
-     * @throws Exception
-     * @return {}
-     */
-    async createDocument(collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
-        let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
-        
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
-                'data': data,
-                'read': read,
-                'write': write,
-                'parentDocument': parentDocument,
-                'parentProperty': parentProperty,
-                'parentPropertyType': parentPropertyType
             });
     }
 
@@ -164,6 +115,73 @@ class Database extends Service {
     }
 
     /**
+     * List Documents
+     *
+     * Get a list of all the user documents. You can use the query params to
+     * filter your results. On admin mode, this endpoint will return a list of all
+     * of the project documents. [Learn more about different API
+     * modes](/docs/modes).
+     *
+     * @param string collectionId
+     * @param array filters
+     * @param number offset
+     * @param number limit
+     * @param string orderField
+     * @param string orderType
+     * @param string orderCast
+     * @param string search
+     * @param number first
+     * @param number last
+     * @throws Exception
+     * @return {}
+     */
+    async listDocuments(collectionId, filters = [], offset = 0, limit = 50, orderField = '$uid', orderType = 'ASC', orderCast = 'string', search = '', first = 0, last = 0) {
+        let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+        
+        return await this.client.call('get', path, {'content-type': 'application/json'},
+            {
+                'filters': filters,
+                'offset': offset,
+                'limit': limit,
+                'order-field': orderField,
+                'order-type': orderType,
+                'order-cast': orderCast,
+                'search': search,
+                'first': first,
+                'last': last
+            });
+    }
+
+    /**
+     * Create Document
+     *
+     * Create a new Document.
+     *
+     * @param string collectionId
+     * @param string data
+     * @param array read
+     * @param array write
+     * @param string parentDocument
+     * @param string parentProperty
+     * @param string parentPropertyType
+     * @throws Exception
+     * @return {}
+     */
+    async createDocument(collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
+        let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+        
+        return await this.client.call('post', path, {'content-type': 'application/json'},
+            {
+                'data': data,
+                'read': read,
+                'write': write,
+                'parentDocument': parentDocument,
+                'parentProperty': parentProperty,
+                'parentPropertyType': parentPropertyType
+            });
+    }
+
+    /**
      * Get Document
      *
      * Get document by its unique ID. This endpoint response returns a JSON object
@@ -175,7 +193,7 @@ class Database extends Service {
      * @return {}
      */
     async getDocument(collectionId, documentId) {
-        let path = '/database/{collectionId}/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+        let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
         return await this.client.call('get', path, {'content-type': 'application/json'},
             {
@@ -194,7 +212,7 @@ class Database extends Service {
      * @return {}
      */
     async updateDocument(collectionId, documentId, data, read = [], write = []) {
-        let path = '/database/{collectionId}/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+        let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
         return await this.client.call('patch', path, {'content-type': 'application/json'},
             {
@@ -217,7 +235,7 @@ class Database extends Service {
      * @return {}
      */
     async deleteDocument(collectionId, documentId) {
-        let path = '/database/{collectionId}/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+        let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
         return await this.client.call('delete', path, {'content-type': 'application/json'},
             {
