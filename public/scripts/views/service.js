@@ -87,7 +87,6 @@
                     }
 
                     let result = resolve(method);
-                    console.log(result);
 
                     if(!result) {
                         return;

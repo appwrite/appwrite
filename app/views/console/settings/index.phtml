@@ -117,6 +117,8 @@ use Utopia\Locale\Locale;
                             </div>
                         </div>
 
+                        <hr />
+
                         <button class="" type="submit">Save</button>
                     </div>
                 </form>
@@ -145,7 +147,8 @@ use Utopia\Locale\Locale;
                                     </form>
                                 </div>
 
-                                <img src="" data-ui-gravatar="{{member.email}}" data-name="{{member.name}}" data-size="100" alt="User Avatar" class="avatar pull-start margin-end" />
+                                <img src="" data-ls-attrs="src={{member|gravatar}}" alt="User Avatar" class="avatar pull-start margin-end" />
+
                                 <div class="margin-bottom-small">
                                     <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0|id2role}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
                                 </div>

@@ -18,12 +18,12 @@
     background: #f6f9fc;
 
     .project-only {
-      visibility: hidden !important;
+      display: none !important;
     }
 
     &.show-nav {
       .project-only {
-        visibility: visible !important;
+        display: inline-block !important;
       }
     }
 
@@ -190,6 +190,7 @@
         overflow: scroll;
         height: ~"calc(100% - 183px)";
         padding-bottom: 50px;
+        width: 100%;
       }
 
       .project-box {

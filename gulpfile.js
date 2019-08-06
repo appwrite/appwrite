@@ -55,7 +55,6 @@ const configApp  = {
         'public/scripts/views/general/setup.js',
         'public/scripts/views/general/switch.js',
 
-        'public/scripts/views/ui/gravatar.js',
         'public/scripts/views/ui/highlight.js',
         'public/scripts/views/ui/modal.js',
         'public/scripts/views/ui/open.js',

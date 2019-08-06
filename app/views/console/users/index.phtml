@@ -18,7 +18,7 @@ $providers = $this->getParam('providers', []);
                 <div class="row responsive force-reverse clear margin-bottom-tiny">
                     <div class="col span-2">
                         <div class="clear">
-                            <div data-ui-modal class="modal close" data-button-text="" data-button-class="pull-end round" data-button-icon="icon-plus">
+                            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="pull-end round" data-button-icon="icon-plus">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                 <h1>Create User</h1>
@@ -34,6 +34,8 @@ $providers = $this->getParam('providers', []);
                                     <label for="user-password">Password</label>
                                     <input type="password" class="full-width" id="user-password" name="password" required autocomplete="off" />
 
+                                    <hr />
+
                                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </form>
                             </div>
@@ -45,7 +47,7 @@ $providers = $this->getParam('providers', []);
                             <form class="" data-forms-filter="filter-users" data-event="init">
                                 <input type="hidden" name="offset" value="0">
                                 <input type="hidden" name="limit" value="10">
-                                <input name="search" id="search" type="search" autocomplete="off" placeholder="Search" class="strip margin-bottom-no">
+                                <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="strip margin-bottom-no">
                             </form>
                         </div>
                     </div>
@@ -75,7 +77,7 @@ $providers = $this->getParam('providers', []);
                                 <tbody data-ls-loop="project-users.users" data-ls-as="user">
                                     <tr>
                                         <td>
-                                            <img src="" data-ui-gravatar="{{user.email}}" data-name="{{user.name}}" data-size="60" alt="User Avatar" class="avatar pull-start" />
+                                            <img src="" data-ls-attrs="src={{user.email|gravatar}}" alt="User Avatar" class="avatar pull-start" />
                                         </td>
                                         <td data-title="Name: ">
                                             <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
@@ -136,8 +138,8 @@ $providers = $this->getParam('providers', []);
 
                             <form data-service="teams.create" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created team successfully" data-success-triggers="filter-teams-changed,team.new,modal-close" data-error="alert" data-error-alert="Failed to create team">
 
-                                <label for="user-name">Name</label>
-                                <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
+                                <label for="team-name">Name</label>
+                                <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" />
 
                                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </form>
@@ -149,13 +151,13 @@ $providers = $this->getParam('providers', []);
                             <form data-forms-filter="filter-teams" data-event="init">
                                 <input type="hidden" name="offset" value="0">
                                 <input type="hidden" name="limit" value="10">
-                                <input name="search" id="search" type="search" autocomplete="off" placeholder="Search" class="strip margin-bottom-no">
+                                <input name="search" id="searchTeams" type="search" autocomplete="off" placeholder="Search" class="strip margin-bottom-no">
                             </form>
                         </div>
                     </div>
                 </div>
 
-                <div class="zone xl" data-service="teams.list" data-scope="sdk" data-name="project-teams" data-event="filter-teams-changed" data-param-search="{{filter-teams.keys.search}}" data-param-limit="{{filter-teams.keys.limit}}" data-param-offset="{{filter-teams.keys.offset}}" data-success="trigger,render" data-error="render" data-success-rerender="team.update,team.new,filter-teams-changed" data-error-rerender="" data-success-triggers="teams.load">
+                <div class="zone xl" data-service="teams.listTeams" data-scope="sdk" data-name="project-teams" data-event="load" data-param-search="{{filter-teams.keys.search}}" data-param-limit="{{filter-teams.keys.limit}}" data-param-offset="{{filter-teams.keys.offset}}" data-success="trigger,render" data-error="render" data-success-rerender="team.update,team.new,filter-teams-changed" data-error-rerender="" data-success-triggers="teams.load">
 
                     <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom" style="display: none;">
                         <h3 class="margin-bottom">No Teams Found</h3>

@@ -4,13 +4,22 @@ use Utopia\Locale\Locale;
 ?>
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <a data-ls-attrs="href=/console/openings/new?company={{router.params.company}}" class="button icon margin-top-tiny pull-end"><i class="icon-plus"></i> &nbsp;Upload</a>
+        <a data-ls-attrs="href=/console/openings/new?company={{router.params.company}}" class="button icon margin-top-tiny pull-end"><i class="icon-plus"></i> &nbsp;Collection</a>
 
         <?php echo Locale::getText('console.database.title'); ?>
     </h1>
 </div>
 
 <div class="zone xl">
-    <div class="box dashboard" data-service="database.list" data-event="load" data-param-search="" data-param-limit="25" data-param-offset="0" data-scope="sdk" data-name="project-users">
+    <div class="zone xl" data-service="database.listCollections" data-scope="sdk" data-event="load" data-name="project-collections" data-success="render,trigger" data-success-triggers="collections.load" data-error="render" data-error-rerender="">
+        <div class="box margin-bottom">
+            <ul data-ls-loop="project-collections.collections" data-ls-as="collection" class="list">
+                <li class="clear">
+                    <img src="" data-ls-attrs="src={{collection.name|gravatar}}" alt="Collection Avatar" class="avatar margin-end pull-start" />
+
+                    <a data-ls-bind="{{collection.name}}" data-ls-attrs="href=/console/database/collection?project={{console-project.$uid}}&id={{collection.$uid}}"></a>
+                    <p class=" note margin-bottom-no margin-top-small"><span data-ls-bind="{{collection.rules.length}}"></span> fields</p>
+                </li>
+            </ul>
+        </div>
     </div>
-</div>
