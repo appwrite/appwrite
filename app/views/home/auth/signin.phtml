@@ -1,4 +1,5 @@
 <?php
+
 use Utopia\Locale\Locale;
 ?>
 <div class="zone xl">
@@ -13,24 +14,16 @@ use Utopia\Locale\Locale;
             <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
 
             <div>
-                <a href="" data-login-fb data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook pull-start margin-start-small"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.facebook')); ?></a>
-                <a href="" data-login-linkedin data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button linkedin fill margin-bottom"><i class="icon-linkedin pull-start margin-start-small"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.linkedin')); ?></a>
-                <a href="" data-login-github data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button github fill margin-bottom"><i class="icon-github-circled pull-start margin-start-small"></i> <?php echo $this->escape(Locale::getText('home.auth.signin.oauth.github')); ?></a>
+                <a href="" data-general-oauth="facebook" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook"></i> Connect with Facebook</a>
+                <a href="" data-general-oauth="github" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button github fill margin-bottom"><i class="icon-github-circled"></i> Connect with Github</a>
+                <a href="" data-general-oauth="linkedin" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button linkedin fill margin-bottom"><i class="icon-linkedin"></i> Connect with Linkedin</a>
             </div>
         </div>
 
         <div class="col span-6">
             <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.regular.title')); ?></p>
 
-            <form name="login"
-                  data-service="auth.login"
-                  data-scope="console"
-                  data-event="submit"
-                  data-success="trigger,redirect"
-                  data-success-triggers="login"
-                  data-success-redirect-url="/console"
-                  data-error="alert"
-                  data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?>">
+            <form name="login" data-service="auth.login" data-scope="console" data-event="submit" data-success="trigger,redirect" data-success-triggers="login" data-success-redirect-url="/console" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?>">
 
                 <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console">
                 <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/signin?failure=1">

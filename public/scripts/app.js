@@ -43,30 +43,6 @@ window.ls.container.get('view')
         }
     })
     .add({
-        selector: 'data-login-fb',
-        controller: function(element, console, expression) {
-            let success = expression.parse(element.dataset['success'] || '');
-            let failure = expression.parse(element.dataset['failure'] || '');
-            element.href = console.auth.loginWithFacebook(success, failure);
-        }
-    })
-    .add({
-        selector: 'data-login-linkedin',
-        controller: function(element, console, expression) {
-            let success = expression.parse(element.dataset['success'] || '');
-            let failure = expression.parse(element.dataset['failure'] || '');
-            element.href = console.auth.loginWithLinkedIn(success, failure);
-        }
-    })
-    .add({
-        selector: 'data-login-github',
-        controller: function(element, console, expression) {
-            let success = expression.parse(element.dataset['success'] || '');
-            let failure = expression.parse(element.dataset['failure'] || '');
-            element.href = console.auth.loginWithGithub(success, failure);
-        }
-    })
-    .add({
         selector: 'data-billing-invoice-print',
         controller: function(element, expression, sdk) {
             let id = expression.parse(element.dataset['billingInvoicePrint'] || '');

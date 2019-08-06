@@ -50,6 +50,7 @@ const configApp  = {
         'public/scripts/views/forms/text-resize.js',
         'public/scripts/views/forms/upload.js',
 
+        'public/scripts/views/general/oauth.js',
         'public/scripts/views/general/page-title.js',
         'public/scripts/views/general/setup.js',
         'public/scripts/views/general/switch.js',
