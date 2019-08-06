@@ -6,7 +6,7 @@
 
         sdk
             .setEndpoint(APP_ENV.API)
-            .setProject(router.params.project || null)
+            .setProject(router.params.project || '')
             .setLocale(APP_ENV.LOCALE)
             .setMode('admin')
         ;

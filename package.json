@@ -4,12 +4,12 @@
   "license": "BSD-3-Clause",
   "repository": "public",
   "devDependencies": {
+    "appwrite": "^1.0.7",
     "gulp": "^4.0.0",
     "gulp-clean-css": "^4.0.0",
     "gulp-concat": "2.5.2",
     "gulp-jsmin": "^0.1.5",
     "gulp-less": "^4.0.1",
-    "jest": "^24.7.1",
-    "appwrite": "^1.0.6"
+    "jest": "^24.7.1"
   }
 }

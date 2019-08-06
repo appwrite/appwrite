@@ -87,6 +87,7 @@
                     }
 
                     let result = resolve(method);
+                    console.log(result);
 
                     if(!result) {
                         return;
@@ -97,13 +98,13 @@
                             if(loaderId !== null) { // Remove loader if needed
                                 alerts.remove(loaderId);
                             }
-
+                            
                             if(!element) {
                                 return;
                             }
-
+                            
                             try {
-                                container.set(service.replace('.', '-'), JSON.parse(data), true, true);
+                                container.set(service.replace('.', '-'), data, true, true);
                                 if (debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
                                 if (debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
                             } catch (e) {

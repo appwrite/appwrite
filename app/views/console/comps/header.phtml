@@ -1,4 +1,4 @@
-<div data-service="projects.get" data-event="project-load" data-name="console-project" data-param-project-id="{{router.params.project}}">
+<div data-service="projects.getProject" data-event="project-load" data-name="console-project" data-param-project-id="{{router.params.project}}">
 </div>
 
 <header class="clear">
@@ -96,16 +96,16 @@
     </nav>
 </header>
 
-<div class="list pull-start project-only" data-service="projects.list" data-event="load" data-name="projects" data-scope="console" data-singleton="true">
+<div class="list pull-start project-only" data-service="projects.listProjects" data-event="load" data-name="projects" data-scope="console" data-singleton="true">
 </div>
 
-<div class="" data-service="geo.get" data-name="geo" data-event="load" data-singleton="true">
+<div class="" data-service="locale.getLocale" data-name="geo" data-event="load" data-singleton="true">
 </div>
 
-<div class="" data-service="geo.countries.list" data-name="geo-countries" data-event="load" data-singleton="true">
+<div class="" data-service="locale.getCountries" data-name="geo-countries" data-event="load" data-singleton="true">
 </div>
 
-<div class="" data-service="geo.countries.phones" data-name="geo-countries-phones" data-event="load" data-singleton="true">
+<div class="" data-service="locale.getCountriesPhones" data-name="geo-countries-phones" data-event="load" data-singleton="true">
 </div>
 
 <div data-ui-modal class="modal close" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="new-project">

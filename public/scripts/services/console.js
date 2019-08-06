@@ -6,11 +6,9 @@
 
         sdk
             .setEndpoint(APP_ENV.API)
-            .setEndpoint(APP_ENV.API)
-            .setProject(0)
+            .setProject('console')
             .setLocale(APP_ENV.LOCALE)
-            .setMode('admin')
-            ;
+        ;
 
         return sdk;
     }, true);
