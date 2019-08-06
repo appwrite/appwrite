@@ -72,36 +72,7 @@ use Utopia\Locale\Locale;
 
                                 <hr />
 
-                                <h3>Legal Information</h3>
-
-                                <div class="row thin">
-                                    <div class="col span-6">
-                                        <label for="legalName">Legal Name</label>
-                                        <input name="legalName" id="legalName" type="text" autocomplete="off" data-ls-bind="{{console-project.legalName}}" data-forms-text-direction>
-
-                                        <label for="legalCountry">Country</label>
-                                        <select id="legalCountry" name="legalCountry" data-ls-options="{{geo-countries}}" data-ls-bind="{{console-project.legalCountry}}"></select>
-
-                                        <label for="legalCity">City</label>
-                                        <input name="legalCity" id="legalCity" type="text" autocomplete="off" data-ls-bind="{{console-project.legalCity}}" data-forms-text-direction>
-                                    </div>
-
-                                    <div class="col span-6">
-                                        <label for="legalTaxId">Tax ID</label>
-                                        <input name="legalTaxId" id="legalTaxId" type="text" autocomplete="off" data-ls-bind="{{console-project.legalTaxId}}" data-forms-text-direction>
-
-                                        <label for="legalState">State</label>
-                                        <input name="legalState" id="legalState" type="text" autocomplete="off" data-ls-bind="{{console-project.legalState}}" data-forms-text-direction>
-
-                                        <label for="legalAddress">Address</label>
-                                        <input name="legalAddress" id="legalAddress" type="text" autocomplete="off" data-ls-bind="{{console-project.legalAddress}}" data-forms-text-direction>
-
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <button class="" type="submit">Save</button>
-                                </div>
+                                <button class="" type="submit">Save</button>
                             </div>
                         </div>
 
@@ -114,7 +85,7 @@ use Utopia\Locale\Locale;
                     </div>
                 </form>
             </li>
-            <li data-state="/console/privacy?project={{router.params.project}}">
+            <li data-state="/console/settings/privacy?project={{router.params.project}}">
 
                 <form data-service="projects.update" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Saved project successfully" data-success-triggers="project.update" data-error="alert" data-error-alert="Failed to update project">
                     <h2>Privacy & Legal</h2>

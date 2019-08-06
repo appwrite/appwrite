@@ -18,12 +18,12 @@
     background: #f6f9fc;
 
     .project-only {
-      display: none !important;
+      visibility: hidden !important;
     }
 
     &.show-nav {
       .project-only {
-        display: block !important;
+        visibility: visible !important;
       }
     }
 
@@ -74,7 +74,7 @@
     line-height: 40px;
     padding: 15px 30px;
     background: #fff;
-    box-shadow: 0 0 2px rgba(0, 0, 0, .05);
+    box-shadow: 0 0 2px rgba(0, 0, 0, .10);
     margin: 0 -50px;
     z-index: 2;
     font-size: 14px;
@@ -188,7 +188,8 @@
 
       .container {
         overflow: scroll;
-        height: ~"calc(100% - 133px)";
+        height: ~"calc(100% - 183px)";
+        padding-bottom: 50px;
       }
 
       .project-box {
@@ -274,12 +275,12 @@
           bottom: 0;
           left: 0;
           right: 0;
-          //background: #183142;
           padding-bottom: 0;
           border: none;
           margin-bottom: 0 !important;
 
           a {
+            border-top: solid 1px #2a253a;
             border-bottom: none;
           }
         }
@@ -348,6 +349,8 @@
     width: ~"calc(100% + 100px)";
     margin: 0 -50px;
     box-sizing: border-box;
+    border-top: solid 1px #e7e7e7;
+    background: transparent;
     .func-padding-end(30px);
     .func-padding-start(30px);
   }

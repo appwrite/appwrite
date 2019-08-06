@@ -59,7 +59,7 @@ $scopes = [ // TODO sync with project list
                         <div class="row thin margin-bottom">
                             <?php foreach ($scopes as $i => $scope) : ?>
                                 <div class="col span-6">
-                                    <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" data-default="{{key.scopes}}" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
+                                    <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
@@ -69,9 +69,9 @@ $scopes = [ // TODO sync with project list
                             <?php endforeach; ?>
                         </div>
 
-                        <div>
-                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                        </div>
+                        <hr />
+
+                        <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                     </form>
                 </div>
 
@@ -85,7 +85,7 @@ $scopes = [ // TODO sync with project list
 
                 <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <span class="note">(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</span></div>
 
-                <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link margin-top-small" data-button-icon="icon-right-open">
+                <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                     <h1>API Key Secret</h1>
@@ -130,11 +130,9 @@ $scopes = [ // TODO sync with project list
                     <?php endforeach; ?>
                 </div>
 
-                <br />
+                <hr />
 
-                <div>
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </div>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </div>
     </div>

@@ -51,7 +51,7 @@ $events = [
                         <div class="row thin margin-bottom">
                             <?php foreach ($events as $i => $event) : ?>
                                 <div class="col span-6">
-                                    <input type="checkbox" name="events" data-ls-bind="<?php echo $event; ?>" data-default="{{webhook.events}}" /> <?php echo $event; ?>
+                                    <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
@@ -67,9 +67,9 @@ $events = [
                         <label data-ls-attrs="for=secure-{{webhook.$uid}}">SSL / TLS</label>
                         <p class="note">Certificate verification</p>
 
-                        <input name="security" data-ls-attrs="id=secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="1" data-default="{{webhook.security}}" /> &nbsp; <span>Enabled</span>
+                        <input name="security" data-ls-attrs="id=secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
                         &nbsp;&nbsp;
-                        <input name="security" data-ls-attrs="id=secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="0" data-default="{{webhook.security}}" /> &nbsp; <span>Disabled</span>
+                        <input name="security" data-ls-attrs="id=secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
 
                         <br />
                         <br />
@@ -91,11 +91,9 @@ $events = [
                             </div>
                         </div>
 
-                        <br />
+                        <hr />
 
-                        <div>
-                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                        </div>
+                        <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                     </form>
                 </div>
 
@@ -117,7 +115,7 @@ $events = [
     </div>
 
     <div class="clear">
-        <div data-ui-modal class="modal close" data-button-text="Add Webhook">
+        <div data-ui-modal class="modal close box" data-button-text="Add Webhook">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
             <h1>Add Webhook</h1>
@@ -173,11 +171,9 @@ $events = [
                     </div>
                 </div>
 
-                <br />
+                <hr />
 
-                <div>
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </div>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </div>
     </div>
