@@ -1,0 +1,22 @@
+language: php
+php:
+  - '7.0'
+  - '7.1'
+  - '7.2'
+  - '7.3'
+  - hhvm # on Trusty only
+  - nightly
+
+addons:
+  hosts:
+    - appwrite.test
+
+notifications:
+  email:
+  - eldad@appwrite.io
+
+install:
+- composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
+
+script:
+- php -v
