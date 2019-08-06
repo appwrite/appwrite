@@ -23,7 +23,8 @@
     background: @config-color-focus;
     color: #ffffff;
 
-    button, .button {
+    button,
+    .button {
       background: #ffffff;
       color: @config-color-focus;
     }
@@ -33,13 +34,14 @@
     background: @config-color-warning;
     color: #2d2d2d;
 
-    button, .button {
+    button,
+    .button {
       background: rgba(45, 45, 45, 0.8);
       color: @config-color-warning;
     }
   }
 
-  & > footer {
+  &>footer {
     margin: 30px -30px -30px -30px;
     padding: 15px 30px;
     background: #f5f5f5;
@@ -137,13 +139,14 @@ a.box:hover {
   border-right: none;
   border-left: none;
   background: #f8fdff;
+  box-shadow: 0 0 1px rgba(0, 0, 0, .2);
 }
 
 .box-asidex {
-  .func-padding-end(25px)!important;
+  .func-padding-end(25px) !important;
   .func-padding-start(70px);
   .func-end(0);
-  box-shadow: 0 0 6px rgba(0,0,0,.05);
+  box-shadow: 0 0 6px rgba(0, 0, 0, .05);
   background: #f9f9f9;
   border-radius: 0 10px 10px 0;
   height: ~"calc(100% - 30px)";
