@@ -23,13 +23,7 @@ $providers = $this->getParam('providers', []);
 
                                 <h1>Create User</h1>
 
-                                <form data-service="users.create"
-                                      data-event="submit"
-                                      data-success="alert,trigger,reset"
-                                      data-success-alert="Created user successfully"
-                                      data-success-triggers="filter-users-changed,user.new,modal-close"
-                                      data-error="alert"
-                                      data-error-alert="Failed to create user">
+                                <form data-service="users.create" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created user successfully" data-success-triggers="filter-users-changed,user.new,modal-close" data-error="alert" data-error-alert="Failed to create user">
 
                                     <label for="user-name">Name</label>
                                     <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
@@ -57,13 +51,7 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div data-service="users.list"
-                     data-event="load"
-                     data-param-search=""
-                     data-param-limit="25"
-                     data-param-offset="0"
-                     data-scope="sdk"
-                     data-name="project-users">
+                <div data-service="users.list" data-event="load" data-param-search="" data-param-limit="25" data-param-offset="0" data-scope="sdk" data-name="project-users">
 
                     <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom">No Users Found</h3>
@@ -76,40 +64,40 @@ $providers = $this->getParam('providers', []);
                         <div class="box margin-bottom">
                             <table class="vertical">
                                 <thead>
-                                <tr>
-                                    <th width="30"></th>
-                                    <th width="180">Name</th>
-                                    <th width="200">Email</th>
-                                    <th>Status</th>
-                                    <th width="100">Created</th>
-                                </tr>
+                                    <tr>
+                                        <th width="30"></th>
+                                        <th width="180">Name</th>
+                                        <th width="200">Email</th>
+                                        <th>Status</th>
+                                        <th width="100">Created</th>
+                                    </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-users.users" data-ls-as="user">
-                                <tr>
-                                    <td>
-                                        <img src="" data-ui-gravatar="{{user.email}}" data-name="{{user.name}}" data-size="60" alt="User Avatar" class="avatar pull-start" />
-                                    </td>
-                                    <td data-title="Name: ">
-                                        <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
-                                    </td>
-                                    <td data-title="Email: ">
-                                        <span data-ls-bind="{{user.email}}" class="note"></span>
-                                    </td>
-                                    <td data-title="Status: ">
-                                    <span data-ls-if="{{user.confirm}} === true">
-                                        &nbsp;<span class="tag green">Verified</span>
-                                    </span>
+                                    <tr>
+                                        <td>
+                                            <img src="" data-ui-gravatar="{{user.email}}" data-name="{{user.name}}" data-size="60" alt="User Avatar" class="avatar pull-start" />
+                                        </td>
+                                        <td data-title="Name: ">
+                                            <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
+                                        </td>
+                                        <td data-title="Email: ">
+                                            <span data-ls-bind="{{user.email}}" class="note"></span>
+                                        </td>
+                                        <td data-title="Status: ">
+                                            <span data-ls-if="{{user.confirm}} === true">
+                                                &nbsp;<span class="tag green">Verified</span>
+                                            </span>
 
-                                    <span data-ls-if="{{user.confirm}} !== true">
-                                        &nbsp;<span class="tag">Unverified</span>
-                                    </span>
+                                            <span data-ls-if="{{user.confirm}} !== true">
+                                                &nbsp;<span class="tag">Unverified</span>
+                                            </span>
 
-                                    <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
-                                        &nbsp;<span class="tag red">Blocked</span>
-                                    </span>
-                                    </td>
-                                    <td data-title="Created: "><span data-ls-bind="{{user.registration}}" data-filter="date-text" class="note"></span></td>
-                                </tr>
+                                            <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
+                                                &nbsp;<span class="tag red">Blocked</span>
+                                            </span>
+                                        </td>
+                                        <td data-title="Created: "><span data-ls-bind="{{user.registration|date-text}}" class="note"></span></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -146,13 +134,7 @@ $providers = $this->getParam('providers', []);
 
                             <h1>Create Team</h1>
 
-                            <form data-service="teams.create"
-                                  data-event="submit"
-                                  data-success="alert,trigger,reset"
-                                  data-success-alert="Created team successfully"
-                                  data-success-triggers="filter-teams-changed,team.new,modal-close"
-                                  data-error="alert"
-                                  data-error-alert="Failed to create team">
+                            <form data-service="teams.create" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created team successfully" data-success-triggers="filter-teams-changed,team.new,modal-close" data-error="alert" data-error-alert="Failed to create team">
 
                                 <label for="user-name">Name</label>
                                 <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
@@ -173,19 +155,7 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div class="zone xl"
-                     data-service="teams.list"
-                     data-scope="sdk"
-                     data-name="project-teams"
-                     data-event="filter-teams-changed"
-                     data-param-search="{{filter-teams.keys.search}}"
-                     data-param-limit="{{filter-teams.keys.limit}}"
-                     data-param-offset="{{filter-teams.keys.offset}}"
-                     data-success="trigger,render"
-                     data-error="render"
-                     data-success-rerender="team.update,team.new,filter-teams-changed"
-                     data-error-rerender=""
-                     data-success-triggers="teams.load">
+                <div class="zone xl" data-service="teams.list" data-scope="sdk" data-name="project-teams" data-event="filter-teams-changed" data-param-search="{{filter-teams.keys.search}}" data-param-limit="{{filter-teams.keys.limit}}" data-param-offset="{{filter-teams.keys.offset}}" data-success="trigger,render" data-error="render" data-success-rerender="team.update,team.new,filter-teams-changed" data-error-rerender="" data-success-triggers="teams.load">
 
                     <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom" style="display: none;">
                         <h3 class="margin-bottom">No Teams Found</h3>
@@ -198,42 +168,35 @@ $providers = $this->getParam('providers', []);
                         <div class="box margin-bottom">
                             <table class="vertical">
                                 <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Members</th>
-                                    <th width="150">Created</th>
-                                </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Members</th>
+                                        <th width="150">Created</th>
+                                    </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
-                                <tr>
-                                    <td data-title="Name: ">
-                                        <div data-ui-modal class="modal close" data-button-text="{{team.name}}" data-button-class="link">
-                                            <h1>Update Team</h1>
+                                    <tr>
+                                        <td data-title="Name: ">
+                                            <div data-ui-modal class="modal close" data-button-text="{{team.name}}" data-button-class="link">
+                                                <h1>Update Team</h1>
 
-                                            <form data-service="teams.update"
-                                                  data-scope="sdk"
-                                                  data-event="submit"
-                                                  data-success="alert,trigger"
-                                                  data-success-alert="Updated team successfully"
-                                                  data-success-triggers="team.update,filter-teams-changed,modal-close"
-                                                  data-error="alert"
-                                                  data-error-alert="Failed to update team">
+                                                <form data-service="teams.update" data-scope="sdk" data-event="submit" data-success="alert,trigger" data-success-alert="Updated team successfully" data-success-triggers="team.update,filter-teams-changed,modal-close" data-error="alert" data-error-alert="Failed to update team">
 
-                                                <label for="name">UID</label>
-                                                <div class="input-copy">
-                                                    <input name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$uid}}" />
-                                                </div>
+                                                    <label for="name">UID</label>
+                                                    <div class="input-copy">
+                                                        <input name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$uid}}" />
+                                                    </div>
 
-                                                <label for="name">Name</label>
-                                                <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
+                                                    <label for="name">Name</label>
+                                                    <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
 
-                                                <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                    <td data-title="Members: "><span data-ls-bind="{{team.sum}}"></span></td>
-                                    <td data-title="Date Created: "><span data-ls-bind="{{team.dateCreated}}" data-filter="date-text" class="note"></span></td>
-                                </tr>
+                                                    <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                        <td data-title="Members: "><span data-ls-bind="{{team.sum}}"></span></td>
+                                        <td data-title="Date Created: "><span data-ls-bind="{{team.dateCreated|date-text}}" class="note"></span></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -264,22 +227,14 @@ $providers = $this->getParam('providers', []);
 
             <div class="box margin-bottom margin-top-large">
                 <ul class="list">
-                    <?php foreach ($providers as $provider => $data):?>
+                    <?php foreach ($providers as $provider => $data) : ?>
                         <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
                             <div data-ui-modal class="modal close" data-button-text="Settings" data-button-class="pull-end">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                 <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
 
-                                <form data-service="projects.updateOauth"
-                                      data-scope="console"
-                                      data-event="submit"
-                                      data-param-project-id="{{router.params.project}}"
-                                      data-success="alert,trigger"
-                                      data-success-alert="Updated project OAuth settings successfully"
-                                      data-success-triggers="project.reload,modal-close"
-                                      data-error="alert"
-                                      data-error-alert="Failed to update project OAuth settings">
+                                <form data-service="projects.updateOauth" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Updated project OAuth settings successfully" data-success-triggers="project.reload,modal-close" data-error="alert" data-error-alert="Failed to update project OAuth settings">
                                     <input name="provider" id="provider" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
 
                                     <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>
@@ -310,11 +265,11 @@ $providers = $this->getParam('providers', []);
                             </div>
 
                             <span>
-                            <?php echo ucfirst($provider); ?>
+                                <?php echo ucfirst($provider); ?>
                                 <span data-ls-if="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} === '' || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}} == '' || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} === undefined || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}} === undefined">
-                                &nbsp;<span class="tag red">Disabled</span>
+                                    &nbsp;<span class="tag red">Disabled</span>
+                                </span>
                             </span>
-                        </span>
                             <p class="margin-bottom-no margin-top-small text-one-liner">
                                 <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">Learn More<i class="icon-link-ext"></i></a> &nbsp;
                                 <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">Developer Docs<i class="icon-link-ext"></i></a>
@@ -324,7 +279,7 @@ $providers = $this->getParam('providers', []);
                 </ul>
             </div>
         </li>
-<!--        <li data-state="/console/users/templates?project={{router.params.project}}">
+        <!--        <li data-state="/console/users/templates?project={{router.params.project}}">
             <h2>Templates</h2>
         </li>-->
     </ul>
