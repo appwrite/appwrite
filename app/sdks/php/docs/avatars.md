@@ -71,7 +71,7 @@ GET https://appwrite.test/v1/avatars/flags/{code}
 GET https://appwrite.test/v1/avatars/image
 ```
 
-** Use this endpoint to fetch a remote image URL and crop it to any image size you want. **
+** Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop a remote image or in cases, you want to make sure a 3rd party image is properly served using a TLS protocol. **
 
 ### Parameters
 

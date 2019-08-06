@@ -55,7 +55,7 @@ return [
     'v1/projects' => [
         'name' => 'Projects',
         'controller' => 'controllers/projects.php',
-        'sdk' => false,
+        'sdk' => true,
     ],
     'v1/storage' => [
         'name' => 'Storage',

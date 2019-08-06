@@ -102,7 +102,9 @@ class Avatars extends Service {
      * Get image from and HTTP URL and crop to any size.
      *
      * Use this endpoint to fetch a remote image URL and crop it to any image size
-     * you want.
+     * you want. This endpoint is very useful if you need to crop a remote image
+     * or in cases, you want to make sure a 3rd party image is properly served
+     * using a TLS protocol.
      *
      * @param string url
      * @param number width
