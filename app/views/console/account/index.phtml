@@ -132,7 +132,7 @@ use Utopia\Locale\Locale;
                         <span data-ls-if="true != {{session.current}}" style="display: none;">
                             <!-- From remote session (-logout event) -->
                             <form class="pull-end" data-service="auth.logoutBySession" data-scope="console" data-event="submit" data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>" data-success="trigger" data-success-triggers="account.update" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
-                                <input type="hidden" name="userId" data-ls-bind="{{session.id}}">
+                                <input type="hidden" name="id" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
                         </span>
@@ -140,7 +140,7 @@ use Utopia\Locale\Locale;
                         <span data-ls-if="true == {{session.current}}" style="display: none;">
                             <!-- From current session (+logout event) -->
                             <form class="pull-end" data-service="auth.logoutBySession" data-scope="console" data-event="submit" data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>" data-success="trigger,redirect" data-success-triggers="logout" data-success-redirect-url="/" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
-                                <input type="hidden" name="userId" data-ls-bind="{{session.id}}">
+                                <input type="hidden" name="id" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
                         </span>
@@ -162,7 +162,7 @@ use Utopia\Locale\Locale;
             </div>
 
             <form class="inline margin-bottom-large" data-service="auth.logoutBySession" data-scope="console" data-event="submit" data-success="trigger,redirect" data-success-triggers="account.update" data-success-redirect-url="/" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>">
-                <input type="hidden" name="userId" value="0">
+                <input type="hidden" name="id" value="0">
                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout-all'); ?></button>
             </form>
 
