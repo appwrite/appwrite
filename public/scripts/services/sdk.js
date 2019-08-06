@@ -2,12 +2,14 @@
     "use strict";
 
     window.ls.container.set('sdk', function (window, router) {
-        var sdk = new window.AppwriteSDK();
+        var sdk = new window.Appwrite();
 
-        sdk.config.domain = APP_ENV.API;
-        sdk.config.project = router.params.project || null;
-        sdk.config.locale = APP_ENV.LOCALE;
-        sdk.config.mode = 'admin';
+        sdk
+            .setEndpoint(APP_ENV.API)
+            .setProject(router.params.project || null)
+            .setLocale(APP_ENV.LOCALE)
+            .setMode('admin')
+        ;
 
         return sdk;
     }, false);
