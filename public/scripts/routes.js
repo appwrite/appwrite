@@ -101,8 +101,8 @@ window.ls.router
         scope: 'console',
         project: true
     })
-    .add('/console/database/:tab', {
-        template: '/console/database?version=' + APP_ENV.VERSION,
+    .add('/console/database/collection', {
+        template: '/console/database/collection?version=' + APP_ENV.VERSION,
         scope: 'console',
         project: true
     })

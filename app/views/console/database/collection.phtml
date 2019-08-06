@@ -2,24 +2,19 @@
 
 use Utopia\Locale\Locale;
 ?>
-<div class="cover margin-bottom-large" data-service="database.getCollection" data-param-id="{{router.params.id}}" data-scope="sdk" data-event="load" data-name="project-collection" data-success="render,trigger" data-success-triggers="collections.load" data-error="render" data-error-rerender="">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        <a data-ls-attrs="href=/console/openings/new?company={{router.params.company}}" class="button icon margin-top-tiny pull-end"><i class="icon-plus"></i> &nbsp;Collection</a>
+<div class="cover margin-bottom-large" data-service="database.getCollection" data-param-collection-id="{{router.params.id}}" data-scope="sdk" data-event="load" data-name="project-collection" data-success="render,trigger" data-success-triggers="collections.load" data-error="render" data-error-rerender="">
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/database?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Collections</a>
 
-        <span data-ls-bind="{{project-collection.name}}"></span>
+        <br />
+
+        <span data-ls-bind="{{project-collection.name}}">&nbsp;&nbsp;</span>
     </h1>
 </div>
 
 <div class="zone xl">
     <div class="zone xl">
         <div class="box margin-bottom">
-            <ul data-ls-loop="project-collections.collections" data-ls-as="collection" class="list">
-                <li class="clear">
-                    <img src="" data-ls-attrs="src={{collection.name|gravatar}}" alt="Collection Avatar" class="avatar margin-end pull-start" />
-
-                    <a data-ls-bind="{{collection.name}}" data-ls-attrs="href=/console/database/collection?project={{console-project.$uid}}&id={{collection.$uid}}"></a>
-                    <p class=" note margin-bottom-no margin-top-small"><span data-ls-bind="{{collection.rules.length}}"></span> fields</p>
-                </li>
-            </ul>
         </div>
     </div>
+</div>
