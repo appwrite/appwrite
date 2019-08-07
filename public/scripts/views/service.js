@@ -35,7 +35,7 @@
 
                     'alert': function (text) {
                         return function (alerts) {
-                            alerts.send({ text: text, class: 'success' }, 3000);
+                            alerts.add({ text: text, class: 'success' }, 3000);
                         }
                     },
 
@@ -170,7 +170,7 @@
                     }
 
                     if(loading) {
-                        loaderId = alerts.send({text: loading, class: ''}, 0);
+                        loaderId = alerts.add({text: loading, class: ''}, 0);
                     }
 
                     let method = container.path(scope + '.' + action);

@@ -142,7 +142,7 @@
                 };
 
                 input.addEventListener('change', function() {
-                    var message     = alerts.send({text: labelLoading, class: ''}, 0);
+                    var message     = alerts.add({text: labelLoading, class: ''}, 0);
                     var files       = input.files;
                     var formData    = new FormData();
                     var read        = JSON.parse(expression.parse(element.dataset['read'] || '[]'));

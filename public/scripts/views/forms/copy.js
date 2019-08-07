@@ -24,9 +24,9 @@
 
                     try {
                         document.execCommand('copy');
-                        alerts.send({text: 'Copied to clipboard', class: ''}, 3000);
+                        alerts.add({text: 'Copied to clipboard', class: ''}, 3000);
                     } catch (err) {
-                        alerts.send({text: "Failed to copy text ", class: 'error'}, 3000);
+                        alerts.add({text: "Failed to copy text ", class: 'error'}, 3000);
                     }
 
                     window.getSelection().removeAllRanges();

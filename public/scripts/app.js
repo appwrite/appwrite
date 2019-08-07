@@ -36,7 +36,7 @@ window.ls.container.get('view')
             if(!cookie.get('cookie-alert')) {
                 let text = element.dataset['cookiePolicy'] || '';
 
-                alerts.send({text: text, class: 'cookie-alert', link: '/policy/cookies', remove: function () {
+                alerts.add({text: text, class: 'cookie-alert', link: '/policy/cookies', callback: function () {
                     cookie.set('cookie-alert', 'true', 365 * 10); // 10 years
                 }}, 0);
             }
@@ -139,9 +139,9 @@ window.ls.container.get('view')
 
                 try {
                     document.execCommand('copy');
-                    alerts.send({text: 'Copied to clipboard', class: ''}, 3000);
+                    alerts.add({text: 'Copied to clipboard', class: ''}, 3000);
                 } catch (err) {
-                    alerts.send({text: "Failed to copy text ", class: 'error'}, 3000);
+                    alerts.add({text: "Failed to copy text ", class: 'error'}, 3000);
                 }
 
                 window.getSelection().removeAllRanges();
