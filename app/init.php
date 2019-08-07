@@ -98,7 +98,7 @@ $register->set('influxdb', function() use ($request) { // Register DB connection
     return $client;
 });
 $register->set('statsd', function() use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_STATSD_HOST', 'telegraf-statsd');
+    $host = $request->getServer('_APP_STATSD_HOST', 'telegraf');
     $port = $request->getServer('_APP_STATSD_PORT', 8125);
 
     $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
