@@ -112,26 +112,26 @@ window.ls.filter
 
         return '';
     })
-    .add('humanFileSize', function (bytes) {
-        if(!bytes) {
+    .add('humanFileSize', function ($value) {
+        if (!$value) {
             return 0;
         }
 
         let thresh = 1000;
 
-        if(Math.abs(bytes) < thresh) {
-            return bytes + ' B';
+        if (Math.abs($value) < thresh) {
+            return $value + ' B';
         }
 
         let units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
         let u = -1;
 
         do {
-            bytes /= thresh;
+            $value /= thresh;
             ++u;
-        } while(Math.abs(bytes) >= thresh && u < units.length - 1);
+        } while (Math.abs($value) >= thresh && u < units.length - 1);
 
-        return bytes.toFixed(1) + '<span class="text-size-small unit">' + units[u] + '</span>';
+        return $value.toFixed(1) + '<span class="text-size-small unit">' + units[u] + '</span>';
     })
     .add('statsTotal', function ($value) {
         if(!$value) {

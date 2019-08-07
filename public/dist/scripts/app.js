@@ -254,9 +254,9 @@ Number.parseFloat(seconds).toFixed(0)+"s";}
 return"< 1s";}).add('nl2p',function($value){let result="<p>"+$value+"</p>";result=result.replace(/\r\n\r\n/g,"</p><p>").replace(/\n\n/g,"</p><p>");result=result.replace(/\r\n/g,"<br />").replace(/\n/g,"<br />");return result;}).add('markdown',function($value,markdown){return markdown.render($value);}).add('id2name',function($value){let members=container.get('members');if(members===null){return'';}
 for(let y=0;y<members.length;y++){if(members[y]['$uid']===$value){$value=members[y].name;}}
 return $value;}).add('id2role',function($value){if(APP_ENV.ROLES[$value]){return APP_ENV.ROLES[$value];}
-return'';}).add('humanFileSize',function(bytes){if(!bytes){return 0;}
-let thresh=1000;if(Math.abs(bytes)<thresh){return bytes+' B';}
-let units=['kB','MB','GB','TB','PB','EB','ZB','YB'];let u=-1;do{bytes/=thresh;++u;}while(Math.abs(bytes)>=thresh&&u<units.length-1);return bytes.toFixed(1)+'<span class="text-size-small unit">'+units[u]+'</span>';}).add('statsTotal',function($value){if(!$value){return 0;}
+return'';}).add('humanFileSize',function($value){if(!$value){return 0;}
+let thresh=1000;if(Math.abs($value)<thresh){return $value+' B';}
+let units=['kB','MB','GB','TB','PB','EB','ZB','YB'];let u=-1;do{$value/=thresh;++u;}while(Math.abs($value)>=thresh&&u<units.length-1);return $value.toFixed(1)+'<span class="text-size-small unit">'+units[u]+'</span>';}).add('statsTotal',function($value){if(!$value){return 0;}
 $value=abbreviate($value,1,false,false);return($value==='0')?'N/A':$value;});function abbreviate(number,maxPlaces,forcePlaces,forceLetter){number=Number(number);forceLetter=forceLetter||false;if(forceLetter!==false){return annotate(number,maxPlaces,forcePlaces,forceLetter);}
 let abbr;if(number>=1e12){abbr='T';}
 else if(number>=1e9){abbr='B';}
