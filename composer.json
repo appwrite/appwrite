@@ -55,7 +55,7 @@
         "dragonmantank/cron-expression": "2.2.0",
         "sentry/sentry": "1.9.*",
         "domnikl/statsd": "2.0.*",
-        "influxdb/influxdb-php": "1.14.*",
+        "influxdb/influxdb-php": "1.15.*",
         "bacon/bacon-qr-code": "2.0.0",
         "erusev/parsedown": "1.7.1"
     },

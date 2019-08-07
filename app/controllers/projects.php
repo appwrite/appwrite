@@ -121,6 +121,9 @@ $utopia->get('/v1/projects/:projectId/usage')
 
             $client = $register->get('influxdb');
 
+            $requests = [];
+            $network  = [];
+
             if($client) {
                 $start      = DateTime::createFromFormat('U', strtotime('first day of this month'));
                 $start      = $start->format(DateTime::RFC3339);
@@ -129,10 +132,8 @@ $utopia->get('/v1/projects/:projectId/usage')
                 $database   = $client->selectDB('telegraf');
 
                 // Requests
-
                 $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
                 $points     = $result->getPoints();
-                $requests = [];
 
                 foreach ($points as $point) {
                     $requests[] = [
@@ -142,10 +143,8 @@ $utopia->get('/v1/projects/:projectId/usage')
                 }
 
                 // Network
-
                 $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
                 $points     = $result->getPoints();
-                $network    = [];
 
                 foreach ($points as $point) {
                     $network[] = [
@@ -363,7 +362,8 @@ $utopia->patch('/v1/projects/:projectId/oauth')
 
             $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $secret       = json_encode([
+            $tag            = null;
+            $secret         = json_encode([
                 'data'      => OpenSSL::encrypt($secret, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method'    => OpenSSL::CIPHER_AES_128_GCM,
                 'iv'        => bin2hex($iv),
@@ -498,6 +498,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
 
             $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag            = null;
             $httpPass       = json_encode([
                 'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method'    => OpenSSL::CIPHER_AES_128_GCM,
@@ -563,6 +564,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
 
             $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag            = null;
             $httpPass       = json_encode([
                 'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method'    => OpenSSL::CIPHER_AES_128_GCM,
@@ -882,6 +884,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
 
             $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag            = null;
             $httpPass       = json_encode([
                 'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method'    => OpenSSL::CIPHER_AES_128_GCM,
@@ -971,6 +974,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
 
             $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag            = null;
             $httpPass       = json_encode([
                 'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method'    => OpenSSL::CIPHER_AES_128_GCM,
