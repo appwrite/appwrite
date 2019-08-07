@@ -43,5 +43,5 @@ services:
     restart: unless-stopped
 
   clamav:
-    image: appwrite/clamav:v1.0.2
+    image: appwrite/clamav:1.0.4
     restart: unless-stopped
