@@ -14,9 +14,11 @@
                 let loaderId    = null;
                 let scope       = element.dataset['scope'] || 'sdk'; // Free text
                 let debug       = !!(element.dataset['debug']); // Free text
-                let callback    = (element.dataset['callbacks'] || '');
+                let success     = (element.dataset['success'] || '');
+                let failure     = (element.dataset['failure'] || '');
 
-                callback = (callback && callback != '') ? callback.trim().split(',') : [];
+                success = (success && success != '') ? success.trim().split(',') : [];
+                failure = (failure && failure != '') ? failure.trim().split(',') : [];
 
                 if (debug) console.log('%c[service init]: ' + action + ' (' + service + ')', 'color:red');
 
@@ -113,6 +115,10 @@
                 }
 
                 let resolve = function(target, prefix = 'param', data = {}) {
+                    if (!target) {
+                        return function() {};
+                    }
+
                     let args = getParams(target);
 
                     if (debug) console.log('%c[form data]: ', 'color:green', data);
@@ -129,7 +135,6 @@
                          * 2. Get from element data-param-state-*
                          * 3. Get from element form object-*
                          */
-                        console.log(prefix + value.charAt(0).toUpperCase() + value.slice(1))
                         if(element.dataset[prefix + value.charAt(0).toUpperCase() + value.slice(1)]) {
                             result = expression.parse(element.dataset[prefix + value.charAt(0).toUpperCase() + value.slice(1)]);
                         }
@@ -143,7 +148,7 @@
                         }
 
                         if (debug) console.log('%c[param resolved]: (' + service + ') ' + value + '=' + result, 'color:#808080');
-console.log(result);
+
                         return result;
                     }));
                 };
@@ -194,16 +199,13 @@ console.log(result);
                                 return;
                             }
                             
-                            try {
-                                container.set(service.replace('.', '-'), data, true, true);
-                                if (debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
-                                if (debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
-                            } catch (e) {
-                                container.set(service.replace('.', '-'), {}, true);
-                            }
+                            container.set(service.replace('.', '-'), data, true, true);
+                            
+                            if (debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
+                            if (debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
 
-                            for (let i = 0; i < callback.length; i++) { // Trigger success callbacks
-                                container.resolve(resolve(callbacks[callback[i]], 'successParam' + callback[i].charAt(0).toUpperCase() + callback[i].slice(1), {}));
+                            for (let i = 0; i < success.length; i++) { // Trigger success callbacks
+                                container.resolve(resolve(callbacks[success[i]], 'successParam' + success[i].charAt(0).toUpperCase() + success[i].slice(1), {}));
                             }
 
                             element.$lsSkip = false;
@@ -217,9 +219,9 @@ console.log(result);
                             if(!element) {
                                 return;
                             }
-
-                            for (let i = 0; i < callback.length; i++) { // Trigger success callbacks
-                                container.resolve(resolve(callbacks[callback[i]], 'failureParam', {}));
+                            
+                            for (let i = 0; i < failure.length; i++) { // Trigger success callbacks
+                                container.resolve(resolve(callbacks[failure[i]], 'failureParam' + failure[i].charAt(0).toUpperCase() + failure[i].slice(1), {}));
                             }
 
                             element.$lsSkip = false;

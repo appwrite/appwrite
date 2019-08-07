@@ -33,67 +33,13 @@ window.ls.container.get('view')
         selector: 'data-cookie-policy',
         repeat: false,
         controller: function(element, alerts, cookie) {
-            if(!cookie.get('cp-cookie-alert')) {
+            if(!cookie.get('cookie-alert')) {
                 let text = element.dataset['cookiePolicy'] || '';
 
                 alerts.send({text: text, class: 'cookie-alert', link: '/policy/cookies', remove: function () {
-                        cookie.set('cp-cookie-alert', 'true', 365 * 10); // 10 years
-                    }}, 0);
+                    cookie.set('cookie-alert', 'true', 365 * 10); // 10 years
+                }}, 0);
             }
-        }
-    })
-    .add({
-        selector: 'data-billing-invoice-print',
-        controller: function(element, expression, sdk) {
-            let id = expression.parse(element.dataset['billingInvoicePrint'] || '');
-            element.href = sdk.billing.invoices.getForPrint(id);
-        }
-    })
-    .add({
-        selector: 'data-billing-invoice-download',
-        controller: function(element, expression, sdk) {
-            let id = expression.parse(element.dataset['billingInvoiceDownload'] || '');
-            element.href = sdk.billing.invoices.getForDownload(id);
-        }
-    })
-    .add({
-        selector: 'data-auto-cc-master',
-        controller: function(element, expression, document) {
-            let price = parseInt(expression.parse(element.dataset['autoCcMaster'] || '0'));
-            let check = function () {
-                if(element.checked && 0 === price) {
-                    document.body.classList.add('free-plan');
-
-                    document.dispatchEvent(new CustomEvent('set-free-plan', {
-                        bubbles: false,
-                        cancelable: true
-                    }));
-                }
-                else if(element.checked) {
-                    document.body.classList.remove('free-plan');
-
-                    document.dispatchEvent(new CustomEvent('unset-free-plan', {
-                        bubbles: false,
-                        cancelable: true
-                    }));
-                }
-            };
-
-            element.addEventListener('change', check);
-
-            check();
-        }
-    })
-    .add({
-        selector: 'data-auto-cc-slave',
-        controller: function(element) {
-            document.addEventListener('set-free-plan', function () {
-                element.checked = true;
-            });
-
-            document.addEventListener('unset-free-plan', function () {
-                element.checked = false;
-            });
         }
     })
     .add({
@@ -114,46 +60,6 @@ window.ls.container.get('view')
             };
 
             element.addEventListener('click', remove);
-        }
-    })
-    .add({
-        selector: 'data-ls-ui-chart-line',
-        repeat: true,
-        controller: function(element, document, expression) {
-            new Chartist.Line(element, {
-                labels: ['16.05', '17.05', '18.05', '19.05', '20.05'],
-                series: [
-                    [12, 9, 7, 8, 5],
-                    [2, 1, 3.5, 7, 3],
-                    [1, 3, 4, 5, 6],
-                    [2, 6, 10, 5, 9],
-                    [3, 1, 1, 8, 3]
-                ]
-            }, {
-                height: '300px',
-                width: '100%',
-                fullWidth: true,
-                showArea: true,
-                //showPoint: false,
-                chartPadding: {
-                    right: 30
-                }
-            });
-
-        }
-    })
-    .add({
-        selector: 'data-ls-ui-chart-pie',
-        repeat: true,
-        controller: function(element, document, expression) {
-            new Chartist.Pie(element, {
-                series: [20, 10, 30, 40]
-            }, {
-                donut: true,
-                donutSolid: true,
-                showLabel: true
-            });
-
         }
     })
     .add({
