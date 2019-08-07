@@ -23,6 +23,8 @@ services:
     - _APP_DB_PASS=password
     - _APP_INFLUXDB_HOST=influxdb
     - _APP_INFLUXDB_PORT=8086
+    - _APP_STATSD_HOST=telegraf
+    - _APP_STATSD_PORT=8125
     - _APP_NEWRELIC_KEY=
     - _APP_MAILGUN_KEY=
     - _APP_MAILGUN_DOMAIN=
