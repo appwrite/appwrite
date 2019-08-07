@@ -198,12 +198,12 @@ $utopia->get('/v1/projects/:projectId/usage')
 
             $response->json([
                 'requests' => [
-                    //'data'  => $requests,
-                    //'total' => array_sum(array_map(function($item) {return $item['value'];}, $requests)),
+                    'data'  => $requests,
+                    'total' => array_sum(array_map(function($item) {return $item['value'];}, $requests)),
                 ],
                 'network' => [
-                    //'data'  => $network,
-                    //'total' => array_sum(array_map(function($item) {return $item['value'];}, $network)),
+                    'data'  => $network,
+                    'total' => array_sum(array_map(function($item) {return $item['value'];}, $network)),
                 ],
                 'collections' => [
                     'data'  => $collections,
