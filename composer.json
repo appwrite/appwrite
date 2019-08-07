@@ -23,7 +23,7 @@
         }
     },
     "require": {
-        "php": ">=7.2.0",
+        "php": ">=7.3.0",
         "ext-mysqlnd": "*",
         "ext-curl": "*",
         "ext-imagick": "*",
