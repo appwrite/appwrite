@@ -45,3 +45,15 @@ services:
   clamav:
     image: appwrite/clamav:1.0.4
     restart: unless-stopped
+
+  influxdb:
+    image: influxdb:1.6
+    volumes:
+      - ./storage/influxdb:/var/lib/influxdb
+    ports:
+      - "8086:8086"
+  
+  telegraf:
+    image: appwrite/telegraf:1.0.0
+    ports:
+      - "8125:8125/udp"
