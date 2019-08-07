@@ -57,12 +57,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "defeb4f92cc9bd84279594f3ce0e8da10d5bd4ff"
+                "reference": "f4663cc27575ddc870a8246a291302900aa5823c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/defeb4f92cc9bd84279594f3ce0e8da10d5bd4ff",
-                "reference": "defeb4f92cc9bd84279594f3ce0e8da10d5bd4ff",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/f4663cc27575ddc870a8246a291302900aa5823c",
+                "reference": "f4663cc27575ddc870a8246a291302900aa5823c",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +94,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-07-21 13:45:44"
+            "time": "2019-08-07 11:12:22"
         },
         {
             "name": "bacon/bacon-qr-code",

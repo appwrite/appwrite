@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.8');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.9');
             addGlobalHeader('content-type', '');
 
             /**
@@ -213,7 +213,7 @@
                     request.onload = function () {
                         if (4 === request.readyState && 399 >= request.status) {
                             let data = request.response;
-                            let contentType = this.getResponseHeader('content-type');
+                            let contentType = this.getResponseHeader('content-type') || '';
                             contentType = contentType.substring(0, contentType.indexOf(';'));
 
                             switch (contentType) {

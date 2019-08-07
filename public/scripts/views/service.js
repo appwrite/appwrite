@@ -31,10 +31,9 @@
                         }
                     },
 
-                    'alert': function () {
+                    'alert': function (text) {
                         return function (alerts) {
-                            let alert = element.dataset['successAlert'] || 'Success';
-                            alerts.send({ text: alert, class: 'success' }, 3000);
+                            alerts.send({ text: text, class: 'success' }, 3000);
                         }
                     },
 
@@ -52,22 +51,22 @@
                         }
                     },
 
-                    'trigger': function () {
-                        return function (document) {
-                            let triggers = element.dataset['successTriggers'] || '';
+                    // 'trigger': function () {
+                    //     return function (document) {
+                    //         let triggers = element.dataset['successTriggers'] || '';
 
-                            triggers = triggers.trim().split(',');
+                    //         triggers = triggers.trim().split(',');
 
-                            for (let i = 0; i < triggers.length; i++) {
-                                if ('' === triggers[i]) {
-                                    continue;
-                                }
-                                if (debug) console.log('%c[event triggered]: ' + triggers[i], 'color:green');
+                    //         for (let i = 0; i < triggers.length; i++) {
+                    //             if ('' === triggers[i]) {
+                    //                 continue;
+                    //             }
+                    //             if (debug) console.log('%c[event triggered]: ' + triggers[i], 'color:green');
 
-                                document.dispatchEvent(new CustomEvent(triggers[i]));
-                            }
-                        }
-                    }
+                    //             document.dispatchEvent(new CustomEvent(triggers[i]));
+                    //         }
+                    //     }
+                    // }
                 };
 
                 /**
@@ -130,9 +129,9 @@
                          * 2. Get from element data-param-state-*
                          * 3. Get from element form object-*
                          */
-
-                        if(element.dataset['param' + value.charAt(0).toUpperCase() + value.slice(1)]) {
-                            result = expression.parse(element.dataset['param' + value.charAt(0).toUpperCase() + value.slice(1)]);
+                        console.log(prefix + value.charAt(0).toUpperCase() + value.slice(1))
+                        if(element.dataset[prefix + value.charAt(0).toUpperCase() + value.slice(1)]) {
+                            result = expression.parse(element.dataset[prefix + value.charAt(0).toUpperCase() + value.slice(1)]);
                         }
 
                         if(data[value]) {
@@ -144,7 +143,7 @@
                         }
 
                         if (debug) console.log('%c[param resolved]: (' + service + ') ' + value + '=' + result, 'color:#808080');
-
+console.log(result);
                         return result;
                     }));
                 };
@@ -204,7 +203,7 @@
                             }
 
                             for (let i = 0; i < callback.length; i++) { // Trigger success callbacks
-                                container.resolve(resolve(callbacks[callback[i]], 'successParam', {}));
+                                container.resolve(resolve(callbacks[callback[i]], 'successParam' + callback[i].charAt(0).toUpperCase() + callback[i].slice(1), {}));
                             }
 
                             element.$lsSkip = false;
