@@ -27,19 +27,17 @@ $providers = $this->getParam('providers', []);
             <div class="col span-4"></div>
         </form>
 
-        <div data-service="storage.files.list"
-             data-param-search="{{filter-files.keys.search}}"
-             data-param-limit="{{filter-files.keys.limit}}"
-             data-param-offset="{{filter-files.keys.offset}}"
-             data-param-order-type="DESC"
-             data-scope="sdk"
-             data-name="project-files"
-             data-event="filter-files-changed"
-             data-success="render,trigger"
-             data-error="render"
-             data-success-rerender="user.update,filter-files-changed"
-             data-error-rerender=""
-             data-success-triggers="users.load">
+        <div
+            data-service="storage.files.list"
+            data-param-search="{{filter-files.keys.search}}"
+            data-param-limit="{{filter-files.keys.limit}}"
+            data-param-offset="{{filter-files.keys.offset}}"
+            data-param-order-type="DESC"
+            data-scope="sdk"
+            data-name="project-files"
+            data-event="filter-files-changed,user-update"
+            data-success="trigger"
+            data-success-param-trigger-events="users-load">
 
             <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom" style="display: none;">
                 <h3 class="margin-bottom">No Files Found</h3>

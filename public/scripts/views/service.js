@@ -39,11 +39,9 @@
                         }
                     },
 
-                    'redirect': function () {
+                    'redirect': function (url) {
                         return function (router) {
-                            let url = expression.parse(element.dataset['successRedirectUrl']) || '/';
-
-                            router.change(url);
+                            router.change(url || '/');
                         }
                     },
 
@@ -53,22 +51,20 @@
                         }
                     },
 
-                    // 'trigger': function () {
-                    //     return function (document) {
-                    //         let triggers = element.dataset['successTriggers'] || '';
+                    'trigger': function (events) {
+                        return function (document) {
+                            events = events.trim().split(',');
 
-                    //         triggers = triggers.trim().split(',');
+                            for (let i = 0; i < events.length; i++) {
+                                if ('' === events[i]) {
+                                    continue;
+                                }
+                                if (debug) console.log('%c[event triggered]: ' + events[i], 'color:green');
 
-                    //         for (let i = 0; i < triggers.length; i++) {
-                    //             if ('' === triggers[i]) {
-                    //                 continue;
-                    //             }
-                    //             if (debug) console.log('%c[event triggered]: ' + triggers[i], 'color:green');
-
-                    //             document.dispatchEvent(new CustomEvent(triggers[i]));
-                    //         }
-                    //     }
-                    // }
+                                document.dispatchEvent(new CustomEvent(events[i]));
+                            }
+                        }
+                    }
                 };
 
                 /**
@@ -200,7 +196,7 @@
                             }
                             
                             container.set(service.replace('.', '-'), data, true, true);
-                            
+
                             if (debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
                             if (debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
 

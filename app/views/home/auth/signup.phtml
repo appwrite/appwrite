@@ -13,7 +13,15 @@ use Utopia\Locale\Locale;
         <div class="col span-6 margin-bottom-large">
             <small class="pull-end">* <?php echo $this->escape(Locale::getText('home.auth.signup.required')); ?></small>
 
-            <form name="register" data-service="auth.register" data-scope="console" data-event="submit" data-success="trigger,redirect" data-success-triggers="signup" data-success-redirect-url="/console/setup" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.signup.failure')); ?>">
+            <form name="register"
+                data-service="auth.register"
+                data-scope="console"
+                data-event="submit"
+                data-success="trigger,redirect"
+                data-success-param-trigger-events="auth-register"
+                data-success-redirect-url="/console/setup"
+                data-error="alert"
+                data-error-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.signup.failure')); ?>">
 
                 <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console">
                 <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/signup?failure=1">

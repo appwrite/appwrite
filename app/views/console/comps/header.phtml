@@ -1,5 +1,8 @@
-<div data-service="projects.getProject" data-event="project-load" data-name="console-project" data-param-project-id="{{router.params.project}}">
-</div>
+<div
+    data-service="projects.getProject"
+    data-event="project-load,platform-create,platform-update,platform-delete"
+    data-name="console-project"
+    data-param-project-id="{{router.params.project}}"></div>
 
 <header class="clear">
     &nbsp;&nbsp;&nbsp;
@@ -13,7 +16,11 @@
 
     <button style="overflow: visible;" class="project-only setup-new tooltip round down" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
 
-    <div class="account-box clear pull-end" data-service="account.get" data-name="account" data-scope="console" data-event="load">
+    <div class="account-box clear pull-end"
+        data-service="account.get"
+        data-name="account"
+        data-scope="console"
+        data-event="load">
 
         <div class="pull-end console-back">
             <a href="/console">Back to Console &nbsp;<i class="icon-right-open"></i></a>
@@ -96,13 +103,26 @@
     </nav>
 </header>
 
-<div class="list pull-start project-only" data-service="projects.listProjects" data-event="load" data-name="projects" data-scope="console"></div>
+<div class="list pull-start project-only"
+    data-service="projects.listProjects"
+    data-event="load"
+    data-name="projects"
+    data-scope="console"></div>
 
-<div class="" data-service="locale.getLocale" data-name="geo" data-event="load"></div>
+<div class=""
+    data-service="locale.getLocale"
+    data-name="locale"
+    data-event="load"></div>
 
-<div class="" data-service="locale.getCountries" data-name="geo-countries" data-event="load"></div>
+<div class=""
+    data-service="locale.getCountries"
+    data-name="locale-countries"
+    data-event="load"></div>
 
-<div class="" data-service="locale.getCountriesPhones" data-name="geo-countries-phones" data-event="load"></div>
+<div class=""
+    data-service="locale.getCountriesPhones"
+    data-name="locale-countries-phones"
+    data-event="load"></div>
 
 <div data-ui-modal class="modal close" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="new-project">
     <h1>Add Project</h1>

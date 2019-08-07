@@ -22,7 +22,14 @@ $events = [
     </h1>
 </div>
 
-<div class="zone xl" data-service="projects.listWebhooks" data-scope="console" data-event="load" data-name="console-webhooks" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="webhook.new,webhook.update,webhook.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
+<div class="zone xl"
+    data-service="projects.listWebhooks"
+    data-scope="console"
+    data-event="load,webhook-create,webhook-update,webhook-delete"
+    data-name="console-webhooks"
+    data-param-project-id="{{router.params.project}}"
+    data-success="trigger"
+    data-success-param-trigger-events="webhook-load">
 
     <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom" style="display: none;">
         <h3 class="margin-bottom-small">No Webhooks Found</h3>
@@ -39,7 +46,15 @@ $events = [
 
                     <h1>Update Webhook</h1>
 
-                    <form data-service="projects.webhooks.update" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Updated webhook successfully" data-success-triggers="webhook.update,modal-close" data-error="alert" data-error-alert="Failed to update webhook">
+                    <form
+                        data-service="projects.updateWebhook"
+                        data-scope="console"
+                        data-event="submit"
+                        data-success="alert,trigger,reset"
+                        data-success-param-alert-text="Updated webhook successfully"
+                        data-success-param-trigger-events="webhook-update,modal-close"
+                        data-error="alert"
+                        data-error-param-alert-text="Failed to update webhook">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
@@ -97,7 +112,16 @@ $events = [
                     </form>
                 </div>
 
-                <form class="pull-end margin-end" data-service="projects.deleteWebhook" data-scope="console" data-event="submit" data-confirm="Are you sure you want to delete this webhook?" data-success="alert,trigger" data-success-alert="Deleted webhook successfully" data-success-triggers="webhook.delete" data-error="alert" data-error-alert="Failed to delete webhook">
+                <form class="pull-end margin-end"
+                    data-service="projects.deleteWebhook"
+                    data-scope="console"
+                    data-event="submit"
+                    data-confirm="Are you sure you want to delete this webhook?"
+                    data-success="alert,trigger"
+                    data-success-param-alert-text="Deleted webhook successfully"
+                    data-success-param-trigger-events="webhook-delete"
+                    data-error="alert"
+                    data-error-param-alert-text="Failed to delete webhook">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                     <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
@@ -120,7 +144,15 @@ $events = [
 
             <h1>Add Webhook</h1>
 
-            <form data-service="projects.createWebhook" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created webhook successfully" data-success-triggers="webhook.new,modal-close" data-error="alert" data-error-alert="Failed to create webhook">
+            <form
+                data-service="projects.createWebhook"
+                data-scope="console"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Created webhook successfully"
+                data-success-param-trigger-events="webhook-create,modal-close"
+                data-error="alert"
+                data-error-param-alert-text="Failed to create webhook">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 

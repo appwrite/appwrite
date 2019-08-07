@@ -3,7 +3,13 @@
 use Utopia\Locale\Locale;
 
 ?>
-<div data-service="users.getUser" data-name="user" data-event="load" data-param-user-id="{{router.params.id}}" data-success="render,trigger" data-error="render" data-success-rerender="user.update" data-error-rerender="" data-success-triggers="user.load">
+<div
+    data-service="users.getUser"
+    data-name="user"
+    data-event="load,user-update"
+    data-param-user-id="{{router.params.id}}"
+    data-success="trigger"
+    data-success-param-trigger-events="user-load">
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
@@ -44,7 +50,13 @@ use Utopia\Locale\Locale;
 
                         <h3 class="margin-bottom">Preferences</h3>
 
-                        <div class="box margin-bottom" data-service="users.getUserPrefs" data-name="user-prefs" data-event="load" data-param-user-id="{{router.params.id}}" data-success="render,trigger" data-error="render" data-success-rerender="" data-error-rerender="" data-success-triggers="user-prefs.load">
+                        <div class="box margin-bottom"
+                            data-service="users.getUserPrefs"
+                            data-name="user-prefs"
+                            data-event="load"
+                            data-param-user-id="{{router.params.id}}"
+                            data-success="trigger"
+                            data-success-param-trigger-events="user-prefs-load">
 
                             <div data-ls-if="'{{user-prefs}}' && '{}' !== '{{user-prefs}}'" style="display: none;">
                                 <table class="vertical">
@@ -79,13 +91,30 @@ use Utopia\Locale\Locale;
                         </div>
 
                         <div data-ls-if="{{user.status}} !== <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
-                            <form name="users.updateStatus" class="margin-bottom" data-service="users.updateUserStatus" data-event="submit" data-param-user-id="{{router.params.id}}" data-success="alert,trigger" data-success-alert="Blocked User Successfully" data-success-triggers="user.update" data-error="alert" data-error-alert="Failed to Block User">
+                            <form name="users.updateStatus" class="margin-bottom"
+                                data-service="users.updateUserStatus"
+                                data-event="submit"
+                                data-param-user-id="{{router.params.id}}"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Blocked User Successfully"
+                                data-success-param-trigger-events="user-update"
+                                data-error="alert"
+                                data-error-param-alert-text="Failed to Block User">
+
                                 <button name="status" type="submit" class="danger fill" value="<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
                             </form>
                         </div>
 
                         <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
-                            <form name="users.updateStatus" class="margin-bottom" data-service="users.updateUserStatus" data-event="submit" data-param-user-id="{{router.params.id}}" data-success="alert,trigger" data-success-alert="Blocked Activated Successfully" data-success-triggers="user.update" data-error="alert" data-error-alert="Failed to Activate User">
+                            <form name="users.updateStatus" class="margin-bottom"
+                                data-service="users.updateUserStatus"
+                                data-event="submit"
+                                data-param-user-id="{{router.params.id}}"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Blocked Activated Successfully"
+                                data-success-param-trigger-events="user-update"
+                                data-error="alert"
+                                data-error-param-alert-text="Failed to Activate User">
 
                                 <button name="status" type="submit" class="fill" value="<?php echo \Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>
                             </form>
@@ -96,7 +125,11 @@ use Utopia\Locale\Locale;
             <li data-state="/console/users/view/devices?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Devices</h2>
 
-                <div data-service="users.getUserSessions" data-name="sessions" data-param-user-id="{{router.params.id}}" data-event="load" data-success="render" data-error="render" data-success-rerender="user.update">
+                <div
+                    data-service="users.getUserSessions"
+                    data-name="sessions"
+                    data-param-user-id="{{router.params.id}}"
+                    data-event="load,user-update">
 
                     <div data-ls-if="{{sessions.length}} === 0" style="display: none" class="margin-top-xl margin-bottom-xl">
                         No sessions available
@@ -106,7 +139,14 @@ use Utopia\Locale\Locale;
                         <div class="box margin-bottom">
                             <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                                 <li class="clear">
-                                    <form class="pull-end" data-service="users.deleteUsersSession" data-event="submit" data-loading="Loading..." data-success="trigger" data-success-triggers="user.update" data-error="alert" data-error-alert="Failed to logout session">
+                                    <form class="pull-end"
+                                        data-service="users.deleteUsersSession"
+                                        data-event="submit"
+                                        data-loading="Loading..."
+                                        data-success="trigger"
+                                        data-success-param-trigger-events="user-update"
+                                        data-error="alert"
+                                        data-error-param-alert-text="Failed to logout session">
                                         <input type="hidden" name="userId" data-ls-bind="{{router.params.id}}">
                                         <input type="hidden" name="sessionId" data-ls-bind="{{session.id}}">
                                         <button class="danger">Logout</button>
@@ -124,7 +164,14 @@ use Utopia\Locale\Locale;
                             </ul>
                         </div>
 
-                        <form class="inline margin-bottom-large" data-service="users.deleteUsersSessions" data-param-user-id="{{router.params.id}}" data-event="submit" data-success="trigger" data-success-triggers="user.update" data-error="alert" data-error-alert="Failed to logout all sessions">
+                        <form class="inline margin-bottom-large"
+                            data-service="users.deleteUsersSessions"
+                            data-param-user-id="{{router.params.id}}"
+                            data-event="submit"
+                            data-success="trigger"
+                            data-success-param-trigger-events="user-update"
+                            data-error="alert"
+                            data-error-param-alert-text="Failed to logout all sessions">
                             <button class="danger">Logout from all devices</button>
                         </form>
                     </div>
@@ -134,7 +181,11 @@ use Utopia\Locale\Locale;
             <li data-state="/console/users/view/audit?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Audit Log</h2>
 
-                <div data-service="users.getUserLogs" data-name="logs" data-param-user-id="{{router.params.id}}" data-event="load" data-success="render" data-success-rerender="logs.load" data-error="">
+                <div
+                    data-service="users.getUserLogs"
+                    data-name="logs"
+                    data-param-user-id="{{router.params.id}}"
+                    data-event="load,logs-load">
 
                     <div data-ls-if="{{logs.length}} === 0" style="display: none" class="margin-top-xl margin-bottom-xl">
                         No logs available

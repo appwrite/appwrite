@@ -15,7 +15,13 @@
 </div>
 
 <section class="zone xl margin-bottom-large margin-top-negative-large">
-    <div data-service="projects.listProjects" data-scope="console" data-event="load" data-name="console-projects" data-success="render,trigger" data-error="render" data-success-rerender="project.new" data-error-rerender="" data-success-triggers="projects.load">
+    <div
+        data-service="projects.listProjects"
+        data-scope="console"
+        data-event="load,project-create"
+        data-name="console-projects"
+        data-success="trigger"
+        data-success-triggers="projects-load">
 
         <div data-ls-if="0 == {{console-projects.sum}}" class="box margin-bottom" style="display: none">
             <h3 class="margin-bottom">No Projects Found</h3>

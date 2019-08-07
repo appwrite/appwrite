@@ -10,14 +10,30 @@ use Utopia\Locale\Locale;
     </h1>
 </div>
 
-<div class="zone xl" data-service="projects.getProject" data-scope="console" data-name="console-project" data-event="load" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-error="render" data-success-rerender="" data-error-rerender="" data-success-triggers="project.load">
+<div class="zone xl"
+    data-service="projects.getProject"
+    data-scope="console"
+    data-name="console-project"
+    data-event="load"
+    data-param-project-id="{{router.params.project}}"
+    data-success="trigger"
+    data-success-param-trigger-events="project-load">
 
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/settings?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.overview.title'); ?></h2>
 
-                <form data-service="projects.updateProject" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Saved project successfully" data-success-triggers="project.update" data-error="alert" data-error-alert="Failed to update project">
+                <form
+                    data-service="projects.updateProject"
+                    data-scope="console"
+                    data-event="submit"
+                    data-param-project-id="{{router.params.project}}"
+                    data-success="alert,trigger"
+                    data-success-param-alert-text="Saved project successfully"
+                    data-success-param-trigger-events="project-update"
+                    data-error="alert"
+                    data-error-param-alert-text="Failed to update project">
 
                     <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
 
@@ -87,7 +103,16 @@ use Utopia\Locale\Locale;
             </li>
             <li data-state="/console/settings/privacy?project={{router.params.project}}">
 
-                <form data-service="projects.updateProject" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Saved project successfully" data-success-triggers="project.update" data-error="alert" data-error-alert="Failed to update project">
+                <form
+                    data-service="projects.updateProject"
+                    data-scope="console"
+                    data-event="submit"
+                    data-param-project-id="{{router.params.project}}"
+                    data-success="alert,trigger"
+                    data-success-param-alert-text="Saved project successfully"
+                    data-success-param-trigger-events="project-update"
+                    data-error="alert"
+                    data-error-param-alert-text="Failed to update project">
                     <h2>Privacy & Legal</h2>
 
                     <div class="box margin-bottom">
@@ -126,12 +151,27 @@ use Utopia\Locale\Locale;
             <li data-state="/console/settings/members?project={{router.params.project}}">
                 <h2><?php echo Locale::getText('console.settings.section.members.title'); ?></h2>
 
-                <div class="zone xl" data-service="teams.getTeamMembers" data-scope="console" data-event="load,auth.invite,auth.leave" data-name="members" data-param-team-id="{{console-project.teamId}}" data-success="render,trigger" data-success-triggers="members.load" data-error="render" data-error-rerender="">
+                <div class="zone xl"
+                    data-service="teams.getTeamMembers"
+                    data-scope="console"
+                    data-event="load,auth-invite,auth-leave"
+                    data-name="members"
+                    data-param-team-id="{{console-project.teamId}}"
+                    data-success="trigger"
+                    data-success-param-trigger-events="members-load">
 
                     <div class="box margin-bottom">
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
                             <li class="clear">
-                                <form class="pull-end" data-service="team.deleteTeamMembership" data-scope="console" data-event="submit" data-success="alert,trigger" data-success-alert="<?php echo Locale::getText('console.settings.section.members.leave.success'); ?>" data-success-triggers="auth.leave,project.update" data-error="alert" data-error-alert="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
+                                <form class="pull-end"
+                                    data-service="team.deleteTeamMembership"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-success="alert,trigger"
+                                    data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.success'); ?>"
+                                    data-success-param-trigger-events="auth-leave,project-update"
+                                    data-error="alert"
+                                    data-error-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
 
                                     <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
@@ -140,7 +180,16 @@ use Utopia\Locale\Locale;
                                 </form>
 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
-                                    <form data-service="auth.inviteResend" data-scope="console" data-event="submit" data-success="alert,trigger" data-success-alert="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>" data-success-triggers="auth.invite" data-error="alert" data-error-alert="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
+                                    <form
+                                        data-service="auth.inviteResend"
+                                        data-scope="console"
+                                        data-event="submit"
+                                        data-success="alert,trigger"
+                                        data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
+                                        data-success-param-trigger-events="auth-invite"
+                                        data-error="alert"
+                                        data-error-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
+
                                         <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
                                         <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
@@ -163,7 +212,15 @@ use Utopia\Locale\Locale;
 
                         <h1><?php echo Locale::getText('console.settings.section.members.labels.invite'); ?></h1>
 
-                        <form name="auth.invite" data-service="auth.invite" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>" data-success-triggers="auth.invite,modal-close" data-error="alert" data-error-alert="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
+                        <form name="auth.invite"
+                            data-service="auth.invite"
+                            data-scope="console"
+                            data-event="submit"
+                            data-success="alert,trigger,reset"
+                            data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
+                            data-success-param-trigger-events="auth-invite,modal-close"
+                            data-error="alert"
+                            data-error-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
 
                             <input name="team" id="team" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />

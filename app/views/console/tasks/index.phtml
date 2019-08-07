@@ -8,7 +8,14 @@ use Utopia\Locale\Locale;
         <?php echo Locale::getText('console.tasks.title'); ?>
     </h1>
 </div>
-<div class="zone xl" data-service="projects.listTasks" data-scope="console" data-event="load" data-name="console-tasks" data-param-project-id="{{router.params.project}}" data-success="render,trigger" data-success-rerender="task.new,task.update,task.delete" data-success-triggers="project.load" data-error="render" data-error-rerender="">
+<div class="zone xl"
+    data-service="projects.listTasks"
+    data-scope="console"
+    data-event="load,task-create,task-update,task-delete"
+    data-name="console-tasks"
+    data-param-project-id="{{router.params.project}}"
+    data-success="trigger"
+    data-success-param-trigger-events="project-load">
 
     <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom" style="display: none;">
         <h3 class="margin-bottom-small">No Tasks Found</h3>
@@ -72,7 +79,15 @@ use Utopia\Locale\Locale;
 
                             <h1>Update Task</h1>
 
-                            <form data-service="projects.updateTask" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Updated task successfully" data-success-triggers="task.update,modal-close" data-error="alert" data-error-alert="Failed to update task">
+                            <form
+                                data-service="projects.updateTask"
+                                data-scope="console"
+                                data-event="submit"
+                                data-success="alert,trigger,reset"
+                                data-success-param-alert-text="Updated task successfully"
+                                data-success-param-trigger-events="task-update,modal-close"
+                                data-error="alert"
+                                data-error-param-alert-text="Failed to update task">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
@@ -168,7 +183,16 @@ use Utopia\Locale\Locale;
                                 </div>
                             </form>
 
-                            <form class="margin-top" data-service="projects.deleteTask" data-scope="console" data-event="submit" data-confirm="Are you sure you want to delete this task?" data-success="alert,trigger" data-success-alert="Deleted task successfully" data-success-triggers="task.delete,modal.close" data-error="alert" data-error-alert="Failed to delete task">
+                            <form class="margin-top"
+                                data-service="projects.deleteTask"
+                                data-scope="console"
+                                data-event="submit"
+                                data-confirm="Are you sure you want to delete this task?"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Deleted task successfully"
+                                data-success-param-trigger-events="task-delete,modal-close"
+                                data-error="alert"
+                                data-error-param-alert-text="Failed to delete task">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
@@ -188,7 +212,15 @@ use Utopia\Locale\Locale;
 
             <h1>Add Task</h1>
 
-            <form data-service="projects.createTask" data-scope="console" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created task successfully" data-success-triggers="task.new,modal-close" data-error="alert" data-error-alert="Failed to create task">
+            <form
+                data-service="projects.createTask"
+                data-scope="console"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Created task successfully"
+                data-success-param-trigger-events="task-create,modal-close"
+                data-error="alert"
+                data-error-param-alert-text="Failed to create task">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 

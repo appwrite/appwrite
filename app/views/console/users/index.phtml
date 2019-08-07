@@ -23,7 +23,14 @@ $providers = $this->getParam('providers', []);
 
                                 <h1>Create User</h1>
 
-                                <form data-service="users.createUser" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created user successfully" data-success-triggers="filter-users-changed,user.new,modal-close" data-error="alert" data-error-alert="Failed to create user">
+                                <form
+                                    data-service="users.createUser"
+                                    data-event="submit"
+                                    data-success="alert,trigger,reset"
+                                    data-success-param-alert-text="Created user successfully"
+                                    data-success-param-trigger-events="filter-users-changed,user-create,modal-close"
+                                    data-error="alert"
+                                    data-error-param-alert-text="Failed to create user">
 
                                     <label for="user-name">Name</label>
                                     <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
@@ -53,7 +60,14 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div data-service="users.listUsers" data-event="load" data-param-search="" data-param-limit="25" data-param-offset="0" data-scope="sdk" data-name="project-users">
+                <div
+                    data-service="users.listUsers"
+                    data-event="load"
+                    data-param-search=""
+                    data-param-limit="25"
+                    data-param-offset="0"
+                    data-scope="sdk"
+                    data-name="project-users">
 
                     <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
                         <h3 class="margin-bottom">No Users Found</h3>
@@ -136,7 +150,14 @@ $providers = $this->getParam('providers', []);
 
                             <h1>Create Team</h1>
 
-                            <form data-service="teams.create" data-event="submit" data-success="alert,trigger,reset" data-success-alert="Created team successfully" data-success-triggers="filter-teams-changed,team.new,modal-close" data-error="alert" data-error-alert="Failed to create team">
+                            <form
+                                data-service="teams.createTeam"
+                                data-event="submit"
+                                data-success="alert,trigger,reset"
+                                data-success-param-alert-text="Created team successfully"
+                                data-success-param-trigger-events="filter-teams-changed,team-create,modal-close"
+                                data-error="alert"
+                                data-error-param-alert-text="Failed to create team">
 
                                 <label for="team-name">Name</label>
                                 <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" />
@@ -157,7 +178,16 @@ $providers = $this->getParam('providers', []);
                     </div>
                 </div>
 
-                <div class="zone xl" data-service="teams.listTeams" data-scope="sdk" data-name="project-teams" data-event="load" data-param-search="{{filter-teams.keys.search}}" data-param-limit="{{filter-teams.keys.limit}}" data-param-offset="{{filter-teams.keys.offset}}" data-success="trigger,render" data-error="render" data-success-rerender="team.update,team.new,filter-teams-changed" data-error-rerender="" data-success-triggers="teams.load">
+                <div class="zone xl"
+                    data-service="teams.listTeams"
+                    data-scope="sdk"
+                    data-name="project-teams"
+                    data-event="load,team-update,team-create,filter-teams-changed"
+                    data-param-search="{{filter-teams.keys.search}}"
+                    data-param-limit="{{filter-teams.keys.limit}}"
+                    data-param-offset="{{filter-teams.keys.offset}}"
+                    data-success="trigger"
+                    data-success-param-trigger-events="teams-load">
 
                     <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom" style="display: none;">
                         <h3 class="margin-bottom">No Teams Found</h3>
@@ -182,7 +212,15 @@ $providers = $this->getParam('providers', []);
                                             <div data-ui-modal class="modal close" data-button-text="{{team.name}}" data-button-class="link">
                                                 <h1>Update Team</h1>
 
-                                                <form data-service="teams.update" data-scope="sdk" data-event="submit" data-success="alert,trigger" data-success-alert="Updated team successfully" data-success-triggers="team.update,filter-teams-changed,modal-close" data-error="alert" data-error-alert="Failed to update team">
+                                                <form
+                                                    data-service="teams.updateTeam"
+                                                    data-scope="sdk"
+                                                    data-event="submit"
+                                                    data-success="alert,trigger"
+                                                    data-success-param-alert-text="Updated team successfully"
+                                                    data-success-param-trigger-events="team-update,modal-close"
+                                                    data-error="alert"
+                                                    data-error-param-alert-text="Failed to update team">
 
                                                     <label for="name">UID</label>
                                                     <div class="input-copy">
@@ -236,7 +274,16 @@ $providers = $this->getParam('providers', []);
 
                                 <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
 
-                                <form data-service="projects.updateProjectOAuth" data-scope="console" data-event="submit" data-param-project-id="{{router.params.project}}" data-success="alert,trigger" data-success-alert="Updated project OAuth settings successfully" data-success-triggers="project.reload,modal-close" data-error="alert" data-error-alert="Failed to update project OAuth settings">
+                                <form
+                                    data-service="projects.updateProjectOAuth"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-param-project-id="{{router.params.project}}"
+                                    data-success="alert,trigger"
+                                    data-success-param-alert-text="Updated project OAuth settings successfully"
+                                    data-success-param-trigger-events="project-update,modal-close"
+                                    data-error="alert"
+                                    data-error-param-alert-text="Failed to update project OAuth settings">
                                     <input name="provider" id="provider<?php echo ucfirst($provider); ?>" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
 
                                     <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>
