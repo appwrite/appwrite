@@ -5,7 +5,7 @@
         {
             selector: 'data-service',
             repeat: false,
-            controller: function(element, view, container, form, alerts, expression, window) {
+            controller: function(element, view, container, form, alerts, expression, window, router) {
                 let action      = element.dataset['service'];
                 let service     = element.dataset['name'] || action;
                 let event       = element.dataset['event'];   // load, click, change, submit
@@ -14,55 +14,106 @@
                 let loaderId    = null;
                 let scope       = element.dataset['scope'] || 'sdk'; // Free text
                 let debug       = !!(element.dataset['debug']); // Free text
+                let callback    = (element.dataset['callbacks'] || '');
+
+                callback = (callback && callback != '') ? callback.trim().split(',') : [];
 
                 if (debug) console.log('%c[service init]: ' + action + ' (' + service + ')', 'color:red');
 
-                let resolve = function(target) {
-                    let data = ('FORM' === element.tagName) ? form.toJson(element) : {};
+                let callbacks = {
+                    'reset': function () {
+                        return function () {
+                            if ('FORM' === element.tagName) {
+                                return element.reset();
+                            }
 
+                            throw new Error('This callback is only valid for forms');
+                        }
+                    },
+
+                    'alert': function () {
+                        return function (alerts) {
+                            let alert = element.dataset['successAlert'] || 'Success';
+                            alerts.send({ text: alert, class: 'success' }, 3000);
+                        }
+                    },
+
+                    'redirect': function () {
+                        return function (router) {
+                            let url = expression.parse(element.dataset['successRedirectUrl']) || '/';
+
+                            router.change(url);
+                        }
+                    },
+
+                    'reload': function () {
+                        return function (router) {
+                            router.reload();
+                        }
+                    },
+
+                    'trigger': function () {
+                        return function (document) {
+                            let triggers = element.dataset['successTriggers'] || '';
+
+                            triggers = triggers.trim().split(',');
+
+                            for (let i = 0; i < triggers.length; i++) {
+                                if ('' === triggers[i]) {
+                                    continue;
+                                }
+                                if (debug) console.log('%c[event triggered]: ' + triggers[i], 'color:green');
+
+                                document.dispatchEvent(new CustomEvent(triggers[i]));
+                            }
+                        }
+                    }
+                };
+
+                /**
+                 * Original Solution From:
+                 * @see https://stackoverflow.com/a/41322698/2299554
+                 *  Notice: this version add support for $ sign in arg name.
+                 *
+                 * Retrieve a function's parameter names and default values
+                 * Notes:
+                 *  - parameters with default values will not show up in transpiler code (Babel) because the parameter is removed from the function.
+                 *  - does NOT support inline arrow functions as default values
+                 *      to clarify: ( name = "string", add = defaultAddFunction )   - is ok
+                 *                  ( name = "string", add = ( a )=> a + 1 )        - is NOT ok
+                 *  - does NOT support default string value that are appended with a non-standard ( word characters or $ ) variable name
+                 *      to clarify: ( name = "string" + b )         - is ok
+                 *                  ( name = "string" + $b )        - is ok
+                 *                  ( name = "string" + b + "!" )   - is ok
+                 *                  ( name = "string" + λ )         - is NOT ok
+                 * @param {function} func
+                 * @returns {Array} - An array of the given function's parameter [key, default value] pairs.
+                 */
+                let getParams = function getParams(func) {
                     const REGEX_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
                     const REGEX_FUNCTION_PARAMS = /(?:\s*(?:function\s*[^(]*)?\s*)((?:[^'"]|(?:(?:(['"])(?:(?:.*?[^\\]\2)|\2))))*?)\s*(?=(?:=>)|{)/m;
                     const REGEX_PARAMETERS_VALUES = /\s*([\w\\$]+)\s*(?:=\s*((?:(?:(['"])(?:\3|(?:.*?[^\\]\3)))((\s*\+\s*)(?:(?:(['"])(?:\6|(?:.*?[^\\]\6)))|(?:[\w$]*)))*)|.*?))?\s*(?:,|$)/gm;
 
-                    /**
-                     * Original Solution From:
-                     * @see https://stackoverflow.com/a/41322698/2299554
-                     *  Notice: this version add support for $ sign in arg name.
-                     *
-                     * Retrieve a function's parameter names and default values
-                     * Notes:
-                     *  - parameters with default values will not show up in transpiler code (Babel) because the parameter is removed from the function.
-                     *  - does NOT support inline arrow functions as default values
-                     *      to clarify: ( name = "string", add = defaultAddFunction )   - is ok
-                     *                  ( name = "string", add = ( a )=> a + 1 )        - is NOT ok
-                     *  - does NOT support default string value that are appended with a non-standard ( word characters or $ ) variable name
-                     *      to clarify: ( name = "string" + b )         - is ok
-                     *                  ( name = "string" + $b )        - is ok
-                     *                  ( name = "string" + b + "!" )   - is ok
-                     *                  ( name = "string" + λ )         - is NOT ok
-                     * @param {function} func
-                     * @returns {Array} - An array of the given function's parameter [key, default value] pairs.
-                     */
-                    function getParams(func) {
-                        let functionAsString = func.toString();
-                        let params = [];
-                        let match;
+                    let functionAsString = func.toString();
+                    let params = [];
+                    let match;
 
-                        functionAsString = functionAsString.replace(REGEX_COMMENTS, '');
-                        functionAsString = functionAsString.match(REGEX_FUNCTION_PARAMS)[1];
+                    functionAsString = functionAsString.replace(REGEX_COMMENTS, '');
+                    functionAsString = functionAsString.match(REGEX_FUNCTION_PARAMS)[1];
 
-                        if (functionAsString.charAt(0) === '(') {
-                            functionAsString = functionAsString.slice(1, -1);
-                        }
-
-                        while (match = REGEX_PARAMETERS_VALUES.exec(functionAsString)) {
-                            //params.push([match[1], match[2]]); // with default values
-                            params.push(match[1]); // only with arg name
-                        }
-
-                        return params;
+                    if (functionAsString.charAt(0) === '(') {
+                        functionAsString = functionAsString.slice(1, -1);
                     }
 
+                    while (match = REGEX_PARAMETERS_VALUES.exec(functionAsString)) {
+                        //params.push([match[1], match[2]]); // with default values
+                        params.push(match[1]); // only with arg name
+                    }
+
+                    return params;
+                }
+
+                let resolve = function(target, prefix = 'param', data = {}) {
                     let args = getParams(target);
 
                     if (debug) console.log('%c[form data]: ', 'color:green', data);
@@ -128,7 +179,7 @@
                         throw new Error('Method "' + scope + '.' + action + '" not found');
                     }
 
-                    let result = resolve(method);
+                    let result = resolve(method, 'param', ('FORM' === element.tagName) ? form.toJson(element) : {});
 
                     if(!result) {
                         return;
@@ -152,6 +203,10 @@
                                 container.set(service.replace('.', '-'), {}, true);
                             }
 
+                            for (let i = 0; i < callback.length; i++) { // Trigger success callbacks
+                                container.resolve(resolve(callbacks[callback[i]], 'successParam', {}));
+                            }
+
                             element.$lsSkip = false;
 
                             view.render(element);
@@ -163,6 +218,14 @@
                             if(!element) {
                                 return;
                             }
+
+                            for (let i = 0; i < callback.length; i++) { // Trigger success callbacks
+                                container.resolve(resolve(callbacks[callback[i]], 'failureParam', {}));
+                            }
+
+                            element.$lsSkip = false;
+
+                            view.render(element);
                         });
                 };
 
