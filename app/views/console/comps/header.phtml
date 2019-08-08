@@ -2,7 +2,8 @@
     data-service="projects.getProject"
     data-event="project-load,platform-create,platform-update,platform-delete"
     data-name="console-project"
-    data-param-project-id="{{router.params.project}}"></div>
+    data-param-project-id="{{router.params.project}}"
+    data-scope="console"></div>
 
 <header class="clear">
     &nbsp;&nbsp;&nbsp;
@@ -112,17 +113,20 @@
 <div class=""
     data-service="locale.getLocale"
     data-name="locale"
-    data-event="load"></div>
+    data-event="load"
+    data-scope="console"></div>
 
 <div class=""
     data-service="locale.getCountries"
     data-name="locale-countries"
-    data-event="load"></div>
+    data-event="load"
+    data-scope="console"></div>
 
 <div class=""
     data-service="locale.getCountriesPhones"
     data-name="locale-countries-phones"
-    data-event="load"></div>
+    data-event="load"
+    data-scope="console"></div>
 
 <div data-ui-modal class="modal box close" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="new-project">
     <h1>Add Project</h1>
