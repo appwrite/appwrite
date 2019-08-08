@@ -174,7 +174,7 @@ use Utopia\Locale\Locale;
                 data-service="account.getSessions"
                 data-scope="console"
                 data-name="sessions"
-                data-event="load">
+                data-event="load,session-delete">
 
                 <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                     <li class="clear">
@@ -186,7 +186,7 @@ use Utopia\Locale\Locale;
                                 data-event="submit"
                                 data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
                                 data-success="trigger"
-                                data-success-param-trigger-events="account.update"
+                                data-success-param-trigger-events="session-delete"
                                 data-failure="alert"
                                 data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
                                 <input type="hidden" name="id" data-ls-bind="{{session.id}}">
@@ -232,7 +232,7 @@ use Utopia\Locale\Locale;
                 data-scope="console"
                 data-event="submit"
                 data-success="trigger,redirect"
-                data-success-param-trigger-events="account-update"
+                data-success-param-trigger-events="session-delete"
                 data-success-redirect-url="/"
                 data-failure="alert"
                 data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>">
