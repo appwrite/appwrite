@@ -11,6 +11,7 @@ $layout
     ->setParam('title', APP_NAME)
     ->setParam('description', Locale::getText('general.description'))
     ->setParam('class', 'home')
+    ->setParam('header', [new View(__DIR__ . '/../views/home/comps/header.phtml')])
 ;
 
 $utopia->shutdown(function() use ($utopia, $response, $request, $layout, $version, $env) {
