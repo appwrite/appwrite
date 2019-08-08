@@ -36,7 +36,7 @@ window.ls.filter
         return '//www.gravatar.com/avatar/' + MD5(email) + '.jpg?s=' + size + '&d=' + encodeURIComponent(def);
     })
     .add('lowerCase', function ($value) {
-        return $value.toLowerCase();
+        return (typeof $value === 'string') ? $value.toLowerCase() : $value;
     })
     .add('date', function ($value, date) {
         return date.format('Y-m-d', $value);

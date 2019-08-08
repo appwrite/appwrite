@@ -467,7 +467,16 @@
       border: none;
     }
 
+    .chart-metric {
+      width: 19%;
+
+      @media @tablets, @phones {
+        width: 100%;
+      }
+    }
+
     .chart {
+      width: 80%;
       position: relative;
       height: 0;
       padding-top: 20px;
@@ -488,6 +497,12 @@
       border: solid 1px rgb(241, 241, 241);
       border-right: solid 1px transparent;
       border-bottom: solid 1px transparent;
+
+      @media @tablets, @phones {
+        width: 100%;
+        float: none;
+        margin-bottom: 20px;
+      }
 
       canvas {
         position: absolute;

@@ -29,14 +29,14 @@ $graph = $this->getParam('graph', false);
             <?php if (!$graph) : ?>
                 <div class="row responsive">
                     <div class="col span-9">
-                        <div class="pull-start margin-end">
+                        <div class="chart pull-end">
+                            <div class="content" data-ls-ui-chart></div>
+                        </div>
+
+                        <div class="chart-metric">
                             <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
                             <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
                             <div class="range">Current Month</div>
-                        </div>
-
-                        <div class="chart">
-                            <div class="content" data-ls-ui-chart></div>
                         </div>
                     </div>
                     <div class="col span-3">

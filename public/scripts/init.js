@@ -13,9 +13,7 @@ window.addEventListener('error', function (event) {
 });
 
 document.addEventListener('logout', function () {
-    if(window.ls.router.getCurrent().view.scope === 'console') {
-        window.ls.router.change('/auth/signin');
-    }
+    window.location = '/auth/signin';
 });
 
 document.addEventListener('http-get-401', function() { /* on error */
