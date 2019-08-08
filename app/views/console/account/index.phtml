@@ -32,7 +32,8 @@ use Utopia\Locale\Locale;
                                     data-success-param-alert-text="Your name was updated successfully"
                                     data-success-param-trigger-events="account.update,modal-close"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to update your name">
+                                    data-failure-param-alert-text="Failed to update your name"
+                                    data-failure-param-alert-classname="error">
 
                                     <label for="name"><?php echo Locale::getText('console.account.section.overview.labels.name'); ?></label>
 
@@ -60,7 +61,8 @@ use Utopia\Locale\Locale;
                                 data-success-param-alert-text="Email address updated successfully"
                                 data-success-param-trigger-events="account-update,modal-close" 
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed updating email address">
+                                data-failure-param-alert-text="Failed updating email address"
+                                data-failure-param-alert-classname="error">
 
                                 <label><?php echo Locale::getText('console.account.section.overview.labels.email'); ?></label>
                                 <div class="row">
@@ -93,7 +95,8 @@ use Utopia\Locale\Locale;
                                     data-success-param-trigger-events="account-update,modal-close"
                                     data-success-param-alert-text="Password updated successfully"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed updating password">
+                                    data-failure-param-alert-text="Failed updating password"
+                                    data-failure-param-alert-classname="error">
 
                                     <label><?php echo Locale::getText('console.account.section.overview.labels.password1'); ?></label>
                                     <input name="oldPassword" type="password" class="full-width" autocomplete="off" placeholder="" required>
@@ -116,7 +119,9 @@ use Utopia\Locale\Locale;
                                 data-success="trigger"
                                 data-success-param-trigger-events="logout"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Logout failed">
+                                data-failure-param-alert-text="Logout failed"
+                                data-failure-param-alert-classname="error">
+
                                 <button class="fill danger icon fill"><i class="icon-login"></i> <?php echo Locale::getText('console.account.section.overview.actions.logout'); ?></button>
                             </form>
                         </div>
@@ -156,7 +161,8 @@ use Utopia\Locale\Locale;
                                 data-success="trigger"
                                 data-success-param-trigger-events="deactivated"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Account deactivation failed">
+                                data-failure-param-alert-text="Account deactivation failed"
+                                data-failure-param-alert-classname="error">
                                 <button class="danger reverse"><?php echo Locale::getText('console.account.section.overview.danger.action'); ?></button>
                             </form>
                         </div>
@@ -188,7 +194,9 @@ use Utopia\Locale\Locale;
                                 data-success="trigger"
                                 data-success-param-trigger-events="session-delete"
                                 data-failure="alert"
-                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
+                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>"
+                                data-failure-param-alert-classname="error">
+
                                 <input type="hidden" name="id" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
@@ -205,7 +213,8 @@ use Utopia\Locale\Locale;
                                 data-success-param-trigger-events="logout"
                                 data-success-param-redirect-url="/"
                                 data-failure="alert"
-                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
+                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>"
+                                data-failure-param-alert-classname="error">
                                 <input type="hidden" name="id" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
@@ -235,7 +244,8 @@ use Utopia\Locale\Locale;
                 data-success-param-trigger-events="session-delete"
                 data-success-redirect-url="/"
                 data-failure="alert"
-                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>">
+                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>"
+                data-failure-param-alert-classname="error">
                 <input type="hidden" name="id" value="0">
                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout-all'); ?></button>
             </form>

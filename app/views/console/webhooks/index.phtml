@@ -54,7 +54,8 @@ $events = [
                         data-success-param-alert-text="Updated webhook successfully"
                         data-success-param-trigger-events="webhook-update,modal-close"
                         data-failure="alert"
-                        data-failure-param-alert-text="Failed to update webhook">
+                        data-failure-param-alert-text="Failed to update webhook"
+                        data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
@@ -121,7 +122,8 @@ $events = [
                     data-success-param-alert-text="Deleted webhook successfully"
                     data-success-param-trigger-events="webhook-delete"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to delete webhook">
+                    data-failure-param-alert-text="Failed to delete webhook"
+                    data-failure-param-alert-classname="error">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                     <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
@@ -152,7 +154,8 @@ $events = [
                 data-success-param-alert-text="Created webhook successfully"
                 data-success-param-trigger-events="webhook-create,modal-close"
                 data-failure="alert"
-                data-failure-param-alert-text="Failed to create webhook">
+                data-failure-param-alert-text="Failed to create webhook"
+                data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 

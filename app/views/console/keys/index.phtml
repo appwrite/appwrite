@@ -62,7 +62,8 @@ $scopes = [ // TODO sync with project list
                         data-success-param-alert-text="Updated API key successfully"
                         data-success-triggers="key-update,modal-close"
                         data-failure="alert"
-                        data-failure-param-alert-text="Failed to update API key">
+                        data-failure-param-alert-text="Failed to update API key"
+                        data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                         <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
@@ -99,7 +100,8 @@ $scopes = [ // TODO sync with project list
                     data-success-param-alert-text="Deleted API key successfully"
                     data-success-param-trigger-events="key-delete"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to delete API key">
+                    data-failure-param-alert-text="Failed to delete API key"
+                    data-failure-param-alert-classname="error">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                     <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
@@ -141,7 +143,8 @@ $scopes = [ // TODO sync with project list
                 data-success-param-alert-text="Created API key successfully"
                 data-success-param-trigger-events="key-create,modal-close"
                 data-failure="alert"
-                data-failure-param-alert-text="Failed to create API key">
+                data-failure-param-alert-text="Failed to create API key"
+                data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 

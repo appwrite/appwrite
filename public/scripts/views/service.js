@@ -33,9 +33,9 @@
                         }
                     },
 
-                    'alert': function (text) {
+                    'alert': function (text, classname) {
                         return function (alerts) {
-                            alerts.add({ text: text, class: 'success' }, 3000);
+                            alerts.add({ text: text, class: (classname || 'success') }, 3000);
                         }
                     },
 

@@ -102,7 +102,8 @@ $graph = $this->getParam('graph', false);
                     data-success-param-alert-text="Deleted platform successfully"
                     data-success-param-trigger-events="platform-delete"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to delete platform">
+                    data-failure-param-alert-text="Failed to delete platform"
+                    data-failure-param-alert-classname="error">
                     <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                     <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">
 
@@ -160,7 +161,8 @@ $graph = $this->getParam('graph', false);
         data-success-param-alert-text="Created new platform successfully"
         data-success-param-trigger-events="platform-create,modal-close"
         data-failure="alert"
-        data-failure-param-alert-text="Failed to create platform">
+        data-failure-param-alert-text="Failed to create platform"
+        data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
         <input type="hidden" name="type" data-ls-bind="web">
@@ -210,7 +212,8 @@ $graph = $this->getParam('graph', false);
         data-success-param-alert-text="Updated platform successfully"
         data-success-param-trigger-events="platform-update,modal-close"
         data-failure="alert"
-        data-failure-param-alert-text="Failed to update platform">
+        data-failure-param-alert-text="Failed to update platform"
+        data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
         <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">

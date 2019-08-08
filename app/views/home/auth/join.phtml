@@ -14,7 +14,8 @@ use Utopia\Locale\Locale;
           data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.join.success')); ?>"
           data-success-triggers="account.update"
           data-failure="alert"
-          data-failure-alert="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>">
+          data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>"
+          data-failure-param-alert-classname="error">
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
 

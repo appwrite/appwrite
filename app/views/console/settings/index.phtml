@@ -33,7 +33,8 @@ use Utopia\Locale\Locale;
                     data-success-param-alert-text="Saved project successfully"
                     data-success-param-trigger-events="project-update"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to update project">
+                    data-failure-param-alert-text="Failed to update project"
+                    data-failure-param-alert-classname="error">
 
                     <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
 
@@ -112,7 +113,9 @@ use Utopia\Locale\Locale;
                     data-success-param-alert-text="Saved project successfully"
                     data-success-param-trigger-events="project-update"
                     data-failure="alert"
-                    data-failure-param-alert-text="Failed to update project">
+                    data-failure-param-alert-text="Failed to update project"
+                    data-failure-param-alert-classname="error">
+
                     <h2>Privacy & Legal</h2>
 
                     <div class="box margin-bottom">
@@ -171,7 +174,8 @@ use Utopia\Locale\Locale;
                                     data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.success'); ?>"
                                     data-success-param-trigger-events="membership-delete"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
+                                    data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>"
+                                    data-failure-param-alert-classname="error">
 
                                     <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
@@ -188,7 +192,8 @@ use Utopia\Locale\Locale;
                                         data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
                                         data-success-param-trigger-events="membership-resend"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
+                                        data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>"
+                                        data-failure-param-alert-classname="error">
 
                                         <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
                                         <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
@@ -220,7 +225,8 @@ use Utopia\Locale\Locale;
                             data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
                             data-success-param-trigger-events="membership-create,modal-close"
                             data-failure="alert"
-                            data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
+                            data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>"
+                            data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />

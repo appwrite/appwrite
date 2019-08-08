@@ -15,7 +15,8 @@ use Utopia\Locale\Locale;
           data-success="alert"
           data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.recovery.success')); ?>"
           data-failure="alert"
-          data-failure-alert="<?php echo $this->escape(Locale::getText('home.auth.recovery.failure')); ?>">
+          data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.recovery.failure')); ?>"
+          data-failure-param-alert-classname="error">
 
         <label><?php echo $this->escape(Locale::getText('home.auth.recovery.labels.email')); ?></label>
         <input name="email" type="email" class="full-width" autocomplete="email" placeholder="me@example.com" required>

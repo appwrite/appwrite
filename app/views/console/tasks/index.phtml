@@ -87,7 +87,8 @@ use Utopia\Locale\Locale;
                                 data-success-param-alert-text="Updated task successfully"
                                 data-success-param-trigger-events="task-update,modal-close"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to update task">
+                                data-failure-param-alert-text="Failed to update task"
+                                data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
@@ -192,7 +193,8 @@ use Utopia\Locale\Locale;
                                 data-success-param-alert-text="Deleted task successfully"
                                 data-success-param-trigger-events="task-delete,modal-close"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to delete task">
+                                data-failure-param-alert-text="Failed to delete task"
+                                data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
@@ -220,7 +222,8 @@ use Utopia\Locale\Locale;
                 data-success-param-alert-text="Created task successfully"
                 data-success-param-trigger-events="task-create,modal-close"
                 data-failure="alert"
-                data-failure-param-alert-text="Failed to create task">
+                data-failure-param-alert-text="Failed to create task"
+                data-failure-param-alert-classname="error">
 
                 <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
 

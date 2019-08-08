@@ -30,7 +30,8 @@ $providers = $this->getParam('providers', []);
                                     data-success-param-alert-text="Created user successfully"
                                     data-success-param-trigger-events="user-create,modal-close"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create user">
+                                    data-failure-param-alert-text="Failed to create user"
+                                    data-failure-param-alert-classname="error">
 
                                     <label for="user-name">Name</label>
                                     <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
@@ -157,7 +158,8 @@ $providers = $this->getParam('providers', []);
                                 data-success-param-alert-text="Created team successfully"
                                 data-success-param-trigger-events="filter-teams-changed,team-create,modal-close"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to create team">
+                                data-failure-param-alert-text="Failed to create team"
+                                data-failure-param-alert-classname="error">
 
                                 <label for="team-name">Name</label>
                                 <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" />
@@ -220,7 +222,8 @@ $providers = $this->getParam('providers', []);
                                                     data-success-param-alert-text="Updated team successfully"
                                                     data-success-param-trigger-events="team-update,modal-close"
                                                     data-failure="alert"
-                                                    data-failure-param-alert-text="Failed to update team">
+                                                    data-failure-param-alert-text="Failed to update team"
+                                                    data-failure-param-alert-classname="error">
 
                                                     <label for="name">UID</label>
                                                     <div class="input-copy">
@@ -283,7 +286,8 @@ $providers = $this->getParam('providers', []);
                                     data-success-param-alert-text="Updated project OAuth settings successfully"
                                     data-success-param-trigger-events="project-update,modal-close"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to update project OAuth settings">
+                                    data-failure-param-alert-text="Failed to update project OAuth settings"
+                                    data-failure-param-alert-classname="error">
                                     <input name="provider" id="provider<?php echo ucfirst($provider); ?>" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
 
                                     <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>
