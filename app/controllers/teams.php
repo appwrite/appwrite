@@ -371,16 +371,18 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('mailgun'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
 
-            $mail
-                ->addRecipient($email, $name)
-                ->setSubject(sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
-                ->setText(strip_tags($body->render()))
-                ->setHTML($body->render())
-            ;
+            $mail->addAddress($email, $name);
 
-            if(!$mail->send()) {
+            $mail->Subject = sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
+            $mail->Body    = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            }
+            catch(Exception $error) {
                 throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
             }
 
@@ -405,7 +407,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
     ->param('inviteId', '', function () {return new UID();}, 'Invite unique ID.')
     ->param('redirect', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
-        function($teamId, $inviteId, $redirect) use ($request, $response, $register, $project, $user, $audit, $projectDB)
+        function($teamId, $inviteId, $redirect) use ($response, $register, $project, $user, $audit, $projectDB)
         {
             $membership = $projectDB->getDocument($inviteId);
 
@@ -419,7 +421,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
                 throw new Exception('Team not found', 404);
             }
 
-            if(empty($team->getUid()) !== $teamId) {
+            if($team->getUid() !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
@@ -450,19 +452,21 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('mailgun'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
 
-            $mail
-                ->addRecipient($invitee->getAttribute('email'), $invitee->getAttribute('name'))
-                ->setSubject(sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
-                ->setText(strip_tags($body->render()))
-                ->setHTML($body->render())
-            ;
+            $mail->addAddress($invitee->getAttribute('email'), $invitee->getAttribute('name'));
 
-            if(!$mail->send()) {
+            $mail->Subject = sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
+            $mail->Body    = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            }
+            catch(Exception $error) {
                 throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
             }
-
+            
             $audit
                 ->setParam('userId', $user->getUid())
                 ->setParam('event', 'auth.invite.resend')
@@ -502,7 +506,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 throw new Exception('Invite not found', 404);
             }
 
-            if(empty($invite->getAttribute('teamId')->getUid()) !== $teamId) {
+            if($invite->getAttribute('teamId')->getUid() !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
@@ -621,7 +625,7 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
                 throw new Exception('Invite not found', 404);
             }
 
-            if(empty($invite->getAttribute('teamId')->getUid()) !== $teamId) {
+            if($invite->getAttribute('teamId') !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 

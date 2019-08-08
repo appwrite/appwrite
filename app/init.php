@@ -16,6 +16,7 @@ use Database\Adapter\MySQL as MySQLAdapter;
 use Database\Adapter\Redis as RedisAdapter;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
+use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_PROTOCOL                  = 'https';
 const APP_NAME                      = 'Appwrite';
@@ -112,17 +113,28 @@ $register->set('cache', function() use ($redisHost, $redisPort) { // Register ca
     $redis->connect($redisHost, $redisPort);
     return $redis;
 });
-$register->set('mailgun', function() use ($request, $domain) { // Register MailGun handler - TODO replace with SMTP connection
-    $apiKey    = $request->getServer('_APP_MAILGUN_KEY', '');
-    $apiDomain = $request->getServer('_APP_MAILGUN_DOMAIN', '');
+$register->set('smtp', function() use ($request) {
+    $mail = new PHPMailer(true);
 
-    $mailgun = new \MailgunLite\MailgunLite($apiKey, $apiDomain);
+    $mail->isSMTP();
 
-    $mailgun
-        ->setFrom('team@appwrite.io', APP_NAME . ' Team') // Notice: Error when using '.test' domain to send emails with mailgun
-    ;
+    $username = $request->getServer('_APP_SMTP_USERNAME', '');
+    $password = $request->getServer('_APP_SMTP_PASSWORD', '');
 
-    return clone $mailgun;
+    $mail->XMailer    = 'Appwrite Mailer';
+    $mail->Host       = $request->getServer('_APP_SMTP_HOST', 'smtp');
+    $mail->Port       = $request->getServer('_APP_SMTP_PORT', 25);
+    $mail->SMTPAuth   = (!empty($username) && !empty($password));
+    $mail->Username   = $username;
+    $mail->Password   = $password;
+    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', '');
+
+    $mail->setFrom('team@appwrite.io', APP_NAME . ' Team');
+    $mail->addReplyTo('team@appwrite.io', APP_NAME . ' Team');
+
+    $mail->isHTML(true);
+    
+    return $mail;
 });
 
 /**
@@ -208,4 +220,4 @@ if(APP_MODE_ADMIN === $mode) {
 }
 
 // Set project mail
-$register->get('mailgun')->setFrom(APP_EMAIL_TEAM, sprintf(Locale::getText('auth.emails.team'), $project->getAttribute('name')));
+$register->get('smtp')->setFrom(APP_EMAIL_TEAM, sprintf(Locale::getText('auth.emails.team'), $project->getAttribute('name')));

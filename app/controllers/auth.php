@@ -135,16 +135,18 @@ $utopia->post('/v1/auth/register')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('mailgun'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
 
-            $mail
-                ->addRecipient($email, $name)
-                ->setSubject(Locale::getText('auth.emails.confirm.title'))
-                ->setText(strip_tags($body->render()))
-                ->setHTML($body->render())
-            ;
+            $mail->addAddress($email, $name);
 
-            if(!$mail->send()) {
+            $mail->Subject = Locale::getText('auth.emails.confirm.title');
+            $mail->Body    = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            }
+            catch(Exception $error) {
                 if($failure) {
                     $response->redirect($failure);
                     return;
@@ -273,16 +275,18 @@ $utopia->post('/v1/auth/register/confirm/resend')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('mailgun'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
 
-            $mail
-                ->addRecipient($user->getAttribute('email'), $user->getAttribute('name'))
-                ->setSubject(Locale::getText('auth.emails.confirm.title'))
-                ->setText(strip_tags($body->render()))
-                ->setHTML($body->render())
-            ;
+            $mail->addAddress($user->getAttribute('email'), $user->getAttribute('name'));
 
-            if(!$mail->send()) {
+            $mail->Subject = Locale::getText('auth.emails.confirm.title');
+            $mail->Body    = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            }
+            catch(Exception $error) {
                 throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
             }
 
@@ -503,16 +507,18 @@ $utopia->post('/v1/auth/recovery')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('mailgun'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
 
-            $mail
-                ->addRecipient($profile->getAttribute('email', ''), $profile->getAttribute('name', ''))
-                ->setSubject(Locale::getText('auth.emails.recovery.title'))
-                ->setText(strip_tags($body->render()))
-                ->setHTML($body->render())
-            ;
+            $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
 
-            if(!$mail->send()) {
+            $mail->Subject = Locale::getText('auth.emails.recovery.title');
+            $mail->Body    = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            }
+            catch(Exception $error) {
                 throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
             }
 

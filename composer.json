@@ -54,7 +54,8 @@
         "domnikl/statsd": "2.0.*",
         "influxdb/influxdb-php": "1.15.*",
         "bacon/bacon-qr-code": "2.0.0",
-        "erusev/parsedown": "1.7.1"
+        "erusev/parsedown": "1.7.1",
+        "phpmailer/phpmailer": "6.0.7"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.0"

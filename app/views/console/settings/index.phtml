@@ -167,7 +167,7 @@ use Utopia\Locale\Locale;
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
                             <li class="clear">
                                 <form class="pull-end"
-                                    data-service="team.deleteTeamMembership"
+                                    data-service="teams.deleteTeamMembership"
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger"
@@ -188,13 +188,15 @@ use Utopia\Locale\Locale;
                                         data-service="teams.createTeamMembershipResend"
                                         data-scope="console"
                                         data-event="submit"
+                                        data-loading="Resending invitation, please wait..."
                                         data-success="alert,trigger"
                                         data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
                                         data-success-param-trigger-events="membership-resend"
                                         data-failure="alert"
                                         data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>"
                                         data-failure-param-alert-classname="error">
-
+                                        
+                                        <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                         <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
                                         <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
@@ -221,6 +223,7 @@ use Utopia\Locale\Locale;
                             data-service="teams.createTeamMembership"
                             data-scope="console"
                             data-event="submit"
+                            data-loading="Sending invitation, please wait..."
                             data-success="alert,trigger,reset"
                             data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
                             data-success-param-trigger-events="membership-create,modal-close"
