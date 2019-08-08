@@ -28,9 +28,9 @@ $providers = $this->getParam('providers', []);
                                     data-event="submit"
                                     data-success="alert,trigger,reset"
                                     data-success-param-alert-text="Created user successfully"
-                                    data-success-param-trigger-events="filter-users-changed,user-create,modal-close"
-                                    data-error="alert"
-                                    data-error-param-alert-text="Failed to create user">
+                                    data-success-param-trigger-events="user-create,modal-close"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to create user">
 
                                     <label for="user-name">Name</label>
                                     <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
@@ -62,7 +62,7 @@ $providers = $this->getParam('providers', []);
 
                 <div
                     data-service="users.listUsers"
-                    data-event="load"
+                    data-event="load,user-create,user-update,user-delete"
                     data-param-search=""
                     data-param-limit="25"
                     data-param-offset="0"
@@ -156,8 +156,8 @@ $providers = $this->getParam('providers', []);
                                 data-success="alert,trigger,reset"
                                 data-success-param-alert-text="Created team successfully"
                                 data-success-param-trigger-events="filter-teams-changed,team-create,modal-close"
-                                data-error="alert"
-                                data-error-param-alert-text="Failed to create team">
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to create team">
 
                                 <label for="team-name">Name</label>
                                 <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" />
@@ -219,8 +219,8 @@ $providers = $this->getParam('providers', []);
                                                     data-success="alert,trigger"
                                                     data-success-param-alert-text="Updated team successfully"
                                                     data-success-param-trigger-events="team-update,modal-close"
-                                                    data-error="alert"
-                                                    data-error-param-alert-text="Failed to update team">
+                                                    data-failure="alert"
+                                                    data-failure-param-alert-text="Failed to update team">
 
                                                     <label for="name">UID</label>
                                                     <div class="input-copy">
@@ -282,8 +282,8 @@ $providers = $this->getParam('providers', []);
                                     data-success="alert,trigger"
                                     data-success-param-alert-text="Updated project OAuth settings successfully"
                                     data-success-param-trigger-events="project-update,modal-close"
-                                    data-error="alert"
-                                    data-error-param-alert-text="Failed to update project OAuth settings">
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to update project OAuth settings">
                                     <input name="provider" id="provider<?php echo ucfirst($provider); ?>" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
 
                                     <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>

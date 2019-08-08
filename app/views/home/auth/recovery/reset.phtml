@@ -18,8 +18,8 @@ use Utopia\Locale\Locale;
           data-success="alert,redirect"
           data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.reset.success')); ?>"
           data-success-redirect-url="/auth/signin"
-          data-error="alert"
-          data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.reset.failure')); ?>">
+          data-failure="alert"
+          data-failure-alert="<?php echo $this->escape(Locale::getText('home.auth.reset.failure')); ?>">
 
         <input type="hidden" name="userId" data-ls-bind="{{router.params.userId}}">
         <input type="hidden" name="token" data-ls-bind="{{router.params.token}}">

@@ -11,14 +11,28 @@ use Utopia\Locale\Locale;
 <div class="zone xl">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/account">
-            <div class="" data-service="account.get" data-scope="console" data-name="account" data-event="load" data-success="render" data-error="trigger" data-error-triggers="logout">
+            <div
+                data-service="account.get"
+                data-scope="console"
+                data-name="account"
+                data-event="load"
+                data-failure="trigger"
+                data-failure-param-trigger-events="logout">
 
                 <h2><span class="number"><i class="icon-user"></i></span><?php echo Locale::getText('console.account.section.overview.title'); ?></h2>
                 <div class="row responsive">
                     <div class="col span-9">
                         <div class="box margin-bottom-xl">
                             <div>
-                                <form name="account.update" onsubmit="return false;" data-service="account.updateName" data-scope="console" data-event="submit" data-success="trigger,alert" data-success-alert="Your name was updated successfully" data-success-triggers="account.update,modal-close" data-error="alert" data-error-alert="Failed to update your name">
+                                <form name="account.update"
+                                    data-service="account.updateName"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-success="trigger,alert"
+                                    data-success-param-alert-text="Your name was updated successfully"
+                                    data-success-param-trigger-events="account.update,modal-close"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to update your name">
 
                                     <label for="name"><?php echo Locale::getText('console.account.section.overview.labels.name'); ?></label>
 
@@ -38,7 +52,15 @@ use Utopia\Locale\Locale;
 
                             <hr />
 
-                            <form name="update-email" data-service="account.updateEmail" data-scope="console" data-event="submit" data-success="trigger,alert" data-success-alert="Email address updated successfully" data-success-triggers="account.update,modal-close" data-error="alert" data-error-alert="Failed updating email address">
+                            <form name="update-email"
+                                data-service="account.updateEmail"
+                                data-scope="console"
+                                data-event="submit"
+                                data-success="trigger,alert"
+                                data-success-param-alert-text="Email address updated successfully"
+                                data-success-param-trigger-events="account-update,modal-close" 
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed updating email address">
 
                                 <label><?php echo Locale::getText('console.account.section.overview.labels.email'); ?></label>
                                 <div class="row">
@@ -63,7 +85,15 @@ use Utopia\Locale\Locale;
                             <div data-ui-modal class="modal close width-small" data-button-text="<?php echo $this->escape(Locale::getText('console.account.section.overview.actions.update-password')); ?>" data-button-class="reverse">
                                 <h1><?php echo Locale::getText('console.account.section.overview.actions.update-password'); ?></h1>
 
-                                <form name="update-password" data-service="account.updatePassword" data-scope="console" data-event="submit" data-success="trigger,alert" data-success-triggers="account.update,modal-close" data-success-alert="Password updated successfully" data-error="alert" data-error-alert="Failed updating password">
+                                <form name="update-password"
+                                    data-service="account.updatePassword"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-success="trigger,alert"
+                                    data-success-param-trigger-events="account-update,modal-close"
+                                    data-success-param-alert-text="Password updated successfully"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed updating password">
 
                                     <label><?php echo Locale::getText('console.account.section.overview.labels.password1'); ?></label>
                                     <input name="oldPassword" type="password" class="full-width" autocomplete="off" placeholder="" required>
@@ -79,7 +109,14 @@ use Utopia\Locale\Locale;
 
                             <hr />
 
-                            <form class="margin-top" data-service="auth.logout" data-scope="console" data-event="submit" data-success="trigger" data-success-triggers="logout" data-error="alert" data-error-alert="Logout failed">
+                            <form class="margin-top"
+                                data-service="auth.logout"
+                                data-scope="console"
+                                data-event="submit"
+                                data-success="trigger"
+                                data-success-param-trigger-events="logout"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Logout failed">
                                 <button class="fill danger icon fill"><i class="icon-login"></i> <?php echo Locale::getText('console.account.section.overview.actions.logout'); ?></button>
                             </form>
                         </div>
@@ -111,7 +148,15 @@ use Utopia\Locale\Locale;
 
                             <p><?php echo Locale::getText('console.account.section.overview.danger.note'); ?></p>
 
-                            <form class="inline" data-service="account.deactivate" data-scope="console" data-event="submit" data-confirm="Are you sure you want to delete your account?" data-success="trigger" data-success-triggers="deactivated" data-error="alert" data-error-alert="Account deactivation failed">
+                            <form class="inline"
+                                data-service="account.deactivate"
+                                data-scope="console"
+                                data-event="submit"
+                                data-confirm="Are you sure you want to delete your account?"
+                                data-success="trigger"
+                                data-success-param-trigger-events="deactivated"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Account deactivation failed">
                                 <button class="danger reverse"><?php echo Locale::getText('console.account.section.overview.danger.action'); ?></button>
                             </form>
                         </div>
@@ -125,13 +170,25 @@ use Utopia\Locale\Locale;
 
             <h3><?php echo Locale::getText('console.account.section.security.devices.title'); ?></h3>
 
-            <div class="box margin-bottom" data-service="account.getSessions" data-scope="console" data-name="sessions" data-event="load">
+            <div class="box margin-bottom"
+                data-service="account.getSessions"
+                data-scope="console"
+                data-name="sessions"
+                data-event="load">
 
                 <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                     <li class="clear">
                         <span data-ls-if="true != {{session.current}}" style="display: none;">
                             <!-- From remote session (-logout event) -->
-                            <form class="pull-end" data-service="auth.logoutBySession" data-scope="console" data-event="submit" data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>" data-success="trigger" data-success-triggers="account.update" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
+                            <form class="pull-end"
+                                data-service="auth.logoutBySession"
+                                data-scope="console"
+                                data-event="submit"
+                                data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
+                                data-success="trigger"
+                                data-success-param-trigger-events="account.update"
+                                data-failure="alert"
+                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
                                 <input type="hidden" name="id" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
@@ -139,7 +196,16 @@ use Utopia\Locale\Locale;
 
                         <span data-ls-if="true == {{session.current}}" style="display: none;">
                             <!-- From current session (+logout event) -->
-                            <form class="pull-end" data-service="auth.logoutBySession" data-scope="console" data-event="submit" data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>" data-success="trigger,redirect" data-success-triggers="logout" data-success-redirect-url="/" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
+                            <form class="pull-end"
+                                data-service="auth.logoutBySession"
+                                data-scope="console"
+                                data-event="submit"
+                                data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
+                                data-success="trigger,redirect"
+                                data-success-param-trigger-events="logout"
+                                data-success-param-redirect-url="/"
+                                data-failure="alert"
+                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>">
                                 <input type="hidden" name="id" data-ls-bind="{{session.id}}">
                                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
                             </form>
@@ -161,12 +227,24 @@ use Utopia\Locale\Locale;
                 </ul>
             </div>
 
-            <form class="inline margin-bottom-large" data-service="auth.logoutBySession" data-scope="console" data-event="submit" data-success="trigger,redirect" data-success-triggers="account.update" data-success-redirect-url="/" data-error="alert" data-error-alert="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>">
+            <form class="inline margin-bottom-large"
+                data-service="auth.logoutBySession"
+                data-scope="console"
+                data-event="submit"
+                data-success="trigger,redirect"
+                data-success-param-trigger-events="account-update"
+                data-success-redirect-url="/"
+                data-failure="alert"
+                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>">
                 <input type="hidden" name="id" value="0">
                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout-all'); ?></button>
             </form>
 
-            <div class="account" data-service="account.getSecurity" data-scope="console" data-name="securityLogs" data-event="load">
+            <div class="account"
+                data-service="account.getSecurity"
+                data-scope="console"
+                data-name="securityLogs"
+                data-event="load">
                 <span data-ls-bind="{{securityLogs}}"></span>
 
                 <h3><?php echo Locale::getText('console.account.section.security.recent-activity.title'); ?></h3>

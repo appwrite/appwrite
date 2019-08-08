@@ -151,14 +151,15 @@ $graph = $this->getParam('graph', false);
 
     <h1>New Website</h1>
 
-    <form data-service="projects.createPlatform"
+    <form
+        data-service="projects.createPlatform"
         data-scope="console"
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new platform successfully"
         data-success-param-trigger-events="platform-create,modal-close"
-        data-error="alert"
-        data-error-param-alert-text="Failed to create platform">
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to create platform">
 
         <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
         <input type="hidden" name="type" data-ls-bind="web">

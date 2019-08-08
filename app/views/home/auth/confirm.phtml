@@ -2,7 +2,8 @@
 use Utopia\Locale\Locale;
 ?>
 <section class="zone xl">
-    <form data-service="auth.confirm"
+    <form
+      data-service="auth.confirm"
       data-scope="console"
       data-event="load"
       data-param-token="{{router.params.token}}"
@@ -11,8 +12,8 @@ use Utopia\Locale\Locale;
       data-success-redirect-url="/console"
       data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.confirm.success')); ?>"
       data-success-triggers="account.update"
-      data-error="alert"
-      data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.confirm.failure')); ?>">
+      data-failure="alert"
+      data-failure-alert="<?php echo $this->escape(Locale::getText('home.auth.confirm.failure')); ?>">
 
         <h2 class="margin-bottom-small"><?php echo $this->escape(Locale::getText('home.auth.confirm.title')); ?></h2>
         <p class="note"><?php echo $this->escape(Locale::getText('home.auth.confirm.subtitle')); ?></p>

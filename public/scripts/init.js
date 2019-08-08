@@ -14,7 +14,7 @@ window.addEventListener('error', function (event) {
 
 document.addEventListener('logout', function () {
     if(window.ls.router.getCurrent().view.scope === 'console') {
-        state.change('/auth/signin');
+        window.ls.router.change('/auth/signin');
     }
 });
 

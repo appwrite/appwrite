@@ -6,9 +6,9 @@ use Utopia\Locale\Locale;
 Locale::$exceptions = false;
 
 $roles = [
-    'owner' => Locale::getText('general.roles.owner'),
-    'developer' => Locale::getText('general.roles.developer'),
-    'admin' => Locale::getText('general.roles.admin'),
+    ['type' => 'owner', 'label' => Locale::getText('general.roles.owner')],
+    ['type' => 'developer', 'label' => Locale::getText('general.roles.developer')],
+    ['type' => 'admin', 'label' => Locale::getText('general.roles.admin')],
 ];
 
 $layout = new View(__DIR__ . '/../../views/layouts/default.phtml');

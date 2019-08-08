@@ -13,8 +13,8 @@ use Utopia\Locale\Locale;
       data-success-redirect-url="/console?project={{router.params.project}}"
           data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.join.success')); ?>"
           data-success-triggers="account.update"
-          data-error="alert"
-          data-error-alert="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>">
+          data-failure="alert"
+          data-failure-alert="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>">
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
 
@@ -29,7 +29,7 @@ use Utopia\Locale\Locale;
              data-event="load"
              data-success="render,trigger"
              data-success-triggers="api-company.load"
-             data-error="render">
+             data-failure="render">
 
             <h2 class="margin-bottom-small"><?php echo $this->escape(Locale::getText('home.auth.join.title')); ?></h2>
 

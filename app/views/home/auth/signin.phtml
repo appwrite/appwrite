@@ -30,8 +30,8 @@ use Utopia\Locale\Locale;
                 data-success="trigger,redirect"
                 data-success-param-trigger-events="login"
                 data-success-param-redirect-url="/console"
-                data-error="alert"
-                data-error-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?>">
+                data-failure="alert"
+                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?>">
 
                 <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console">
                 <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/signin?failure=1">

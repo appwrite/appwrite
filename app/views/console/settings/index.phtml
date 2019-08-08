@@ -32,8 +32,8 @@ use Utopia\Locale\Locale;
                     data-success="alert,trigger"
                     data-success-param-alert-text="Saved project successfully"
                     data-success-param-trigger-events="project-update"
-                    data-error="alert"
-                    data-error-param-alert-text="Failed to update project">
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to update project">
 
                     <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
 
@@ -111,8 +111,8 @@ use Utopia\Locale\Locale;
                     data-success="alert,trigger"
                     data-success-param-alert-text="Saved project successfully"
                     data-success-param-trigger-events="project-update"
-                    data-error="alert"
-                    data-error-param-alert-text="Failed to update project">
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to update project">
                     <h2>Privacy & Legal</h2>
 
                     <div class="box margin-bottom">
@@ -154,7 +154,7 @@ use Utopia\Locale\Locale;
                 <div class="zone xl"
                     data-service="teams.getTeamMembers"
                     data-scope="console"
-                    data-event="load,auth-invite,auth-leave"
+                    data-event="load,membership-create,membership-update,membership-delete"
                     data-name="members"
                     data-param-team-id="{{console-project.teamId}}"
                     data-success="trigger"
@@ -169,9 +169,9 @@ use Utopia\Locale\Locale;
                                     data-event="submit"
                                     data-success="alert,trigger"
                                     data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.success'); ?>"
-                                    data-success-param-trigger-events="auth-leave,project-update"
-                                    data-error="alert"
-                                    data-error-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
+                                    data-success-param-trigger-events="membership-delete"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>">
 
                                     <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
@@ -181,14 +181,14 @@ use Utopia\Locale\Locale;
 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
                                     <form
-                                        data-service="auth.inviteResend"
+                                        data-service="teams.createTeamMembershipResend"
                                         data-scope="console"
                                         data-event="submit"
                                         data-success="alert,trigger"
                                         data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
-                                        data-success-param-trigger-events="auth-invite"
-                                        data-error="alert"
-                                        data-error-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
+                                        data-success-param-trigger-events="membership-resend"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
 
                                         <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
                                         <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
@@ -212,17 +212,17 @@ use Utopia\Locale\Locale;
 
                         <h1><?php echo Locale::getText('console.settings.section.members.labels.invite'); ?></h1>
 
-                        <form name="auth.invite"
-                            data-service="auth.invite"
+                        <form name="teams.createTeamMembership"
+                            data-service="teams.createTeamMembership"
                             data-scope="console"
                             data-event="submit"
                             data-success="alert,trigger,reset"
                             data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
-                            data-success-param-trigger-events="auth-invite,modal-close"
-                            data-error="alert"
-                            data-error-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
+                            data-success-param-trigger-events="membership-create,modal-close"
+                            data-failure="alert"
+                            data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>">
 
-                            <input name="team" id="team" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                            <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
                             <label for="name"><?php echo Locale::getText('console.settings.section.members.labels.name'); ?> <small>(<?php echo Locale::getText('general.optional'); ?>)</small></label>
@@ -232,7 +232,9 @@ use Utopia\Locale\Locale;
                             <input name="email" id="email" type="email" autocomplete="email" required>
 
                             <label for="roles"><?php echo Locale::getText('console.settings.section.members.labels.role'); ?></label>
-                            <select id="roles" name="roles" required data-ls-options="{{env.ROLES}}" data-cast-to="array"></select>
+                            <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array">
+                                <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
+                            </select>
 
                             <div class="clear">
                                 <button><?php echo Locale::getText('console.settings.section.members.labels.send'); ?></button>

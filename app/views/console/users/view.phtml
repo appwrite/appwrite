@@ -98,8 +98,8 @@ use Utopia\Locale\Locale;
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Blocked User Successfully"
                                 data-success-param-trigger-events="user-update"
-                                data-error="alert"
-                                data-error-param-alert-text="Failed to Block User">
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to Block User">
 
                                 <button name="status" type="submit" class="danger fill" value="<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
                             </form>
@@ -113,8 +113,8 @@ use Utopia\Locale\Locale;
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Blocked Activated Successfully"
                                 data-success-param-trigger-events="user-update"
-                                data-error="alert"
-                                data-error-param-alert-text="Failed to Activate User">
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to Activate User">
 
                                 <button name="status" type="submit" class="fill" value="<?php echo \Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>
                             </form>
@@ -145,8 +145,8 @@ use Utopia\Locale\Locale;
                                         data-loading="Loading..."
                                         data-success="trigger"
                                         data-success-param-trigger-events="user-update"
-                                        data-error="alert"
-                                        data-error-param-alert-text="Failed to logout session">
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to logout session">
                                         <input type="hidden" name="userId" data-ls-bind="{{router.params.id}}">
                                         <input type="hidden" name="sessionId" data-ls-bind="{{session.id}}">
                                         <button class="danger">Logout</button>
@@ -170,8 +170,8 @@ use Utopia\Locale\Locale;
                             data-event="submit"
                             data-success="trigger"
                             data-success-param-trigger-events="user-update"
-                            data-error="alert"
-                            data-error-param-alert-text="Failed to logout all sessions">
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to logout all sessions">
                             <button class="danger">Logout from all devices</button>
                         </form>
                     </div>
