@@ -29,7 +29,7 @@
             <p class="margin-bottom-no">Create your first project to get started</p>
         </div>
 
-        <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3">
+        <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3" style="visibility: hidden;">
             <li class="margin-bottom">
                 <a data-ls-attrs="href=/console/home?project={{project.$uid}}" class="box">
                     <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-large">&nbsp;</div>
@@ -40,5 +40,5 @@
         </ul>
     </div>
 
-    <button data-ls-trigger="new-project" class="setup-new">Add Project</button>
+    <button data-ls-ui-trigger="create-project">Create Project</button>
 </section>

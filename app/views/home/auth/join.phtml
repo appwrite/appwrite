@@ -3,19 +3,19 @@ use Utopia\Locale\Locale;
 ?>
 <section class="zone medium">
     <form class="box margin-top-large"
-          data-service="auth.join"
-          data-scope="console"
-          data-event="submit"
-          data-param-invite-id="{{router.params.inviteId}}"
-          data-param-user-id="{{router.params.userId}}"
-          data-param-secret="{{router.params.secret}}"
-          data-success="redirect,alert,trigger"
-      data-success-redirect-url="/console?project={{router.params.project}}"
-          data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.join.success')); ?>"
-          data-success-triggers="account.update"
-          data-failure="alert"
-          data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>"
-          data-failure-param-alert-classname="error">
+        data-service="auth.join"
+        data-scope="console"
+        data-event="submit"
+        data-param-invite-id="{{router.params.inviteId}}"
+        data-param-user-id="{{router.params.userId}}"
+        data-param-secret="{{router.params.secret}}"
+        data-success="redirect,alert,trigger"
+        data-success-redirect-url="/console?project={{router.params.project}}"
+        data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.join.success')); ?>"
+        data-success-triggers="account.update"
+        data-failure="alert"
+        data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?>"
+        data-failure-param-alert-classname="error">
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
 
@@ -28,9 +28,8 @@ use Utopia\Locale\Locale;
              data-name="api-company"
              data-param-id="{{router.params.company}}"
              data-event="load"
-             data-success="render,trigger"
-             data-success-triggers="api-company.load"
-             data-failure="render">
+             data-success="trigger"
+             data-success-triggers="api-company.load">
 
             <h2 class="margin-bottom-small"><?php echo $this->escape(Locale::getText('home.auth.join.title')); ?></h2>
 
