@@ -7,7 +7,7 @@ use Utopia\Locale\Locale;
         <?php echo $this->escape(Locale::getText('home.auth.signin.title')); ?>
     </h1>
 
-    <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?></div>
+    <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} >= 1"><?php echo $this->escape(Locale::getText('home.auth.signin.failure')); ?></div>
 
     <div class="row responsive force-reverse">
         <div class="col span-6 oauth margin-bottom-large">
