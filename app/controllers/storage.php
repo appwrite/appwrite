@@ -217,20 +217,6 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             if (!file_exists($path)) {
                 throw new Exception('File not found in ' . $path, 404);
             }
-/*
-            if(1 === 1 || !$libreOffice->supported($convertExt)) {
-                if (array_key_exists($mimeType, $fileLogos)) {
-                    $path = realpath('./images/file-types/' . $fileLogos[$mimeType]);
-                    $type = 'jpg';
-                    $cipher = '';
-                    $algorithm = '';
-                } elseif (!in_array($mimeType, $inputs)) {
-                    $path = realpath('./images/file-types/default.gif');
-                    $type = 'jpg';
-                    $cipher = '';
-                    $algorithm = '';
-                }
-            }*/
 
             $cache  = new Cache(new Filesystem('/storage/cache/app-' . $project->getUid())); // Limit file number or size
             $data   = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
@@ -621,23 +607,3 @@ $utopia->get('/v1/storage/files/:fileId/scan')
             //$response->json($antiVirus->continueScan($device->getRoot()));
         }
     );
-/*
-$utopia->get('/v1/storage/scan')
-    ->desc('Scan Storage')
-    ->label('scope', 'storage.scan')
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'scan')
-    ->label('sdk.hide', true)
-    ->action(
-        function() use ($response)
-        {
-            $device = Storage::getDevice('local');
-
-            $antiVirus = new Network('clamav', 3310);
-            //var_dump($antiVirus->ping());
-            //var_dump($antiVirus->version());
-            //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
-
-            $response->json($antiVirus->continueScan($device->getRoot()));
-        }
-    );*/

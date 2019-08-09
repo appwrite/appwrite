@@ -60,24 +60,24 @@ class Database
             'legalCity' => '',
             'legalAddress' => '',
             'legalTaxId' => '',
-            'usersOauthBitbucketAppid' => '',
-            'usersOauthBitbucketSecret' => '',
+            // 'usersOauthBitbucketAppid' => '',
+            // 'usersOauthBitbucketSecret' => '',
             'usersOauthFacebookAppid' => '',
             'usersOauthFacebookSecret' => '',
             'usersOauthGithubAppid' => '',
             'usersOauthGithubSecret' => '',
-            'usersOauthGitlabAppid' => '',
-            'usersOauthGitlabSecret' => '',
-            'usersOauthGoogleAppid' => '',
-            'usersOauthGoogleSecret' => '',
-            'usersOauthInstagramAppid' => '',
-            'usersOauthInstagramSecret' => '',
+            // 'usersOauthGitlabAppid' => '',
+            // 'usersOauthGitlabSecret' => '',
+            // 'usersOauthGoogleAppid' => '',
+            // 'usersOauthGoogleSecret' => '',
+            // 'usersOauthInstagramAppid' => '',
+            // 'usersOauthInstagramSecret' => '',
             'usersOauthLinkedinAppid' => '',
             'usersOauthLinkedinSecret' => '',
-            'usersOauthMicrosoftAppid' => '',
-            'usersOauthMicrosoftSecret' => '',
-            'usersOauthTwitterAppid' => '',
-            'usersOauthTwitterSecret' => '',
+            // 'usersOauthMicrosoftAppid' => '',
+            // 'usersOauthMicrosoftSecret' => '',
+            // 'usersOauthTwitterAppid' => '',
+            // 'usersOauthTwitterSecret' => '',
         ],
         self::SYSTEM_COLLECTION_COLLECTIONS => [
             '$collection' => self::SYSTEM_COLLECTION_COLLECTIONS,
@@ -94,7 +94,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -104,7 +103,6 @@ class Database
                     'default' => false,
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -136,7 +134,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -146,7 +143,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -156,7 +152,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -166,7 +161,6 @@ class Database
                     'default' => '',
                     'required' => false,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -176,7 +170,6 @@ class Database
                     'default' => true,
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -186,7 +179,6 @@ class Database
                     'default' => true,
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -218,7 +210,6 @@ class Database
                     'default' => '',
                     'required' => false,
                     'array' => true,
-
                 ],
             ],
         ],
@@ -237,7 +228,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -247,7 +237,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -257,7 +246,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -267,7 +255,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -277,7 +264,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -287,7 +273,6 @@ class Database
                     'default' => '',
                     'required' => false,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -297,7 +282,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -307,7 +291,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -523,7 +506,6 @@ class Database
                     'default' => null,
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -533,7 +515,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -543,7 +524,6 @@ class Database
                     'default' => 0,
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -553,7 +533,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -563,7 +542,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
             ],
         ],
@@ -654,7 +632,6 @@ class Database
                     'default' => '',
                     'required' => true,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -664,7 +641,6 @@ class Database
                     'default' => '',
                     'required' => false,
                     'array' => false,
-
                 ],
                 [
                     '$collection' => self::SYSTEM_COLLECTION_RULES,
@@ -674,7 +650,6 @@ class Database
                     'default' => '',
                     'required' => false,
                     'array' => false,
-
                 ],
             ],
         ],
@@ -1705,6 +1680,16 @@ class Database
         $results = $this->adapter->getCount($options);
 
         return $results;
+    }
+
+    /**
+     * @param string $key
+     * @param string $value
+     * @return array
+     */
+    public function setMock($key, $value) {
+        $this->mocks[$key] = $value;
+        return $this;
     }
 
     /**
