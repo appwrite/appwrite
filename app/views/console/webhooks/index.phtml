@@ -135,7 +135,9 @@ $events = [
                 <span data-ls-if="0 == {{webhook.security}}" style="display: none;">
                     &nbsp; <span class="note text-danger">(SSL/TLS Disabled)</span>
                 </span>
-                <p class="note margin-bottom-no margin-top-small"><span class="tag green">POST</span> <span data-ls-bind="{{webhook.url}}"></span></p>
+                <div class="margin-top-tiny">
+                    <a data-ls-attrs="href={{webhook.url}}" data-ls-bind="{{webhook.url}}" target="_blank" class="text-one-liner"></a>
+                </div>
             </li>
         </ul>
     </div>

@@ -74,7 +74,7 @@ use Utopia\Locale\Locale;
                         </div>
                     </td>
                     <td>
-                        <div data-ui-modal class="modal close" data-button-text="" data-button-class="pull-end reverse round" data-button-icon="icon-cog">
+                        <div data-ui-modal class="modal box close" data-button-text="" data-button-class="pull-end reverse round" data-button-icon="icon-cog">
                             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Update Task</h1>
@@ -104,7 +104,7 @@ use Utopia\Locale\Locale;
                                 </label>
 
                                 <label data-ls-attrs="for=schedule-{{task.$uid}}">Schedule (CRON Syntax)</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" />
+                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" placeholder="* * * * *" />
 
                                 <div class="row thin">
                                     <div class="col span-4">
@@ -179,9 +179,9 @@ use Utopia\Locale\Locale;
                                     </div>
                                 </div>
 
-                                <div>
-                                    <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                </div>
+                                <hr />
+
+                                <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </form>
 
                             <form class="margin-top"
@@ -209,7 +209,7 @@ use Utopia\Locale\Locale;
     </div>
 
     <div class="clear">
-        <div data-ui-modal class="modal close" data-button-text="Add Task">
+        <div data-ui-modal class="modal box close" data-button-text="Add Task">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
             <h1>Add Task</h1>
@@ -238,7 +238,7 @@ use Utopia\Locale\Locale;
                 </label>
 
                 <label for="schedule">Schedule (CRON Syntax)</label>
-                <input type="text" class="full-width" id="schedule" name="schedule" required autocomplete="off" />
+                <input type="text" class="full-width" id="schedule" name="schedule" required autocomplete="off" placeholder="* * * * *" />
 
                 <div class="row thin">
                     <div class="col span-4">
@@ -299,10 +299,10 @@ use Utopia\Locale\Locale;
                         <input type="password" class="full-width" id="httpPass" name="httpPass" autocomplete="off" />
                     </div>
                 </div>
+                
+                <hr />
 
-                <div>
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                </div>
+                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </div>
     </div>
