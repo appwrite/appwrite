@@ -62,7 +62,7 @@ $utopia->get('/v1/account/prefs')
             $prefs  = $user->getAttribute('prefs', '{}');
 
             if(empty($prefs)) {
-                $prefs = [];
+                $prefs = '[]';
             }
 
             try {

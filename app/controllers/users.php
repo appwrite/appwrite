@@ -140,7 +140,7 @@ $utopia->get('/v1/users/:userId/prefs')
             $prefs  = $user->getAttribute('prefs', '');
 
             if(empty($prefs)) {
-                $prefs = [];
+                $prefs = '[]';
             }
 
             try {
