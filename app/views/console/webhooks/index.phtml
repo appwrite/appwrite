@@ -80,34 +80,42 @@ $events = [
                         <label data-ls-attrs="for=url-{{webhook.$uid}}">POST URL</label>
                         <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
 
-                        <label data-ls-attrs="for=secure-{{webhook.$uid}}">SSL / TLS</label>
-                        <p class="note">Certificate verification</p>
+                        <div class="margin-bottom toggle" data-ls-ui-open>
+                            <i class="icon-plus pull-end margin-top-tiny"></i>
+                            <i class="icon-minus pull-end margin-top-tiny"></i>
+                            
+                            <h2 class="margin-bottom">
+                                Advanced Options
+                                <small class="note text-size-small">(optional)</small>
+                            </h2>
 
-                        <input name="security" data-ls-attrs="id=secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
-                        &nbsp;&nbsp;
-                        <input name="security" data-ls-attrs="id=secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
+                            <label data-ls-attrs="for=secure-{{webhook.$uid}}">SSL / TLS</label>
+                            <p class="note">Certificate verification</p>
 
-                        <br />
-                        <br />
+                            <input name="security" data-ls-attrs="id=secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
+                            &nbsp;&nbsp;
+                            <input name="security" data-ls-attrs="id=secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
 
-                        <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
-                            <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
-                        </p>
+                            <br />
+                            <br />
 
-                        <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+                            <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                                <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                            </p>
 
-                        <div class="row thin">
-                            <div class="col span-6">
-                                <label data-ls-attrs="for=httpUser-{{webhook.$uid}}">User</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
-                            </div>
-                            <div class="col span-6">
-                                <label data-ls-attrs="for=httpPass-{{webhook.$uid}}">Password</label>
-                                <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                            <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+
+                            <div class="row thin">
+                                <div class="col span-6">
+                                    <label data-ls-attrs="for=httpUser-{{webhook.$uid}}">User</label>
+                                    <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
+                                </div>
+                                <div class="col span-6">
+                                    <label data-ls-attrs="for=httpPass-{{webhook.$uid}}">Password</label>
+                                    <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                                </div>
                             </div>
                         </div>
-
-                        <hr />
 
                         <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                     </form>
@@ -181,34 +189,42 @@ $events = [
                 <label for="url">POST URL</label>
                 <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="https://example.com/callback" />
 
-                <label for="secure">SSL / TLS</label>
-                <p class="note">Certificate verification</p>
+                <div class="margin-bottom toggle" data-ls-ui-open>
+                    <i class="icon-plus pull-end margin-top-tiny"></i>
+                    <i class="icon-minus pull-end margin-top-tiny"></i>
+                    
+                    <h2 class="margin-bottom">
+                        Advanced Options
+                        <small class="note text-size-small">(optional)</small>
+                    </h2>
 
-                <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
-                &nbsp;&nbsp;
-                <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
+                    <label for="secure">SSL / TLS</label>
+                    <p class="note">Certificate verification</p>
 
-                <br />
-                <br />
+                    <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
+                    &nbsp;&nbsp;
+                    <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
 
-                <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
-                    <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
-                </p>
+                    <br />
+                    <br />
 
-                <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+                    <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                        <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                    </p>
 
-                <div class="row thin">
-                    <div class="col span-6">
-                        <label for="httpUser">User</label>
-                        <input type="text" class="full-width" id="httpUser" name="httpUser" autocomplete="off" />
-                    </div>
-                    <div class="col span-6">
-                        <label for="httpPass">Password</label>
-                        <input type="password" class="full-width" id="httpPass" name="httpPass" autocomplete="off" />
+                    <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+
+                    <div class="row thin">
+                        <div class="col span-6">
+                            <label for="httpUser">User</label>
+                            <input type="text" class="full-width" id="httpUser" name="httpUser" autocomplete="off" />
+                        </div>
+                        <div class="col span-6">
+                            <label for="httpPass">Password</label>
+                            <input type="password" class="full-width" id="httpPass" name="httpPass" autocomplete="off" />
+                        </div>
                     </div>
                 </div>
-
-                <hr />
 
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
