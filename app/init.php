@@ -165,6 +165,7 @@ stream_context_set_default([ // Set global user agent and http settings
 $consoleDB = new Database();
 $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
 $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
+$consoleDB->setMocks(include __DIR__ . '/../app/config/collections.php');
 
 Authorization::disable();
 
