@@ -7,18 +7,15 @@
 
                 let formData    = form.toJson(element);
 
-                delete formData.vault;
-                delete formData.plan;
-
                 formData['name'] = formData['name'] || (element.dataset['defaultName'] || '');
 
-                console.teams.create(formData['name'] || '')
+                console.teams.createTeam(formData['name'] || '')
                     .then(function (data) {
                         let team = JSON.parse(data)['$uid'];
 
                         formData = JSON.parse(JSON.stringify(formData).replace(new RegExp('{{teamId}}', 'g'), team)); //convert to JSON string
 
-                        console.projects.create(formData['name'], team)
+                        console.projects.createProject(formData['name'], team)
                             .then(function (data) {
                                 let project= JSON.parse(data);
 

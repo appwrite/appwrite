@@ -31,15 +31,6 @@ const ROLE_ALL              = '*';
  * files.write
  * files.scan
  *
- * billing.currencies.read
- * billing.vaults.read
- * billing.vaults.write
- * billing.plans.read
- * billing.plans.write
- * billing.subscriptions.read
- * billing.subscriptions.write
- * billing.invoices.read
- *
  * health.read
  *
  * locale.read
@@ -63,13 +54,6 @@ $logged = [
     'documents.write',
     'files.read',
     'files.write',
-    'billing.currencies.read',
-    'billing.vaults.read',
-    'billing.vaults.write',
-    'billing.plans.read',
-    'billing.subscriptions.read',
-    'billing.subscriptions.write',
-    'billing.invoices.read',
     'projects.read',
     'projects.write',
     'locale.read',
@@ -82,7 +66,6 @@ $admins = [
     'users.write',
     'collections.read',
     'collections.write',
-    'billing.plans.write',
 ];
 
 return [
@@ -97,7 +80,6 @@ return [
             'locale.read',
             'avatars.read',
             'health.read',
-            'billing.currencies.read',
         ]
     ],
     ROLE_MEMBER     => [

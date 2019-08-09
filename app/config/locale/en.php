@@ -203,26 +203,6 @@ return [
     'console.account.section.security.recent-activity.location' => 'Location',
     'console.account.section.security.recent-activity.ip' => 'IP',
 
-    'console.account.section.payment-methods.title' => 'Payment Methods',
-    'console.account.section.payment-methods.disclaimer' => 'All data is stored securely using',
-    'console.account.section.payment-methods.provider' => 'PayPal',
-    'console.account.section.payment-methods.action' => 'Add Payment Method',
-    'console.account.section.payment-methods.remove' => 'Remove',
-    'console.account.section.payment-methods.success' => 'Payment Method Removed Successfully',
-    'console.account.section.payment-methods.failure' => 'Failed to Remove Payment Method',
-    'console.account.section.payment-methods.empty.title' => 'No Payment Methods Found',
-    'console.account.section.payment-methods.empty.subtitle' => 'You haven\'t attached any payment method to your account yet.',
-
-    'console.account.section.invoices.title' => 'Invoices',
-    'console.account.section.invoices.description' => 'Description',
-    'console.account.section.invoices.for' => 'Invoice for',
-    'console.account.section.invoices.status' => 'Status',
-    'console.account.section.invoices.amount' => 'Amount',
-    'console.account.section.invoices.view' => 'View',
-    'console.account.section.invoices.download' => 'Download',
-    'console.account.section.invoices.empty.title' => 'No Invoices Found',
-    'console.account.section.invoices.empty.subtitle' => 'You probably haven\'t subscribed to any plan or billing date hasn\'t arrived yet.',
-
     'console.notifications.title' => 'Notifications',
 
     'console.settings.title' => 'Settings',

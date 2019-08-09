@@ -28,18 +28,6 @@ $scopes = [ // TODO sync with console UI list
     'documents.write',
     'files.read',
     'files.write',
-
-    //'billing.vaults.read',
-    //'billing.vaults.write',
-    //'billing.plans.read',
-    //'billing.plans.write',
-    //'billing.subscriptions.read',
-    //'billing.subscriptions.write',
-    //'billing.invoices.read',
-    //'projects.read',
-    //'projects.write',
-    //'locale.read',
-    //'health.read',
 ];
 
 $utopia->get('/v1/projects')
