@@ -53,20 +53,6 @@ Resque::setBackend($redisHost . ':' . $redisPort);
 define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) !== 'localhost') ? '.' . $request->getServer('HTTP_HOST', false) : false);
 
 /**
- * Error Logging
- */
-/*if($request->getServer('_APP_SENTRY_DSN')) {
-    $sentry = new Raven_Client($request->getServer('_APP_SENTRY_DSN'));
-
-    if($env == App::ENV_TYPE_PRODUCTION) {
-        $error_handler = new Raven_ErrorHandler($sentry);
-        $error_handler->registerExceptionHandler();
-        $error_handler->registerErrorHandler();
-        $error_handler->registerShutdownFunction();
-    }
-}*/
-
-/**
  * Registry
  */
 $register->set('db', function() use ($request) { // Register DB connection
