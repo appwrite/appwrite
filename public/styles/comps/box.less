@@ -66,34 +66,48 @@
     border-bottom: solid 1px #efefef;
   }
 
-  .card {
-    margin: 0 0 20px 0;
-    height: 30px;
-    width: 30px;
-    padding: 0;
-    background: @config-color-focus-fade;
-    border-radius: 50%;
+  .toggle {
     position: relative;
+    border-top: 2px solid #f6f7f8;
+    border-bottom: 2px solid #f6f7f8;
+    margin: 0 -30px;
+    padding: 30px;
+    height: 35px;
     overflow: hidden;
-    text-align: center;
 
-    &.xdatabase {
-      background: #b97fc6;
+    button.ls-ui-open {
+      position: absolute;
+      top: 0;
+      .func-start(0);
+      width: 100%;
+      height: 95px;
+      background: transparent;
+      opacity: .5;
+      border-radius: 0;
     }
 
-    &.xstorage {
-      background: #f2942c;
+    .icon-minus {
+      display: none;
     }
 
-    &.xusers {
-      background: #89e8da;
+    .content {
+      display: none;
     }
 
-    i {
-      font-size: 15px;
-      line-height: 30px;
-      color: #000000;
-      opacity: 0.08;
+    &.open {
+      height: auto;
+
+      .icon-minus {
+        display: block;
+      }
+
+      .icon-plus {
+        display: none;
+      }
+
+      .content {
+        display: block;
+      }
     }
   }
 

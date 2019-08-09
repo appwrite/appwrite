@@ -4,10 +4,11 @@
         repeat: false,
         controller: function(element, window) {
             let def         = (element.classList.contains('open')) ? 'open' : 'close';
-            let buttonClass = element.dataset['buttonClass'];
+            let buttonClass = element.dataset['buttonClass'] || 'ls-ui-open';
             let buttonText  = element.dataset['buttonText'] || '';
             let buttonIcon  = element.dataset['buttonIcon'] || '';
             let hover       = element.hasAttribute('data-hover');
+            let blur        = element.hasAttribute('data-blur');
             let button      = window.document.createElement('button');
 
             let isTouch = function() {
@@ -18,6 +19,7 @@
             button.innerText = buttonText;
             button.className = buttonClass;
             button.tabIndex = 1;
+            button.type = 'button';
 
             if(buttonIcon) {
                 let icon = window.document.createElement('i');
@@ -75,8 +77,11 @@
                 }
                 return null;
             };
+            
+            if(blur) {
+                button.addEventListener('blur', closeDelay);
+            }
 
-            button.addEventListener('blur', closeDelay);
             element.addEventListener('click', function (event) {
                 let target = findParent('a', event.target);
 
