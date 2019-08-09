@@ -11,13 +11,12 @@
 
                 console.teams.createTeam(formData['name'] || '')
                     .then(function (data) {
-                        let team = JSON.parse(data)['$uid'];
+                        let team = data['$uid'];
 
                         formData = JSON.parse(JSON.stringify(formData).replace(new RegExp('{{teamId}}', 'g'), team)); //convert to JSON string
 
                         console.projects.createProject(formData['name'], team)
-                            .then(function (data) {
-                                let project= JSON.parse(data);
+                            .then(function (project) {
 
                                 //router.change();
                                 window.location.href = '/console?project=' + project['$uid'];
