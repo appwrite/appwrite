@@ -33,7 +33,7 @@ use Utopia\Locale\Locale;
                     <div class="col span-8">
                         <div class="box margin-bottom-large">
                             <div class="text-center">
-                                <img src="" data-ui-gravatar="{{user.email}}" data-name="{{user.name}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
+                                <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
 
                                 <div class="margin-top-small note" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
@@ -58,7 +58,7 @@ use Utopia\Locale\Locale;
                             data-success="trigger"
                             data-success-param-trigger-events="user-prefs-load">
 
-                            <div data-ls-if="'{{user-prefs}}' && '{}' !== '{{user-prefs}}'" style="display: none;">
+                            <div data-ls-if="{{user-prefs.length}}" style="display: none;">
                                 <table class="vertical">
                                     <thead>
                                         <tr>
@@ -79,7 +79,7 @@ use Utopia\Locale\Locale;
                                 </table>
                             </div>
 
-                            <div data-ls-if="'{}' === '{{user-prefs}}'" style="display: none;">
+                            <div data-ls-if="!{{user-prefs.length}}" style="display: none;">
                                 No user preferences found
                             </div>
                         </div>
@@ -156,12 +156,12 @@ use Utopia\Locale\Locale;
                                         <button class="danger">Logout</button>
                                     </form>
 
-                                    <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120,title={{session.client.name}},alt={{session.client.name}}" class="avatar trans pull-start margin-end" />
+                                    <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{session.client.short_name|lowercase}}?width=120&height=120,title={{session.client.name}},alt={{session.client.name}}" class="avatar trans pull-start margin-end" />
 
                                     <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
 
                                     <div class="note info margin-top-small">
-                                        <img data-ls-attrs="src={{env.API}}/v1/avatars/flags/{{session.geo.isoCode}}?width=80&height=80" class="avatar xs margin-end-small inline" />
+                                        <img data-ls-attrs="src={{env.API}}/avatars/flags/{{session.geo.isoCode}}?width=80&height=80" class="avatar xs margin-end-small inline" />
                                         <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.geo.country}}"></small>
                                     </div>
                                 </li>
@@ -213,11 +213,11 @@ use Utopia\Locale\Locale;
                                     <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
                                     <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
                                     <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.client')); ?>: ">
-                                        <img data-ls-attrs="src={{env.API}}/v1/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80,title={{log.client.name}},alt={{log.client.name}}" class="avatar xs inline margin-end-small" />
+                                        <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80,title={{log.client.name}},alt={{log.client.name}}" class="avatar xs inline margin-end-small" />
                                         <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                                     </td>
                                     <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.location')); ?>: ">
-                                        <img data-ls-attrs="src={{env.API}}/v1/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
+                                        <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
                                         <span data-ls-bind="{{log.geo.country}}"></span>
                                     </td>
                                     <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
