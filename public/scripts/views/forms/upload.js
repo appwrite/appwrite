@@ -97,7 +97,7 @@
                         var file = document.createElement('li');
                         var image = document.createElement('img');
 
-                        image.src = image.src = sdk.storage.getPreview(obj, null, previewWidth, previewHeight);
+                        image.src = image.src = sdk.storage.getFilePreview(obj, null, previewWidth, previewHeight);
 
                         file.className = 'file';
                         file.tabIndex = 0;
@@ -172,7 +172,7 @@
                         formData.append('write[]', write[y]);
                     }
 
-                    sdk.storage.create(formData, onProgress)
+                    sdk.storage.createFile(formData, onProgress)
                         .then(function (response) {
                             // parse array of $id's and assign to input value
                             response = JSON.parse(response);

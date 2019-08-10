@@ -180,6 +180,7 @@ Auth::$secret   = $session['secret'];
 $projectDB = new Database();
 $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
 $projectDB->setNamespace('app_' . $project->getUid());
+$projectDB->setMocks(include __DIR__ . '/../app/config/collections.php');
 
 $user = $projectDB->getDocument(Auth::$unique);
 
