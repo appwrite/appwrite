@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.10');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.11');
             addGlobalHeader('content-type', '');
 
             /**
@@ -245,7 +245,7 @@
 
             return {
                 'get': function(path, headers = {}, params = {}) {
-                    return call('GET', path + ((params.length > 0) ? '?' + buildQuery(params) : ''), headers, {});
+                    return call('GET', path + ((Object.keys(params).length > 0) ? '?' + buildQuery(params) : ''), headers, {});
                 },
                 'post': function(path, headers = {}, params = {}, progress = null) {
                     return call('POST', path, headers, params, progress);
