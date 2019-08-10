@@ -56,7 +56,7 @@ use Utopia\Locale\Locale;
                                 <input name="url" id="url" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-bind="{{console-project.url}}">
 
                                 <hr />
-                                
+
                                 <button class="" type="submit">Save</button>
                             </div>
                         </div>
@@ -175,7 +175,7 @@ use Utopia\Locale\Locale;
                                 <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" />
 
                                 <div class="margin-bottom-small">
-                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0|id2role}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
+                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
                                 </div>
                                 <span class="note" data-ls-bind="{{member.email}}"></span>
                             </li>

@@ -35,9 +35,6 @@ window.ls.filter
 
         return '//www.gravatar.com/avatar/' + MD5(email) + '.jpg?s=' + size + '&d=' + encodeURIComponent(def);
     })
-    .add('lowerCase', function ($value) {
-        return (typeof $value === 'string') ? $value.toLowerCase() : $value;
-    })
     .add('date', function ($value, date) {
         return date.format('Y-m-d', $value);
     })
@@ -46,21 +43,6 @@ window.ls.filter
     })
     .add('date-text', function ($value, date) {
         return date.format('d M Y', $value);
-    })
-    .add('date-long', function ($value, date) {
-        return date.format('l, j F, H:i', $value);
-    })
-    .add('min2hum', function ($value) {
-        if($value >= 60) {
-            if($value % 60 === 0) {
-                return Math.ceil($value / 60) + ' hours';
-            }
-            else {
-                return Math.ceil($value / 60) + ' hours and ' + ($value % 60) + ' minutes';
-            }
-        }
-
-        return $value + ' minutes';
     })
     .add('ms2hum', function ($value) {
         let temp = $value;
@@ -80,37 +62,8 @@ window.ls.filter
 
         return "< 1s";
     })
-    .add('nl2p', function ($value) {
-        let result = "<p>" + $value + "</p>";
-        result = result.replace(/\r\n\r\n/g, "</p><p>").replace(/\n\n/g, "</p><p>");
-        result = result.replace(/\r\n/g, "<br />").replace(/\n/g, "<br />");
-
-        return result;
-    })
     .add('markdown', function ($value, markdown) {
         return markdown.render($value);
-    })
-    .add('id2name', function ($value) {
-        let members = container.get('members');
-
-        if(members === null) {
-            return '';
-        }
-
-        for (let y = 0; y < members.length; y++) {
-            if(members[y]['$uid'] === $value) {
-                $value = members[y].name;
-            }
-        }
-
-        return $value;
-    })
-    .add('id2role', function ($value) {
-        if(APP_ENV.ROLES[$value]) {
-            return APP_ENV.ROLES[$value];
-        }
-
-        return '';
     })
     .add('humanFileSize', function ($value) {
         if (!$value) {

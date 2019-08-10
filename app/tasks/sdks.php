@@ -46,7 +46,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'js' => [
-                'version'       => 'v1.0.10',
+                'version'       => 'v1.0.11',
                 'result'        => __DIR__ . '/../sdks/js/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-js.git',

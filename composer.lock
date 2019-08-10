@@ -1505,12 +1505,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "f07a7f388d9577265fa2bfafb7449505a1fcfc53"
+                "reference": "5168c0e2feac6b1c4c14810df4f8ac95efc1312e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/f07a7f388d9577265fa2bfafb7449505a1fcfc53",
-                "reference": "f07a7f388d9577265fa2bfafb7449505a1fcfc53",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/5168c0e2feac6b1c4c14810df4f8ac95efc1312e",
+                "reference": "5168c0e2feac6b1c4c14810df4f8ac95efc1312e",
                 "shasum": ""
             },
             "require": {
@@ -1521,7 +1521,6 @@
             "require-dev": {
                 "psr/container": "^1.0",
                 "symfony/debug": "^3.4|^4.2",
-                "symfony/mime": "^4.3",
                 "symfony/phpunit-bridge": "^4.4@dev|^5.0"
             },
             "type": "library",
@@ -1565,7 +1564,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-08-08 16:07:29"
+            "time": "2019-08-10 14:16:47"
         },
         {
             "name": "utopia-php/abuse",
@@ -1910,12 +1909,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "6c3e9f1c8315a93bcebdd5f21630c945439968e9"
+                "reference": "007c053ae6f31bba39dfa19a7726f56e9763bbea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/6c3e9f1c8315a93bcebdd5f21630c945439968e9",
-                "reference": "6c3e9f1c8315a93bcebdd5f21630c945439968e9",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/007c053ae6f31bba39dfa19a7726f56e9763bbea",
+                "reference": "007c053ae6f31bba39dfa19a7726f56e9763bbea",
                 "shasum": ""
             },
             "require": {
@@ -1950,7 +1949,7 @@
                 "object",
                 "object graph"
             ],
-            "time": "2019-08-05T15:28:34+00:00"
+            "time": "2019-08-09T12:45:53+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -1994,18 +1993,18 @@
             "authors": [
                 {
                     "name": "Arne Blankerts",
-                    "email": "arne@blankerts.de",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "email": "arne@blankerts.de"
                 },
                 {
                     "name": "Sebastian Heuer",
-                    "email": "sebastian@phpeople.de",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "email": "sebastian@phpeople.de"
                 },
                 {
                     "name": "Sebastian Bergmann",
-                    "email": "sebastian@phpunit.de",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "email": "sebastian@phpunit.de"
                 }
             ],
             "description": "Component for reading phar.io manifest information from a PHP Archive (PHAR)",

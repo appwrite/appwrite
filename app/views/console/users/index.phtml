@@ -12,130 +12,99 @@ $providers = $this->getParam('providers', []);
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/users?project={{router.params.project}}">
 
-            <h2>Users</h2>
+            <h2 style="display: none;">Users</h2>
 
-            <div>
-                <div class="row responsive force-reverse clear margin-bottom-tiny">
-                    <div class="col span-2">
-                        <div class="clear">
-                            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="pull-end round" data-button-icon="icon-plus">
-                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                                <h1>Create User</h1>
-
-                                <form
-                                    data-service="users.createUser"
-                                    data-event="submit"
-                                    data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Created user successfully"
-                                    data-success-param-trigger-events="user-create,modal-close"
-                                    data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create user"
-                                    data-failure-param-alert-classname="error">
-
-                                    <label for="user-name">Name</label>
-                                    <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
-
-                                    <label for="user-email">Email</label>
-                                    <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
-
-                                    <label for="user-password">Password</label>
-                                    <input type="password" class="full-width" id="user-password" name="password" required autocomplete="off" />
-
-                                    <hr />
-
-                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                </form>
-                            </div>
-                        </div>
+            <form class="box padding-small margin-bottom"
+                data-service="users.listUsers"
+                data-event="submit"
+                data-scope="sdk"
+                data-name="project-users" data-debug="1">
+                <input type="hidden" name="offset" value="0">
+                <input type="hidden" name="limit" value="5">
+                <div class="row responsive">
+                    <div class="col span-10">
+                        <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no">
                     </div>
-                    <div class="col span-6">&nbsp;</div>
-                    <div class="col span-4">
-                        <div class="margin-bottom-small">
-                            <form class="" data-forms-filter="filter-users" data-event="init">
-                                <input type="hidden" name="offset" value="0">
-                                <input type="hidden" name="limit" value="10">
-                                <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="strip margin-bottom-no">
-                            </form>
-                        </div>
+                    <div class="col span-2">
+                        <button class="fill">Search</button>
                     </div>
                 </div>
+            </form>
 
-                <div
-                    data-service="users.listUsers"
-                    data-event="load,user-create,user-update,user-delete"
-                    data-param-search=""
-                    data-param-limit="25"
-                    data-param-offset="0"
-                    data-scope="sdk"
-                    data-name="project-users">
+            <div
+                data-service="users.listUsers"
+                data-event="load,user-create,user-update,user-delete"
+                data-param-search=""
+                data-param-limit="25"
+                data-param-offset="0"
+                data-scope="sdk"
+                data-name="project-users">
 
-                    <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
-                        <h3 class="margin-bottom">No Users Found</h3>
+                <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
+                    <h3 class="margin-bottom">No Users Found</h3>
 
-                        <p class="margin-bottom-no">Create your first user to get started</p>
+                    <p class="margin-bottom-no">Create your first user to get started</p>
+                </div>
+
+                <div data-ls-if="0 != {{project-users.sum}}" style="display: none;">
+
+                    <div class="box margin-bottom">
+                        <table class="vertical">
+                            <thead>
+                                <tr>
+                                    <th width="30"></th>
+                                    <th width="180">Name</th>
+                                    <th width="200">Email</th>
+                                    <th>Status</th>
+                                    <th width="100">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody data-ls-loop="project-users.users" data-ls-as="user">
+                                <tr>
+                                    <td>
+                                        <img src="" data-ls-attrs="src={{user.email|gravatar}}" alt="User Avatar" class="avatar pull-start" />
+                                    </td>
+                                    <td data-title="Name: ">
+                                        <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
+                                    </td>
+                                    <td data-title="Email: ">
+                                        <span data-ls-bind="{{user.email}}" class="note"></span>
+                                    </td>
+                                    <td data-title="Status: ">
+                                        <span data-ls-if="{{user.confirm}} === true">
+                                            &nbsp;<span class="tag green">Verified</span>
+                                        </span>
+
+                                        <span data-ls-if="{{user.confirm}} !== true">
+                                            &nbsp;<span class="tag">Unverified</span>
+                                        </span>
+
+                                        <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
+                                            &nbsp;<span class="tag red">Blocked</span>
+                                        </span>
+                                    </td>
+                                    <td data-title="Created: "><span data-ls-bind="{{user.registration|date-text}}" class="note"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
-                    <div data-ls-if="0 != {{project-users.sum}}" style="display: none;">
+                    <div class="clear">
+                        <span class="pull-end paging" data-ls-ui-paging="" data-sum="{{project-users.sum}}" data-offset="{{filter-users.keys.offset}}" data-limit="{{filter-users.keys.limit}}"></span>
 
-                        <div class="box margin-bottom">
-                            <table class="vertical">
-                                <thead>
-                                    <tr>
-                                        <th width="30"></th>
-                                        <th width="180">Name</th>
-                                        <th width="200">Email</th>
-                                        <th>Status</th>
-                                        <th width="100">Created</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-ls-loop="project-users.users" data-ls-as="user">
-                                    <tr>
-                                        <td>
-                                            <img src="" data-ls-attrs="src={{user.email|gravatar}}" alt="User Avatar" class="avatar pull-start" />
-                                        </td>
-                                        <td data-title="Name: ">
-                                            <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
-                                        </td>
-                                        <td data-title="Email: ">
-                                            <span data-ls-bind="{{user.email}}" class="note"></span>
-                                        </td>
-                                        <td data-title="Status: ">
-                                            <span data-ls-if="{{user.confirm}} === true">
-                                                &nbsp;<span class="tag green">Verified</span>
-                                            </span>
+                        <span data-ls-if="{{filter-users.backward}} >= 0" style="display: none;">
+                            <button type="button" class="margin-end round" data-forms-filter="filter-users" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-users.backward}}'])); ?>" aria-label="Back"><i class="icon-left-open"></i></button>
+                        </span>
+                        <span data-ls-if="{{filter-users.backward}} < 0" style="display: none;">
+                            <button type="button" class="disabled margin-end round" disabled aria-label="Back"><i class="icon-left-open"></i></button>
+                        </span>
 
-                                            <span data-ls-if="{{user.confirm}} !== true">
-                                                &nbsp;<span class="tag">Unverified</span>
-                                            </span>
-
-                                            <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
-                                                &nbsp;<span class="tag red">Blocked</span>
-                                            </span>
-                                        </td>
-                                        <td data-title="Created: "><span data-ls-bind="{{user.registration|date-text}}" class="note"></span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="clear">
-                            <span class="pull-end paging" data-ls-ui-paging="" data-sum="{{project-users.sum}}" data-offset="{{filter-users.keys.offset}}" data-limit="{{filter-users.keys.limit}}"></span>
-
-                            <span data-ls-if="{{filter-users.backward}} >= 0" style="display: none;">
-                                <button type="button" class="margin-end round" data-forms-filter="filter-users" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-users.backward}}'])); ?>" aria-label="Back"><i class="icon-left-open"></i></button>
-                            </span>
-                            <span data-ls-if="{{filter-users.backward}} < 0" style="display: none;">
-                                <button type="button" class="disabled margin-end round" disabled aria-label="Back"><i class="icon-left-open"></i></button>
-                            </span>
-
-                            <span data-ls-if="{{filter-users.forward}} < {{project-users.sum}}" style="display: none;">
-                                <button type="button" class="margin-end round" data-forms-filter="filter-users" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-users.forward}}'])); ?>" aria-label="Next"><i class="icon-right-open"></i></button>
-                            </span>
-                            <span data-ls-if="{{filter-users.forward}} >= {{project-users.sum}}" style="display: none;">
-                                <button type="button" class="disabled margin-end round" disabled aria-label="Next"><i class="icon-right-open"></i></button>
-                            </span>
-                        </div>
+                        <span data-ls-if="{{filter-users.forward}} < {{project-users.sum}}" style="display: none;">
+                            <button type="button" class="margin-end round" data-forms-filter="filter-users" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-users.forward}}'])); ?>" aria-label="Next"><i class="icon-right-open"></i></button>
+                        </span>
+                        <span data-ls-if="{{filter-users.forward}} >= {{project-users.sum}}" style="display: none;">
+                            <button type="button" class="disabled margin-end round" disabled aria-label="Next"><i class="icon-right-open"></i></button>
+                        </span>
                     </div>
                 </div>
             </div>
