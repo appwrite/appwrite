@@ -49,6 +49,14 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     $referrer   = $request->getServer('HTTP_REFERER', '');
     $origin     = $request->getServer('HTTP_ORIGIN', parse_url($referrer, PHP_URL_SCHEME) . '://' . parse_url($referrer, PHP_URL_HOST));
 
+    // //var_dump($project->getAttribute('clients', []), $project);
+    // print_r(array_map(function($node) {
+    //     var_dump($node);
+    //     if(isset($node['type']) && $node['type'] === 'web') {
+    //         return $node['domains'];
+    //     }
+    // }, $project->getAttribute('platforms', [])));
+    // exit();
     $refDomain = (in_array($origin, array_merge($project->getAttribute('clients', []))))
         ? $origin : 'http://localhost';
 

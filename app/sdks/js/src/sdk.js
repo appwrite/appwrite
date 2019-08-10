@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.9');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.10');
             addGlobalHeader('content-type', '');
 
             /**
@@ -1716,10 +1716,10 @@
              * @param {string} name
              * @param {string} key
              * @param {string} store
-             * @param {array} domains
+             * @param {string} url
              * @throws {Error}
              * @return {Promise}             */
-            createPlatform: function(projectId, type, name, key = '', store = '', domains = []) {
+            createPlatform: function(projectId, type, name, key = '', store = '', url = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -1741,7 +1741,7 @@
                             'name': name, 
                             'key': key, 
                             'store': store, 
-                            'domains': domains
+                            'url': url
                         });
             },
 
@@ -1779,10 +1779,10 @@
              * @param {string} name
              * @param {string} key
              * @param {string} store
-             * @param {array} domains
+             * @param {string} url
              * @throws {Error}
              * @return {Promise}             */
-            updatePlatform: function(projectId, platformId, name, key = '', store = '', domains = []) {
+            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '[]') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -1803,7 +1803,7 @@
                             'name': name, 
                             'key': key, 
                             'store': store, 
-                            'domains': domains
+                            'url': url
                         });
             },
 

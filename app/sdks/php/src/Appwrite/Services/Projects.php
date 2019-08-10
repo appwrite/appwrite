@@ -281,11 +281,11 @@ class Projects extends Service
      * @param string $name
      * @param string $key
      * @param string $store
-     * @param array $domains
+     * @param string $url
      * @throws Exception
      * @return array
      */
-    public function createPlatform($projectId, $type, $name, $key = '', $store = '', $domains = [])
+    public function createPlatform($projectId, $type, $name, $key = '', $store = '', $url = '')
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/platforms');
         $params = [];
@@ -294,7 +294,7 @@ class Projects extends Service
         $params['name'] = $name;
         $params['key'] = $key;
         $params['store'] = $store;
-        $params['domains'] = $domains;
+        $params['url'] = $url;
 
         return $this->client->call(Client::METHOD_POST, $path, [
         ], $params);
@@ -326,11 +326,11 @@ class Projects extends Service
      * @param string $name
      * @param string $key
      * @param string $store
-     * @param array $domains
+     * @param string $url
      * @throws Exception
      * @return array
      */
-    public function updatePlatform($projectId, $platformId, $name, $key = '', $store = '', $domains = [])
+    public function updatePlatform($projectId, $platformId, $name, $key = '', $store = '', $url = '[]')
     {
         $path   = str_replace(['{projectId}', '{platformId}'], [$projectId, $platformId], '/projects/{projectId}/platforms/{platformId}');
         $params = [];
@@ -338,7 +338,7 @@ class Projects extends Service
         $params['name'] = $name;
         $params['key'] = $key;
         $params['store'] = $store;
-        $params['domains'] = $domains;
+        $params['url'] = $url;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
         ], $params);

@@ -4,7 +4,7 @@
   "license": "BSD-3-Clause",
   "repository": "public",
   "devDependencies": {
-    "appwrite": "^1.0.9",
+    "appwrite": "^1.0.10",
     "gulp": "^4.0.0",
     "gulp-clean-css": "^4.0.0",
     "gulp-concat": "2.5.2",

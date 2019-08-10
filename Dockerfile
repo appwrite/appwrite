@@ -3,6 +3,27 @@ FROM ubuntu:18.04
 LABEL maintainer="team@appwrite.io"
 
 ENV TZ=Asia/Tel_Aviv
+
+ENV _APP_ENV production
+ENV _APP_EDITION community
+ENV _APP_OPENSSL_KEY_V1 empty
+ENV _APP_REDIS_HOST redis
+ENV _APP_REDIS_PORT 6379
+ENV _APP_DB_HOST mariadb
+ENV _APP_DB_PORT 3306
+ENV _APP_DB_USER root
+ENV _APP_DB_PASS password
+ENV _APP_DB_SCHEMA appwrite
+ENV _APP_INFLUXDB_HOST influxdb
+ENV _APP_INFLUXDB_PORT 8086
+ENV _APP_STATSD_HOST telegraf
+ENV _APP_STATSD_PORT 8125
+ENV _APP_SMTP_HOST smtp
+ENV _APP_SMTP_PORT 25
+ENV _APP_SMTP_SECURE ''
+ENV _APP_SMTP_USERNAME ''
+ENV _APP_SMTP_PASSWORD ''
+
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \

@@ -25,10 +25,6 @@ services:
     - _APP_INFLUXDB_PORT=8086
     - _APP_STATSD_HOST=telegraf
     - _APP_STATSD_PORT=8125
-    - _APP_NEWRELIC_KEY=
-    - _APP_MAILGUN_KEY=
-    - _APP_MAILGUN_DOMAIN=
-    - _APP_SENTRY_DSN=
 
   mariadb:
     image: appwrite/mariadb:1.0.0 # fix issues when upgrading using: mysql_upgrade -u root -p

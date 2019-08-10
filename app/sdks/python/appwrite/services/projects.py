@@ -156,8 +156,7 @@ class Projects(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def create_platform(self, project_id, type, name, key='', store='', domainsstring(4) ""[]""
-=[]):
+    def create_platform(self, project_id, type, name, key='', store='', url=''):
         """Create Platform"""
 
         params = {}
@@ -167,7 +166,7 @@ class Projects(Service):
         params['name'] = name
         params['key'] = key
         params['store'] = store
-        params['domains'] = domains
+        params['url'] = url
 
         return self.client.call('post', path, {
         }, params)
@@ -183,8 +182,7 @@ class Projects(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def update_platform(self, project_id, platform_id, name, key='', store='', domainsstring(4) ""[]""
-=[]):
+    def update_platform(self, project_id, platform_id, name, key='', store='', url='[]'):
         """Update Platform"""
 
         params = {}
@@ -194,7 +192,7 @@ class Projects(Service):
         params['name'] = name
         params['key'] = key
         params['store'] = store
-        params['domains'] = domains
+        params['url'] = url
 
         return self.client.call('put', path, {
         }, params)

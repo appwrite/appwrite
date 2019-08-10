@@ -164,7 +164,7 @@ module Appwrite
             }, params);
         end
 
-        def create_platform(project_id:, type:, name:, key: '', store: '', domains: [])
+        def create_platform(project_id:, type:, name:, key: '', store: '', url: '')
             path = '/projects/{projectId}/platforms'
                 .gsub('{project_id}', project_id)
 
@@ -173,7 +173,7 @@ module Appwrite
                 'name': name, 
                 'key': key, 
                 'store': store, 
-                'domains': domains
+                'url': url
             }
 
             return @client.call('post', path, {
@@ -192,7 +192,7 @@ module Appwrite
             }, params);
         end
 
-        def update_platform(project_id:, platform_id:, name:, key: '', store: '', domains: [])
+        def update_platform(project_id:, platform_id:, name:, key: '', store: '', url: '[]')
             path = '/projects/{projectId}/platforms/{platformId}'
                 .gsub('{project_id}', project_id)
                 .gsub('{platform_id}', platform_id)
@@ -201,7 +201,7 @@ module Appwrite
                 'name': name, 
                 'key': key, 
                 'store': store, 
-                'domains': domains
+                'url': url
             }
 
             return @client.call('put', path, {

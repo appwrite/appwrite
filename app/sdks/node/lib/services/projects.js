@@ -251,11 +251,11 @@ class Projects extends Service {
      * @param string name
      * @param string key
      * @param string store
-     * @param array domains
+     * @param string url
      * @throws Exception
      * @return {}
      */
-    async createPlatform(projectId, type, name, key = '', store = '', domains = []) {
+    async createPlatform(projectId, type, name, key = '', store = '', url = '') {
         let path = '/projects/{projectId}/platforms'.replace(new RegExp('{projectId}', 'g'), projectId);
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
@@ -264,7 +264,7 @@ class Projects extends Service {
                 'name': name,
                 'key': key,
                 'store': store,
-                'domains': domains
+                'url': url
             });
     }
 
@@ -292,11 +292,11 @@ class Projects extends Service {
      * @param string name
      * @param string key
      * @param string store
-     * @param array domains
+     * @param string url
      * @throws Exception
      * @return {}
      */
-    async updatePlatform(projectId, platformId, name, key = '', store = '', domains = []) {
+    async updatePlatform(projectId, platformId, name, key = '', store = '', url = '[]') {
         let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
         
         return await this.client.call('put', path, {'content-type': 'application/json'},
@@ -304,7 +304,7 @@ class Projects extends Service {
                 'name': name,
                 'key': key,
                 'store': store,
-                'domains': domains
+                'url': url
             });
     }
 

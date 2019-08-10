@@ -1086,9 +1086,9 @@ $utopia->post('/v1/projects/:projectId/platforms')
     ->param('name', null, function () {return new Text(256);}, 'Platform name')
     ->param('key', null, function () {return new Text(256);}, 'Package name for android or bundle ID for iOS', true)
     ->param('store', null, function () {return new Text(256);}, 'App store or Google Play store ID', true)
-    ->param('domains', [], function () {return new ArrayList(new Domain());}, 'Project client domains names', true)
+    ->param('url', '', function() {return new URL();}, 'Platform client URL', true)
     ->action(
-        function($projectId, $type, $name, $key, $store, $domains) use ($request, $response, $consoleDB)
+        function($projectId, $type, $name, $key, $store, $url) use ($response, $consoleDB)
         {
             $project = $consoleDB->getDocument($projectId);
 
@@ -1106,7 +1106,7 @@ $utopia->post('/v1/projects/:projectId/platforms')
                 'name'          => $name,
                 'key'           => $key,
                 'store'         => $store,
-                'domains'       => $domains,
+                'url'           => $url,
                 'created'       => time(),
                 'updated'       => time(),
             ]);
@@ -1140,9 +1140,9 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
     ->param('name', null, function () {return new Text(256);}, 'Platform name')
     ->param('key', null, function () {return new Text(256);}, 'Package name for android or bundle ID for iOS', true)
     ->param('store', null, function () {return new Text(256);}, 'App store or Google Play store ID', true)
-    ->param('domains', [], function () {return new ArrayList(new Domain());}, 'Project client domains names', true)
+    ->param('url', [], function () {return new URL();}, 'Platform client URL', true)
     ->action(
-        function($projectId, $platformId, $name, $key, $store, $domains) use ($request, $response, $consoleDB)
+        function($projectId, $platformId, $name, $key, $store, $url) use ($response, $consoleDB)
         {
             $project = $consoleDB->getDocument($projectId);
 
@@ -1161,7 +1161,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
                 ->setAttribute('updated', time())
                 ->setAttribute('key', $key)
                 ->setAttribute('store', $store)
-                ->setAttribute('domains', $domains)
+                ->setAttribute('url', $url)
             ;
 
             if(false === $consoleDB->updateDocument($platform->getArrayCopy())) {

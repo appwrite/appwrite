@@ -114,7 +114,7 @@ $graph = $this->getParam('graph', false);
                     <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 
-                <p class="note margin-bottom-no"><span data-ls-bind="{{platform.domains.0}}"></span></p>
+                <p class="note margin-bottom-no"><span data-ls-bind="{{platform.url}}"></span></p>
             </li>
         </ul>
     </div>
@@ -169,23 +169,9 @@ $graph = $this->getParam('graph', false);
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
 
-        <label for="domains">Domains <span class="tooltip large" data-tooltip="List the domains your website will use to interact with the <?php echo APP_NAME; ?> API in production or development environments."><i class="icon-question"></i></span></label>
-
-        <input name="domains" type="hidden" data-cast-to="array-empty">
-
-        <div data-forms-clone="" data-first="1">
-            <div>
-                <div data-forms-remove class="row thin">
-                    <div class="col span-10">
-                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
-                    </div>
-                    <div class="col span-2">
-                        <button type="button" data-remove class="reverse round danger pull-end"><i class="icon-cancel"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
+        <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="https://localhost:3000" required>
+        
         <div class="info margin-top-small margin-bottom-small">
             <div class="text-bold margin-bottom-small">Next Steps</div>
 
@@ -220,36 +206,9 @@ $graph = $this->getParam('graph', false);
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" id="name" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />
 
-        <label for="domains">Domains <span class="tooltip large" data-tooltip="List the domains your website will use to interact with the <?php echo APP_NAME; ?> API in production or development environments."><i class="icon-question"></i></span></label>
-
-        <input name="domains" type="hidden" data-cast-to="array-empty">
-
-        <div data-ls-loop="platform.domains" data-ls-as="domain" style="overflow: hidden">
-            <div>
-                <div data-forms-remove class="row thin">
-                    <div class="col span-10">
-                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-ls-bind="{{domain}}" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
-                    </div>
-                    <div class="col span-2">
-                        <button type="button" data-remove class="reverse round danger pull-end"><i class="icon-cancel"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div data-forms-clone="" data-first="0">
-            <div>
-                <div data-forms-remove class="row thin">
-                    <div class="col span-10">
-                        <input name="domains" type="text" class="margin-bottom-small" autocomplete="off" placeholder="example.com" data-cast-to="array" pattern="^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}$" title="Please enter a valid domain name" required>
-                    </div>
-                    <div class="col span-2">
-                        <button type="button" data-remove class="reverse round danger pull-end"><i class="icon-cancel"></i></button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
+        <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="example.com" data-ls-bind="{{platform.url}}" required>
+        
         <div class="margin-top">
             <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </div>
