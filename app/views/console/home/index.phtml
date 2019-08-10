@@ -84,12 +84,12 @@ $graph = $this->getParam('graph', false);
         <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
             <li class="clear">
 
-                <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
+                <div data-ui-modal class="modal box close" data-button-text="Update" data-button-class="pull-end">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                     <h1>Update Platform</h1>
 
-                    <div xdata-ls-template="template-{{platform.type}}-update" data-type="script"></div>
+                    <div data-ls-template="template-{{platform.type}}-update" data-type="script"></div>
                 </div>
 
                 <form class="pull-end margin-end"
@@ -119,7 +119,7 @@ $graph = $this->getParam('graph', false);
         </ul>
     </div>
 
-    <div data-ls-if="({{console-project.platforms.length}} === undefined)" class="box dashboard margin-bottom" style="display: none;">
+    <div data-ls-if="(!{{console-project.platforms.length}})" class="box dashboard margin-bottom" style="display: none;">
         <div class="margin-bottom margin-top-small margin-end margin-start">
             <h3 class="margin-bottom">No Platforms Added to Your Project</h3>
 
@@ -147,7 +147,7 @@ $graph = $this->getParam('graph', false);
     </div>
 </div>
 
-<div data-ui-modal class="modal close" data-button-alias=".web-new">
+<div data-ui-modal class="modal box close" data-button-alias=".web-new">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
     <h1>New Website</h1>
@@ -182,9 +182,9 @@ $graph = $this->getParam('graph', false);
             </div>
         </div>
 
-        <div class="margin-top">
-            <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-        </div>
+        <hr />
+
+        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
     </form>
 </div>
 
@@ -209,8 +209,8 @@ $graph = $this->getParam('graph', false);
         <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
         <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="example.com" data-ls-bind="{{platform.url}}" required>
         
-        <div class="margin-top">
-            <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-        </div>
+        <hr />
+
+        <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
     </form>
 </script>

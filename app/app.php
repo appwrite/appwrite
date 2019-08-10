@@ -32,7 +32,16 @@ $webhook    = new Event('v1-webhooks', 'WebhooksV1');
 $audit      = new Event('v1-audits', 'AuditsV1');
 $usage      = new Event('v1-usage', 'UsageV1');
 
-$utopia->init(function() use ($utopia, $request, $response, $register, &$user, $project, $consoleDB, $roles, $webhook, $audit, $usage, $domain) {
+$clients = array_map(function($node) {
+    return $node['url'];
+}, array_filter($project->getAttribute('platforms', []), function($node) {
+    if(isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
+        return true;
+    }
+    return false;
+}));
+
+$utopia->init(function() use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
 
     $route = $utopia->match($request);
 
@@ -49,15 +58,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     $referrer   = $request->getServer('HTTP_REFERER', '');
     $origin     = $request->getServer('HTTP_ORIGIN', parse_url($referrer, PHP_URL_SCHEME) . '://' . parse_url($referrer, PHP_URL_HOST));
 
-    // //var_dump($project->getAttribute('clients', []), $project);
-    // print_r(array_map(function($node) {
-    //     var_dump($node);
-    //     if(isset($node['type']) && $node['type'] === 'web') {
-    //         return $node['domains'];
-    //     }
-    // }, $project->getAttribute('platforms', [])));
-    // exit();
-    $refDomain = (in_array($origin, array_merge($project->getAttribute('clients', []))))
+    $refDomain = (in_array($origin, $clients))
         ? $origin : 'http://localhost';
 
     /**
@@ -82,7 +83,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
      * Validate Client Domain - Check to avoid CSRF attack
      *  Adding appwrite api domains to allow XDOMAIN communication
      */
-    $hostValidator = new Host(array_merge($project->getAttribute('clients', []), ['http://localhost', 'https://localhost', 'https://appwrite.test', 'https://appwrite.io']));
+    $hostValidator = new Host(array_merge($clients, ['http://localhost', 'https://localhost', 'https://appwrite.test', 'https://appwrite.io']));
 
     if(!$hostValidator->isValid($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')))
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
@@ -425,7 +426,7 @@ $utopia->get('/v1/xss')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response, $project) {
+        function() {
             throw new Exception('XSS detected and reported by a browser client', 500);
         }
     );
@@ -434,11 +435,11 @@ $utopia->get('/v1/proxy')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response, $project, $console) {
+        function() use ($response, $console, $clients) {
             $view = new View(__DIR__ . '/views/proxy.phtml');
             $view
                 ->setParam('routes', '')
-                ->setParam('clients', array_merge($project->getAttribute('clients', []), $console->getAttribute('clients', [])))
+                ->setParam('clients', array_merge($clients, $console->getAttribute('clients', [])))
             ;
 
             $response

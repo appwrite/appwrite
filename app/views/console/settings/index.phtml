@@ -56,39 +56,7 @@ use Utopia\Locale\Locale;
                                 <input name="url" id="url" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-bind="{{console-project.url}}">
 
                                 <hr />
-
-                                <h3>Clients</h3>
-
-                                <input name="clients" type="hidden" data-cast-to="array-empty">
-
-                                <div data-ls-loop="console-project.clients" data-ls-as="client" style="overflow: hidden">
-                                    <div class="margin-bottom-small">
-                                        <div data-forms-remove class="row thin">
-                                            <div class="col span-9">
-                                                <input name="clients" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-bind="{{client}}" data-cast-to="array">
-                                            </div>
-                                            <div class="col span-3">
-                                                <button type="button" data-remove class="reverse danger pull-end"><i class="icon-cancel"></i></button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div data-forms-clone="" data-first="0">
-                                    <div class="margin-bottom-small">
-                                        <div data-forms-remove class="row thin">
-                                            <div class="col span-9">
-                                                <input name="clients" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-cast-to="array">
-                                            </div>
-                                            <div class="col span-3">
-                                                <button type="button" data-remove class="reverse danger pull-end"><i class="icon-cancel"></i></button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <hr />
-
+                                
                                 <button class="" type="submit">Save</button>
                             </div>
                         </div>
