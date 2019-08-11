@@ -15,17 +15,21 @@ $limit = 5;
 
             <h2 style="display: none;">Users</h2>
 
-            <form class="box padding-small margin-bottom-large"
+            <form class="box padding-small margin-bottom"
                 data-service="users.listUsers"
                 data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo $limit; ?>"
+                data-param-offset="{{router.params.offset}}"
+                data-param-order-type="ASC"
                 data-scope="sdk"
-                data-name="project-users">
-                <input type="hidden" name="orderType" value="ASC">
-                <input type="hidden" name="offset" value="0">
-                <input type="hidden" name="limit" value="<?php echo $limit; ?>">
-                <div class="row responsive">
+                data-name="project-users"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <input type="hidden" name="project" data-ls-bind="{{router.params.project}}">
+                <div class="row responsive thin">
                     <div class="col span-10">
-                        <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no">
+                        <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
                     <div class="col span-2">
                         <button class="fill">Search</button>
@@ -50,12 +54,13 @@ $limit = 5;
                 </div>
 
                 <div data-ls-if="0 != {{project-users.sum}}" style="display: none;">
+                    <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-users.sum}}"></span> results found</div>
                     <div class="box margin-bottom">
                         <table class="vertical">
                             <thead>
                                 <tr>
-                                    <th width="30"></th>
-                                    <th width="180">Name</th>
+                                    <th width="60"></th>
+                                    <th width="200">Name</th>
                                     <th width="200">Email</th>
                                     <th>Status</th>
                                     <th width="100">Joined</th>

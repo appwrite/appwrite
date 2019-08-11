@@ -17,8 +17,8 @@
                 let success     = (element.dataset['success'] || '');
                 let failure     = (element.dataset['failure'] || '');
 
-                success = (success && success != '') ? success.trim().split(',') : [];
-                failure = (failure && failure != '') ? failure.trim().split(',') : [];
+                success = (success && success != '') ? success.split(',').map(element => element.trim()) : [];
+                failure = (failure && failure != '') ? failure.split(',').map(element => element.trim()) : [];
 
                 if (debug) console.log('%c[service init]: ' + action + ' (' + service + ')', 'color:red');
 
@@ -48,6 +48,61 @@
                     'reload': function () {
                         return function (router) {
                             router.reload();
+                        }
+                    },
+
+                    'state': function (keys) {
+                        let updateQueryString = function(key, value, url) {
+                            var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi"),
+                                hash;
+                        
+                            if (re.test(url)) {
+                                if (typeof value !== 'undefined' && value !== null) {
+                                    return url.replace(re, '$1' + key + "=" + value + '$2$3');
+                                } 
+                                else {
+                                    hash = url.split('#');
+                                    url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
+                                    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+                                        url += '#' + hash[1];
+                                    }
+                                    return url;
+                                }
+                            }
+                            else {
+                                if (typeof value !== 'undefined' && value !== null) {
+                                    var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                                    hash = url.split('#');
+                                    url = hash[0] + separator + key + '=' + value;
+                                    if (typeof hash[1] !== 'undefined' && hash[1] !== null) {
+                                        url += '#' + hash[1];
+                                    }
+                                    return url;
+                                }
+                                else {
+                                    return url;
+                                }
+                            }
+                        }
+
+                        keys = keys.split(',').map(element => element.trim());
+
+                        return function (router, serviceData) {
+                            let url = window.location.href;
+
+                            keys.map(key => {
+                                let value = getValue(key, 'param', serviceData);
+
+                                if(!value) {
+                                //    return;
+                                }
+
+                                url = updateQueryString(key, (value ? value : null), url)
+                            });
+
+                            console.log(url);
+                            //router.change(url, true);
+                            window.history.replaceState({}, '', url);
                         }
                     },
 
@@ -110,6 +165,35 @@
                     return params;
                 }
 
+                let getValue = function(key, prefix, data) {
+                    let result = null;
+
+                    if(!key) {
+                        return null;
+                    }
+
+                    /**
+                     * 1. Get from element data-param-* (expression supported)
+                     * 2. Get from element data-param-state-*
+                     * 3. Get from element form object-*
+                     */
+                    if(element.dataset[prefix + key.charAt(0).toUpperCase() + key.slice(1)]) {
+                        result = expression.parse(element.dataset[prefix + key.charAt(0).toUpperCase() + key.slice(1)]);
+                    }
+
+                    if(data[key]) {
+                        result = data[key];
+                    }
+
+                    if(!result) {
+                        result = '';
+                    }
+
+                    if (debug) console.log('%c[param resolved]: (' + service + ') ' + key + '=' + result, 'color:#808080');
+
+                    return result;
+                }
+
                 let resolve = function(target, prefix = 'param', data = {}) {
                     if (!target) {
                         return function() {};
@@ -120,32 +204,7 @@
                     if (debug) console.log('%c[form data]: ', 'color:green', data);
 
                     return target.apply(target, args.map(function(value) {
-                        let result = null;
-
-                        if(!value) {
-                            return null;
-                        }
-
-                        /**
-                         * 1. Get from element data-param-* (expression supported)
-                         * 2. Get from element data-param-state-*
-                         * 3. Get from element form object-*
-                         */
-                        if(element.dataset[prefix + value.charAt(0).toUpperCase() + value.slice(1)]) {
-                            result = expression.parse(element.dataset[prefix + value.charAt(0).toUpperCase() + value.slice(1)]);
-                        }
-
-                        if(data[value]) {
-                            result = data[value];
-                        }
-
-                        if(!result) {
-                            result = '';
-                        }
-
-                        if (debug) console.log('%c[param resolved]: (' + service + ') ' + value + '=' + result, 'color:#808080');
-
-                        return result;
+                        return getValue(value, prefix, data);
                     }));
                 };
 
@@ -196,6 +255,7 @@
                             }
                             
                             container.set(service.replace('.', '-'), data, true, true);
+                            container.set('serviceData', data, true, true);
 
                             if (debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
                             if (debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
@@ -204,9 +264,12 @@
                                 container.resolve(resolve(callbacks[success[i]], 'successParam' + success[i].charAt(0).toUpperCase() + success[i].slice(1), {}));
                             }
 
+                            container.set('serviceData', null, true, true);
+
                             element.$lsSkip = false;
 
                             view.render(element);
+                            
                         }, function (exception) {
                             if(loaderId !== null) { // Remove loader if needed
                                 alerts.remove(loaderId);
