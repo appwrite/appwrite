@@ -307,7 +307,6 @@ $utopia->error(function($error /* @var $error Exception */) use ($request, $resp
             ->setParam('projectURL', $project->getAttribute('url'))
             ->setParam('message', $error->getMessage())
             ->setParam('code', $code)
-            ->setParam('errorID', $errorID)
         ;
 
         $layout
