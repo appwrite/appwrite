@@ -1,6 +1,6 @@
 <?php
 $providers = $this->getParam('providers', []);
-$limit = 25;
+$limit = 5;
 ?>
 
 <div class="cover">
@@ -36,9 +36,9 @@ $limit = 25;
             <div
                 data-service="users.listUsers"
                 data-event="load,user-create,user-update,user-delete"
-                data-param-search=""
+                data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo $limit; ?>"
-                data-param-offset="0"
+                data-param-offset="{{router.params.offset}}"
                 data-param-order-type="ASC"
                 data-scope="sdk"
                 data-name="project-users">
@@ -92,21 +92,10 @@ $limit = 25;
                     </div>
 
                     <div class="clear">
-                        <span class="pull-end paging" data-ls-ui-paging="" data-sum="{{project-users.sum}}" data-offset="{{filter-users.keys.offset}}" data-limit="{{filter-users.keys.limit}}"></span>
+                        <span class="pull-end paging" data-sum="{{project-users.sum}}" data-offset="{{filter-users.keys.offset}}" data-limit="{{filter-users.keys.limit}}"></span>
 
-                        <span data-ls-if="{{filter-users.backward}} >= 0" style="display: none;">
-                            <button type="button" class="margin-end round" data-forms-filter="filter-users" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-users.backward}}'])); ?>" aria-label="Back"><i class="icon-left-open"></i></button>
-                        </span>
-                        <span data-ls-if="{{filter-users.backward}} < 0" style="display: none;">
-                            <button type="button" class="disabled margin-end round" disabled aria-label="Back"><i class="icon-left-open"></i></button>
-                        </span>
-
-                        <span data-ls-if="{{filter-users.forward}} < {{project-users.sum}}" style="display: none;">
-                            <button type="button" class="margin-end round" data-forms-filter="filter-users" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-users.forward}}'])); ?>" aria-label="Next"><i class="icon-right-open"></i></button>
-                        </span>
-                        <span data-ls-if="{{filter-users.forward}} >= {{project-users.sum}}" style="display: none;">
-                            <button type="button" class="disabled margin-end round" disabled aria-label="Next"><i class="icon-right-open"></i></button>
-                        </span>
+                        <button type="button" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                        <button type="button" class="margin-end round small" aria-label="Next"><i class="icon-right-open"></i></button>
                     </div>
                 </div>
             </div>

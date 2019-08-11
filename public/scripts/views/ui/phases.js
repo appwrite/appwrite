@@ -2,7 +2,7 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-ui-phases',
-            controller: function(element, window, document, expression, view) {
+            controller: function(element, window, document, expression) {
                 var tabs = document.createElement('ul');
                 var container = document.createElement('div');
                 var titles = Array.prototype.slice.call(element.getElementsByTagName('h2'));
@@ -22,7 +22,10 @@
                     var tabState = expression.parse(element.children[index].dataset['state'] || '');
 
                     if((tabState !== '') && (tabState !== window.location.pathname + window.location.search)) {
-                        window.history.pushState({}, '', tabState);
+                        var parser = document.createElement('a');
+                        parser.href = tabState;
+
+                        window.history.pushState({}, '', parser.pathname + window.location.search);
                     }
 
                     element.children[position].classList.remove('selected');
@@ -76,11 +79,6 @@
                 container.appendChild(tabs);
 
                 element.parentNode.insertBefore(container, element);
-
-                //setTimeout(function () {
-                //    view.render(container.parentNode);
-                //}, 1000);
-
             }
         }
     );
