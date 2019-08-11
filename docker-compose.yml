@@ -12,7 +12,7 @@ services:
     - "80:80"
     - "443:443"
     environment:
-    - _APP_ENV=production
+    - _APP_ENV=development
     - _APP_OPENSSL_KEY_V1=
     - _APP_REDIS_HOST=redis
     - _APP_REDIS_PORT=6379

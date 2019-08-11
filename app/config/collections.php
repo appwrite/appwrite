@@ -19,6 +19,20 @@ return [
             'https://appwrite.io',
             'https://appwrite.test',
         ],
+        'platforms' => [
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Production',
+                'type' => 'web',
+                'url' => 'https://appwrite.io',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Development',
+                'type' => 'web',
+                'url' => 'https://appwrite.test',
+            ],
+        ],
         'legalName' => '',
         'legalCountry' => '',
         'legalState' => '',
