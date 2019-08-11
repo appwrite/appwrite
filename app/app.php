@@ -285,7 +285,6 @@ $utopia->error(function($error /* @var $error Exception */) use ($request, $resp
     ] : [
         'message' => $message,
         'code'    => $code,
-        'errorID' => $errorID,
         'version'   => $version,
     ];
 
