@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mode;
+global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mode, $clients;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -262,7 +262,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('email', '', function () {return new Email();}, 'New team member email address.')
     ->param('name', '', function () {return new Text(100);}, 'New team member name.', true)
     ->param('roles', [], function () {return new ArrayList(new Text(128));}, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
-    ->param('redirect', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Reset page to redirect user back to your app from the invitation email.')
+    ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
         function($teamId, $email, $name, $roles, $redirect) use ($request, $response, $register, $project, $user, $audit, $projectDB)
         {
@@ -405,7 +405,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
     ->label('sdk.description', 'Use this endpoint to resend your invitation email for a user to join a team.')
     ->param('teamId', '', function () {return new UID();}, 'Team unique ID.')
     ->param('inviteId', '', function () {return new UID();}, 'Invite unique ID.')
-    ->param('redirect', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Reset page to redirect user back to your app from the invitation email.')
+    ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
         function($teamId, $inviteId, $redirect) use ($response, $register, $project, $user, $audit, $projectDB)
         {
@@ -490,8 +490,8 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('inviteId', '', function () {return new UID();}, 'Invite unique ID')
     ->param('userId', '', function () {return new UID();}, 'User unique ID')
     ->param('secret', '', function () {return new Text(256);}, 'Secret Key')
-    ->param('success', null, function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Redirect when registration succeed', true)
-    ->param('failure', null, function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Redirect when registration failed', true)
+    ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed', true)
+    ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed', true)
     ->action(
         function($teamId, $inviteId, $userId, $secret, $success, $failure) use ($response, $request, $user, $audit, $projectDB)
         {

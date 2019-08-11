@@ -18,9 +18,10 @@ $providers = $this->getParam('providers', []);
                 data-service="users.listUsers"
                 data-event="submit"
                 data-scope="sdk"
-                data-name="project-users" data-debug="1">
+                data-name="project-users">
+                <input type="hidden" name="orderType" value="ASC">
                 <input type="hidden" name="offset" value="0">
-                <input type="hidden" name="limit" value="5">
+                <input type="hidden" name="limit" value="25">
                 <div class="row responsive">
                     <div class="col span-10">
                         <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no">
@@ -31,12 +32,15 @@ $providers = $this->getParam('providers', []);
                 </div>
             </form>
 
+            <hr class="margin-bottom" />
+
             <div
                 data-service="users.listUsers"
                 data-event="load,user-create,user-update,user-delete"
                 data-param-search=""
                 data-param-limit="25"
                 data-param-offset="0"
+                data-param-order-type="ASC"
                 data-scope="sdk"
                 data-name="project-users">
 
@@ -47,7 +51,6 @@ $providers = $this->getParam('providers', []);
                 </div>
 
                 <div data-ls-if="0 != {{project-users.sum}}" style="display: none;">
-
                     <div class="box margin-bottom">
                         <table class="vertical">
                             <thead>

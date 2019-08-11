@@ -1,7 +1,7 @@
 
 <?php
 
-global $utopia, $register, $request, $response, $user, $audit, $webhook, $project, $domain, $projectDB, $providers;
+global $utopia, $register, $request, $response, $user, $audit, $webhook, $project, $domain, $projectDB, $providers, $clients;
 
 use Utopia\Exception;
 use Utopia\Validator\WhiteList;
@@ -40,9 +40,9 @@ $utopia->post('/v1/auth/register')
     ->param('email', '', function () {return new Email();}, 'Account email')
     ->param('password', '', function () {return new Password();}, 'User password')
     ->param('name', '', function () {return new Text(100);}, 'User name', true)
-    ->param('redirect', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Confirmation page to redirect user after confirm token has been sent to user email')
-    ->param('success', null, function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Redirect when registration succeed', true)
-    ->param('failure', null, function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Redirect when registration failed', true)
+    ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Confirmation page to redirect user after confirm token has been sent to user email')
+    ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed', true)
+    ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed', true)
     ->action(
         function($email, $password, $name, $redirect, $success, $failure) use ($request, $response, $register, $audit, $projectDB, $project, $webhook)
         {
@@ -237,7 +237,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
     ->label('sdk.description', "This endpoint allows the user to request your app to resend him his email confirmation message. The redirect arguments acts the same way as in /auth/register endpoint.\n\nPlease notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL's are the once from domains you have set when added your platforms in the console interface.")
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('redirect', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Confirmation page to redirect user to your app after confirm token has been sent to user email.')
+    ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Confirmation page to redirect user to your app after confirm token has been sent to user email.')
     ->action(
         function($redirect) use ($response, $request, $projectDB, $user, $register, $project)
         {
@@ -306,8 +306,8 @@ $utopia->post('/v1/auth/login')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () {return new Email();}, 'User account email address')
     ->param('password', '', function () {return new Password();}, 'User account password')
-    ->param('success', null, function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'URL to redirect back to your app after a successful login attempt.', true)
-    ->param('failure', null, function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'URL to redirect back to your app after a failed login attempt.', true)
+    ->param('success', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.', true)
+    ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.', true)
     ->action(
         function($email, $password, $success, $failure) use ($response, $request, $projectDB, $audit, $webhook)
         {
@@ -458,7 +458,7 @@ $utopia->post('/v1/auth/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () {return new Email();}, 'User account email address.')
-    ->param('redirect', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'Reset page in your app to redirect user after reset token has been sent to user email.')
+    ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Reset page in your app to redirect user after reset token has been sent to user email.')
     ->action(
         function($email, $redirect) use ($request, $response, $projectDB, $register, $audit, $project)
         {
@@ -603,8 +603,8 @@ $utopia->get('/v1/oauth/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', function () use ($providers) {return new WhiteList(array_keys($providers));}, 'OAuth Provider')
-    ->param('success', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'URL to redirect back to your app after a successful login attempt.', true)
-    ->param('failure', '', function () use ($project) {return new Host($project->getAttribute('clients', []));}, 'URL to redirect back to your app after a failed login attempt.', true)
+    ->param('success', '', function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.', true)
+    ->param('failure', '', function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.', true)
     ->action(
         function($provider, $success, $failure) use ($response, $request, $project)
         {
