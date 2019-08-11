@@ -275,22 +275,9 @@ $utopia->error(function($error /* @var $error Exception */) use ($request, $resp
 
     $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
-    $errorID = (App::ENV_TYPE_PRODUCTION == $env) ? $sentry->captureException($error) : null;
-
-    if (extension_loaded('newrelic') && (App::ENV_TYPE_PRODUCTION == $env)) { // Ensure PHP agent is available
-        newrelic_notice_error($error->getMessage(), $error);
-    }
-
-    $whiteUsers = [
-        'eldad.fux@gmail.com',
-        'eldad@appwrite.io',
-        'eldad@careerpage.io',
-    ];
-
-    $output = ((App::ENV_TYPE_DEVELOPMENT == $env) || (in_array($user->getAttribute('email'), $whiteUsers))) ? [
+    $output = ((App::ENV_TYPE_DEVELOPMENT == $env)) ? [
         'message'   => $error->getMessage(),
         'code'      => $error->getCode(),
-        'errorID'   => $errorID,
         'file'      => $error->getFile(),
         'line'      => $error->getLine(),
         'trace'     => $error->getTrace(),

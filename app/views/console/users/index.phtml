@@ -1,5 +1,6 @@
 <?php
 $providers = $this->getParam('providers', []);
+$limit = 25;
 ?>
 
 <div class="cover">
@@ -14,14 +15,14 @@ $providers = $this->getParam('providers', []);
 
             <h2 style="display: none;">Users</h2>
 
-            <form class="box padding-small margin-bottom"
+            <form class="box padding-small margin-bottom-large"
                 data-service="users.listUsers"
                 data-event="submit"
                 data-scope="sdk"
                 data-name="project-users">
                 <input type="hidden" name="orderType" value="ASC">
                 <input type="hidden" name="offset" value="0">
-                <input type="hidden" name="limit" value="25">
+                <input type="hidden" name="limit" value="<?php echo $limit; ?>">
                 <div class="row responsive">
                     <div class="col span-10">
                         <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no">
@@ -32,13 +33,11 @@ $providers = $this->getParam('providers', []);
                 </div>
             </form>
 
-            <hr class="margin-bottom" />
-
             <div
                 data-service="users.listUsers"
                 data-event="load,user-create,user-update,user-delete"
                 data-param-search=""
-                data-param-limit="25"
+                data-param-limit="<?php echo $limit; ?>"
                 data-param-offset="0"
                 data-param-order-type="ASC"
                 data-scope="sdk"
@@ -59,13 +58,13 @@ $providers = $this->getParam('providers', []);
                                     <th width="180">Name</th>
                                     <th width="200">Email</th>
                                     <th>Status</th>
-                                    <th width="100">Created</th>
+                                    <th width="100">Joined</th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-users.users" data-ls-as="user">
                                 <tr>
                                     <td>
-                                        <img src="" data-ls-attrs="src={{user.email|gravatar}}" alt="User Avatar" class="avatar pull-start" />
+                                        <img src="" data-ls-attrs="src={{user|gravatar}}" alt="User Avatar" class="avatar pull-start" />
                                     </td>
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
@@ -112,6 +111,7 @@ $providers = $this->getParam('providers', []);
                 </div>
             </div>
         </li>
+
         <li data-state="/console/users/teams?project={{router.params.project}}">
             <h2>Teams</h2>
 
@@ -237,6 +237,7 @@ $providers = $this->getParam('providers', []);
                 </div>
             </div>
         </li>
+        
         <li data-state="/console/users/providers?project={{router.params.project}}">
             <h2>Providers</h2>
 
