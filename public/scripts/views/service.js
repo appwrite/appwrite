@@ -5,7 +5,7 @@
         {
             selector: 'data-service',
             repeat: false,
-            controller: function(element, view, container, form, alerts, expression, window, router) {
+            controller: function(element, view, container, form, alerts, expression, window) {
                 let action      = element.dataset['service'];
                 let service     = element.dataset['name'] || action;
                 let event       = element.dataset['event'];   // load, click, change, submit
@@ -87,22 +87,18 @@
 
                         keys = keys.split(',').map(element => element.trim());
 
-                        return function (router, serviceData) {
+                        return function (serviceForm, router, window) {
                             let url = window.location.href;
 
                             keys.map(key => {
-                                let value = getValue(key, 'param', serviceData);
-
-                                if(!value) {
-                                //    return;
-                                }
-
+                                let value = getValue(key, 'param', serviceForm);
                                 url = updateQueryString(key, (value ? value : null), url)
                             });
 
-                            console.log(url);
-                            //router.change(url, true);
-                            window.history.replaceState({}, '', url);
+                            if(url !== window.location.href) {
+                                window.history.pushState({}, '', url);
+                                router.reset();
+                            }
                         }
                     },
 
@@ -238,7 +234,8 @@
                         throw new Error('Method "' + scope + '.' + action + '" not found');
                     }
 
-                    let result = resolve(method, 'param', ('FORM' === element.tagName) ? form.toJson(element) : {});
+                    let formData    = ('FORM' === element.tagName) ? form.toJson(element) : {};
+                    let result      = resolve(method, 'param', formData);
 
                     if(!result) {
                         return;
@@ -256,6 +253,7 @@
                             
                             container.set(service.replace('.', '-'), data, true, true);
                             container.set('serviceData', data, true, true);
+                            container.set('serviceForm', formData, true, true);
 
                             if (debug) console.log('%cservice ready: "' + service.replace('.', '-') + '"', 'color:green');
                             if (debug) console.log('%cservice:', 'color:blue', container.get(service.replace('.', '-')));
@@ -265,6 +263,7 @@
                             }
 
                             container.set('serviceData', null, true, true);
+                            container.set('serviceForm', null, true, true);
 
                             element.$lsSkip = false;
 

@@ -69,6 +69,10 @@ window.ls.filter
     .add('markdown', function ($value, markdown) {
         return markdown.render($value);
     })
+    .add('pageNext', function ($value, element) {
+        $value = parseInt($value || 0);
+        return $value + 5;
+    })
     .add('humanFileSize', function ($value) {
         if (!$value) {
             return 0;

@@ -25,7 +25,9 @@
                         var parser = document.createElement('a');
                         parser.href = tabState;
 
-                        window.history.pushState({}, '', parser.pathname + window.location.search);
+                        if(position != index) { // When tab has changed add state to history
+                            window.history.pushState({}, '', parser.pathname + window.location.search);
+                        }
                     }
 
                     element.children[position].classList.remove('selected');

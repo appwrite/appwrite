@@ -20,13 +20,12 @@ $limit = 5;
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo $limit; ?>"
-                data-param-offset="{{router.params.offset}}"
+                data-param-offset="0"
                 data-param-order-type="ASC"
                 data-scope="sdk"
                 data-name="project-users"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <input type="hidden" name="project" data-ls-bind="{{router.params.project}}">
                 <div class="row responsive thin">
                     <div class="col span-10">
                         <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
@@ -97,6 +96,19 @@ $limit = 5;
                     </div>
 
                     <div class="clear text-align-center">
+                        <form
+                            data-service="users.listUsers"
+                            data-event="submit"
+                            data-param-search="{{router.params.search}}"
+                            data-param-limit="<?php echo $limit; ?>"
+                            data-param-order-type="ASC"
+                            data-scope="sdk"
+                            data-name="project-users"
+                            data-success="state"
+                            data-success-param-state-keys="search,offset">
+                            <button name="offset" class="margin-end round small" aria-label="Back" data-ls-bind="{{router.params.offset|pageNext}}"><i class="icon-left-open"></i></button>
+                        </form>
+
                         <span class="pull-end paging" data-sum="{{project-users.sum}}" data-offset="{{filter-users.keys.offset}}" data-limit="{{filter-users.keys.limit}}"></span>
 
                         <button type="button" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
