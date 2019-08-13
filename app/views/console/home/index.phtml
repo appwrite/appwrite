@@ -18,8 +18,8 @@ $graph = $this->getParam('graph', false);
 </div>
 
 <div class="zone xxl margin-top-negative-large">
-    <div class="box margin-bottom dashboard">
-        <div
+    <div>
+        <div class="box margin-bottom dashboard"
             data-service="projects.getProjectUsage"
             data-event="load"
             data-name="usage"
@@ -53,7 +53,6 @@ $graph = $this->getParam('graph', false);
             <?php endif; ?>
 
             <div>
-
                 <div class="row responsive">
                     <div class="col span-3">
                         <div class="value"><span class="sum" data-ls-bind="{{usage.documents.total|statsTotal}}" data-default="0">0</span></div>
