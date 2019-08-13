@@ -73,19 +73,8 @@ window.ls.filter
         return Math.ceil(parseInt($value || 0) / 3) + 1;
     })
     .add('pageTotal', function ($value) {
-        return Math.ceil(parseInt($value || 0) / 3);
-    })
-    .add('pageNextDisbaled', function ($value, element, expression, container) {
-        let sum = parseInt(element.dataset['sum'] || 0);
-        $value = parseInt($value || 0) + 5;
-        
-        console.log('next', 'value', $value, 'sum', sum, ($value > sum));
-
-        if($value > sum && sum > 0) {
-            return 'disabled';
-        }
-        
-        return ''
+        let total = Math.ceil(parseInt($value || 0) / 3);
+        return (total) ? total : 1;
     })
     .add('humanFileSize', function ($value) {
         if (!$value) {
