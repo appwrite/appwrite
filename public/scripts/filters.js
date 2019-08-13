@@ -69,9 +69,23 @@ window.ls.filter
     .add('markdown', function ($value, markdown) {
         return markdown.render($value);
     })
-    .add('pageNext', function ($value, element) {
-        $value = parseInt($value || 0);
-        return $value + 5;
+    .add('pageCurrent', function ($value) {
+        return Math.ceil(parseInt($value || 0) / 3) + 1;
+    })
+    .add('pageTotal', function ($value) {
+        return Math.ceil(parseInt($value || 0) / 3);
+    })
+    .add('pageNextDisbaled', function ($value, element, expression, container) {
+        let sum = parseInt(element.dataset['sum'] || 0);
+        $value = parseInt($value || 0) + 5;
+        
+        console.log('next', 'value', $value, 'sum', sum, ($value > sum));
+
+        if($value > sum && sum > 0) {
+            return 'disabled';
+        }
+        
+        return ''
     })
     .add('humanFileSize', function ($value) {
         if (!$value) {

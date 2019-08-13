@@ -124,6 +124,7 @@ button,
   }
 
   &.disabled,
+  &:disabled,
   .disabled {
     //opacity: .3;
     background: @config-color-fade-light;
@@ -569,7 +570,10 @@ input[type=checkbox] {
 .paging {
   color: #8d8e8e;
   padding: 5px 15px;
-  display: inline-block;
+  
+  form {
+    display: inline-block;
+  }
 }
 
 .blue-snap {

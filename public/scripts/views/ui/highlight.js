@@ -1,7 +1,7 @@
 (function (window) {
     window.ls.container.get('view').add({
         selector: 'data-ui-highlight',
-        controller: function(element, state, expression, document) {
+        controller: function(element, expression, document) {
 
             let check = function () {
                 let links       = element.getElementsByTagName('a');

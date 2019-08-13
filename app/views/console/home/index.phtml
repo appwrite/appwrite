@@ -18,8 +18,8 @@ $graph = $this->getParam('graph', false);
 </div>
 
 <div class="zone xxl margin-top-negative-large">
-    <div>
-        <div class="box margin-bottom dashboard"
+    <div class="box margin-bottom dashboard">
+        <div
             data-service="projects.getProjectUsage"
             data-event="load"
             data-name="usage"
@@ -77,7 +77,7 @@ $graph = $this->getParam('graph', false);
     </div>
 </div>
 
-<div class="zone xl margin-top-xl clear">
+<div class="zone xl margin-top-xl clear" data-ls-if="({{console-project}})">
     <h2 class="margin-bottom">Platforms</h2>
 
     <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}" style="display: none;">

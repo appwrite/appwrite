@@ -96,6 +96,7 @@
                             });
 
                             if(url !== window.location.href) {
+                                console.log('UPDATE STATE');
                                 window.history.pushState({}, '', url);
                                 router.reset();
                             }
@@ -207,6 +208,8 @@
                 let exec = function(event) {
                     element.$lsSkip = true;
 
+                    element.classList.add('load-service-start');
+
                     if (debug) console.log('%c[executed]: ' + scope + '.' + action, 'color:yellow', event, element, document.body.contains(element));
 
                     if(!document.body.contains(element)) {
@@ -251,6 +254,8 @@
                                 return;
                             }
                             
+                            element.classList.add('load-service-end');
+
                             container.set(service.replace('.', '-'), data, true, true);
                             container.set('serviceData', data, true, true);
                             container.set('serviceForm', formData, true, true);

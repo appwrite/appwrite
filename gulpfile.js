@@ -54,6 +54,9 @@ const configApp  = {
         'public/scripts/views/general/page-title.js',
         'public/scripts/views/general/setup.js',
         'public/scripts/views/general/switch.js',
+        
+        'public/scripts/views/paging/back.js',
+        'public/scripts/views/paging/next.js',
 
         'public/scripts/views/ui/highlight.js',
         'public/scripts/views/ui/modal.js',

@@ -1,6 +1,6 @@
 <?php
 $providers = $this->getParam('providers', []);
-$limit = 5;
+$limit = 3;
 ?>
 
 <div class="cover">
@@ -13,8 +13,8 @@ $limit = 5;
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/users?project={{router.params.project}}">
 
-            <h2 style="display: none;">Users</h2>
-
+            <h2>Users</h2>
+                
             <form class="box padding-small margin-bottom"
                 data-service="users.listUsers"
                 data-event="submit"
@@ -26,7 +26,7 @@ $limit = 5;
                 data-name="project-users"
                 data-success="state"
                 data-success-param-state-keys="search,offset">
-                <div class="row responsive thin">
+                <div class="row responsive">
                     <div class="col span-10">
                         <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
@@ -94,27 +94,44 @@ $limit = 5;
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="clear text-align-center">
-                        <form
-                            data-service="users.listUsers"
-                            data-event="submit"
-                            data-param-search="{{router.params.search}}"
-                            data-param-limit="<?php echo $limit; ?>"
-                            data-param-order-type="ASC"
-                            data-scope="sdk"
-                            data-name="project-users"
-                            data-success="state"
-                            data-success-param-state-keys="search,offset">
-                            <button name="offset" class="margin-end round small" aria-label="Back" data-ls-bind="{{router.params.offset|pageNext}}"><i class="icon-left-open"></i></button>
-                        </form>
-
-                        <span class="pull-end paging" data-sum="{{project-users.sum}}" data-offset="{{filter-users.keys.offset}}" data-limit="{{filter-users.keys.limit}}"></span>
-
-                        <button type="button" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
-                        <button type="button" class="margin-end round small" aria-label="Next"><i class="icon-right-open"></i></button>
-                    </div>
                 </div>
+
+                <div class="clear text-align-center paging">
+                    <form
+                        data-service="users.listUsers"
+                        data-event="submit"
+                        data-param-search="{{router.params.search}}"
+                        data-param-limit="<?php echo $limit; ?>"
+                        data-param-order-type="ASC"
+                        data-scope="sdk"
+                        data-name="project-users"
+                        data-success="state"
+                        data-success-param-state-keys="search,offset">
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                    </form>
+
+                    <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-users.sum|pageTotal}}"></span>
+
+                    <form
+                        data-service="users.listUsers"
+                        data-event="submit"
+                        data-param-search="{{router.params.search}}"
+                        data-param-limit="<?php echo $limit; ?>"
+                        data-param-order-type="ASC"
+                        data-scope="sdk"
+                        data-name="project-users"
+                        data-success="state"
+                        data-success-param-state-keys="search,offset">
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                    </form>
+                </div>
+
+<!-- 
+                <br />
+                <br />
+                <br />
+                <input type="text" class="fill" data-ls-bind="Back: {{router.params.offset|pageBack}}, status:{{router.params.offset|pageBackDisbaled}} (sum: {{project-users.sum}})" disabled />
+                <input type="text" class="fill" data-ls-bind="Next: {{router.params.offset|pageNext}}, status: {{router.params.offset|pageNextDisbaled}} (sum: {{project-users.sum}})" data-sum="{{project-users.sum}}" disabled /> -->
             </div>
         </li>
 
