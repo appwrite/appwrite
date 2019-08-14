@@ -14,8 +14,6 @@
                 
                 paths = paths.concat(expression.getPaths());
 
-                console.log('back', offset - limit);
-
                 if((offset - limit) < 0) {
                     element.disabled = true;
                 }

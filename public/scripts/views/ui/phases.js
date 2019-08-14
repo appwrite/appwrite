@@ -2,31 +2,37 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-ui-phases',
-            controller: function(element, window, document, expression) {
+            controller: function(element, window, document, expression, router) {
                 var tabs = document.createElement('ul');
                 var container = document.createElement('div');
                 var titles = Array.prototype.slice.call(element.getElementsByTagName('h2'));
                 var next = Array.prototype.slice.call(element.querySelectorAll('[data-next]'));
                 var previous = Array.prototype.slice.call(element.querySelectorAll('[data-previous]'));
                 var position = 0;
+                var init = false;
 
                 for (var i = 0; i < element.children.length; i++) {
                    var tabState = expression.parse(element.children[i].dataset['state'] || '');
 
-                    if(tabState === window.location.pathname + window.location.search) {
+                    if(tabState === (window.location.pathname + window.location.search).substring(0, tabState.length)) {
                         position = i;
                     }
                 }
 
                 var setTab = function (index) {
                     var tabState = expression.parse(element.children[index].dataset['state'] || '');
-
+                    var url = '';
+                    
                     if((tabState !== '') && (tabState !== window.location.pathname + window.location.search)) {
-                        var parser = document.createElement('a');
+                        var parser  = document.createElement('a');
                         parser.href = tabState;
+                        url         = (!init) ? parser.pathname + window.location.search : tabState;
+        
+                        console.log(parser.pathname + window.location.search, tabState);
 
                         if(position != index) { // When tab has changed add state to history
-                            window.history.pushState({}, '', parser.pathname + window.location.search);
+                            window.history.pushState({}, '', url);
+                            router.reset();
                         }
                     }
 
@@ -37,6 +43,8 @@
                     position = index;
 
                     document.dispatchEvent(new CustomEvent('tab-changed'));
+
+                    init = true;
                 };
 
                 tabs.classList.add('tabs');

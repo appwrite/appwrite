@@ -10,13 +10,11 @@
                 
                 paths = paths.concat(expression.getPaths());
                 
-                let sum     = parseInt(expression.parse(element.dataset['sum']) || '0');
+                let sum = parseInt(expression.parse(element.dataset['sum']) || '0');
                 
                 paths = paths.concat(expression.getPaths());
 
-                console.log('next', (offset + limit));
-
-                if((offset + limit) > sum) {
+                if((offset + limit) >= sum) {
                     element.disabled = true;
                 }
                 else {
