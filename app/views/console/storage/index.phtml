@@ -19,10 +19,10 @@ use Utopia\Locale\Locale;
             data-event="submit"
             data-scope="sdk"
             data-success="alert,trigger,reset"
-            data-success-param-alert-text="Created user successfully"
-            data-success-param-trigger-events="user-create,modal-close"
+            data-success-param-alert-text="File uploaded successfully"
+            data-success-param-trigger-events="file-create,modal-close"
             data-failure="alert"
-            data-failure-param-alert-text="Failed to create user"
+            data-failure-param-alert-text="Failed to upload file"
             data-failure-param-alert-classname="error">
             <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
@@ -64,7 +64,7 @@ use Utopia\Locale\Locale;
 
     <div
         data-service="storage.listFiles"
-        data-event="load,user-create,user-update,user-delete"
+        data-event="load,file-create,file-update,file-delete"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
         data-param-offset="{{router.params.offset}}"
@@ -86,7 +86,7 @@ use Utopia\Locale\Locale;
                     <thead>
                         <tr>
                             <th width="60"></th>
-                            <th width="220">Name</th>
+                            <th width="220">Filename</th>
                             <th width="180">Type</th>
                             <th>Size</th>
                             <th width="100">Created</th>
@@ -145,71 +145,4 @@ use Utopia\Locale\Locale;
             </form>
         </div>
     </div>
-<!--     
-    <div>
-        <form class="row clear margin-bottom-tiny" data-forms-filter="filter-files" data-event="init">
-            <div class="col span-4">
-                <div class="margin-bottom-small">
-                    <input type="hidden" name="offset" value="0">
-                    <input type="hidden" name="limit" value="15">
-                    <input name="search" id="search" type="search" autocomplete="off" placeholder="Search" class="strip">
-                </div>
-            </div>
-            <div class="col span-4"></div>
-            <div class="col span-4"></div>
-        </form>
-
-        <div
-            data-service="storage.files.list"
-            data-param-search="{{filter-files.keys.search}}"
-            data-param-limit="{{filter-files.keys.limit}}"
-            data-param-offset="{{filter-files.keys.offset}}"
-            data-param-order-type="DESC"
-            data-scope="sdk"
-            data-name="project-files"
-            data-event="filter-files-changed,user-update"
-            data-success="trigger"
-            data-success-param-trigger-events="users-load">
-
-            <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom" style="display: none;">
-                <h3 class="margin-bottom">No Files Found</h3>
-
-                <p class="margin-bottom-no">Upload your first file to get started</p>
-            </div>
-
-            <div data-ls-if="0 != {{project-files.sum}}" style="display: none;">
-
-                <ul data-ls-loop="project-files.files" data-ls-as="file" class="tiles cell-3">
-                    <li>
-                        <div class="box padding-small margin-bottom">
-
-                            <img data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar margin-end" />
-
-                            <button class="pull-end strip margin-top-tiny"><i class="icon icon-dot-3"></i></button>
-                            <div data-ls-bind="{{file.name}}" data-ls-attrs="title={{file.name}}" class="text-one-liner margin-bottom-tiny">&nbsp;</div>
-                            <div data-ls-bind="{{file.sizeOriginal|humanFileSize}}" class="note text-one-liner">&nbsp;</div>
-                        </div>
-                    </li>
-                </ul>
-
-                <div class="clear">
-                    <span class="pull-end paging" data-ls-ui-paging="" data-sum="{{project-files.sum}}" data-offset="{{filter-files.keys.offset}}" data-limit="{{filter-files.keys.limit}}"></span>
-
-                    <span data-ls-if="{{filter-files.backward}} >= 0" style="display: none;">
-                        <button type="button" class="margin-end round" data-forms-filter="filter-files" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-files.backward}}'])); ?>" aria-label="Back"><i class="icon-left-open"></i></button>
-                    </span>
-                    <span data-ls-if="{{filter-files.backward}} < 0" style="display: none;">
-                        <button type="button" class="disabled margin-end round" disabled aria-label="Back"><i class="icon-left-open"></i></button>
-                    </span>
-
-                    <span data-ls-if="{{filter-files.forward}} < {{project-files.sum}}" style="display: none;">
-                        <button type="button" class="margin-end round" data-forms-filter="filter-files" data-params="<?php echo $this->escape(json_encode(['offset' => '{{filter-files.forward}}'])); ?>" aria-label="Next"><i class="icon-right-open"></i></button>
-                    </span>
-                    <span data-ls-if="{{filter-files.forward}} >= {{project-files.sum}}" style="display: none;">
-                        <button type="button" class="disabled margin-end round" disabled aria-label="Next"><i class="icon-right-open"></i></button>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div> -->
 </div>
