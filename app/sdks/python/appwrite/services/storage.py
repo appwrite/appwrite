@@ -29,7 +29,7 @@ class Storage(Service):
         params['folderId'] = folder_id
 
         return self.client.call('post', path, {
-            'content-type': 'multipart/form-data',
+            'content-type': 'Array',
         }, params)
 
     def get_file(self, file_id):

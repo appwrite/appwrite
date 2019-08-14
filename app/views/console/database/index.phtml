@@ -4,13 +4,150 @@ use Utopia\Locale\Locale;
 ?>
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <a data-ls-attrs="href=/console/database?project={{router.params.company}}" class="button icon pull-end"><i class="icon-plus"></i> &nbsp;Collection</a>
-
         <?php echo Locale::getText('console.database.title'); ?>
     </h1>
 </div>
 
 <div class="zone xl">
+    <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Create Collection</h1>
+
+        <form data-debug="1"
+            data-service="database.createCollection"
+            data-event="submit"
+            data-scope="sdk"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created collection successfully"
+            data-success-param-trigger-events="collection-create,modal-close"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create collection"
+            data-failure-param-alert-classname="error">
+
+            <label for="collection-name">Name</label>
+            <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" data-cast-to="array" value="*" />
+
+            <label for="collection-read">Read Permissions</label>
+            <input type="text" class="full-width" id="collection-read" name="read" required autocomplete="off" data-cast-to="array" value="*" />
+
+            <label for="collection-write">Write Permissions</label>
+            <input type="text" class="full-width" id="collection-write" name="write" required autocomplete="off" data-cast-to="array" value="*" />
+
+            <hr />
+
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </form>
+    </div>
+
+    <form class="box padding-small margin-bottom search"
+        data-service="database.listCollections"
+        data-event="submit"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset=""
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-collections"
+        data-success="state"
+        data-success-param-state-keys="search,offset">
+        <div class="row responsive">
+            <div class="col span-10">
+                <input name="search" id="searchCollection" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+            </div>
+            <div class="col span-2">
+                <button class="fill">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <div
+        data-service="database.listCollections"
+        data-event="load,collection-create,collection-update,collection-delete"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset="{{router.params.offset}}"
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-collections">
+
+        <div data-ls-if="0 == {{project-collections.sum}}" class="box margin-bottom">
+            <h3 class="margin-bottom">No Collections Found</h3>
+
+            <p class="margin-bottom-no">Create your first collection to get started</p>
+        </div>
+
+        <div data-ls-if="0 != {{project-collections.sum}}" style="display: none;">
+            <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-collections.sum}}"></span> results found</div>
+
+            <div class="box margin-bottom">
+                <table class="vertical">
+                    <thead>
+                        <tr>
+                            <th width="60"></th>
+                            <th width="160">Name</th>
+                            <th>Rules</th>
+                            <th width="150">Created</th>
+                            <th width="150">Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody data-ls-loop="project-collections.collections" data-ls-as="collection">
+                        <tr>
+                            <td class="hide">
+                                <img src="" data-ls-attrs="src={{collection.name|gravatar}}" data-size="200" alt="Collection Avatar" class="avatar margin-end pull-start" />
+                            </td>
+                            <td data-title="Name: ">
+                                <a data-ls-attrs="href=/console/database/collection?project={{router.params.project}}&id={{collection.$uid}}">
+                                    <span data-ls-bind="{{collection.name}}"></span>
+                                </a>
+                            </td>
+                            <td data-title="Rules: ">
+                                <span data-ls-bind="{{collection.rules.length}}" class="note"></span>
+                            </td>
+                            <td data-title="Created: ">
+                                <span data-ls-bind="{{collection.dateCreated|date-text}}" class="note"></span>
+                            </td>
+                            <td data-title="Updated: ">
+                                <span data-ls-bind="{{collection.dateUpdated|date-text}}" class="note"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="clear text-align-center paging">
+            <form
+                data-service="database.listCollections"
+                data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-collections"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-collections.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
+
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-collections.sum|pageTotal}}"></span>
+
+            <form
+                data-service="database.listCollections"
+                data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-collections"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-collections.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- 
     <div class="zone xl"
         data-service="database.listCollections"
         data-scope="sdk"
@@ -27,4 +164,4 @@ use Utopia\Locale\Locale;
             </ul>
         </div>
     </div>
-</div>
+-->

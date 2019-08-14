@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.11');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.12');
             addGlobalHeader('content-type', '');
 
             /**
@@ -187,11 +187,11 @@
 
                     case 'multipart/form-data':
                         let formData = new FormData();
-                        for (let param in params) {
-                            if (param.hasOwnProperty(key)) {
-                                formData.append(key, param[key]);
-                            }
-                        }
+
+                        Object.keys(params).forEach(function(key) {
+                            let param = params[key];
+                            formData.append(key + (Array.isArray(param) ? '[]' : ''), param);
+                        });
 
                         params = formData;
                     break;
@@ -206,6 +206,10 @@
 
                     for (key in headers) { // Set Headers
                         if (headers.hasOwnProperty(key)) {
+                            if (key === 'content-type' && headers[key] === 'multipart/form-data') { // Skip to avoid missing boundary
+                                continue;
+                            }
+
                             request.setRequestHeader(key, headers[key]);
                         }
                     }
@@ -2272,7 +2276,7 @@
                 let path = '/storage/files';
 
                 return http
-                    .post(path, {'content-type': 'application/json'},
+                    .post(path, {'content-type': 'multipart/form-data'},
                         {
                             'files': files, 
                             'read': read, 
