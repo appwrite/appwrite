@@ -350,8 +350,8 @@
     width: ~"calc(100% + 100px)";
     margin: 0 -50px;
     box-sizing: border-box;
-    border-top: solid 1px #e7e7e7;
-    background: transparent;
+    border-top: solid 1px @config-color-fade-super;
+    background: @config-color-fade-super;
     .func-padding-end(30px);
     .func-padding-start(30px);
   }
@@ -736,6 +736,8 @@
 }
 
 .search {
+
+  opacity: 1!important;
 
   @media @phones, @tablets {
     button {
