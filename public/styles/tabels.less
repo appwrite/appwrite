@@ -59,9 +59,6 @@ table {
     background: #fbfbfb;
   }
 
-  tr:nth-child(odd) {
-  }
-
   th {
     text-align: @config-start;
     font-weight: normal;
@@ -109,6 +106,10 @@ table {
       border-top: solid 1px @config-color-fade-super;
       padding-top: 12px;
 
+      .hide {
+        display: none;
+      }
+
       thead, tbody, tr, td, th {
         width:100%;
         display: block;
@@ -124,11 +125,11 @@ table {
       }
 
       td, th {
-        padding: 0 10px!important;
-        min-height: 35px;
-        line-height: 35px;
+        padding: 0 20px!important;
         text-overflow: ellipsis;
         white-space: normal;
+        height: 40px;
+        line-height: 40px;
 
         &:first-child, &:last-child {
           padding: 0 10px;

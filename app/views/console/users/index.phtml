@@ -46,7 +46,7 @@ $limit = 3;
             </div>
 
                 
-            <form class="box padding-small margin-bottom"
+            <form class="box padding-small margin-bottom search"
                 data-service="users.listUsers"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
@@ -99,7 +99,7 @@ $limit = 3;
                             </thead>
                             <tbody data-ls-loop="project-users.users" data-ls-as="user">
                                 <tr>
-                                    <td>
+                                    <td class="hide">
                                         <img src="" data-ls-attrs="src={{user|gravatar}}" alt="User Avatar" class="avatar pull-start" />
                                     </td>
                                     <td data-title="Name: ">
@@ -185,7 +185,7 @@ $limit = 3;
                 </form>
             </div>
 
-            <form class="box padding-small margin-bottom"
+            <form class="box padding-small margin-bottom search"
                 data-service="teams.listTeams"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
