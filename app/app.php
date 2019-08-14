@@ -533,7 +533,7 @@ $utopia->get('/v1/open-api-2.json')
                 'host' => $domain,
                 'basePath' => '/v1',
                 'schemes' => ['https'],
-                'consumes' => ['application/json', 'application/x-www-form-urlencoded'],
+                'consumes' => ['application/json', 'multipart/form-data'],
                 'produces' => ['application/json'],
                 'securityDefinitions' => [
                     'Project' => [
@@ -632,9 +632,10 @@ $utopia->get('/v1/open-api-2.json')
                         continue;
                     }
 
-                    $url    = str_replace('/v1', '', $route->getURL());
-                    $scope  = $route->getLabel('scope', '');
-                    $hide   = $route->getLabel('sdk.hide', false);
+                    $url        = str_replace('/v1', '', $route->getURL());
+                    $scope      = $route->getLabel('scope', '');
+                    $hide       = $route->getLabel('sdk.hide', false);
+                    $consumes   = [];
 
                     if($hide) {
                         continue;
@@ -643,6 +644,7 @@ $utopia->get('/v1/open-api-2.json')
                     $temp = [
                         'summary' => $route->getDesc(),
                         'operationId' => $route->getLabel('sdk.method', uniqid()),
+                        'consumes' => [],
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
                         'description' => $route->getLabel('sdk.description', ''),
                         'responses' => [
@@ -715,6 +717,7 @@ $utopia->get('/v1/open-api-2.json')
                                 //$node['format'] = 'json';
                                 break;
                             case 'Storage\Validators\File':
+                                $consumes[] = ['multipart/form-data'];
                                 $node['type'] = 'file';
                                 $temp['consumes'] = ['multipart/form-data'];
                                 break;
@@ -780,6 +783,8 @@ $utopia->get('/v1/open-api-2.json')
 
                         $url = str_replace(':' . $name, '{' . $name . '}', $url);
                     }
+
+                    $temp['consumes'] = $consumes;
 
                     $output['paths'][$url][strtolower($route->getMethod())] = $temp;
                 }
