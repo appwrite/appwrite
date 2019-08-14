@@ -1,9 +1,9 @@
 (function (window) {
     window.ls.container.get('view').add({
         selector: 'data-paging-next',
-        controller: function(element, container, expression) {
+        controller: function(element, container, expression, env) {
             let paths   = [];
-            let limit   = 3;
+            let limit   = env.PAGING_LIMIT;
             
             let check = function () {
                 let offset  = parseInt(expression.parse(element.dataset['offset']) || '0');

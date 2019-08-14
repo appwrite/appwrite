@@ -139,7 +139,7 @@ $utopia->get('/v1/storage/files')
             ]);
 
             $results = array_map(function ($value) { /* @var $value \Database\Document */
-                return $value->getArrayCopy(['$uid', '$permissions', 'name', 'signature', 'mimeType', 'sizeOriginal']);
+                return $value->getArrayCopy(['$uid', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
             }, $results);
 
             $response->json(['sum' => $projectDB->getSum(), 'files' => $results]);
@@ -161,7 +161,7 @@ $utopia->get('/v1/storage/files/:fileId')
                 throw new Exception('File not found', 404);
             }
 
-            $response->json($file->getArrayCopy(['$uid', '$permissions', 'name', 'signature', 'mimeType', 'sizeOriginal']));
+            $response->json($file->getArrayCopy(['$uid', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']));
         }
     );
 

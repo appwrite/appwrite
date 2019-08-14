@@ -34,6 +34,7 @@ const APP_SOCIAL_GITHUB             = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD            = 'https://discord.gg/GSeTUeA';
 const APP_MODE_ADMIN                = 'admin';
 const APP_LOCALES                   = ['en', 'he'];
+const APP_PAGING_LIMIT              = 15;
 
 $register   = new Registry();
 $request    = new Request();

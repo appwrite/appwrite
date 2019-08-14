@@ -1,19 +1,151 @@
 <?php
 use Utopia\Locale\Locale;
-
-$providers = $this->getParam('providers', []);
 ?>
 
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <a data-ls-attrs="href=/console/openings/new?company={{router.params.company}}" class="button icon margin-top-tiny pull-end"><i class="icon-plus"></i> &nbsp;Upload</a>
-
         <?php echo Locale::getText('console.storage.title'); ?>
     </h1>
 </div>
 
 <div class="zone xl">
+    <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
+        <h1>Upload File</h1>
+
+        <form data-debug="1"
+            data-service="storage.createFile"
+            data-event="submit"
+            data-scope="sdk"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created user successfully"
+            data-success-param-trigger-events="user-create,modal-close"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create user"
+            data-failure-param-alert-classname="error">
+            <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+
+            <label for="file-read">Files</label>
+            <input type="file" name="files" id="file-files" require>
+
+            <label for="file-read">Read Permissions</label>
+            <input type="text" class="full-width" id="file-read" name="read" required autocomplete="off" data-cast-to="array" value="*" />
+
+            <label for="file-write">Write Permissions</label>
+            <input type="text" class="full-width" id="file-write" name="write" required autocomplete="off" data-cast-to="array" value="*" />
+
+            <hr />
+
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </form>
+    </div>
+
+    <form class="box padding-small margin-bottom search"
+        data-service="storage.listFiles"
+        data-event="submit"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset=""
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-files"
+        data-success="state"
+        data-success-param-state-keys="search,offset">
+        <div class="row responsive">
+            <div class="col span-10">
+                <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+            </div>
+            <div class="col span-2">
+                <button class="fill">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <div
+        data-service="storage.listFiles"
+        data-event="load,user-create,user-update,user-delete"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset="{{router.params.offset}}"
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-files">
+
+        <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom">
+            <h3 class="margin-bottom">No Files Found</h3>
+
+            <p class="margin-bottom-no">Upload your first file to get started</p>
+        </div>
+
+        <div data-ls-if="0 != {{project-files.sum}}" style="display: none;">
+            <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> results found</div>
+
+            <div class="box margin-bottom">
+                <table class="vertical">
+                    <thead>
+                        <tr>
+                            <th width="60"></th>
+                            <th width="220">Name</th>
+                            <th width="180">Type</th>
+                            <th>Size</th>
+                            <th width="100">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody data-ls-loop="project-files.files" data-ls-as="file">
+                        <tr>
+                            <td class="hide">
+                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar" />
+                            </td>
+                            <td data-title="Name: ">
+                                <span data-ls-bind="{{file.name}}" class="note"></span>
+                            </td>
+                            <td data-title="Type: ">
+                                <span data-ls-bind="{{file.mimeType}}" class="note tag"></span>
+                            </td>
+                            <td data-title="Status: ">
+                                    <span data-ls-bind="{{file.sizeOriginal|humanFileSize}}" class="note"></span>
+                            </td>
+                            <td data-title="Created: ">
+                                <span data-ls-bind="{{file.dateCreated|date-text}}" class="note"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="clear text-align-center paging">
+            <form
+                data-service="storage.listFiles"
+                data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-files"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
+
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
+
+            <form
+                data-service="storage.listFiles"
+                data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-files"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
+        </div>
+    </div>
+<!--     
     <div>
         <form class="row clear margin-bottom-tiny" data-forms-filter="filter-files" data-event="init">
             <div class="col span-4">
@@ -79,5 +211,5 @@ $providers = $this->getParam('providers', []);
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 </div>

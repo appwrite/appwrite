@@ -69,11 +69,11 @@ window.ls.filter
     .add('markdown', function ($value, markdown) {
         return markdown.render($value);
     })
-    .add('pageCurrent', function ($value) {
-        return Math.ceil(parseInt($value || 0) / 3) + 1;
+    .add('pageCurrent', function ($value, env) {
+        return Math.ceil(parseInt($value || 0) / env.PAGING_LIMIT) + 1;
     })
-    .add('pageTotal', function ($value) {
-        let total = Math.ceil(parseInt($value || 0) / 3);
+    .add('pageTotal', function ($value, env) {
+        let total = Math.ceil(parseInt($value || 0) / env.PAGING_LIMIT);
         return (total) ? total : 1;
     })
     .add('humanFileSize', function ($value) {

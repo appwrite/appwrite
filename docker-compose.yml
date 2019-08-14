@@ -47,6 +47,8 @@ services:
   clamav:
     image: appwrite/clamav:1.0.4
     restart: unless-stopped
+    volumes:
+    - ./storage:/storage:rw
       
   redis:
     image: redis:5.0
