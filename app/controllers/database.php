@@ -141,6 +141,8 @@ $utopia->post('/v1/database')
                 $data = $projectDB->createDocument([
                     '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
                     'name' => $name,
+                    'dateCreated'   => time(),
+                    'dateUpdated'   => time(),
                     'structure' => true,
                     '$permissions' => [
                         'read' => $read,
@@ -204,6 +206,7 @@ $utopia->put('/v1/database/:collectionId')
             $collection = $projectDB->updateDocument(array_merge($collection->getArrayCopy(), [
                 'name' => $name,
                 'structure' => true,
+                'dateUpdated' => time(),
                 '$permissions' => [
                     'read' => $read,
                     'write' => $write,

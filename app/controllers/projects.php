@@ -1107,8 +1107,8 @@ $utopia->post('/v1/projects/:projectId/platforms')
                 'key'           => $key,
                 'store'         => $store,
                 'url'           => $url,
-                'created'       => time(),
-                'updated'       => time(),
+                'dateCreated'   => time(),
+                'dateUpdated'   => time(),
             ]);
 
             if(false === $platform) {
@@ -1158,7 +1158,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
 
             $platform
                 ->setAttribute('name', $name)
-                ->setAttribute('updated', time())
+                ->setAttribute('dateUpdated', time())
                 ->setAttribute('key', $key)
                 ->setAttribute('store', $store)
                 ->setAttribute('url', $url)
