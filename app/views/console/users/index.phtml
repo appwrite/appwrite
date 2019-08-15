@@ -82,7 +82,7 @@ $providers = $this->getParam('providers', []);
                 </div>
 
                 <div data-ls-if="0 != {{project-users.sum}}" style="display: none;">
-                    <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-users.sum}}"></span> results found</div>
+                    <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-users.sum}}"></span> users found</div>
 
                     <div class="box margin-bottom">
                         <table class="vertical">
@@ -98,7 +98,7 @@ $providers = $this->getParam('providers', []);
                             <tbody data-ls-loop="project-users.users" data-ls-as="user">
                                 <tr>
                                     <td class="hide">
-                                        <img src="" data-ls-attrs="src={{user|gravatar}}" alt="User Avatar" class="avatar pull-start" />
+                                        <img src="" data-ls-attrs="src={{user|gravatar}}" alt="User Avatar" class="avatar pull-start" loading="lazy" />
                                     </td>
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
@@ -227,6 +227,7 @@ $providers = $this->getParam('providers', []);
                         <table class="vertical">
                             <thead>
                                 <tr>
+                                    <th width="60"></th>
                                     <th width="180">Name</th>
                                     <th>Members</th>
                                     <th width="150">Created</th>
@@ -234,6 +235,9 @@ $providers = $this->getParam('providers', []);
                             </thead>
                             <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
                                 <tr>
+                                    <td class="hide">
+                                        <img src="" data-ls-attrs="src={{team.name|gravatar}}" data-size="200" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" />
+                                    </td>
                                     <td data-title="Name: ">
                                         <div data-ui-modal class="modal close" data-button-text="{{team.name}}" data-button-class="link">
                                             <h1>Update Team</h1>

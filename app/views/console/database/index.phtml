@@ -78,7 +78,7 @@ use Utopia\Locale\Locale;
         </div>
 
         <div data-ls-if="0 != {{project-collections.sum}}" style="display: none;">
-            <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-collections.sum}}"></span> results found</div>
+            <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-collections.sum}}"></span> collections found</div>
 
             <div class="box margin-bottom">
                 <table class="vertical">
@@ -88,13 +88,13 @@ use Utopia\Locale\Locale;
                             <th width="160">Name</th>
                             <th>Rules</th>
                             <th width="150">Created</th>
-                            <th width="150">Updated</th>
+                            <th width="150">Last Updated</th>
                         </tr>
                     </thead>
                     <tbody data-ls-loop="project-collections.collections" data-ls-as="collection">
                         <tr>
                             <td class="hide">
-                                <img src="" data-ls-attrs="src={{collection.name|gravatar}}" data-size="200" alt="Collection Avatar" class="avatar margin-end pull-start" />
+                                <img src="" data-ls-attrs="src={{collection.name|gravatar}}" data-size="200" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" />
                             </td>
                             <td data-title="Name: ">
                                 <a data-ls-attrs="href=/console/database/collection?project={{router.params.project}}&id={{collection.$uid}}">
@@ -107,7 +107,7 @@ use Utopia\Locale\Locale;
                             <td data-title="Created: ">
                                 <span data-ls-bind="{{collection.dateCreated|date-text}}" class="note"></span>
                             </td>
-                            <td data-title="Updated: ">
+                            <td data-title="Last Updated: ">
                                 <span data-ls-bind="{{collection.dateUpdated|date-text}}" class="note"></span>
                             </td>
                         </tr>

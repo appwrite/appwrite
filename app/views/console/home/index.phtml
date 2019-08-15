@@ -18,8 +18,8 @@ $graph = $this->getParam('graph', false);
 </div>
 
 <div class="zone xxl margin-top-negative-large">
-    <div>
-        <div class="box margin-bottom dashboard"
+    <div class="box margin-bottom dashboard">
+        <div
             data-service="projects.getProjectUsage"
             data-event="load"
             data-name="usage"
@@ -109,7 +109,7 @@ $graph = $this->getParam('graph', false);
                 </form>
 
                 <div class="margin-bottom-tiny">
-                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" />
+                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" loading="lazy" />
                     <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 

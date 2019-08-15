@@ -79,7 +79,7 @@ use Utopia\Locale\Locale;
         </div>
 
         <div data-ls-if="0 != {{project-files.sum}}" style="display: none;">
-            <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> results found</div>
+            <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> files found</div>
 
             <div class="box margin-bottom">
                 <table class="vertical">
@@ -95,7 +95,7 @@ use Utopia\Locale\Locale;
                     <tbody data-ls-loop="project-files.files" data-ls-as="file">
                         <tr>
                             <td class="hide">
-                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar" />
+                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" />
                             </td>
                             <td data-title="Name: ">
                                 <span data-ls-bind="{{file.name}}" class="note"></span>
