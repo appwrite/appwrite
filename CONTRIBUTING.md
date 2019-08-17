@@ -3,7 +3,7 @@
 We would love for you to contribute to Appwrite and help make it even better than it is today! As a contributor, here are the guidelines we would like you to follow:
 
 ## Code of Conduct
-Help us keep Angular open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDACT.md).
+Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDACT.md).
 
 
 ## Technology Stack
