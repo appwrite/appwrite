@@ -76,6 +76,17 @@ window.ls.filter
         let total = Math.ceil(parseInt($value || 0) / env.PAGING_LIMIT);
         return (total) ? total : 1;
     })
+    .add('emptyDash', function ($value, env) {
+        if(!$value) {
+            return '-';
+        }
+
+        if(Array.isArray($value)) {
+            return $value.length + ' items';
+        }
+
+        return $value;
+    })
     .add('humanFileSize', function ($value) {
         if (!$value) {
             return 0;
