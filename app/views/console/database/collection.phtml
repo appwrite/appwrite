@@ -1,14 +1,15 @@
 <?php
 
-use Utopia\Locale\Locale;
+$collection = $this->getParam('collection', []);
+
 ?>
 <div class="cover margin-bottom-large"
     data-service="database.getCollection"
     data-param-collection-id="{{router.params.id}}"
     data-scope="sdk" data-event="load"
     data-name="project-collection">
-    <h1 class="zone xl margin-bottom-large">
-        <a data-ls-attrs="href=/console/database?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Collections</a>
+    <h1 class="zone xxl margin-bottom-large">
+        <a data-ls-attrs="href=/console/database?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Database</a>
 
         <br />
 
@@ -16,9 +17,144 @@ use Utopia\Locale\Locale;
     </h1>
 </div>
 
-<div class="zone xl">
-    <div class="zone xl">
-        <div class="box margin-bottom">
+<div class="zone xxl">
+    <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+        <h1>Create Document</h1>
+
+        <form data-debug="1"
+            data-service="database.createCollection"
+            data-event="submit"
+            data-scope="sdk"
+            data-success="alert,trigger,reset"
+            data-success-param-alert-text="Created document successfully"
+            data-success-param-trigger-events="document-create,modal-close"
+            data-failure="alert"
+            data-failure-param-alert-text="Failed to create document"
+            data-failure-param-alert-classname="error">
+
+            <hr />
+
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </form>
+    </div>
+
+    <form class="box padding-small margin-bottom search"
+        data-service="database.listDocuments"
+        data-event="submit"
+        data-param-collection-id="{{router.params.id}}"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset=""
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-documents"
+        data-success="state"
+        data-success-param-state-keys="search,offset">
+        <div class="row responsive">
+            <div class="col span-10">
+                <input name="search" id="searchDocuments" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+            </div>
+            <div class="col span-2">
+                <button class="fill">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <div
+        data-service="database.listDocuments"
+        data-event="load,document-create,document-update,document-delete"
+        data-param-collection-id="{{router.params.id}}"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset="{{router.params.offset}}"
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-documents">
+
+        <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
+            <h3 class="margin-bottom">No Documents Found</h3>
+
+            <p class="margin-bottom-no">Create your first document to get started</p>
+        </div>
+
+        <div data-ls-if="0 != {{project-documents.sum}}" style="display: none;">
+            <div class="note margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
+
+            <div class="box y-scroll margin-bottom">
+                <table class="vertical">
+                    <thead>
+                        <tr>
+                            <?php foreach($collection['rules'] as $rule): ?>
+                            <th width="220">
+                                <?php echo $rule['label']; ?>
+
+                                <?php if(!empty($rule['description'])): ?>
+                                    <span class="tooltip large" data-tooltip="<?php echo $rule['description']; ?>"><i class="icon-question"></i></span>
+                                <?php endif; ?>
+                            </th>
+
+                            
+                            <?php endforeach; ?>
+                        </tr>
+                    </thead>
+                    <tbody data-ls-loop="project-documents.documents" data-ls-as="document">
+                        <tr>
+                            <?php foreach($collection['rules'] as $rule): ?>
+                            <td>
+                                <?php switch($rule['type']):
+                                    case 'numeric':?>
+                                        <span class="tag" data-ls-bind="{{document.<?php echo $rule['key']; ?>|emptyDash}}" data-ls-attrs="title={{document.<?php echo $rule['key']; ?>}}"></span>
+                                    <?php break;?>
+
+                                    <?php case 'uuid':?>
+                                    $
+                                    <?php break;?>
+                                        
+                                    <?php default:?>
+                                        <span class="text-one-liner" data-ls-bind="{{document.<?php echo $rule['key']; ?>|emptyDash}}" data-ls-attrs="title={{document.<?php echo $rule['key']; ?>}}"></span>
+                                    <?php break;?>
+                                <?php endswitch;?>
+
+                            </td>
+                            <?php endforeach; ?>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="clear text-align-center paging">
+            <form
+                data-service="database.listDocuments"
+                data-event="submit"
+                data-param-collection-id="{{router.params.id}}"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-documents"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
+
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.sum|pageTotal}}"></span>
+
+            <form
+                data-service="database.listDocuments"
+                data-event="submit"
+                data-param-collection-id="{{router.params.id}}"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-documents"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
         </div>
     </div>
 </div>
