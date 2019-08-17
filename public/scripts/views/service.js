@@ -90,9 +90,15 @@
                         return function (serviceForm, router, window) {
                             let url = window.location.href;
 
-                            keys.map(key => {
+                            keys.map(node => {
+                                node = node.split('=');
+
+                                let key = node[0] || '';
+                                let name = node[1] || key;
+
+
                                 let value = getValue(key, 'param', serviceForm);
-                                url = updateQueryString(key, (value ? value : null), url)
+                                url = updateQueryString(name, (value ? value : null), url)
                             });
 
                             if(url !== window.location.href) {

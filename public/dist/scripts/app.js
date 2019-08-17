@@ -253,7 +253,9 @@ return n[0];}).join('')||'--';let background=themes[theme[theme.length-1]]['back
 (hours?hours+"h ":"")+
 (minutes?minutes+"m ":"")+
 Number.parseFloat(seconds).toFixed(0)+"s";}
-return"< 1s";}).add('markdown',function($value,markdown){return markdown.render($value);}).add('pageCurrent',function($value,env){return Math.ceil(parseInt($value||0)/env.PAGING_LIMIT)+1;}).add('pageTotal',function($value,env){let total=Math.ceil(parseInt($value||0)/env.PAGING_LIMIT);return(total)?total:1;}).add('humanFileSize',function($value){if(!$value){return 0;}
+return"< 1s";}).add('markdown',function($value,markdown){return markdown.render($value);}).add('pageCurrent',function($value,env){return Math.ceil(parseInt($value||0)/env.PAGING_LIMIT)+1;}).add('pageTotal',function($value,env){let total=Math.ceil(parseInt($value||0)/env.PAGING_LIMIT);return(total)?total:1;}).add('emptyDash',function($value,env){if(!$value){return'-';}
+if(Array.isArray($value)){return $value.length+' items';}
+return $value;}).add('humanFileSize',function($value){if(!$value){return 0;}
 let thresh=1000;if(Math.abs($value)<thresh){return $value+' B';}
 let units=['kB','MB','GB','TB','PB','EB','ZB','YB'];let u=-1;do{$value/=thresh;++u;}while(Math.abs($value)>=thresh&&u<units.length-1);return $value.toFixed(1)+'<span class="text-size-small unit">'+units[u]+'</span>';}).add('statsTotal',function($value){if(!$value){return 0;}
 $value=abbreviate($value,1,false,false);return($value==='0')?'N/A':$value;});function abbreviate(number,maxPlaces,forcePlaces,forceLetter){number=Number(number);forceLetter=forceLetter||false;if(forceLetter!==false){return annotate(number,maxPlaces,forcePlaces,forceLetter);}
@@ -283,7 +285,7 @@ return url;}}
 else{if(typeof value!=='undefined'&&value!==null){var separator=url.indexOf('?')!==-1?'&':'?';hash=url.split('#');url=hash[0]+separator+key+'='+value;if(typeof hash[1]!=='undefined'&&hash[1]!==null){url+='#'+hash[1];}
 return url;}
 else{return url;}}}
-keys=keys.split(',').map(element=>element.trim());return function(serviceForm,router,window){let url=window.location.href;keys.map(key=>{let value=getValue(key,'param',serviceForm);url=updateQueryString(key,(value?value:null),url)});if(url!==window.location.href){console.log('UPDATE STATE');window.history.pushState({},'',url);router.reset();}}},'trigger':function(events){return function(document){events=events.trim().split(',');for(let i=0;i<events.length;i++){if(''===events[i]){continue;}
+keys=keys.split(',').map(element=>element.trim());return function(serviceForm,router,window){let url=window.location.href;keys.map(node=>{node=node.split('=');let key=node[0]||'';let name=node[1]||key;let value=getValue(key,'param',serviceForm);url=updateQueryString(name,(value?value:null),url)});if(url!==window.location.href){console.log('UPDATE STATE');window.history.pushState({},'',url);router.reset();}}},'trigger':function(events){return function(document){events=events.trim().split(',');for(let i=0;i<events.length;i++){if(''===events[i]){continue;}
 if(debug)console.log('%c[event triggered]: '+events[i],'color:green');document.dispatchEvent(new CustomEvent(events[i]));}}}};let getParams=function getParams(func){const REGEX_COMMENTS=/((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;const REGEX_FUNCTION_PARAMS=/(?:\s*(?:function\s*[^(]*)?\s*)((?:[^'"]|(?:(?:(['"])(?:(?:.*?[^\\]\2)|\2))))*?)\s*(?=(?:=>)|{)/m;const REGEX_PARAMETERS_VALUES=/\s*([\w\\$]+)\s*(?:=\s*((?:(?:(['"])(?:\3|(?:.*?[^\\]\3)))((\s*\+\s*)(?:(?:(['"])(?:\6|(?:.*?[^\\]\6)))|(?:[\w$]*)))*)|.*?))?\s*(?:,|$)/gm;let functionAsString=func.toString();let params=[];let match;functionAsString=functionAsString.replace(REGEX_COMMENTS,'');functionAsString=functionAsString.match(REGEX_FUNCTION_PARAMS)[1];if(functionAsString.charAt(0)==='('){functionAsString=functionAsString.slice(1,-1);}
 while(match=REGEX_PARAMETERS_VALUES.exec(functionAsString)){params.push(match[1]);}
 return params;}
