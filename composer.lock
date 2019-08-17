@@ -1714,12 +1714,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "fc287847c51b042d1b8baf955181cbbc7eb4d866"
+                "reference": "5ac8c91de53166ca7c03c82b55ed717a66362876"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/fc287847c51b042d1b8baf955181cbbc7eb4d866",
-                "reference": "fc287847c51b042d1b8baf955181cbbc7eb4d866",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/5ac8c91de53166ca7c03c82b55ed717a66362876",
+                "reference": "5ac8c91de53166ca7c03c82b55ed717a66362876",
                 "shasum": ""
             },
             "require": {
@@ -1750,7 +1750,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2019-07-31 13:00:25"
+            "time": "2019-08-15 06:36:30"
         },
         {
             "name": "utopia-php/locale",

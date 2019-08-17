@@ -15,7 +15,7 @@
     //overflow: auto;
     //-webkit-overflow-scrolling: touch;
     color: #4b4b4b;
-    background: #f6f9fc;
+    background: #eceff1;
 
     .project-only {
       display: none !important;
@@ -350,10 +350,20 @@
     width: ~"calc(100% + 100px)";
     margin: 0 -50px;
     box-sizing: border-box;
-    border-top: solid 1px @config-color-fade-super;
-    background: @config-color-fade-super;
+    //border-top: solid 1px @config-color-fade-super;
+    background: transparent;
     .func-padding-end(30px);
     .func-padding-start(30px);
+    
+    ul {
+      float: none;
+      text-align: center;
+
+      li {
+        float: none;
+        display: inline-block;
+      }
+    }
   }
 
   .projects {
@@ -403,8 +413,8 @@
         content: "";
         display: block;
         width: 2px;
-        background: #f6f7f8;
-        height: ~"calc(100% + 100px)";
+        background: #eceff1;
+        height: ~"calc(100% + 110px)";
         position: absolute;
         top: -20px;
         bottom: -20px;

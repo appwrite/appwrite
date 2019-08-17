@@ -1,0 +1,107 @@
+.console {
+    .database {
+        .row {
+            //height: 500px;
+
+            .col {
+                &:after {
+                    width: 2px;
+                    right: 20px;
+                }
+            }
+        }
+
+        hr {
+            margin: 0 -20px;
+            background: #efefef;
+            height: 2px;
+        }
+
+        h2 {
+            font-size: 13px;
+            line-height: 20px;
+            background-color: #f5f5f5;
+            margin: -20px -20px 0 -20px;
+            padding: 10px 20px;
+            border-bottom: solid 1px #e1e2e2;
+            font-weight: 600;
+        }
+
+        .search {
+            background-color: #f5f5f5;
+            margin: 0 -20px 0 -20px;
+            padding: 10px 15px;
+
+            input {
+                height: 40px;
+                background-color: #fff;
+            }
+        }
+
+        .code {
+            background: red;
+            margin: 0 -20px -20px -20px;
+        }
+
+        .paging {
+            background: #f5f5f5;
+            margin: 0 -20px -20px -20px;
+            padding: 20px;
+        }
+
+        .button {
+            margin: 0 -20px;
+            padding: 0 20px!important;
+            text-align: inherit;
+            color: @config-color-focus;
+            width: 100%;
+            font-size: 15px;
+            line-height: 55px;
+            box-sizing: content-box;
+
+            i {
+                .func-margin-end(8px);
+            }
+            
+            &:hover {
+                border: none;
+                background: @config-color-focus-fade;
+            }
+        }
+        
+        .wrapper {
+            
+        }
+
+        .items {
+            margin: -5px -20px;
+            height: 270px;
+            overflow-x: hidden;
+            overflow-y: scroll;
+
+            li {
+                padding: 0 20px;
+                margin: 5px 0;
+                line-height: 45px;
+                font-size: 15px;
+                .func-padding-start(50px);
+
+                i {
+                    display: none;
+                }
+                
+                &:hover {
+                    background: #f5f5f5;
+
+                    i {
+                        display: block;
+                    }
+                }
+
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+        }
+    }
+}
