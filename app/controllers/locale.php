@@ -89,7 +89,7 @@ $utopia->get('/v1/locale/countries/eu')
     ->label('sdk.method', 'getCountriesEU')
     ->label('sdk.description', 'List of all countries that are currently members of the EU. You can use the locale header to get the data in supported language. UK brexit date is currently set to 2019-10-31 and will be updated if and when needed.')
     ->action(
-        function() use ($response, $request)
+        function() use ($response)
         {
             $countries  = Locale::getText('countries'); /* @var $countries array */
             $eu         = include __DIR__ . '/../config/eu.php';
@@ -114,7 +114,7 @@ $utopia->get('/v1/locale/countries/phones')
     ->label('sdk.method', 'getCountriesPhones')
     ->label('sdk.description', 'List of all countries phone codes. You can use the locale header to get the data in supported language.')
     ->action(
-        function() use ($response, $request)
+        function() use ($response)
         {
             $list       = include __DIR__ . '/../config/phones.php'; /* @var $list array */
 
