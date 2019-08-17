@@ -87,7 +87,7 @@ $utopia->get('/v1/locale/countries/eu')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountriesEU')
-    ->label('sdk.description', 'List of all countries that are currently members of the EU. You can use the locale header to get the data in supported language.')
+    ->label('sdk.description', 'List of all countries that are currently members of the EU. You can use the locale header to get the data in supported language. UK brexit date is currently set to 2019-10-31 and will be updated if and when needed.')
     ->action(
         function() use ($response, $request)
         {
