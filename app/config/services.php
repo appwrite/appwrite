@@ -44,6 +44,7 @@ return [
     ],
     'v1/locale' => [
         'name' => 'Locale',
+        'description' => 'The locale service allow you customize your app based on your user location. Get your user location, IP address, list of countries names, phone codes, currencies and more. This product includes GeoLite2 data created by MaxMind, available from<a href="https://www.maxmind.com">https://www.maxmind.com</a>.',
         'controller' => 'controllers/locale.php',
         'sdk' => true,
     ],
