@@ -5,6 +5,8 @@ global $utopia, $response, $request, $layout, $version, $providers;
 
 use Utopia\View;
 use Utopia\Locale\Locale;
+use Database\Database;
+use Database\Validator\UID;
 
 $utopia->init(function () use ($layout, $utopia) {
     $layout
@@ -105,19 +107,6 @@ $utopia->get('/console/home')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/platforms/web')
-    ->desc('Platform console project home')
-    ->label('permission', 'public')
-    ->label('scope', 'console')
-    ->action(function() use ($layout)
-    {
-        $page = new View(__DIR__ . '/../views/console/platforms/web.phtml');
-
-        $layout
-            ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.home.title'))
-            ->setParam('body', $page);
-    });
-
 $utopia->get('/console/settings')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
@@ -183,9 +172,20 @@ $utopia->get('/console/database/collection')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function() use ($layout)
+    ->param('id', '', function () {return new UID();}, 'Collection unique ID.')
+    ->action(function($id) use ($layout, $projectDB)
     {
+        $collection = $projectDB->getDocument($id, false);
+
+        if(empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
+        }
+        
         $page = new View(__DIR__ . '/../views/console/database/collection.phtml');
+
+        $page
+            ->setParam('collection', $collection->getArrayCopy())
+        ;
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.database.title'))
