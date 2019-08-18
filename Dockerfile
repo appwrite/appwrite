@@ -20,9 +20,9 @@ ENV _APP_STATSD_HOST telegraf
 ENV _APP_STATSD_PORT 8125
 ENV _APP_SMTP_HOST smtp
 ENV _APP_SMTP_PORT 25
-ENV _APP_SMTP_SECURE ''
-ENV _APP_SMTP_USERNAME ''
-ENV _APP_SMTP_PASSWORD ''
+#ENV _APP_SMTP_SECURE ''
+#ENV _APP_SMTP_USERNAME ''
+#ENV _APP_SMTP_PASSWORD ''
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
