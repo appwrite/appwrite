@@ -66,6 +66,7 @@ ADD ./docker/ssl/nginx.crt /etc/nginx/ssl/nginx.crt
 ADD ./docker/ssl/nginx.key /etc/nginx/ssl/nginx.key
 
 # php conf
+RUN mkdir -p /var/run/php
 ADD ./docker/www.conf /etc/php/7.3/fpm/pool.d/www.conf
 
 # supervisord conf
