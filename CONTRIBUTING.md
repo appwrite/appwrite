@@ -3,8 +3,8 @@
 We would love for you to contribute to Appwrite and help make it even better than it is today! As a contributor, here are the guidelines we would like you to follow:
 
 ## Code of Conduct
-Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDACT.md).
 
+Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDACT.md).
 
 ## Technology Stack
 
@@ -36,4 +36,32 @@ Appwrite uses PHPs Composer for managing dependencies on the server-side and JS 
 
 ## Architecture
 
+## Security & Privacy
+
+## Setup
+
+To set up a working development environment just clone the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+
+```bash
+git clone git@github.com:appwrite/appwrite.git
+
+cd appwrite
+
+composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
+
+npm install
+
+docker-compose up -d
+```
+
+After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
+
 ## Build
+
+To build a new version of the Appwrite server all you need to do is run the build.sh file like this:
+
+```bash
+bash ./build.sh 1.0.0
+```
+
+Before running the command make sure you have proper write permissions to Appwrite docker hub team.
