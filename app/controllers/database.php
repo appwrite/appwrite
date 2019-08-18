@@ -340,8 +340,8 @@ $utopia->get('/v1/database/:collectionId/documents/:documentId')
             $output = $document->getArrayCopy();
 
             $paths = explode('/', $request->getParam('q', ''));
-            $paths = array_slice($paths, 5, count($paths));
-
+            $paths = array_slice($paths, 6, count($paths));
+            
             if(count($paths) > 0) {
                 if(count($paths) % 2 == 1) {
                     $output = $document->getAttribute(implode('.', $paths));
@@ -353,6 +353,7 @@ $utopia->get('/v1/database/:collectionId/documents/:documentId')
 
                 $output = ($output instanceof Document) ? $output->getArrayCopy() : $output;
 
+                var_dump($output);
                 if(!is_array($output)) {
                     throw new Exception('No document found', 404);
                 }

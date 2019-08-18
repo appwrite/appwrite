@@ -1,4 +1,4 @@
 <?php
-const VERSION = 'v0.0.0dev';
+const VERSION = '0.1.2';
 
 return VERSION;

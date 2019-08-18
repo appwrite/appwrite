@@ -4,6 +4,8 @@
             //height: 500px;
 
             .col {
+                height: 452px;
+
                 &:after {
                     width: 2px;
                     right: 20px;
@@ -20,11 +22,23 @@
         h2 {
             font-size: 13px;
             line-height: 20px;
+            height: 20px;
             background-color: #f5f5f5;
             margin: -20px -20px 0 -20px;
             padding: 10px 20px;
             border-bottom: solid 1px #e1e2e2;
             font-weight: 600;
+        }
+
+        .empty {
+            height: 160px;
+            font-size: 12px;
+            text-align: center;
+            margin: 50px 0;
+
+            h3 {
+                line-height: 120px;
+            }
         }
 
         .search {
@@ -42,8 +56,19 @@
         }
 
         .code {
-            background: red;
+            height: 411px;
+            background: #f5f5f5;
             margin: 0 -20px -20px -20px;
+            padding: 20px;
+            width: ~"calc(100% - 10px)";
+
+            .ide {
+                overflow: scroll;
+                height: 451px;
+                margin: -20px;
+                box-shadow: none;
+                border-radius: 0;
+            }
         }
 
         .paging {
@@ -77,20 +102,48 @@
         }
 
         .items {
-            margin: -5px -20px;
-            height: 270px;
+            margin: 0 -20px;
+            height: 260px;
             overflow-x: hidden;
             overflow-y: scroll;
 
+            form {
+                opacity: 0;
+                position: relative;
+                
+                button {
+                    background: red;
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    .func-start(0);
+                    .func-end(0);
+                    width: 100%;
+                    height: 45px;
+                    border-radius: 0;
+                    cursor: pointer;
+                }
+            }
+
             li {
-                padding: 0 20px;
-                margin: 5px 0;
+                padding: 0;
+                margin: 0 0;
                 line-height: 45px;
                 font-size: 15px;
                 .func-padding-start(50px);
+                .func-padding-end(30px);
+                position: relative;
 
                 i {
+                    position: absolute;
                     display: none;
+                    .func-end(10px);
+                }
+
+                .name {
+                    display: inline-block;
+                    width: 100%;
+                    height: 28px;
                 }
                 
                 &:hover {

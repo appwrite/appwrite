@@ -8,7 +8,8 @@ use Utopia\Locale\Locale;
     </h1>
 </div>
 
-<div class="zone xxl">
+<div class="zone xxl margin-top-negative-xl">
+
     <div class="box dashboard database margin-bottom-xl">
         <div class="row responsive">
             <div class="col span-3">
@@ -71,15 +72,30 @@ use Utopia\Locale\Locale;
                     data-scope="sdk"
                     data-name="project-collections">
 
-                    <div data-ls-if="0 == {{project-collections.sum}}">
-                        <h3 class="margin-bottom">No Collections Found</h3>
+                    <div data-ls-if="0 == {{project-collections.sum}}" class="empty">
+                        <h3>No Collections Found</h3>
                     </div>
 
                     <div data-ls-if="0 != {{project-collections.sum}}">
                         <ul data-ls-loop="project-collections.collections" data-ls-as="collection" class="items">
                             <li>
+                                <form
+                                    data-service="database.listDocuments"
+                                    data-event="submit"
+                                    data-param-search=""
+                                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                                    data-param-offset=""
+                                    data-param-order-type="DESC"
+                                    data-scope="sdk"
+                                    data-name="project-documents"
+                                    data-success="state"
+                                    data-success-param-state-keys="collectionId=collectionId,search=dsearch,offset=doffset">
+                                    <input name="collectionId" data-ls-bind="{{collection.$uid}}" type="hidden" />
+                                    <button><span data-ls-bind="{{collection.$uid}}"></span></button>
+                                </form>
+
                                 <i class="icon-right-open pull-end"></i>
-                                <span data-ls-bind="{{collection.name}}"></span>
+                                <span class="name text-one-liner" data-ls-bind="{{collection.name}}"></span>
                             </li>
                         </ul>
                     </div>
@@ -118,99 +134,125 @@ use Utopia\Locale\Locale;
                 </div>
             </div>
             <div class="col span-3">
-                <h2>Documents</h2>
+                <h2 xdata-ls-bind="{{project-documents.name}}">Documents</h2>
 
-                <form class="search"
-                    data-service="database.listDocuments"
-                    data-event="submit"
-                    xdata-param-collection-id="{{router.params.id}}"
-                    data-param-collection-id="5cfd47751a67c"
-                    data-param-search="{{router.params.dsearch}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset=""
-                    data-param-order-type="DESC"
-                    data-scope="sdk"
-                    data-name="project-documents"
-                    data-success="state"
-                    data-success-param-state-keys="dsearch,doffset">
-                    <input name="dsearch" id="searchDocuments" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.dsearch}}">
-                </form>
-
-                <hr />
-
-                <div data-ui-modal class="box modal close" data-button-text="Add document" data-button-class="button link" data-button-icon="icon-plus">
-                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                    <h1>Create Document</h1>
-
-                </div>
-
-                <div class="wrapper"
-                    data-service="database.listDocuments"
-                    data-event="load,document-create,document-update,document-delete"
-                    xdata-param-collection-id="{{router.params.id}}"
-                    data-param-collection-id="5cfd47751a67c"
-                    data-param-search="{{router.params.dsearch}}"
-                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                    data-param-offset="{{router.params.doffset}}"
-                    data-param-order-type="DESC"
-                    data-scope="sdk"
-                    data-name="project-documents">
-
-                    <div data-ls-if="0 == {{project-documents.sum}}">
-                        <h3 class="margin-bottom">No Documents Found</h3>
-                    </div>
-
-                    <div data-ls-if="0 != {{project-documents.sum}}">
-                        <ul data-ls-loop="project-documents.documents" data-ls-as="node" class="items">
-                            <li>
-                                <i class="icon-right-open pull-end"></i>
-                                <span data-ls-bind="{{node.$uid}}"></span>
-                            </li>
-                        </ul>
-                    </div>
+                <div data-ls-if="({{router.params.collectionId}})" style="display: none">
+                    <form class="search"
+                        data-service="database.listDocuments"
+                        data-event="submit"
+                        data-param-collection-id="{{router.params.collectionId}}"
+                        data-param-search="{{router.params.dsearch}}"
+                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-offset=""
+                        data-param-order-type="DESC"
+                        data-scope="sdk"
+                        data-name="project-documents"
+                        data-success="state"
+                        data-success-param-state-keys="dsearch,doffset">
+                        <input name="dsearch" id="searchDocuments" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.dsearch}}">
+                    </form>
 
                     <hr />
 
-                    <div class="clear text-align-center paging">
-                        <form
-                            data-service="database.listDocuments"
-                            data-event="submit"
-                            xdata-param-collection-id="{{router.params.id}}"
-                            data-param-collection-id="5cfd47751a67c"
-                            data-param-search="{{router.params.dsearch}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
-                            data-scope="sdk"
-                            data-name="project-documents"
-                            data-success="state"
-                            data-success-param-state-keys="search=dsearch,offset=doffset">
-                            <button name="offset" data-paging-back data-offset="{{router.params.doffset}}" data-sum="{{project-documents.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
-                        </form>
+                    <div data-ui-modal class="box modal close" data-button-text="Add document" data-button-class="button link" data-button-icon="icon-plus">
+                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                        <span data-ls-bind="{{router.params.doffset|pageCurrent}} / {{project-documents.sum|pageTotal}}"></span>
+                        <h1>Create Document</h1>
 
-                        <form
-                            data-service="database.listDocuments"
-                            data-event="submit"
-                            xdata-param-collection-id="{{router.params.id}}"
-                            data-param-collection-id="5cfd47751a67c"
-                            data-param-search="{{router.params.dsearch}}"
-                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                            data-param-order-type="DESC"
-                            data-scope="sdk"
-                            data-name="project-documents"
-                            data-success="state"
-                            data-success-param-state-keys="search=dsearch,offset=doffset">
-                            <button name="offset" data-paging-next data-offset="{{router.params.doffset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
-                        </form>
+                    </div>
+
+                    <div class="wrapper"
+                        data-service="database.listDocuments"
+                        data-event="load,document-create,document-update,document-delete"
+                        data-param-collection-id="{{router.params.collectionId}}"
+                        data-param-search="{{router.params.dsearch}}"
+                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-offset="{{router.params.doffset}}"
+                        data-param-order-type="DESC"
+                        data-scope="sdk"
+                        data-name="project-documents">
+
+                        <div data-ls-if="0 == {{project-documents.sum}}" class="empty">
+                            <h3>No Documents Found</h3>
+                        </div>
+
+                        <div data-ls-if="0 != {{project-documents.sum}}">
+                            <ul data-ls-loop="project-documents.documents" data-ls-as="node" class="items">
+                                <li>
+                                    <form
+                                        data-service="database.getDocument"
+                                        data-event="submit"
+                                        data-scope="sdk"
+                                        data-name="project-document"
+                                        data-success="state"
+                                        data-success-param-state-keys="documentId=documentId">
+                                        <input name="collectionId" data-ls-bind="{{router.params.collectionId}}" type="hidden" />
+                                        <input name="documentId" data-ls-bind="{{node.$uid}}" type="hidden" />
+                                        <button><span data-ls-bind="{{node.$uid}}"></span></button>
+                                    </form>
+
+                                    <i class="icon-right-open pull-end"></i>
+                                    <span data-ls-bind="{{node.$uid}}"></span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <hr />
+
+                        <div class="clear text-align-center paging">
+                            <form
+                                data-service="database.listDocuments"
+                                data-event="submit"
+                                data-param-collection-id="{{router.params.collectionId}}"
+                                data-param-search="{{router.params.dsearch}}"
+                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                                data-param-order-type="DESC"
+                                data-scope="sdk"
+                                data-name="project-documents"
+                                data-success="state"
+                                data-success-param-state-keys="search=dsearch,offset=doffset">
+                                <button name="offset" data-paging-back data-offset="{{router.params.doffset}}" data-sum="{{project-documents.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            </form>
+
+                            <span data-ls-bind="{{router.params.doffset|pageCurrent}} / {{project-documents.sum|pageTotal}}"></span>
+
+                            <form
+                                data-service="database.listDocuments"
+                                data-event="submit"
+                                data-param-collection-id="{{router.params.collectionId}}"
+                                data-param-search="{{router.params.dsearch}}"
+                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                                data-param-order-type="DESC"
+                                data-scope="sdk"
+                                data-name="project-documents"
+                                data-success="state"
+                                data-success-param-state-keys="search=dsearch,offset=doffset">
+                                <button name="offset" data-paging-next data-offset="{{router.params.doffset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col span-6">
                 <h2>Preview</h2>
-
-                <div class="code"></div>
+                <div data-ls-if="({{router.params.documentId}})" style="display: none">
+                    <div
+                        data-service="database.getDocument"
+                        data-event="load"
+                        data-scope="sdk"
+                        data-name="project-document"
+                        data-param-collection-id="{{router.params.collectionId}}"
+                        data-param-document-id="{{router.params.documentId}}"
+                        data-success="state"
+                        data-success-param-state-keys="documentId=documentId">
+                    </div>
+                    
+                    <div class="code">
+                        <div class="ide margin-bottom-no">
+                            <pre class="line-numbers"><code class="prism language-javascript" data-ls-bind="{{project-document}}" data-prism></code></pre>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
