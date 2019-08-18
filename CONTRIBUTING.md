@@ -32,6 +32,8 @@ Many of Appwrite internal modules are also used as dependencies to allow other A
 
 Appwrite uses PHPs Composer for managing dependencies on the server-side and JS NPM for managing dependencies on the frontend side.
 
+## Coding Standards
+
 ## Scalability
 
 ## Architecture
