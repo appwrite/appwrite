@@ -5,11 +5,11 @@
         {
             selector: 'data-forms-upload',
             repeat: false,
-            controller: function(element, window, container, alerts, expression) {
+            controller: function(element, container, alerts, expression, env) {
                 var scope           = element.dataset['scope'];
                 var labelButton     = element.dataset['labelButton'] || 'Upload';
                 var labelLoading    = element.dataset['labelLoading'] || 'Uploading...';
-                var previewWidth    = element.dataset['previewWidth'] || null;
+                var previewWidth    = element.dataset['previewWidth'] || 200;
                 var previewHeight   = element.dataset['previewHeight'] || 200;
                 var accept          = element.dataset['accept'] || '';
                 var required        = (element.dataset['required'] || false);
@@ -77,29 +77,23 @@
                     progress.style.display = 'none';
                 };
 
-                var onProgress = function (event) {
-                    var percentage = (event.lengthComputable) ? Math.round(event.loaded * 100 / event.total) : '0';
-                    progress.style.display = (percentage !== 0) ? 'block' : 'none';
-                    progress.style.width = percentage + '%';
-                };
-
                 var render = function (files) { // Generate image previews + remove buttons + input array (array only when multiple is on)
-
                     if(!Array.isArray(files)) { // Support single file
                         files = [files];
                     }
-
+                    
                     preview.innerHTML = '';
-
+                    
                     count.innerHTML = '0 / ' + max;
-
+                    
                     files.map(function(obj) {
+                        console.log('1',obj);
                         var file = document.createElement('li');
                         var image = document.createElement('img');
 
-                        image.src = image.src = sdk.storage.getFilePreview(obj, null, previewWidth, previewHeight);
+                        image.src = image.src = env.API + '/storage/files/' + obj + '/preview?width=' + previewWidth + '&height=' + previewHeight;
 
-                        file.className = 'file';
+                        file.className = 'file avatar';
                         file.tabIndex = 0;
                         file.appendChild(image);
 
@@ -128,23 +122,12 @@
                         file.addEventListener('keypress', remove);
 
                         element.value = (multiple) ? JSON.stringify(output) : output[0];
-
-                        /*title.addEventListener('click', function () {
-                            setTab(i);
-                        });
-
-                        title.addEventListener('keyup', function () {
-                            if(event.which === 13) {
-                                setTab(i);
-                            }
-                        });*/
                     });
                 };
 
                 input.addEventListener('change', function() {
                     var message     = alerts.add({text: labelLoading, class: ''}, 0);
                     var files       = input.files;
-                    var formData    = new FormData();
                     var read        = JSON.parse(expression.parse(element.dataset['read'] || '[]'));
                     var write       = JSON.parse(expression.parse(element.dataset['write'] || '[]'));
 
@@ -152,44 +135,22 @@
                         output = [];
                     }
 
-                    for (var i = 0; i < files.length; i++) {
-                        if(output.length + (i + 1) > max) {
-                            break;
-                        }
-
-                        var file = files[i];
-
-                        formData.append('files[]', file);
-
-                        total = total + file.size;
-                    }
-
-                    for (var x = 0; x < read.length; x++) {
-                        formData.append('read[]', read[x]);
-                    }
-
-                    for (var y = 0; y < write.length; y++) {
-                        formData.append('write[]', write[y]);
-                    }
-
-                    sdk.storage.createFile(formData, onProgress)
+                    sdk.storage.createFile(files[0], read, write, 1)
                         .then(function (response) {
-                            // parse array of $id's and assign to input value
-                            response = JSON.parse(response);
-
                             response.map(function(obj) {
                                 if(!Array.isArray(output)) { // Support single file
                                     throw new Error('Can\'t append new file to non array value');
                                 }
 
                                 output[output.length] = obj['$uid'];
+
                             });
 
                             onComplete(message);
 
                             render(output);
                         }, function (error) {
-                            alerts.send({text: 'An error occurred!', class: ''}, 3000); // File(s) uploaded.
+                            alerts.add({text: 'An error occurred!', class: ''}, 3000); // File(s) uploaded.
                             onComplete(message);
                         });
 
