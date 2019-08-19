@@ -74,7 +74,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
         //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Ajax, Origin, Content-Type, Accept, X-Appwrite-Project, X-Appwrite-Key, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Ajax, Origin, Content-Type, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
     ;
@@ -249,7 +249,7 @@ $utopia->options(function() use ($request, $response, $domain, $project) {
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Ajax, Origin, Content-Type, Accept, X-Appwrite-Project, X-Appwrite-Key, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Ajax, Origin, Content-Type, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
         ->send();
