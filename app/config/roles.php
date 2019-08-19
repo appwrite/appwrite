@@ -9,39 +9,6 @@ const ROLE_APP              = 5;
 const ROLE_SYSTEM           = 6;
 const ROLE_ALL              = '*';
 
-/**
- * public
- *
- * auth
- * account
- *
- * users.read
- * users.write
- *
- * teams.read
- * teams.write
- *
- * projects.read
- * projects.write
- *
- * documents.read
- * documents.write
- *
- * files.read
- * files.write
- * files.scan
- *
- * health.read
- *
- * locale.read
- *
- * avatars.read
- *
- * auth.invite
- * auth.join
- * auth.leave
- */
-
 $logged = [
     'public',
     'home',
@@ -50,6 +17,7 @@ $logged = [
     'account',
     'teams.read',
     'teams.write',
+    'collections.read',
     'documents.read',
     'documents.write',
     'files.read',
