@@ -19,7 +19,7 @@ echo -e "<?php\nconst VERSION = '$1';\n\nreturn VERSION;" > app/config/version.p
 
 echo 'Updating PHP dependencies and auto-loading...'
 
-composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
+composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts --prefer-dist
 
 echo 'Starting build...'
 
