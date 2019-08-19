@@ -182,7 +182,7 @@ class Projects(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def update_platform(self, project_id, platform_id, name, key='', store='', url='[]'):
+    def update_platform(self, project_id, platform_id, name, key='', store='', url=''):
         """Update Platform"""
 
         params = {}

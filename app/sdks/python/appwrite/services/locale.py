@@ -38,3 +38,12 @@ class Locale(Service):
 
         return self.client.call('get', path, {
         }, params)
+
+    def get_currencies(self):
+        """List of currencies"""
+
+        params = {}
+        path = '/locale/currencies'
+
+        return self.client.call('get', path, {
+        }, params)

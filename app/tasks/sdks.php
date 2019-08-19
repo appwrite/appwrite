@@ -38,7 +38,7 @@ $cli
 
         $clients = [
             'php' => [
-                'version'       => 'v1.0.2',
+                'version'       => 'v1.0.3',
                 'result'        => __DIR__ . '/../sdks/php/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-php.git',
@@ -46,7 +46,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'js' => [
-                'version'       => 'v1.0.12',
+                'version'       => 'v1.0.14',
                 'result'        => __DIR__ . '/../sdks/js/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-js.git',
@@ -54,7 +54,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'node' => [
-                'version'       => 'v1.0.19',
+                'version'       => 'v1.0.20',
                 'result'        => __DIR__ . '/../sdks/node/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-node.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-node.git',

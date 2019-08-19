@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.12');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.14');
             addGlobalHeader('content-type', '');
 
             /**
@@ -1341,7 +1341,8 @@
              * List EU Countries
              *
              * List of all countries that are currently members of the EU. You can use the
-             * locale header to get the data in supported language.
+             * locale header to get the data in supported language. UK brexit date is
+             * currently set to 2019-10-31 and will be updated if and when needed.
              *
              * @throws {Error}
              * @return {Promise}             */
@@ -1364,6 +1365,24 @@
              * @return {Promise}             */
             getCountriesPhones: function() {
                 let path = '/locale/countries/phones';
+
+                return http
+                    .get(path, {'content-type': 'application/json'},
+                        {
+                        });
+            },
+
+            /**
+             * List of currencies
+             *
+             * List of all currencies, including currency symol, name, plural, and decimal
+             * digits for all major and minor currencies. You can use the locale header to
+             * get the data in supported language.
+             *
+             * @throws {Error}
+             * @return {Promise}             */
+            getCurrencies: function() {
+                let path = '/locale/currencies';
 
                 return http
                     .get(path, {'content-type': 'application/json'},
@@ -1786,7 +1805,7 @@
              * @param {string} url
              * @throws {Error}
              * @return {Promise}             */
-            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '[]') {
+            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }

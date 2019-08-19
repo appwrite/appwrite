@@ -42,7 +42,8 @@ class Locale extends Service {
      * List EU Countries
      *
      * List of all countries that are currently members of the EU. You can use the
-     * locale header to get the data in supported language.
+     * locale header to get the data in supported language. UK brexit date is
+     * currently set to 2019-10-31 and will be updated if and when needed.
      *
      * @throws Exception
      * @return {}
@@ -66,6 +67,24 @@ class Locale extends Service {
      */
     async getCountriesPhones() {
         let path = '/locale/countries/phones';
+        
+        return await this.client.call('get', path, {'content-type': 'application/json'},
+            {
+            });
+    }
+
+    /**
+     * List of currencies
+     *
+     * List of all currencies, including currency symol, name, plural, and decimal
+     * digits for all major and minor currencies. You can use the locale header to
+     * get the data in supported language.
+     *
+     * @throws Exception
+     * @return {}
+     */
+    async getCurrencies() {
+        let path = '/locale/currencies';
         
         return await this.client.call('get', path, {'content-type': 'application/json'},
             {
