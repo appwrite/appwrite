@@ -17,7 +17,6 @@ $logged = [
     'account',
     'teams.read',
     'teams.write',
-    'collections.read',
     'documents.read',
     'documents.write',
     'files.read',
