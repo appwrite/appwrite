@@ -1,11 +1,10 @@
 (function (window) {
     "use strict";
 
-    window.ls.container.get('view').add(
+    window.ls.view.add(
         {
             selector: 'data-service',
-            repeat: false,
-            controller: function(element, view, container, form, alerts, expression, window) {
+            controller: function(element, view, container, form2json, alerts, expression, window) {
                 let action      = element.dataset['service'];
                 let service     = element.dataset['name'] || action;
                 let event       = element.dataset['event'];   // load, click, change, submit
@@ -175,25 +174,27 @@
                         return null;
                     }
 
+                    let attrKey = prefix + key.charAt(0).toUpperCase() + key.slice(1);
                     /**
                      * 1. Get from element data-param-* (expression supported)
-                     * 2. Get from element data-param-state-*
-                     * 3. Get from element form object-*
+                     * 2. Get from element form object-*
                      */
-                    if(element.dataset[prefix + key.charAt(0).toUpperCase() + key.slice(1)]) {
-                        result = expression.parse(element.dataset[prefix + key.charAt(0).toUpperCase() + key.slice(1)]);
+                    if(element.dataset[attrKey]) {
+                        result = expression.parse(element.dataset[attrKey]);
+                        
+                        if(element.dataset[attrKey + 'CastTo'] === 'array') {
+                            result = result.split(',');
+                        }
                     }
-
+                    
                     if(data[key]) {
                         result = data[key];
                     }
-
+                    
                     if(!result) {
                         result = '';
                     }
-
-                    if (debug) console.log('%c[param resolved]: (' + service + ') ' + key + '=' + result, 'color:#808080');
-
+                    
                     return result;
                 }
 
@@ -207,7 +208,9 @@
                     if (debug) console.log('%c[form data]: ', 'color:green', data);
 
                     return target.apply(target, args.map(function(value) {
-                        return getValue(value, prefix, data);
+                        let result = getValue(value, prefix, data);
+                        if (debug) console.log('[param resolved]: (' + service + ') ' + value + '=', result);
+                        return result;
                     }));
                 };
 
@@ -243,7 +246,7 @@
                         throw new Error('Method "' + scope + '.' + action + '" not found');
                     }
 
-                    let formData    = ('FORM' === element.tagName) ? form.toJson(element) : {};
+                    let formData    = ('FORM' === element.tagName) ? form2json.toJson(element) : {};
                     let result      = resolve(method, 'param', formData);
 
                     if(!result) {
