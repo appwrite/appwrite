@@ -18,8 +18,6 @@
                 });
 
                 for (let i = 0; i < list.length; i++) {
-                    let href = list[i].href || expression.parse(list[i].dataset['lsHref'] || '');
-
                     if (list[i].pathname === window.location.pathname.substring(0, list[i].pathname.length)) {
                         list[i].classList.add('selected');
 
