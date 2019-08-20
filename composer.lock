@@ -57,12 +57,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "805894cc5d02132d0edbb26d8e6544498041241c"
+                "reference": "79fa48dfabbbd200aaf461aa6a70837c61b02681"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/805894cc5d02132d0edbb26d8e6544498041241c",
-                "reference": "805894cc5d02132d0edbb26d8e6544498041241c",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/79fa48dfabbbd200aaf461aa6a70837c61b02681",
+                "reference": "79fa48dfabbbd200aaf461aa6a70837c61b02681",
                 "shasum": ""
             },
             "require": {
@@ -94,7 +94,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-08-14 19:37:17"
+            "time": "2019-08-20 14:09:40"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1505,12 +1505,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "163f6a0979e3011eaacffa57602e9143d84c4cfb"
+                "reference": "55704ce1d29f184374f77b9542baaba58d4d30f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/163f6a0979e3011eaacffa57602e9143d84c4cfb",
-                "reference": "163f6a0979e3011eaacffa57602e9143d84c4cfb",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/55704ce1d29f184374f77b9542baaba58d4d30f2",
+                "reference": "55704ce1d29f184374f77b9542baaba58d4d30f2",
                 "shasum": ""
             },
             "require": {
@@ -1564,7 +1564,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-08-12 07:26:54"
+            "time": "2019-08-20 08:37:55"
         },
         {
             "name": "utopia-php/abuse",

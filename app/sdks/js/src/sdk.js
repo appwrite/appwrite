@@ -117,7 +117,7 @@
 
                 for (let p in params) {
                     if (params.hasOwnProperty(p)) {
-                        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+                        str.push(encodeURIComponent(p + (Array.isArray(params[p]) ? '[]' : '')) + "=" + encodeURIComponent(params[p]));
                     }
                 }
 
@@ -132,7 +132,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.14');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.15');
             addGlobalHeader('content-type', '');
 
             /**
@@ -175,7 +175,7 @@
                 if(method === 'GET') {
                     for (let param in params) {
                         if (param.hasOwnProperty(key)) {
-                            path = addParam(path, key, params[key]);
+                            path = addParam(path, key + (Array.isArray(param) ? '[]' : ''), params[key]);
                         }
                     }
                 }
