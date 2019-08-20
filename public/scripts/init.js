@@ -2,13 +2,11 @@
 
 window.ls.error = function () {
     return function (error) {
-        alert(error);
         console.error('ERROR-APP', error);
     }
 };
 
 window.addEventListener('error', function (event) {
-    alert(event.error.message);
     console.error('ERROR-EVENT:', event.error.message, event.error.stack);
 });
 
