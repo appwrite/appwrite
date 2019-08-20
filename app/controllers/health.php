@@ -5,6 +5,7 @@ global $utopia, $request, $response, $register, $project;
 use Utopia\Exception;
 use Storage\Devices\Local;
 use Storage\Storage;
+use Appwrite\ClamAV\Network;
 
 $utopia->get('/v1/health')
     ->desc('Check DB Health')
@@ -141,7 +142,7 @@ $utopia->get('/v1/health/storage/anti-virus')
     ->action(
         function() use ($response)
         {
-            $antiVirus = new \ClamAV\Network('clamav', 3310);
+            $antiVirus = new Network('clamav', 3310);
 
             $response->json([
                 'status' => (@$antiVirus->ping()) ? 'online' : 'offline',
