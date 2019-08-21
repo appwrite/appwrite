@@ -4,7 +4,7 @@
     window.ls.view.add(
         {
             selector: 'data-service',
-            controller: function(element, view, container, form2json, alerts, expression, window) {
+            controller: function(element, view, container, form, alerts, expression, window) {
                 let action      = element.dataset['service'];
                 let service     = element.dataset['name'] || action;
                 let event       = element.dataset['event'];   // load, click, change, submit
@@ -246,7 +246,7 @@
                         throw new Error('Method "' + scope + '.' + action + '" not found');
                     }
 
-                    let formData    = ('FORM' === element.tagName) ? form2json.toJson(element) : {};
+                    let formData    = ('FORM' === element.tagName) ? form.toJson(element) : {};
                     let result      = resolve(method, 'param', formData);
 
                     if(!result) {
