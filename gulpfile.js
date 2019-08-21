@@ -101,7 +101,7 @@ function lessLTR () {
 }
 
 function lessRTL () {
-    return src('./public/styles/default-ltr.less')
+    return src('./public/styles/default-rtl.less')
         .pipe(gulpLess())
         .pipe(gulpCleanCSS({compatibility: 'ie8'}))
         .pipe(dest('./public/dist/styles'));
