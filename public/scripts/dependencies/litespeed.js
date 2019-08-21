@@ -20,9 +20,9 @@ while(match=REGEX_PARAMETERS_VALUES.exec(functionAsString)){params.push(match[1]
 return params;}
 let args=getParams(target);return target.apply(target,args.map(function(value){return self.get(value.trim());}));};let path=function(path,value,as,prefix){as=(as)?as:container.get('$as');prefix=(prefix)?prefix:container.get('$prefix');path=((path.indexOf('.')>-1)?path.replace(as+'.',prefix+'.'):path.replace(as,prefix)).split('.');let name=path.shift();let object=this.get(name);let result=null;while(path.length>1){if(!object){return null;}
 object=object[path.shift()];}
-if(value!==null&&value!==undefined){object[path.shift()]=value;return true;}
+let shift=path.shift();if(value!==null&&value!==undefined&&object&&shift&&object[shift]){object[shift]=value;return true;}
 if(!object){return null;}
-let shift=path.shift();if(!shift){result=object;}
+if(!shift){result=object;}
 else{return object[shift];}
 return result;};let bind=function(element,path,callback,as,prefix){as=(as)?as:container.get('$as');prefix=(prefix)?prefix:container.get('$prefix');let event=((path.indexOf('.')>-1)?path.replace(as+'.',prefix+'.'):path.replace(as,prefix))+'.changed';let service=event.split('.').slice(0,1).pop();listeners[service]=listeners[service]||{};listeners[service][event]=true;let printer=()=>{if(!document.body.contains(element)){element=null;document.removeEventListener(event,printer,false);return false;}
 callback();};document.addEventListener(event,printer);};let container={set:set,get:get,resolve:resolve,path:path,bind:bind,stock:stock,listeners:listeners,};set('container',container,true,false);return container;}();window.ls.container.set('http',function(document){let globalParams=[],globalHeaders=[];let addParam=function(url,param,value){param=encodeURIComponent(param);let a=document.createElement('a');param+=(value?"="+encodeURIComponent(value):"");a.href=url;a.search+=(a.search?"&":"")+param;return a.href;};let request=function(method,url,headers,payload,progress){let i;if(-1===['GET','POST','PUT','DELETE','TRACE','HEAD','OPTIONS','CONNECT','PATCH'].indexOf(method)){throw new Error('var method must contain a valid HTTP method name');}

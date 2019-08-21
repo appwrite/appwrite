@@ -1,15 +1,8 @@
-<div
-    data-service="projects.getProject"
-    data-event="project-load,platform-create,platform-update,platform-delete"
-    data-name="console-project"
-    data-param-project-id="{{router.params.project}}"
-    data-scope="console"></div>
-
 <header class="clear">
     &nbsp;&nbsp;&nbsp;
     <div class="list pull-start project-only">
         <label>
-            <select data-ls-bind="{{console-project.$uid}}" data-switch data-ls-loop="projects" data-ls-as="option">
+            <select data-ls-bind="{{router.params.project}}" data-switch data-ls-loop="projects" data-ls-as="option">
                 <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
             </select>
         </label>
@@ -44,7 +37,7 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/home?project={{console-project.$uid}}">
+                    <a data-ls-attrs="href=/console/home?project={{router.params.project}}">
                         <i class="icon-home"></i>
                         Home
                     </a>
@@ -55,19 +48,19 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/database?project={{console-project.$uid}}">
+                    <a data-ls-attrs="href=/console/database?project={{router.params.project}}">
                         <i class="icon-database"></i>
                         Database
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/storage?project={{console-project.$uid}}">
+                    <a data-ls-attrs="href=/console/storage?project={{router.params.project}}">
                         <i class="icon-folder"></i>
                         Storage
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/users?project={{console-project.$uid}}">
+                    <a data-ls-attrs="href=/console/users?project={{router.params.project}}">
                         <i class="icon-users"></i>
                         Users
                     </a>
@@ -78,19 +71,19 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/keys?project={{console-project.$uid}}">
+                    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">
                         <i class="icon-key-inv"></i>
                         API Keys
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/webhooks?project={{console-project.$uid}}">
+                    <a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}">
                         <i class="icon-link"></i>
                         Webhooks
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/tasks?project={{console-project.$uid}}">
+                    <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}">
                         <i class="icon-clock"></i>
                         Tasks
                     </a>
@@ -100,7 +93,7 @@
 
         <ul class="links bottom project-only">
             <li>
-                <a data-ls-attrs="href=/console/settings?project={{console-project.$uid}}"><i class="icon-cog"></i> Settings</a>
+                <a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> Settings</a>
             </li>
         </ul>
     </nav>
