@@ -39,6 +39,17 @@ window.ls.filter
 
         return '//www.gravatar.com/avatar/' + MD5(email) + '.jpg?s=' + size + '&d=' + encodeURIComponent(def);
     })
+    .add('selectedCollection', function ($value, router) {
+        return ($value === router.params.collectionId) ? 'selected' : '';
+    })
+    .add('selectedDocument', function ($value, router) {
+        return ($value === router.params.documentId) ? 'selected' : '';
+    })
+    .add('localeString', function ($value) {
+        $value = parseInt($value);
+        console.log($value);
+        return (!Number.isNaN($value)) ? $value.toLocaleString() : '';
+    })
     .add('date', function ($value, date) {
         return date.format('Y-m-d', $value);
     })

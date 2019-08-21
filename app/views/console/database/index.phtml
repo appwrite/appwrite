@@ -13,7 +13,9 @@ use Utopia\Locale\Locale;
     <div class="box dashboard database margin-bottom-xl">
         <div class="row responsive">
             <div class="col span-3">
-                <h2>Collections</h2>
+                <h2>
+                    <b data-ls-bind="Collections ({{project-collections.sum|localeString}})"></b>
+                </h2>
 
                 <form class="search"
                     data-service="database.listCollections"
@@ -78,7 +80,7 @@ use Utopia\Locale\Locale;
 
                     <div data-ls-if="0 != {{project-collections.sum}}">
                         <ul data-ls-loop="project-collections.collections" data-ls-as="collection" class="items">
-                            <li>
+                            <li data-ls-attrs="class={{collection.$uid|selectedCollection}},data-uid={{router.params.collectionId}}">
                                 <form
                                     data-service="database.listDocuments"
                                     data-event="submit"
@@ -134,7 +136,10 @@ use Utopia\Locale\Locale;
                 </div>
             </div>
             <div class="col span-3">
-                <h2 xdata-ls-bind="{{project-documents.name}}">Documents</h2>
+                
+                <h2>
+                    <b data-ls-if="{{router.params.collectionId}}" data-ls-bind="{{project-documents.name}} ({{project-documents.sum|localeString}})"></b>
+                </h2>
 
                 <div data-ls-if="({{router.params.collectionId}})" style="display: none">
                     <form class="search"
@@ -178,7 +183,7 @@ use Utopia\Locale\Locale;
 
                         <div data-ls-if="0 != {{project-documents.sum}}">
                             <ul data-ls-loop="project-documents.documents" data-ls-as="node" class="items">
-                                <li>
+                                <li data-ls-attrs="class={{node.$uid|selectedDocument}},data-uid={{router.params.documentId}}">
                                     <form
                                         data-service="database.getDocument"
                                         data-event="submit"
@@ -234,7 +239,9 @@ use Utopia\Locale\Locale;
                 </div>
             </div>
             <div class="col span-6">
-                <h2>Preview</h2>
+                <h2>
+                    <span data-ls-if="({{router.params.documentId}})">Preview</span>
+                </h2>
                 <div data-ls-if="({{router.params.documentId}})" style="display: none">
                     <div
                         data-service="database.getDocument"
