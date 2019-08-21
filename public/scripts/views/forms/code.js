@@ -18,7 +18,7 @@
 
                 div.className   = 'ide';
                 pre.className   = 'line-numbers';
-                code.className  = 'prism language-javascript';
+                code.className  = 'prism language-json';
                 copy.className  = 'icon-docs copy';
                 
                 copy.title = 'Copy to Clipboard';

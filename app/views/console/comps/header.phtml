@@ -2,7 +2,7 @@
     &nbsp;&nbsp;&nbsp;
     <div class="list pull-start project-only">
         <label>
-            <select data-ls-bind="{{console-project.$uid}}" data-switch data-ls-loop="projects" data-ls-as="option">
+            <select data-switch data-ls-bind="{{router.params.project}}" data-unsync="1" data-ls-loop="projects" data-ls-as="option">
                 <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
             </select>
         </label>
