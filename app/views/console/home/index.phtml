@@ -28,8 +28,7 @@ $graph = $this->getParam('graph', false);
             data-service="projects.getProjectUsage"
             data-event="load"
             data-name="usage"
-            data-param-project-id="{{router.params.project}}"
-            xdata-scope="console">
+            data-param-project-id="{{router.params.project}}">
 
             <?php if (!$graph) : ?>
                 <div class="row responsive">

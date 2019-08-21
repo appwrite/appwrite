@@ -107,7 +107,7 @@ if(bind){element.addEventListener('change',()=>{for(let i=0;i<paths.length;i++){
 if(!element.checked&&index>-1){value.splice(index,1);}
 container.path(paths[i],value,$as,$prefix);}});}
 return;}
-if(element.value!==value){element.value=value;}
+if(element.value!==value){element.value=value;element.dispatchEvent(new Event('change'));}
 if(bind){element.addEventListener('input',sync);element.addEventListener('change',sync);}}
 else{if(element.innerText!==value){element.innerHTML=value;}}};let sync=((as,prefix)=>{return()=>{for(let i=0;i<paths.length;i++){container.path(paths[i],element.value,as,prefix);}}})($as,$prefix);let syntax=element.getAttribute('data-ls-bind');let result=expression.parse(syntax,null,$as,$prefix);let paths=expression.getPaths();echo(result,true);element.addEventListener('looped',function(){echo(expression.parse(syntax,null,$as,$prefix),false);});for(let i=0;i<paths.length;i++){let path=paths[i].split('.');while(path.length){container.bind(element,path.join('.'),()=>{echo(expression.parse(syntax,null,$as,$prefix),false);});path.pop();}}}});window.ls.container.get('view').add({selector:'data-ls-if',controller:function(element,expression,container,view,$as,$prefix){let result='';let syntax=element.getAttribute('data-ls-if')||'';let debug=element.getAttribute('data-debug')||false;let paths=[];let check=()=>{if(debug){console.info('debug-ls-if',expression.parse(syntax.replace(/(\r\n|\n|\r)/gm,' '),'undefined',$as,$prefix,true));}
 try{result=(eval(expression.parse(syntax.replace(/(\r\n|\n|\r)/gm,' '),'undefined',$as,$prefix,true)));}
