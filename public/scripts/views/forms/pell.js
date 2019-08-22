@@ -3,7 +3,6 @@
 
     window.ls.container.get('view').add({
         selector: 'data-forms-pell',
-        repeat: false,
         controller: function(element, window, document, markdown) {
             var div = document.createElement('div');
 

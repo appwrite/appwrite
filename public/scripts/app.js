@@ -31,7 +31,6 @@ window.ls.container.get('view')
     })
     .add({
         selector: 'data-cookie-policy',
-        repeat: false,
         controller: function(element, alerts, cookie) {
             if(!cookie.get('cookie-alert')) {
                 let text = element.dataset['cookiePolicy'] || '';
@@ -64,7 +63,6 @@ window.ls.container.get('view')
     })
     .add({
         selector: 'data-forms-headers',
-        repeat: false,
         controller: function(element) {
             let key      = document.createElement('input');
             let value    = document.createElement('input');
@@ -119,7 +117,6 @@ window.ls.container.get('view')
     })
     .add({
         selector: 'data-prism',
-        repeat: false,
         controller: function(window, document, element, alerts) {
             Prism.highlightElement(element);
 
@@ -152,7 +149,6 @@ window.ls.container.get('view')
     })
     .add({
         selector: 'data-code-example',
-        repeat: false,
         controller: function(window, document, element, cookie) {
             let prefix = element.dataset['codeExample'] || 'unknown';
 
@@ -185,7 +181,6 @@ window.ls.container.get('view')
     })
     .add({
         selector: 'data-ls-ui-chart',
-        repeat: false,
         controller: function(element, container, date, document) {
             let child = document.createElement('canvas');
 

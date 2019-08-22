@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-color',
-            repeat: false,
             controller: function(element) {
                 var preview = document.createElement('div');
                 var picker = document.createElement('input');

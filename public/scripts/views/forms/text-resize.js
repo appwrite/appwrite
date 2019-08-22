@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-text-resize',
-            repeat: false,
             controller: function(element, window) {
                 function resize () {
 

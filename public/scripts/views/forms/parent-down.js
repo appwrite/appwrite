@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-parent-down',
-            repeat: false,
             controller: function(element) {
                 var target = element.dataset['target'] || null;
 

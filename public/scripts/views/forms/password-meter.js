@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-password-meter',
-            repeat: false,
             controller: function(element, window) {
                 var calc = function(password) {
                     var score = 0;

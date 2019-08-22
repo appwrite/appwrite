@@ -1,7 +1,6 @@
 (function (window) {
     window.ls.container.get('view').add({
         selector: 'data-ls-ui-open',
-        repeat: false,
         controller: function(element, window) {
             let def         = (element.classList.contains('open')) ? 'open' : 'close';
             let buttonClass = element.dataset['buttonClass'] || 'ls-ui-open';

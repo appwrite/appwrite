@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-upload',
-            repeat: false,
             controller: function(element, container, alerts, expression, env) {
                 var scope           = element.dataset['scope'];
                 var labelButton     = element.dataset['labelButton'] || 'Upload';

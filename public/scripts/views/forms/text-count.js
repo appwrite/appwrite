@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-text-count',
-            repeat: false,
             controller: function(element) {
                 var counter = document.createElement('span');
 

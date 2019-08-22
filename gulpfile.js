@@ -62,7 +62,6 @@ const configApp  = {
         'public/scripts/views/ui/highlight.js',
         'public/scripts/views/ui/modal.js',
         'public/scripts/views/ui/open.js',
-        'public/scripts/views/ui/paging.js',
         'public/scripts/views/ui/phases.js',
         'public/scripts/views/ui/trigger.js',
     ],

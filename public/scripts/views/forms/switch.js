@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-switch',
-            repeat: false,
             controller: function(element) {
                 let input = window.document.createElement('input');
                 input.type = 'checkbox';

@@ -4,7 +4,6 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-clone',
-            repeat: false,
             controller: function(element, document, view) {
                 var template = element.innerHTML.toString();
                 var label = element.dataset['label'] || 'Add';
