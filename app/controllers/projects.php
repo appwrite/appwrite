@@ -393,7 +393,12 @@ $utopia->delete('/v1/projects/:projectId')
             }
 
             // Delete all DBs
-            $consoleDB->deleteNamespace($project->getUid());
+            // $consoleDB->deleteNamespace($project->getUid());
+            
+            // Optimize DB?
+
+            // Delete all storage files
+            // Delete all storage cache
 
             $response->noContent();
         }
