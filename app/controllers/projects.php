@@ -229,7 +229,6 @@ $utopia->post('/v1/projects')
     ->param('description', '', function () {return new Text(255);}, 'Project description', true)
     ->param('logo', '', function () {return new Text(1024);}, 'Project logo', true)
     ->param('url', '', function () {return new URL();}, 'Project URL', true)
-    ->param('clients', [], function () {return new ArrayList(new URL());}, 'Project client domains', true)
     ->param('legalName', '', function () {return new Text(256);}, 'Project Legal Name', true)
     ->param('legalCountry', '', function () {return new Text(256);}, 'Project Legal Country', true)
     ->param('legalState', '', function () {return new Text(256);}, 'Project Legal State', true)
@@ -237,7 +236,7 @@ $utopia->post('/v1/projects')
     ->param('legalAddress', '', function () {return new Text(256);}, 'Project Legal Address', true)
     ->param('legalTaxId', '', function () {return new Text(256);}, 'Project Legal Tax ID', true)
     ->action(
-        function($name, $teamId, $description, $logo, $url, $clients, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB)
+        function($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB)
         {
             $team = $projectDB->getDocument($teamId);
 
@@ -256,7 +255,6 @@ $utopia->post('/v1/projects')
                     'description'       => $description,
                     'logo'              => $logo,
                     'url'               => $url,
-                    'clients'           => $clients,
                     'legalName'         => $legalName,
                     'legalCountry'      => $legalCountry,
                     'legalState'        => $legalState,
@@ -291,7 +289,6 @@ $utopia->patch('/v1/projects/:projectId')
     ->param('description', '', function () {return new Text(255);}, 'Project description', true)
     ->param('logo', '', function () {return new Text(1024);}, 'Project logo', true)
     ->param('url', '', function () {return new URL();}, 'Project URL', true)
-    ->param('clients', [], function () {return new ArrayList(new URL());}, 'Project client  domains', true)
     ->param('legalName', '', function () {return new Text(256);}, 'Project Legal Name', true)
     ->param('legalCountry', '', function () {return new Text(256);}, 'Project Legal Country', true)
     ->param('legalState', '', function () {return new Text(256);}, 'Project Legal State', true)
@@ -299,7 +296,7 @@ $utopia->patch('/v1/projects/:projectId')
     ->param('legalAddress', '', function () {return new Text(256);}, 'Project Legal Address', true)
     ->param('legalTaxId', '', function () {return new Text(256);}, 'Project Legal Tax ID', true)
     ->action(
-        function($projectId, $name, $description, $logo, $url, $clients, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $consoleDB)
+        function($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $consoleDB)
         {
             $project = $consoleDB->getDocument($projectId);
 
@@ -312,7 +309,6 @@ $utopia->patch('/v1/projects/:projectId')
                 'description' => $description,
                 'logo' => $logo,
                 'url' => $url,
-                'clients' => $clients,
                 'legalName' => $legalName,
                 'legalCountry' => $legalCountry,
                 'legalState' => $legalState,
