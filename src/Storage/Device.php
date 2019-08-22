@@ -98,7 +98,7 @@ abstract class Device
      * @param string $data
      * @return string
      */
-    public function write(string $path, string $data):string
+    public function write(string $path, string $data):bool
     {
         return file_put_contents($path, $data);
     }
@@ -114,6 +114,32 @@ abstract class Device
     public function delete(string $path):bool
     {
         return unlink($path);
+    }
+
+    /**
+     * Delete all file and directories in given path, Return true on success and false on failure
+     *
+     * @see https://paulund.co.uk/php-delete-directory-and-files-in-directory
+     *
+     * @param string $path
+     * @return bool
+     */
+    public function deleteDir($target):bool
+    {
+        if (is_dir($target)) {
+            $files = glob($target . '*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
+    
+            foreach ($files as $file) {
+                $this->deleteDir($file);      
+            }
+    
+            rmdir($target);
+        }
+        elseif (is_file($target)) {
+            unlink( $target );  
+        }
+
+        return true;
     }
 
     /**
