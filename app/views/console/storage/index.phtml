@@ -27,13 +27,13 @@ use Utopia\Locale\Locale;
             <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
             <label for="file-read">Files</label>
-            <input type="file" name="files" id="file-files" require>
+            <input type="file" name="files" id="file-files" required>
 
             <label for="file-read">Read Permissions</label>
-            <input type="text" class="full-width" id="file-read" name="read" required autocomplete="off" data-cast-to="array" value="*" />
-
+            <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
+            
             <label for="file-write">Write Permissions</label>
-            <input type="text" class="full-width" id="file-write" name="write" required autocomplete="off" data-cast-to="array" value="*" />
+            <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
 
             <hr />
 

@@ -222,7 +222,13 @@ select {
   width: ~"calc(100% - 32px)";
   margin-bottom: 30px;
 
-  &[xype=file] {
+  &[type=file] {
+    line-height: 0;
+    padding: 15px;
+    height: auto;
+  }
+  
+  &[xtype=file] {
     line-height: normal;
     height: auto;
     border: none;
@@ -1102,6 +1108,57 @@ ol {
 
     &:hover {
       background: transparent;
+    }
+  }
+}
+
+.tags {
+  .input;
+  background: #ffffff;
+  min-height: 42px;
+  height: auto;
+
+  .add {
+    display: inline-block!important;
+    border: none;
+    padding: 0;
+    width: auto;
+    margin: 0;
+  }
+
+  ul.tags-list {
+    display: inline;
+
+    li {
+      display: inline-block!important;
+      .func-margin-end(10px);
+      font-size: 16px;
+      padding: 5px 10px;
+      cursor: pointer;
+      -webkit-user-select: none; /* Chrome all / Safari all */
+      -moz-user-select: none;    /* Firefox all             */
+      -ms-user-select: none;     /* IE 10+                  */
+       user-select: none;        /* Likely future           */
+
+      &::before {
+        .pull-end;
+        content: '\e807';
+        font-family: fontello;
+        font-style: normal;
+        display: inline-block;
+        text-align: center;
+        line-height: 16px;
+        width: 16px;
+        height: 16px;
+        font-size: 12px;
+        background: #000;
+        color: #fff;
+        border-radius: 50%;
+        margin-top: 4px;
+        margin-bottom: 4px;
+        .func-margin-start(6px);
+        .func-margin-end(0);
+      }
     }
   }
 }

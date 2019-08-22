@@ -46,6 +46,7 @@ const configApp  = {
         'public/scripts/views/forms/pell.js',
         'public/scripts/views/forms/remove.js',
         'public/scripts/views/forms/switch.js',
+        'public/scripts/views/forms/tags.js',
         'public/scripts/views/forms/text-count.js',
         'public/scripts/views/forms/text-direction.js',
         'public/scripts/views/forms/text-resize.js',
