@@ -96,6 +96,17 @@ class Database
     }
 
     /**
+     * Delete Namespace
+     *
+     * @param  int $namespace
+     * @return bool
+     */
+    public function deleteNamespace($namespace)
+    {
+        return $this->adapter->deleteNamespace($namespace);
+    }
+
+    /**
      * @param array $options
      * @return Document[]|Document
      */

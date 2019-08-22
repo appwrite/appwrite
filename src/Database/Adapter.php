@@ -89,6 +89,14 @@ abstract class Adapter
     abstract public function createNamespace($namespace);
 
     /**
+     * Delete Namespace
+     *
+     * @param string $namespace
+     * @return bool
+     */
+    abstract public function deleteNamespace($namespace);
+
+    /**
      * Filter
      *
      * Filter data sets using chosen queries

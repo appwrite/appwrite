@@ -155,6 +155,17 @@ class Redis extends Adapter
     }
 
     /**
+     * Delete Namespace
+     *
+     * @param string $namespace
+     * @return bool
+     */
+    public function deleteNamespace($namespace)
+    {
+        return $this->adapter->deleteNamespace($namespace);
+    }
+
+    /**
      * @param array $options
      * @return array
      * @throws Exception
