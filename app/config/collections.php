@@ -702,15 +702,6 @@ return [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Clients',
-                'key' => 'clients',
-                'type' => 'url',
-                'default' => '',
-                'required' => false,
-                'array' => true,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Legal Name',
                 'key' => 'legalName',
                 'type' => 'text',
@@ -756,15 +747,6 @@ return [
                 'type' => 'text',
                 'default' => '',
                 'required' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'OAuth Callback',
-                'key' => 'usersOauthCallback', // TODO Deprecate this
-                'type' => 'url',
-                'default' => '',
-                'required' => false,
-                'array' => false,
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,

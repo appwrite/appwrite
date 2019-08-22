@@ -9,7 +9,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 use Utopia\Validator\URL;
-use Utopia\Validator\Domain;
 use Task\Validator\Cron;
 use Database\Database;
 use Database\Document;
@@ -386,6 +385,8 @@ $utopia->delete('/v1/projects/:projectId')
             if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
+
+            // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
 
             if(!$consoleDB->deleteDocument($projectId)) {
                 throw new Exception('Failed to remove project from DB', 500);
