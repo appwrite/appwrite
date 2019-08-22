@@ -405,6 +405,39 @@ class MySQL extends Adapter
     }
 
     /**
+     * Delete Namespace
+     *
+     * @param $namespace
+     * @throws Exception
+     * @return bool
+     */
+    public function deleteNamespace($namespace)
+    {
+        if(empty($namespace)) {
+            throw new Exception('Empty namespace');
+        }
+
+        $documents      = 'app_' . $namespace . '.database.documents';
+        $properties     = 'app_' . $namespace . '.database.properties';
+        $relationships  = 'app_' . $namespace . '.database.relationships';
+        $audit          = 'app_' . $namespace . '.audit.audit';
+        $abuse          = 'app_' . $namespace . '.abuse.abuse';
+
+        try {
+            $this->getPDO()->prepare('DROP TABLE `' . $documents . '`;')->execute();
+            $this->getPDO()->prepare('DROP TABLE `' . $properties . '`;')->execute();
+            $this->getPDO()->prepare('DROP TABLE `' . $relationships . '`;')->execute();
+            $this->getPDO()->prepare('DROP TABLE `' . $audit .'`;')->execute();
+            $this->getPDO()->prepare('DROP TABLE `' . $abuse . '`;')->execute();
+        }
+        catch (Exception $e) {
+            throw $e;
+        }
+
+        return true;
+    }
+
+    /**
      * Get Collection
      *
      * @param array $options
