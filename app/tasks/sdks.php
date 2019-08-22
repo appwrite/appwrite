@@ -140,7 +140,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AN
                 ->setGitURL($client['gitURL'])
                 ->setGitRepoName($client['gitRepoName'])
                 ->setGitUserName($client['gitUserName'])
-                ->setLogo('https://appwrite.io/v1/images/github.png')
+                ->setLogo('https://appwrite.io/images/github.png')
                 ->setURL('https://appwrite.io')
                 ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
                 ->setShareURL('http://appwrite.io')

@@ -1376,24 +1376,6 @@
                     .get(path, {'content-type': 'application/json'},
                         {
                         });
-            },
-
-            /**
-             * List of currencies
-             *
-             * List of all currencies, including currency symol, name, plural, and decimal
-             * digits for all major and minor currencies. You can use the locale header to
-             * get the data in supported language.
-             *
-             * @throws {Error}
-             * @return {Promise}             */
-            getCurrencies: function() {
-                let path = '/locale/currencies';
-
-                return http
-                    .get(path, {'content-type': 'application/json'},
-                        {
-                        });
             }
         };
 
@@ -1811,7 +1793,7 @@
              * @param {string} url
              * @throws {Error}
              * @return {Promise}             */
-            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '') {
+            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '[]') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }

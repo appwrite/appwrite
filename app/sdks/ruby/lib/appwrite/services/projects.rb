@@ -192,7 +192,7 @@ module Appwrite
             }, params);
         end
 
-        def update_platform(project_id:, platform_id:, name:, key: '', store: '', url: '')
+        def update_platform(project_id:, platform_id:, name:, key: '', store: '', url: '[]')
             path = '/projects/{projectId}/platforms/{platformId}'
                 .gsub('{project_id}', project_id)
                 .gsub('{platform_id}', platform_id)

@@ -330,7 +330,7 @@ class Projects extends Service
      * @throws Exception
      * @return array
      */
-    public function updatePlatform($projectId, $platformId, $name, $key = '', $store = '', $url = '')
+    public function updatePlatform($projectId, $platformId, $name, $key = '', $store = '', $url = '[]')
     {
         $path   = str_replace(['{projectId}', '{platformId}'], [$projectId, $platformId], '/projects/{projectId}/platforms/{platformId}');
         $params = [];

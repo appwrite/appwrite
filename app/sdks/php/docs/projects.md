@@ -215,7 +215,7 @@ PUT https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
 | name | string | Platform name |  |
 | key | string | Package name for android or bundle ID for iOS |  |
 | store | string | App store or Google Play store ID |  |
-| url | string | Platform client URL |  |
+| url | string | Platform client URL | [] |
 
 ## Delete Platform
 

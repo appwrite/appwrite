@@ -32,11 +32,3 @@ GET https://appwrite.test/v1/locale/countries/phones
 
 ** List of all countries phone codes. You can use the locale header to get the data in supported language. **
 
-## List of currencies
-
-```http request
-GET https://appwrite.test/v1/locale/currencies
-```
-
-** List of all currencies, including currency symol, name, plural, and decimal digits for all major and minor currencies. You can use the locale header to get the data in supported language. **
-

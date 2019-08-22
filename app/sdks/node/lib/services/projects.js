@@ -296,7 +296,7 @@ class Projects extends Service {
      * @throws Exception
      * @return {}
      */
-    async updatePlatform(projectId, platformId, name, key = '', store = '', url = '') {
+    async updatePlatform(projectId, platformId, name, key = '', store = '', url = '[]') {
         let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
         
         return await this.client.call('put', path, {'content-type': 'application/json'},
