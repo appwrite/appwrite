@@ -47,7 +47,6 @@ window.ls.filter
     })
     .add('localeString', function ($value) {
         $value = parseInt($value);
-        console.log($value);
         return (!Number.isNaN($value)) ? $value.toLocaleString() : '';
     })
     .add('date', function ($value, date) {
