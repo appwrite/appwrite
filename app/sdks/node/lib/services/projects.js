@@ -24,7 +24,6 @@ class Projects extends Service {
      * @param string description
      * @param string logo
      * @param string url
-     * @param array clients
      * @param string legalName
      * @param string legalCountry
      * @param string legalState
@@ -34,7 +33,7 @@ class Projects extends Service {
      * @throws Exception
      * @return {}
      */
-    async createProject(name, teamId, description = '', logo = '', url = '', clients = [], legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+    async createProject(name, teamId, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
         let path = '/projects';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
@@ -44,7 +43,6 @@ class Projects extends Service {
                 'description': description,
                 'logo': logo,
                 'url': url,
-                'clients': clients,
                 'legalName': legalName,
                 'legalCountry': legalCountry,
                 'legalState': legalState,
@@ -77,7 +75,6 @@ class Projects extends Service {
      * @param string description
      * @param string logo
      * @param string url
-     * @param array clients
      * @param string legalName
      * @param string legalCountry
      * @param string legalState
@@ -87,7 +84,7 @@ class Projects extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateProject(projectId, name, description = '', logo = '', url = '', clients = [], legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+    async updateProject(projectId, name, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
         let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
         
         return await this.client.call('patch', path, {'content-type': 'application/json'},
@@ -96,7 +93,6 @@ class Projects extends Service {
                 'description': description,
                 'logo': logo,
                 'url': url,
-                'clients': clients,
                 'legalName': legalName,
                 'legalCountry': legalCountry,
                 'legalState': legalState,
@@ -296,7 +292,7 @@ class Projects extends Service {
      * @throws Exception
      * @return {}
      */
-    async updatePlatform(projectId, platformId, name, key = '', store = '', url = '[]') {
+    async updatePlatform(projectId, platformId, name, key = '', store = '', url = '') {
         let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
         
         return await this.client.call('put', path, {'content-type': 'application/json'},

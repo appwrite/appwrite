@@ -87,4 +87,24 @@ class Locale extends Service
         ], $params);
     }
 
+    /**
+     * List of currencies
+     *
+     * List of all currencies, including currency symol, name, plural, and decimal
+     * digits for all major and minor currencies. You can use the locale header to
+     * get the data in supported language.
+     *
+     * @throws Exception
+     * @return array
+     */
+    public function getCurrencies()
+    {
+        $path   = str_replace([], [], '/locale/currencies');
+        $params = [];
+
+
+        return $this->client->call(Client::METHOD_GET, $path, [
+        ], $params);
+    }
+
 }

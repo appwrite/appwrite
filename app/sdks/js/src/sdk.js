@@ -138,7 +138,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.16');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.17');
             addGlobalHeader('content-type', '');
 
             /**
@@ -1376,6 +1376,24 @@
                     .get(path, {'content-type': 'application/json'},
                         {
                         });
+            },
+
+            /**
+             * List of currencies
+             *
+             * List of all currencies, including currency symol, name, plural, and decimal
+             * digits for all major and minor currencies. You can use the locale header to
+             * get the data in supported language.
+             *
+             * @throws {Error}
+             * @return {Promise}             */
+            getCurrencies: function() {
+                let path = '/locale/currencies';
+
+                return http
+                    .get(path, {'content-type': 'application/json'},
+                        {
+                        });
             }
         };
 
@@ -1405,7 +1423,6 @@
              * @param {string} description
              * @param {string} logo
              * @param {string} url
-             * @param {array} clients
              * @param {string} legalName
              * @param {string} legalCountry
              * @param {string} legalState
@@ -1414,7 +1431,7 @@
              * @param {string} legalTaxId
              * @throws {Error}
              * @return {Promise}             */
-            createProject: function(name, teamId, description = '', logo = '', url = '', clients = [], legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+            createProject: function(name, teamId, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
@@ -1433,7 +1450,6 @@
                             'description': description, 
                             'logo': logo, 
                             'url': url, 
-                            'clients': clients, 
                             'legalName': legalName, 
                             'legalCountry': legalCountry, 
                             'legalState': legalState, 
@@ -1472,7 +1488,6 @@
              * @param {string} description
              * @param {string} logo
              * @param {string} url
-             * @param {array} clients
              * @param {string} legalName
              * @param {string} legalCountry
              * @param {string} legalState
@@ -1481,7 +1496,7 @@
              * @param {string} legalTaxId
              * @throws {Error}
              * @return {Promise}             */
-            updateProject: function(projectId, name, description = '', logo = '', url = '', clients = [], legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+            updateProject: function(projectId, name, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -1499,7 +1514,6 @@
                             'description': description, 
                             'logo': logo, 
                             'url': url, 
-                            'clients': clients, 
                             'legalName': legalName, 
                             'legalCountry': legalCountry, 
                             'legalState': legalState, 
@@ -1793,7 +1807,7 @@
              * @param {string} url
              * @throws {Error}
              * @return {Promise}             */
-            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '[]') {
+            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }

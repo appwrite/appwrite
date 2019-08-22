@@ -11,7 +11,7 @@ module Appwrite
             }, params);
         end
 
-        def create_project(name:, team_id:, description: '', logo: '', url: '', clients: [], legal_name: '', legal_country: '', legal_state: '', legal_city: '', legal_address: '', legal_tax_id: '')
+        def create_project(name:, team_id:, description: '', logo: '', url: '', legal_name: '', legal_country: '', legal_state: '', legal_city: '', legal_address: '', legal_tax_id: '')
             path = '/projects'
 
             params = {
@@ -20,7 +20,6 @@ module Appwrite
                 'description': description, 
                 'logo': logo, 
                 'url': url, 
-                'clients': clients, 
                 'legalName': legal_name, 
                 'legalCountry': legal_country, 
                 'legalState': legal_state, 
@@ -44,7 +43,7 @@ module Appwrite
             }, params);
         end
 
-        def update_project(project_id:, name:, description: '', logo: '', url: '', clients: [], legal_name: '', legal_country: '', legal_state: '', legal_city: '', legal_address: '', legal_tax_id: '')
+        def update_project(project_id:, name:, description: '', logo: '', url: '', legal_name: '', legal_country: '', legal_state: '', legal_city: '', legal_address: '', legal_tax_id: '')
             path = '/projects/{projectId}'
                 .gsub('{project_id}', project_id)
 
@@ -53,7 +52,6 @@ module Appwrite
                 'description': description, 
                 'logo': logo, 
                 'url': url, 
-                'clients': clients, 
                 'legalName': legal_name, 
                 'legalCountry': legal_country, 
                 'legalState': legal_state, 
@@ -192,7 +190,7 @@ module Appwrite
             }, params);
         end
 
-        def update_platform(project_id:, platform_id:, name:, key: '', store: '', url: '[]')
+        def update_platform(project_id:, platform_id:, name:, key: '', store: '', url: '')
             path = '/projects/{projectId}/platforms/{platformId}'
                 .gsub('{project_id}', project_id)
                 .gsub('{platform_id}', platform_id)

@@ -12,8 +12,7 @@ class Projects(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def create_project(self, name, team_id, description='', logo='', url='', clientsstring(4) ""[]""
-=[], legal_name='', legal_country='', legal_state='', legal_city='', legal_address='', legal_tax_id=''):
+    def create_project(self, name, team_id, description='', logo='', url='', legal_name='', legal_country='', legal_state='', legal_city='', legal_address='', legal_tax_id=''):
         """Create Project"""
 
         params = {}
@@ -23,7 +22,6 @@ class Projects(Service):
         params['description'] = description
         params['logo'] = logo
         params['url'] = url
-        params['clients'] = clients
         params['legalName'] = legal_name
         params['legalCountry'] = legal_country
         params['legalState'] = legal_state
@@ -44,8 +42,7 @@ class Projects(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def update_project(self, project_id, name, description='', logo='', url='', clientsstring(4) ""[]""
-=[], legal_name='', legal_country='', legal_state='', legal_city='', legal_address='', legal_tax_id=''):
+    def update_project(self, project_id, name, description='', logo='', url='', legal_name='', legal_country='', legal_state='', legal_city='', legal_address='', legal_tax_id=''):
         """Update Project"""
 
         params = {}
@@ -55,7 +52,6 @@ class Projects(Service):
         params['description'] = description
         params['logo'] = logo
         params['url'] = url
-        params['clients'] = clients
         params['legalName'] = legal_name
         params['legalCountry'] = legal_country
         params['legalState'] = legal_state
@@ -182,7 +178,7 @@ class Projects(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def update_platform(self, project_id, platform_id, name, key='', store='', url='[]'):
+    def update_platform(self, project_id, platform_id, name, key='', store='', url=''):
         """Update Platform"""
 
         params = {}

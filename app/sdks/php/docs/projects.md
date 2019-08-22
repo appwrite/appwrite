@@ -21,7 +21,6 @@ POST https://appwrite.test/v1/projects
 | description | string | Project description |  |
 | logo | string | Project logo |  |
 | url | string | Project URL |  |
-| clients | array | Project client domains | [] |
 | legalName | string | Project Legal Name |  |
 | legalCountry | string | Project Legal Country |  |
 | legalState | string | Project Legal State |  |
@@ -56,7 +55,6 @@ PATCH https://appwrite.test/v1/projects/{projectId}
 | description | string | Project description |  |
 | logo | string | Project logo |  |
 | url | string | Project URL |  |
-| clients | array | Project client  domains | [] |
 | legalName | string | Project Legal Name |  |
 | legalCountry | string | Project Legal Country |  |
 | legalState | string | Project Legal State |  |
@@ -215,7 +213,7 @@ PUT https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
 | name | string | Platform name |  |
 | key | string | Package name for android or bundle ID for iOS |  |
 | store | string | App store or Google Play store ID |  |
-| url | string | Platform client URL | [] |
+| url | string | Platform client URL |  |
 
 ## Delete Platform
 

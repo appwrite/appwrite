@@ -32,7 +32,6 @@ class Projects extends Service
      * @param string $description
      * @param string $logo
      * @param string $url
-     * @param array $clients
      * @param string $legalName
      * @param string $legalCountry
      * @param string $legalState
@@ -42,7 +41,7 @@ class Projects extends Service
      * @throws Exception
      * @return array
      */
-    public function createProject($name, $teamId, $description = '', $logo = '', $url = '', $clients = [], $legalName = '', $legalCountry = '', $legalState = '', $legalCity = '', $legalAddress = '', $legalTaxId = '')
+    public function createProject($name, $teamId, $description = '', $logo = '', $url = '', $legalName = '', $legalCountry = '', $legalState = '', $legalCity = '', $legalAddress = '', $legalTaxId = '')
     {
         $path   = str_replace([], [], '/projects');
         $params = [];
@@ -52,7 +51,6 @@ class Projects extends Service
         $params['description'] = $description;
         $params['logo'] = $logo;
         $params['url'] = $url;
-        $params['clients'] = $clients;
         $params['legalName'] = $legalName;
         $params['legalCountry'] = $legalCountry;
         $params['legalState'] = $legalState;
@@ -89,7 +87,6 @@ class Projects extends Service
      * @param string $description
      * @param string $logo
      * @param string $url
-     * @param array $clients
      * @param string $legalName
      * @param string $legalCountry
      * @param string $legalState
@@ -99,7 +96,7 @@ class Projects extends Service
      * @throws Exception
      * @return array
      */
-    public function updateProject($projectId, $name, $description = '', $logo = '', $url = '', $clients = [], $legalName = '', $legalCountry = '', $legalState = '', $legalCity = '', $legalAddress = '', $legalTaxId = '')
+    public function updateProject($projectId, $name, $description = '', $logo = '', $url = '', $legalName = '', $legalCountry = '', $legalState = '', $legalCity = '', $legalAddress = '', $legalTaxId = '')
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}');
         $params = [];
@@ -108,7 +105,6 @@ class Projects extends Service
         $params['description'] = $description;
         $params['logo'] = $logo;
         $params['url'] = $url;
-        $params['clients'] = $clients;
         $params['legalName'] = $legalName;
         $params['legalCountry'] = $legalCountry;
         $params['legalState'] = $legalState;
@@ -330,7 +326,7 @@ class Projects extends Service
      * @throws Exception
      * @return array
      */
-    public function updatePlatform($projectId, $platformId, $name, $key = '', $store = '', $url = '[]')
+    public function updatePlatform($projectId, $platformId, $name, $key = '', $store = '', $url = '')
     {
         $path   = str_replace(['{projectId}', '{platformId}'], [$projectId, $platformId], '/projects/{projectId}/platforms/{platformId}');
         $params = [];

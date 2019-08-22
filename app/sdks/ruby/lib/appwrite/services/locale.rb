@@ -41,6 +41,16 @@ module Appwrite
             }, params);
         end
 
+        def get_currencies()
+            path = '/locale/currencies'
+
+            params = {
+            }
+
+            return @client.call('get', path, {
+            }, params);
+        end
+
 
         protected
 
