@@ -13,12 +13,6 @@ return [
         'teamId' => -1,
         'webhooks' => [],
         'keys' => [],
-        'clients' => [
-            'http://localhost',
-            'https://localhost',
-            'https://appwrite.io',
-            'https://appwrite.test',
-        ],
         'platforms' => [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
