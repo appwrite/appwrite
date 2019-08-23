@@ -123,14 +123,14 @@ $utopia->get('/v1/avatars/flags/:code')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {return $avatarCallback('flags', $code, $width, $height, $quality);});
 
 $utopia->get('/v1/avatars/image')
-    ->desc('Get image from and HTTP URL and crop to any size.')
+    ->desc('Get Image from URL')
     ->param('url', '', function () {return new URL();}, 'Image URL which you want to crop.')
     ->param('width', 400,  function () {return new Range(0, 2000);}, 'Resize preview image width, Pass an integer between 0 to 4000', true)
     ->param('height', 400, function () {return new Range(0, 2000);}, 'Resize preview image height, Pass an integer between 0 to 4000', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getImage')
-    ->label('sdk.description', 'Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop a remote image or in cases, you want to make sure a 3rd party image is properly served using a TLS protocol.')
+    ->label('sdk.description', 'Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in cases, you want to make sure a 3rd party image is properly served using a TLS protocol.')
     ->action(
         function($url, $width, $height) use ($response, $request, $version)
         {
