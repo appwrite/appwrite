@@ -54,8 +54,8 @@ $scopes = [ // TODO sync with project list
                         data-failure-param-alert-text="Failed to update API key"
                         data-failure-param-alert-classname="error">
 
-                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                        <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
+                        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                        <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}" />
 
                         <label data-ls-attrs="for=name-{{key.$uid}}">Name</label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
@@ -92,13 +92,13 @@ $scopes = [ // TODO sync with project list
                     data-failure-param-alert-text="Failed to delete API key"
                     data-failure-param-alert-classname="error">
 
-                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                    <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}">
+                    <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                    <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}" />
 
                     <button class="reverse danger">Delete</button>
                 </form>
 
-                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <span class="note">(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</span></div>
+                <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</small></div>
 
                 <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
@@ -135,7 +135,7 @@ $scopes = [ // TODO sync with project list
                 data-failure-param-alert-text="Failed to create API key"
                 data-failure-param-alert-classname="error">
 
-                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />

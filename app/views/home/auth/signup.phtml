@@ -36,7 +36,7 @@ use Utopia\Locale\Locale;
                 <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.password')); ?></label>
                 <input name="password" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="<?php echo $this->escape(Locale::getText('home.auth.signup.labels.password.validation')); ?>">
 
-                <div class="note agree margin-top-large margin-bottom-large">
+                <div class="agree margin-top-large margin-bottom-large">
                     <div class="pull-start margin-end-small margin-bottom">
                         <input type="checkbox" required />
                     </div>
@@ -49,7 +49,7 @@ use Utopia\Locale\Locale;
             </form>
         </div>
         <div class="col span-6 oauth">
-            <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
+            <p><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
 
             <div>
                 <a href="" data-general-oauth="facebook" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook"></i> Connect with Facebook</a>

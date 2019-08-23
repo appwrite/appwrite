@@ -59,19 +59,19 @@ use Utopia\Locale\Locale;
                         </span>
                     </td>
                     <td style="vertical-align: middle">
-                        <span data-ls-bind="{{task.next|date-time}}" class="note"></span>
+                        <small data-ls-bind="{{task.next|date-time}}"></small>
                     </td>
                     <td style="vertical-align: middle">
-                        <div data-ls-if="'undefined' !== {{task.previous}}" class="note">
-                            <span data-ls-bind="{{task.previous|date-time}}"></span>
+                        <div data-ls-if="undefined !== {{task.previous}}">
+                            <small data-ls-bind="{{task.previous|date-time}}"></small>
 
-                            <div data-ls-if="'undefined' !== {{task.delay}} && 59 < {{task.delay}}" class="note text-danger margin-top-tiny">
-                                <span data-ls-bind="({{task.delay|ms2hum}} Delay)"></span>
+                            <div data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
+                                <small data-ls-bind="({{task.delay|ms2hum}} Delay)"></small>
                             </div>
                         </div>
-                        <div data-ls-if="'undefined' === {{task.previous}}" class="note">
+                        <small data-ls-if="undefined === {{task.previous}}">
                             None.
-                        </div>
+                        </small>
                     </td>
                     <td>
                         <div data-ui-modal class="modal box close" data-button-text="" data-button-class="pull-end reverse round" data-button-icon="icon-cog">
@@ -90,8 +90,8 @@ use Utopia\Locale\Locale;
                                 data-failure-param-alert-text="Failed to update task"
                                 data-failure-param-alert-classname="error">
 
-                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
+                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}" />
 
                                 <label data-ls-attrs="for=name-{{task.$uid}}">Name</label>
                                 <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
@@ -133,7 +133,7 @@ use Utopia\Locale\Locale;
 
                                     <h2 class="margin-bottom">
                                         Advanced Options
-                                        <small class="note text-size-small">(optional)</small>
+                                        <small class="text-size-small">(optional)</small>
                                     </h2>
 
                                     <label for="httpHeaders">HTTP Headers</label>
@@ -166,17 +166,18 @@ use Utopia\Locale\Locale;
                                         </div>
                                     </div>
 
-                                    <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom">SSL / TLS
-                                        <p class="note">Certificate verification</p>
+                                    <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom">
+                                        <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                                        
                                         <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="1" /> &nbsp; <span>Enabled</span>
                                         <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="0" /> &nbsp; <span>Disabled</span>
                                     </label>
 
-                                    <p class="note margin-bottom"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
+                                    <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
                                         <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                                     </p>
 
-                                    <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+                                    <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                                     <div class="row thin">
                                         <div class="col span-6">
@@ -205,8 +206,8 @@ use Utopia\Locale\Locale;
                                 data-failure-param-alert-text="Failed to delete task"
                                 data-failure-param-alert-classname="error">
 
-                                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}">
+                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}" />
 
                                 <button class="danger fill">Delete</button>
                             </form>
@@ -234,7 +235,7 @@ use Utopia\Locale\Locale;
                 data-failure-param-alert-text="Failed to create task"
                 data-failure-param-alert-classname="error">
 
-                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
@@ -276,7 +277,7 @@ use Utopia\Locale\Locale;
                     
                     <h2 class="margin-bottom">
                         Advanced Options
-                        <small class="note text-size-small">(optional)</small>
+                        <small class="text-size-small">(optional)</small>
                     </h2>
 
                     <label for="httpHeaders">HTTP Headers</label>
@@ -295,17 +296,18 @@ use Utopia\Locale\Locale;
                         </div>
                     </div>
 
-                    <label for="secure" class="margin-bottom">SSL / TLS
-                        <p class="note">Certificate verification</p>
+                    <label for="secure" class="margin-bottom-small">
+                        <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                        
                         <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
                         <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
                     </label>
 
-                    <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                    <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
                         <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                     </p>
 
-                    <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+                    <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                     <div class="row thin">
                         <div class="col span-6">

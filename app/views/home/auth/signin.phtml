@@ -11,7 +11,7 @@ use Utopia\Locale\Locale;
 
     <div class="row responsive force-reverse">
         <div class="col span-6 oauth margin-bottom-large">
-            <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
+            <p><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
 
             <div>
                 <a href="" data-general-oauth="facebook" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook"></i> Connect with Facebook</a>
@@ -21,7 +21,7 @@ use Utopia\Locale\Locale;
         </div>
 
         <div class="col span-6">
-            <p class="note"><?php echo $this->escape(Locale::getText('home.auth.signin.regular.title')); ?></p>
+            <p><?php echo $this->escape(Locale::getText('home.auth.signin.regular.title')); ?></p>
 
             <form name="login"
                 data-service="auth.login"

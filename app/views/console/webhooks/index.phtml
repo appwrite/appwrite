@@ -57,8 +57,8 @@ $events = [
                         data-failure-param-alert-text="Failed to update webhook"
                         data-failure-param-alert-classname="error">
 
-                        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
+                        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}" />
 
                         <label data-ls-attrs="for=name-{{webhook.$uid}}">Name</label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
@@ -86,24 +86,21 @@ $events = [
                             
                             <h2 class="margin-bottom">
                                 Advanced Options
-                                <small class="note text-size-small">(optional)</small>
+                                <small class="text-size-small">(optional)</small>
                             </h2>
 
-                            <label data-ls-attrs="for=secure-{{webhook.$uid}}">SSL / TLS</label>
-                            <p class="note">Certificate verification</p>
+                            <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom-small">
+                                <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                                        
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$uid}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$uid}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
+                            </label>
 
-                            <input name="security" data-ls-attrs="id=secure-yes-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
-                            &nbsp;&nbsp;
-                            <input name="security" data-ls-attrs="id=secure-no-{{webhook.$uid}}" type="radio" required data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
-
-                            <br />
-                            <br />
-
-                            <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                            <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
                                 <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                             </p>
 
-                            <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+                            <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                             <div class="row thin">
                                 <div class="col span-6">
@@ -133,15 +130,15 @@ $events = [
                     data-failure-param-alert-text="Failed to delete webhook"
                     data-failure-param-alert-classname="error">
 
-                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}">
+                    <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}" />
 
                     <button class="danger reverse">Delete</button>
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
                 <span data-ls-if="0 == {{webhook.security}}" style="display: none;">
-                    &nbsp; <span class="note text-danger">(SSL/TLS Disabled)</span>
+                    &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
                 <div class="margin-top-tiny">
                     <a data-ls-attrs="href={{webhook.url}}" data-ls-bind="{{webhook.url}}" target="_blank" class="text-one-liner"></a>
@@ -167,7 +164,7 @@ $events = [
                 data-failure-param-alert-text="Failed to create webhook"
                 data-failure-param-alert-classname="error">
 
-                <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
@@ -195,24 +192,21 @@ $events = [
                     
                     <h2 class="margin-bottom">
                         Advanced Options
-                        <small class="note text-size-small">(optional)</small>
+                        <small class="text-size-small">(optional)</small>
                     </h2>
 
-                    <label for="secure">SSL / TLS</label>
-                    <p class="note">Certificate verification</p>
+                    <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom-small">
+                        <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                                        
+                        <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span>Enabled</span>
+                        <input name="security" type="radio" required data-ls-attrs="id=secure-no" value="0" /> &nbsp; <span>Disabled</span>
+                    </label>
 
-                    <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
-                    &nbsp;&nbsp;
-                    <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
-
-                    <br />
-                    <br />
-
-                    <p class="note margin-bottom"><span class="tag red">Warning</span> Untrusted or self-signed certificates may not be secure.
+                    <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
                         <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                     </p>
 
-                    <h3>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></h3>
+                    <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                     <div class="row thin">
                         <div class="col span-6">

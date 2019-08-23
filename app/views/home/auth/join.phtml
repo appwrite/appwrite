@@ -33,7 +33,7 @@ use Utopia\Locale\Locale;
 
             <h2 class="margin-bottom-small"><?php echo $this->escape(Locale::getText('home.auth.join.title')); ?></h2>
 
-            <p class="note"><?php echo sprintf($this->escape(Locale::getText('home.auth.join.subtitle')), '<span data-ls-echo="{{api-company.name}}"></span>'); ?></p>
+            <p><?php echo sprintf($this->escape(Locale::getText('home.auth.join.subtitle')), '<span data-ls-echo="{{api-company.name}}"></span>'); ?></p>
 
             <div data-ls-if="{{api-company.logo}} !== '' || {{api-company.logo}} !== undefined">
                 <div data-ls-style="background: {{api-company.theme-color}}; color: {{api-company.theme-color-contrast}}; width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto; text-align: center">
@@ -42,7 +42,7 @@ use Utopia\Locale\Locale;
             </div>
         </div>
 
-        <div class="note agree margin-top margin-bottom">
+        <div class="agree margin-top margin-bottom">
             <div class="pull-start margin-end-small margin-bottom">
                 <input type="checkbox" required />
             </div>

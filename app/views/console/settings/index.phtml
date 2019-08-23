@@ -179,7 +179,7 @@ use Utopia\Locale\Locale;
                                 <div class="margin-bottom-small">
                                     <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
                                 </div>
-                                <span class="note" data-ls-bind="{{member.email}}"></span>
+                                <small data-ls-bind="{{member.email}}"></small>
                             </li>
                         </ul>
                     </div>

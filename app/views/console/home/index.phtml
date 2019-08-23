@@ -106,8 +106,8 @@ $graph = $this->getParam('graph', false);
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to delete platform"
                     data-failure-param-alert-classname="error">
-                    <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-                    <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">
+                    <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                    <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}" />
 
                     <button class="reverse danger">Delete</button>
                 </form>
@@ -117,7 +117,7 @@ $graph = $this->getParam('graph', false);
                     <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 
-                <p class="note margin-bottom-no"><span data-ls-bind="{{platform.url}}"></span></p>
+                <p class="margin-bottom-no"><small data-ls-bind="{{platform.url}}"></small></p>
             </li>
         </ul>
     </div>
@@ -138,13 +138,13 @@ $graph = $this->getParam('graph', false);
                 <div class="link web-new"><img src="/images/clients/web.png" alt="Web Platform Logo" class="avatar xs margin-end" /> New Web App</div>
             </li>
             <li class="disabled">
-                <div class="link ios-new"><img src="/images/clients/ios.png" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App <span class="note">(soon)</span></div>
+                <div class="link ios-new"><img src="/images/clients/ios.png" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App</div>
             </li>
             <li class="disabled">
-                <div class="link android-new"><img src="/images/clients/android.png" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App <span class="note">(soon)</span></div>
+                <div class="link android-new"><img src="/images/clients/android.png" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App</div>
             </li>
             <li class="disabled">
-                <div class="link unity-new"><img src="/images/clients/unity.png" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game <span class="note">(soon)</span></div>
+                <div class="link unity-new"><img src="/images/clients/unity.png" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game</div>
             </li>
         </ul>
     </div>
@@ -166,8 +166,8 @@ $graph = $this->getParam('graph', false);
         data-failure-param-alert-text="Failed to create platform"
         data-failure-param-alert-classname="error">
 
-        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-        <input type="hidden" name="type" data-ls-bind="web">
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="type" data-ls-bind="web" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
@@ -201,8 +201,8 @@ $graph = $this->getParam('graph', false);
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
 
-        <input type="hidden" name="projectId" data-ls-bind="{{console-project.$uid}}">
-        <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}">
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}"/ >
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" id="name" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />

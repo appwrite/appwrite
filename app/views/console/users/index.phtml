@@ -104,7 +104,7 @@ $providers = $this->getParam('providers', []);
                                         <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
                                     </td>
                                     <td data-title="Email: ">
-                                        <span data-ls-bind="{{user.email}}" class="note"></span>
+                                        <small data-ls-bind="{{user.email}}"></span>
                                     </td>
                                     <td data-title="Status: ">
                                         <span data-ls-if="{{user.confirm}} === true">
@@ -119,7 +119,7 @@ $providers = $this->getParam('providers', []);
                                             &nbsp;<span class="tag red">Blocked</span>
                                         </span>
                                     </td>
-                                    <td data-title="Created: "><span data-ls-bind="{{user.registration|date-text}}" class="note"></span></td>
+                                    <td data-title="Created: "><small data-ls-bind="{{user.registration|date-text}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -266,7 +266,7 @@ $providers = $this->getParam('providers', []);
                                         </div>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.sum}} Users"></span></td>
-                                    <td data-title="Date Created: "><span data-ls-bind="{{team.dateCreated|date-text}}" class="note"></span></td>
+                                    <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|date-text}}"></small></td>
                                 </tr>
                             </tbody>
                         </table>

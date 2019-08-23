@@ -98,16 +98,16 @@ use Utopia\Locale\Locale;
                                 <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" />
                             </td>
                             <td data-title="Name: ">
-                                <span data-ls-bind="{{file.name}}" class="note"></span>
+                                <small data-ls-bind="{{file.name}}"></small>
                             </td>
                             <td data-title="Type: ">
-                                <span data-ls-bind="{{file.mimeType}}" class="note tag"></span>
+                                <span data-ls-bind="{{file.mimeType}}" class="tag"></span>
                             </td>
-                            <td data-title="Status: ">
-                                    <span data-ls-bind="{{file.sizeOriginal|humanFileSize}}" class="note"></span>
+                            <td data-title="Size: ">
+                                <small data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></small>
                             </td>
                             <td data-title="Created: ">
-                                <span data-ls-bind="{{file.dateCreated|date-text}}" class="note"></span>
+                                <small data-ls-bind="{{file.dateCreated|date-text}}"></small>
                             </td>
                         </tr>
                     </tbody>
