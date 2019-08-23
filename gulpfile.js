@@ -78,9 +78,6 @@ const configDep = {
         'public/scripts/dependencies/pell.js',
         'public/scripts/dependencies/prism.js',
         'public/scripts/dependencies/turndown.js',
-
-        'public/scripts/polyfills/date-input.js',
-        'public/scripts/polyfills/datalist.js',
     ],
     dest: './public/dist/scripts'
 };
