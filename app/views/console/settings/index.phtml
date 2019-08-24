@@ -168,7 +168,7 @@ use Utopia\Locale\Locale;
                                         
                                         <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                         <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
-                                        <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                                        <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
                                         <button class="reverse"><?php echo Locale::getText('console.settings.section.members.labels.resend'); ?></button>
                                     </form>
@@ -202,7 +202,7 @@ use Utopia\Locale\Locale;
                             data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                            <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                            <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
                             <label for="name"><?php echo Locale::getText('console.settings.section.members.labels.name'); ?> <small>(<?php echo Locale::getText('general.optional'); ?>)</small></label>
                             <input name="name" id="name" type="text" autocomplete="name">

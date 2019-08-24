@@ -18,7 +18,6 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use PHPMailer\PHPMailer\PHPMailer;
 
-const APP_PROTOCOL                  = 'https';
 const APP_NAME                      = 'Appwrite';
 const APP_DOMAIN                    = 'appwrite.io';
 const APP_EMAIL_TEAM                = 'team@' . APP_DOMAIN;

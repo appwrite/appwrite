@@ -338,7 +338,7 @@ $utopia->delete('/v1/account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', 'Delete currently logged in user account.')
     ->action(
-        function() use ($response, $user, $projectDB, $audit)
+        function() use ($response, $request, $user, $projectDB, $audit)
         {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'status' => Auth::USER_STATUS_BLOCKED,
@@ -367,7 +367,7 @@ $utopia->delete('/v1/account')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == APP_PROTOCOL), true)
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true)
                 ->json(array('result' => 'success'));
         }
     );

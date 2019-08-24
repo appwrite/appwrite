@@ -167,7 +167,7 @@ $utopia->post('/v1/auth/register')
                 ->setParam('event', 'auth.register')
             ;
 
-            $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $loginSecret), $expiry, '/', COOKIE_DOMAIN, ('https' == APP_PROTOCOL), true);
+            $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $loginSecret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
 
             if($success) {
                 $response->redirect($success);
@@ -369,7 +369,7 @@ $utopia->post('/v1/auth/login')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == APP_PROTOCOL), true);
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
 
             if($success) {
                 $response->redirect($success);
@@ -408,7 +408,7 @@ $utopia->delete('/v1/auth/logout')
             $audit->setParam('event', 'auth.logout');
 
             $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == APP_PROTOCOL), true)
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true)
                 ->json(array('result' => 'success'))
             ;
         }
@@ -440,7 +440,7 @@ $utopia->delete('/v1/auth/logout/:id')
                     ;
 
                     if($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete cookies
-                        $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == APP_PROTOCOL), true);
+                        $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
                     }
                 }
             }
@@ -608,7 +608,7 @@ $utopia->get('/v1/oauth/:provider')
     ->action(
         function($provider, $success, $failure) use ($response, $request, $project)
         {
-            $callback   = APP_PROTOCOL . '://' . $request->getServer('HTTP_HOST') . '/v1/oauth/callback/' . $provider . '/' . $project->getUid();
+            $callback   = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/oauth/callback/' . $provider . '/' . $project->getUid();
             $appId      = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Appid', '');
             $appSecret  = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Secret', '{}');
 
@@ -672,9 +672,9 @@ $utopia->get('/v1/oauth/callback/:provider/:projectId')
     ->param('code', '', function () {return new Text(1024);}, 'OAuth code')
     ->param('state', '', function () {return new Text(2048);}, 'Login state params', true)
     ->action(
-        function($projectId, $provider, $code, $state) use ($response, $domain)
+        function($projectId, $provider, $code, $state) use ($response, $request, $domain)
         {
-            $response->redirect(APP_PROTOCOL . '://' . $domain . '/v1/oauth/' . $provider . '/redirect?'
+            $response->redirect($request->getServer('REQUEST_SCHEME', 'https') . '://' . $domain . '/v1/oauth/' . $provider . '/redirect?'
                 . http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
@@ -695,7 +695,7 @@ $utopia->get('/v1/oauth/:provider/redirect')
     ->action(
         function($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit)
         {
-            $callback       = APP_PROTOCOL . '://' . $request->getServer('HTTP_HOST') . '/v1/oauth/callback/' . $provider . '/' . $project->getUid();
+            $callback       = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/oauth/callback/' . $provider . '/' . $project->getUid();
             $defaultState   = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL    = new URL();
 
@@ -868,7 +868,7 @@ $utopia->get('/v1/oauth/:provider/redirect')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == APP_PROTOCOL), true)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true)
             ;
 
             $response->redirect($state['success']);

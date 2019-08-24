@@ -24,8 +24,8 @@ use Utopia\Locale\Locale;
                 data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.signup.failure')); ?>"
                 data-failure-param-alert-classname="error">
 
-                <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console">
-                <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/signup?failure=1">
+                <input name="success" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/console">
+                <input name="failure" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/signup?failure=1">
 
                 <label><?php echo $this->escape(Locale::getText('home.auth.signup.labels.name')); ?></label>
                 <input name="name" type="text" autocomplete="name" placeholder="" required>
@@ -43,7 +43,7 @@ use Utopia\Locale\Locale;
                     <?php echo $this->escape(Locale::getText('home.auth.signup.labels.agree')); ?><a href="/policy/terms" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.terms')); ?></a><?php echo $this->escape(Locale::getText('home.auth.signup.labels.and')); ?><a href="/policy/privacy" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.privacy')); ?></a>
                 </div>
 
-                <input name="redirect" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/confirm" />
+                <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/confirm" />
 
                 <button type="submit"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.action')); ?></button>
             </form>
@@ -52,9 +52,9 @@ use Utopia\Locale\Locale;
             <p><?php echo $this->escape(Locale::getText('home.auth.signin.oauth.title')); ?></p>
 
             <div>
-                <a href="" data-general-oauth="facebook" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook"></i> Connect with Facebook</a>
-                <a href="" data-general-oauth="github" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button github fill margin-bottom"><i class="icon-github-circled"></i> Connect with Github</a>
-                <a href="" data-general-oauth="linkedin" data-success="https://{{env.DOMAIN}}/console" data-failure="https://{{env.DOMAIN}}/auth/signin?failure=2" class="button linkedin fill margin-bottom"><i class="icon-linkedin"></i> Connect with Linkedin</a>
+                <a href="" data-general-oauth="facebook" data-success="{{env.PROTOCOL}}://{{env.DOMAIN}}/console" data-failure="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/signin?failure=2" class="button facebook fill margin-bottom"><i class="icon-facebook"></i> Connect with Facebook</a>
+                <a href="" data-general-oauth="github" data-success="{{env.PROTOCOL}}://{{env.DOMAIN}}/console" data-failure="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/signin?failure=2" class="button github fill margin-bottom"><i class="icon-github-circled"></i> Connect with Github</a>
+                <a href="" data-general-oauth="linkedin" data-success="{{env.PROTOCOL}}://{{env.DOMAIN}}/console" data-failure="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/signin?failure=2" class="button linkedin fill margin-bottom"><i class="icon-linkedin"></i> Connect with Linkedin</a>
             </div>
         </div>
     </div>

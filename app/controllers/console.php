@@ -18,6 +18,10 @@ $utopia->shutdown(function() use ($utopia, $response, $request, $layout, $versio
     $header = new View(__DIR__ . '/../views/console/comps/header.phtml');
     $footer = new View(__DIR__ . '/../views/console/comps/footer.phtml');
 
+    $footer
+        ->setParam('home', $request->getServer('_APP_HOME', ''))
+    ;
+    
     $layout
         ->setParam('header', [$header])
         ->setParam('footer', [$footer])
@@ -54,9 +58,13 @@ $utopia->get('/error/:code')
 $utopia->get('/console')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function() use ($layout)
+    ->action(function() use ($layout, $request)
     {
         $page = new View(__DIR__ . '/../views/console/index.phtml');
+
+        $page
+            ->setParam('home', $request->getServer('_APP_HOME', ''))
+        ;
 
         $layout
             ->setParam('title', APP_NAME . ' - ' . Locale::getText('console.title'))

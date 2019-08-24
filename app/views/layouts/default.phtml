@@ -2,6 +2,7 @@
 
 use Utopia\Locale\Locale;
 
+$protocol   = $this->getParam('protocol', '');
 $domain     = $this->getParam('domain', '');
 $api        = $this->getParam('api', '');
 $project    = $this->getParam('project', '');
@@ -33,7 +34,7 @@ $env        = $this->getParam('env', '');
     <meta property="og:type" content="website" />
     <meta property="og:title" content="<?php echo $this->getParam('title', ''); ?>" />
     <meta property="og:description" content="<?php echo $this->getParam('description', ''); ?>" />
-    <meta property="og:image"  content="<?php echo APP_PROTOCOL;?>://<?php echo $domain; ?>/images/logo.png?v=1" />
+    <meta property="og:image"  content="<?php echo $protocol; ?>://<?php echo $domain; ?>/images/logo.png?v=1" />
     <script>
 
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -46,6 +47,7 @@ $env        = $this->getParam('env', '');
         var APP_ENV = {
             NAME: '<?php echo APP_NAME; ?>',
             VERSION: '<?php echo $version; ?>',
+            PROTOCOL: '<?php echo $protocol; ?>',
             DOMAIN: '<?php echo $domain; ?>',
             API: '<?php echo $api; ?>/v1',
             PROJECT: '<?php echo $project; ?>',

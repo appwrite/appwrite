@@ -19,8 +19,8 @@ use Utopia\Locale\Locale;
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1"><?php echo $this->escape(Locale::getText('home.auth.join.failure')); ?></div>
 
-        <input name="success" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/console?company={{router.params.company}}">
-        <input name="failure" type="hidden" data-ls-bind="https://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
+        <input name="success" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/console?company={{router.params.company}}">
+        <input name="failure" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
 
         <div class=""
              data-service="companies.getPreview"

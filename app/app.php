@@ -42,7 +42,7 @@ $clients = array_map(function($node) {
 }));
 
 $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
-
+    
     $route = $utopia->match($request);
 
     /**
@@ -51,8 +51,8 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     $https = $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('HTTPS', ''));
 
     if (empty($https) || 'off' == $https) {
-        $response->redirect('https://' . $request->getServer('HTTP_HOST', '') . $request->getServer('REQUEST_URI'));
-        exit(0);
+        //$response->redirect('https://' . $request->getServer('HTTP_HOST', '') . $request->getServer('REQUEST_URI'));
+        //exit(0);
     }
 
     $referrer   = $request->getServer('HTTP_REFERER', '');
@@ -70,11 +70,11 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . urlencode($request->getServer('REQUEST_URI')))
-        ->addHeader('Strict-Transport-Security', 'max-age=16070400')
+        //->addHeader('Strict-Transport-Security', 'max-age=16070400')
         //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Ajax, Origin, Content-Type, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
     ;
@@ -83,7 +83,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
      * Validate Client Domain - Check to avoid CSRF attack
      *  Adding appwrite api domains to allow XDOMAIN communication
      */
-    $hostValidator = new Host(array_merge($clients, ['http://localhost', 'https://localhost', 'https://appwrite.test', 'https://appwrite.io']));
+    $hostValidator = new Host($clients);
 
     if(!$hostValidator->isValid($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')))
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
@@ -249,7 +249,7 @@ $utopia->options(function() use ($request, $response, $domain, $project) {
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Ajax, Origin, Content-Type, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
         ->send();
@@ -462,7 +462,7 @@ $utopia->get('/v1/open-api-2.json')
     ->label('docs', false)
     ->param('extensions', 0 , function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->action(
-        function($extensions) use ($response, $utopia, $domain, $version, $services, $consoleDB) {
+        function($extensions) use ($response, $request, $utopia, $domain, $version, $services) {
 
             function fromCamelCase($input) {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -613,7 +613,7 @@ $utopia->get('/v1/open-api-2.json')
                 ),
                 'externalDocs' => [
                     'description' => 'Full API docs, specs and tutorials',
-                    'url' => APP_PROTOCOL . '://' . $domain . '/docs'
+                    'url' => $request->getServer('REQUEST_SCHEME', 'https') . '://' . $domain . '/docs'
                 ]
             ];
 

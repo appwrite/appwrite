@@ -21,6 +21,7 @@ if(!empty($request->getQuery('version', ''))) {
 $layout
     ->setParam('title', APP_NAME)
     ->setParam('description', Locale::getText('general.description'))
+    ->setParam('protocol', $request->getServer('REQUEST_SCHEME', 'https'))
     ->setParam('domain', $domain)
     ->setParam('api', $request->getServer('_APP_APPWRITE_HOST_CLIENT'))
     ->setParam('project', $request->getServer('_APP_APPWRITE_ID'))
