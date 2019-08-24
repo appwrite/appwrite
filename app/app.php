@@ -202,12 +202,14 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
 
     $abuse = new Abuse($timeLimit);
 
-    $response
-        ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
-        ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
-        ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
-    ;
-
+    if($timeLimit->limit()) {
+        $response
+            ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
+            ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
+            ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
+        ;
+    }
+    
     if($abuse->check()) {
         throw new Exception('Too many requests', 429);
     }
