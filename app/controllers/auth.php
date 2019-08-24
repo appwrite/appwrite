@@ -147,12 +147,12 @@ $utopia->post('/v1/auth/register')
                 $mail->send();
             }
             catch(Exception $error) {
-                if($failure) {
-                    $response->redirect($failure);
-                    return;
-                }
+                // if($failure) {
+                //     $response->redirect($failure);
+                //     return;
+                // }
 
-                throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
+                // throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
             }
 
             $webhook
@@ -287,7 +287,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
                 $mail->send();
             }
             catch(Exception $error) {
-                throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
+                //throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
             }
 
             $response->json(array('result' => 'success'));
@@ -519,7 +519,7 @@ $utopia->post('/v1/auth/recovery')
                 $mail->send();
             }
             catch(Exception $error) {
-                throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
+                //throw new Exception('Problem sending mail: ' . $mail->getError(), 500);
             }
 
             $audit
