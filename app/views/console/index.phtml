@@ -1,3 +1,6 @@
+<?php
+$home = $this->getParam('home', '');
+?>
 <div class="cover" style="background-size: 400px 400px; background-repeat: no-repeat;">
     <div class="zone xl">
         <div class="margin-top margin-bottom"><a href="/"><img src="/images/appwrite.svg" height="30" alt="Logo" /></a></div>
@@ -7,9 +10,9 @@
         <p class="margin-bottom">Start creating projects and take advantage of Appwrite development tools and APIs.</p>
 
         <ul class="margin-bottom-xl clear">
-            <li class="pull-start margin-end"><a href="/features"><i class="icon-lamp"></i> &nbsp;Learn More</a></li>
-            <li class="pull-start margin-end"><a href="/docs"><i class="icon-book-open"></i> &nbsp;Documentation</a></li>
-            <li class="pull-start margin-end"><a href="/support"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
+            <li class="pull-start margin-end"><a href="<?php echo $home; ?>/features" target="_blank"><i class="icon-lamp"></i> &nbsp;Learn More</a></li>
+            <li class="pull-start margin-end"><a href="<?php echo $home; ?>/docs" target="_blank"><i class="icon-book-open"></i> &nbsp;Documentation</a></li>
+            <li class="pull-start margin-end"><a href="<?php echo $home; ?>/support" target="_blank"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
         </ul>
     </div>
 </div>

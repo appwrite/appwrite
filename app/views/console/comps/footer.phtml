@@ -1,3 +1,6 @@
+<?php
+$home = $this->getParam('home', '');
+?>
 <footer class="clear margin-top-xl">
     <ul class="copyright pull-start">
         <li>
@@ -7,7 +10,7 @@
             <a href="https://github.com/appwrite/appwrite/issues/new?body=%0A%0A%0A---%0AAppwrite Version:%20<?php echo VERSION; ?>" target="_blank">Open an Issue</a>
         </li>
         <li>
-            <a href="https://appwrite.io/docs" target="_blank">Documentation</a>
+            <a href="<?php echo $home; ?>/docs" target="_blank">Documentation</a>
         </li>
         <li>
             <?php echo VERSION; ?>

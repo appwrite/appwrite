@@ -5,6 +5,7 @@ LABEL maintainer="team@appwrite.io"
 ENV TZ=Asia/Tel_Aviv
 
 ENV _APP_ENV production
+ENV _APP_HOME https://appwrite.io
 ENV _APP_EDITION community
 ENV _APP_OPENSSL_KEY_V1 empty
 ENV _APP_REDIS_HOST redis
