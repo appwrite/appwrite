@@ -31,7 +31,7 @@ mkdir appwrite
     && docker-compose up -d --remove-orphans
 ```
 
-Go to http://localhost to access the Appwrite console. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
+Go to http://localhost to access the Appwrite console from your browser. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
 
 ## Getting Started
 
