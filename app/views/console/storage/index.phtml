@@ -14,7 +14,7 @@ use Utopia\Locale\Locale;
 
         <h1>Upload File</h1>
 
-        <form data-debug="1"
+        <form
             data-service="storage.createFile"
             data-event="submit"
             data-scope="sdk"
@@ -95,7 +95,7 @@ use Utopia\Locale\Locale;
                     <tbody data-ls-loop="project-files.files" data-ls-as="file">
                         <tr>
                             <td class="hide">
-                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=100&height=100&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" />
+                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=45&height=45&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
                             </td>
                             <td data-title="Name: ">
                                 <small data-ls-bind="{{file.name}}"></small>
