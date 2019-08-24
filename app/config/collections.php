@@ -22,9 +22,27 @@ return [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
-                'name' => 'Development',
+                'name' => 'Development (SSL)',
                 'type' => 'web',
                 'url' => 'https://appwrite.test',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Development (Non-SSL)',
+                'type' => 'web',
+                'url' => 'http://appwrite.test',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Localhost (SSL)',
+                'type' => 'web',
+                'url' => 'https://localhost',
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                'name' => 'Localhost (Non-SSL)',
+                'type' => 'web',
+                'url' => 'http://localhost',
             ],
         ],
         'legalName' => '',
