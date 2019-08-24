@@ -259,7 +259,7 @@ $providers = $this->getParam('providers', []);
                                                 </div>
 
                                                 <label for="name">Name</label>
-                                                <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
+                                                <input name="name" data-ls-attrs="id=name-{{team.$uid}}" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
 
                                                 <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                             </form>
