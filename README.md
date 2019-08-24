@@ -12,10 +12,6 @@
 
 ---
 
-**WORK IN PROGRESS - NOT READY FOR USAGE**
-
----
-
 Appwrite is a simple to use backend for frontend and mobile apps. Appwrite provides client side (and server) developers with a set of REST APIs to speed up app development time.
 
 Using Appwrite you can easily manage user authentication with multiple sign-in methods, database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
@@ -31,9 +27,11 @@ The easiest way to start running your Appwrite server is by running our docker c
 ```bash
 mkdir appwrite
     && cd appwrite
-    && curl -o docker-compose.yml https://raw.githubusercontent.com/appwrite/appwrite/master/docker-compose.yml
+    && curl -o docker-compose.yml https://appwrite.io/docker-compose.yml
     && docker-compose up -d --remove-orphans
 ```
+
+Go to http://localhost to access the Appwrite console. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
 
 ## Getting Started
 
@@ -64,8 +62,9 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
 * ✅ [Javascript](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
 * ✅ [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
-* ✅ [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
-* ✅ [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
+* ✅ [Python](https://github.com/appwrite/sdk-for-python) - **Work in progress** (Maintained by the Appwrite Team)
+* ✅ [NodeJS](https://github.com/appwrite/sdk-for-node) - **Work in progress** (Maintained by the Appwrite Team)
+* ✳️ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
 ## Contributing
 
@@ -73,4 +72,4 @@ All code contributions - including those of people having commit access - must g
 
 Fork the project, create a feature branch, and send us a pull request.
 
-For security issues, please email security@appwrite.io instead of posting a public issue in GitHub.
+For security issues, please email [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
