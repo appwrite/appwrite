@@ -624,12 +624,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "61494bf259393e972f60ff34476dd55ab90cb4a8"
+                "reference": "a7010cc9b52ecfa00051bb26e4ae025958fe9851"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/61494bf259393e972f60ff34476dd55ab90cb4a8",
-                "reference": "61494bf259393e972f60ff34476dd55ab90cb4a8",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/a7010cc9b52ecfa00051bb26e4ae025958fe9851",
+                "reference": "a7010cc9b52ecfa00051bb26e4ae025958fe9851",
                 "shasum": ""
             },
             "require": {
@@ -682,7 +682,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2019-08-13 11:06:12"
+            "time": "2019-08-23 22:16:30"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1505,12 +1505,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "55704ce1d29f184374f77b9542baaba58d4d30f2"
+                "reference": "38341bbefdaf496e0752c90b053c54ed23d57f98"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/55704ce1d29f184374f77b9542baaba58d4d30f2",
-                "reference": "55704ce1d29f184374f77b9542baaba58d4d30f2",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/38341bbefdaf496e0752c90b053c54ed23d57f98",
+                "reference": "38341bbefdaf496e0752c90b053c54ed23d57f98",
                 "shasum": ""
             },
             "require": {
@@ -1564,7 +1564,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-08-20 08:37:55"
+            "time": "2019-08-21 05:13:01"
         },
         {
             "name": "utopia-php/abuse",
@@ -2215,12 +2215,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/prophecy.git",
-                "reference": "1927e75f4ed19131ec9bcc3b002e07fb1173ee76"
+                "reference": "f7b200e973d04cd82ed757785e7ec4d12d81dde5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/1927e75f4ed19131ec9bcc3b002e07fb1173ee76",
-                "reference": "1927e75f4ed19131ec9bcc3b002e07fb1173ee76",
+                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/f7b200e973d04cd82ed757785e7ec4d12d81dde5",
+                "reference": "f7b200e973d04cd82ed757785e7ec4d12d81dde5",
                 "shasum": ""
             },
             "require": {
@@ -2270,7 +2270,7 @@
                 "spy",
                 "stub"
             ],
-            "time": "2019-06-13T12:50:23+00:00"
+            "time": "2019-08-23T10:18:53+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -2530,12 +2530,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "062dfa4b8836627848a471bb552ede3d5c4f2a8f"
+                "reference": "d79c053d972856b8b941bb233e39dc521a5093f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/062dfa4b8836627848a471bb552ede3d5c4f2a8f",
-                "reference": "062dfa4b8836627848a471bb552ede3d5c4f2a8f",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d79c053d972856b8b941bb233e39dc521a5093f0",
+                "reference": "d79c053d972856b8b941bb233e39dc521a5093f0",
                 "shasum": ""
             },
             "require": {
@@ -2606,7 +2606,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-08-03T08:12:46+00:00"
+            "time": "2019-08-21T07:05:16+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -3216,16 +3216,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "1.4.0",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozart/assert.git",
-                "reference": "83e253c8e0be5b0257b881e1827274667c5c17a9"
+                "reference": "88e6d84706d09a236046d686bbea96f07b3a34f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/assert/zipball/83e253c8e0be5b0257b881e1827274667c5c17a9",
-                "reference": "83e253c8e0be5b0257b881e1827274667c5c17a9",
+                "url": "https://api.github.com/repos/webmozart/assert/zipball/88e6d84706d09a236046d686bbea96f07b3a34f4",
+                "reference": "88e6d84706d09a236046d686bbea96f07b3a34f4",
                 "shasum": ""
             },
             "require": {
@@ -3233,8 +3233,7 @@
                 "symfony/polyfill-ctype": "^1.8"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.6",
-                "sebastian/version": "^1.0.1"
+                "phpunit/phpunit": "^4.8.36 || ^7.5.13"
             },
             "type": "library",
             "extra": {
@@ -3263,7 +3262,7 @@
                 "check",
                 "validate"
             ],
-            "time": "2018-12-25T11:19:39+00:00"
+            "time": "2019-08-24T08:43:50+00:00"
         }
     ],
     "aliases": [],
