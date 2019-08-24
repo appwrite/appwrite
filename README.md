@@ -25,10 +25,10 @@ Appwrite backend server is designed to run in a container environment. Running y
 The easiest way to start running your Appwrite server is by running our docker compose file:
 
 ```bash
-mkdir appwrite
-    && cd appwrite
-    && curl -o docker-compose.yml https://appwrite.io/docker-compose.yml
-    && docker-compose up -d --remove-orphans
+mkdir appwrite-ce && \
+cd appwrite-ce && \
+curl -o docker-compose.yml https://appwrite.io/docker-compose.yml && \
+docker-compose up -d --remove-orphans
 ```
 
 Go to http://localhost to access the Appwrite console from your browser. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
