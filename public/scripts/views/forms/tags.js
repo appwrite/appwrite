@@ -51,7 +51,6 @@
                         array = JSON.parse(element.value) || [];
                     }
                     catch(error) {
-                        console.log('error', element.value);
                         array = [];
                     }
 
@@ -68,9 +67,7 @@
                         tag.className = 'tag';
                         tag.textContent = value;
 
-                        tag.addEventListener('click', function () {
-                            console.log(index);
-                            
+                        tag.addEventListener('click', function () {                            
                             array.splice(index, 1);
 
                             element.value = JSON.stringify(array);

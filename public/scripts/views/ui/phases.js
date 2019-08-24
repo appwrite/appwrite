@@ -28,8 +28,6 @@
                         parser.href = tabState;
                         url         = (!init) ? parser.pathname + window.location.search : tabState;
         
-                        console.log(parser.pathname + window.location.search, tabState);
-
                         if(position != index) { // When tab has changed add state to history
                             window.history.pushState({}, '', url);
                             router.reset();

@@ -86,7 +86,6 @@
                     count.innerHTML = '0 / ' + max;
                     
                     files.map(function(obj) {
-                        console.log('1',obj);
                         var file = document.createElement('li');
                         var image = document.createElement('img');
 

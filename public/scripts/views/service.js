@@ -101,7 +101,6 @@
                             });
 
                             if(url !== window.location.href) {
-                                console.log('UPDATE STATE');
                                 window.history.pushState({}, '', url);
                                 router.reset();
                             }

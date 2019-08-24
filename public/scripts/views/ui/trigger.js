@@ -6,7 +6,6 @@
             let event       = element.dataset['event'] || 'click';
             
             element.addEventListener(event, function() {
-                console.log(element, trigger);
                 document.dispatchEvent(new CustomEvent(trigger));
             });
         }

@@ -77,7 +77,6 @@
                         }
                     }
                     else if ('file' === type) { // File upload
-                        console.log('form2json file:', element.files);
                         json[name] = element.files[0];
                     }
                     else if (undefined !== element.value) { // Normal
