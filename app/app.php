@@ -45,16 +45,6 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     
     $route = $utopia->match($request);
 
-    /**
-     * Validate SSL Connection
-     */
-    $https = $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('HTTPS', ''));
-
-    if (empty($https) || 'off' == $https) {
-        //$response->redirect('https://' . $request->getServer('HTTP_HOST', '') . $request->getServer('REQUEST_URI'));
-        //exit(0);
-    }
-
     $referrer   = $request->getServer('HTTP_REFERER', '');
     $origin     = $request->getServer('HTTP_ORIGIN', parse_url($referrer, PHP_URL_SCHEME) . '://' . parse_url($referrer, PHP_URL_HOST));
 
@@ -70,7 +60,6 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . urlencode($request->getServer('REQUEST_URI')))
-        //->addHeader('Strict-Transport-Security', 'max-age=16070400')
         //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
