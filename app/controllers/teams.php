@@ -398,7 +398,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     );
 
 $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
-    ->desc('Create Team Membership (Resend Invitation Email)')
+    ->desc('Create Team Membership (Resend)')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createTeamMembershipResend')
