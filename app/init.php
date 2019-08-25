@@ -36,7 +36,6 @@ const APP_LOCALES                   = ['en', 'he'];
 const APP_PAGING_LIMIT              = 15;
 
 $register   = new Registry();
-$utopia     = new App('Asia/Tel_Aviv', $env);
 $request    = new Request();
 $response   = new Response();
 
@@ -48,6 +47,7 @@ $domain     = $request->getServer('HTTP_HOST', '');
 $version    = include __DIR__ . '/../app/config/version.php';
 $redisHost  = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort  = $request->getServer('_APP_REDIS_PORT', '');
+$utopia     = new App('Asia/Tel_Aviv', $env);
 
 Resque::setBackend($redisHost . ':' . $redisPort);
 
