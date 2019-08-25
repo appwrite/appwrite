@@ -49,6 +49,7 @@ $env        = $this->getParam('env', '');
             VERSION: '<?php echo $version; ?>',
             PROTOCOL: '<?php echo $protocol; ?>',
             DOMAIN: '<?php echo $domain; ?>',
+            HOME: '<?php echo $this->escape($this->getParam('home')); ?>',
             API: '<?php echo $api; ?>/v1',
             PROJECT: '<?php echo $project; ?>',
             LOCALE: '<?php echo $this->escape(Locale::getText('settings.locale')); ?>',

@@ -23,6 +23,7 @@ $layout
     ->setParam('description', Locale::getText('general.description'))
     ->setParam('protocol', $request->getServer('REQUEST_SCHEME', 'https'))
     ->setParam('domain', $domain)
+    ->setParam('home', $request->getServer('_APP_HOME'))
     ->setParam('api', $request->getServer('_APP_APPWRITE_HOST_CLIENT'))
     ->setParam('project', $request->getServer('_APP_APPWRITE_ID'))
     ->setParam('class', 'unknown')
