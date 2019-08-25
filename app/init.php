@@ -36,6 +36,7 @@ const APP_LOCALES                   = ['en', 'he'];
 const APP_PAGING_LIMIT              = 15;
 
 $register   = new Registry();
+$utopia     = new App('Asia/Tel_Aviv', $env);
 $request    = new Request();
 $response   = new Response();
 

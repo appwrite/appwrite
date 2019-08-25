@@ -3,7 +3,7 @@
 // Init
 require_once __DIR__ . '/init.php';
 
-global $env, $request, $response, $register, $consoleDB, $project, $domain, $sentry, $version, $service;
+global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $sentry, $version, $service;
 
 use Utopia\App;
 use Utopia\Request;
@@ -27,7 +27,6 @@ $providers  = include __DIR__ . '/config/providers.php'; // OAuth providers list
 $sdks       = include __DIR__ . '/config/sdks.php'; // List of SDK clients
 $services   = include __DIR__ . '/config/services.php'; // List of SDK clients
 
-$utopia     = new App('Asia/Tel_Aviv', $env);
 $webhook    = new Event('v1-webhooks', 'WebhooksV1');
 $audit      = new Event('v1-audits', 'AuditsV1');
 $usage      = new Event('v1-usage', 'UsageV1');
