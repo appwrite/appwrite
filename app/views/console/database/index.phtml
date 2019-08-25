@@ -8,6 +8,21 @@ use Utopia\Locale\Locale;
     </h1>
 </div>
 
+<div data-ui-modal class="box modal close" data-open-event="create-collection">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Create Collection</h1>
+
+    <p>Currently this feature is only available using the Appwrite API. To learn more about how to use it, visit our <a href="" data-ls-attrs="href={{env.HOME}}/docs/database" target="_blank">documentation</a>.</p>
+</div>
+
+<div data-ui-modal class="box modal close" data-open-event="create-document">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1>Create Document</h1>
+
+    <p>Currently this feature is only available using the Appwrite API. To learn more about how to use it, visit our <a href="" data-ls-attrs="href={{env.HOME}}/docs/database" target="_blank">documentation</a>.</p>
+</div>
 
 <div class="zone xxl">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
@@ -38,13 +53,7 @@ use Utopia\Locale\Locale;
                         
                         <hr />
                         
-                        <div data-ui-modal class="box modal close" data-button-text="Add collection" data-button-class="button link" data-button-icon="icon-plus">
-                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                            <h1>Create Collection</h1>
-
-                            <p>Currently this feature is only available using the Appwrite API. To learn more about how to use it, visit our <a href="" data-ls-attrs="href={{env.HOME}}/docs/database" target="_blank">documentation</a>.</p>
-                        </div>
+                        <button data-ls-ui-trigger="create-collection" class="button link"><i class="icon-plus"></i> Add collection</button>
 
                         <div class="wrapper"
                             data-service="database.listCollections"
@@ -141,13 +150,7 @@ use Utopia\Locale\Locale;
 
                             <hr />
 
-                            <div data-ui-modal class="box modal close" data-button-text="Add document" data-button-class="button link" data-button-icon="icon-plus">
-                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                                <h1>Create Document</h1>
-
-                                <p>Currently this feature is only available using the Appwrite API. To learn more about how to use it, visit our <a href="" data-ls-attrs="href={{env.HOME}}/docs/database" target="_blank">documentation</a>.</p>
-                            </div>
+                            <button data-ls-ui-trigger="create-document" class="button link"><i class="icon-plus"></i> Add document</button>
 
                             <div class="wrapper"
                                 data-service="database.listDocuments"
