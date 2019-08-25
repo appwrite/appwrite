@@ -166,7 +166,7 @@ $utopia->get('/v1/storage/files/:fileId')
     );
 
 $utopia->get('/v1/storage/files/:fileId/preview')
-    ->desc('Preview File')
+    ->desc('Get File Preview')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFilePreview')
@@ -279,7 +279,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     );
 
 $utopia->get('/v1/storage/files/:fileId/download')
-    ->desc('Download File')
+    ->desc('Get File for Download')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileDownload')
@@ -330,7 +330,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
     );
 
 $utopia->get('/v1/storage/files/:fileId/view')
-    ->desc('View File')
+    ->desc('Get File for View')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileView')
