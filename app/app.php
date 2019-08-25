@@ -31,14 +31,23 @@ $webhook    = new Event('v1-webhooks', 'WebhooksV1');
 $audit      = new Event('v1-audits', 'AuditsV1');
 $usage      = new Event('v1-usage', 'UsageV1');
 
-$clients = array_map(function($node) {
+$clientsConsole = array_map(function($node) {
+    return $node['url'];
+}, array_filter($console->getAttribute('platforms', []), function($node) {
+    if(isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
+        return true;
+    }
+    return false;
+}));
+
+$clients = array_merge($clientsConsole, array_map(function($node) {
     return $node['url'];
 }, array_filter($project->getAttribute('platforms', []), function($node) {
     if(isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
         return true;
     }
     return false;
-}));
+})));
 
 $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
     
