@@ -137,6 +137,8 @@ use Utopia\Locale\Locale;
                                     </h2>
 
                                     <label for="httpHeaders">HTTP Headers</label>
+
+                                    <input type="hidden" id="httpHeadersInit" name="httpHeaders" data-cast-to="array-empty">
                                     
                                     <div class="margin-bottom-small">
                                         <div data-ls-loop="task.httpHeaders" data-ls-as="header" style="overflow: hidden">
@@ -281,6 +283,9 @@ use Utopia\Locale\Locale;
                     </h2>
 
                     <label for="httpHeaders">HTTP Headers</label>
+                    
+                    <input type="hidden" id="httpHeadersInitAdd" name="httpHeaders" data-cast-to="array-empty">
+
                     <div class="margin-bottom-small">
                         <div data-forms-clone="" data-label="Add Header" data-first="0">
                             <div class="">
