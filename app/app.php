@@ -321,7 +321,7 @@ $utopia->get('/manifest.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response, $project) {
+        function() use ($response) {
 
             $response->json([
                 'name' => APP_NAME,
@@ -348,7 +348,7 @@ $utopia->get('/robots.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response, $project) {
+        function() use ($response) {
 
             $response->text("# robotstxt.org/
 
@@ -362,7 +362,7 @@ $utopia->get('/humans.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response, $project) {
+        function() use ($response) {
 
             $response->text("# humanstxt.org/
 # The humans responsible & technology colophon
@@ -375,85 +375,11 @@ $utopia->get('/humans.txt')
         }
     );
 
-$utopia->get('/docker-compose.yml')
-    ->desc('docker-compose file')
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->action(
-        function() use ($response) {
-
-            $response->text('version: "3"
-
-services:
-    appwrite:
-        image: appwrite/appwrite
-        restart: unless-stopped
-        volumes:
-        - ./storage:/storage:rw
-        ports:
-        - "80:80"
-        environment:
-        - _APP_ENV=production
-        - _APP_OPENSSL_KEY_V1=your-secret-key-here
-        - _APP_REDIS_HOST=redis
-        - _APP_REDIS_PORT=6379
-        - _APP_DB_HOST=mariadb
-        - _APP_DB_PORT=3306
-        - _APP_DB_SCHEMA=appwrite
-        - _APP_DB_USER=root
-        - _APP_DB_PASS=password
-        - _APP_INFLUXDB_HOST=influxdb
-        - _APP_INFLUXDB_PORT=8086
-        - _APP_STATSD_HOST=telegraf
-        - _APP_STATSD_PORT=8125
-
-    mariadb:
-        image: appwrite/mariadb:1.0.0
-        restart: unless-stopped
-        environment:
-        - MYSQL_ROOT_PASSWORD=password
-        volumes:
-        - ./storage/db:/var/lib/mysql:rw
-        ports:
-        - 3306:3306/tcp
-
-    smtp:
-        image: appwrite/smtp:1.0.0
-        environment:
-        - MAILNAME=appwrite
-        - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
-        ports:
-        - "25:25"
-
-    clamav:
-        image: appwrite/clamav:1.0.4
-        restart: unless-stopped
-        volumes:
-        - ./storage:/storage:rw
-        
-    redis:
-        image: redis:5.0
-        restart: unless-stopped
-
-    influxdb:
-        image: influxdb:1.6
-        volumes:
-        - ./storage/influxdb:/var/lib/influxdb
-        ports:
-        - "8086:8086"
-
-    telegraf:
-        image: appwrite/telegraf:1.0.0
-        ports:
-        - "8125:8125/udp"');
-        }
-    );
-
 $utopia->get('/v1/info') // This is only visible to gods
 ->label('scope', 'god')
     ->label('docs', false)
     ->action(
-        function() use ($request, $response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
+        function() use ($response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
             $response->json([
                 'name'          => 'API',
                 'version'       => $version,
@@ -496,29 +422,6 @@ $utopia->get('/v1/proxy')
                 ->setContentType(Response::CONTENT_TYPE_HTML)
                 ->removeHeader('X-Frame-Options')
                 ->send($view->render());
-        }
-    );
-
-$utopia->get('/v1/docs')
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->action(
-        function() use ($response, $utopia) {
-            $view = new View(__DIR__ . '/views/docs.phtml');
-            $view
-                ->setParam('routes', $utopia->getRoutes())
-            ;
-
-            $response->send($view->render());
-        }
-    );
-
-$utopia->get('/v1/server') // This is only visible to gods
-->label('scope', 'god')
-    ->label('docs', false)
-    ->action(
-        function() use ($response) {
-            $response->json($_SERVER);
         }
     );
 
