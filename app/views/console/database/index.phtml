@@ -38,37 +38,12 @@ use Utopia\Locale\Locale;
                         
                         <hr />
                         
-                        <button class="button disabled link" type="button" disabled><i class="icon-plus"></i>Add collection</button>
-                        
-                        <div xdata-ui-modal class="box modal close" data-button-text="Add collection" data-button-class="button link" data-button-icon="icon-plus">
+                        <div data-ui-modal class="box modal close" data-button-text="Add collection" data-button-class="button link" data-button-icon="icon-plus">
                             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Create Collection</h1>
 
-                            <form
-                                data-service="database.createCollection"
-                                data-event="submit"
-                                data-scope="sdk"
-                                data-success="alert,trigger,reset"
-                                data-success-param-alert-text="Created collection successfully"
-                                data-success-param-trigger-events="collection-create,modal-close"
-                                data-failure="alert"
-                                data-failure-param-alert-text="Failed to create collection"
-                                data-failure-param-alert-classname="error">
-
-                                <label for="collection-name">Name</label>
-                                <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" data-cast-to="array" value="*" />
-
-                                <label for="collection-read">Read Permissions</label>
-                                <input type="text" class="full-width" id="collection-read" name="read" required autocomplete="off" data-cast-to="array" value="*" />
-
-                                <label for="collection-write">Write Permissions</label>
-                                <input type="text" class="full-width" id="collection-write" name="write" required autocomplete="off" data-cast-to="array" value="*" />
-
-                                <hr />
-
-                                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                            </form>
+                            <p>Currently this feature is only available using the Appwrite API. To learn more about how to use it, visit our <a href="" data-ls-attrs="{{env.HOME}}/docs/database" target="_blank">documentation</a>.</p>
                         </div>
 
                         <div class="wrapper"
@@ -166,12 +141,12 @@ use Utopia\Locale\Locale;
 
                             <hr />
 
-                            <button class="button disabled link" type="button" disabled><i class="icon-plus"></i>Add document</button>
-                            <div xdata-ui-modal class="box modal close" data-button-text="Add document" data-button-class="button link" data-button-icon="icon-plus">
+                            <div data-ui-modal class="box modal close" data-button-text="Add document" data-button-class="button link" data-button-icon="icon-plus">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                 <h1>Create Document</h1>
 
+                                <p>Currently this feature is only available using the Appwrite API. To learn more about how to use it, visit our <a href="" data-ls-attrs="{{env.HOME}}/docs/database" target="_blank">documentation</a>.</p>
                             </div>
 
                             <div class="wrapper"
