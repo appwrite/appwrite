@@ -28,7 +28,7 @@
                     });
                 }
 
-                if(!buttonAlias && (buttonText || buttonIcon)) {
+                if(!buttonAlias) {
                     buttonElements.forEach((button) => {
 
                         button.innerText = buttonText;
