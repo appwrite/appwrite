@@ -47,7 +47,7 @@ return [
     'footer.cookies' => 'Cookies',
 
     'home.press.title' => 'Press Kit',
-    'home.press.subtitle' => 'For media inquires and more information, email us at press@appwrite.io',
+    'home.press.subtitle' => 'For media inquires and more information, email us at team@appwrite.io',
     'home.press.title.logos' => 'Logos',
     'home.press.title.colors' => 'Brand Colors',
     'home.press.title.photos' => 'Product Photos',
