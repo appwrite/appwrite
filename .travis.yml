@@ -1,11 +1,9 @@
 language: php
+
 php:
-  - '7.0'
   - '7.1'
   - '7.2'
   - '7.3'
-  - hhvm # on Trusty only
-  - nightly
 
 addons:
   hosts:
@@ -15,8 +13,17 @@ notifications:
   email:
   - eldad@appwrite.io
 
-install:
+services:
+- docker
+
+before_install:
 - composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
+
+install:
+- docker-compose up -d -f tests/resources/docker-compose.yml
+- sleep 60
 
 script:
 - php -v
+- ls storage
+- ls tests/reosurces/storage
