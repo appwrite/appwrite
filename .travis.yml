@@ -25,4 +25,4 @@ install:
 script:
 - php -v
 - ls storage
-- ls tests/reosurces/storage
+- ls tests/resources/storage
