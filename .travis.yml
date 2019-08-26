@@ -1,8 +1,6 @@
 language: php
 
 php:
-  - '7.1'
-  - '7.2'
   - '7.3'
 
 addons:
@@ -20,7 +18,7 @@ before_install:
 - composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
 
 install:
-- docker-compose up -d -f tests/resources/docker-compose.yml
+- docker-compose -f tests/resources/docker-compose.yml up -d
 - sleep 60
 
 script:

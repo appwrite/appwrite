@@ -2,10 +2,10 @@ version: '3'
 
 services:
   appwrite:
-    build: .
+    build: ../../
     restart: unless-stopped
     volumes:
-    - ./tests/resources/storage:/storage:rw
+    - ./storage:/storage:rw
     ports:
     - "80:80"
     - "443:443"
@@ -46,7 +46,7 @@ services:
     image: appwrite/clamav:1.0.4
     restart: unless-stopped
     volumes:
-    - ./tests/resources/storage:/storage:rw
+    - ./storage:/storage:rw
       
   redis:
     image: redis:5.0
@@ -55,7 +55,7 @@ services:
   influxdb:
     image: influxdb:1.6
     volumes:
-    - ./tests/resources/storage/influxdb:/var/lib/influxdb
+    - ./storage/influxdb:/var/lib/influxdb
     ports:
     - "8086:8086"
 

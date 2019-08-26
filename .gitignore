@@ -1,5 +1,6 @@
 /vendor/
 /node_modules/
 /storage/uploads/
+/tests/resources/storage/
 /.idea/
 .DS_Store
