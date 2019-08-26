@@ -16,6 +16,7 @@ services:
 
 before_install:
 - composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
+- sudo service mysql stop
 
 install:
 - docker-compose -f tests/resources/docker-compose.yml up -d
