@@ -1,5 +1,5 @@
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img height="60" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img style="max-height: 50px;" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
     <br />
     <b>Simple Backend Server for your [Vue / Angular / React / iOS / Android / Flutter / *ANY*] Frontend App</b>
