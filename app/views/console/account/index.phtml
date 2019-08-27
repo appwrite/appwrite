@@ -249,15 +249,15 @@ use Utopia\Locale\Locale;
                 <input type="hidden" name="id" value="0">
                 <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout-all'); ?></button>
             </form>
+        </li>
+        <li data-state="/console/account/activity">
+            <h2>Activity</h2>
 
-            <div class="account"
+            <div
                 data-service="account.getSecurity"
                 data-scope="console"
                 data-name="securityLogs"
                 data-event="load">
-                <span data-ls-bind="{{securityLogs}}"></span>
-
-                <h3><?php echo Locale::getText('console.account.section.security.recent-activity.title'); ?></h3>
 
                 <div class="box">
                     <table class="vertical small">
