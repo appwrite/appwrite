@@ -106,7 +106,7 @@ class Storage extends Service
     }
 
     /**
-     * Download File
+     * Get File for Download
      *
      * Get file content by its unique ID. The endpoint response return with a
      * 'Content-Disposition: attachment' header that tells the browser to start
@@ -127,7 +127,7 @@ class Storage extends Service
     }
 
     /**
-     * Preview File
+     * Get File Preview
      *
      * Get file preview image. Currently, this method supports preview for image
      * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
@@ -159,7 +159,7 @@ class Storage extends Service
     }
 
     /**
-     * View File
+     * Get File for View
      *
      * Get file content by its unique ID. This endpoint is similar to the download
      * method but returns with no  'Content-Disposition: attachment' header.

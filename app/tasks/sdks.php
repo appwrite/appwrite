@@ -38,7 +38,7 @@ $cli
 
         $clients = [
             'php' => [
-                'version'       => 'v1.0.4',
+                'version'       => 'v1.0.5',
                 'result'        => __DIR__ . '/../sdks/php/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-php.git',
@@ -46,7 +46,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'js' => [
-                'version'       => 'v1.0.17',
+                'version'       => 'v1.0.18',
                 'result'        => __DIR__ . '/../sdks/js/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-js.git',
@@ -54,7 +54,7 @@ $cli
                 'gitUserName'   => 'appwrite',
             ],
             'node' => [
-                'version'       => 'v1.0.21',
+                'version'       => 'v1.0.22',
                 'result'        => __DIR__ . '/../sdks/node/',
                 'gitURL'        => 'https://github.com/appwrite/sdk-for-node.git',
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-node.git',
@@ -146,7 +146,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AN
                 ->setShareURL('http://appwrite.io')
                 ->setShareTags('JS,javascript,reactjs,angular,ios,android')
                 ->setShareVia('appwrite_io')
-                ->setWarning('**WORK IN PROGRESS - NOT READY FOR USAGE**')
+                //->setWarning('**WORK IN PROGRESS - NOT READY FOR USAGE**')
+                ->setWarning('')
             ;
 
             $target = __DIR__ . '/../sdks/git/' . $name;

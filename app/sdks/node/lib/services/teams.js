@@ -182,7 +182,7 @@ class Teams extends Service {
     }
 
     /**
-     * Create Team Membership (Resend Invitation Email)
+     * Create Team Membership (Resend)
      *
      * Use this endpoint to resend your invitation email for a user to join a
      * team.

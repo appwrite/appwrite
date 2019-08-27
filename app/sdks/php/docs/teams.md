@@ -126,7 +126,7 @@ DELETE https://appwrite.test/v1/teams/{teamId}/memberships/{inviteId}
 | teamId | string | **Required** Team unique ID. |  |
 | inviteId | string | **Required** Invite unique ID |  |
 
-## Create Team Membership (Resend Invitation Email)
+## Create Team Membership (Resend)
 
 ```http request
 POST https://appwrite.test/v1/teams/{teamId}/memberships/{inviteId}/resend

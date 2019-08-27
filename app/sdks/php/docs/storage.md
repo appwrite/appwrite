@@ -62,7 +62,7 @@ DELETE https://appwrite.test/v1/storage/files/{fileId}
 | --- | --- | --- | --- |
 | fileId | string | **Required** File unique ID. |  |
 
-## Download File
+## Get File for Download
 
 ```http request
 GET https://appwrite.test/v1/storage/files/{fileId}/download
@@ -76,7 +76,7 @@ GET https://appwrite.test/v1/storage/files/{fileId}/download
 | --- | --- | --- | --- |
 | fileId | string | **Required** File unique ID. |  |
 
-## Preview File
+## Get File Preview
 
 ```http request
 GET https://appwrite.test/v1/storage/files/{fileId}/preview
@@ -95,7 +95,7 @@ GET https://appwrite.test/v1/storage/files/{fileId}/preview
 | background | string | Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix. |  |
 | output | string | Output format type (jpeg, jpg, png, gif and webp) |  |
 
-## View File
+## Get File for View
 
 ```http request
 GET https://appwrite.test/v1/storage/files/{fileId}/view

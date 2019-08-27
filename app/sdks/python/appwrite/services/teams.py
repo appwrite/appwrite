@@ -95,7 +95,7 @@ class Teams(Service):
         }, params)
 
     def create_team_membership_resend(self, team_id, invite_id, redirect):
-        """Create Team Membership (Resend Invitation Email)"""
+        """Create Team Membership (Resend)"""
 
         params = {}
         path = '/teams/{teamId}/memberships/{inviteId}/resend'

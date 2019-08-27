@@ -138,7 +138,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.17');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.18');
             addGlobalHeader('content-type', '');
 
             /**
@@ -943,12 +943,12 @@
             },
 
             /**
-             * Get image from and HTTP URL and crop to any size.
+             * Get Image from URL
              *
              * Use this endpoint to fetch a remote image URL and crop it to any image size
-             * you want. This endpoint is very useful if you need to crop a remote image
-             * or in cases, you want to make sure a 3rd party image is properly served
-             * using a TLS protocol.
+             * you want. This endpoint is very useful if you need to crop and display
+             * remote images in your app or in cases, you want to make sure a 3rd party
+             * image is properly served using a TLS protocol.
              *
              * @param {string} url
              * @param {number} width
@@ -2351,7 +2351,7 @@
             },
 
             /**
-             * Download File
+             * Get File for Download
              *
              * Get file content by its unique ID. The endpoint response return with a
              * 'Content-Disposition: attachment' header that tells the browser to start
@@ -2374,7 +2374,7 @@
             },
 
             /**
-             * Preview File
+             * Get File Preview
              *
              * Get file preview image. Currently, this method supports preview for image
              * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
@@ -2408,7 +2408,7 @@
             },
 
             /**
-             * View File
+             * Get File for View
              *
              * Get file content by its unique ID. This endpoint is similar to the download
              * method but returns with no  'Content-Disposition: attachment' header.
@@ -2662,7 +2662,7 @@
             },
 
             /**
-             * Create Team Membership (Resend Invitation Email)
+             * Create Team Membership (Resend)
              *
              * Use this endpoint to resend your invitation email for a user to join a
              * team.

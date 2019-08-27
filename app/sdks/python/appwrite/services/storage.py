@@ -53,7 +53,7 @@ class Storage(Service):
         }, params)
 
     def get_file_download(self, file_id):
-        """Download File"""
+        """Get File for Download"""
 
         params = {}
         path = '/storage/files/{fileId}/download'
@@ -63,7 +63,7 @@ class Storage(Service):
         }, params)
 
     def get_file_preview(self, file_id, width=0, height=0, quality=100, background='', output=''):
-        """Preview File"""
+        """Get File Preview"""
 
         params = {}
         path = '/storage/files/{fileId}/preview'
@@ -78,7 +78,7 @@ class Storage(Service):
         }, params)
 
     def get_file_view(self, file_id, as=''):
-        """View File"""
+        """Get File for View"""
 
         params = {}
         path = '/storage/files/{fileId}/view'

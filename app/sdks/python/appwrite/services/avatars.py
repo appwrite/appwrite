@@ -53,7 +53,7 @@ class Avatars(Service):
         }, params)
 
     def get_image(self, url, width=400, height=400):
-        """Get image from and HTTP URL and crop to any size."""
+        """Get Image from URL"""
 
         params = {}
         path = '/avatars/image'
