@@ -146,7 +146,7 @@ $utopia->post('/v1/auth/register')
             try {
                 $mail->send();
             }
-            catch(Exception $error) {
+            catch(\Exception $error) {
                 // if($failure) {
                 //     $response->redirect($failure);
                 //     return;
@@ -286,7 +286,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
             try {
                 $mail->send();
             }
-            catch(Exception $error) {
+            catch(\Exception $error) {
                 //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
             }
 
@@ -518,7 +518,7 @@ $utopia->post('/v1/auth/recovery')
             try {
                 $mail->send();
             }
-            catch(Exception $error) {
+            catch(\Exception $error) {
                 //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
             }
 
