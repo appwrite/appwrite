@@ -33,7 +33,7 @@ curl -o docker-compose.yml https://appwrite.io/docker-compose.yml && \
 docker-compose up -d --remove-orphans
 ```
 
-Go to http://localhost to access the Appwrite console from your browser. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
 
 ## Getting Started
 
