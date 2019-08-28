@@ -48,6 +48,23 @@ GET https://appwrite.test/v1/storage/files/{fileId}
 | --- | --- | --- | --- |
 | fileId | string | **Required** File unique ID. |  |
 
+## Update File
+
+```http request
+PUT https://appwrite.test/v1/storage/files/{fileId}
+```
+
+** Update file by its unique ID. Only users with write permissions have access to update this resource. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| fileId | string | **Required** File unique ID. |  |
+| read | array | An array of read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| write | array | An array of write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| folderId | string | Folder to associate files with. |  |
+
 ## Delete File
 
 ```http request

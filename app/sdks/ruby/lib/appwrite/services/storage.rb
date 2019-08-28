@@ -40,6 +40,20 @@ module Appwrite
             }, params);
         end
 
+        def update_file(file_id:, read: [], write: [], folder_id: '')
+            path = '/storage/files/{fileId}'
+                .gsub('{file_id}', file_id)
+
+            params = {
+                'read': read, 
+                'write': write, 
+                'folderId': folder_id
+            }
+
+            return @client.call('put', path, {
+            }, params);
+        end
+
         def delete_file(file_id:)
             path = '/storage/files/{fileId}'
                 .gsub('{file_id}', file_id)

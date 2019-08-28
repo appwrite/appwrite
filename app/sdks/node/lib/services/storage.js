@@ -73,6 +73,30 @@ class Storage extends Service {
     }
 
     /**
+     * Update File
+     *
+     * Update file by its unique ID. Only users with write permissions have access
+     * to update this resource.
+     *
+     * @param string fileId
+     * @param array read
+     * @param array write
+     * @param string folderId
+     * @throws Exception
+     * @return {}
+     */
+    async updateFile(fileId, read = [], write = [], folderId = '') {
+        let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
+        
+        return await this.client.call('put', path, {'content-type': 'application/json'},
+            {
+                'read': read,
+                'write': write,
+                'folderId': folderId
+            });
+    }
+
+    /**
      * Delete File
      *
      * Delete a file by its unique ID. Only users with write permissions have

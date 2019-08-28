@@ -138,7 +138,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.18');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.19');
             addGlobalHeader('content-type', '');
 
             /**
@@ -2325,6 +2325,34 @@
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
+                        });
+            },
+
+            /**
+             * Update File
+             *
+             * Update file by its unique ID. Only users with write permissions have access
+             * to update this resource.
+             *
+             * @param {string} fileId
+             * @param {array} read
+             * @param {array} write
+             * @param {string} folderId
+             * @throws {Error}
+             * @return {Promise}             */
+            updateFile: function(fileId, read = [], write = [], folderId = '') {
+                if(fileId === undefined) {
+                    throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
+
+                return http
+                    .put(path, {'content-type': 'application/json'},
+                        {
+                            'read': read, 
+                            'write': write, 
+                            'folderId': folderId
                         });
             },
 

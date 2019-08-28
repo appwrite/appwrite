@@ -42,6 +42,21 @@ class Storage(Service):
         return self.client.call('get', path, {
         }, params)
 
+    def update_file(self, file_id, readstring(4) ""[]""
+=[], writestring(4) ""[]""
+=[], folder_id=''):
+        """Update File"""
+
+        params = {}
+        path = '/storage/files/{fileId}'
+        path.replace('{fileId}', file_id)                
+        params['read'] = read
+        params['write'] = write
+        params['folderId'] = folder_id
+
+        return self.client.call('put', path, {
+        }, params)
+
     def delete_file(self, file_id):
         """Delete File"""
 

@@ -5,7 +5,7 @@ sdk
     setKey('')
 ;
 
-let promise = sdk.projects.updateWebhook('[PROJECT_ID]', '[WEBHOOK_ID]', '[NAME]', [], '[URL]', 0);
+let promise = sdk.storage.updateFile('[FILE_ID]');
 
 promise.then(function (response) {
     console.log(response);

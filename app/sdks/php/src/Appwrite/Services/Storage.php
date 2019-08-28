@@ -86,6 +86,32 @@ class Storage extends Service
     }
 
     /**
+     * Update File
+     *
+     * Update file by its unique ID. Only users with write permissions have access
+     * to update this resource.
+     *
+     * @param string $fileId
+     * @param array $read
+     * @param array $write
+     * @param string $folderId
+     * @throws Exception
+     * @return array
+     */
+    public function updateFile($fileId, $read = [], $write = [], $folderId = '')
+    {
+        $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}');
+        $params = [];
+
+        $params['read'] = $read;
+        $params['write'] = $write;
+        $params['folderId'] = $folderId;
+
+        return $this->client->call(Client::METHOD_PUT, $path, [
+        ], $params);
+    }
+
+    /**
      * Delete File
      *
      * Delete a file by its unique ID. Only users with write permissions have
