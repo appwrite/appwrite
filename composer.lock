@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a82b974293d36c305d02a36c7e9ff420",
+    "content-hash": "a46675ad60074c2cd9da1bb5b7c65047",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -2215,12 +2215,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/prophecy.git",
-                "reference": "f7b200e973d04cd82ed757785e7ec4d12d81dde5"
+                "reference": "93d6a38116e46a885d13f5fb5db8e0a2cd52a62e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/f7b200e973d04cd82ed757785e7ec4d12d81dde5",
-                "reference": "f7b200e973d04cd82ed757785e7ec4d12d81dde5",
+                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/93d6a38116e46a885d13f5fb5db8e0a2cd52a62e",
+                "reference": "93d6a38116e46a885d13f5fb5db8e0a2cd52a62e",
                 "shasum": ""
             },
             "require": {
@@ -2270,7 +2270,7 @@
                 "spy",
                 "stub"
             ],
-            "time": "2019-08-23T10:18:53+00:00"
+            "time": "2019-08-28T15:54:17+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -3283,5 +3283,8 @@
         "ext-zlib": "*",
         "ext-sockets": "*"
     },
-    "platform-dev": []
+    "platform-dev": [],
+    "platform-overrides": {
+        "php": "7.3"
+    }
 }

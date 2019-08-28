@@ -63,5 +63,10 @@
     "provide": {
         "ext-phpiredis": "*"
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "config": {
+        "platform": {
+            "php": "7.3"
+        }
+    }
 }
