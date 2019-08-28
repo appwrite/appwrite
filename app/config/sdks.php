@@ -14,18 +14,22 @@ return [
         'link' => 'https://github.com/appwrite/sdk-for-php',
     ],
     [
-        'label' => 'Ruby',
-        'versions' => [],
-        'logo' => 'ruby.svg',
-        'link' => 'https://...',
-        'tag' => 'Beta'
+        'label' => 'Node.js',
+        'versions' => ['v1.0.0'],
+        'logo' => 'nodejs.svg',
+        'link' => 'https://github.com/appwrite/sdk-for-node',
     ],
     [
-        'label' => 'Node.js',
-        'versions' => [],
-        'logo' => 'nodejs.svg',
-        'link' => 'https://...',
-        'tag' => 'Soon'
+        'label' => 'Ruby',
+        'versions' => ['v1.0.0'],
+        'logo' => 'ruby.svg',
+        'link' => 'https://github.com/appwrite/sdk-for-ruby',
+    ],
+    [
+        'label' => 'Python',
+        'versions' => ['v1.0.0'],
+        'logo' => 'python.svg',
+        'link' => 'https://github.com/appwrite/sdk-for-python',
     ],
     [
         'label' => 'Go',
@@ -66,13 +70,6 @@ return [
         'label' => 'Erlang',
         'versions' => [],
         'logo' => 'erlang.svg',
-        'link' => 'https://...',
-        'tag' => 'Soon'
-    ],
-    [
-        'label' => 'Python',
-        'versions' => [],
-        'logo' => 'python.svg',
         'link' => 'https://...',
         'tag' => 'Soon'
     ],
