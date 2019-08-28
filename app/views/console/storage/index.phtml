@@ -98,7 +98,43 @@ use Utopia\Locale\Locale;
                                 <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=45&height=45&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
                             </td>
                             <td data-title="Name: ">
-                                <small data-ls-bind="{{file.name}}"></small>
+                                <div data-ui-modal class="box modal close" data-button-text="{{file.name}}" data-button-class="link">
+                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                    <h1>Update File</h1>
+
+                                    <form
+                                        data-service="storage.updateFile"
+                                        data-event="submit"
+                                        data-scope="sdk"
+                                        data-success="alert,trigger"
+                                        data-success-param-alert-text="File uploaded successfully"
+                                        data-success-param-trigger-events="file-update,modal-close"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to upload file"
+                                        data-failure-param-alert-classname="error">
+
+                                        <label for="files-uid">File UID</label>
+                                        <div class="input-copy">
+                                            <input data-forms-copy type="text" id="files-uid" disabled data-ls-bind="{{file.$uid}}" />
+                                        </div>
+                                        <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+
+                                        <label for="file-read">Read Permissions</label>
+                                        <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
+                                        
+                                        <label for="file-write">Write Permissions</label>
+                                        <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
+
+                                        <hr />
+
+                                        <div class="pull-end">
+                                            <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?project={{router.params.project}}&mode=admin" target="_blank">Open preview in new window <i class="icon-link-ext"></i></a>
+                                        </div>
+
+                                        <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                    </form>
+                                </div>
                             </td>
                             <td data-title="Type: ">
                                 <span data-ls-bind="{{file.mimeType}}" class="tag"></span>

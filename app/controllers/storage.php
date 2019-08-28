@@ -521,6 +521,41 @@ $utopia->post('/v1/storage/files')
         }
     );
 
+$utopia->put('/v1/storage/files/:fileId')
+    ->desc('Update File')
+    ->label('scope', 'files.write')
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'updateFile')
+    ->label('sdk.description', 'Update file by its unique ID. Only users with write permissions have access to update this resource.')
+    ->param('fileId', '', function () {return new UID();}, 'File unique ID.')
+    ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('folderId', '', function () {return new UID();}, 'Folder to associate files with.', true)
+    ->action(
+        function($fileId, $read, $write, $folderId) use ($response, $projectDB)
+        {
+            $file = $projectDB->getDocument($fileId);
+
+            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+                throw new Exception('File not found', 404);
+            }
+
+            $file = $projectDB->updateDocument(array_merge($file->getArrayCopy(), [
+                '$permissions' => [
+                    'read' => $read,
+                    'write' => $write,
+                ],
+                'folderId' => $folderId,
+            ]));
+
+            if(false === $file) {
+                throw new Exception('Failed saving file to DB', 500);
+            }
+
+            $response->json($file->getArrayCopy());
+        }
+    );
+
 $utopia->delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
     ->label('scope', 'files.write')
