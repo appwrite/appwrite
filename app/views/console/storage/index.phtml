@@ -108,15 +108,15 @@ use Utopia\Locale\Locale;
                                         data-event="submit"
                                         data-scope="sdk"
                                         data-success="alert,trigger"
-                                        data-success-param-alert-text="File uploaded successfully"
+                                        data-success-param-alert-text="File updated successfully"
                                         data-success-param-trigger-events="file-update,modal-close"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="Failed to upload file"
+                                        data-failure-param-alert-text="Failed to update file"
                                         data-failure-param-alert-classname="error">
 
-                                        <label for="files-uid">File UID</label>
+                                        <label for="files-fileId">File UID</label>
                                         <div class="input-copy">
-                                            <input data-forms-copy type="text" id="files-uid" disabled data-ls-bind="{{file.$uid}}" />
+                                            <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$uid}}" />
                                         </div>
                                         <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
