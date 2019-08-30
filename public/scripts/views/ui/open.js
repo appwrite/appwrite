@@ -82,7 +82,7 @@
                 button.addEventListener('blur', closeDelay);
             }
 
-            if(!buttonSelector) {
+            if(buttonSelector) {
                 let buttonElements = element.querySelectorAll(buttonSelector);
 
                 buttonElements.forEach((node) => {
