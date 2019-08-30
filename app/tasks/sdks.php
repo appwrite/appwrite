@@ -44,6 +44,7 @@ $cli
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-php.git',
                 'gitRepoName'   => 'sdk-for-php',
                 'gitUserName'   => 'appwrite',
+                'warning'       => '',
             ],
             'js' => [
                 'version'       => 'v1.0.19',
@@ -52,6 +53,7 @@ $cli
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-js.git',
                 'gitRepoName'   => 'sdk-for-js',
                 'gitUserName'   => 'appwrite',
+                'warning'       => '',
             ],
             'node' => [
                 'version'       => 'v1.0.23',
@@ -60,6 +62,7 @@ $cli
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName'   => 'sdk-for-node',
                 'gitUserName'   => 'appwrite',
+                'warning'       => '',
             ],
             'python' => [
                 'version'       => 'v1.0.0',
@@ -68,6 +71,7 @@ $cli
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-python.git',
                 'gitRepoName'   => 'sdk-for-python',
                 'gitUserName'   => 'appwrite',
+                'warning'       => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
             ],
             'ruby' => [
                 'version'       => 'v1.0.0',
@@ -76,6 +80,7 @@ $cli
                 'gitRepo'       => 'git@github.com:appwrite/sdk-for-ruby.git',
                 'gitRepoName'   => 'sdk-for-ruby',
                 'gitUserName'   => 'appwrite',
+                'warning'       => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
             ],
         ];
 
@@ -147,7 +152,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AN
                 ->setShareTags('JS,javascript,reactjs,angular,ios,android')
                 ->setShareVia('appwrite_io')
                 //->setWarning('**WORK IN PROGRESS - NOT READY FOR USAGE**')
-                ->setWarning('')
+                ->setWarning($client['warning'])
             ;
 
             $target = __DIR__ . '/../sdks/git/' . $name;
