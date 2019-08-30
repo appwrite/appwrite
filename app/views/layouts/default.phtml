@@ -11,6 +11,8 @@ $isDev      = $this->getParam('isDev', false);
 $litespeed  = $this->getParam('litespeed', true);
 $analytics  = $this->getParam('analytics', 'UA-26264668-9');
 $env        = $this->getParam('env', '');
+$canonical  = $this->getParam('canonical', '');
+
 ?>
 <!DOCTYPE html><!--
 <?php echo Locale::getText('settings.inspire'); ?>
@@ -25,6 +27,9 @@ $env        = $this->getParam('env', '');
     <link href="https://fonts.googleapis.com/css?family=Poppins:100,300,400,500,600" rel="stylesheet">
     <link rel="apple-touch-icon" href="/images/apple.png">
     <link rel="preconnect" href="<?php echo $api; ?>" />
+    <?php if(!empty($canonical)): ?>
+        <link rel="canonical" href="<?php echo $canonical; ?>" />
+    <?php endif; ?>
     <?php foreach ($this->getParam('prefetch', []) as $prefetch): ?>
         <link rel="prefetch" href="<?php echo $this->escape($prefetch); ?>" />
     <?php endforeach; ?>
