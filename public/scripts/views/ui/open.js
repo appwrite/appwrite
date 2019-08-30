@@ -2,13 +2,14 @@
     window.ls.container.get('view').add({
         selector: 'data-ls-ui-open',
         controller: function(element, window) {
-            let def         = (element.classList.contains('open')) ? 'open' : 'close';
-            let buttonClass = element.dataset['buttonClass'] || 'ls-ui-open';
-            let buttonText  = element.dataset['buttonText'] || '';
-            let buttonIcon  = element.dataset['buttonIcon'] || '';
-            let hover       = element.hasAttribute('data-hover');
-            let blur        = element.hasAttribute('data-blur');
-            let button      = window.document.createElement('button');
+            let def             = (element.classList.contains('open')) ? 'open' : 'close';
+            let buttonClass     = element.dataset['buttonClass'] || 'ls-ui-open';
+            let buttonText      = element.dataset['buttonText'] || '';
+            let buttonIcon      = element.dataset['buttonIcon'] || '';
+            let buttonSelector  = element.dataset['buttonSelector'] || '';
+            let hover           = element.hasAttribute('data-hover');
+            let blur            = element.hasAttribute('data-blur');
+            let button          = window.document.createElement('button');
 
             let isTouch = function() {
                 return 'ontouchstart' in window        // works on most browsers
@@ -79,6 +80,21 @@
             
             if(blur) {
                 button.addEventListener('blur', closeDelay);
+            }
+
+            if(!buttonSelector) {
+                let buttonElements = element.querySelectorAll(buttonSelector);
+
+                buttonElements.forEach((node) => {
+                    node.addEventListener('click', function() {
+                        element.classList.toggle('open');
+                        element.classList.toggle('close');
+                    });
+
+                    if(blur) {
+                        node.addEventListener('blur', closeDelay);
+                    }
+                });
             }
 
             element.addEventListener('click', function (event) {
