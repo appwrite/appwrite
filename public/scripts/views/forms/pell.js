@@ -46,6 +46,10 @@
                     {
                         name: 'ulist',
                         icon: '<i class="icon-list-bullet"></i>'
+                    },
+                    {
+                        name: 'link',
+                        icon: '<i class="icon-link"></i>'
                     }
                 ]
             });
