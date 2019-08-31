@@ -49,7 +49,6 @@
         "chrisboulton/php-resque-scheduler": "*",
         "geoip2/geoip2": "2.9.0",
         "piwik/device-detector": "3.5.1",
-        "eldadfux/mailgun-lite": "master",
         "dragonmantank/cron-expression": "2.2.0",
         "domnikl/statsd": "2.0.*",
         "influxdb/influxdb-php": "1.15.*",

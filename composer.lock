@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a46675ad60074c2cd9da1bb5b7c65047",
+    "content-hash": "6c5fcf274285960f2b3ab96bb9ce16ba",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -284,12 +284,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/ca-bundle.git",
-                "reference": "f26a67e397be0e5c00d7c52ec7b5010098e15ce5"
+                "reference": "10bb96592168a0f8e8f6dcde3532d9fa50b0b527"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/f26a67e397be0e5c00d7c52ec7b5010098e15ce5",
-                "reference": "f26a67e397be0e5c00d7c52ec7b5010098e15ce5",
+                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/10bb96592168a0f8e8f6dcde3532d9fa50b0b527",
+                "reference": "10bb96592168a0f8e8f6dcde3532d9fa50b0b527",
                 "shasum": ""
             },
             "require": {
@@ -332,7 +332,7 @@
                 "ssl",
                 "tls"
             ],
-            "time": "2019-08-02 09:05:43"
+            "time": "2019-08-30 08:44:50"
         },
         {
             "name": "dasprid/enum",
@@ -471,54 +471,6 @@
                 "schedule"
             ],
             "time": "2018-06-06T03:12:17+00:00"
-        },
-        {
-            "name": "eldadfux/mailgun-lite",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/eldadfux/mailgun-php-lite.git",
-                "reference": "0f99bb55306dd5e9f1a6785e6a0a17cd56f06118"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/eldadfux/mailgun-php-lite/zipball/0f99bb55306dd5e9f1a6785e6a0a17cd56f06118",
-                "reference": "0f99bb55306dd5e9f1a6785e6a0a17cd56f06118",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "php": ">=7.0.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "3.7.35"
-            },
-            "type": "project",
-            "autoload": {
-                "psr-4": {
-                    "MailgunLite\\": "src/MailgunLite"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "homepage": "https://twitter.com/eldadfux"
-                }
-            ],
-            "description": "A lite and minimalistic PHP client library for sending mails using Mailgun API.",
-            "homepage": "https://github.com/eldadfux/mailgun-php-lite",
-            "keywords": [
-                "Simple",
-                "api",
-                "lite",
-                "mailgun"
-            ],
-            "time": "2018-12-31 08:25:18"
         },
         {
             "name": "erusev/parsedown",
@@ -1251,12 +1203,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/http-message.git",
-                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363"
+                "reference": "efd67d1dc14a7ef4fc4e518e7dee91c271d524e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/f6561bf28d520154e4b0ec72be95418abe6d9363",
-                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/efd67d1dc14a7ef4fc4e518e7dee91c271d524e4",
+                "reference": "efd67d1dc14a7ef4fc4e518e7dee91c271d524e4",
                 "shasum": ""
             },
             "require": {
@@ -1293,7 +1245,7 @@
                 "request",
                 "response"
             ],
-            "time": "2016-08-06 14:39:51"
+            "time": "2019-08-29 13:16:46"
         },
         {
             "name": "psr/log",
@@ -2040,18 +1992,18 @@
             "authors": [
                 {
                     "name": "Arne Blankerts",
-                    "role": "Developer",
-                    "email": "arne@blankerts.de"
+                    "email": "arne@blankerts.de",
+                    "role": "Developer"
                 },
                 {
                     "name": "Sebastian Heuer",
-                    "role": "Developer",
-                    "email": "sebastian@phpeople.de"
+                    "email": "sebastian@phpeople.de",
+                    "role": "Developer"
                 },
                 {
                     "name": "Sebastian Bergmann",
-                    "role": "Developer",
-                    "email": "sebastian@phpunit.de"
+                    "email": "sebastian@phpunit.de",
+                    "role": "Developer"
                 }
             ],
             "description": "Library for handling version information and constraints",

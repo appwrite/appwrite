@@ -371,7 +371,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
 
             $mail->addAddress($email, $name);
 
@@ -452,7 +452,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
 
             $mail->addAddress($invitee->getAttribute('email'), $invitee->getAttribute('name'));
 

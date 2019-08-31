@@ -135,7 +135,7 @@ $utopia->post('/v1/auth/register')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
 
             $mail->addAddress($email, $name);
 
@@ -275,7 +275,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
 
             $mail->addAddress($user->getAttribute('email'), $user->getAttribute('name'));
 
@@ -507,7 +507,7 @@ $utopia->post('/v1/auth/recovery')
                 ->setParam('{{redirect}}', $redirect)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \MailgunLite\MailgunLite */
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
 
             $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
 
