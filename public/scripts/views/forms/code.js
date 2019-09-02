@@ -5,6 +5,7 @@
         {
             selector: 'data-forms-code',
             controller: function(element) {
+                let lang    = element.dataset['formsCode'] || 'json';
                 let div     = document.createElement('div');
                 let pre     = document.createElement('pre');
                 let code    = document.createElement('code');
@@ -18,7 +19,7 @@
 
                 div.className   = 'ide';
                 pre.className   = 'line-numbers';
-                code.className  = 'prism language-json';
+                code.className  = 'prism language-' + lang;
                 copy.className  = 'icon-docs copy';
                 
                 copy.title = 'Copy to Clipboard';
@@ -47,8 +48,15 @@
                         return;
                     }
 
-                    let value = JSON.stringify(JSON.parse(element.value), null, 4);
-                    
+                    let value = null;
+
+                    try {
+                        value = JSON.stringify(JSON.parse(element.value), null, 4);
+                    }
+                    catch(error) {
+                        value = element.value;
+                    }
+
                     code.innerHTML = value;
 
                     Prism.highlightElement(code);
