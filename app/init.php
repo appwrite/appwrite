@@ -48,10 +48,11 @@ $version    = include __DIR__ . '/../app/config/version.php';
 $redisHost  = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort  = $request->getServer('_APP_REDIS_PORT', '');
 $utopia     = new App('Asia/Tel_Aviv', $env);
+$port       = parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT);
 
 Resque::setBackend($redisHost . ':' . $redisPort);
 
-define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) !== 'localhost') ? '.' . $request->getServer('HTTP_HOST', false) : false);
+define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) === 'localhost' || $request->getServer('HTTP_HOST', null) === 'localhost:' . $port) ? false : '.' . $request->getServer('HTTP_HOST', false));
 
 /**
  * Registry
