@@ -4,7 +4,7 @@
     window.ls.container.get('view').add(
         {
             selector: 'data-forms-code',
-            controller: function(element) {
+            controller: function(element, alerts) {
                 let lang    = element.dataset['formsCode'] || 'json';
                 let div     = document.createElement('div');
                 let pre     = document.createElement('pre');
@@ -12,10 +12,10 @@
                 let copy    = document.createElement('i');
                 
                 div.appendChild(pre);
+                div.appendChild(copy);
                 pre.appendChild(code);
 
                 element.parentNode.appendChild(div);
-                element.parentNode.appendChild(copy);
 
                 div.className   = 'ide';
                 pre.className   = 'line-numbers';
