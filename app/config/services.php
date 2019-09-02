@@ -17,9 +17,9 @@ return [
         'controller' => 'controllers/account.php',
         'sdk' => true,
     ],
-    'v1/auth' => [ //TODO MOVE TO AUTH CONTROLLER SCOPE
+    'v1/auth' => [ //TODO MOVE TO AUTH CONTROLLER SCOPE -- You can also learn how to [configure support for our supported OAuth providers](/docs/oauth)
         'name' => 'Auth',
-        'description' => "The authentication service allows you to verify users accounts using basic email and password login or with a supported OAuth provider. The auth service also exposes methods to confirm users email account and recover users forgotten passwords.\n\nYou can also learn how to [configure support for our supported OAuth providers](/docs/oauth). You can review our currently available OAuth providers from your project console under the **'users'** menu.",
+        'description' => "The authentication service allows you to verify users accounts using basic email and password login or with a supported OAuth provider. The auth service also exposes methods to confirm users email account and recover users forgotten passwords.\n\n. You can review our currently available OAuth providers from your project console under the **'users'** menu.",
         'controller' => 'controllers/auth.php',
         'sdk' => true,
     ],
