@@ -89,6 +89,49 @@ class Auth extends Service
     }
 
     /**
+     * OAuth Callback
+     *
+     * @param string $projectId
+     * @param string $provider
+     * @param string $code
+     * @param string $state
+     * @throws Exception
+     * @return array
+     */
+    public function oauthCallback($projectId, $provider, $code, $state = '')
+    {
+        $path   = str_replace(['{projectId}', '{provider}'], [$projectId, $provider], '/auth/oauth/callback/{provider}/{projectId}');
+        $params = [];
+
+        $params['code'] = $code;
+        $params['state'] = $state;
+
+        return $this->client->call(Client::METHOD_GET, $path, [
+        ], $params);
+    }
+
+    /**
+     * OAuth Login
+     *
+     * @param string $provider
+     * @param string $success
+     * @param string $failure
+     * @throws Exception
+     * @return array
+     */
+    public function oauth($provider, $success = '', $failure = '')
+    {
+        $path   = str_replace(['{provider}'], [$provider], '/auth/oauth/{provider}');
+        $params = [];
+
+        $params['success'] = $success;
+        $params['failure'] = $failure;
+
+        return $this->client->call(Client::METHOD_GET, $path, [
+        ], $params);
+    }
+
+    /**
      * Password Recovery
      *
      * Sends the user an email with a temporary secret token for password reset.
@@ -247,49 +290,6 @@ class Auth extends Service
         $params['redirect'] = $redirect;
 
         return $this->client->call(Client::METHOD_POST, $path, [
-        ], $params);
-    }
-
-    /**
-     * OAuth Callback
-     *
-     * @param string $projectId
-     * @param string $provider
-     * @param string $code
-     * @param string $state
-     * @throws Exception
-     * @return array
-     */
-    public function oauthCallback($projectId, $provider, $code, $state = '')
-    {
-        $path   = str_replace(['{projectId}', '{provider}'], [$projectId, $provider], '/oauth/callback/{provider}/{projectId}');
-        $params = [];
-
-        $params['code'] = $code;
-        $params['state'] = $state;
-
-        return $this->client->call(Client::METHOD_GET, $path, [
-        ], $params);
-    }
-
-    /**
-     * OAuth Login
-     *
-     * @param string $provider
-     * @param string $success
-     * @param string $failure
-     * @throws Exception
-     * @return array
-     */
-    public function oauth($provider, $success = '', $failure = '')
-    {
-        $path   = str_replace(['{provider}'], [$provider], '/oauth/{provider}');
-        $params = [];
-
-        $params['success'] = $success;
-        $params['failure'] = $failure;
-
-        return $this->client->call(Client::METHOD_GET, $path, [
         ], $params);
     }
 

@@ -36,6 +36,33 @@ module Appwrite
             }, params);
         end
 
+        def oauth_callback(project_id:, provider:, code:, state: '')
+            path = '/auth/oauth/callback/{provider}/{projectId}'
+                .gsub('{project_id}', project_id)
+                .gsub('{provider}', provider)
+
+            params = {
+                'code': code, 
+                'state': state
+            }
+
+            return @client.call('get', path, {
+            }, params);
+        end
+
+        def oauth(provider:, success: '', failure: '')
+            path = '/auth/oauth/{provider}'
+                .gsub('{provider}', provider)
+
+            params = {
+                'success': success, 
+                'failure': failure
+            }
+
+            return @client.call('get', path, {
+            }, params);
+        end
+
         def recovery(email:, redirect:)
             path = '/auth/recovery'
 
@@ -98,33 +125,6 @@ module Appwrite
             }
 
             return @client.call('post', path, {
-            }, params);
-        end
-
-        def oauth_callback(project_id:, provider:, code:, state: '')
-            path = '/oauth/callback/{provider}/{projectId}'
-                .gsub('{project_id}', project_id)
-                .gsub('{provider}', provider)
-
-            params = {
-                'code': code, 
-                'state': state
-            }
-
-            return @client.call('get', path, {
-            }, params);
-        end
-
-        def oauth(provider:, success: '', failure: '')
-            path = '/oauth/{provider}'
-                .gsub('{provider}', provider)
-
-            params = {
-                'success': success, 
-                'failure': failure
-            }
-
-            return @client.call('get', path, {
             }, params);
         end
 

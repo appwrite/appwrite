@@ -35,6 +35,31 @@ class Auth(Service):
         return self.client.call('delete', path, {
         }, params)
 
+    def oauth_callback(self, project_id, provider, code, state=''):
+        """OAuth Callback"""
+
+        params = {}
+        path = '/auth/oauth/callback/{provider}/{projectId}'
+        path.replace('{projectId}', project_id)                
+        path.replace('{provider}', provider)                
+        params['code'] = code
+        params['state'] = state
+
+        return self.client.call('get', path, {
+        }, params)
+
+    def oauth(self, provider, success='', failure=''):
+        """OAuth Login"""
+
+        params = {}
+        path = '/auth/oauth/{provider}'
+        path.replace('{provider}', provider)                
+        params['success'] = success
+        params['failure'] = failure
+
+        return self.client.call('get', path, {
+        }, params)
+
     def recovery(self, email, redirect):
         """Password Recovery"""
 
@@ -93,29 +118,4 @@ class Auth(Service):
         params['redirect'] = redirect
 
         return self.client.call('post', path, {
-        }, params)
-
-    def oauth_callback(self, project_id, provider, code, state=''):
-        """OAuth Callback"""
-
-        params = {}
-        path = '/oauth/callback/{provider}/{projectId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{provider}', provider)                
-        params['code'] = code
-        params['state'] = state
-
-        return self.client.call('get', path, {
-        }, params)
-
-    def oauth(self, provider, success='', failure=''):
-        """OAuth Login"""
-
-        params = {}
-        path = '/oauth/{provider}'
-        path.replace('{provider}', provider)                
-        params['success'] = success
-        params['failure'] = failure
-
-        return self.client.call('get', path, {
         }, params)

@@ -5,7 +5,7 @@ sdk
     setKey('')
 ;
 
-let promise = sdk.projects.updateTask('[PROJECT_ID]', '[TASK_ID]', '[NAME]', 'play', '', 0, 'GET', 'https://example.com');
+let promise = sdk.projects.updateTask('[PROJECT_ID]', '[TASK_ID]', '[NAME]', 'play', '', 1, 'GET', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

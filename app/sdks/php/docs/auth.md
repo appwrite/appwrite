@@ -43,6 +43,35 @@ DELETE https://appwrite.test/v1/auth/logout/{id}
 | --- | --- | --- | --- |
 | id | string | **Required** User specific session unique ID number. if 0 delete all sessions. |  |
 
+## OAuth Callback
+
+```http request
+GET https://appwrite.test/v1/auth/oauth/callback/{provider}/{projectId}
+```
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| projectId | string | **Required** Project unique ID |  |
+| provider | string | **Required** OAuth provider |  |
+| code | string | **Required** OAuth code |  |
+| state | string | Login state params |  |
+
+## OAuth Login
+
+```http request
+GET https://appwrite.test/v1/auth/oauth/{provider}
+```
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| provider | string | **Required** OAuth Provider |  |
+| success | string | URL to redirect back to your app after a successful login attempt. |  |
+| failure | string | URL to redirect back to your app after a failed login attempt. |  |
+
 ## Password Recovery
 
 ```http request
@@ -132,33 +161,4 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | redirect | string | Confirmation page to redirect user to your app after confirm token has been sent to user email. |  |
-
-## OAuth Callback
-
-```http request
-GET https://appwrite.test/v1/oauth/callback/{provider}/{projectId}
-```
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| projectId | string | **Required** Project unique ID |  |
-| provider | string | **Required** OAuth provider |  |
-| code | string | **Required** OAuth code |  |
-| state | string | Login state params |  |
-
-## OAuth Login
-
-```http request
-GET https://appwrite.test/v1/oauth/{provider}
-```
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| provider | string | **Required** OAuth Provider |  |
-| success | string | URL to redirect back to your app after a successful login attempt. |  |
-| failure | string | URL to redirect back to your app after a failed login attempt. |  |
 

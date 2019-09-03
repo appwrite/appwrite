@@ -138,7 +138,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.19');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.20');
             addGlobalHeader('content-type', '');
 
             /**
@@ -573,6 +573,63 @@
             },
 
             /**
+             * OAuth Callback
+             *
+             *
+             * @param {string} projectId
+             * @param {string} provider
+             * @param {string} code
+             * @param {string} state
+             * @throws {Error}
+             * @return {Promise}             */
+            oauthCallback: function(projectId, provider, code, state = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(provider === undefined) {
+                    throw new Error('Missing required parameter: "provider"');
+                }
+                
+                if(code === undefined) {
+                    throw new Error('Missing required parameter: "code"');
+                }
+                
+                let path = '/auth/oauth/callback/{provider}/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{provider}', 'g'), provider);
+
+                return http
+                    .get(path, {'content-type': 'application/json'},
+                        {
+                            'code': code, 
+                            'state': state
+                        });
+            },
+
+            /**
+             * OAuth Login
+             *
+             *
+             * @param {string} provider
+             * @param {string} success
+             * @param {string} failure
+             * @throws {Error}
+             * @return {Promise}             */
+            oauth: function(provider, success = '', failure = '') {
+                if(provider === undefined) {
+                    throw new Error('Missing required parameter: "provider"');
+                }
+                
+                let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
+
+                return http
+                    .get(path, {'content-type': 'application/json'},
+                        {
+                            'success': success, 
+                            'failure': failure
+                        });
+            },
+
+            /**
              * Password Recovery
              *
              * Sends the user an email with a temporary secret token for password reset.
@@ -767,63 +824,6 @@
                     .post(path, {'content-type': 'application/json'},
                         {
                             'redirect': redirect
-                        });
-            },
-
-            /**
-             * OAuth Callback
-             *
-             *
-             * @param {string} projectId
-             * @param {string} provider
-             * @param {string} code
-             * @param {string} state
-             * @throws {Error}
-             * @return {Promise}             */
-            oauthCallback: function(projectId, provider, code, state = '') {
-                if(projectId === undefined) {
-                    throw new Error('Missing required parameter: "projectId"');
-                }
-                
-                if(provider === undefined) {
-                    throw new Error('Missing required parameter: "provider"');
-                }
-                
-                if(code === undefined) {
-                    throw new Error('Missing required parameter: "code"');
-                }
-                
-                let path = '/oauth/callback/{provider}/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{provider}', 'g'), provider);
-
-                return http
-                    .get(path, {'content-type': 'application/json'},
-                        {
-                            'code': code, 
-                            'state': state
-                        });
-            },
-
-            /**
-             * OAuth Login
-             *
-             *
-             * @param {string} provider
-             * @param {string} success
-             * @param {string} failure
-             * @throws {Error}
-             * @return {Promise}             */
-            oauth: function(provider, success = '', failure = '') {
-                if(provider === undefined) {
-                    throw new Error('Missing required parameter: "provider"');
-                }
-                
-                let path = '/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
-
-                return http
-                    .get(path, {'content-type': 'application/json'},
-                        {
-                            'success': success, 
-                            'failure': failure
                         });
             }
         };

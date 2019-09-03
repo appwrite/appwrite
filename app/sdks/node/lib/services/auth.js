@@ -77,6 +77,45 @@ class Auth extends Service {
     }
 
     /**
+     * OAuth Callback
+     *
+     * @param string projectId
+     * @param string provider
+     * @param string code
+     * @param string state
+     * @throws Exception
+     * @return {}
+     */
+    async oauthCallback(projectId, provider, code, state = '') {
+        let path = '/auth/oauth/callback/{provider}/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{provider}', 'g'), provider);
+        
+        return await this.client.call('get', path, {'content-type': 'application/json'},
+            {
+                'code': code,
+                'state': state
+            });
+    }
+
+    /**
+     * OAuth Login
+     *
+     * @param string provider
+     * @param string success
+     * @param string failure
+     * @throws Exception
+     * @return {}
+     */
+    async oauth(provider, success = '', failure = '') {
+        let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
+        
+        return await this.client.call('get', path, {'content-type': 'application/json'},
+            {
+                'success': success,
+                'failure': failure
+            });
+    }
+
+    /**
      * Password Recovery
      *
      * Sends the user an email with a temporary secret token for password reset.
@@ -225,45 +264,6 @@ class Auth extends Service {
         return await this.client.call('post', path, {'content-type': 'application/json'},
             {
                 'redirect': redirect
-            });
-    }
-
-    /**
-     * OAuth Callback
-     *
-     * @param string projectId
-     * @param string provider
-     * @param string code
-     * @param string state
-     * @throws Exception
-     * @return {}
-     */
-    async oauthCallback(projectId, provider, code, state = '') {
-        let path = '/oauth/callback/{provider}/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{provider}', 'g'), provider);
-        
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
-                'code': code,
-                'state': state
-            });
-    }
-
-    /**
-     * OAuth Login
-     *
-     * @param string provider
-     * @param string success
-     * @param string failure
-     * @throws Exception
-     * @return {}
-     */
-    async oauth(provider, success = '', failure = '') {
-        let path = '/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
-        
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
-                'success': success,
-                'failure': failure
             });
     }
 }
