@@ -42,13 +42,15 @@ $response   = new Response();
 /**
  * ENV vars
  */
-$env        = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
-$domain     = $request->getServer('HTTP_HOST', '');
-$version    = include __DIR__ . '/../app/config/version.php';
-$redisHost  = $request->getServer('_APP_REDIS_HOST', '');
-$redisPort  = $request->getServer('_APP_REDIS_PORT', '');
-$utopia     = new App('Asia/Tel_Aviv', $env);
-$port       = (string)(isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT) : '';
+$env            = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
+$domain         = $request->getServer('HTTP_HOST', '');
+$version        = include __DIR__ . '/../app/config/version.php';
+$providers      = include __DIR__ . '/../app/config/providers.php'; // OAuth providers list
+$collections    = include __DIR__ . '/../app/config/collections.php'; // OAuth providers list
+$redisHost      = $request->getServer('_APP_REDIS_HOST', '');
+$redisPort      = $request->getServer('_APP_REDIS_PORT', '');
+$utopia         = new App('Asia/Tel_Aviv', $env);
+$port           = (string)(isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT) : '';
 
 Resque::setBackend($redisHost . ':' . $redisPort);
 
@@ -153,7 +155,7 @@ stream_context_set_default([ // Set global user agent and http settings
 $consoleDB = new Database();
 $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
 $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-$consoleDB->setMocks(include __DIR__ . '/../app/config/collections.php');
+$consoleDB->setMocks($collections);
 
 Authorization::disable();
 
@@ -182,7 +184,7 @@ Auth::$secret   = $session['secret'];
 $projectDB = new Database();
 $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
 $projectDB->setNamespace('app_' . $project->getUid());
-$projectDB->setMocks(include __DIR__ . '/../app/config/collections.php');
+$projectDB->setMocks($collections);
 
 $user = $projectDB->getDocument(Auth::$unique);
 

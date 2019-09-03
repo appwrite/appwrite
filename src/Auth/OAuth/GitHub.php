@@ -4,7 +4,7 @@ namespace Auth\OAuth;
 
 use Auth\OAuth;
 
-class GitHub extends OAuth
+class Github extends OAuth
 {
     /**
      * @var array

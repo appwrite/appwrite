@@ -11,15 +11,6 @@ use Utopia\Validator\Host;
 use Utopia\Validator\URL;
 use Utopia\Locale\Locale;
 use Auth\Auth;
-use Auth\OAuth\Bitbucket;
-use Auth\OAuth\Facebook;
-use Auth\OAuth\GitHub;
-use Auth\OAuth\Gitlab;
-use Auth\OAuth\Google;
-use Auth\OAuth\Instagram;
-use Auth\OAuth\LinkedIn;
-use Auth\OAuth\Microsoft;
-use Auth\OAuth\Twitter;
 use Auth\Validator\Password;
 use Database\Database;
 use Database\Document;
@@ -623,37 +614,13 @@ $utopia->get('/v1/auth/oauth/:provider')
                 throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
             }
 
-            switch($provider) {
-                case 'bitbucket':
-                    $oauth = new Bitbucket($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'facebook':
-                    $oauth = new Facebook($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'github':
-                    $oauth = new GitHub($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'gitlab':
-                    $oauth = new Gitlab($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'google':
-                    $oauth = new Google($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'instagram':
-                    $oauth = new Instagram($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'linkedin':
-                    $oauth = new LinkedIn($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'microsoft':
-                    $oauth = new Microsoft($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                case 'twitter':
-                    $oauth = new Twitter($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
-                    break;
-                default:
-                    throw new Exception('Provider is not supported', 501);
+            $classname = 'Auth\\OAuth\\' . ucfirst($provider);
+            
+            if(!class_exists($classname)) {
+                throw new Exception('Provider is not supported', 501);
             }
+
+            $oauth = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
 
             $response->redirect($oauth->getLoginURL());
         }
@@ -729,37 +696,14 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
                 $appSecret  = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key,0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
             }
 
-            switch($provider) {
-                case 'bitbucket':
-                    $oauth = new Bitbucket($appId, $appSecret, $callback);
-                    break;
-                case 'facebook':
-                    $oauth = new Facebook($appId, $appSecret, $callback);
-                    break;
-                case 'github':
-                    $oauth = new GitHub($appId, $appSecret, $callback);
-                    break;
-                case 'gitlab':
-                    $oauth = new Gitlab($appId, $appSecret, $callback);
-                    break;
-                case 'google':
-                    $oauth = new Google($appId, $appSecret, $callback);
-                    break;
-                case 'instagram':
-                    $oauth = new Instagram($appId, $appSecret, $callback);
-                    break;
-                case 'linkedin':
-                    $oauth = new LinkedIn($appId, $appSecret, $callback);
-                    break;
-                case 'microsoft':
-                    $oauth = new Microsoft($appId, $appSecret, $callback);
-                    break;
-                case 'twitter':
-                    $oauth = new LinkedIn($appId, $appSecret, $callback);
-                    break;
-                default:
-                    throw new Exception('Provider is not supported', 501);
+
+            $classname = 'Auth\\OAuth\\' . ucfirst($provider);
+            
+            if(!class_exists($classname)) {
+                throw new Exception('Provider is not supported', 501);
             }
+
+            $oauth = new $classname($appId, $appSecret, $callback);
 
             $accessToken = $oauth->getAccessToken($code);
 

@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $register, $response, $user, $audit, $project, $projectDB;
+global $utopia, $register, $response, $user, $audit, $project, $projectDB, $providers;
 
 use Utopia\Exception;
 use Utopia\Validator\Text;
@@ -8,7 +8,6 @@ use Utopia\Validator\Email;
 use Auth\Auth;
 use Auth\Validator\Password;
 use Database\Database;
-use Database\Document;
 use Database\Validator\Authorization;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
@@ -21,33 +20,28 @@ $utopia->get('/v1/account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', 'Get currently logged in user data as JSON object.')
     ->action(
-        function() use ($response, &$user)
+        function() use ($response, &$user, $providers)
         {
-            $response->json(array_merge($user->getArrayCopy([
-                '$uid',
-                'email',
-                'registration',
-                'confirm',
-                'name',
-                'oauthBitbucket',
-                'oauthBitBucketAccessToken',
-                'oauthFacebook',
-                'oauthFacebookAccessToken',
-                'oauthGithub',
-                'oauthGithubAccessToken',
-                'oauthGitlab',
-                'oauthGitlabAccessToken',
-                'oauthGoogle',
-                'oauthGoogleAccessToken',
-                'oauthInstagram',
-                'oauthInstagramAccessToken',
-                'oauthLinkedin',
-                'oauthLinkedinAccessToken',
-                'oauthMicrosoft',
-                'oauthMicrosoftAccessToken',
-                'oauthTwitter',
-                'oauthTwitterAccessToken',
-            ]), ['roles' => Authorization::getRoles()]));
+            $oauthKeys = [];
+
+            foreach($providers as $key => $provider) {
+                if(!$provider['enabled']) {
+                    continue;
+                }
+                
+                $oauthKeys[] = 'oauth' . ucfirst($key);
+                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+            }
+
+            $response->json(array_merge($user->getArrayCopy(array_merge(
+                [
+                    '$uid',
+                    'email',
+                    'registration',
+                    'confirm',
+                    'name',
+                ], $oauthKeys
+            )), ['roles' => Authorization::getRoles()]));
         }
     );
 

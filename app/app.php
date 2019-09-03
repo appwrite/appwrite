@@ -3,7 +3,7 @@
 // Init
 require_once __DIR__ . '/init.php';
 
-global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $sentry, $version, $service;
+global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $sentry, $version, $service, $providers;
 
 use Utopia\App;
 use Utopia\Request;
@@ -23,7 +23,6 @@ use Event\Event;
  * Configuration files
  */
 $roles      = include __DIR__ . '/config/roles.php'; // User roles and scopes
-$providers  = include __DIR__ . '/config/providers.php'; // OAuth providers list
 $sdks       = include __DIR__ . '/config/sdks.php'; // List of SDK clients
 $services   = include __DIR__ . '/config/services.php'; // List of SDK clients
 

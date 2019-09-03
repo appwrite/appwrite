@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $response, $projectDB;
+global $utopia, $response, $projectDB, $providers;
 
 use Auth\Auth;
 use Auth\Validator\Password;
@@ -12,7 +12,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Locale\Locale;
 use Database\Database;
-use Database\Document;
 use Database\Validator\Authorization;
 use Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
@@ -29,7 +28,7 @@ $utopia->get('/v1/users')
     ->param('offset', 0 , function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () {return new WhiteList(['ASC', 'DESC']);}, 'Order result by ASC or DESC order.', true)
     ->action(
-        function($search, $limit, $offset, $orderType) use ($response, $projectDB)
+        function($search, $limit, $offset, $orderType) use ($response, $projectDB, $providers)
         {
             $results = $projectDB->getCollection([
                 'limit' => $limit,
@@ -43,34 +42,27 @@ $utopia->get('/v1/users')
                 ],
             ]);
 
-            $results = array_map(function ($value) { /* @var $value \Database\Document */
-                return $value->getArrayCopy([
-                    '$uid',
-                    '$permissions',
-                    'status',
-                    'email',
-                    'registration',
-                    'confirm',
-                    'name',
-                    'oauthBitbucket',
-                    'oauthBitBucketAccessToken',
-                    'oauthFacebook',
-                    'oauthFacebookAccessToken',
-                    'oauthGithub',
-                    'oauthGithubAccessToken',
-                    'oauthGitlab',
-                    'oauthGitlabAccessToken',
-                    'oauthGoogle',
-                    'oauthGoogleAccessToken',
-                    'oauthInstagram',
-                    'oauthInstagramAccessToken',
-                    'oauthLinkedin',
-                    'oauthLinkedinAccessToken',
-                    'oauthMicrosoft',
-                    'oauthMicrosoftAccessToken',
-                    'oauthTwitter',
-                    'oauthTwitterAccessToken',
-                ]);
+            $oauthKeys = [];
+
+            foreach($providers as $key => $provider) {
+                if(!$provider['enabled']) {
+                    continue;
+                }
+                
+                $oauthKeys[] = 'oauth' . ucfirst($key);
+                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+            }
+
+            $results = array_map(function ($value) use ($oauthKeys) { /* @var $value \Database\Document */
+                return $value->getArrayCopy(array_merge(
+                    [
+                        '$uid',
+                        'email',
+                        'registration',
+                        'confirm',
+                        'name',
+                    ], $oauthKeys
+                ));
             }, $results);
 
             $response->json(['sum' => $projectDB->getSum(), 'users' => $results]);
@@ -85,7 +77,7 @@ $utopia->get('/v1/users/:userId')
     ->label('sdk.description', 'Get user by its unique ID.')
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(
-        function($userId) use ($response, $projectDB)
+        function($userId) use ($response, $projectDB, $providers)
         {
             $user = $projectDB->getDocument($userId);
 
@@ -93,32 +85,26 @@ $utopia->get('/v1/users/:userId')
                 throw new Exception('User not found', 404);
             }
 
-            $response->json(array_merge($user->getArrayCopy([
-                '$uid',
-                'status',
-                'email',
-                'registration',
-                'confirm',
-                'name',
-                'oauthBitbucket',
-                'oauthBitBucketAccessToken',
-                'oauthFacebook',
-                'oauthFacebookAccessToken',
-                'oauthGithub',
-                'oauthGithubAccessToken',
-                'oauthGitlab',
-                'oauthGitlabAccessToken',
-                'oauthGoogle',
-                'oauthGoogleAccessToken',
-                'oauthInstagram',
-                'oauthInstagramAccessToken',
-                'oauthLinkedin',
-                'oauthLinkedinAccessToken',
-                'oauthMicrosoft',
-                'oauthMicrosoftAccessToken',
-                'oauthTwitter',
-                'oauthTwitterAccessToken',
-            ]), ['roles' => Authorization::getRoles()]));
+            $oauthKeys = [];
+
+            foreach($providers as $key => $provider) {
+                if(!$provider['enabled']) {
+                    continue;
+                }
+                
+                $oauthKeys[] = 'oauth' . ucfirst($key);
+                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+            }
+
+            $response->json(array_merge($user->getArrayCopy(array_merge(
+                [
+                    '$uid',
+                    'email',
+                    'registration',
+                    'confirm',
+                    'name',
+                ], $oauthKeys
+            )), ['roles' => Authorization::getRoles()]));
         }
     );
 
@@ -289,7 +275,7 @@ $utopia->post('/v1/users')
     ->param('password', '', function () {return new Password();}, 'User account password.')
     ->param('name', '', function () {return new Text(100);}, 'User account name.', true)
     ->action(
-        function($email, $password, $name) use ($response, $register, $projectDB, $project) {
+        function($email, $password, $name) use ($response, $register, $projectDB, $providers) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -318,35 +304,28 @@ $utopia->post('/v1/users')
                 'reset' => false,
                 'name' => $name,
             ]);
+            
+            $oauthKeys = [];
+
+            foreach($providers as $key => $provider) {
+                if(!$provider['enabled']) {
+                    continue;
+                }
+                
+                $oauthKeys[] = 'oauth' . ucfirst($key);
+                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+            }
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json(array_merge($user->getArrayCopy([
+                ->json(array_merge($user->getArrayCopy(array_merge([
                     '$uid',
                     'status',
                     'email',
                     'registration',
                     'confirm',
                     'name',
-                    'oauthBitbucket',
-                    'oauthBitBucketAccessToken',
-                    'oauthFacebook',
-                    'oauthFacebookAccessToken',
-                    'oauthGithub',
-                    'oauthGithubAccessToken',
-                    'oauthGitlab',
-                    'oauthGitlabAccessToken',
-                    'oauthGoogle',
-                    'oauthGoogleAccessToken',
-                    'oauthInstagram',
-                    'oauthInstagramAccessToken',
-                    'oauthLinkedin',
-                    'oauthLinkedinAccessToken',
-                    'oauthMicrosoft',
-                    'oauthMicrosoftAccessToken',
-                    'oauthTwitter',
-                    'oauthTwitterAccessToken',
-            ]), ['roles' => Authorization::getRoles()]));
+                ], $oauthKeys)), ['roles' => Authorization::getRoles()]));
         }
     );
 
