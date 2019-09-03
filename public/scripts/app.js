@@ -31,11 +31,11 @@ window.ls.container.get('view')
     })
     .add({
         selector: 'data-cookie-policy',
-        controller: function(element, alerts, cookie) {
+        controller: function(element, alerts, cookie, env) {
             if(!cookie.get('cookie-alert')) {
                 let text = element.dataset['cookiePolicy'] || '';
 
-                alerts.add({text: text, class: 'cookie-alert', link: '/policy/cookies', callback: function () {
+                alerts.add({text: text, class: 'cookie-alert', link: env.home + '/policy/cookies', callback: function () {
                     cookie.set('cookie-alert', 'true', 365 * 10); // 10 years
                 }}, 0);
             }
