@@ -48,7 +48,7 @@ $version    = include __DIR__ . '/../app/config/version.php';
 $redisHost  = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort  = $request->getServer('_APP_REDIS_PORT', '');
 $utopia     = new App('Asia/Tel_Aviv', $env);
-$port       = parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT);
+$port       = (string)(isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT) : '';
 
 Resque::setBackend($redisHost . ':' . $redisPort);
 
