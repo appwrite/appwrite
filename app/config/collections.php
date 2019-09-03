@@ -1108,15 +1108,12 @@ $collections = [
 /**
  * Add enabled OAuth providers to default data rules
  */
-$oauthProjectsRules = [];
-$oauthUsersRules = [];
-
 foreach($providers as $key => $provider) {
     if(!$provider['enabled']) {
         continue;
     }
 
-    $oauthProjectsRules[] = [
+    $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
         'label' => 'OAuth ' . ucfirst($key) . ' ID',
         'key' => 'oauth' . ucfirst($key),
@@ -1126,7 +1123,7 @@ foreach($providers as $key => $provider) {
         'array' => false,
     ];
 
-    $oauthProjectsRules[] = [
+    $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
         'label' => 'OAuth ' . ucfirst($key) . ' Access Token',
         'key' => 'oauth' . ucfirst($key) . 'AccessToken',
@@ -1136,7 +1133,7 @@ foreach($providers as $key => $provider) {
         'array' => false,
     ];
 
-    $oauthUsersRules = [
+    $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
         'label' => 'OAuth ' . ucfirst($key) . ' ID',
         'key' => 'oauth' . ucfirst($key),
@@ -1146,7 +1143,7 @@ foreach($providers as $key => $provider) {
         'array' => false,
     ];
 
-    $oauthUsersRules = [
+    $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
         'label' => 'OAuth ' . ucfirst($key) . ' Access Token',
         'key' => 'oauth' . ucfirst($key) . 'AccessToken',
@@ -1156,8 +1153,5 @@ foreach($providers as $key => $provider) {
         'array' => false,
     ];
 }
-
-$collections[Database::SYSTEM_COLLECTION_USERS]['rules'] = array_merge($collections[Database::SYSTEM_COLLECTION_USERS]['rules'], $oauthUsersRules);
-$collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'] = array_merge($collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'], $oauthProjectsRules);
 
 return $collections;
