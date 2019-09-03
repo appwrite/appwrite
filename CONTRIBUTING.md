@@ -40,6 +40,14 @@ Appwrite uses PHPs Composer for managing dependencies on the server-side and JS 
 
 ## Security & Privacy
 
+Security and privacy are extremly important to Appwrite, developers and users alike. Make sure to follow the best industry standards and practices. To help you make sure you are doing as best as possible we have setup our security checklist for pull requests and contributers. Please make sure to follow the list before sending a pull request.
+
+## Dependencies
+
+Please avoid intoducing new dependencies to Appwrite without consulting the team. New dependencies can be very helpfull but also introduce new security and privacy issues, complexity and impact total docker image size.
+
+Adding a new dependancy should have vital value on the product with minumum possible risk.
+
 ## Setup
 
 To set up a working development environment just clone the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
