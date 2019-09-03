@@ -11,6 +11,13 @@ services:
     ports:
     - "80:80"
     - "443:443"
+    depends_on:
+      - mariadb
+      - redis
+      - smtp
+      - clamav
+      - influxdb
+      - telegraf
     environment:
     - _APP_ENV=development
     - _APP_OPENSSL_KEY_V1=
