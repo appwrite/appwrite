@@ -17,8 +17,6 @@ class LinkedIn extends OAuth
     protected $scope = [
         'r_basicprofile',
         'r_emailaddress',
-        'w_member_social',
-        //'r_fullprofile', //TODO request permission from linkedIn for this scope
     ];
 
     /**
