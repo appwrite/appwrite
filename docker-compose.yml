@@ -20,7 +20,7 @@ services:
       - telegraf
     environment:
     - _APP_ENV=development
-    - _APP_OPENSSL_KEY_V1=
+    - _APP_OPENSSL_KEY_V1=your-secret-key
     - _APP_REDIS_HOST=redis
     - _APP_REDIS_PORT=6379
     - _APP_DB_HOST=mariadb

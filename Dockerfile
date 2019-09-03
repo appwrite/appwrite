@@ -7,7 +7,7 @@ ENV TZ=Asia/Tel_Aviv
 ENV _APP_ENV production
 ENV _APP_HOME https://appwrite.io
 ENV _APP_EDITION community
-ENV _APP_OPENSSL_KEY_V1 empty
+ENV _APP_OPENSSL_KEY_V1 your-secret-key
 ENV _APP_REDIS_HOST redis
 ENV _APP_REDIS_PORT 6379
 ENV _APP_DB_HOST mariadb
