@@ -608,7 +608,7 @@ $utopia->get('/v1/auth/oauth/:provider')
     ->action(
         function($provider, $success, $failure) use ($response, $request, $project)
         {
-            $callback   = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/oauth/callback/' . $provider . '/' . $project->getUid();
+            $callback   = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/auth/oauth/callback/' . $provider . '/' . $project->getUid();
             $appId      = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Appid', '');
             $appSecret  = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Secret', '{}');
 
@@ -674,7 +674,7 @@ $utopia->get('/v1/auth/oauth/callback/:provider/:projectId')
     ->action(
         function($projectId, $provider, $code, $state) use ($response, $request, $domain)
         {
-            $response->redirect($request->getServer('REQUEST_SCHEME', 'https') . '://' . $domain . '/v1/oauth/' . $provider . '/redirect?'
+            $response->redirect($request->getServer('REQUEST_SCHEME', 'https') . '://' . $domain . '/v1/auth/oauth/' . $provider . '/redirect?'
                 . http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
@@ -695,7 +695,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
     ->action(
         function($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit)
         {
-            $callback       = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/oauth/callback/' . $provider . '/' . $project->getUid();
+            $callback       = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/auth/oauth/callback/' . $provider . '/' . $project->getUid();
             $defaultState   = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL    = new URL();
 
