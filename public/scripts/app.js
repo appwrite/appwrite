@@ -35,7 +35,7 @@ window.ls.container.get('view')
             if(!cookie.get('cookie-alert')) {
                 let text = element.dataset['cookiePolicy'] || '';
 
-                alerts.add({text: text, class: 'cookie-alert', link: env.home + '/policy/cookies', callback: function () {
+                alerts.add({text: text, class: 'cookie-alert', link: env.HOME + '/policy/cookies', callback: function () {
                     cookie.set('cookie-alert', 'true', 365 * 10); // 10 years
                 }}, 0);
             }
