@@ -30,11 +30,15 @@ The easiest way to start running your Appwrite server is by running our docker c
 ```bash
 mkdir appwrite-ce && \
 cd appwrite-ce && \
-curl -o docker-compose.yml https://appwrite.io/docker-compose.yml && \
+curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?port=80 && \
 docker-compose up -d --remove-orphans
 ```
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
+
+### Changing Port Number
+
+In case your port 80 is already taken, change the port number in the command above. Make sure to set the correct endpoint in your selected SDK, including your new port number.
 
 ## Getting Started
 
