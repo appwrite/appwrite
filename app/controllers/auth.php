@@ -594,7 +594,7 @@ $utopia->put('/v1/auth/recovery/reset')
         }
     );
 
-$utopia->get('/v1/oauth/:provider')
+$utopia->get('/v1/auth/oauth/:provider')
     ->desc('OAuth Login')
     ->label('error', __DIR__ . '/../views/general/error.phtml')
     ->label('scope', 'auth')
@@ -659,7 +659,7 @@ $utopia->get('/v1/oauth/:provider')
         }
     );
 
-$utopia->get('/v1/oauth/callback/:provider/:projectId')
+$utopia->get('/v1/auth/oauth/callback/:provider/:projectId')
     ->desc('OAuth Callback')
     ->label('error', __DIR__ . '/../views/general/error.phtml')
     ->label('scope', 'auth')
@@ -679,7 +679,7 @@ $utopia->get('/v1/oauth/callback/:provider/:projectId')
         }
     );
 
-$utopia->get('/v1/oauth/:provider/redirect')
+$utopia->get('/v1/auth/oauth/:provider/redirect')
     ->desc('OAuth Redirect')
     ->label('error', __DIR__ . '/../views/general/error.phtml')
     ->label('webhook', 'auth.oauth')
