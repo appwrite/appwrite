@@ -1,6 +1,6 @@
 # Contributing
 
-We would love for you to contribute to Appwrite and help make it even better than it is today! As a contributor, here are the guidelines we would like you to follow:
+We would ❤️ for you to contribute to Appwrite and help make it  better! As a contributor, here are the guidelines we would like you to follow:
 
 ## Code of Conduct
 
@@ -34,19 +34,60 @@ Appwrite uses PHPs Composer for managing dependencies on the server-side and JS 
 
 ## Coding Standards
 
-## Scalability
+Appwrite is following the PHP-FIG standards. Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
+
+## Scalability, Speed and Performance
+
+Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
+
+We wish Appwrite will be as easy to set up and in a single, local host and easy to grow to a large environment with thousands and even hundreds of instances.
+
+When contributing code please take into account the following considerations:
+
+* Response Time
+* Throughput
+* Requests per Seconds
+* Network Usage
+* Memory Usage
+* Browser Rendering
+* Background Jobs
+* Task Execution Time
 
 ## Architecture
 
+Appwrite current structure is a combination of both Monolithic and Microservice architectures, but our final goal, as we grow is to be using only microservices.
+
+### The Monolithic Part
+
+Appwrite main API container is designed as a monolithic app. This is a decision we made to allow us to develop the project faster while still being a very small team.
+
+Although the Appwrite API is a monolithic app, it has a very clear separation of concern as each internal service or worker is separated by it its container which will allow us as we grow to start breaking services for better maintenance and scalability.
+
+### The Microservice Part
+
+Each container in Appwrite is a microservice by its own. Each service is an independent process which can scale without regard to any of the other services.
+
+Currently, all of the Appwrite microservices are intended to communicate using TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443 who by default are used to expose the Appwrite HTTP API.
+
 ## Security & Privacy
 
-Security and privacy are extremly important to Appwrite, developers and users alike. Make sure to follow the best industry standards and practices. To help you make sure you are doing as best as possible we have setup our security checklist for pull requests and contributers. Please make sure to follow the list before sending a pull request.
+Security and privacy are extremely important to Appwrite, developers and users alike. Make sure to follow the best industry standards and practices. To help you make sure you are doing as best as possible we have set up our security checklist for pull requests and contributors. Please make sure to follow the list before sending a pull request.
 
 ## Dependencies
 
-Please avoid intoducing new dependencies to Appwrite without consulting the team. New dependencies can be very helpfull but also introduce new security and privacy issues, complexity and impact total docker image size.
+Please avoid introducing new dependencies to Appwrite without consulting the team. New dependencies can be very helpful but also introduce new security and privacy issues, complexity and impact total docker image size.
 
-Adding a new dependancy should have vital value on the product with minumum possible risk.
+Adding a new dependency should have vital value on the product with minimum possible risk.
+
+## Introducing New Features
+
+We whould 💖 you to contribute to Appwrite, but we whould also like to make sure Appwrite is as great as possible and loyal to its vision and mission statement 🙏.
+
+For us to find the right balance, please open an issue explaining your ideas before intoducing a new pull requests.
+
+This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
+
+This is also important for the Appwrite lead developers to be able to give technical input and different emphasises regarding the feature design and architecture.
 
 ## Setup
 
@@ -75,3 +116,9 @@ bash ./build.sh 1.0.0
 ```
 
 Before running the command make sure you have proper write permissions to Appwrite docker hub team.
+
+## Tutorials
+
+From time to time our team will add tutorials that will help contributers find there way in the Appwrite source code. Below is a list of currently available tutorials:
+
+* [Adding Support for a New OAuth Provider](./docs/AddOAuthProvider.md)
