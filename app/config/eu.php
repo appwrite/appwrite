@@ -1,4 +1,5 @@
 <?php
+
 $list = [
     'AT', // Austria
     'BE', // Belgium
@@ -29,7 +30,7 @@ $list = [
     'SE', // Sweden
 ];
 
-if(time() < strtotime('2019-10-31')) { // @see https://en.wikipedia.org/wiki/Brexit
+if (time() < strtotime('2019-10-31')) { // @see https://en.wikipedia.org/wiki/Brexit
     $list[] = 'GB'; // // United Kingdom
 }
 

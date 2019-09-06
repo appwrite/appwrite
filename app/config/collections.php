@@ -107,7 +107,7 @@ $collections = [
                 'array' => true,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_RULES]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_RULES],
                 ],
             ],
         ],
@@ -183,7 +183,7 @@ $collections = [
                 'array' => false,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_OPTIONS]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_OPTIONS],
                 ],
             ],
         ],
@@ -304,7 +304,7 @@ $collections = [
                 'array' => true,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_TOKENS]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_TOKENS],
                 ],
             ],
             [
@@ -317,9 +317,9 @@ $collections = [
                 'array' => true,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_MEMBERSHIPS]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_MEMBERSHIPS],
                 ],
-            ]
+            ],
         ],
     ],
     Database::SYSTEM_COLLECTION_TOKENS => [
@@ -592,7 +592,7 @@ $collections = [
                 'array' => true,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_WEBHOOKS]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_WEBHOOKS],
                 ],
             ],
             [
@@ -605,7 +605,7 @@ $collections = [
                 'array' => true,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_KEYS]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_KEYS],
                 ],
             ],
             [
@@ -618,7 +618,7 @@ $collections = [
                 'array' => true,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_TASKS]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_TASKS],
                 ],
             ],
             [
@@ -631,7 +631,7 @@ $collections = [
                 'array' => true,
                 'options' => [
                     '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_PLATFORMS]
+                    'whitelist' => [Database::SYSTEM_COLLECTION_PLATFORMS],
                 ],
             ],
         ],
@@ -1105,18 +1105,18 @@ $collections = [
     ],
 ];
 
-/**
+/*
  * Add enabled OAuth providers to default data rules
  */
-foreach($providers as $key => $provider) {
-    if(!$provider['enabled']) {
+foreach ($providers as $key => $provider) {
+    if (!$provider['enabled']) {
         continue;
     }
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth ' . ucfirst($key) . ' ID',
-        'key' => 'oauth' . ucfirst($key),
+        'label' => 'OAuth '.ucfirst($key).' ID',
+        'key' => 'oauth'.ucfirst($key),
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1125,8 +1125,8 @@ foreach($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth ' . ucfirst($key) . ' Access Token',
-        'key' => 'oauth' . ucfirst($key) . 'AccessToken',
+        'label' => 'OAuth '.ucfirst($key).' Access Token',
+        'key' => 'oauth'.ucfirst($key).'AccessToken',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1135,8 +1135,8 @@ foreach($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth ' . ucfirst($key) . ' ID',
-        'key' => 'oauth' . ucfirst($key),
+        'label' => 'OAuth '.ucfirst($key).' ID',
+        'key' => 'oauth'.ucfirst($key),
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1145,8 +1145,8 @@ foreach($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth ' . ucfirst($key) . ' Access Token',
-        'key' => 'oauth' . ucfirst($key) . 'AccessToken',
+        'label' => 'OAuth '.ucfirst($key).' Access Token',
+        'key' => 'oauth'.ucfirst($key).'AccessToken',
         'type' => 'text',
         'default' => '',
         'required' => false,

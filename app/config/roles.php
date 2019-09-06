@@ -1,13 +1,13 @@
 <?php
 
-const ROLE_GUEST            = 0;
-const ROLE_MEMBER           = 1;
-const ROLE_ADMIN            = 2;
-const ROLE_DEVELOPER        = 3;
-const ROLE_OWNER            = 4;
-const ROLE_APP              = 5;
-const ROLE_SYSTEM           = 6;
-const ROLE_ALL              = '*';
+const ROLE_GUEST = 0;
+const ROLE_MEMBER = 1;
+const ROLE_ADMIN = 2;
+const ROLE_DEVELOPER = 3;
+const ROLE_OWNER = 4;
+const ROLE_APP = 5;
+const ROLE_SYSTEM = 6;
+const ROLE_ALL = '*';
 
 $logged = [
     'public',
@@ -36,7 +36,7 @@ $admins = [
 ];
 
 return [
-    ROLE_GUEST      => [
+    ROLE_GUEST => [
         'label' => 'Guest',
         'scopes' => [
             'public',
@@ -47,26 +47,26 @@ return [
             'locale.read',
             'avatars.read',
             'health.read',
-        ]
+        ],
     ],
-    ROLE_MEMBER     => [
+    ROLE_MEMBER => [
         'label' => 'Member',
-        'scopes' => array_merge($logged, [])
+        'scopes' => array_merge($logged, []),
     ],
-    ROLE_ADMIN      => [
+    ROLE_ADMIN => [
         'label' => 'Admin',
-        'scopes' => array_merge($logged, $admins, [])
+        'scopes' => array_merge($logged, $admins, []),
     ],
-    ROLE_DEVELOPER  => [
+    ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => array_merge($logged, $admins, [])
+        'scopes' => array_merge($logged, $admins, []),
     ],
-    ROLE_OWNER      => [
+    ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => array_merge($logged, $admins, [])
+        'scopes' => array_merge($logged, $admins, []),
     ],
-    ROLE_APP        => [
+    ROLE_APP => [
         'label' => 'Application',
-        'scopes' => ['public']
+        'scopes' => ['public'],
     ],
 ];

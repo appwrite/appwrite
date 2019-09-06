@@ -1,10 +1,11 @@
 <?php
+
 /**
-* List Of World Currencies
-*
-* Source:
-* https://gist.github.com/GoGross/19b254a4210d3d72b3dfc1e808116af3
-*/
+ * List Of World Currencies.
+ *
+ * Source:
+ * https://gist.github.com/GoGross/19b254a4210d3d72b3dfc1e808116af3
+ */
 
 return [
     [
@@ -25,7 +26,7 @@ return [
         'rounding' => 0,
         'code' => 'EUR',
         'namePlural' => 'euros',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '£',
@@ -45,7 +46,7 @@ return [
         'rounding' => 0,
         'code' => 'CAD',
         'namePlural' => 'Canadian dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'AED',
@@ -55,7 +56,7 @@ return [
         'rounding' => 0,
         'code' => 'AED',
         'namePlural' => 'UAE dirhams',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Af',
@@ -65,7 +66,7 @@ return [
         'rounding' => 0,
         'code' => 'AFN',
         'namePlural' => 'Afghan Afghanis',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'ALL',
@@ -75,7 +76,7 @@ return [
         'rounding' => 0,
         'code' => 'ALL',
         'namePlural' => 'Albanian lekë',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'AMD',
@@ -85,7 +86,7 @@ return [
         'rounding' => 0,
         'code' => 'AMD',
         'namePlural' => 'Armenian drams',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'AR$',
@@ -95,7 +96,7 @@ return [
         'rounding' => 0,
         'code' => 'ARS',
         'namePlural' => 'Argentine pesos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'AU$',
@@ -105,7 +106,7 @@ return [
         'rounding' => 0,
         'code' => 'AUD',
         'namePlural' => 'Australian dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'man.',
@@ -115,7 +116,7 @@ return [
         'rounding' => 0,
         'code' => 'AZN',
         'namePlural' => 'Azerbaijani manats',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'KM',
@@ -125,7 +126,7 @@ return [
         'rounding' => 0,
         'code' => 'BAM',
         'namePlural' => 'Bosnia-Herzegovina convertible marks',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Tk',
@@ -135,7 +136,7 @@ return [
         'rounding' => 0,
         'code' => 'BDT',
         'namePlural' => 'Bangladeshi takas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'BGN',
@@ -145,7 +146,7 @@ return [
         'rounding' => 0,
         'code' => 'BGN',
         'namePlural' => 'Bulgarian leva',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'BD',
@@ -155,7 +156,7 @@ return [
         'rounding' => 0,
         'code' => 'BHD',
         'namePlural' => 'Bahraini dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'FBu',
@@ -165,7 +166,7 @@ return [
         'rounding' => 0,
         'code' => 'BIF',
         'namePlural' => 'Burundian francs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'BN$',
@@ -175,7 +176,7 @@ return [
         'rounding' => 0,
         'code' => 'BND',
         'namePlural' => 'Brunei dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Bs',
@@ -185,7 +186,7 @@ return [
         'rounding' => 0,
         'code' => 'BOB',
         'namePlural' => 'Bolivian bolivianos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'R$',
@@ -195,7 +196,7 @@ return [
         'rounding' => 0,
         'code' => 'BRL',
         'namePlural' => 'Brazilian reals',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'BWP',
@@ -205,7 +206,7 @@ return [
         'rounding' => 0,
         'code' => 'BWP',
         'namePlural' => 'Botswanan pulas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'BYR',
@@ -215,7 +216,7 @@ return [
         'rounding' => 0,
         'code' => 'BYR',
         'namePlural' => 'Belarusian rubles',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'BZ$',
@@ -225,7 +226,7 @@ return [
         'rounding' => 0,
         'code' => 'BZD',
         'namePlural' => 'Belize dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CDF',
@@ -235,7 +236,7 @@ return [
         'rounding' => 0,
         'code' => 'CDF',
         'namePlural' => 'Congolese francs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CHF',
@@ -245,7 +246,7 @@ return [
         'rounding' => 0.05000000000000000277555756156289135105907917022705078125,
         'code' => 'CHF',
         'namePlural' => 'Swiss francs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CL$',
@@ -255,7 +256,7 @@ return [
         'rounding' => 0,
         'code' => 'CLP',
         'namePlural' => 'Chilean pesos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CN¥',
@@ -265,7 +266,7 @@ return [
         'rounding' => 0,
         'code' => 'CNY',
         'namePlural' => 'Chinese yuan',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CO$',
@@ -275,7 +276,7 @@ return [
         'rounding' => 0,
         'code' => 'COP',
         'namePlural' => 'Colombian pesos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₡',
@@ -285,7 +286,7 @@ return [
         'rounding' => 0,
         'code' => 'CRC',
         'namePlural' => 'Costa Rican colóns',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CV$',
@@ -295,7 +296,7 @@ return [
         'rounding' => 0,
         'code' => 'CVE',
         'namePlural' => 'Cape Verdean escudos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Kč',
@@ -305,7 +306,7 @@ return [
         'rounding' => 0,
         'code' => 'CZK',
         'namePlural' => 'Czech Republic korunas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Fdj',
@@ -315,7 +316,7 @@ return [
         'rounding' => 0,
         'code' => 'DJF',
         'namePlural' => 'Djiboutian francs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Dkr',
@@ -325,7 +326,7 @@ return [
         'rounding' => 0,
         'code' => 'DKK',
         'namePlural' => 'Danish kroner',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'RD$',
@@ -335,7 +336,7 @@ return [
         'rounding' => 0,
         'code' => 'DOP',
         'namePlural' => 'Dominican pesos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'DA',
@@ -345,7 +346,7 @@ return [
         'rounding' => 0,
         'code' => 'DZD',
         'namePlural' => 'Algerian dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Ekr',
@@ -355,7 +356,7 @@ return [
         'rounding' => 0,
         'code' => 'EEK',
         'namePlural' => 'Estonian kroons',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'EGP',
@@ -365,7 +366,7 @@ return [
         'rounding' => 0,
         'code' => 'EGP',
         'namePlural' => 'Egyptian pounds',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Nfk',
@@ -375,7 +376,7 @@ return [
         'rounding' => 0,
         'code' => 'ERN',
         'namePlural' => 'Eritrean nakfas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Br',
@@ -385,7 +386,7 @@ return [
         'rounding' => 0,
         'code' => 'ETB',
         'namePlural' => 'Ethiopian birrs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'GEL',
@@ -395,7 +396,7 @@ return [
         'rounding' => 0,
         'code' => 'GEL',
         'namePlural' => 'Georgian laris',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'GH₵',
@@ -405,7 +406,7 @@ return [
         'rounding' => 0,
         'code' => 'GHS',
         'namePlural' => 'Ghanaian cedis',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'FG',
@@ -415,7 +416,7 @@ return [
         'rounding' => 0,
         'code' => 'GNF',
         'namePlural' => 'Guinean francs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'GTQ',
@@ -425,7 +426,7 @@ return [
         'rounding' => 0,
         'code' => 'GTQ',
         'namePlural' => 'Guatemalan quetzals',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'HK$',
@@ -435,7 +436,7 @@ return [
         'rounding' => 0,
         'code' => 'HKD',
         'namePlural' => 'Hong Kong dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'HNL',
@@ -445,7 +446,7 @@ return [
         'rounding' => 0,
         'code' => 'HNL',
         'namePlural' => 'Honduran lempiras',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'kn',
@@ -455,7 +456,7 @@ return [
         'rounding' => 0,
         'code' => 'HRK',
         'namePlural' => 'Croatian kunas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Ft',
@@ -465,7 +466,7 @@ return [
         'rounding' => 0,
         'code' => 'HUF',
         'namePlural' => 'Hungarian forints',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Rp',
@@ -475,7 +476,7 @@ return [
         'rounding' => 0,
         'code' => 'IDR',
         'namePlural' => 'Indonesian rupiahs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₪',
@@ -485,7 +486,7 @@ return [
         'rounding' => 0,
         'code' => 'ILS',
         'namePlural' => 'Israeli new sheqels',
-		'locations' => ['IL'],
+        'locations' => ['IL'],
     ],
     [
         'symbol' => 'Rs',
@@ -495,7 +496,7 @@ return [
         'rounding' => 0,
         'code' => 'INR',
         'namePlural' => 'Indian rupees',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'IQD',
@@ -505,7 +506,7 @@ return [
         'rounding' => 0,
         'code' => 'IQD',
         'namePlural' => 'Iraqi dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'IRR',
@@ -515,7 +516,7 @@ return [
         'rounding' => 0,
         'code' => 'IRR',
         'namePlural' => 'Iranian rials',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Ikr',
@@ -525,7 +526,7 @@ return [
         'rounding' => 0,
         'code' => 'ISK',
         'namePlural' => 'Icelandic krónur',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'J$',
@@ -535,7 +536,7 @@ return [
         'rounding' => 0,
         'code' => 'JMD',
         'namePlural' => 'Jamaican dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'JD',
@@ -545,7 +546,7 @@ return [
         'rounding' => 0,
         'code' => 'JOD',
         'namePlural' => 'Jordanian dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '¥',
@@ -555,7 +556,7 @@ return [
         'rounding' => 0,
         'code' => 'JPY',
         'namePlural' => 'Japanese yen',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Ksh',
@@ -565,7 +566,7 @@ return [
         'rounding' => 0,
         'code' => 'KES',
         'namePlural' => 'Kenyan shillings',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'KHR',
@@ -575,7 +576,7 @@ return [
         'rounding' => 0,
         'code' => 'KHR',
         'namePlural' => 'Cambodian riels',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CF',
@@ -585,7 +586,7 @@ return [
         'rounding' => 0,
         'code' => 'KMF',
         'namePlural' => 'Comorian francs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₩',
@@ -595,7 +596,7 @@ return [
         'rounding' => 0,
         'code' => 'KRW',
         'namePlural' => 'South Korean won',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'KD',
@@ -605,7 +606,7 @@ return [
         'rounding' => 0,
         'code' => 'KWD',
         'namePlural' => 'Kuwaiti dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'KZT',
@@ -615,7 +616,7 @@ return [
         'rounding' => 0,
         'code' => 'KZT',
         'namePlural' => 'Kazakhstani tenges',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'SLRs',
@@ -625,7 +626,7 @@ return [
         'rounding' => 0,
         'code' => 'LKR',
         'namePlural' => 'Sri Lankan rupees',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Lt',
@@ -635,7 +636,7 @@ return [
         'rounding' => 0,
         'code' => 'LTL',
         'namePlural' => 'Lithuanian litai',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Ls',
@@ -645,7 +646,7 @@ return [
         'rounding' => 0,
         'code' => 'LVL',
         'namePlural' => 'Latvian lati',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'LD',
@@ -655,7 +656,7 @@ return [
         'rounding' => 0,
         'code' => 'LYD',
         'namePlural' => 'Libyan dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MAD',
@@ -665,7 +666,7 @@ return [
         'rounding' => 0,
         'code' => 'MAD',
         'namePlural' => 'Moroccan dirhams',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MDL',
@@ -675,7 +676,7 @@ return [
         'rounding' => 0,
         'code' => 'MDL',
         'namePlural' => 'Moldovan lei',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MGA',
@@ -685,7 +686,7 @@ return [
         'rounding' => 0,
         'code' => 'MGA',
         'namePlural' => 'Malagasy Ariaries',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MKD',
@@ -695,7 +696,7 @@ return [
         'rounding' => 0,
         'code' => 'MKD',
         'namePlural' => 'Macedonian denari',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MMK',
@@ -705,7 +706,7 @@ return [
         'rounding' => 0,
         'code' => 'MMK',
         'namePlural' => 'Myanma kyats',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MOP$',
@@ -715,7 +716,7 @@ return [
         'rounding' => 0,
         'code' => 'MOP',
         'namePlural' => 'Macanese patacas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MURs',
@@ -725,7 +726,7 @@ return [
         'rounding' => 0,
         'code' => 'MUR',
         'namePlural' => 'Mauritian rupees',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MX$',
@@ -735,7 +736,7 @@ return [
         'rounding' => 0,
         'code' => 'MXN',
         'namePlural' => 'Mexican pesos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'RM',
@@ -745,7 +746,7 @@ return [
         'rounding' => 0,
         'code' => 'MYR',
         'namePlural' => 'Malaysian ringgits',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'MTn',
@@ -755,7 +756,7 @@ return [
         'rounding' => 0,
         'code' => 'MZN',
         'namePlural' => 'Mozambican meticals',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'N$',
@@ -765,7 +766,7 @@ return [
         'rounding' => 0,
         'code' => 'NAD',
         'namePlural' => 'Namibian dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₦',
@@ -775,7 +776,7 @@ return [
         'rounding' => 0,
         'code' => 'NGN',
         'namePlural' => 'Nigerian nairas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'C$',
@@ -785,7 +786,7 @@ return [
         'rounding' => 0,
         'code' => 'NIO',
         'namePlural' => 'Nicaraguan córdobas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Nkr',
@@ -795,7 +796,7 @@ return [
         'rounding' => 0,
         'code' => 'NOK',
         'namePlural' => 'Norwegian kroner',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'NPRs',
@@ -805,7 +806,7 @@ return [
         'rounding' => 0,
         'code' => 'NPR',
         'namePlural' => 'Nepalese rupees',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'NZ$',
@@ -815,7 +816,7 @@ return [
         'rounding' => 0,
         'code' => 'NZD',
         'namePlural' => 'New Zealand dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'OMR',
@@ -825,7 +826,7 @@ return [
         'rounding' => 0,
         'code' => 'OMR',
         'namePlural' => 'Omani rials',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'B/.',
@@ -835,7 +836,7 @@ return [
         'rounding' => 0,
         'code' => 'PAB',
         'namePlural' => 'Panamanian balboas',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'S/.',
@@ -845,7 +846,7 @@ return [
         'rounding' => 0,
         'code' => 'PEN',
         'namePlural' => 'Peruvian nuevos soles',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₱',
@@ -855,7 +856,7 @@ return [
         'rounding' => 0,
         'code' => 'PHP',
         'namePlural' => 'Philippine pesos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'PKRs',
@@ -865,7 +866,7 @@ return [
         'rounding' => 0,
         'code' => 'PKR',
         'namePlural' => 'Pakistani rupees',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'zł',
@@ -875,7 +876,7 @@ return [
         'rounding' => 0,
         'code' => 'PLN',
         'namePlural' => 'Polish zlotys',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₲',
@@ -885,7 +886,7 @@ return [
         'rounding' => 0,
         'code' => 'PYG',
         'namePlural' => 'Paraguayan guaranis',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'QR',
@@ -895,7 +896,7 @@ return [
         'rounding' => 0,
         'code' => 'QAR',
         'namePlural' => 'Qatari rials',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'RON',
@@ -905,7 +906,7 @@ return [
         'rounding' => 0,
         'code' => 'RON',
         'namePlural' => 'Romanian lei',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'din.',
@@ -915,7 +916,7 @@ return [
         'rounding' => 0,
         'code' => 'RSD',
         'namePlural' => 'Serbian dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'RUB',
@@ -925,7 +926,7 @@ return [
         'rounding' => 0,
         'code' => 'RUB',
         'namePlural' => 'Russian rubles',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'RWF',
@@ -935,7 +936,7 @@ return [
         'rounding' => 0,
         'code' => 'RWF',
         'namePlural' => 'Rwandan francs',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'SR',
@@ -945,7 +946,7 @@ return [
         'rounding' => 0,
         'code' => 'SAR',
         'namePlural' => 'Saudi riyals',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'SDG',
@@ -955,7 +956,7 @@ return [
         'rounding' => 0,
         'code' => 'SDG',
         'namePlural' => 'Sudanese pounds',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Skr',
@@ -965,7 +966,7 @@ return [
         'rounding' => 0,
         'code' => 'SEK',
         'namePlural' => 'Swedish kronor',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'S$',
@@ -975,7 +976,7 @@ return [
         'rounding' => 0,
         'code' => 'SGD',
         'namePlural' => 'Singapore dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Ssh',
@@ -985,7 +986,7 @@ return [
         'rounding' => 0,
         'code' => 'SOS',
         'namePlural' => 'Somali shillings',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'SY£',
@@ -995,7 +996,7 @@ return [
         'rounding' => 0,
         'code' => 'SYP',
         'namePlural' => 'Syrian pounds',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '฿',
@@ -1005,7 +1006,7 @@ return [
         'rounding' => 0,
         'code' => 'THB',
         'namePlural' => 'Thai baht',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'DT',
@@ -1015,7 +1016,7 @@ return [
         'rounding' => 0,
         'code' => 'TND',
         'namePlural' => 'Tunisian dinars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'T$',
@@ -1025,7 +1026,7 @@ return [
         'rounding' => 0,
         'code' => 'TOP',
         'namePlural' => 'Tongan paʻanga',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'TL',
@@ -1035,7 +1036,7 @@ return [
         'rounding' => 0,
         'code' => 'TRY',
         'namePlural' => 'Turkish Lira',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'TT$',
@@ -1045,7 +1046,7 @@ return [
         'rounding' => 0,
         'code' => 'TTD',
         'namePlural' => 'Trinidad and Tobago dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'NT$',
@@ -1055,7 +1056,7 @@ return [
         'rounding' => 0,
         'code' => 'TWD',
         'namePlural' => 'New Taiwan dollars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'TSh',
@@ -1065,7 +1066,7 @@ return [
         'rounding' => 0,
         'code' => 'TZS',
         'namePlural' => 'Tanzanian shillings',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₴',
@@ -1075,7 +1076,7 @@ return [
         'rounding' => 0,
         'code' => 'UAH',
         'namePlural' => 'Ukrainian hryvnias',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'USh',
@@ -1085,7 +1086,7 @@ return [
         'rounding' => 0,
         'code' => 'UGX',
         'namePlural' => 'Ugandan shillings',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '$U',
@@ -1095,7 +1096,7 @@ return [
         'rounding' => 0,
         'code' => 'UYU',
         'namePlural' => 'Uruguayan pesos',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'UZS',
@@ -1105,7 +1106,7 @@ return [
         'rounding' => 0,
         'code' => 'UZS',
         'namePlural' => 'Uzbekistan som',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'Bs.F.',
@@ -1115,7 +1116,7 @@ return [
         'rounding' => 0,
         'code' => 'VEF',
         'namePlural' => 'Venezuelan bolívars',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => '₫',
@@ -1125,7 +1126,7 @@ return [
         'rounding' => 0,
         'code' => 'VND',
         'namePlural' => 'Vietnamese dong',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'FCFA',
@@ -1135,7 +1136,7 @@ return [
         'rounding' => 0,
         'code' => 'XAF',
         'namePlural' => 'CFA francs BEAC',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'CFA',
@@ -1145,7 +1146,7 @@ return [
         'rounding' => 0,
         'code' => 'XOF',
         'namePlural' => 'CFA francs BCEAO',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'YR',
@@ -1155,7 +1156,7 @@ return [
         'rounding' => 0,
         'code' => 'YER',
         'namePlural' => 'Yemeni rials',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'R',
@@ -1165,7 +1166,7 @@ return [
         'rounding' => 0,
         'code' => 'ZAR',
         'namePlural' => 'South African rand',
-		'locations' => [],
+        'locations' => [],
     ],
     [
         'symbol' => 'ZK',
@@ -1175,6 +1176,6 @@ return [
         'rounding' => 0,
         'code' => 'ZMK',
         'namePlural' => 'Zambian kwachas',
-		'locations' => [],
+        'locations' => [],
     ],
 ];

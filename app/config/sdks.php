@@ -36,55 +36,55 @@ return [
         'versions' => [],
         'logo' => 'go.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
     [
         'label' => 'Scala',
         'versions' => [],
         'logo' => 'scala.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
     [
         'label' => 'Swift',
         'versions' => [],
         'logo' => 'swift.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
     [
         'label' => 'C',
         'versions' => [],
         'logo' => 'c.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
     [
         'label' => '.NET',
         'versions' => [],
         'logo' => 'dotnet.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
     [
         'label' => 'Erlang',
         'versions' => [],
         'logo' => 'erlang.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
     [
         'label' => 'Kotlin',
         'versions' => [],
         'logo' => 'kotlin.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
     [
         'label' => 'Java',
         'versions' => [],
         'logo' => 'java.svg',
         'link' => 'https://...',
-        'tag' => 'Soon'
+        'tag' => 'Soon',
     ],
 ];

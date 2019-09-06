@@ -53,9 +53,9 @@ return [
     'home.press.title.photos' => 'Product Photos',
 
     'home.cookies.title' => 'Cookies',
-    'home.cookies.paragraph-1' => 'When someone visits ' . APP_NAME . ', we collect standard internet log information and details of visitor behaviour patterns. We do this to find out things such as the number of visitors to the various parts of the site. We collect this information in a way which does not personally identify anyone.',
+    'home.cookies.paragraph-1' => 'When someone visits '.APP_NAME.', we collect standard internet log information and details of visitor behaviour patterns. We do this to find out things such as the number of visitors to the various parts of the site. We collect this information in a way which does not personally identify anyone.',
     'home.cookies.paragraph-2' => 'Most web browsers allow some control of most cookies through the browser settings. To find out more about cookies, including how to see what cookies have been set and how to manage and delete them, visit',
-    'home.cookies.set' => 'Cookies set by ' . APP_NAME,
+    'home.cookies.set' => 'Cookies set by '.APP_NAME,
     'home.cookies.cell.name' => 'Name',
     'home.cookies.cell.description' => 'Description',
     'home.cookies.cell.duration' => 'Duration',
@@ -151,7 +151,7 @@ return [
 
     // Auth - Join
     'home.auth.join.title' => 'Invitation',
-    'home.auth.join.subtitle' => 'You have been invited to join %s team on ' . APP_NAME,
+    'home.auth.join.subtitle' => 'You have been invited to join %s team on '.APP_NAME,
     'home.auth.join.success' => 'Joined Team Successfully',
     'home.auth.join.failure' => 'Failed to join team. Please try again later',
     'home.auth.join.agree' => 'By accepting the invitation, you agree to the %s and %s.',
@@ -225,19 +225,18 @@ return [
     'console.settings.section.members.leave.success' => 'Member Removed Successfully',
     'console.settings.section.members.leave.failure' => 'Failed to Remove Member',
 
-
     'console.home.title' => 'Console',
 
     'console.database.title' => 'Database',
 
     'console.storage.title' => 'Storage',
-    
+
     'console.users.title' => 'Users',
     'console.users.section.users.title' => 'Users',
     'console.users.section.teams.title' => 'Teams',
     'console.users.section.providers.title' => 'Providers',
     'console.users.section.templates.title' => 'Templates',
-    
+
     'console.webhooks.title' => 'Webhooks',
     'console.keys.title' => 'API Keys',
     'console.tasks.title' => 'Tasks',
