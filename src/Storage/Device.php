@@ -7,7 +7,7 @@ use Exception;
 abstract class Device
 {
     /**
-     * Get Name
+     * Get Name.
      *
      * Get storage device name
      *
@@ -16,7 +16,7 @@ abstract class Device
     abstract public function getName();
 
     /**
-     * Get Description
+     * Get Description.
      *
      * Get storage device description and purpose.
      *
@@ -25,7 +25,7 @@ abstract class Device
     abstract public function getDescription();
 
     /**
-     * Get Root
+     * Get Root.
      *
      * Get storage device root path
      *
@@ -34,42 +34,45 @@ abstract class Device
     abstract public function getRoot();
 
     /**
-     * Get Path
+     * Get Path.
      *
      * Each device hold a complex directory structure that is being build in this method.
      *
      * @param $filename
+     *
      * @return string
      */
     public function getPath($filename)
     {
-        return $this->getRoot() . DIRECTORY_SEPARATOR . $filename;
+        return $this->getRoot().DIRECTORY_SEPARATOR.$filename;
     }
 
     /**
-     * Upload
+     * Upload.
      *
      * Upload a file to desired destination in the selected disk.
      *
-     * @param  string $target
-     * @param  string $filename
+     * @param string $target
+     * @param string $filename
+     *
      * @throws \Exception
+     *
      * @return string|bool saved destination on success or false on failures
      */
     public function upload($target, $filename = '')
     {
-        $filename   = (empty($filename)) ? $target : $filename;
-        $filename   = uniqid() . '.' . pathinfo($filename, PATHINFO_EXTENSION);
+        $filename = (empty($filename)) ? $target : $filename;
+        $filename = uniqid().'.'.pathinfo($filename, PATHINFO_EXTENSION);
 
-        $path       = $this->getPath($filename);
+        $path = $this->getPath($filename);
 
-        if(!is_uploaded_file($target)) {
+        if (!is_uploaded_file($target)) {
             throw new Exception('File is not a valid uploaded file');
         }
 
         if (!file_exists(dirname($path))) { // Checks if directory path to file exists
-            if(!mkdir(dirname($path), 0755, true)) {
-                throw new Exception('Can\'t create directory ' . dirname($path));
+            if (!mkdir(dirname($path), 0755, true)) {
+                throw new Exception('Can\'t create directory '.dirname($path));
             }
         }
 
@@ -81,9 +84,10 @@ abstract class Device
     }
 
     /**
-     * Read file by given path
+     * Read file by given path.
      *
      * @param string $path
+     *
      * @return string
      */
     public function read(string $path):string
@@ -92,10 +96,11 @@ abstract class Device
     }
 
     /**
-     * Write file by given path
+     * Write file by given path.
      *
      * @param string $path
      * @param string $data
+     *
      * @return string
      */
     public function write(string $path, string $data):bool
@@ -104,11 +109,12 @@ abstract class Device
     }
 
     /**
-     * Delete file in given path, Return true on success and false on failure
+     * Delete file in given path, Return true on success and false on failure.
      *
      * @see http://php.net/manual/en/function.filesize.php
      *
      * @param string $path
+     *
      * @return bool
      */
     public function delete(string $path):bool
@@ -117,37 +123,38 @@ abstract class Device
     }
 
     /**
-     * Delete all file and directories in given path, Return true on success and false on failure
+     * Delete all file and directories in given path, Return true on success and false on failure.
      *
      * @see https://paulund.co.uk/php-delete-directory-and-files-in-directory
      *
      * @param string $path
+     *
      * @return bool
      */
     public function deleteDir($target):bool
     {
         if (is_dir($target)) {
-            $files = glob($target . '*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
-    
+            $files = glob($target.'*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
+
             foreach ($files as $file) {
-                $this->deleteDir($file);      
+                $this->deleteDir($file);
             }
-    
+
             rmdir($target);
-        }
-        elseif (is_file($target)) {
-            unlink( $target );  
+        } elseif (is_file($target)) {
+            unlink($target);
         }
 
         return true;
     }
 
     /**
-     * Returns given file path its size
+     * Returns given file path its size.
      *
      * @see http://php.net/manual/en/function.filesize.php
      *
      * @param $path
+     *
      * @return int
      */
     public function getFileSize(string $path):int
@@ -156,11 +163,12 @@ abstract class Device
     }
 
     /**
-     * Returns given file path its mime type
+     * Returns given file path its mime type.
      *
      * @see http://php.net/manual/en/function.mime-content-type.php
      *
      * @param $path
+     *
      * @return string
      */
     public function getFileMimeType(string $path):string
@@ -169,11 +177,12 @@ abstract class Device
     }
 
     /**
-     * Returns given file path its MD5 hash value
+     * Returns given file path its MD5 hash value.
      *
      * @see http://php.net/manual/en/function.md5-file.php
      *
      * @param $path
+     *
      * @return string
      */
     public function getFileHash(string $path):string
@@ -182,13 +191,14 @@ abstract class Device
     }
 
     /**
-     * Get directory size in bytes
+     * Get directory size in bytes.
      *
      * Return -1 on error
      *
      * Based on http://www.jonasjohn.de/snippets/php/dir-size.htm
      *
      * @param $path
+     *
      * @return int
      */
     public function getDirectorySize(string $path):int
@@ -197,19 +207,21 @@ abstract class Device
 
         $directory = opendir($path);
 
-        if (!$directory)
+        if (!$directory) {
             return -1;
+        }
 
         while (($file = readdir($directory)) !== false) {
             // Skip file pointers
-            if ($file[0] == '.') continue;
+            if ($file[0] == '.') {
+                continue;
+            }
 
             // Go recursive down, or add the file size
-            if (is_dir($path . $file)) {
-                $size += $this->getDirectorySize($path . $file . DIRECTORY_SEPARATOR);
-            }
-            else {
-                $size += filesize($path . $file);
+            if (is_dir($path.$file)) {
+                $size += $this->getDirectorySize($path.$file.DIRECTORY_SEPARATOR);
+            } else {
+                $size += filesize($path.$file);
             }
         }
 
@@ -219,7 +231,7 @@ abstract class Device
     }
 
     /**
-     * Get Partition Free Space
+     * Get Partition Free Space.
      *
      * disk_free_space — Returns available space on filesystem or disk partition
      *
@@ -231,7 +243,7 @@ abstract class Device
     }
 
     /**
-     * Get Partition Total Space
+     * Get Partition Total Space.
      *
      * disk_total_space — Returns the total size of a filesystem or disk partition
      *
@@ -243,25 +255,26 @@ abstract class Device
     }
 
     /**
-     * Human readable data size format from bytes input
+     * Human readable data size format from bytes input.
      *
      * As published on https://gist.github.com/liunian/9338301 (first comment)
      *
      * @param int $bytes
      * @param int $decimals
+     *
      * @return string
      */
     public function human($bytes, $decimals = 2)
     {
-        $units  = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
-        $step   = 1024;
-        $i      = 0;
+        $units = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
+        $step = 1024;
+        $i = 0;
 
         while (($bytes / $step) > 0.9) {
             $bytes = $bytes / $step;
-            $i++;
+            ++$i;
         }
 
-        return round($bytes, $decimals) . $units[$i];
+        return round($bytes, $decimals).$units[$i];
     }
 }

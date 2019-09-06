@@ -15,39 +15,42 @@ class Resize
 
     /**
      * @param string $data
+     *
      * @throws Exception
      */
     public function __construct($data)
     {
-        $this->image  = new Imagick();
+        $this->image = new Imagick();
 
         $this->image->readImageBlob($data);
 
-        $this->width  = $this->image->getImageWidth();
+        $this->width = $this->image->getImageWidth();
         $this->height = $this->image->getImageHeight();
     }
 
     /**
      * @param int $width
      * @param int $height
+     *
      * @return Resize
+     *
      * @throws \ImagickException
      */
     public function crop(int $width, int $height)
     {
         $originalAspect = $this->width / $this->height;
 
-        if(empty($width)) {
+        if (empty($width)) {
             $width = $height * $originalAspect;
         }
 
-        if(empty($height)) {
+        if (empty($height)) {
             $height = $width / $originalAspect;
         }
 
-        if(empty($height) && empty($width)) {
+        if (empty($height) && empty($width)) {
             $height = $this->height;
-            $width  = $this->width;
+            $width = $this->width;
         }
 
         if ($this->image->getImageFormat() == 'GIF') {
@@ -58,8 +61,7 @@ class Resize
             }
 
             $this->image->deconstructImages();
-        }
-        else {
+        } else {
             $this->image->cropThumbnailImage($width, $height);
         }
 
@@ -68,10 +70,13 @@ class Resize
 
     /**
      * @param $color
+     *
      * @return Resize
+     *
      * @throws \ImagickException
      */
-    public function setBackground($color) {
+    public function setBackground($color)
+    {
         $this->image->setImageBackgroundColor($color);
         $this->image = $this->image->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
 
@@ -79,13 +84,15 @@ class Resize
     }
 
     /**
-     * Output
+     * Output.
      *
      * Prints manipulated image.
      *
      * @param string $type
-     * @param int $quality
+     * @param int    $quality
+     *
      * @return string
+     *
      * @throws Exception
      */
     public function output(string $type, int $quality = 75)
@@ -97,7 +104,9 @@ class Resize
      * @param string $path
      * @param $type
      * @param int $quality
+     *
      * @return string
+     *
      * @throws Exception
      */
     public function save(string $path = null, string $type = '', int $quality = 75)
@@ -122,9 +131,9 @@ class Resize
             case 'webp':
                 //$this->image->setImageFormat('webp');
 
-                $signature  = $this->image->getImageSignature();
-                $temp       = '/tmp/temp-' . $signature . '.' . strtolower($this->image->getImageFormat());
-                $output     = '/tmp/output-' . $signature . '.webp';
+                $signature = $this->image->getImageSignature();
+                $temp = '/tmp/temp-'.$signature.'.'.strtolower($this->image->getImageFormat());
+                $output = '/tmp/output-'.$signature.'.webp';
 
                 // save temp
                 $this->image->writeImages($temp, true);
@@ -135,10 +144,9 @@ class Resize
                 $data = file_get_contents($output);
 
                 //load webp
-                if(empty($path)) {
+                if (empty($path)) {
                     return $data;
-                }
-                else {
+                } else {
                     file_put_contents($path, $data, LOCK_EX);
                 }
 
@@ -149,20 +157,20 @@ class Resize
                 unlink($output);
                 unlink($temp);
 
-                return null;
+                return;
 
                 break;
 
             case 'png':
                 /* Scale quality from 0-100 to 0-9 */
-                $scaleQuality = round(($quality/100) * 9);
+                $scaleQuality = round(($quality / 100) * 9);
 
                 /* Invert quality setting as 0 is best, not 9 */
                 $invertScaleQuality = 9 - $scaleQuality;
 
                 $this->image->setImageCompressionQuality($invertScaleQuality);
 
-                $this->image->setImageFormat("png");
+                $this->image->setImageFormat('png');
                 break;
 
             default:
@@ -170,10 +178,9 @@ class Resize
                 break;
         }
 
-        if(empty($path)) {
+        if (empty($path)) {
             return $this->image->getImagesBlob();
-        }
-        else {
+        } else {
             $this->image->writeImages($path, true);
         }
 
@@ -182,7 +189,8 @@ class Resize
     }
 
     /**
-     * @param  int $newHeight
+     * @param int $newHeight
+     *
      * @return int
      */
     protected function getSizeByFixedHeight(int $newHeight):int
@@ -194,7 +202,8 @@ class Resize
     }
 
     /**
-     * @param  int $newWidth
+     * @param int $newWidth
+     *
      * @return int
      */
     protected function getSizeByFixedWidth(int $newWidth):int

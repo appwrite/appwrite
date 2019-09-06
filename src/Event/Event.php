@@ -23,6 +23,7 @@ class Event
 
     /**
      * Event constructor.
+     *
      * @param string $queue
      * @param string $class
      */
@@ -34,17 +35,20 @@ class Event
 
     /**
      * @param string $key
-     * @param mixed $value
+     * @param mixed  $value
+     *
      * @return $this
      */
     public function setParam($key, $value)
     {
         $this->params[$key] = $value;
+
         return $this;
     }
 
     /**
      * @param string $key
+     *
      * @return mixed|null
      */
     public function getParam($key)
@@ -53,7 +57,7 @@ class Event
     }
 
     /**
-     * Execute Event
+     * Execute Event.
      */
     public function trigger()
     {

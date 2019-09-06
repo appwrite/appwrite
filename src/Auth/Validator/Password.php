@@ -5,16 +5,14 @@ namespace Auth\Validator;
 use Utopia\Validator;
 
 /**
- * Password
+ * Password.
  *
  * Validates user password string
- *
- * @package Utopia\Validator
  */
 class Password extends Validator
 {
     /**
-     * Get Description
+     * Get Description.
      *
      * Returns validator description
      *
@@ -26,11 +24,12 @@ class Password extends Validator
     }
 
     /**
-     * Is valid
+     * Is valid.
      *
      * Validation username
      *
-     * @param  mixed $value
+     * @param mixed $value
+     *
      * @return bool
      */
     public function isValid($value)

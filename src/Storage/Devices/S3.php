@@ -32,16 +32,17 @@ class S3 extends Device
 
     /**
      * @param string $filename
+     *
      * @return string
      */
     public function getPath($filename)
     {
         $path = '';
 
-        for ($i = 0; $i < 4; $i++) {
-            $path = ($i < strlen($filename)) ? $path . DIRECTORY_SEPARATOR . $filename[$i] : $path . DIRECTORY_SEPARATOR . 'x';
+        for ($i = 0; $i < 4; ++$i) {
+            $path = ($i < strlen($filename)) ? $path.DIRECTORY_SEPARATOR.$filename[$i] : $path.DIRECTORY_SEPARATOR.'x';
         }
 
-        return $this->getRoot() . $path . DIRECTORY_SEPARATOR . $filename;
+        return $this->getRoot().$path.DIRECTORY_SEPARATOR.$filename;
     }
 }

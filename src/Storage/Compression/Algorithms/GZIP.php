@@ -15,7 +15,7 @@ class GZIP extends Compression
     }
 
     /**
-     * Compress
+     * Compress.
      *
      * We use gzencode over gzcompress for better support of the first format among other tools.
      * (http://stackoverflow.com/a/621987/2299554)
@@ -23,6 +23,7 @@ class GZIP extends Compression
      * @see http://php.net/manual/en/function.gzencode.php
      *
      * @param string $data
+     *
      * @return string
      */
     public function compress(string $data):string
@@ -31,9 +32,10 @@ class GZIP extends Compression
     }
 
     /**
-     * Decompress
+     * Decompress.
      *
      * @param string $data
+     *
      * @return string
      */
     public function decompress(string $data):string

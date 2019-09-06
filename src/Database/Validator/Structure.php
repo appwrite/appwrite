@@ -19,7 +19,7 @@ class Structure extends Validator
     protected $id = null;
 
     /**
-     * Basic rules to apply on all documents
+     * Basic rules to apply on all documents.
      *
      * @var array
      */
@@ -93,6 +93,7 @@ class Structure extends Validator
 
     /**
      * Structure constructor.
+     *
      * @param Database $database
      */
     public function __construct(Database $database)
@@ -101,7 +102,7 @@ class Structure extends Validator
     }
 
     /**
-     * Get Description
+     * Get Description.
      *
      * Returns validator description
      *
@@ -109,15 +110,16 @@ class Structure extends Validator
      */
     public function getDescription()
     {
-        return 'Invalid document (#' . $this->id . '): ' . $this->message;
+        return 'Invalid document (#'.$this->id.'): '.$this->message;
     }
 
     /**
-     * Is valid
+     * Is valid.
      *
      * Returns true if valid or false if not.
      *
-     * @param  Document $document
+     * @param Document $document
+     *
      * @return bool
      */
     public function isValid($document)
@@ -126,36 +128,39 @@ class Structure extends Validator
 
         $this->id = $document->getUid();
 
-        if(is_null($document->getCollection())) {
+        if (is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
+
             return false;
         }
 
         $collection = $this->getCollection($document->getCollection());
 
-        if(is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             $this->message = 'Collection not found';
+
             return false;
         }
 
-        $array      = $document->getArrayCopy();
-        $rules      = array_merge($this->rules, $collection->getAttribute('rules', []));
+        $array = $document->getArrayCopy();
+        $rules = array_merge($this->rules, $collection->getAttribute('rules', []));
 
         foreach ($rules as $rule) { // Check all required keys are set
-            if(isset($rule['key']) && !isset($array[$rule['key']])
+            if (isset($rule['key']) && !isset($array[$rule['key']])
             && isset($rule['required']) && true == $rule['required']) {
-                $this->message = 'Missing required key "' . $rule['key'] . '"';
+                $this->message = 'Missing required key "'.$rule['key'].'"';
+
                 return false;
             }
         }
 
         foreach ($array as $key => $value) {
-            $rule           = $collection->search('key', $key, $rules);
-            $ruleType       = (isset($rule['type'])) ? $rule['type'] : '';
-            $ruleOptions    = (isset($rule['options'])) ? $rule['options'] : '';
-            $ruleRequired   = (isset($rule['required'])) ? $rule['required'] : true;
-            $ruleArray      = (isset($rule['array'])) ? $rule['array'] : false;
-            $validator      = null;
+            $rule = $collection->search('key', $key, $rules);
+            $ruleType = (isset($rule['type'])) ? $rule['type'] : '';
+            $ruleOptions = (isset($rule['options'])) ? $rule['options'] : '';
+            $ruleRequired = (isset($rule['required'])) ? $rule['required'] : true;
+            $ruleArray = (isset($rule['array'])) ? $rule['array'] : false;
+            $validator = null;
 
             switch ($ruleType) {
                 case 'uid':
@@ -194,42 +199,46 @@ class Structure extends Validator
                     break;
             }
 
-            if(empty($validator)) { // Error creating validator for property
-                $this->message = 'Unknown property "' . $key . '"' .
-                    '. Make sure to follow ' . strtolower($collection->getAttribute('name', 'unknown')) . ' collection structure';
+            if (empty($validator)) { // Error creating validator for property
+                $this->message = 'Unknown property "'.$key.'"'.
+                    '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
+
                 return false;
             }
 
-            if($ruleRequired && ('' === $value || null === $value)) {
-                $this->message = 'Required property "' . $key . '" has no value';
+            if ($ruleRequired && ('' === $value || null === $value)) {
+                $this->message = 'Required property "'.$key.'" has no value';
+
                 return false;
             }
 
-            if(!$ruleRequired && empty($value)) {
+            if (!$ruleRequired && empty($value)) {
                 unset($array[$key]);
                 unset($rule);
 
                 continue;
             }
 
-            if($ruleArray) { // Array of values validation
-                if(!is_array($value)) {
-                    $this->message = 'Property "' . $key . '" must be an array';
+            if ($ruleArray) { // Array of values validation
+                if (!is_array($value)) {
+                    $this->message = 'Property "'.$key.'" must be an array';
+
                     return false;
                 }
 
                 // TODO add is required check here
 
                 foreach ($value as $node) {
-                    if(!$validator->isValid($node)) { // Check if property is valid, if not required can also be empty
-                        $this->message = 'Property "' . $key . '" has invalid input. ' . $validator->getDescription();
+                    if (!$validator->isValid($node)) { // Check if property is valid, if not required can also be empty
+                        $this->message = 'Property "'.$key.'" has invalid input. '.$validator->getDescription();
+
                         return false;
                     }
                 }
-            }
-            else { // Single value validation
-                if((!$validator->isValid($value)) && !('' === $value && !$ruleRequired)) {  // Error when value is not valid, and is not optional and empty
-                    $this->message = 'Property "' . $key . '" has invalid input. ' . $validator->getDescription();
+            } else { // Single value validation
+                if ((!$validator->isValid($value)) && !('' === $value && !$ruleRequired)) {  // Error when value is not valid, and is not optional and empty
+                    $this->message = 'Property "'.$key.'" has invalid input. '.$validator->getDescription();
+
                     return false;
                 }
             }
@@ -238,9 +247,10 @@ class Structure extends Validator
             unset($rule);
         }
 
-        if(!empty($array)) { // No fields should be left unvalidated
-            $this->message = 'Unknown properties are not allowed (' . implode(', ', array_keys($array)) . ') for this collection' .
-                '. Make sure to follow ' . strtolower($collection->getAttribute('name', 'unknown')) . ' collection structure';
+        if (!empty($array)) { // No fields should be left unvalidated
+            $this->message = 'Unknown properties are not allowed ('.implode(', ', array_keys($array)).') for this collection'.
+                '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
+
             return false;
         }
 

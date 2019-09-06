@@ -7,9 +7,8 @@ use Utopia\Validator;
 
 class Cron extends Validator
 {
-
     /**
-     * Get Description
+     * Get Description.
      *
      * Returns validator description
      *
@@ -21,16 +20,17 @@ class Cron extends Validator
     }
 
     /**
-     * Is valid
+     * Is valid.
      *
      * Returns true if valid or false if not.
      *
-     * @param  mixed $value
+     * @param mixed $value
+     *
      * @return bool
      */
     public function isValid($value)
     {
-        if(!CronExpression::isValidExpression($value)) {
+        if (!CronExpression::isValidExpression($value)) {
             return false;
         }
 

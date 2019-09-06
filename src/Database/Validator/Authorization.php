@@ -10,7 +10,7 @@ class Authorization extends Validator
     /**
      * @var array
      */
-    static protected $roles = ['*'];
+    protected static $roles = ['*'];
 
     /**
      * @var Document
@@ -31,7 +31,7 @@ class Authorization extends Validator
      * Structure constructor.
      *
      * @param Document $document
-     * @param string $action
+     * @param string   $action
      */
     public function __construct(Document $document, $action)
     {
@@ -40,7 +40,7 @@ class Authorization extends Validator
     }
 
     /**
-     * Get Description
+     * Get Description.
      *
      * Returns validator description
      *
@@ -52,35 +52,37 @@ class Authorization extends Validator
     }
 
     /**
-     * Is valid
+     * Is valid.
      *
      * Returns true if valid or false if not.
      *
-     * @param  array $permissions
+     * @param array $permissions
+     *
      * @return bool
      */
     public function isValid($permissions)
     {
-        if(!self::$status) {
+        if (!self::$status) {
             return true;
         }
 
-        if(!isset($permissions[$this->action])) {
-            $this->message = 'Missing action key: "' . $this->action . '"';
+        if (!isset($permissions[$this->action])) {
+            $this->message = 'Missing action key: "'.$this->action.'"';
+
             return false;
         }
 
         $permission = null;
 
         foreach ($permissions[$this->action] as $permission) {
-            $permission = str_replace(':{self}', ':' . $this->document->getUid(), $permission);
+            $permission = str_replace(':{self}', ':'.$this->document->getUid(), $permission);
 
-            if(in_array($permission, self::getRoles())) {
+            if (in_array($permission, self::getRoles())) {
                 return true;
             }
         }
 
-        $this->message = 'User is missing ' . $this->action . ' for ' . $permission . ' permission. only this scope "' . json_encode(self::getRoles()) . '" is given.';
+        $this->message = 'User is missing '.$this->action.' for '.$permission.' permission. only this scope "'.json_encode(self::getRoles()).'" is given.';
 
         return false;
     }
@@ -88,7 +90,7 @@ class Authorization extends Validator
     /**
      * @param string $role
      */
-    static public function setRole($role)
+    public static function setRole($role)
     {
         self::$roles[] = $role;
     }
@@ -96,7 +98,7 @@ class Authorization extends Validator
     /**
      * @return array
      */
-    static public function getRoles()
+    public static function getRoles()
     {
         return self::$roles;
     }
@@ -104,12 +106,12 @@ class Authorization extends Validator
     /**
      * @var bool
      */
-    static public $status = true;
+    public static $status = true;
 
     /**
      *
      */
-    static public function enable()
+    public static function enable()
     {
         self::$status = true;
     }
@@ -117,7 +119,7 @@ class Authorization extends Validator
     /**
      *
      */
-    static public function disable()
+    public static function disable()
     {
         self::$status = false;
     }

@@ -12,17 +12,19 @@ abstract class Adapter
     protected $namespace = '';
 
     /**
-     * Set Namespace
+     * Set Namespace.
      *
      * Set namespace to divide different scope of data sets
      *
      * @param $namespace
+     *
      * @throws Exception
+     *
      * @return bool
      */
     public function setNamespace($namespace)
     {
-        if(empty($namespace)) {
+        if (empty($namespace)) {
             throw new Exception('Missing namespace');
         }
 
@@ -32,16 +34,17 @@ abstract class Adapter
     }
 
     /**
-     * Get Namespace
+     * Get Namespace.
      *
      * Get namespace of current set scope
      *
      * @throws Exception
+     *
      * @return string
      */
     public function getNamespace()
     {
-        if(empty($this->namespace)) {
+        if (empty($this->namespace)) {
             throw new Exception('Missing namespace');
         }
 
@@ -49,71 +52,80 @@ abstract class Adapter
     }
 
     /**
-     * Get Document
+     * Get Document.
      *
      * @param int $id
+     *
      * @return array
      */
     abstract public function getDocument($id);
 
     /**
      * Create Document
-     **
+     **.
+     *
      * @param array $data
+     *
      * @return array
      */
     abstract public function createDocument(array $data);
 
     /**
-     * Update Document
+     * Update Document.
      *
      * @param array $data
+     *
      * @return array
      */
     abstract public function updateDocument(array $data);
 
     /**
-     * Delete Node
+     * Delete Node.
      *
      * @param int $id
+     *
      * @return array
      */
     abstract public function deleteDocument($id);
 
     /**
-     * Create Namespace
+     * Create Namespace.
      *
      * @param string $namespace
+     *
      * @return bool
      */
     abstract public function createNamespace($namespace);
 
     /**
-     * Delete Namespace
+     * Delete Namespace.
      *
      * @param string $namespace
+     *
      * @return bool
      */
     abstract public function deleteNamespace($namespace);
 
     /**
-     * Filter
+     * Filter.
      *
      * Filter data sets using chosen queries
      *
      * @param array $options
+     *
      * @return array
      */
     abstract public function getCollection(array $options);
 
     /**
      * @param array $options
+     *
      * @return int
      */
     abstract public function getCount(array $options);
 
     /**
-     * Last Modified
+     * Last Modified.
      *
      * Return unix timestamp of last time a node queried in corrent session has been changed
      *
@@ -122,7 +134,7 @@ abstract class Adapter
     abstract public function lastModified();
 
     /**
-     * Get Debug Data
+     * Get Debug Data.
      *
      * @return array
      */

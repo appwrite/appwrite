@@ -36,30 +36,31 @@ class Audit
 
     /**
      * @param Adapter $adapter
-     * @param int $userId
-     * @param int $userType
-     * @param string $userAgent
-     * @param string $ip
-     * @param string $location
+     * @param int     $userId
+     * @param int     $userType
+     * @param string  $userAgent
+     * @param string  $ip
+     * @param string  $location
      */
     public function __construct(Adapter $adapter, $userId, $userType, $userAgent, $ip, $location)
     {
-        $this->adapter 	    = $adapter;
-        $this->userId 	    = $userId;
-        $this->userType     = $userType;
-        $this->userAgent 	= $userAgent;
-        $this->ip    	    = $ip;
-        $this->location     = $location;
+        $this->adapter = $adapter;
+        $this->userId = $userId;
+        $this->userType = $userType;
+        $this->userAgent = $userAgent;
+        $this->ip = $ip;
+        $this->location = $location;
     }
 
     /**
-     * Log
+     * Log.
      *
      * Add specific event log
      *
      * @param string $event
      * @param string $resource
-     * @param array $data
+     * @param array  $data
+     *
      * @return mixed
      */
     public function log($event, $resource = '', array $data = [])
@@ -68,12 +69,13 @@ class Audit
     }
 
     /**
-     * Get All Logs By User and Actions
+     * Get All Logs By User and Actions.
      *
      * Get all user logs logs by given action names
      *
      * @param int $userId
      * @param int $userType
+     *
      * @return mixed
      */
     public function getLogsByUser($userId, $userType)
@@ -82,13 +84,14 @@ class Audit
     }
 
     /**
-     * Get All Logs By User and Actions
+     * Get All Logs By User and Actions.
      *
      * Get all user logs logs by given action names
      *
-     * @param int $userId
-     * @param int $userType
+     * @param int   $userId
+     * @param int   $userType
      * @param array $actions
+     *
      * @return mixed
      */
     public function getLogsByUserAndActions($userId, $userType, array $actions)

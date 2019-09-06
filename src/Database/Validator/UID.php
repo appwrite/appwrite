@@ -7,7 +7,7 @@ use Utopia\Validator;
 class UID extends Validator
 {
     /**
-     * Get Description
+     * Get Description.
      *
      * Returns validator description
      *
@@ -19,16 +19,17 @@ class UID extends Validator
     }
 
     /**
-     * Is valid
+     * Is valid.
      *
      * Returns true if valid or false if not.
      *
-     * @param  string $value
+     * @param string $value
+     *
      * @return bool
      */
     public function isValid($value)
     {
-        if(is_numeric($value)) {
+        if (is_numeric($value)) {
             //return false;
         }
 

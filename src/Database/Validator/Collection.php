@@ -19,7 +19,7 @@ class Collection extends Structure
 
     /**
      * @param Database $database
-     * @param array $collections
+     * @param array    $collections
      */
     public function __construct(Database $database, array $collections)
     {
@@ -30,19 +30,22 @@ class Collection extends Structure
 
     /**
      * @param Document $document
+     *
      * @return bool
      */
     public function isValid($document)
     {
         $document = (is_array($document)) ? new Document($document) : $document;
 
-        if(is_null($document->getCollection())) {
+        if (is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
+
             return false;
         }
 
-        if(!in_array($document->getCollection(), $this->collections)) {
+        if (!in_array($document->getCollection(), $this->collections)) {
             $this->message = 'Collection is not allowed';
+
             return false;
         }
 

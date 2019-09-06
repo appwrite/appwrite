@@ -21,13 +21,14 @@ class FileSize extends Validator
 
     public function getDescription()
     {
-        return 'File size can\'t be bigger than ' . $this->max;
+        return 'File size can\'t be bigger than '.$this->max;
     }
 
     /**
-     * Finds whether a file size is smaller than required limit
+     * Finds whether a file size is smaller than required limit.
      *
-     * @param  int  $fileSize
+     * @param int $fileSize
+     *
      * @return bool
      */
     public function isValid($fileSize)

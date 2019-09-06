@@ -12,7 +12,7 @@ class Key extends Validator
     protected $message = 'Parameter must contain only letters with no spaces or special chars and be shorter than 32 chars';
 
     /**
-     * Get Description
+     * Get Description.
      *
      * Returns validator description
      *
@@ -24,21 +24,21 @@ class Key extends Validator
     }
 
     /**
-     * Is valid
+     * Is valid.
      *
      * Returns true if valid or false if not.
      *
      * @param $value
+     *
      * @return bool
      */
     public function isValid($value)
     {
-        if (preg_match('/[^A-Za-z0-9\-\_]/', $value))
-        {
+        if (preg_match('/[^A-Za-z0-9\-\_]/', $value)) {
             return false;
         }
 
-        if(mb_strlen($value) > 40) {
+        if (mb_strlen($value) > 40) {
             return false;
         }
 

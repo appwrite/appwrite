@@ -8,21 +8,21 @@ use Utopia\Validator;
 class FileType extends Validator
 {
     /**
-     * File Types Constants
+     * File Types Constants.
      */
-    const FILE_TYPE_JPEG	= 'jpeg';
-    const FILE_TYPE_GIF		= 'gif';
-    const FILE_TYPE_PNG		= 'png';
+    const FILE_TYPE_JPEG = 'jpeg';
+    const FILE_TYPE_GIF = 'gif';
+    const FILE_TYPE_PNG = 'png';
 
     /**
-     * File Type Binaries
+     * File Type Binaries.
      *
      * @var array
      */
     protected $types = array(
-        self::FILE_TYPE_JPEG	=> "\xFF\xD8\xFF",
-        self::FILE_TYPE_GIF		=> 'GIF',
-        self::FILE_TYPE_PNG		=> "\x89\x50\x4e\x47\x0d\x0a",
+        self::FILE_TYPE_JPEG => "\xFF\xD8\xFF",
+        self::FILE_TYPE_GIF => 'GIF',
+        self::FILE_TYPE_PNG => "\x89\x50\x4e\x47\x0d\x0a",
     );
 
     /**
@@ -31,7 +31,8 @@ class FileType extends Validator
     protected $whiteList;
 
     /**
-     * @param  array     $whiteList
+     * @param array $whiteList
+     *
      * @throws Exception
      */
     public function __construct(array $whiteList)
@@ -51,12 +52,14 @@ class FileType extends Validator
     }
 
     /**
-     * Is Valid
+     * Is Valid.
      *
      * Binary check to finds whether a file is of valid type
      *
      * @see http://stackoverflow.com/a/3313196
-     * @param  string $path
+     *
+     * @param string $path
+     *
      * @return bool
      */
     public function isValid($path)

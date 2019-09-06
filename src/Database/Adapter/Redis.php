@@ -21,29 +21,32 @@ class Redis extends Adapter
 
     /**
      * Redis constructor.
-     * @param Adapter $adapter
+     *
+     * @param Adapter  $adapter
      * @param Registry $register
      */
     public function __construct(Adapter $adapter, Registry $register)
     {
         $this->register = $register;
-        $this->adapter  = $adapter;
+        $this->adapter = $adapter;
     }
 
     /**
-     * Get Document
+     * Get Document.
      *
      * @param string $id
+     *
      * @return array
+     *
      * @throws Exception
      */
     public function getDocument($id)
     {
-        $output = json_decode($this->getRedis()->get($this->getNamespace() . ':document-' . $id), true);
+        $output = json_decode($this->getRedis()->get($this->getNamespace().':document-'.$id), true);
 
-        if(!$output) {
+        if (!$output) {
             $output = $this->adapter->getDocument($id);
-            $this->getRedis()->set($this->getNamespace() . ':document-' . $id, json_encode($output, JSON_UNESCAPED_UNICODE));
+            $this->getRedis()->set($this->getNamespace().':document-'.$id, json_encode($output, JSON_UNESCAPED_UNICODE));
         }
 
         $output = $this->parseRelations($output);
@@ -53,36 +56,37 @@ class Redis extends Adapter
 
     /**
      * @param $output
+     *
      * @return mixed
+     *
      * @throws Exception
      */
     protected function parseRelations($output)
     {
         $keys = [];
 
-        if(empty($output) || !isset($output['temp-relations'])) {
+        if (empty($output) || !isset($output['temp-relations'])) {
             return $output;
         }
 
-        foreach($output['temp-relations'] as $relationship) {
-            $keys[] = $this->getNamespace() . ':document-' . $relationship['end'];
+        foreach ($output['temp-relations'] as $relationship) {
+            $keys[] = $this->getNamespace().':document-'.$relationship['end'];
         }
 
         $nodes = (!empty($keys)) ? $this->getRedis()->mget($keys) : [];
 
-        foreach($output['temp-relations'] as $i => $relationship) {
+        foreach ($output['temp-relations'] as $i => $relationship) {
             $node = $relationship['end'];
 
             $node = (!empty($nodes[$i])) ? $this->parseRelations(json_decode($nodes[$i], true)) : $this->getDocument($node);
 
-            if(empty($node)) {
+            if (empty($node)) {
                 continue;
             }
 
-            if($relationship['array']) {
+            if ($relationship['array']) {
                 $output[$relationship['key']][] = $node;
-            }
-            else {
+            } else {
                 $output[$relationship['key']] = $node;
             }
         }
@@ -93,60 +97,67 @@ class Redis extends Adapter
     }
 
     /**
-     * Create Document
+     * Create Document.
      *
      * @param array $data
+     *
      * @return array
+     *
      * @throws Exception
      */
     public function createDocument(array $data = [])
     {
         $data = $this->adapter->createDocument($data);
 
-        $this->getRedis()->expire($this->getNamespace() . ':document-' . $data['$uid'], 0);
-        $this->getRedis()->expire($this->getNamespace() . ':document-' . $data['$uid'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
 
         return $data;
     }
 
     /**
-     * Update Document
+     * Update Document.
      *
      * @param array $data
+     *
      * @return array
+     *
      * @throws Exception
      */
     public function updateDocument(array $data = [])
     {
         $data = $this->adapter->updateDocument($data);
 
-        $this->getRedis()->expire($this->getNamespace() . ':document-' . $data['$uid'], 0);
-        $this->getRedis()->expire($this->getNamespace() . ':document-' . $data['$uid'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
 
         return $data;
     }
 
     /**
-     * Delete Document
+     * Delete Document.
      *
      * @param $id
+     *
      * @return array
+     *
      * @throws Exception
      */
     public function deleteDocument($id)
     {
         $data = $this->adapter->deleteDocument($id);
 
-        $this->getRedis()->expire($this->getNamespace() . ':document-' . $id, 0);
-        $this->getRedis()->expire($this->getNamespace() . ':document-' . $id, 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$id, 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$id, 0);
 
         return $data;
     }
 
     /**
-     * Create Namespace
+     * Create Namespace.
      *
      * @param string $namespace
+     *
      * @return bool
      */
     public function createNamespace($namespace)
@@ -155,9 +166,10 @@ class Redis extends Adapter
     }
 
     /**
-     * Delete Namespace
+     * Delete Namespace.
      *
      * @param string $namespace
+     *
      * @return bool
      */
     public function deleteNamespace($namespace)
@@ -167,7 +179,9 @@ class Redis extends Adapter
 
     /**
      * @param array $options
+     *
      * @return array
+     *
      * @throws Exception
      */
     public function getCollection(array $options)
@@ -175,16 +189,16 @@ class Redis extends Adapter
         $data = $this->adapter->getCollection($options);
         $keys = [];
 
-        foreach($data as $node) {
-            $keys[] = $this->getNamespace() . ':document-' . $node;
+        foreach ($data as $node) {
+            $keys[] = $this->getNamespace().':document-'.$node;
         }
 
         $nodes = (!empty($keys)) ? $this->getRedis()->mget($keys) : [];
 
-        foreach($data as $i => &$node) {
+        foreach ($data as $i => &$node) {
             $temp = (!empty($nodes[$i])) ? $this->parseRelations(json_decode($nodes[$i], true)) : $this->getDocument($node);
 
-            if(!empty($temp)) {
+            if (!empty($temp)) {
                 $node = $temp;
             }
         }
@@ -194,7 +208,9 @@ class Redis extends Adapter
 
     /**
      * @param array $options
+     *
      * @return int
+     *
      * @throws Exception
      */
     public function getCount(array $options)
@@ -203,7 +219,7 @@ class Redis extends Adapter
     }
 
     /**
-     * Last Modified
+     * Last Modified.
      *
      * Return unix timestamp of last time a node queried in current session has been changed
      *
@@ -211,7 +227,7 @@ class Redis extends Adapter
      */
     public function lastModified()
     {
-        return null;
+        return;
     }
 
     /**
@@ -224,6 +240,7 @@ class Redis extends Adapter
 
     /**
      * @throws Exception
+     *
      * @return Client
      */
     protected function getRedis():Client
@@ -232,12 +249,14 @@ class Redis extends Adapter
     }
 
     /**
-     * Set Namespace
+     * Set Namespace.
      *
      * Set namespace to divide different scope of data sets
      *
      * @param $namespace
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function setNamespace($namespace)

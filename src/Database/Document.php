@@ -6,30 +6,30 @@ use ArrayObject;
 
 class Document extends ArrayObject
 {
-    const SET_TYPE_ASSIGN   = 'assign';
-    const SET_TYPE_PREPEND  = 'prepend';
-    const SET_TYPE_APPEND   = 'append';
+    const SET_TYPE_ASSIGN = 'assign';
+    const SET_TYPE_PREPEND = 'prepend';
+    const SET_TYPE_APPEND = 'append';
 
     /**
-     * Construct
+     * Construct.
      *
      * Construct a new fields object
      *
      * @see ArrayObject::__construct
-     * @param null $input
-     * @param int $flags
+     *
+     * @param null   $input
+     * @param int    $flags
      * @param string $iterator_class
      */
-    public function __construct($input = null, $flags = 0, $iterator_class = "ArrayIterator")
+    public function __construct($input = null, $flags = 0, $iterator_class = 'ArrayIterator')
     {
-        foreach($input as $key => &$value) {
-            if(is_array($value)) {
-                if(isset($value['$uid']) || isset($value['$collection'])){
+        foreach ($input as $key => &$value) {
+            if (is_array($value)) {
+                if (isset($value['$uid']) || isset($value['$collection'])) {
                     $input[$key] = new self($value);
-                }
-                else {
+                } else {
                     foreach ($value as $childKey => $child) {
-                        if(isset($child['$uid']) || isset($child['$collection'])){
+                        if (isset($child['$uid']) || isset($child['$collection'])) {
                             $value[$childKey] = new self($child);
                         }
                     }
@@ -65,12 +65,13 @@ class Document extends ArrayObject
     }
 
     /**
-     * Get Attribute
+     * Get Attribute.
      *
      * Method for getting a specific fields attribute. If $name is not found $default value will be returned.
      *
-     * @param  string $name
-     * @param  mixed  $default
+     * @param string $name
+     * @param mixed  $default
+     *
      * @return mixed
      */
     public function getAttribute($name, $default = null)
@@ -79,8 +80,8 @@ class Document extends ArrayObject
 
         $temp = &$this;
 
-        foreach($name as $key) {
-            if(!isset($temp[$key])) {
+        foreach ($name as $key) {
+            if (!isset($temp[$key])) {
                 return $default;
             }
 
@@ -91,13 +92,14 @@ class Document extends ArrayObject
     }
 
     /**
-     * Set Attribute
+     * Set Attribute.
      *
      * Method for setting a specific field attribute
      *
-     * @param  string $key
-     * @param  mixed $value
+     * @param string $key
+     * @param mixed  $value
      * @param string $type
+     *
      * @return mixed
      */
     public function setAttribute($key, $value, $type = self::SET_TYPE_ASSIGN)
@@ -120,33 +122,33 @@ class Document extends ArrayObject
     }
 
     /**
-     * Search
+     * Search.
      *
      * Get array child by key and value match
      *
      * @param $key
      * @param $value
      * @param array|null $scope
+     *
      * @return Document|Document[]|mixed|null|array
      */
     public function search($key, $value, $scope = null)
     {
         $array = (!is_null($scope)) ? $scope : $this;
 
-        if(is_array($array)  || $array instanceof self) {
-            if(isset($array[$key]) && $array[$key] == $value) {
+        if (is_array($array)  || $array instanceof self) {
+            if (isset($array[$key]) && $array[$key] == $value) {
                 return $array;
             }
 
             foreach ($array as $k => $v) {
-                if((is_array($v) || $v instanceof self) && (!empty($v))) {
+                if ((is_array($v) || $v instanceof self) && (!empty($v))) {
                     $result = $this->search($key, $value, $v);
 
-                    if(!empty($result)) {
+                    if (!empty($result)) {
                         return $result;
                     }
-                }
-                else {
+                } else {
                     if ($k === $key && $v === $value) {
                         return $array;
                     }
@@ -154,15 +156,15 @@ class Document extends ArrayObject
             }
         }
 
-        if($array === $value) {
+        if ($array === $value) {
             return $array;
         }
 
-        return null;
+        return;
     }
 
     /**
-     * Checks if document has data
+     * Checks if document has data.
      *
      * @return bool
      */
@@ -172,12 +174,13 @@ class Document extends ArrayObject
     }
 
     /**
-     * Get Array Copy
+     * Get Array Copy.
      *
      * Outputs entity as a PHP array
      *
      * @param array $whitelist
      * @param array $blacklist
+     *
      * @return array
      */
     public function getArrayCopy(array $whitelist = [], array $blacklist = [])
@@ -187,32 +190,29 @@ class Document extends ArrayObject
         $output = array();
 
         foreach ($array as $key => &$value) {
-            if(!empty($whitelist) && !in_array($key, $whitelist)) { // Export only whitelisted fields
+            if (!empty($whitelist) && !in_array($key, $whitelist)) { // Export only whitelisted fields
                 continue;
             }
 
-            if(!empty($blacklist) && in_array($key, $blacklist)) { // Don't export blacklisted fields
+            if (!empty($blacklist) && in_array($key, $blacklist)) { // Don't export blacklisted fields
                 continue;
             }
 
             if ($value instanceof self) {
                 $output[$key] = $value->getArrayCopy($whitelist, $blacklist);
-            }
-            elseif (is_array($value)) {
+            } elseif (is_array($value)) {
                 foreach ($value as $childKey => &$child) {
                     if ($child instanceof self) {
                         $output[$key][$childKey] = $child->getArrayCopy($whitelist, $blacklist);
-                    }
-                    else {
+                    } else {
                         $output[$key][$childKey] = $child;
                     }
                 }
 
-                if(empty($value)) {
+                if (empty($value)) {
                     $output[$key] = $value;
                 }
-            }
-            else {
+            } else {
                 $output[$key] = $value;
             }
         }
