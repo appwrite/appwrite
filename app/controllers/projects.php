@@ -35,8 +35,7 @@ $utopia->get('/v1/projects')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listProjects')
     ->action(
-        function() use ($request, $response, $providers, $consoleDB)
-        {
+        function () use ($request, $response, $providers, $consoleDB) {
             $results = $consoleDB->getCollection([
                 'limit' => 20,
                 'offset' => 0,
@@ -44,17 +43,17 @@ $utopia->get('/v1/projects')
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_PROJECTS
+                    '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
                 ],
             ]);
 
             foreach ($results as $project) {
                 foreach ($providers as $provider => $node) {
-                    $secret = json_decode($project->getAttribute('usersOauth' . ucfirst($provider) . 'Secret', '{}'), true);
+                    $secret = json_decode($project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}'), true);
 
-                    if(!empty($secret) && isset($secret['version'])) {
-                        $key  = $request->getServer('_APP_OPENSSL_KEY_V' . $secret['version']);
-                        $project->setAttribute('usersOauth' . ucfirst($provider) . 'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key,0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
+                    if (!empty($secret) && isset($secret['version'])) {
+                        $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
+                        $project->setAttribute('usersOauth'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
                     }
                 }
             }
@@ -70,20 +69,19 @@ $utopia->get('/v1/projects/:projectId')
     ->label('sdk.method', 'getProject')
     ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
     ->action(
-        function($projectId) use ($request, $response, $providers, $consoleDB)
-        {
+        function ($projectId) use ($request, $response, $providers, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             foreach ($providers as $provider => $node) {
-                $secret = json_decode($project->getAttribute('usersOauth' . ucfirst($provider) . 'Secret', '{}'), true);
+                $secret = json_decode($project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}'), true);
 
-                if(!empty($secret) && isset($secret['version'])) {
-                    $key  = $request->getServer('_APP_OPENSSL_KEY_V' . $secret['version']);
-                    $project->setAttribute('usersOauth' . ucfirst($provider) . 'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key,0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
+                if (!empty($secret) && isset($secret['version'])) {
+                    $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
+                    $project->setAttribute('usersOauth'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
                 }
             }
 
@@ -98,45 +96,44 @@ $utopia->get('/v1/projects/:projectId/usage')
     ->label('sdk.method', 'getProjectUsage')
     ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
     ->action(
-        function($projectId) use ($response, $consoleDB, $projectDB, $register)
-        {
+        function ($projectId) use ($response, $consoleDB, $projectDB, $register) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $client = $register->get('influxdb');
 
             $requests = [];
-            $network  = [];
+            $network = [];
 
-            if($client) {
-                $start      = DateTime::createFromFormat('U', strtotime('first day of this month'));
-                $start      = $start->format(DateTime::RFC3339);
-                $end        = DateTime::createFromFormat('U', strtotime('last day of this month'));
-                $end        = $end->format(DateTime::RFC3339);
-                $database   = $client->selectDB('telegraf');
+            if ($client) {
+                $start = DateTime::createFromFormat('U', strtotime('first day of this month'));
+                $start = $start->format(DateTime::RFC3339);
+                $end = DateTime::createFromFormat('U', strtotime('last day of this month'));
+                $end = $end->format(DateTime::RFC3339);
+                $database = $client->selectDB('telegraf');
 
                 // Requests
-                $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
-                $points     = $result->getPoints();
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getUid().'\' GROUP BY time(1d) FILL(null)');
+                $points = $result->getPoints();
 
                 foreach ($points as $point) {
                     $requests[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date'  => strtotime($point['time']),
+                        'date' => strtotime($point['time']),
                     ];
                 }
 
                 // Network
-                $result     = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \'' . $start . '\' AND time < \'' . $end . '\' AND "metric_type"=\'counter\' AND "project"=\'' . $project->getUid() . '\' GROUP BY time(1d) FILL(null)');
-                $points     = $result->getPoints();
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getUid().'\' GROUP BY time(1d) FILL(null)');
+                $points = $result->getPoints();
 
                 foreach ($points as $point) {
                     $network[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date'  => strtotime($point['time']),
+                        'date' => strtotime($point['time']),
                     ];
                 }
             }
@@ -147,7 +144,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 'limit' => 0,
                 'offset' => 0,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
                 ],
             ]);
 
@@ -159,7 +156,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 'limit' => 100,
                 'offset' => 0,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_COLLECTIONS
+                    '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
                 ],
             ]);
 
@@ -172,7 +169,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                     'limit' => 0,
                     'offset' => 0,
                     'filters' => [
-                        '$collection=' . $collection['$uid']
+                        '$collection='.$collection['$uid'],
                     ],
                 ]);
 
@@ -184,37 +181,37 @@ $utopia->get('/v1/projects/:projectId/usage')
 
             $response->json([
                 'requests' => [
-                    'data'  => $requests,
-                    'total' => array_sum(array_map(function($item) {return $item['value'];}, $requests)),
+                    'data' => $requests,
+                    'total' => array_sum(array_map(function ($item) {return $item['value'];}, $requests)),
                 ],
                 'network' => [
-                    'data'  => $network,
-                    'total' => array_sum(array_map(function($item) {return $item['value'];}, $network)),
+                    'data' => $network,
+                    'total' => array_sum(array_map(function ($item) {return $item['value'];}, $network)),
                 ],
                 'collections' => [
-                    'data'  => $collections,
+                    'data' => $collections,
                     'total' => $collectionsTotal,
                 ],
                 'documents' => [
-                    'data'  => $documents,
-                    'total' => array_sum(array_map(function($item) {return $item['total'];}, $documents)),
+                    'data' => $documents,
+                    'total' => array_sum(array_map(function ($item) {return $item['total'];}, $documents)),
                 ],
                 'users' => [
-                    'data'  => [],
+                    'data' => [],
                     'total' => $usersTotal,
                 ],
                 'tasks' => [
-                    'data'  => [],
+                    'data' => [],
                     'total' => $tasksTotal,
                 ],
                 'storage' => [
                     'total' => $projectDB->getCount([
                             'filters' => [
-                                '$collection=' . Database::SYSTEM_COLLECTION_FILES,
+                                '$collection='.Database::SYSTEM_COLLECTION_FILES,
                             ],
                         ]
-                    )
-                ]
+                    ),
+                ],
             ]);
         }
     );
@@ -236,37 +233,36 @@ $utopia->post('/v1/projects')
     ->param('legalAddress', '', function () {return new Text(256);}, 'Project Legal Address', true)
     ->param('legalTaxId', '', function () {return new Text(256);}, 'Project Legal Tax ID', true)
     ->action(
-        function($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB)
-        {
+        function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
             $project = $consoleDB->createDocument(
                 [
-                    '$collection'       => Database::SYSTEM_COLLECTION_PROJECTS,
-                    '$permissions'      => [
-                        'read'      => ['team:' . $teamId],
-                        'write'     => ['team:' . $teamId . '/owner', 'team:' . $teamId . '/developer'],
+                    '$collection' => Database::SYSTEM_COLLECTION_PROJECTS,
+                    '$permissions' => [
+                        'read' => ['team:'.$teamId],
+                        'write' => ['team:'.$teamId.'/owner', 'team:'.$teamId.'/developer'],
                     ],
-                    'name'              => $name,
-                    'description'       => $description,
-                    'logo'              => $logo,
-                    'url'               => $url,
-                    'legalName'         => $legalName,
-                    'legalCountry'      => $legalCountry,
-                    'legalState'        => $legalState,
-                    'legalCity'         => $legalCity,
-                    'legalAddress'      => $legalAddress,
-                    'legalTaxId'        => $legalTaxId,
-                    'teamId'            => $team->getUid(),
-                    'webhooks'          => [],
-                    'keys'              => [],
+                    'name' => $name,
+                    'description' => $description,
+                    'logo' => $logo,
+                    'url' => $url,
+                    'legalName' => $legalName,
+                    'legalCountry' => $legalCountry,
+                    'legalState' => $legalState,
+                    'legalCity' => $legalCity,
+                    'legalAddress' => $legalAddress,
+                    'legalTaxId' => $legalTaxId,
+                    'teamId' => $team->getUid(),
+                    'webhooks' => [],
+                    'keys' => [],
                 ]);
 
-            if(false === $project) {
+            if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
             }
 
@@ -296,11 +292,10 @@ $utopia->patch('/v1/projects/:projectId')
     ->param('legalAddress', '', function () {return new Text(256);}, 'Project Legal Address', true)
     ->param('legalTaxId', '', function () {return new Text(256);}, 'Project Legal Tax ID', true)
     ->action(
-        function($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $consoleDB)
-        {
+        function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -317,7 +312,7 @@ $utopia->patch('/v1/projects/:projectId')
                 'legalTaxId' => $legalTaxId,
             ]));
 
-            if(false === $project) {
+            if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
             }
 
@@ -335,31 +330,30 @@ $utopia->patch('/v1/projects/:projectId/oauth')
     ->param('appId', '', function () {return new Text(256);}, 'Provider App ID', true)
     ->param('secret', '', function () {return new text(256);}, 'Provider Secret Key', true)
     ->action(
-        function($projectId, $provider, $appId, $secret) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $provider, $appId, $secret) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
-            $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $tag            = null;
-            $secret         = json_encode([
-                'data'      => OpenSSL::encrypt($secret, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                'method'    => OpenSSL::CIPHER_AES_128_GCM,
-                'iv'        => bin2hex($iv),
-                'tag'       => bin2hex($tag),
-                'version'   => '1',
+            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            $secret = json_encode([
+                'data' => OpenSSL::encrypt($secret, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => bin2hex($iv),
+                'tag' => bin2hex($tag),
+                'version' => '1',
             ]);
 
             $project = $consoleDB->updateDocument(array_merge($project->getArrayCopy(), [
-                'usersOauth' . ucfirst($provider) . 'Appid' => $appId,
-                'usersOauth' . ucfirst($provider) . 'Secret' => $secret,
+                'usersOauth'.ucfirst($provider).'Appid' => $appId,
+                'usersOauth'.ucfirst($provider).'Secret' => $secret,
             ]));
 
-            if(false === $project) {
+            if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
             }
 
@@ -374,23 +368,22 @@ $utopia->delete('/v1/projects/:projectId')
     ->label('sdk.method', 'deleteProject')
     ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
     ->action(
-        function($projectId) use ($response, $consoleDB)
-        {
+        function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
 
-            if(!$consoleDB->deleteDocument($projectId)) {
+            if (!$consoleDB->deleteDocument($projectId)) {
                 throw new Exception('Failed to remove project from DB', 500);
             }
 
             // Delete all DBs
             // $consoleDB->deleteNamespace($project->getUid());
-            
+
             // Optimize DB?
 
             // Delete all storage files
@@ -409,11 +402,10 @@ $utopia->get('/v1/projects/:projectId/webhooks')
     ->label('sdk.method', 'listWebhooks')
     ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
     ->action(
-        function($projectId) use ($request, $response, $consoleDB)
-        {
+        function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -422,11 +414,11 @@ $utopia->get('/v1/projects/:projectId/webhooks')
             foreach ($webhooks as $webhook) { /* @var $webhook Document */
                 $httpPass = json_decode($webhook->getAttribute('httpPass', '{}'), true);
 
-                if(empty($httpPass) || !isset($httpPass['version'])) {
+                if (empty($httpPass) || !isset($httpPass['version'])) {
                     continue;
                 }
 
-                $key = $request->getServer('_APP_OPENSSL_KEY_V' . $httpPass['version']);
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
 
                 $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
             }
@@ -443,24 +435,23 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('webhookId', null, function () {return new UID();}, 'Webhook unique ID.')
     ->action(
-        function($projectId, $webhookId) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $webhookId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
 
-            if(empty($webhook) && $webhook instanceof Document) {
+            if (empty($webhook) && $webhook instanceof Document) {
                 throw new Exception('Webhook not found', 404);
             }
 
             $httpPass = json_decode($webhook->getAttribute('httpPass', '{}'), true);
 
-            if(!empty($httpPass) && isset($httpPass['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V' . $httpPass['version']);
+            if (!empty($httpPass) && isset($httpPass['version'])) {
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
                 $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
             }
 
@@ -477,44 +468,43 @@ $utopia->post('/v1/projects/:projectId/webhooks')
     ->param('name', null, function () {return new Text(256);}, 'Webhook name')
     ->param('events', null, function () {return new ArrayList(new Text(256));}, 'Webhook events list')
     ->param('url', null, function () {return new Text(2000);}, 'Webhook URL')
-    ->param('security', null, function () {return new Range(0, 1);},'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('security', null, function () {return new Range(0, 1);}, 'Certificate verification, 0 for disabled or 1 for enabled')
     ->param('httpUser', '', function () {return new Text(256);}, 'Webhook HTTP user', true)
     ->param('httpPass', '', function () {return new Text(256);}, 'Webhook HTTP password', true)
     ->action(
-        function($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
-            $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $tag            = null;
-            $httpPass       = json_encode([
-                'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                'method'    => OpenSSL::CIPHER_AES_128_GCM,
-                'iv'        => bin2hex($iv),
-                'tag'       => bin2hex($tag),
-                'version'   => '1',
+            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            $httpPass = json_encode([
+                'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => bin2hex($iv),
+                'tag' => bin2hex($tag),
+                'version' => '1',
             ]);
 
             $webhook = $consoleDB->createDocument([
-                '$collection'   => Database::SYSTEM_COLLECTION_WEBHOOKS,
-                '$permissions'      => [
-                    'read'      => ['team:' . $project->getAttribute('teamId', null)],
-                    'write'     => ['team:' . $project->getAttribute('teamId', null) . '/owner', 'team:' . $project->getAttribute('teamId', null) . '/developer'],
+                '$collection' => Database::SYSTEM_COLLECTION_WEBHOOKS,
+                '$permissions' => [
+                    'read' => ['team:'.$project->getAttribute('teamId', null)],
+                    'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
                 ],
-                'name'          => $name,
-                'events'        => $events,
-                'url'           => $url,
-                'security'      => (int)$security,
-                'httpUser'      => $httpUser,
-                'httpPass'      => $httpPass,
+                'name' => $name,
+                'events' => $events,
+                'url' => $url,
+                'security' => (int) $security,
+                'httpUser' => $httpUser,
+                'httpPass' => $httpPass,
             ]);
 
-            if(false === $webhook) {
+            if (false === $webhook) {
                 throw new Exception('Failed saving webhook to DB', 500);
             }
 
@@ -522,7 +512,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
 
             $project = $consoleDB->updateDocument($project->getArrayCopy());
 
-            if(false === $project) {
+            if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
             }
 
@@ -547,28 +537,27 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpUser', '', function () {return new Text(256);}, 'Webhook HTTP user', true)
     ->param('httpPass', '', function () {return new Text(256);}, 'Webhook HTTP password', true)
     ->action(
-        function($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
-            $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $tag            = null;
-            $httpPass       = json_encode([
-                'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                'method'    => OpenSSL::CIPHER_AES_128_GCM,
-                'iv'        => bin2hex($iv),
-                'tag'       => bin2hex($tag),
-                'version'   => '1',
+            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            $httpPass = json_encode([
+                'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => bin2hex($iv),
+                'tag' => bin2hex($tag),
+                'version' => '1',
             ]);
 
             $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
 
-            if(empty($webhook) && $webhook instanceof Document) {
+            if (empty($webhook) && $webhook instanceof Document) {
                 throw new Exception('Webhook not found', 404);
             }
 
@@ -576,12 +565,12 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
                 ->setAttribute('name', $name)
                 ->setAttribute('events', $events)
                 ->setAttribute('url', $url)
-                ->setAttribute('security', (int)$security)
+                ->setAttribute('security', (int) $security)
                 ->setAttribute('httpUser', $httpUser)
                 ->setAttribute('httpPass', $httpPass)
             ;
 
-            if(false === $consoleDB->updateDocument($webhook->getArrayCopy())) {
+            if (false === $consoleDB->updateDocument($webhook->getArrayCopy())) {
                 throw new Exception('Failed saving webhook to DB', 500);
             }
 
@@ -597,21 +586,20 @@ $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('webhookId', null, function () {return new UID();}, 'Webhook unique ID.')
     ->action(
-        function($projectId, $webhookId) use ($response, $consoleDB)
-        {
+        function ($projectId, $webhookId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
 
-            if(empty($webhook) && $webhook instanceof Document) {
+            if (empty($webhook) && $webhook instanceof Document) {
                 throw new Exception('Webhook not found', 404);
             }
 
-            if(!$consoleDB->deleteDocument($webhook->getUid())) {
+            if (!$consoleDB->deleteDocument($webhook->getUid())) {
                 throw new Exception('Failed to remove webhook from DB', 500);
             }
 
@@ -628,11 +616,10 @@ $utopia->get('/v1/projects/:projectId/keys')
     ->label('sdk.method', 'listKeys')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->action(
-        function($projectId) use ($response, $consoleDB)
-        {
+        function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -648,17 +635,16 @@ $utopia->get('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('keyId', null, function () {return new UID();}, 'Key unique ID.')
     ->action(
-        function($projectId, $keyId) use ($response, $consoleDB)
-        {
+        function ($projectId, $keyId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
 
-            if(empty($key) && $key instanceof Document) {
+            if (empty($key) && $key instanceof Document) {
                 throw new Exception('Key not found', 404);
             }
 
@@ -675,26 +661,25 @@ $utopia->post('/v1/projects/:projectId/keys')
     ->param('name', null, function () {return new Text(256);}, 'Key name')
     ->param('scopes', null, function () use ($scopes) {return new ArrayList(new WhiteList($scopes));}, 'Key scopes list')
     ->action(
-        function($projectId, $name, $scopes) use ($response, $consoleDB)
-        {
+        function ($projectId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $key = $consoleDB->createDocument([
-                '$collection'   => Database::SYSTEM_COLLECTION_KEYS,
-                '$permissions'      => [
-                    'read'      => ['team:' . $project->getAttribute('teamId', null)],
-                    'write'     => ['team:' . $project->getAttribute('teamId', null) . '/owner', 'team:' . $project->getAttribute('teamId', null) . '/developer'],
+                '$collection' => Database::SYSTEM_COLLECTION_KEYS,
+                '$permissions' => [
+                    'read' => ['team:'.$project->getAttribute('teamId', null)],
+                    'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
                 ],
-                'name'          => $name,
-                'scopes'        => $scopes,
-                'secret'        => bin2hex(random_bytes(128)),
+                'name' => $name,
+                'scopes' => $scopes,
+                'secret' => bin2hex(random_bytes(128)),
             ]);
 
-            if(false === $key) {
+            if (false === $key) {
                 throw new Exception('Failed saving key to DB', 500);
             }
 
@@ -702,7 +687,7 @@ $utopia->post('/v1/projects/:projectId/keys')
 
             $project = $consoleDB->updateDocument($project->getArrayCopy());
 
-            if(false === $project) {
+            if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
             }
 
@@ -723,17 +708,16 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
     ->param('name', null, function () {return new Text(256);}, 'Key name')
     ->param('scopes', null, function () use ($scopes) {return new ArrayList(new WhiteList($scopes));}, 'Key scopes list')
     ->action(
-        function($projectId, $keyId, $name, $scopes) use ($response, $consoleDB)
-        {
+        function ($projectId, $keyId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
 
-            if(empty($key) && $key instanceof Document) {
+            if (empty($key) && $key instanceof Document) {
                 throw new Exception('Key not found', 404);
             }
 
@@ -742,7 +726,7 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
                 ->setAttribute('scopes', $scopes)
             ;
 
-            if(false === $consoleDB->updateDocument($key->getArrayCopy())) {
+            if (false === $consoleDB->updateDocument($key->getArrayCopy())) {
                 throw new Exception('Failed saving key to DB', 500);
             }
 
@@ -758,21 +742,20 @@ $utopia->delete('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('keyId', null, function () {return new UID();}, 'Key unique ID.')
     ->action(
-        function($projectId, $keyId) use ($response, $consoleDB)
-        {
+        function ($projectId, $keyId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
 
-            if(empty($key) && $key instanceof Document) {
+            if (empty($key) && $key instanceof Document) {
                 throw new Exception('Key not found', 404);
             }
 
-            if(!$consoleDB->deleteDocument($key->getUid())) {
+            if (!$consoleDB->deleteDocument($key->getUid())) {
                 throw new Exception('Failed to remove key from DB', 500);
             }
 
@@ -789,11 +772,10 @@ $utopia->get('/v1/projects/:projectId/tasks')
     ->label('sdk.method', 'listTasks')
     ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
     ->action(
-        function($projectId) use ($request, $response, $consoleDB)
-        {
+        function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -802,11 +784,11 @@ $utopia->get('/v1/projects/:projectId/tasks')
             foreach ($tasks as $task) { /* @var $task Document */
                 $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
 
-                if(empty($httpPass) || !isset($httpPass['version'])) {
+                if (empty($httpPass) || !isset($httpPass['version'])) {
                     continue;
                 }
 
-                $key = $request->getServer('_APP_OPENSSL_KEY_V' . $httpPass['version']);
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
 
                 $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
             }
@@ -823,24 +805,23 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('taskId', null, function () {return new UID();}, 'Task unique ID.')
     ->action(
-        function($projectId, $taskId) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $taskId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
 
-            if(empty($task) && $task instanceof Document) {
+            if (empty($task) && $task instanceof Document) {
                 throw new Exception('Task not found', 404);
             }
 
             $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
 
-            if(!empty($httpPass) && isset($httpPass['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V' . $httpPass['version']);
+            if (!empty($httpPass) && isset($httpPass['version'])) {
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
                 $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
             }
 
@@ -857,58 +838,57 @@ $utopia->post('/v1/projects/:projectId/tasks')
     ->param('name', null, function () {return new Text(256);}, 'Task name')
     ->param('status', null, function () {return new WhiteList(['play', 'pause']);}, 'Task status')
     ->param('schedule', null, function () {return new Cron();}, 'Task schedule syntax')
-    ->param('security', null, function () {return new Range(0, 1);},'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('security', null, function () {return new Range(0, 1);}, 'Certificate verification, 0 for disabled or 1 for enabled')
     ->param('httpMethod', '', function () {return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']);}, 'Task HTTP method')
     ->param('httpUrl', '', function () {return new URL();}, 'Task HTTP URL')
     ->param('httpHeaders', null, function () {return new ArrayList(new Text(256));}, 'Task HTTP headers list', true)
     ->param('httpUser', '', function () {return new Text(256);}, 'Task HTTP user', true)
     ->param('httpPass', '', function () {return new Text(256);}, 'Task HTTP password', true)
     ->action(
-        function($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $cron = CronExpression::factory($schedule);
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
-            $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
-            $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $tag            = null;
-            $httpPass       = json_encode([
-                'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                'method'    => OpenSSL::CIPHER_AES_128_GCM,
-                'iv'        => bin2hex($iv),
-                'tag'       => bin2hex($tag),
-                'version'   => '1',
+            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            $httpPass = json_encode([
+                'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => bin2hex($iv),
+                'tag' => bin2hex($tag),
+                'version' => '1',
             ]);
 
             $task = $consoleDB->createDocument([
-                '$collection'   => Database::SYSTEM_COLLECTION_TASKS,
-                '$permissions'      => [
-                    'read'      => ['team:' . $project->getAttribute('teamId', null)],
-                    'write'     => ['team:' . $project->getAttribute('teamId', null) . '/owner', 'team:' . $project->getAttribute('teamId', null) . '/developer'],
+                '$collection' => Database::SYSTEM_COLLECTION_TASKS,
+                '$permissions' => [
+                    'read' => ['team:'.$project->getAttribute('teamId', null)],
+                    'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
                 ],
-                'name'          => $name,
-                'status'        => $status,
-                'schedule'      => $schedule,
-                'updated'       => time(),
-                'previous'      => null,
-                'next'          => $next,
-                'security'      => (int)$security,
-                'httpMethod'    => $httpMethod,
-                'httpUrl'       => $httpUrl,
-                'httpHeaders'   => $httpHeaders,
-                'httpUser'      => $httpUser,
-                'httpPass'      => $httpPass,
-                'log'           => '{}',
-                'failures'      => 0,
+                'name' => $name,
+                'status' => $status,
+                'schedule' => $schedule,
+                'updated' => time(),
+                'previous' => null,
+                'next' => $next,
+                'security' => (int) $security,
+                'httpMethod' => $httpMethod,
+                'httpUrl' => $httpUrl,
+                'httpHeaders' => $httpHeaders,
+                'httpUser' => $httpUser,
+                'httpPass' => $httpPass,
+                'log' => '{}',
+                'failures' => 0,
             ]);
 
-            if(false === $task) {
+            if (false === $task) {
                 throw new Exception('Failed saving tasks to DB', 500);
             }
 
@@ -916,11 +896,11 @@ $utopia->post('/v1/projects/:projectId/tasks')
 
             $project = $consoleDB->updateDocument($project->getArrayCopy());
 
-            if(false === $project) {
+            if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
             }
 
-            if($next) {
+            if ($next) {
                 ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
             }
 
@@ -941,39 +921,38 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
     ->param('name', null, function () {return new Text(256);}, 'Task name')
     ->param('status', null, function () {return new WhiteList(['play', 'pause']);}, 'Task status')
     ->param('schedule', null, function () {return new Cron();}, 'Task schedule syntax')
-    ->param('security', null, function () {return new Range(0, 1);},'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('security', null, function () {return new Range(0, 1);}, 'Certificate verification, 0 for disabled or 1 for enabled')
     ->param('httpMethod', '', function () {return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']);}, 'Task HTTP method')
     ->param('httpUrl', '', function () {return new URL();}, 'Task HTTP URL')
     ->param('httpHeaders', null, function () {return new ArrayList(new Text(256));}, 'Task HTTP headers list', true)
     ->param('httpUser', '', function () {return new Text(256);}, 'Task HTTP user', true)
     ->param('httpPass', '', function () {return new Text(256);}, 'Task HTTP password', true)
     ->action(
-        function($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
 
-            if(empty($task) && $task instanceof Document) {
+            if (empty($task) && $task instanceof Document) {
                 throw new Exception('Task not found', 404);
             }
 
             $cron = CronExpression::factory($schedule);
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
-            $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
-            $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $tag            = null;
-            $httpPass       = json_encode([
-                'data'      => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                'method'    => OpenSSL::CIPHER_AES_128_GCM,
-                'iv'        => bin2hex($iv),
-                'tag'       => bin2hex($tag),
-                'version'   => '1',
+            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            $httpPass = json_encode([
+                'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => bin2hex($iv),
+                'tag' => bin2hex($tag),
+                'version' => '1',
             ]);
 
             $task
@@ -982,7 +961,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
                 ->setAttribute('schedule', $schedule)
                 ->setAttribute('updated', time())
                 ->setAttribute('next', $next)
-                ->setAttribute('security', (int)$security)
+                ->setAttribute('security', (int) $security)
                 ->setAttribute('httpMethod', $httpMethod)
                 ->setAttribute('httpUrl', $httpUrl)
                 ->setAttribute('httpHeaders', $httpHeaders)
@@ -990,11 +969,11 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
                 ->setAttribute('httpPass', $httpPass)
             ;
 
-            if(false === $consoleDB->updateDocument($task->getArrayCopy())) {
+            if (false === $consoleDB->updateDocument($task->getArrayCopy())) {
                 throw new Exception('Failed saving tasks to DB', 500);
             }
 
-            if($next) {
+            if ($next) {
                 ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
             }
 
@@ -1010,21 +989,20 @@ $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('taskId', null, function () {return new UID();}, 'Task unique ID.')
     ->action(
-        function($projectId, $taskId) use ($response, $consoleDB)
-        {
+        function ($projectId, $taskId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
 
-            if(empty($task) && $task instanceof Document) {
+            if (empty($task) && $task instanceof Document) {
                 throw new Exception('Task not found', 404);
             }
 
-            if(!$consoleDB->deleteDocument($task->getUid())) {
+            if (!$consoleDB->deleteDocument($task->getUid())) {
                 throw new Exception('Failed to remove tasks from DB', 500);
             }
 
@@ -1041,11 +1019,10 @@ $utopia->get('/v1/projects/:projectId/platforms')
     ->label('sdk.method', 'listPlatforms')
     ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
     ->action(
-        function($projectId) use ($request, $response, $consoleDB)
-        {
+        function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -1063,17 +1040,16 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('platformId', null, function () {return new UID();}, 'Platform unique ID.')
     ->action(
-        function($projectId, $platformId) use ($request, $response, $consoleDB)
-        {
+        function ($projectId, $platformId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
 
-            if(empty($platform) && $platform instanceof Document) {
+            if (empty($platform) && $platform instanceof Document) {
                 throw new Exception('Platform not found', 404);
             }
 
@@ -1091,32 +1067,31 @@ $utopia->post('/v1/projects/:projectId/platforms')
     ->param('name', null, function () {return new Text(256);}, 'Platform name')
     ->param('key', '', function () {return new Text(256);}, 'Package name for android or bundle ID for iOS', true)
     ->param('store', '', function () {return new Text(256);}, 'App store or Google Play store ID', true)
-    ->param('url', '', function() {return new URL();}, 'Platform client URL', true)
+    ->param('url', '', function () {return new URL();}, 'Platform client URL', true)
     ->action(
-        function($projectId, $type, $name, $key, $store, $url) use ($response, $consoleDB)
-        {
+        function ($projectId, $type, $name, $key, $store, $url) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $platform = $consoleDB->createDocument([
-                '$collection'   => Database::SYSTEM_COLLECTION_PLATFORMS,
-                '$permissions'      => [
-                    'read'      => ['team:' . $project->getAttribute('teamId', null)],
-                    'write'     => ['team:' . $project->getAttribute('teamId', null) . '/owner', 'team:' . $project->getAttribute('teamId', null) . '/developer'],
+                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+                '$permissions' => [
+                    'read' => ['team:'.$project->getAttribute('teamId', null)],
+                    'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
                 ],
-                'type'          => $type,
-                'name'          => $name,
-                'key'           => $key,
-                'store'         => $store,
-                'url'           => $url,
-                'dateCreated'   => time(),
-                'dateUpdated'   => time(),
+                'type' => $type,
+                'name' => $name,
+                'key' => $key,
+                'store' => $store,
+                'url' => $url,
+                'dateCreated' => time(),
+                'dateUpdated' => time(),
             ]);
 
-            if(false === $platform) {
+            if (false === $platform) {
                 throw new Exception('Failed saving platform to DB', 500);
             }
 
@@ -1124,7 +1099,7 @@ $utopia->post('/v1/projects/:projectId/platforms')
 
             $project = $consoleDB->updateDocument($project->getArrayCopy());
 
-            if(false === $project) {
+            if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
             }
 
@@ -1147,17 +1122,16 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
     ->param('store', '', function () {return new Text(256);}, 'App store or Google Play store ID', true)
     ->param('url', '', function () {return new URL();}, 'Platform client URL', true)
     ->action(
-        function($projectId, $platformId, $name, $key, $store, $url) use ($response, $consoleDB)
-        {
+        function ($projectId, $platformId, $name, $key, $store, $url) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
 
-            if(empty($platform) && $platform instanceof Document) {
+            if (empty($platform) && $platform instanceof Document) {
                 throw new Exception('Platform not found', 404);
             }
 
@@ -1169,7 +1143,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
                 ->setAttribute('url', $url)
             ;
 
-            if(false === $consoleDB->updateDocument($platform->getArrayCopy())) {
+            if (false === $consoleDB->updateDocument($platform->getArrayCopy())) {
                 throw new Exception('Failed saving platform to DB', 500);
             }
 
@@ -1185,21 +1159,20 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
     ->param('platformId', null, function () {return new UID();}, 'Platform unique ID.')
     ->action(
-        function($projectId, $platformId) use ($response, $consoleDB)
-        {
+        function ($projectId, $platformId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if(empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
             $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
 
-            if(empty($platform) && $platform instanceof Document) {
+            if (empty($platform) && $platform instanceof Document) {
                 throw new Exception('Platform not found', 404);
             }
 
-            if(!$consoleDB->deleteDocument($platform->getUid())) {
+            if (!$consoleDB->deleteDocument($platform->getUid())) {
                 throw new Exception('Failed to remove platform from DB', 500);
             }
 

@@ -35,20 +35,20 @@ $utopia->post('/v1/auth/register')
     ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed', true)
     ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed', true)
     ->action(
-        function($email, $password, $name, $redirect, $success, $failure) use ($request, $response, $register, $audit, $projectDB, $project, $webhook)
-        {
+        function ($email, $password, $name, $redirect, $success, $failure) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    'email=' . $email
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
             ]);
 
-            if(!empty($profile)) {
-                if($failure) {
+            if (!empty($profile)) {
+                if ($failure) {
                     $response->redirect($failure);
+
                     return;
                 }
 
@@ -79,36 +79,36 @@ $utopia->post('/v1/auth/register')
 
             Authorization::enable();
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            Authorization::setRole('user:' . $user->getUid());
+            Authorization::setRole('user:'.$user->getUid());
 
             $user
                 ->setAttribute('tokens', new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                    '$permissions' => ['read' => ['user:' . $user->getUid()], 'write' => ['user:' . $user->getUid()]],
+                    '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
                     'type' => Auth::TOKEN_TYPE_CONFIRM,
                     'secret' => Auth::hash($confirmSecret), // On way hash encryption to protect DB leak
                     'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
                     'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
                     'ip' => $request->getIP(),
-                ]),Document::SET_TYPE_APPEND)
+                ]), Document::SET_TYPE_APPEND)
                 ->setAttribute('tokens', new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                    '$permissions' => ['read' => ['user:' . $user->getUid()], 'write' => ['user:' . $user->getUid()]],
+                    '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
                     'type' => Auth::TOKEN_TYPE_LOGIN,
                     'secret' => Auth::hash($loginSecret), // On way hash encryption to protect DB leak
                     'expire' => $expiry,
                     'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
                     'ip' => $request->getIP(),
-                ]),Document::SET_TYPE_APPEND)
+                ]), Document::SET_TYPE_APPEND)
             ;
 
             $user = $projectDB->createDocument($user->getArrayCopy());
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving tokens to DB', 500);
             }
 
@@ -118,7 +118,7 @@ $utopia->post('/v1/auth/register')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__ . '/../config/locale/templates/' . Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -131,13 +131,12 @@ $utopia->post('/v1/auth/register')
             $mail->addAddress($email, $name);
 
             $mail->Subject = Locale::getText('auth.emails.confirm.title');
-            $mail->Body    = $body->render();
+            $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
             try {
                 $mail->send();
-            }
-            catch(\Exception $error) {
+            } catch (\Exception $error) {
                 // if($failure) {
                 //     $response->redirect($failure);
                 //     return;
@@ -160,7 +159,7 @@ $utopia->post('/v1/auth/register')
 
             $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $loginSecret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
 
-            if($success) {
+            if ($success) {
                 $response->redirect($success);
             }
 
@@ -174,30 +173,29 @@ $utopia->post('/v1/auth/register/confirm')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'auth')
     ->label('sdk.method', 'confirm')
-    ->label('sdk.description', "Use this endpoint to complete the confirmation of the user account email address. Both the **userId** and **token** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the /auth/register endpoint.")
+    ->label('sdk.description', 'Use this endpoint to complete the confirmation of the user account email address. Both the **userId** and **token** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the /auth/register endpoint.')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', function () {return new UID();}, 'User unique ID')
     ->param('token', '', function () {return new Text(256);}, 'Confirmation secret token')
     ->action(
-        function($userId, $token) use ($response, $request, $projectDB, $audit)
-        {
+        function ($userId, $token) use ($response, $request, $projectDB, $audit) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    '$uid=' . $userId
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    '$uid='.$userId,
+                ],
             ]);
 
-            if(empty($profile)) {
+            if (empty($profile)) {
                 throw new Exception('User not found', 404); // TODO maybe hide this
             }
 
             $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_CONFIRM, $token);
 
-            if(!$token) {
+            if (!$token) {
                 throw new Exception('Confirmation token is not valid', 401);
             }
 
@@ -206,11 +204,11 @@ $utopia->post('/v1/auth/register/confirm')
                 'confirm' => true,
             ]));
 
-            if(false === $profile) {
+            if (false === $profile) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            if(!$projectDB->deleteDocument($token)) {
+            if (!$projectDB->deleteDocument($token)) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
@@ -230,9 +228,8 @@ $utopia->post('/v1/auth/register/confirm/resend')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Confirmation page to redirect user to your app after confirm token has been sent to user email.')
     ->action(
-        function($redirect) use ($response, $request, $projectDB, $user, $register, $project)
-        {
-            if($user->getAttribute('confirm', false)) {
+        function ($redirect) use ($response, $request, $projectDB, $user, $register, $project) {
+            if ($user->getAttribute('confirm', false)) {
                 throw new Exception('Email address is already confirmed', 400);
             }
 
@@ -240,7 +237,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
 
             $user->setAttribute('tokens', new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:' . $user->getUid()], 'write' => ['user:' . $user->getUid()]],
+                '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
                 'type' => Auth::TOKEN_TYPE_CONFIRM,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
@@ -250,7 +247,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
 
             $user = $projectDB->updateDocument($user->getArrayCopy());
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -258,7 +255,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['userId' => $user->getUid(), 'token' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__ . '/../config/locale/templates/' . Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -271,13 +268,12 @@ $utopia->post('/v1/auth/register/confirm/resend')
             $mail->addAddress($user->getAttribute('email'), $user->getAttribute('name'));
 
             $mail->Subject = Locale::getText('auth.emails.confirm.title');
-            $mail->Body    = $body->render();
+            $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
             try {
                 $mail->send();
-            }
-            catch(\Exception $error) {
+            } catch (\Exception $error) {
                 //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
             }
 
@@ -300,26 +296,25 @@ $utopia->post('/v1/auth/login')
     ->param('success', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.', true)
     ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.', true)
     ->action(
-        function($email, $password, $success, $failure) use ($response, $request, $projectDB, $audit, $webhook)
-        {
+        function ($email, $password, $success, $failure) use ($response, $request, $projectDB, $audit, $webhook) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    'email=' . $email
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
             ]);
 
-            if(!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
-
+            if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
                 $audit
                     //->setParam('userId', $profile->getUid())
                     ->setParam('event', 'auth.failure')
                 ;
 
-                if($failure) {
+                if ($failure) {
                     $response->redirect($failure);
+
                     return;
                 }
 
@@ -331,19 +326,19 @@ $utopia->post('/v1/auth/login')
 
             $profile->setAttribute('tokens', new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:' . $profile->getUid()], 'write' => ['user:' . $profile->getUid()]],
+                '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
                 'expire' => $expiry,
                 'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
                 'ip' => $request->getIP(),
-            ]),Document::SET_TYPE_APPEND);
+            ]), Document::SET_TYPE_APPEND);
 
-            Authorization::setRole('user:' . $profile->getUid());
+            Authorization::setRole('user:'.$profile->getUid());
 
             $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
-            if(false === $profile) {
+            if (false === $profile) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -362,13 +357,12 @@ $utopia->post('/v1/auth/login')
             $response
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
 
-            if($success) {
+            if ($success) {
                 $response->redirect($success);
             }
 
             $response
                 ->json(array('result' => 'success'));
-            ;
         }
     );
 
@@ -381,11 +375,10 @@ $utopia->delete('/v1/auth/logout')
     ->label('sdk.description', 'Use this endpoint to log out the currently logged in user from his account. When succeed this endpoint will delete the user session and remove the session secret cookie.')
     ->label('abuse-limit', 100)
     ->action(
-        function() use ($response, $request, $user, $projectDB, $audit, $webhook)
-        {
+        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
             $token = Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
-            if(!$projectDB->deleteDocument($token)) {
+            if (!$projectDB->deleteDocument($token)) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
@@ -414,23 +407,21 @@ $utopia->delete('/v1/auth/logout/:id')
     ->label('abuse-limit', 100)
     ->param('id', null, function () {return new UID();}, 'User specific session unique ID number. if 0 delete all sessions.')
     ->action(
-        function($id) use ($response, $request, $user, $projectDB, $audit)
-        {
+        function ($id) use ($response, $request, $user, $projectDB, $audit) {
             $tokens = $user->getAttribute('tokens', []);
 
-            foreach($tokens as $token) { /* @var $token Document */
-                if(($id == $token->getUid() || ($id == 0)) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
-
-                    if(!$projectDB->deleteDocument($token->getUid())) {
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (($id == $token->getUid() || ($id == 0)) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
+                    if (!$projectDB->deleteDocument($token->getUid())) {
                         throw new Exception('Failed to remove token from DB', 500);
                     }
 
                     $audit
                         ->setParam('event', 'auth.logout')
-                        ->setParam('resource', '/auth/token/' . $token->getUid())
+                        ->setParam('resource', '/auth/token/'.$token->getUid())
                     ;
 
-                    if($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete cookies
+                    if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete cookies
                         $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
                     }
                 }
@@ -451,18 +442,17 @@ $utopia->post('/v1/auth/recovery')
     ->param('email', '', function () {return new Email();}, 'User account email address.')
     ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Reset page in your app to redirect user after reset token has been sent to user email.')
     ->action(
-        function($email, $redirect) use ($request, $response, $projectDB, $register, $audit, $project)
-        {
+        function ($email, $redirect) use ($request, $response, $projectDB, $register, $audit, $project) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    'email=' . $email
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
             ]);
 
-            if(empty($profile)) {
+            if (empty($profile)) {
                 throw new Exception('User not found', 404); // TODO maybe hide this
             }
 
@@ -470,7 +460,7 @@ $utopia->post('/v1/auth/recovery')
 
             $profile->setAttribute('tokens', new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:' . $profile->getUid()], 'write' => ['user:' . $profile->getUid()]],
+                '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
                 'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
                 'expire' => time() + Auth::TOKEN_EXPIRATION_RECOVERY,
@@ -478,11 +468,11 @@ $utopia->post('/v1/auth/recovery')
                 'ip' => $request->getIP(),
             ]), Document::SET_TYPE_APPEND);
 
-            Authorization::setRole('user:' . $profile->getUid());
+            Authorization::setRole('user:'.$profile->getUid());
 
             $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
-            if(false === $profile) {
+            if (false === $profile) {
                 throw new Exception('Failed to save user to DB', 500);
             }
 
@@ -490,7 +480,7 @@ $utopia->post('/v1/auth/recovery')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__ . '/../config/locale/templates/' . Locale::getText('auth.emails.recovery.body'));
+            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.recovery.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -503,13 +493,12 @@ $utopia->post('/v1/auth/recovery')
             $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
 
             $mail->Subject = Locale::getText('auth.emails.recovery.title');
-            $mail->Body    = $body->render();
+            $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
             try {
                 $mail->send();
-            }
-            catch(\Exception $error) {
+            } catch (\Exception $error) {
                 //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
             }
 
@@ -535,9 +524,8 @@ $utopia->put('/v1/auth/recovery/reset')
     ->param('password-a', '', function () {return new Password();}, 'New password.')
     ->param('password-b', '', function () {return new Password();}, 'New password again.')
     ->action(
-        function($userId, $token, $passwordA, $passwordB) use ($response, $projectDB, $audit)
-        {
-            if($passwordA !== $passwordB) {
+        function ($userId, $token, $passwordA, $passwordB) use ($response, $projectDB, $audit) {
+            if ($passwordA !== $passwordB) {
                 throw new Exception('Passwords must match', 400);
             }
 
@@ -545,22 +533,22 @@ $utopia->put('/v1/auth/recovery/reset')
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    '$uid=' . $userId
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    '$uid='.$userId,
+                ],
             ]);
 
-            if(empty($profile)) {
+            if (empty($profile)) {
                 throw new Exception('User not found', 404); // TODO maybe hide this
             }
 
             $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $token);
 
-            if(!$token) {
+            if (!$token) {
                 throw new Exception('Recovery token is not valid', 401);
             }
 
-            Authorization::setRole('user:' . $profile->getUid());
+            Authorization::setRole('user:'.$profile->getUid());
 
             $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
                 'password' => Auth::passwordHash($passwordA),
@@ -568,11 +556,11 @@ $utopia->put('/v1/auth/recovery/reset')
                 'confirm' => true,
             ]));
 
-            if(false === $profile) {
+            if (false === $profile) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            if(!$projectDB->deleteDocument($token)) {
+            if (!$projectDB->deleteDocument($token)) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
@@ -587,7 +575,7 @@ $utopia->put('/v1/auth/recovery/reset')
 
 $utopia->get('/v1/auth/oauth/:provider')
     ->desc('OAuth Login')
-    ->label('error', __DIR__ . '/../views/general/error.phtml')
+    ->label('error', __DIR__.'/../views/general/error.phtml')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'auth')
     ->label('sdk.method', 'oauth')
@@ -597,26 +585,25 @@ $utopia->get('/v1/auth/oauth/:provider')
     ->param('success', '', function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.', true)
     ->param('failure', '', function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.', true)
     ->action(
-        function($provider, $success, $failure) use ($response, $request, $project)
-        {
-            $callback   = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/auth/oauth/callback/' . $provider . '/' . $project->getUid();
-            $appId      = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Appid', '');
-            $appSecret  = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Secret', '{}');
+        function ($provider, $success, $failure) use ($response, $request, $project) {
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/oauth/callback/'.$provider.'/'.$project->getUid();
+            $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
+            $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
 
-            $appSecret  = json_decode($appSecret, true);
+            $appSecret = json_decode($appSecret, true);
 
-            if(!empty($appSecret) && isset($appSecret['version'])) {
-                $key        = $request->getServer('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-                $appSecret  = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key,0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
+            if (!empty($appSecret) && isset($appSecret['version'])) {
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+                $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
             }
 
-            if(empty($appId) || empty($appSecret)) {
+            if (empty($appId) || empty($appSecret)) {
                 throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
             }
 
-            $classname = 'Auth\\OAuth\\' . ucfirst($provider);
-            
-            if(!class_exists($classname)) {
+            $classname = 'Auth\\OAuth\\'.ucfirst($provider);
+
+            if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);
             }
 
@@ -628,7 +615,7 @@ $utopia->get('/v1/auth/oauth/:provider')
 
 $utopia->get('/v1/auth/oauth/callback/:provider/:projectId')
     ->desc('OAuth Callback')
-    ->label('error', __DIR__ . '/../views/general/error.phtml')
+    ->label('error', __DIR__.'/../views/general/error.phtml')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'auth')
     ->label('sdk.method', 'oauthCallback')
@@ -639,16 +626,15 @@ $utopia->get('/v1/auth/oauth/callback/:provider/:projectId')
     ->param('code', '', function () {return new Text(1024);}, 'OAuth code')
     ->param('state', '', function () {return new Text(2048);}, 'Login state params', true)
     ->action(
-        function($projectId, $provider, $code, $state) use ($response, $request, $domain)
-        {
-            $response->redirect($request->getServer('REQUEST_SCHEME', 'https') . '://' . $domain . '/v1/auth/oauth/' . $provider . '/redirect?'
-                . http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+        function ($projectId, $provider, $code, $state) use ($response, $request, $domain) {
+            $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/auth/oauth/'.$provider.'/redirect?'
+                .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
 
 $utopia->get('/v1/auth/oauth/:provider/redirect')
     ->desc('OAuth Redirect')
-    ->label('error', __DIR__ . '/../views/general/error.phtml')
+    ->label('error', __DIR__.'/../views/general/error.phtml')
     ->label('webhook', 'auth.oauth')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'auth')
@@ -660,46 +646,42 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
     ->param('code', '', function () {return new Text(1024);}, 'OAuth code')
     ->param('state', '', function () {return new Text(2048);}, 'OAuth state params', true)
     ->action(
-        function($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit)
-        {
-            $callback       = $request->getServer('REQUEST_SCHEME', 'https') . '://' . $request->getServer('HTTP_HOST') . '/v1/auth/oauth/callback/' . $provider . '/' . $project->getUid();
-            $defaultState   = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
-            $validateURL    = new URL();
+        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/oauth/callback/'.$provider.'/'.$project->getUid();
+            $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
+            $validateURL = new URL();
 
-            if(!empty($state)) {
+            if (!empty($state)) {
                 try {
                     $state = array_merge($defaultState, json_decode($state, true));
-                }
-                catch (\Exception $exception) {
+                } catch (\Exception $exception) {
                     throw new Exception('Failed to parse login state params as passed from OAuth provider');
                 }
-            }
-            else {
+            } else {
                 $state = $defaultState;
             }
 
-            if(!$validateURL->isValid($state['success'])) {
+            if (!$validateURL->isValid($state['success'])) {
                 throw new Exception('Invalid redirect URL for success login', 400);
             }
 
-            if(!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
+            if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
                 throw new Exception('Invalid redirect URL for failure login', 400);
             }
 
-            $appId      = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Appid', '');
-            $appSecret  = $project->getAttribute('usersOauth' . ucfirst($provider) . 'Secret', '{}');
+            $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
+            $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
 
-            $appSecret  = json_decode($appSecret, true);
+            $appSecret = json_decode($appSecret, true);
 
-            if(!empty($appSecret) && isset($appSecret['version'])) {
-                $key        = $request->getServer('_APP_OPENSSL_KEY_V' . $appSecret['version']);
-                $appSecret  = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key,0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
+            if (!empty($appSecret) && isset($appSecret['version'])) {
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+                $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
             }
 
+            $classname = 'Auth\\OAuth\\'.ucfirst($provider);
 
-            $classname = 'Auth\\OAuth\\' . ucfirst($provider);
-            
-            if(!class_exists($classname)) {
+            if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);
             }
 
@@ -707,8 +689,8 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
 
             $accessToken = $oauth->getAccessToken($code);
 
-            if(empty($accessToken)) {
-                if(!empty($state['failure'])) {
+            if (empty($accessToken)) {
+                if (!empty($state['failure'])) {
                     $response->redirect($state['failure'], 301, 0);
                 }
 
@@ -717,8 +699,8 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
 
             $oauthID = $oauth->getUserID($accessToken);
 
-            if(empty($oauthID)) {
-                if(!empty($state['failure'])) {
+            if (empty($oauthID)) {
+                if (!empty($state['failure'])) {
                     $response->redirect($state['failure'], 301, 0);
                 }
 
@@ -727,7 +709,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
 
             $current = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
-            if($current) {
+            if ($current) {
                 $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
             }
 
@@ -735,25 +717,25 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    'oauth' . ucfirst($provider) . '=' . $oauthID
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'oauth'.ucfirst($provider).'='.$oauthID,
+                ],
             ]) : $user;
 
-            if(empty($user)) { // No user logged in or with oauth provider ID, create new one or connect with account with same email
-                $name     = $oauth->getUserName($accessToken);
-                $email    = $oauth->getUserEmail($accessToken);
+            if (empty($user)) { // No user logged in or with oauth provider ID, create new one or connect with account with same email
+                $name = $oauth->getUserName($accessToken);
+                $email = $oauth->getUserEmail($accessToken);
 
                 $user = $projectDB->getCollection([ // Get user by provider email address
                     'limit' => 1,
                     'first' => true,
                     'filters' => [
-                        '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                        'email=' . $email
-                    ]
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                        'email='.$email,
+                    ],
                 ]);
 
-                if(empty($user->getUid())) { // Last option -> create user alone, generate random password
+                if (empty($user->getUid())) { // Last option -> create user alone, generate random password
                     Authorization::disable();
 
                     $user = $projectDB->createDocument([
@@ -771,7 +753,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
 
                     Authorization::enable();
 
-                    if(false === $user) {
+                    if (false === $user) {
                         throw new Exception('Failed saving user to DB', 500);
                     }
                 }
@@ -783,12 +765,12 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
             $user
-                ->setAttribute('oauth' . ucfirst($provider), $oauthID)
-                ->setAttribute('oauth' . ucfirst($provider) . 'AccessToken', $accessToken)
+                ->setAttribute('oauth'.ucfirst($provider), $oauthID)
+                ->setAttribute('oauth'.ucfirst($provider).'AccessToken', $accessToken)
                 ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
                 ->setAttribute('tokens', new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                    '$permissions' => ['read' => ['user:' . $user['$uid']], 'write' => ['user:' . $user['$uid']]],
+                    '$permissions' => ['read' => ['user:'.$user['$uid']], 'write' => ['user:'.$user['$uid']]],
                     'type' => Auth::TOKEN_TYPE_LOGIN,
                     'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
                     'expire' => $expiry,
@@ -797,11 +779,11 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
                 ]), Document::SET_TYPE_APPEND)
             ;
 
-            Authorization::setRole('user:' . $user->getUid());
+            Authorization::setRole('user:'.$user->getUid());
 
             $user = $projectDB->updateDocument($user->getArrayCopy());
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 

@@ -22,7 +22,7 @@ use Storage\Compression\Algorithms\GZIP;
 use Resize\Resize;
 use OpenSSL\OpenSSL;
 
-Storage::addDevice('local', new Local('app-' . $project->getUid()));
+Storage::addDevice('local', new Local('app-'.$project->getUid()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
     'default' => 'default.gif',
@@ -60,18 +60,18 @@ $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/229
 ];
 
 $inputs = [
-    'jpg'   => 'image/jpeg',
-    'jpeg'  => 'image/jpeg',
-    'gif'   => 'image/gif',
-    'png'   => 'image/png',
+    'jpg' => 'image/jpeg',
+    'jpeg' => 'image/jpeg',
+    'gif' => 'image/gif',
+    'png' => 'image/png',
 ];
 
 $outputs = [
-    'jpg'   => 'image/jpeg',
-    'jpeg'  => 'image/jpeg',
-    'gif'   => 'image/gif',
-    'png'   => 'image/png',
-    'webp'  => 'image/webp',
+    'jpg' => 'image/jpeg',
+    'jpeg' => 'image/jpeg',
+    'gif' => 'image/gif',
+    'png' => 'image/png',
+    'webp' => 'image/webp',
 ];
 
 $mimes = [
@@ -121,11 +121,10 @@ $utopia->get('/v1/storage/files')
     ->label('sdk.description', 'Get a list of all the user files. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project files. [Learn more about different API modes](/docs/modes).')
     ->param('search', '', function () {return new Text(256);}, 'Search term to filter your list results.', true)
     ->param('limit', 25, function () {return new Range(0, 100);}, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0 , function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () {return new WhiteList(['ASC', 'DESC']);}, 'Order result by ASC or DESC order.', true)
     ->action(
-        function($search, $limit, $offset, $orderType) use ($response, $projectDB)
-        {
+        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
             $results = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
@@ -134,7 +133,7 @@ $utopia->get('/v1/storage/files')
                 'orderCast' => 'int',
                 'search' => $search,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_FILES
+                    '$collection='.Database::SYSTEM_COLLECTION_FILES,
                 ],
             ]);
 
@@ -154,10 +153,10 @@ $utopia->get('/v1/storage/files/:fileId')
     ->label('sdk.description', 'Get file by its unique ID. This endpoint response returns a JSON object with the file metadata.')
     ->param('fileId', '', function () {return new UID();}, 'File unique ID.')
     ->action(
-        function($fileId) use ($response, $projectDB) {
+        function ($fileId) use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
-            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
@@ -180,48 +179,47 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     //->param('storage', 'local', function () {return new WhiteList(array('local'));}, 'Selected storage device. defaults to local')
     //->param('token', '', function () {return new Text(128);}, 'Preview token', true)
     ->action(
-        function($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos)
-        {
+        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
             $storage = 'local';
 
             if (!extension_loaded('imagick')) {
                 throw new Exception('Imagick extension is missing', 500);
             }
 
-            if(!Storage::exists($storage)) {
+            if (!Storage::exists($storage)) {
                 throw new Exception('No such storage device');
             }
 
-            if((strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
+            if ((strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
                 $output = 'jpg';
             }
 
-            $date   = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
-            $key    = md5($fileId . $width . $height . $quality . $background . $storage . $output);
+            $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
+            $key = md5($fileId.$width.$height.$quality.$background.$storage.$output);
 
-            $file   = $projectDB->getDocument($fileId);
+            $file = $projectDB->getDocument($fileId);
 
-            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
-            $path           = $file->getAttribute('path');
-            $algorithm      = $file->getAttribute('algorithm');
-            $type           = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-            $cipher         = $file->getAttribute('fileOpenSSLCipher');
+            $path = $file->getAttribute('path');
+            $algorithm = $file->getAttribute('algorithm');
+            $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $cipher = $file->getAttribute('fileOpenSSLCipher');
             //$mimeType       = $file->getAttribute('mimeType', 'unknown');
 
-            $compressor     = new GZIP();
-            $device         = Storage::getDevice('local');
+            $compressor = new GZIP();
+            $device = Storage::getDevice('local');
 
             if (!file_exists($path)) {
-                throw new Exception('File not found in ' . $path, 404);
+                throw new Exception('File not found in '.$path, 404);
             }
 
-            $cache  = new Cache(new Filesystem('/storage/cache/app-' . $project->getUid())); // Limit file number or size
-            $data   = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
+            $cache = new Cache(new Filesystem('/storage/cache/app-'.$project->getUid())); // Limit file number or size
+            $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
-            if($data) {
+            if ($data) {
                 $output = (empty($output)) ? $type : $output;
 
                 $response
@@ -234,27 +232,27 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $source = $device->read($path);
 
-            if(!empty($cipher)) { // Decrypt
+            if (!empty($cipher)) { // Decrypt
                 $source = OpenSSL::decrypt(
                     $source,
                     $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V' . $file->getAttribute('fileOpenSSLVersion')),
+                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
                     hex2bin($file->getAttribute('fileOpenSSLIV')),
                     hex2bin($file->getAttribute('fileOpenSSLTag'))
                 );
             }
 
-            if(!empty($algorithm)) {
+            if (!empty($algorithm)) {
                 $source = $compressor->decompress($source);
             }
 
             $resize = new Resize($source);
 
-            $resize->crop((int)$width, (int)$height);
+            $resize->crop((int) $width, (int) $height);
 
-            if(!empty($background)) {
-                $resize->setBackground('#' . $background);
+            if (!empty($background)) {
+                $resize->setBackground('#'.$background);
             }
 
             $output = (empty($output)) ? $type : $output;
@@ -286,30 +284,29 @@ $utopia->get('/v1/storage/files/:fileId/download')
     ->label('sdk.description', 'Get file content by its unique ID. The endpoint response return with a \'Content-Disposition: attachment\' header that tells the browser to start downloading the file to user downloads directory.')
     ->param('fileId', '', function () {return new UID();}, 'File unique ID.')
     ->action(
-        function($fileId) use ($response, $request, $projectDB)
-        {
+        function ($fileId) use ($response, $request, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
-            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
             $path = $file->getAttribute('path', '');
 
             if (!file_exists($path)) {
-                throw new Exception('File not found in ' . $path, 404);
+                throw new Exception('File not found in '.$path, 404);
             }
 
             $compressor = new GZIP();
-            $device     = Storage::getDevice('local');
+            $device = Storage::getDevice('local');
 
             $source = $device->read($path);
 
-            if(!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
+            if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
                 $source = OpenSSL::decrypt(
                     $source,
                     $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V' . $file->getAttribute('fileOpenSSLVersion')),
+                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
                     hex2bin($file->getAttribute('fileOpenSSLIV')),
                     hex2bin($file->getAttribute('fileOpenSSLTag'))
@@ -321,8 +318,8 @@ $utopia->get('/v1/storage/files/:fileId/download')
             // Response
             $response
                 ->setContentType($file->getAttribute('mimeType'))
-                ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                ->addHeader('Content-Disposition', 'attachment; filename="'.$file->getAttribute('name', '').'"')
+                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
                 ->addHeader('X-Peak', memory_get_peak_usage())
                 ->send($source)
             ;
@@ -338,48 +335,47 @@ $utopia->get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', function () {return new UID();}, 'File unique ID.')
     ->param('as', '', function () {return new WhiteList(['pdf', /*'html',*/ 'text']);}, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(
-        function($fileId, $as) use ($response, $request, $projectDB, $mimes)
-        {
+        function ($fileId, $as) use ($response, $request, $projectDB, $mimes) {
             $file = $projectDB->getDocument($fileId);
 
-            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
             $path = $file->getAttribute('path', '');
 
             if (!file_exists($path)) {
-                throw new Exception('File not found in ' . $path, 404);
+                throw new Exception('File not found in '.$path, 404);
             }
 
-            $compressor     = new GZIP();
-            $device         = Storage::getDevice('local');
+            $compressor = new GZIP();
+            $device = Storage::getDevice('local');
 
             $contentType = 'text/plain';
 
-            if(in_array($file->getAttribute('mimeType'), $mimes)) {
+            if (in_array($file->getAttribute('mimeType'), $mimes)) {
                 $contentType = $file->getAttribute('mimeType');
             }
 
             $source = $device->read($path);
 
-            if(!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
+            if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
                 $source = OpenSSL::decrypt(
                     $source,
                     $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V' . $file->getAttribute('fileOpenSSLVersion')),
+                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
                     hex2bin($file->getAttribute('fileOpenSSLIV')),
                     hex2bin($file->getAttribute('fileOpenSSLTag'))
                 );
             }
 
-            $output     = $compressor->decompress($source);
-            $fileName   = $file->getAttribute('name', '');
+            $output = $compressor->decompress($source);
+            $fileName = $file->getAttribute('name', '');
 
             $contentTypes = [
-                'pdf'   => 'application/pdf',
-                'text'  => 'text/plain',
+                'pdf' => 'application/pdf',
+                'text' => 'text/plain',
             ];
 
             $contentType = (array_key_exists($as, $contentTypes)) ? $contentTypes[$as] : $contentType;
@@ -389,8 +385,8 @@ $utopia->get('/v1/storage/files/:fileId/view')
                 ->setContentType($contentType)
                 ->addHeader('Content-Security-Policy', 'script-src none;')
                 ->addHeader('X-Content-Type-Options', 'nosniff')
-                ->addHeader('Content-Disposition', 'inline; filename="' . $fileName . '"')
-                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                ->addHeader('Content-Disposition', 'inline; filename="'.$fileName.'"')
+                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
                 ->addHeader('X-Peak', memory_get_peak_usage())
                 ->send($output)
             ;
@@ -409,26 +405,25 @@ $utopia->post('/v1/storage/files')
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('folderId', '', function () {return new UID();}, 'Folder to associate files with.', true)
     ->action(
-        function($files, $read, $write, $folderId) use ($request, $response, $user, $projectDB, $audit, $usage)
-        {
-            $files  = $request->getFiles('files');
-            $read   = (empty($read)) ? ['user:' . $user->getUid()] : $read;
-            $write  = (empty($write)) ? ['user:' . $user->getUid()] : $write;
+        function ($files, $read, $write, $folderId) use ($request, $response, $user, $projectDB, $audit, $usage) {
+            $files = $request->getFiles('files');
+            $read = (empty($read)) ? ['user:'.$user->getUid()] : $read;
+            $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
 
-            /**
+            /*
              * Validation
              */
             //$fileType 	= new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
-            $fileSize	= new FileSize(2097152 * 2); // 4MB
+            $fileSize = new FileSize(2097152 * 2); // 4MB
 
             if (empty($files)) {
                 throw new Exception('No files sent', 400);
             }
 
             // Make sure we handle single file and multiple files the same way
-            $files['name']      = (is_array($files['name'])) ? $files['name'] : [$files['name']];
-            $files['tmp_name']  = (is_array($files['tmp_name'])) ? $files['tmp_name'] : [$files['tmp_name']];
-            $files['size']      = (is_array($files['size'])) ? $files['size'] : [$files['size']];
+            $files['name'] = (is_array($files['name'])) ? $files['name'] : [$files['name']];
+            $files['tmp_name'] = (is_array($files['tmp_name'])) ? $files['tmp_name'] : [$files['tmp_name']];
+            $files['size'] = (is_array($files['size'])) ? $files['size'] : [$files['size']];
 
             // Check if file type is allowed
             //foreach ($files['tmp_name'] as $tmpName) {
@@ -446,18 +441,18 @@ $utopia->post('/v1/storage/files')
 
             $antiVirus = new Network('clamav', 3310);
 
-            /**
+            /*
              * Models
              */
-            $list   = [];
+            $list = [];
             $device = Storage::getDevice('local');
 
             foreach ($files['tmp_name'] as $i => $tmpName) {
                 // Save to storage
-                $name       = $files['name'][$i];
-                $size       = $device->getFileSize($tmpName);
-                $path       = $device->upload($tmpName, $files['name'][$i]);
-                $mimeType   = $device->getFileMimeType($path);
+                $name = $files['name'][$i];
+                $size = $device->getFileSize($tmpName);
+                $path = $device->upload($tmpName, $files['name'][$i]);
+                $mimeType = $device->getFileMimeType($path);
 
                 // Check if file size is exceeding allowed limit
                 if (!$antiVirus->fileScan($path)) {
@@ -466,45 +461,45 @@ $utopia->post('/v1/storage/files')
                 }
 
                 // Compression
-                $compressor     = new GZIP();
-                $data           = $device->read($path);
-                $data           = $compressor->compress($data);
-                $key            = $request->getServer('_APP_OPENSSL_KEY_V1');
-                $iv             = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-                $data           = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+                $compressor = new GZIP();
+                $data = $device->read($path);
+                $data = $compressor->compress($data);
+                $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+                $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+                $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-                $sizeCompressed = (int)$device->write($path, $data);
+                $sizeCompressed = (int) $device->write($path, $data);
 
                 $file = $projectDB->createDocument([
-                    '$collection'       => Database::SYSTEM_COLLECTION_FILES,
-                    '$permissions'      => [
+                    '$collection' => Database::SYSTEM_COLLECTION_FILES,
+                    '$permissions' => [
                         'read' => $read,
                         'write' => $write,
                     ],
-                    'dateCreated'       => time(),
-                    'folderId'          => $folderId,
-                    'name'              => $name,
-                    'path'              => $path,
-                    'signature'         => $device->getFileHash($path),
-                    'mimeType'          => $mimeType,
-                    'sizeOriginal'      => $size,
-                    'sizeCompressed'    => $sizeCompressed,
-                    'algorithm'         => $compressor->getName(),
-                    'token'             => bin2hex(random_bytes(64)),
-                    'comment'           => '',
-                    'fileOpenSSLVersion'=> '1',
+                    'dateCreated' => time(),
+                    'folderId' => $folderId,
+                    'name' => $name,
+                    'path' => $path,
+                    'signature' => $device->getFileHash($path),
+                    'mimeType' => $mimeType,
+                    'sizeOriginal' => $size,
+                    'sizeCompressed' => $sizeCompressed,
+                    'algorithm' => $compressor->getName(),
+                    'token' => bin2hex(random_bytes(64)),
+                    'comment' => '',
+                    'fileOpenSSLVersion' => '1',
                     'fileOpenSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-                    'fileOpenSSLTag'    => bin2hex($tag),
-                    'fileOpenSSLIV'     => bin2hex($iv),
+                    'fileOpenSSLTag' => bin2hex($tag),
+                    'fileOpenSSLIV' => bin2hex($iv),
                 ]);
 
-                if(false === $file) {
+                if (false === $file) {
                     throw new Exception('Failed saving file to DB', 500);
                 }
 
                 $audit
                     ->setParam('event', 'storage.upload')
-                    ->setParam('resource', 'storage/file/' . $file->getUid())
+                    ->setParam('resource', 'storage/file/'.$file->getUid())
                 ;
 
                 $usage
@@ -532,11 +527,10 @@ $utopia->put('/v1/storage/files/:fileId')
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('folderId', '', function () {return new UID();}, 'Folder to associate files with.', true)
     ->action(
-        function($fileId, $read, $write, $folderId) use ($response, $projectDB)
-        {
+        function ($fileId, $read, $write, $folderId) use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
-            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
@@ -548,7 +542,7 @@ $utopia->put('/v1/storage/files/:fileId')
                 'folderId' => $folderId,
             ]));
 
-            if(false === $file) {
+            if (false === $file) {
                 throw new Exception('Failed saving file to DB', 500);
             }
 
@@ -564,24 +558,24 @@ $utopia->delete('/v1/storage/files/:fileId')
     ->label('sdk.description', 'Delete a file by its unique ID. Only users with write permissions have access to delete this resource.')
     ->param('fileId', '', function () {return new UID();}, 'File unique ID.')
     ->action(
-        function($fileId) use ($response, $projectDB, $audit, $usage) {
+        function ($fileId) use ($response, $projectDB, $audit, $usage) {
             $file = $projectDB->getDocument($fileId);
 
-            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
             $device = Storage::getDevice('local');
 
-            if($device->delete($file->getAttribute('path', ''))) {
-                if(!$projectDB->deleteDocument($fileId)) {
+            if ($device->delete($file->getAttribute('path', ''))) {
+                if (!$projectDB->deleteDocument($fileId)) {
                     throw new Exception('Failed to remove file from DB', 500);
                 }
             }
 
             $audit
                 ->setParam('event', 'storage.delete')
-                ->setParam('resource', 'storage/file/' . $file->getUid())
+                ->setParam('resource', 'storage/file/'.$file->getUid())
             ;
 
             $usage
@@ -601,30 +595,29 @@ $utopia->get('/v1/storage/files/:fileId/scan')
     ->param('fileId', '', function () {return new UID();}, 'File unique ID.')
     ->param('storage', 'local', function () {return new WhiteList(['local']);})
     ->action(
-        function($fileId, $storage) use ($response, $request, $projectDB)
-        {
+        function ($fileId, $storage) use ($response, $request, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
-            if(empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
             $path = $file->getAttribute('path', '');
 
             if (!file_exists($path)) {
-                throw new Exception('File not found in ' . $path, 404);
+                throw new Exception('File not found in '.$path, 404);
             }
 
             $compressor = new GZIP();
-            $device     = Storage::getDevice($storage);
+            $device = Storage::getDevice($storage);
 
             $source = $device->read($path);
 
-            if(!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
+            if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
                 $source = OpenSSL::decrypt(
                     $source,
                     $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V' . $file->getAttribute('fileOpenSSLVersion')),
+                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
                     hex2bin($file->getAttribute('fileOpenSSLIV')),
                     hex2bin($file->getAttribute('fileOpenSSLTag'))

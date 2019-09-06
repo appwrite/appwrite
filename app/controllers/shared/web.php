@@ -11,11 +11,11 @@ $roles = [
     ['type' => 'admin', 'label' => Locale::getText('general.roles.admin')],
 ];
 
-$layout = new View(__DIR__ . '/../../views/layouts/default.phtml');
+$layout = new View(__DIR__.'/../../views/layouts/default.phtml');
 
 /* AJAX check  */
-if(!empty($request->getQuery('version', ''))) {
-    $layout->setPath(__DIR__ . '/../../views/layouts/empty.phtml');
+if (!empty($request->getQuery('version', ''))) {
+    $layout->setPath(__DIR__.'/../../views/layouts/empty.phtml');
 }
 
 $layout
@@ -32,13 +32,13 @@ $layout
     ->setParam('env', $utopia->getEnv())
 ;
 
-$utopia->shutdown(function() use ($utopia, $response, $request, $layout, $version, $env) {
+$utopia->shutdown(function () use ($utopia, $response, $request, $layout, $version, $env) {
     $time = (60 * 60 * 24 * 45); // 45 days cache
     $isDev = (\Utopia\App::ENV_TYPE_DEVELOPMENT == $env);
 
     $response
-        ->addHeader('Cache-Control', 'public, max-age=' . $time)
-        ->addHeader('Expires', date('D, d M Y H:i:s', time() + $time) . ' GMT') // 45 days cache
+        ->addHeader('Cache-Control', 'public, max-age='.$time)
+        ->addHeader('Expires', date('D, d M Y H:i:s', time() + $time).' GMT') // 45 days cache
         ->addHeader('X-UA-Compatible', 'IE=Edge'); // Deny IE browsers from going into quirks mode
 
     $route = $utopia->match($request);

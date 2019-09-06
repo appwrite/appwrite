@@ -26,11 +26,10 @@ $utopia->get('/v1/teams')
     ->label('sdk.description', 'Get a list of all the current user teams. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project teams. [Learn more about different API modes](/docs/modes).')
     ->param('search', '', function () {return new Text(256);}, 'Search term to filter your list results.', true)
     ->param('limit', 25, function () {return new Range(0, 100);}, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0 , function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () {return new WhiteList(['ASC', 'DESC']);}, 'Order result by ASC or DESC order.', true)
     ->action(
-        function($search, $limit, $offset, $orderType) use ($response, $projectDB)
-        {
+        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
             $results = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
@@ -39,7 +38,7 @@ $utopia->get('/v1/teams')
                 'orderCast' => 'int',
                 'search' => $search,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_TEAMS
+                    '$collection='.Database::SYSTEM_COLLECTION_TEAMS,
                 ],
             ]);
 
@@ -55,11 +54,10 @@ $utopia->get('/v1/teams/:teamId')
     ->label('sdk.description', 'Get team by its unique ID. All team members have read access for this resource.')
     ->param('teamId', '', function () {return new UID();}, 'Team unique ID.')
     ->action(
-        function($teamId) use ($response, $projectDB)
-        {
+        function ($teamId) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
@@ -75,11 +73,10 @@ $utopia->get('/v1/teams/:teamId/members')
     ->label('sdk.description', 'Get team members by the team unique ID. All team members have read access for this list of resources.')
     ->param('teamId', '', function () {return new UID();}, 'Team unique ID.')
     ->action(
-        function($teamId) use ($response, $projectDB)
-        {
+        function ($teamId) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
@@ -87,15 +84,15 @@ $utopia->get('/v1/teams/:teamId/members')
                 'limit' => 50,
                 'offset' => 0,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    'teamId=' . $teamId
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                    'teamId='.$teamId,
+                ],
             ]);
 
             $users = [];
 
             foreach ($memberships as $member) {
-                if(empty($member->getAttribute('userId', null))) {
+                if (empty($member->getAttribute('userId', null))) {
                     continue;
                 }
 
@@ -109,9 +106,10 @@ $utopia->get('/v1/teams/:teamId/members')
             }
 
             usort($users, function ($a, $b) {
-                if($a['joined'] === 0 || $b['joined'] === 0) {
+                if ($a['joined'] === 0 || $b['joined'] === 0) {
                     return $b['joined'] - $a['joined'];
                 }
+
                 return $a['joined'] - $b['joined'];
             });
 
@@ -128,15 +126,14 @@ $utopia->post('/v1/teams')
     ->param('name', null, function () {return new Text(100);}, 'Team name.')
     ->param('roles', ['owner'], function () {return new ArrayList(new Text(128));}, 'User roles array. Use this param to set the roles in the team for the user who created the team. The default role is **owner**, a role can be any string.', true)
     ->action(
-        function($name, $roles) use ($response, $projectDB, $user, $mode)
-        {
+        function ($name, $roles) use ($response, $projectDB, $user, $mode) {
             Authorization::disable();
 
             $team = $projectDB->createDocument([
                 '$collection' => Database::SYSTEM_COLLECTION_TEAMS,
-                '$permissions'      => [
-                    'read'      => ['team:{self}'],
-                    'write'     => ['team:{self}/owner'],
+                '$permissions' => [
+                    'read' => ['team:{self}'],
+                    'write' => ['team:{self}/owner'],
                 ],
                 'name' => $name,
                 'sum' => ($mode !== APP_MODE_ADMIN) ? 1 : 0,
@@ -145,16 +142,16 @@ $utopia->post('/v1/teams')
 
             Authorization::enable();
 
-            if(false === $team) {
+            if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
             }
 
-            if($mode !== APP_MODE_ADMIN) { // Don't add user on admin mode
+            if ($mode !== APP_MODE_ADMIN) { // Don't add user on admin mode
                 $membership = new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    '$permissions'      => [
-                        'read'      => ['user:' . $user->getUid(), 'team:' . $team->getUid()],
-                        'write'     => ['user:' . $user->getUid(), 'team:' . $team->getUid() . '/owner'],
+                    '$permissions' => [
+                        'read' => ['user:'.$user->getUid(), 'team:'.$team->getUid()],
+                        'write' => ['user:'.$user->getUid(), 'team:'.$team->getUid().'/owner'],
                     ],
                     'userId' => $user->getUid(),
                     'teamId' => $team->getUid(),
@@ -170,7 +167,7 @@ $utopia->post('/v1/teams')
 
                 $user = $projectDB->updateDocument($user->getArrayCopy());
 
-                if(false === $user) {
+                if (false === $user) {
                     throw new Exception('Failed saving user to DB', 500);
                 }
             }
@@ -191,11 +188,10 @@ $utopia->put('/v1/teams/:teamId')
     ->param('teamId', '', function () {return new UID();}, 'Team unique ID.')
     ->param('name', null, function () {return new Text(100);}, 'Team name.')
     ->action(
-        function($teamId, $name) use ($response, $projectDB)
-        {
+        function ($teamId, $name) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
@@ -203,7 +199,7 @@ $utopia->put('/v1/teams/:teamId')
                 'name' => $name,
             ]));
 
-            if(false === $team) {
+            if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
             }
 
@@ -219,11 +215,10 @@ $utopia->delete('/v1/teams/:teamId')
     ->label('sdk.description', 'Delete team by its unique ID. Only team owners have write access for this resource.')
     ->param('teamId', '', function () {return new UID();}, 'Team unique ID.')
     ->action(
-        function($teamId) use ($response, $projectDB)
-        {
+        function ($teamId) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
@@ -231,18 +226,18 @@ $utopia->delete('/v1/teams/:teamId')
                 'limit' => 2000, // TODO add members limit
                 'offset' => 0,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    'teamId=' . $teamId
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                    'teamId='.$teamId,
+                ],
             ]);
 
             foreach ($memberships as $member) {
-                if(!$projectDB->deleteDocument($member)) {
+                if (!$projectDB->deleteDocument($member)) {
                     throw new Exception('Failed to remove membership for team from DB', 500);
                 }
             }
 
-            if(!$projectDB->deleteDocument($teamId)) {
+            if (!$projectDB->deleteDocument($teamId)) {
                 throw new Exception('Failed to remove team from DB', 500);
             }
 
@@ -264,12 +259,11 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('roles', [], function () {return new ArrayList(new Text(128));}, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
     ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
-        function($teamId, $email, $name, $roles, $redirect) use ($request, $response, $register, $project, $user, $audit, $projectDB)
-        {
+        function ($teamId, $email, $name, $roles, $redirect) use ($request, $response, $register, $project, $user, $audit, $projectDB) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
@@ -277,21 +271,21 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'limit' => 50,
                 'offset' => 0,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    'teamId=' . $team->getUid()
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                    'teamId='.$team->getUid(),
+                ],
             ]);
 
             $invitee = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    'email=' . $email
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
             ]);
 
-            if(empty($invitee)) { // Create new user if no user with same email found
+            if (empty($invitee)) { // Create new user if no user with same email found
 
                 Authorization::disable();
 
@@ -309,12 +303,12 @@ $utopia->post('/v1/teams/:teamId/memberships')
                     'confirm' => false,
                     'reset' => false,
                     'name' => $name,
-                    'tokens' => []
+                    'tokens' => [],
                 ]);
 
                 Authorization::enable();
 
-                if(false === $invitee) {
+                if (false === $invitee) {
                     throw new Exception('Failed saving user to DB', 500);
                 }
             }
@@ -322,16 +316,16 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $isOwner = false;
 
             foreach ($memberships as $member) {
-                if($member->getAttribute('userId') ==  $invitee->getUid()) {
+                if ($member->getAttribute('userId') ==  $invitee->getUid()) {
                     throw new Exception('User has already been invited or is already a member of this team', 400);
                 }
 
-                if($member->getAttribute('userId') == $user->getUid() && in_array('owner', $member->getAttribute('roles', []))) {
+                if ($member->getAttribute('userId') == $user->getUid() && in_array('owner', $member->getAttribute('roles', []))) {
                     $isOwner = true;
                 }
             }
 
-            if(!$isOwner) {
+            if (!$isOwner) {
                 throw new Exception('User is not allowed to send invitations for this team', 401);
             }
 
@@ -339,9 +333,9 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $membership = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                '$permissions'      => [
-                    'read'      => ['*'],
-                    'write'     => ['user:' . $invitee->getUid(), 'team:' . $team->getUid() . '/owner'],
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['user:'.$invitee->getUid(), 'team:'.$team->getUid().'/owner'],
                 ],
                 'userId' => $invitee->getUid(),
                 'teamId' => $team->getUid(),
@@ -354,7 +348,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $membership = $projectDB->createDocument($membership->getArrayCopy());
 
-            if(false === $membership) {
+            if (false === $membership) {
                 throw new Exception('Failed saving membership to DB', 500);
             }
 
@@ -362,7 +356,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__ . '/../config/locale/templates/' . Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -376,13 +370,12 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $mail->addAddress($email, $name);
 
             $mail->Subject = sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-            $mail->Body    = $body->render();
+            $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
             try {
                 $mail->send();
-            }
-            catch(\Exception $error) {
+            } catch (\Exception $error) {
                 //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
             }
 
@@ -407,27 +400,26 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
     ->param('inviteId', '', function () {return new UID();}, 'Invite unique ID.')
     ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
-        function($teamId, $inviteId, $redirect) use ($response, $register, $project, $user, $audit, $projectDB)
-        {
+        function ($teamId, $inviteId, $redirect) use ($response, $register, $project, $user, $audit, $projectDB) {
             $membership = $projectDB->getDocument($inviteId);
 
-            if(empty($membership->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
+            if (empty($membership->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
                 throw new Exception('Membership not found', 404);
             }
 
             $team = $projectDB->getDocument($membership->getAttribute('teamId'));
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
-            if($team->getUid() !== $teamId) {
+            if ($team->getUid() !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
             $invitee = $projectDB->getDocument($membership->getAttribute('userId'));
 
-            if(empty($invitee->getUid()) || Database::SYSTEM_COLLECTION_USERS != $invitee->getCollection()) {
+            if (empty($invitee->getUid()) || Database::SYSTEM_COLLECTION_USERS != $invitee->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
@@ -435,7 +427,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
 
             $membership = $projectDB->updateDocument(array_merge($membership->getArrayCopy(), ['secret' => Auth::hash($secret)]));
 
-            if(false === $membership) {
+            if (false === $membership) {
                 throw new Exception('Failed updating membership to DB', 500);
             }
 
@@ -443,7 +435,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'userId' => $membership->getAttribute('userId'), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__ . '/../config/locale/templates/' . Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -457,16 +449,15 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
             $mail->addAddress($invitee->getAttribute('email'), $invitee->getAttribute('name'));
 
             $mail->Subject = sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-            $mail->Body    = $body->render();
+            $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
             try {
                 $mail->send();
-            }
-            catch(\Exception $error) {
+            } catch (\Exception $error) {
                 //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
             }
-            
+
             $audit
                 ->setParam('userId', $user->getUid())
                 ->setParam('event', 'auth.invite.resend')
@@ -493,65 +484,68 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed', true)
     ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed', true)
     ->action(
-        function($teamId, $inviteId, $userId, $secret, $success, $failure) use ($response, $request, $user, $audit, $projectDB)
-        {
+        function ($teamId, $inviteId, $userId, $secret, $success, $failure) use ($response, $request, $user, $audit, $projectDB) {
             $invite = $projectDB->getDocument($inviteId);
 
-            if(empty($invite->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $invite->getCollection()) {
-                if($failure) {
+            if (empty($invite->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $invite->getCollection()) {
+                if ($failure) {
                     $response->redirect($failure);
+
                     return;
                 }
 
                 throw new Exception('Invite not found', 404);
             }
 
-            if($invite->getAttribute('teamId')->getUid() !== $teamId) {
+            if ($invite->getAttribute('teamId')->getUid() !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
-            if(Auth::hash($secret) !== $invite->getAttribute('secret')) {
-                if($failure) {
+            if (Auth::hash($secret) !== $invite->getAttribute('secret')) {
+                if ($failure) {
                     $response->redirect($failure);
+
                     return;
                 }
 
                 throw new Exception('Secret key not valid', 401);
             }
 
-            if($userId != $invite->getAttribute('userId')) {
-                if($failure) {
+            if ($userId != $invite->getAttribute('userId')) {
+                if ($failure) {
                     $response->redirect($failure);
+
                     return;
                 }
 
-                throw new Exception('Invite not belong to current user (' . $user->getAttribute('email') . ')', 401);
+                throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
             }
 
-            if(empty($user->getUid())) {
+            if (empty($user->getUid())) {
                 $user = $projectDB->getCollection([ // Get user
                     'limit' => 1,
                     'first' => true,
                     'filters' => [
-                        '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                        '$uid=' . $userId
-                    ]
+                        '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                        '$uid='.$userId,
+                    ],
                 ]);
             }
 
-            if($invite->getAttribute('userId') !== $user->getUid()) {
-                if($failure) {
+            if ($invite->getAttribute('userId') !== $user->getUid()) {
+                if ($failure) {
                     $response->redirect($failure);
+
                     return;
                 }
 
-                throw new Exception('Invite not belong to current user (' . $user->getAttribute('email') . ')', 401);
+                throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
             }
 
             $invite // Attach user to team
@@ -569,19 +563,19 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             $user->setAttribute('tokens', new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:' . $user->getUid()], 'write' => ['user:' . $user->getUid()]],
+                '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
                 'expire' => $expiry,
                 'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
                 'ip' => $request->getIP(),
-            ]),Document::SET_TYPE_APPEND);
+            ]), Document::SET_TYPE_APPEND);
 
-            Authorization::setRole('user:' . $userId);
+            Authorization::setRole('user:'.$userId);
 
             $user = $projectDB->updateDocument($user->getArrayCopy());
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -589,7 +583,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 'sum' => $team->getAttribute('sum', 0) + 1,
             ]));
 
-            if(false === $team) {
+            if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
             }
 
@@ -600,7 +594,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
 
-            if($success) {
+            if ($success) {
                 $response->redirect($success);
             }
 
@@ -613,29 +607,28 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteTeamMembership')
-    ->label('sdk.description', "This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member.")
+    ->label('sdk.description', 'This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member.')
     ->param('teamId', '', function () {return new UID();}, 'Team unique ID.')
     ->param('inviteId', '', function () {return new UID();}, 'Invite unique ID')
     ->action(
-        function($teamId, $inviteId) use ($response, $projectDB, $audit)
-        {
+        function ($teamId, $inviteId) use ($response, $projectDB, $audit) {
             $invite = $projectDB->getDocument($inviteId);
 
-            if(empty($invite->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $invite->getCollection()) {
+            if (empty($invite->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $invite->getCollection()) {
                 throw new Exception('Invite not found', 404);
             }
 
-            if($invite->getAttribute('teamId') !== $teamId) {
+            if ($invite->getAttribute('teamId') !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
             $team = $projectDB->getDocument($teamId);
 
-            if(empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
-            if(!$projectDB->deleteDocument($invite->getUid())) {
+            if (!$projectDB->deleteDocument($invite->getUid())) {
                 throw new Exception('Failed to remove membership from DB', 500);
             }
 
@@ -643,7 +636,7 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
                 'sum' => $team->getAttribute('sum', 0) - 1,
             ]));
 
-            if(false === $team) {
+            if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
             }
 

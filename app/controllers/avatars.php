@@ -16,21 +16,20 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 
 $types = [
-    'browsers' => include __DIR__ . '/../config/avatars/browsers.php',
-    'credit-cards' => include __DIR__ . '/../config/avatars/credit-cards.php',
-    'flags' => include __DIR__ . '/../config/avatars/flags.php',
+    'browsers' => include __DIR__.'/../config/avatars/browsers.php',
+    'credit-cards' => include __DIR__.'/../config/avatars/credit-cards.php',
+    'flags' => include __DIR__.'/../config/avatars/flags.php',
 ];
 
-$avatarCallback = function($type, $code, $width, $height, $quality) use ($types, $response, $request)
-{
+$avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response, $request) {
     $code = strtolower($code);
     $type = strtolower($type);
 
-    if(!array_key_exists($type, $types)) {
+    if (!array_key_exists($type, $types)) {
         throw new Exception('Avatar set not found', 404);
     }
 
-    if(!array_key_exists($code, $types[$type])) {
+    if (!array_key_exists($code, $types[$type])) {
         throw new Exception('Avatar not found', 404);
     }
 
@@ -38,20 +37,20 @@ $avatarCallback = function($type, $code, $width, $height, $quality) use ($types,
         throw new Exception('Imagick extension is missing', 500);
     }
 
-    $output     = 'png';
-    $date       = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
-    $key        = md5('/v1/avatars/:type/:code-' . $code .$width . $height . $quality . $output);
-    $path       = $types[$type][$code];
-    $type 	    = 'png';
+    $output = 'png';
+    $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
+    $key = md5('/v1/avatars/:type/:code-'.$code.$width.$height.$quality.$output);
+    $path = $types[$type][$code];
+    $type = 'png';
 
     if (!file_exists($path)) {
-        throw new Exception('File not found in ' . $path, 404);
+        throw new Exception('File not found in '.$path, 404);
     }
 
-    $cache  = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
-    $data   = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
+    $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
+    $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
-    if($data) {
+    if ($data) {
         //$output = (empty($output)) ? $type : $output;
 
         $response
@@ -64,7 +63,7 @@ $avatarCallback = function($type, $code, $width, $height, $quality) use ($types,
 
     $resize = new Resize(file_get_contents($path));
 
-    $resize->crop((int)$width, (int)$height);
+    $resize->crop((int) $width, (int) $height);
 
     $output = (empty($output)) ? $type : $output;
 
@@ -88,7 +87,7 @@ $avatarCallback = function($type, $code, $width, $height, $quality) use ($types,
 
 $utopia->get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
-    ->param('code', '', function () use ($types) {return new WhiteList(array_keys($types['credit-cards'])); }, 'Credit Card Code. Possible values: ' . implode(', ', array_keys($types['credit-cards'])) . '.')
+    ->param('code', '', function () use ($types) {return new WhiteList(array_keys($types['credit-cards'])); }, 'Credit Card Code. Possible values: '.implode(', ', array_keys($types['credit-cards'])).'.')
     ->param('width', 100,  function () {return new Range(0, 2000);}, 'Image width. Pass an integer between 0 to 2000. Defaults to 100', true)
     ->param('height', 100, function () {return new Range(0, 2000);}, 'Image height. Pass an integer between 0 to 2000. Defaults to 100', true)
     ->param('quality', 100, function () {return new Range(0, 100);}, 'Image quality. Pass an integer between 0 to 100. Defaults to 100', true)
@@ -132,17 +131,16 @@ $utopia->get('/v1/avatars/image')
     ->label('sdk.method', 'getImage')
     ->label('sdk.description', 'Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in cases, you want to make sure a 3rd party image is properly served using a TLS protocol.')
     ->action(
-        function($url, $width, $height) use ($response, $request, $version)
-        {
-            $quality    = 80;
-            $output     = 'png';
-            $date       = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
-            $key        = md5('/v2/avatars/images-' . $url . '-' . $width . '/' . $height . '/' . $quality);
-            $type 	    = 'png';
-            $cache      = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
-            $data       = $cache->load($key, 60 * 60 * 24 * 7 /* 1 week */);
+        function ($url, $width, $height) use ($response, $request, $version) {
+            $quality = 80;
+            $output = 'png';
+            $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
+            $key = md5('/v2/avatars/images-'.$url.'-'.$width.'/'.$height.'/'.$quality);
+            $type = 'png';
+            $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
+            $data = $cache->load($key, 60 * 60 * 24 * 7 /* 1 week */);
 
-            if($data) {
+            if ($data) {
                 $response
                     ->setContentType('image/png')
                     ->addHeader('Expires', $date)
@@ -157,18 +155,17 @@ $utopia->get('/v1/avatars/image')
 
             $fetch = @file_get_contents($url, false);
 
-            if(!$fetch) {
+            if (!$fetch) {
                 throw new Exception('Image not found', 404);
             }
 
             try {
                 $resize = new Resize($fetch);
-            }
-            catch (\Exception $exception) {
+            } catch (\Exception $exception) {
                 throw new Exception('Unable to parse image', 500);
             }
 
-            $resize->crop((int)$width, (int)$height);
+            $resize->crop((int) $width, (int) $height);
 
             $output = (empty($output)) ? $type : $output;
 
@@ -199,19 +196,18 @@ $utopia->get('/v1/avatars/favicon')
     ->label('sdk.method', 'getFavicon')
     ->label('sdk.description', 'Use this endpoint to fetch the favorite icon (AKA favicon) of a  any remote website URL.')
     ->action(
-        function($url) use ($response, $request, $version)
-        {
-            $width      = 56;
-            $height     = 56;
-            $quality    = 80;
-            $output     = 'png';
-            $date       = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT';  // 45 days cache
-            $key        = md5('/v2/avatars/favicon-' . $url);
-            $type 	    = 'png';
-            $cache      = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
-            $data       = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
+        function ($url) use ($response, $request, $version) {
+            $width = 56;
+            $height = 56;
+            $quality = 80;
+            $output = 'png';
+            $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
+            $key = md5('/v2/avatars/favicon-'.$url);
+            $type = 'png';
+            $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
+            $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
-            if($data) {
+            if ($data) {
                 $response
                     ->setContentType('image/png')
                     ->addHeader('Expires', $date)
@@ -234,11 +230,11 @@ $utopia->get('/v1/avatars/favicon')
                 CURLOPT_USERAGENT => sprintf(APP_USERAGENT, $version),
             ]);
 
-            $html  = curl_exec($curl);
+            $html = curl_exec($curl);
 
             curl_close($curl);
 
-            if(!$html) {
+            if (!$html) {
                 throw new Exception('Failed to fetch remote URL', 404);
             }
 
@@ -246,16 +242,16 @@ $utopia->get('/v1/avatars/favicon')
             $doc->strictErrorChecking = false;
             @$doc->loadHTML($html);
 
-            $links  = $doc->getElementsByTagName('link');
-            $outputHref   = '';
-            $outputExt    = '';
-            $space  = 0;
+            $links = $doc->getElementsByTagName('link');
+            $outputHref = '';
+            $outputExt = '';
+            $space = 0;
 
             foreach ($links as $link) { /* @var $link DOMElement */
-                $href       = $link->getAttribute('href');
-                $rel        = $link->getAttribute('rel');
-                $sizes      = $link->getAttribute('sizes');
-                $absolute   = unparse_url(array_merge(parse_url($url), parse_url($href)));
+                $href = $link->getAttribute('href');
+                $rel = $link->getAttribute('rel');
+                $sizes = $link->getAttribute('sizes');
+                $absolute = unparse_url(array_merge(parse_url($url), parse_url($href)));
 
                 switch (strtolower($rel)) {
                     case 'icon':
@@ -270,13 +266,13 @@ $utopia->get('/v1/avatars/favicon')
                             case 'jpeg':
                                 $size = explode('x', strtolower($sizes));
 
-                                $sizeWidth  = (isset($size[0])) ? (int)$size[0] : 0;
-                                $sizeHeight = (isset($size[1])) ? (int)$size[1] : 0;
+                                $sizeWidth = (isset($size[0])) ? (int) $size[0] : 0;
+                                $sizeHeight = (isset($size[1])) ? (int) $size[1] : 0;
 
-                                if(($sizeWidth * $sizeHeight) >= $space) {
-                                    $space  = $sizeWidth * $sizeHeight;
-                                    $outputHref  = $absolute;
-                                    $outputExt   = $ext;
+                                if (($sizeWidth * $sizeHeight) >= $space) {
+                                    $space = $sizeWidth * $sizeHeight;
+                                    $outputHref = $absolute;
+                                    $outputExt = $ext;
                                 }
 
                                 break;
@@ -286,17 +282,17 @@ $utopia->get('/v1/avatars/favicon')
                 }
             }
 
-            if(empty($outputHref) || empty($outputExt)) {
+            if (empty($outputHref) || empty($outputExt)) {
                 $default = parse_url($url);
 
-                $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
+                $outputHref = $default['scheme'].'://'.$default['host'].'/favicon.ico';
                 $outputExt = 'ico';
             }
 
-            if('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
+            if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
                 $data = @file_get_contents($outputHref, false);
 
-                if(empty($data) || (mb_substr($data, 0, 5) === '<html') || mb_substr($data, 0, 5) === '<!doc') {
+                if (empty($data) || (mb_substr($data, 0, 5) === '<html') || mb_substr($data, 0, 5) === '<!doc') {
                     throw new Exception('Favicon not found', 404);
                 }
 
@@ -312,13 +308,13 @@ $utopia->get('/v1/avatars/favicon')
 
             $fetch = @file_get_contents($outputHref, false);
 
-            if(!$fetch) {
+            if (!$fetch) {
                 throw new Exception('Icon not found', 404);
             }
 
             $resize = new Resize($fetch);
 
-            $resize->crop((int)$width, (int)$height);
+            $resize->crop((int) $width, (int) $height);
 
             $output = (empty($output)) ? $type : $output;
 
@@ -352,8 +348,7 @@ $utopia->get('/v1/avatars/qr')
     ->label('sdk.method', 'getQR')
     ->label('sdk.description', 'Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.')
     ->action(
-        function($text, $size, $margin, $download) use ($response)
-        {
+        function ($text, $size, $margin, $download) use ($response) {
             $renderer = new ImageRenderer(
                 new RendererStyle($size, $margin),
                 new ImagickImageBackEnd('png', 100)
@@ -361,12 +356,12 @@ $utopia->get('/v1/avatars/qr')
 
             $writer = new Writer($renderer);
 
-            if($download) {
+            if ($download) {
                 $response->addHeader('Content-Disposition', 'attachment; filename="qr.png"');
             }
 
             $response
-                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
+                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
                 ->setContentType('image/png')
                 ->send('', $writer->writeString($text))
             ;
@@ -374,39 +369,35 @@ $utopia->get('/v1/avatars/qr')
         }
     );
 
-
-function unparse_url( $parsed_url , $ommit = array( ) )
+function unparse_url($parsed_url, $ommit = array())
 {
-    if(isset($parsed_url['path']) && mb_substr($parsed_url['path'], 0, 1) !== '/') {
-        $parsed_url['path'] = '/' . $parsed_url['path'];
+    if (isset($parsed_url['path']) && mb_substr($parsed_url['path'], 0, 1) !== '/') {
+        $parsed_url['path'] = '/'.$parsed_url['path'];
     }
 
-    $p             = array();
+    $p = array();
 
-    $p['scheme']   = isset( $parsed_url['scheme'] ) ? $parsed_url['scheme'] . '://' : '';
+    $p['scheme'] = isset($parsed_url['scheme']) ? $parsed_url['scheme'].'://' : '';
 
-    $p['host']     = isset( $parsed_url['host'] ) ? $parsed_url['host'] : '';
+    $p['host'] = isset($parsed_url['host']) ? $parsed_url['host'] : '';
 
-    $p['port']     = isset( $parsed_url['port'] ) ? ':' . $parsed_url['port'] : '';
+    $p['port'] = isset($parsed_url['port']) ? ':'.$parsed_url['port'] : '';
 
-    $p['user']     = isset( $parsed_url['user'] ) ? $parsed_url['user'] : '';
+    $p['user'] = isset($parsed_url['user']) ? $parsed_url['user'] : '';
 
-    $p['pass']     = isset( $parsed_url['pass'] ) ? ':' . $parsed_url['pass']  : '';
+    $p['pass'] = isset($parsed_url['pass']) ? ':'.$parsed_url['pass']  : '';
 
-    $p['pass']     = ( $p['user'] || $p['pass'] ) ? $p['pass']."@" : '';
+    $p['pass'] = ($p['user'] || $p['pass']) ? $p['pass'].'@' : '';
 
-    $p['path']     = isset( $parsed_url['path'] ) ? $parsed_url['path'] : '';
+    $p['path'] = isset($parsed_url['path']) ? $parsed_url['path'] : '';
 
-    $p['query']    = isset( $parsed_url['query'] ) ? '?' . $parsed_url['query'] : '';
+    $p['query'] = isset($parsed_url['query']) ? '?'.$parsed_url['query'] : '';
 
-    $p['fragment'] = isset( $parsed_url['fragment'] ) ? '#' . $parsed_url['fragment'] : '';
+    $p['fragment'] = isset($parsed_url['fragment']) ? '#'.$parsed_url['fragment'] : '';
 
-    if ( $ommit )
-    {
-        foreach ( $ommit as $key )
-        {
-            if ( isset( $p[ $key ] ) )
-            {
+    if ($ommit) {
+        foreach ($ommit as $key) {
+            if (isset($p[ $key ])) {
                 $p[ $key ] = '';
             }
         }

@@ -25,11 +25,10 @@ $utopia->get('/v1/users')
     ->label('sdk.description', 'Get a list of all the project users. You can use the query params to filter your results.')
     ->param('search', '', function () {return new Text(256);}, 'Search term to filter your list results.', true)
     ->param('limit', 25, function () {return new Range(0, 100);}, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0 , function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('offset', 0, function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () {return new WhiteList(['ASC', 'DESC']);}, 'Order result by ASC or DESC order.', true)
     ->action(
-        function($search, $limit, $offset, $orderType) use ($response, $projectDB, $providers)
-        {
+        function ($search, $limit, $offset, $orderType) use ($response, $projectDB, $providers) {
             $results = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
@@ -38,19 +37,19 @@ $utopia->get('/v1/users')
                 'orderCast' => 'int',
                 'search' => $search,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
                 ],
             ]);
 
             $oauthKeys = [];
 
-            foreach($providers as $key => $provider) {
-                if(!$provider['enabled']) {
+            foreach ($providers as $key => $provider) {
+                if (!$provider['enabled']) {
                     continue;
                 }
-                
-                $oauthKeys[] = 'oauth' . ucfirst($key);
-                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+
+                $oauthKeys[] = 'oauth'.ucfirst($key);
+                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
             }
 
             $results = array_map(function ($value) use ($oauthKeys) { /* @var $value \Database\Document */
@@ -77,23 +76,22 @@ $utopia->get('/v1/users/:userId')
     ->label('sdk.description', 'Get user by its unique ID.')
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(
-        function($userId) use ($response, $projectDB, $providers)
-        {
+        function ($userId) use ($response, $projectDB, $providers) {
             $user = $projectDB->getDocument($userId);
 
-            if(empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
             $oauthKeys = [];
 
-            foreach($providers as $key => $provider) {
-                if(!$provider['enabled']) {
+            foreach ($providers as $key => $provider) {
+                if (!$provider['enabled']) {
                     continue;
                 }
-                
-                $oauthKeys[] = 'oauth' . ucfirst($key);
-                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+
+                $oauthKeys[] = 'oauth'.ucfirst($key);
+                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
             }
 
             $response->json(array_merge($user->getArrayCopy(array_merge(
@@ -116,23 +114,22 @@ $utopia->get('/v1/users/:userId/prefs')
     ->label('sdk.description', 'Get user preferences by its unique ID.')
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(
-        function($userId) use ($response, $projectDB) {
+        function ($userId) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if(empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
-            $prefs  = $user->getAttribute('prefs', '');
+            $prefs = $user->getAttribute('prefs', '');
 
-            if(empty($prefs)) {
+            if (empty($prefs)) {
                 $prefs = '[]';
             }
 
             try {
                 $prefs = json_decode($prefs, true);
-            }
-            catch (\Exception $error) {
+            } catch (\Exception $error) {
                 throw new Exception('Failed to parse prefs', 500);
             }
 
@@ -148,25 +145,25 @@ $utopia->get('/v1/users/:userId/sessions')
     ->label('sdk.description', 'Get user sessions list by its unique ID.')
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(
-        function($userId) use ($response, $projectDB) {
+        function ($userId) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if(empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
-            $tokens     = $user->getAttribute('tokens', []);
-            $reader     = new Reader(__DIR__ . '/../db/GeoLite2/GeoLite2-Country.mmdb');
-            $sessions   = [];
-            $index      = 0;
-            $countries  = Locale::getText('countries');
+            $tokens = $user->getAttribute('tokens', []);
+            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $sessions = [];
+            $index = 0;
+            $countries = Locale::getText('countries');
 
-            foreach($tokens as $token) { /* @var $token Document */
-                if(Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
                     continue;
                 }
 
-                $userAgent  = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
+                $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
 
                 $dd = new DeviceDetector($userAgent);
 
@@ -176,27 +173,26 @@ $utopia->get('/v1/users/:userId/sessions')
                 $dd->parse();
 
                 $sessions[$index] = [
-                    '$uid'      => $token->getUid(),
-                    'OS'        => $dd->getOs(),
-                    'client'    => $dd->getClient(),
-                    'device'    => $dd->getDevice(),
-                    'brand'     => $dd->getBrand(),
-                    'model'     => $dd->getModel(),
-                    'ip'        => $token->getAttribute('ip', ''),
-                    'geo'       => [],
+                    '$uid' => $token->getUid(),
+                    'OS' => $dd->getOs(),
+                    'client' => $dd->getClient(),
+                    'device' => $dd->getDevice(),
+                    'brand' => $dd->getBrand(),
+                    'model' => $dd->getModel(),
+                    'ip' => $token->getAttribute('ip', ''),
+                    'geo' => [],
                 ];
 
                 try {
                     $record = $reader->country($token->getAttribute('ip', ''));
                     $sessions[$index]['geo']['isoCode'] = strtolower($record->country->isoCode);
                     $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                }
-                catch(\Exception $e) {
+                } catch (\Exception $e) {
                     $sessions[$index]['geo']['isoCode'] = '--';
                     $sessions[$index]['geo']['country'] = Locale::getText('locale.country.unknown');
                 }
 
-                $index++;
+                ++$index;
             }
 
             $response->json($sessions);
@@ -211,25 +207,25 @@ $utopia->get('/v1/users/:userId/logs')
     ->label('sdk.description', 'Get user activity logs list by its unique ID.')
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(
-        function($userId) use ($response, $register, $projectDB, $project) {
+        function ($userId) use ($response, $register, $projectDB, $project) {
             $user = $projectDB->getDocument($userId);
 
-            if(empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
             $ad = new \Audit\Adapter\MySQL($register->get('db'));
-            $ad->setNamespace('app_' . $project->getUid());
+            $ad->setNamespace('app_'.$project->getUid());
             $au = new \Audit\Audit($ad, $user->getUid(), $user->getAttribute('type'), '', '', '');
-            $countries  = Locale::getText('countries');
+            $countries = Locale::getText('countries');
 
             $logs = $au->getLogsByUser($user->getUid(), $user->getAttribute('type', 0));
 
-            $reader     = new Reader(__DIR__ . '/../db/GeoLite2/GeoLite2-Country.mmdb');
-            $output     = [];
+            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $output = [];
 
-            foreach($logs as $i => &$log) {
-                $log['userAgent']  = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            foreach ($logs as $i => &$log) {
+                $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
                 $dd = new DeviceDetector($log['userAgent']);
 
@@ -238,15 +234,15 @@ $utopia->get('/v1/users/:userId/logs')
                 $dd->parse();
 
                 $output[$i] = [
-                    'event'     => $log['event'],
-                    'ip'        => $log['ip'],
-                    'time'      => strtotime($log['time']),
-                    'OS'        => $dd->getOs(),
-                    'client'    => $dd->getClient(),
-                    'device'    => $dd->getDevice(),
-                    'brand'     => $dd->getBrand(),
-                    'model'     => $dd->getModel(),
-                    'geo'       => [],
+                    'event' => $log['event'],
+                    'ip' => $log['ip'],
+                    'time' => strtotime($log['time']),
+                    'OS' => $dd->getOs(),
+                    'client' => $dd->getClient(),
+                    'device' => $dd->getDevice(),
+                    'brand' => $dd->getBrand(),
+                    'model' => $dd->getModel(),
+                    'geo' => [],
                 ];
 
                 try {
@@ -254,10 +250,9 @@ $utopia->get('/v1/users/:userId/logs')
                     $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
                     $output[$i]['geo']['country'] = $record->country->name;
                     $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                }
-                catch(\Exception $e) {
+                } catch (\Exception $e) {
                     $output[$i]['geo']['isoCode'] = '--';
-                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');;
+                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
                 }
             }
 
@@ -275,17 +270,17 @@ $utopia->post('/v1/users')
     ->param('password', '', function () {return new Password();}, 'User account password.')
     ->param('name', '', function () {return new Text(100);}, 'User account name.', true)
     ->action(
-        function($email, $password, $name) use ($response, $register, $projectDB, $providers) {
+        function ($email, $password, $name) use ($response, $register, $projectDB, $providers) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    'email=' . $email
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
             ]);
 
-            if(!empty($profile)) {
+            if (!empty($profile)) {
                 throw new Exception('User already registered', 400);
             }
 
@@ -304,16 +299,16 @@ $utopia->post('/v1/users')
                 'reset' => false,
                 'name' => $name,
             ]);
-            
+
             $oauthKeys = [];
 
-            foreach($providers as $key => $provider) {
-                if(!$provider['enabled']) {
+            foreach ($providers as $key => $provider) {
+                if (!$provider['enabled']) {
                     continue;
                 }
-                
-                $oauthKeys[] = 'oauth' . ucfirst($key);
-                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+
+                $oauthKeys[] = 'oauth'.ucfirst($key);
+                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
             }
 
             $response
@@ -336,13 +331,12 @@ $utopia->patch('/v1/users/:userId/status')
     ->label('sdk.method', 'updateUserStatus')
     ->label('sdk.description', 'Update user status by its unique ID.')
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
-    ->param('status', '', function () {return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]);}, 'User Status code. To activate the user pass ' . Auth::USER_STATUS_ACTIVATED . ', to blocking the user pass ' . Auth::USER_STATUS_BLOCKED . ' and for disabling the user pass ' . Auth::USER_STATUS_UNACTIVATED)
+    ->param('status', '', function () {return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]);}, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to blocking the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->action(
-        function($userId, $status) use ($response, $projectDB)
-        {
+        function ($userId, $status) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if(empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
@@ -350,7 +344,7 @@ $utopia->patch('/v1/users/:userId/status')
                 'status' => $status,
             ]));
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -369,20 +363,18 @@ $utopia->delete('/v1/users/:userId/sessions/:session')
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->param('sessionId', null, function () {return new UID();}, 'User unique session ID.')
     ->action(
-        function($userId, $sessionId) use ($response, $request, $projectDB)
-        {
+        function ($userId, $sessionId) use ($response, $request, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if(empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
             $tokens = $user->getAttribute('tokens', []);
 
-            foreach($tokens as $token) { /* @var $token Document */
-                if($sessionId == $token->getUid()) {
-
-                    if(!$projectDB->deleteDocument($token->getUid())) {
+            foreach ($tokens as $token) { /* @var $token Document */
+                if ($sessionId == $token->getUid()) {
+                    if (!$projectDB->deleteDocument($token->getUid())) {
                         throw new Exception('Failed to remove token from DB', 500);
                     }
                 }
@@ -401,18 +393,17 @@ $utopia->delete('/v1/users/:userId/sessions')
     ->label('abuse-limit', 100)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(
-        function($userId) use ($response, $request, $projectDB)
-        {
+        function ($userId) use ($response, $request, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if(empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
             $tokens = $user->getAttribute('tokens', []);
 
-            foreach($tokens as $token) { /* @var $token Document */
-                if(!$projectDB->deleteDocument($token->getUid())) {
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (!$projectDB->deleteDocument($token->getUid())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
             }

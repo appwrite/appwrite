@@ -20,17 +20,16 @@ $utopia->get('/v1/account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', 'Get currently logged in user data as JSON object.')
     ->action(
-        function() use ($response, &$user, $providers)
-        {
+        function () use ($response, &$user, $providers) {
             $oauthKeys = [];
 
-            foreach($providers as $key => $provider) {
-                if(!$provider['enabled']) {
+            foreach ($providers as $key => $provider) {
+                if (!$provider['enabled']) {
                     continue;
                 }
-                
-                $oauthKeys[] = 'oauth' . ucfirst($key);
-                $oauthKeys[] = 'oauth' . ucfirst($key) . 'AccessToken';
+
+                $oauthKeys[] = 'oauth'.ucfirst($key);
+                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
             }
 
             $response->json(array_merge($user->getArrayCopy(array_merge(
@@ -52,17 +51,16 @@ $utopia->get('/v1/account/prefs')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', 'Get currently logged in user preferences key-value object.')
     ->action(
-        function() use ($response, $user) {
-            $prefs  = $user->getAttribute('prefs', '{}');
+        function () use ($response, $user) {
+            $prefs = $user->getAttribute('prefs', '{}');
 
-            if(empty($prefs)) {
+            if (empty($prefs)) {
                 $prefs = '[]';
             }
 
             try {
                 $prefs = json_decode($prefs, true);
-            }
-            catch (\Exception $error) {
+            } catch (\Exception $error) {
                 throw new Exception('Failed to parse prefs', 500);
             }
 
@@ -77,20 +75,20 @@ $utopia->get('/v1/account/sessions')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', 'Get currently logged in user list of active sessions across different devices.')
     ->action(
-        function() use ($response, $user) {
-            $tokens     = $user->getAttribute('tokens', []);
-            $reader     = new Reader(__DIR__ . '/../db/GeoLite2/GeoLite2-Country.mmdb');
-            $sessions   = [];
-            $current    = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-            $index      = 0;
-            $countries  = Locale::getText('countries');
+        function () use ($response, $user) {
+            $tokens = $user->getAttribute('tokens', []);
+            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $sessions = [];
+            $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+            $index = 0;
+            $countries = Locale::getText('countries');
 
-            foreach($tokens as $token) { /* @var $token Document */
-                if(Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
                     continue;
                 }
 
-                $userAgent  = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
+                $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
 
                 $dd = new DeviceDetector($userAgent);
 
@@ -100,28 +98,27 @@ $utopia->get('/v1/account/sessions')
                 $dd->parse();
 
                 $sessions[$index] = [
-                    'id'        => $token->getUid(),
-                    'OS'        => $dd->getOs(),
-                    'client'    => $dd->getClient(),
-                    'device'    => $dd->getDevice(),
-                    'brand'     => $dd->getBrand(),
-                    'model'     => $dd->getModel(),
-                    'ip'        => $token->getAttribute('ip', ''),
-                    'geo'       => [],
-                    'current'   => ($current == $token->getUid()) ? true : false,
+                    'id' => $token->getUid(),
+                    'OS' => $dd->getOs(),
+                    'client' => $dd->getClient(),
+                    'device' => $dd->getDevice(),
+                    'brand' => $dd->getBrand(),
+                    'model' => $dd->getModel(),
+                    'ip' => $token->getAttribute('ip', ''),
+                    'geo' => [],
+                    'current' => ($current == $token->getUid()) ? true : false,
                 ];
 
                 try {
                     $record = $reader->country($token->getAttribute('ip', ''));
                     $sessions[$index]['geo']['isoCode'] = strtolower($record->country->isoCode);
                     $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                }
-                catch(\Exception $e) {
+                } catch (\Exception $e) {
                     $sessions[$index]['geo']['isoCode'] = '--';
                     $sessions[$index]['geo']['country'] = Locale::getText('locale.country.unknown');
                 }
 
-                $index++;
+                ++$index;
             }
 
             $response->json($sessions);
@@ -135,12 +132,12 @@ $utopia->get('/v1/account/security')
     ->label('sdk.method', 'getSecurity')
     ->label('sdk.description', 'Get currently logged in user list of latest security activity logs. Each log returns user IP address, location and date and time of log.')
     ->action(
-        function() use ($response, $register, $project, $user) {
+        function () use ($response, $register, $project, $user) {
 
             $ad = new \Audit\Adapter\MySQL($register->get('db'));
-            $ad->setNamespace('app_' . $project->getUid());
+            $ad->setNamespace('app_'.$project->getUid());
             $au = new \Audit\Audit($ad, $user->getUid(), $user->getAttribute('type'), '', '', '');
-            $countries  = Locale::getText('countries');
+            $countries = Locale::getText('countries');
 
             $logs = $au->getLogsByUserAndActions($user->getUid(), $user->getAttribute('type', 0), [
                 'auth.register',
@@ -159,11 +156,11 @@ $utopia->get('/v1/account/security')
                 'account.update.password',
             ]);
 
-            $reader     = new Reader(__DIR__ . '/../db/GeoLite2/GeoLite2-Country.mmdb');
-            $output     = [];
+            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $output = [];
 
-            foreach($logs as $i => &$log) {
-                $log['userAgent']  = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+            foreach ($logs as $i => &$log) {
+                $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
                 $dd = new DeviceDetector($log['userAgent']);
 
@@ -172,15 +169,15 @@ $utopia->get('/v1/account/security')
                 $dd->parse();
 
                 $output[$i] = [
-                    'event'     => $log['event'],
-                    'ip'        => $log['ip'],
-                    'time'      => strtotime($log['time']),
-                    'OS'        => $dd->getOs(),
-                    'client'    => $dd->getClient(),
-                    'device'    => $dd->getDevice(),
-                    'brand'     => $dd->getBrand(),
-                    'model'     => $dd->getModel(),
-                    'geo'       => [],
+                    'event' => $log['event'],
+                    'ip' => $log['ip'],
+                    'time' => strtotime($log['time']),
+                    'OS' => $dd->getOs(),
+                    'client' => $dd->getClient(),
+                    'device' => $dd->getDevice(),
+                    'brand' => $dd->getBrand(),
+                    'model' => $dd->getModel(),
+                    'geo' => [],
                 ];
 
                 try {
@@ -188,10 +185,9 @@ $utopia->get('/v1/account/security')
                     $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
                     $output[$i]['geo']['country'] = $record->country->name;
                     $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                }
-                catch(\Exception $e) {
+                } catch (\Exception $e) {
                     $output[$i]['geo']['isoCode'] = '--';
-                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');;
+                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
                 }
             }
 
@@ -208,13 +204,12 @@ $utopia->patch('/v1/account/name')
     ->label('sdk.description', 'Update currently logged in user account name.')
     ->param('name', '', function () {return new Text(100);}, 'User name')
     ->action(
-        function($name) use ($response, $user, $projectDB, $audit)
-        {
+        function ($name) use ($response, $user, $projectDB, $audit) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'name' => $name,
             ]));
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -234,9 +229,8 @@ $utopia->patch('/v1/account/password')
     ->param('password', '', function () {return new Password();}, 'New password')
     ->param('old-password', '', function () {return new Password();}, 'Old password')
     ->action(
-        function($password, $oldPassword) use ($response, $user, $projectDB, $audit)
-        {
-            if(!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
+        function ($password, $oldPassword) use ($response, $user, $projectDB, $audit) {
+            if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
 
@@ -244,7 +238,7 @@ $utopia->patch('/v1/account/password')
                 'password' => Auth::passwordHash($password),
             ]));
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -264,9 +258,8 @@ $utopia->patch('/v1/account/email')
     ->param('email', '', function () {return new Email();}, 'Email Address')
     ->param('password', '', function () {return new Password();}, 'User Password')
     ->action(
-        function($email, $password) use ($response, $user, $projectDB, $audit)
-        {
-            if(!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
+        function ($email, $password) use ($response, $user, $projectDB, $audit) {
+            if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
 
@@ -274,12 +267,12 @@ $utopia->patch('/v1/account/email')
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
-                    '$collection=' . Database::SYSTEM_COLLECTION_USERS,
-                    'email=' . $email
-                ]
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
             ]);
 
-            if(!empty($profile)) {
+            if (!empty($profile)) {
                 throw new Exception('User already registered', 400);
             }
 
@@ -289,7 +282,7 @@ $utopia->patch('/v1/account/email')
                 'email' => $email,
             ]));
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -308,13 +301,12 @@ $utopia->patch('/v1/account/prefs')
     ->param('prefs', '', function () {return new \Utopia\Validator\Mock();}, 'Prefs key-value JSON object string.')
     ->label('sdk.description', 'Update currently logged in user account preferences. You can pass only the specific settings you wish to update.')
     ->action(
-        function($prefs) use ($response, $user, $projectDB, $audit)
-        {
+        function ($prefs) use ($response, $user, $projectDB, $audit) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'prefs' => json_encode(array_merge(json_decode($user->getAttribute('prefs', '{}'), true), $prefs)),
             ]));
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
@@ -332,19 +324,18 @@ $utopia->delete('/v1/account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', 'Delete currently logged in user account.')
     ->action(
-        function() use ($response, $request, $user, $projectDB, $audit)
-        {
+        function () use ($response, $request, $user, $projectDB, $audit) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'status' => Auth::USER_STATUS_BLOCKED,
             ]));
 
-            if(false === $user) {
+            if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
             //TODO delete all tokens or only current session?
             //TODO delete all user data according to GDPR. Make sure everything is backed up and backups are deleted later
-            /**
+            /*
              * Data to delete
              * * Tokens
              * * Memberships

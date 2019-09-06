@@ -14,8 +14,7 @@ $utopia->get('/v1/health')
     ->label('sdk.method', 'getDB')
     ->label('docs', false)
     ->action(
-        function() use ($response, $register)
-        {
+        function () use ($response, $register) {
             $response->json(array('OK'));
         }
     );
@@ -27,8 +26,7 @@ $utopia->get('/v1/health/db')
     ->label('sdk.method', 'getDB')
     ->label('docs', false)
     ->action(
-        function() use ($response, $register)
-        {
+        function () use ($response, $register) {
             $register->get('db'); /* @var $db PDO */
 
             $response->json(array('OK'));
@@ -42,8 +40,7 @@ $utopia->get('/v1/health/cache')
     ->label('sdk.method', 'getCache')
     ->label('docs', false)
     ->action(
-        function() use ($response, $register)
-        {
+        function () use ($response, $register) {
             $register->get('cache'); /* @var $cache Predis\Client */
 
             $response->json(array('OK'));
@@ -57,9 +54,8 @@ $utopia->get('/v1/health/time')
     ->label('sdk.method', 'getTime')
     ->label('docs', false)
     ->action(
-        function() use ($response)
-        {
-            /**
+        function () use ($response) {
+            /*
              * Code from: @see https://www.beliefmedia.com.au/query-ntp-time-server
              */
             $host = 'time.google.com'; // https://developers.google.com/time/
@@ -71,7 +67,7 @@ $utopia->get('/v1/health/time')
             socket_connect($sock, $host, 123);
 
             /* Send request */
-            $msg = "\010" . str_repeat("\0", 47);
+            $msg = "\010".str_repeat("\0", 47);
 
             socket_send($sock, $msg, strlen($msg), 0);
 
@@ -89,7 +85,7 @@ $utopia->get('/v1/health/time')
 
             $diff = ($timestamp - time());
 
-            if($diff > $gap || $diff < ($gap * -1)) {
+            if ($diff > $gap || $diff < ($gap * -1)) {
                 throw new Exception('Server time gaps detected');
             }
 
@@ -104,8 +100,7 @@ $utopia->get('/v1/health/webhooks')
     ->label('sdk.method', 'getWebhooks')
     ->label('docs', false)
     ->action(
-        function() use ($response)
-        {
+        function () use ($response) {
             $response->json(['size' => Resque::size('webhooks')]);
         }
     );
@@ -117,15 +112,14 @@ $utopia->get('/v1/health/storage/local')
     ->label('sdk.method', 'getStorageLocal')
     ->label('docs', false)
     ->action(
-        function() use ($response)
-        {
+        function () use ($response) {
             $device = new Local();
 
-            if(!is_readable($device->getRoot())) {
+            if (!is_readable($device->getRoot())) {
                 throw new Exception('Device is not readable');
             }
 
-            if(!is_writable($device->getRoot())) {
+            if (!is_writable($device->getRoot())) {
                 throw new Exception('Device is not writable');
             }
 
@@ -140,8 +134,7 @@ $utopia->get('/v1/health/storage/anti-virus')
     ->label('sdk.method', 'getStorageAntiVirus')
     ->label('docs', false)
     ->action(
-        function() use ($response)
-        {
+        function () use ($response) {
             $antiVirus = new Network('clamav', 3310);
 
             $response->json([
@@ -158,10 +151,9 @@ $utopia->get('/v1/health/stats')
     ->label('sdk.method', 'getStats')
     ->label('docs', false)
     ->action(
-        function() use ($request, $response, $register, $project)
-        {
+        function () use ($request, $response, $register, $project) {
             $device = Storage::getDevice('local');
-            $cache  = $register->get('cache');
+            $cache = $register->get('cache');
 
             $cacheStats = $cache->info();
 
@@ -172,9 +164,9 @@ $utopia->get('/v1/health/stats')
                         'version' => shell_exec('nginx -v 2>&1'),
                     ],
                     'storage' => [
-                        'used'              => $device->human($device->getDirectorySize($device->getRoot() . '/')),
-                        'partitionTotal'    => $device->human($device->getPartitionTotalSpace()),
-                        'partitionFree'     => $device->human($device->getPartitionFreeSpace()),
+                        'used' => $device->human($device->getDirectorySize($device->getRoot().'/')),
+                        'partitionTotal' => $device->human($device->getPartitionTotalSpace()),
+                        'partitionFree' => $device->human($device->getPartitionFreeSpace()),
                     ],
                     'cache' => [
                         'uptime' => (isset($cacheStats['uptime_in_seconds'])) ? $cacheStats['uptime_in_seconds'] : 0,
@@ -185,7 +177,7 @@ $utopia->get('/v1/health/stats')
                         'memory_used_human' => (isset($cacheStats['used_memory_human'])) ? $cacheStats['used_memory_human'] : 0,
                         'memory_used_peak' => (isset($cacheStats['used_memory_peak'])) ? $cacheStats['used_memory_peak'] : 0,
                         'memory_used_peak_human' => (isset($cacheStats['used_memory_peak_human'])) ? $cacheStats['used_memory_peak_human'] : 0,
-                    ]
+                    ],
                 ]);
         }
     );
