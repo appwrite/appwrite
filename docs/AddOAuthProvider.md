@@ -22,7 +22,7 @@ Make sure to fill all data needed and that your provider array key name is in ca
 
 ### Add Provider Logo
 
-// TODO currently all logos are from font icon, need to change this, to make it easier for anyone to contribute.
+Add a logo image to your new provider in this path: ./public/images/oauth. Your logo should be a png 100X100px file with the name ofyour provider (all lowercase). Please make sure to leave about 20px padding around the logo to be consistent with other logos.
 
 ### Add Provider Class
 
