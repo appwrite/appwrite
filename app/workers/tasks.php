@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 use Database\Database;
 use Database\Validator\Authorization;
@@ -8,7 +8,7 @@ use Cron\CronExpression;
 
 cli_set_process_title('Tasks V1 Worker');
 
-echo APP_NAME . ' tasks worker v1 has started';
+echo APP_NAME.' tasks worker v1 has started';
 
 class TasksV1
 {
@@ -25,7 +25,7 @@ class TasksV1
     {
         global $consoleDB, $register, $version;
 
-        /**
+        /*
          * 1. Get Original Task
          * 2. Check for updates
          *  If has updates skip task and don't reschedule
@@ -38,14 +38,14 @@ class TasksV1
          *      If error count bigger than allowed change status to pause
          */
 
-        $taskId     = (isset($this->args['$uid'])) ? $this->args['$uid'] : null;
-        $updated    = (isset($this->args['updated'])) ? $this->args['updated'] : null;
-        $next       = (isset($this->args['next'])) ? $this->args['next'] : null;
-        $delay      = time() - $next;
-        $errors     = [];
-        $timeout    = 60 * 5; // 5 minutes
+        $taskId = (isset($this->args['$uid'])) ? $this->args['$uid'] : null;
+        $updated = (isset($this->args['updated'])) ? $this->args['updated'] : null;
+        $next = (isset($this->args['next'])) ? $this->args['next'] : null;
+        $delay = time() - $next;
+        $errors = [];
+        $timeout = 60 * 5; // 5 minutes
 
-        if(empty($taskId)) {
+        if (empty($taskId)) {
             throw new Exception('Missing task $id');
         }
 
@@ -55,23 +55,23 @@ class TasksV1
 
         Authorization::enable();
 
-        if(is_null($task->getUid()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
+        if (is_null($task->getUid()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
             throw new Exception('Task Not Found');
         }
 
-        if($task->getAttribute('updated') !== $updated) { // Task have already been rescheduled by owner
+        if ($task->getAttribute('updated') !== $updated) { // Task have already been rescheduled by owner
             return false;
         }
 
-        if($task->getAttribute('status') !== 'play') { // Skip task and don't schedule again
+        if ($task->getAttribute('status') !== 'play') { // Skip task and don't schedule again
             return false;
         }
 
         // Reschedule
 
-        $cron       = CronExpression::factory($task->getAttribute('schedule'));
-        $next       = (int)$cron->getNextRunDate()->format('U');
-        $headers    = (is_array($task->getAttribute('httpHeaders', []))) ? $task->getAttribute('httpHeaders', []) : [];
+        $cron = CronExpression::factory($task->getAttribute('schedule'));
+        $next = (int) $cron->getNextRunDate()->format('U');
+        $headers = (is_array($task->getAttribute('httpHeaders', []))) ? $task->getAttribute('httpHeaders', []) : [];
 
         $task
             ->setAttribute('next', $next)
@@ -92,15 +92,15 @@ class TasksV1
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_USERAGENT, sprintf(APP_USERAGENT, $version));
         curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, [
-                'X-' . APP_NAME . '-Task-UID: ' . $task->getAttribute('$uid', ''),
-                'X-' . APP_NAME . '-Task-Name: ' . $task->getAttribute('name', ''),
+                'X-'.APP_NAME.'-Task-UID: '.$task->getAttribute('$uid', ''),
+                'X-'.APP_NAME.'-Task-Name: '.$task->getAttribute('name', ''),
             ])
         );
         curl_setopt($ch, CURLOPT_HEADER, true);  // we want headers
         curl_setopt($ch, CURLOPT_NOBODY, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
 
-        if(!$task->getAttribute('security', true)) {
+        if (!$task->getAttribute('security', true)) {
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
@@ -108,22 +108,22 @@ class TasksV1
         $httpUser = $task->getAttribute('httpUser');
         $httpPass = $task->getAttribute('httpPass');
 
-        if(!empty($httpUser) && !empty($httpPass)) {
+        if (!empty($httpUser) && !empty($httpPass)) {
             curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         }
 
         $response = curl_exec($ch);
 
-        if(false === $response) {
-            $errors[] = curl_error($ch) . 'Failed to execute task';
+        if (false === $response) {
+            $errors[] = curl_error($ch).'Failed to execute task';
         }
 
-        $code           = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $codeFamily     = mb_substr($code, 0, 1);
-        $headersSize    = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $headers        = substr($response, 0, $headersSize);
-        $body           = substr($response, $headersSize);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $codeFamily = mb_substr($code, 0, 1);
+        $headersSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headers = substr($response, 0, $headersSize);
+        $body = substr($response, $headersSize);
 
         curl_close($ch);
 
@@ -134,26 +134,25 @@ class TasksV1
             case '3':
             break;
             default:
-                $errors[] = 'Request failed with status code ' . $code;
+                $errors[] = 'Request failed with status code '.$code;
         }
 
-        if(empty($errors)) {
+        if (empty($errors)) {
             $task->setAttribute('failures', 0);
 
-            $alert = 'Task "' . $task->getAttribute('name') . '" Executed Successfully';
-        }
-        else {
+            $alert = 'Task "'.$task->getAttribute('name').'" Executed Successfully';
+        } else {
             $task
                 ->setAttribute('failures', $task->getAttribute('failures', 0) + 1)
                 ->setAttribute('status', ($task->getAttribute('failures') >= 5) ? 'pause' : 'play')
             ;
 
-            $alert = 'Task "' . $task->getAttribute('name') . '" failed to execute with the following errors: ' . implode($errors, "\n");
+            $alert = 'Task "'.$task->getAttribute('name').'" failed to execute with the following errors: '.implode($errors, "\n");
         }
 
         $log = json_decode($task->getAttribute('log', '{}'), true);
 
-        if(count($log) >= 5) {
+        if (count($log) >= 5) {
             array_pop($log);
         }
 
@@ -174,7 +173,7 @@ class TasksV1
 
         Authorization::disable();
 
-        if(false === $consoleDB->updateDocument($task->getArrayCopy())) {
+        if (false === $consoleDB->updateDocument($task->getArrayCopy())) {
             throw new Exception('Failed saving tasks to DB');
         }
 
