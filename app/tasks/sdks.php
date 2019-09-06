@@ -1,7 +1,7 @@
 #!/bin/env php
 <?php
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__.'/../../vendor/autoload.php';
 
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
@@ -19,7 +19,8 @@ $cli
     ->task('generate')
     ->action(function () {
 
-        function getSSLPage($url) {
+        function getSSLPage($url)
+        {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -28,59 +29,60 @@ $cli
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $result = curl_exec($ch);
             curl_close($ch);
+
             return $result;
         }
 
         Console::success('Fetching API Spec');
 
-        $spec   = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1');
-        $spec   = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1');
+        $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1');
+        $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1');
 
         $clients = [
             'php' => [
-                'version'       => 'v1.0.7',
-                'result'        => __DIR__ . '/../sdks/php/',
-                'gitURL'        => 'https://github.com/appwrite/sdk-for-php.git',
-                'gitRepo'       => 'git@github.com:appwrite/sdk-for-php.git',
-                'gitRepoName'   => 'sdk-for-php',
-                'gitUserName'   => 'appwrite',
-                'warning'       => '',
+                'version' => 'v1.0.7',
+                'result' => __DIR__.'/../sdks/php/',
+                'gitURL' => 'https://github.com/appwrite/sdk-for-php.git',
+                'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
+                'gitRepoName' => 'sdk-for-php',
+                'gitUserName' => 'appwrite',
+                'warning' => '',
             ],
             'js' => [
-                'version'       => 'v1.0.20',
-                'result'        => __DIR__ . '/../sdks/js/',
-                'gitURL'        => 'https://github.com/appwrite/sdk-for-js.git',
-                'gitRepo'       => 'git@github.com:appwrite/sdk-for-js.git',
-                'gitRepoName'   => 'sdk-for-js',
-                'gitUserName'   => 'appwrite',
-                'warning'       => '',
+                'version' => 'v1.0.20',
+                'result' => __DIR__.'/../sdks/js/',
+                'gitURL' => 'https://github.com/appwrite/sdk-for-js.git',
+                'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
+                'gitRepoName' => 'sdk-for-js',
+                'gitUserName' => 'appwrite',
+                'warning' => '',
             ],
             'node' => [
-                'version'       => 'v1.0.24',
-                'result'        => __DIR__ . '/../sdks/node/',
-                'gitURL'        => 'https://github.com/appwrite/sdk-for-node.git',
-                'gitRepo'       => 'git@github.com:appwrite/sdk-for-node.git',
-                'gitRepoName'   => 'sdk-for-node',
-                'gitUserName'   => 'appwrite',
-                'warning'       => '',
+                'version' => 'v1.0.24',
+                'result' => __DIR__.'/../sdks/node/',
+                'gitURL' => 'https://github.com/appwrite/sdk-for-node.git',
+                'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
+                'gitRepoName' => 'sdk-for-node',
+                'gitUserName' => 'appwrite',
+                'warning' => '',
             ],
             'python' => [
-                'version'       => 'v1.0.0',
-                'result'        => __DIR__ . '/../sdks/python/',
-                'gitURL'        => 'https://github.com/appwrite/sdk-for-python.git',
-                'gitRepo'       => 'git@github.com:appwrite/sdk-for-python.git',
-                'gitRepoName'   => 'sdk-for-python',
-                'gitUserName'   => 'appwrite',
-                'warning'       => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'version' => 'v1.0.0',
+                'result' => __DIR__.'/../sdks/python/',
+                'gitURL' => 'https://github.com/appwrite/sdk-for-python.git',
+                'gitRepo' => 'git@github.com:appwrite/sdk-for-python.git',
+                'gitRepoName' => 'sdk-for-python',
+                'gitUserName' => 'appwrite',
+                'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
             ],
             'ruby' => [
-                'version'       => 'v1.0.0',
-                'result'        => __DIR__ . '/../sdks/ruby/',
-                'gitURL'        => 'https://github.com/appwrite/sdk-for-ruby.git',
-                'gitRepo'       => 'git@github.com:appwrite/sdk-for-ruby.git',
-                'gitRepoName'   => 'sdk-for-ruby',
-                'gitUserName'   => 'appwrite',
-                'warning'       => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'version' => 'v1.0.0',
+                'result' => __DIR__.'/../sdks/ruby/',
+                'gitURL' => 'https://github.com/appwrite/sdk-for-ruby.git',
+                'gitRepo' => 'git@github.com:appwrite/sdk-for-ruby.git',
+                'gitRepoName' => 'sdk-for-ruby',
+                'gitUserName' => 'appwrite',
+                'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
             ],
         ];
 
@@ -128,7 +130,7 @@ $cli
 
             $sdk
                 ->setLicense('BSD-3-Clause')
-                ->setLicenseContent("Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
+                ->setLicenseContent('Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -139,7 +141,7 @@ Redistribution and use in source and binary forms, with or without modification,
 
     3. Neither the name Appwrite nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.")
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.')
                 ->setVersion($client['version'])
                 ->setGitRepo($client['gitRepo'])
                 ->setGitURL($client['gitURL'])
@@ -155,36 +157,34 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AN
                 ->setWarning($client['warning'])
             ;
 
-            $target = __DIR__ . '/../sdks/git/' . $name;
+            $target = __DIR__.'/../sdks/git/'.$name;
 
             Console::success("Generating {$name} SDK");
 
             try {
                 $sdk->generate($client['result']);
-            }
-            catch (Exception $exception) {
-                echo $exception->getMessage() . "\n";
-            }
-            catch (Throwable $exception) {
-                echo $exception->getMessage() . "\n";
+            } catch (Exception $exception) {
+                echo $exception->getMessage()."\n";
+            } catch (Throwable $exception) {
+                echo $exception->getMessage()."\n";
             }
 
-            exec('rm -rf ' .$target . ' && \
-                mkdir -p ' . $target . ' && \
-                cd ' . $target . ' && \
+            exec('rm -rf '.$target.' && \
+                mkdir -p '.$target.' && \
+                cd '.$target.' && \
                 git init && \
-                git remote add origin ' . $client['gitRepo'] . ' && \
+                git remote add origin '.$client['gitRepo'].' && \
                 git fetch && \
-                git pull ' . $client['gitRepo'] . ' && \
-                rm -rf ' . $target . '/* && \
-                cp -r ' . $client['result'] .' ' . $target . ' && \
+                git pull '.$client['gitRepo'].' && \
+                rm -rf '.$target.'/* && \
+                cp -r '.$client['result'].' '.$target.' && \
                 git add . && \
                 git commit -m "Initial commit" && \
                 git push -u origin master');
 
             Console::success("Pushing {$name} SDK to {$client['gitRepo']}");
 
-            exec('rm -rf ' . $target);
+            exec('rm -rf '.$target);
 
             Console::success("Remove temp directory '{$target}' for {$name} SDK");
         }
