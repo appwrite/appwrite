@@ -25,22 +25,23 @@
                 copy.title = 'Copy to Clipboard';
                 
                 copy.addEventListener('click', function () {
-                    window.getSelection().removeAllRanges();
+                    element.disabled = false;
+                    
+                    element.focus();
+                    element.select();
+                    
+                    document.execCommand('Copy');
 
-                    let range = document.createRange();
-
-                    range.selectNode(element);
-
-                    window.getSelection().addRange(range);
-
-                    try {
-                        document.execCommand('copy');
-                        alerts.add({text: 'Copied to clipboard', class: ''}, 3000);
-                    } catch (err) {
-                        alerts.add({text: "Failed to copy text ", class: 'error'}, 3000);
+                    if (document.selection) {
+                        document.selection.empty();
+                    }
+                    else if (window.getSelection) {
+                        window.getSelection().removeAllRanges();
                     }
 
-                    window.getSelection().removeAllRanges();
+                    element.disabled = true;
+                    
+                    alerts.add({text: 'Copied to clipboard', class: ''}, 3000);
                 });
 
                 let check = function() {
