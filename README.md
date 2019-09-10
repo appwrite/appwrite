@@ -42,7 +42,7 @@ In case your port 80 is already taken, change the port number in the command abo
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can esily get started with your platform of choice by reading one of our getting started tutorials.
+Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our getting started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * Getting Started for Android (soon...)
