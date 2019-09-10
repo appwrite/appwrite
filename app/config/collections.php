@@ -1,6 +1,6 @@
 <?php
 
-global $providers;
+global $providers, $request;
 
 use Database\Database;
 
@@ -38,13 +38,13 @@ $collections = [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 'name' => 'Localhost (SSL)',
                 'type' => 'web',
-                'url' => 'https://localhost',
+                'url' => 'https://' . $request->getServer('HTTP_HOST'),
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 'name' => 'Localhost (Non-SSL)',
                 'type' => 'web',
-                'url' => 'http://localhost',
+                'url' => 'http://' . $request->getServer('HTTP_HOST'),
             ],
         ],
         'legalName' => '',
