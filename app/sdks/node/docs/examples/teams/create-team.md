@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Teams.Client();
+
+let teams = new sdk.Teams(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.teams.createTeam('[NAME]');
+let promise = teams.createTeam('[NAME]');
 
 promise.then(function (response) {
     console.log(response);

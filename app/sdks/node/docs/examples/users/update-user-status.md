@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Users.Client();
+
+let users = new sdk.Users(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.users.updateUserStatus('[USER_ID]', '1');
+let promise = users.updateUserStatus('[USER_ID]', '1');
 
 promise.then(function (response) {
     console.log(response);

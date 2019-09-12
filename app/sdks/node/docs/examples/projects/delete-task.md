@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Projects.Client();
+
+let projects = new sdk.Projects(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.projects.deleteTask('[PROJECT_ID]', '[TASK_ID]');
+let promise = projects.deleteTask('[PROJECT_ID]', '[TASK_ID]');
 
 promise.then(function (response) {
     console.log(response);

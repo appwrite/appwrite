@@ -1,9 +1,14 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Auth.Client();
+
+let auth = new sdk.Auth(client);
+
+client
 ;
 
-let promise = sdk.auth.confirm('[USER_ID]', '[TOKEN]');
+let promise = auth.confirm('[USER_ID]', '[TOKEN]');
 
 promise.then(function (response) {
     console.log(response);

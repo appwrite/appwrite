@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Avatars.Client();
+
+let avatars = new sdk.Avatars(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.avatars.getQR('[TEXT]');
+let promise = avatars.getQR('[TEXT]');
 
 promise.then(function (response) {
     console.log(response);

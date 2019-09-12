@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Locale.Client();
+
+let locale = new sdk.Locale(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.locale.getCountries();
+let promise = locale.getCountries();
 
 promise.then(function (response) {
     console.log(response);

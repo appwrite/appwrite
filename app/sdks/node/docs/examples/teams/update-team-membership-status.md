@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Teams.Client();
+
+let teams = new sdk.Teams(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.teams.updateTeamMembershipStatus('[TEAM_ID]', '[INVITE_ID]', '[USER_ID]', '[SECRET]');
+let promise = teams.updateTeamMembershipStatus('[TEAM_ID]', '[INVITE_ID]', '[USER_ID]', '[SECRET]');
 
 promise.then(function (response) {
     console.log(response);

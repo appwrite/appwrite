@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Account.Client();
+
+let account = new sdk.Account(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.account.delete();
+let promise = account.delete();
 
 promise.then(function (response) {
     console.log(response);

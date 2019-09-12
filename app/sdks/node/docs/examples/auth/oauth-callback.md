@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Auth.Client();
+
+let auth = new sdk.Auth(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.auth.oauthCallback('[PROJECT_ID]', 'bitbucket', '[CODE]');
+let promise = auth.oauthCallback('[PROJECT_ID]', 'bitbucket', '[CODE]');
 
 promise.then(function (response) {
     console.log(response);

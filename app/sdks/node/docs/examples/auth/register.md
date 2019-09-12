@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Auth.Client();
+
+let auth = new sdk.Auth(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.auth.register('email@example.com', 'password', 'https://example.com', 'https://example.com', 'https://example.com');
+let promise = auth.register('email@example.com', 'password', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

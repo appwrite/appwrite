@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Teams.Client();
+
+let teams = new sdk.Teams(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.teams.createTeamMembershipResend('[TEAM_ID]', '[INVITE_ID]', 'https://example.com');
+let promise = teams.createTeamMembershipResend('[TEAM_ID]', '[INVITE_ID]', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

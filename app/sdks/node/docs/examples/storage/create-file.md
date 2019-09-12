@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Storage.Client();
+
+let storage = new sdk.Storage(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.storage.createFile(document.getElementById('uploader').files[0]);
+let promise = storage.createFile(document.getElementById('uploader').files[0]);
 
 promise.then(function (response) {
     console.log(response);

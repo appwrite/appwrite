@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Projects.Client();
+
+let projects = new sdk.Projects(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.projects.createWebhook('[PROJECT_ID]', '[NAME]', [], '[URL]', 1);
+let promise = projects.createWebhook('[PROJECT_ID]', '[NAME]', [], '[URL]', 0);
 
 promise.then(function (response) {
     console.log(response);

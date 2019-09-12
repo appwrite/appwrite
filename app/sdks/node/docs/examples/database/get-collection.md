@@ -1,11 +1,16 @@
-let sdk = new Appwrite();
+const sdk = require('node-appwrite');
 
-sdk
+// Init SDK
+let client = new Database.Client();
+
+let database = new sdk.Database(client);
+
+client
     setProject('')
     setKey('')
 ;
 
-let promise = sdk.database.getCollection('[COLLECTION_ID]');
+let promise = database.getCollection('[COLLECTION_ID]');
 
 promise.then(function (response) {
     console.log(response);
