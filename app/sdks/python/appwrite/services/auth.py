@@ -84,15 +84,15 @@ class Auth(Service):
         return self.client.call('put', path, {
         }, params)
 
-    def register(self, email, password, redirect, name='', success='', failure=''):
+    def register(self, email, password, redirect, success, failure, name=''):
         """Register User"""
 
         params = {}
         path = '/auth/register'
         params['email'] = email
         params['password'] = password
-        params['name'] = name
         params['redirect'] = redirect
+        params['name'] = name
         params['success'] = success
         params['failure'] = failure
 

@@ -737,12 +737,12 @@
              * @param {string} email
              * @param {string} password
              * @param {string} redirect
-             * @param {string} name
              * @param {string} success
              * @param {string} failure
+             * @param {string} name
              * @throws {Error}
              * @return {null}             */
-            register: function(email, password, redirect, name = '', success = '', failure = '') {
+            register: function(email, password, redirect, success, failure, name = '') {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
@@ -755,13 +755,21 @@
                     throw new Error('Missing required parameter: "redirect"');
                 }
                 
+                if(success === undefined) {
+                    throw new Error('Missing required parameter: "success"');
+                }
+                
+                if(failure === undefined) {
+                    throw new Error('Missing required parameter: "failure"');
+                }
+                
                 let path = '/auth/register';
 
                 return iframe('post', path, {project: config.project,
                     'email': email, 
                     'password': password, 
-                    'name': name, 
                     'redirect': redirect, 
+                    'name': name, 
                     'success': success, 
                     'failure': failure
                 });

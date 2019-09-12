@@ -219,21 +219,21 @@ class Auth extends Service
      * @param string $email
      * @param string $password
      * @param string $redirect
-     * @param string $name
      * @param string $success
      * @param string $failure
+     * @param string $name
      * @throws Exception
      * @return array
      */
-    public function register($email, $password, $redirect, $name = '', $success = '', $failure = '')
+    public function register($email, $password, $redirect, $success, $failure, $name = '')
     {
         $path   = str_replace([], [], '/auth/register');
         $params = [];
 
         $params['email'] = $email;
         $params['password'] = $password;
-        $params['name'] = $name;
         $params['redirect'] = $redirect;
+        $params['name'] = $name;
         $params['success'] = $success;
         $params['failure'] = $failure;
 

@@ -199,21 +199,21 @@ class Auth extends Service {
      * @param string email
      * @param string password
      * @param string redirect
-     * @param string name
      * @param string success
      * @param string failure
+     * @param string name
      * @throws Exception
      * @return {}
      */
-    async register(email, password, redirect, name = '', success = '', failure = '') {
+    async register(email, password, redirect, success, failure, name = '') {
         let path = '/auth/register';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
             {
                 'email': email,
                 'password': password,
-                'name': name,
                 'redirect': redirect,
+                'name': name,
                 'success': success,
                 'failure': failure
             });
