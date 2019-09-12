@@ -1,5 +1,4 @@
 <?php
-
-const VERSION = 'latest';
+const VERSION = '0.1.15';
 
 return VERSION;

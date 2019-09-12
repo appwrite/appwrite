@@ -53,6 +53,9 @@ $collections = [
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
+        'authWhitelistEmails' => explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_EMAILS', '')),
+        'authWhitelistIPs' => explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_IPS', '')),
+        'authWhitelistDomains' => explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_DOMIANS', '')),
     ],
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,

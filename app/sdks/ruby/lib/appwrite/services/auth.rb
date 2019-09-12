@@ -89,14 +89,14 @@ module Appwrite
             }, params);
         end
 
-        def register(email:, password:, redirect:, success:, failure:, name: '')
+        def register(email:, password:, redirect:, name: '', success: '', failure: '')
             path = '/auth/register'
 
             params = {
                 'email': email, 
                 'password': password, 
-                'redirect': redirect, 
                 'name': name, 
+                'redirect': redirect, 
                 'success': success, 
                 'failure': failure
             }

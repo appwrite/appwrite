@@ -30,12 +30,30 @@ $utopia->post('/v1/auth/register')
     ->label('abuse-limit', 10)
     ->param('email', '', function () {return new Email();}, 'Account email')
     ->param('password', '', function () {return new Password();}, 'User password')
-    ->param('name', '', function () {return new Text(100);}, 'User name', true)
     ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Confirmation page to redirect user after confirm token has been sent to user email')
-    ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed', true)
-    ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed', true)
+    ->param('name', '', function () {return new Text(100);}, 'User name', true)
+    ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed')
+    ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed')
     ->action(
         function ($email, $password, $name, $redirect, $success, $failure) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
+            if('console' === $project->getUid()) {
+                $whitlistEmails     = $project->getAttribute('authWhitelistEmails');
+                $whitlistIPs        = $project->getAttribute('authWhitelistIPs');
+                $whitlistDomains    = $project->getAttribute('authWhitelistDomains');
+
+                if(!empty($whitlistEmails) && !in_array($email, $whitlistEmails)) {
+                    throw new Exception('Console access is restricted to specific emails', 401);
+                }
+
+                if(!empty($whitlistIPs) && !in_array($request->getIP(), $whitlistIPs)) {
+                    throw new Exception('Console access is restricted to specific IPs', 401);
+                }
+
+                if(!empty($whitlistDomains) && !in_array(substr(strrchr($email, "@"), 1), $whitlistDomains)) {
+                    throw new Exception('Console access is restricted to specific Domains', 401);
+                }
+            }
+            
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
