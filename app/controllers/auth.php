@@ -35,22 +35,22 @@ $utopia->post('/v1/auth/register')
     ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed')
     ->param('name', '', function () {return new Text(100);}, 'User name', true)
     ->action(
-        function ($email, $password, $name, $redirect, $success, $failure) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
+        function ($email, $password, $redirect, $success, $failure, $name) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
             if('console' === $project->getUid()) {
                 $whitlistEmails     = $project->getAttribute('authWhitelistEmails');
                 $whitlistIPs        = $project->getAttribute('authWhitelistIPs');
                 $whitlistDomains    = $project->getAttribute('authWhitelistDomains');
 
                 if(!empty($whitlistEmails) && !in_array($email, $whitlistEmails)) {
-                    throw new Exception('Console access is restricted to specific emails', 401);
+                    throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
                 }
 
                 if(!empty($whitlistIPs) && !in_array($request->getIP(), $whitlistIPs)) {
-                    throw new Exception('Console access is restricted to specific IPs', 401);
+                    throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
                 }
 
                 if(!empty($whitlistDomains) && !in_array(substr(strrchr($email, "@"), 1), $whitlistDomains)) {
-                    throw new Exception('Console access is restricted to specific Domains', 401);
+                    throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
                 }
             }
             
