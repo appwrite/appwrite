@@ -31,9 +31,9 @@ $utopia->post('/v1/auth/register')
     ->param('email', '', function () {return new Email();}, 'Account email')
     ->param('password', '', function () {return new Password();}, 'User password')
     ->param('redirect', '', function () use ($clients) {return new Host($clients);}, 'Confirmation page to redirect user after confirm token has been sent to user email')
-    ->param('name', '', function () {return new Text(100);}, 'User name', true)
     ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed')
     ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed')
+    ->param('name', '', function () {return new Text(100);}, 'User name', true)
     ->action(
         function ($email, $password, $name, $redirect, $success, $failure) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
             if('console' === $project->getUid()) {
@@ -311,8 +311,8 @@ $utopia->post('/v1/auth/login')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () {return new Email();}, 'User account email address')
     ->param('password', '', function () {return new Password();}, 'User account password')
-    ->param('success', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.', true)
-    ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.', true)
+    ->param('success', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a successful login attempt.')
+    ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
         function ($email, $password, $success, $failure) use ($response, $request, $projectDB, $audit, $webhook) {
             $profile = $projectDB->getCollection([ // Get user by email address
