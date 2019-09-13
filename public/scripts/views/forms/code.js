@@ -1,74 +1,70 @@
-(function (window) {
-    "use strict";
+(function(window) {
+  "use strict";
 
-    window.ls.container.get('view').add(
-        {
-            selector: 'data-forms-code',
-            controller: function(element, alerts) {
-                let lang    = element.dataset['formsCode'] || 'json';
-                let div     = document.createElement('div');
-                let pre     = document.createElement('pre');
-                let code    = document.createElement('code');
-                let copy    = document.createElement('i');
-                
-                div.appendChild(pre);
-                div.appendChild(copy);
-                pre.appendChild(code);
+  window.ls.container.get("view").add({
+    selector: "data-forms-code",
+    controller: function(element, alerts) {
+      let lang = element.dataset["formsCode"] || "json";
+      let div = document.createElement("div");
+      let pre = document.createElement("pre");
+      let code = document.createElement("code");
+      let copy = document.createElement("i");
 
-                element.parentNode.appendChild(div);
+      div.appendChild(pre);
+      div.appendChild(copy);
+      pre.appendChild(code);
 
-                div.className   = 'ide';
-                pre.className   = 'line-numbers';
-                code.className  = 'prism language-' + lang;
-                copy.className  = 'icon-docs copy';
-                
-                copy.title = 'Copy to Clipboard';
-                
-                copy.addEventListener('click', function () {
-                    element.disabled = false;
-                    
-                    element.focus();
-                    element.select();
-                    
-                    document.execCommand('Copy');
+      element.parentNode.appendChild(div);
 
-                    if (document.selection) {
-                        document.selection.empty();
-                    }
-                    else if (window.getSelection) {
-                        window.getSelection().removeAllRanges();
-                    }
+      div.className = "ide";
+      pre.className = "line-numbers";
+      code.className = "prism language-" + lang;
+      copy.className = "icon-docs copy";
 
-                    element.disabled = true;
-                    
-                    alerts.add({text: 'Copied to clipboard', class: ''}, 3000);
-                });
+      copy.title = "Copy to Clipboard";
 
-                let check = function() {
-                    if(!element.value) {
-                        return;
-                    }
+      copy.addEventListener("click", function() {
+        element.disabled = false;
 
-                    let value = null;
+        element.focus();
+        element.select();
 
-                    try {
-                        value = JSON.stringify(JSON.parse(element.value), null, 4);
-                    }
-                    catch(error) {
-                        value = element.value;
-                    }
+        document.execCommand("Copy");
 
-                    code.innerHTML = value;
-
-                    Prism.highlightElement(code);
-
-                    div.scrollTop = 0;
-                }
-
-                element.addEventListener('change', check);
-
-                check();
-            }
+        if (document.selection) {
+          document.selection.empty();
+        } else if (window.getSelection) {
+          window.getSelection().removeAllRanges();
         }
-    );
+
+        element.disabled = true;
+
+        alerts.add({ text: "Copied to clipboard", class: "" }, 3000);
+      });
+
+      let check = function() {
+        if (!element.value) {
+          return;
+        }
+
+        let value = null;
+
+        try {
+          value = JSON.stringify(JSON.parse(element.value), null, 4);
+        } catch (error) {
+          value = element.value;
+        }
+
+        code.innerHTML = value;
+
+        Prism.highlightElement(code);
+
+        div.scrollTop = 0;
+      };
+
+      element.addEventListener("change", check);
+
+      check();
+    }
+  });
 })(window);

@@ -38,7 +38,7 @@ use Utopia\Locale\Locale;
             <div class="pull-start margin-end-small margin-bottom">
                 <input type="checkbox" required />
             </div>
-            <?php echo $this->escape(Locale::getText('home.auth.signup.labels.agree')); ?><a href="/policy/terms" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.terms')); ?></a><?php echo $this->escape(Locale::getText('home.auth.signup.labels.and')); ?><a href="/policy/privacy" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.privacy')); ?></a>
+            <?php echo $this->escape(Locale::getText('home.auth.signup.labels.agree')); ?><a href="/policy/terms" tabindex="-1" target="_blank"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.terms')); ?></a><?php echo $this->escape(Locale::getText('home.auth.signup.labels.and')); ?><a href="/policy/privacy" target="_blank" tabindex="-1"><?php echo $this->escape(Locale::getText('home.auth.signup.labels.privacy')); ?></a>
         </div>
 
         <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/confirm" />

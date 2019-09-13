@@ -1,20 +1,17 @@
-(function (window) {
-    "use strict";
+(function(window) {
+  "use strict";
 
-    window.ls.container.get('view').add(
-        {
-            selector: 'data-forms-parent-remove',
-            controller: function(element) {
-                var target = element.dataset['target'] || null;
+  window.ls.container.get("view").add({
+    selector: "data-forms-parent-remove",
+    controller: function(element) {
+      var target = element.dataset["target"] || null;
 
-                target = (target) ? element.closest(target) : element.parentNode;
+      target = target ? element.closest(target) : element.parentNode;
 
-                element.addEventListener('click', function () {
-                    target.parentNode.removeChild(target);
-                    element.scrollIntoView({behavior: 'smooth'});
-                });
-            }
-        }
-    );
-
+      element.addEventListener("click", function() {
+        target.parentNode.removeChild(target);
+        element.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  });
 })(window);
