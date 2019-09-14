@@ -218,7 +218,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     }
     
     if($abuse->check()) {
-        //throw new Exception('Too many requests', 429);
+        throw new Exception('Too many requests', 429);
     }
 });
 

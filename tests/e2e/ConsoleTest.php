@@ -70,6 +70,8 @@ class ConsoleTest extends TestCase
             'failure' => 'http://localhost/failure',
         ]);
 
+        var_dump();
+
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("\n", $response['body']);
     }
