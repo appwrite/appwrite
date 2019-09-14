@@ -7,10 +7,10 @@
          convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="false"
->
+        >
     <testsuites>
         <testsuite name="Application Test Suite">
-            <directory>./tests/e2e/</directory>
+            <directory>./tests/</directory>
         </testsuite>
     </testsuites>
 </phpunit>
