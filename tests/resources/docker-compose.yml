@@ -5,6 +5,8 @@ services:
     build: ../../
     restart: unless-stopped
     volumes:
+    - ./../../:/usr/share/nginx/html
+    - ./../../docker/nginx.conf:/etc/nginx/nginx.conf:rw
     - ./storage:/storage:rw
     ports:
     - "80:80"
@@ -29,8 +31,8 @@ services:
     restart: unless-stopped
     environment:
     - MYSQL_ROOT_PASSWORD=password
-    #volumes:
-    #- ./storage/db:/var/lib/mysql:rw
+    volumes:
+    - ./storage/db:/var/lib/mysql:rw
     ports:
     - 3306:3306/tcp
 

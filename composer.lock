@@ -4,8 +4,43 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "197b677f995f7b308494e55f1dc66729",
+    "content-hash": "bcdcb2d9926740fea4a0515f87c58a3c",
     "packages": [
+        {
+            "name": "appwrite/appwrite",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/appwrite/sdk-for-php.git",
+                "reference": "c3d6f82565cc5606980451221b8f0a28af6af2f5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/c3d6f82565cc5606980451221b8f0a28af6af2f5",
+                "reference": "c3d6f82565cc5606980451221b8f0a28af6af2f5",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=7.1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.35"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Appwrite\\": "src/Appwrite"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
+            "time": "2019-09-12T16:19:16+00:00"
+        },
         {
             "name": "appwrite/php-clamav",
             "version": "dev-master",

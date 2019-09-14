@@ -22,6 +22,9 @@
             "Template\\": "src/Template"
         }
     },
+    "autoload-dev": {
+        "psr-4": {"Tests\\E2E\\": "tests/e2e"}
+    },
     "require": {
         "php": ">=7.3.0",
         "ext-curl": "*",
@@ -37,6 +40,7 @@
 
         "appwrite/sdk-generator": "master",
         "appwrite/php-clamav": "master",
+        "appwrite/appwrite": "master",
 
         "utopia-php/framework": "master",
         "utopia-php/abuse": "master",
