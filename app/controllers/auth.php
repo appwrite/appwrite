@@ -65,9 +65,9 @@ $utopia->post('/v1/auth/register')
 
             if (!empty($profile)) {
                 if ($failure) {
-                    $response->redirect($failure);
+                    //$response->redirect($failure);
 
-                    return;
+                    //return;
                 }
 
                 throw new Exception('User already registered', 400);
@@ -331,9 +331,9 @@ $utopia->post('/v1/auth/login')
                 ;
 
                 if ($failure) {
-                    $response->redirect($failure);
+                    //$response->redirect($failure);
 
-                    return;
+                    //return;
                 }
 
                 throw new Exception('Invalid credentials', 401); // Wrong password or username

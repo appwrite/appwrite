@@ -12,14 +12,19 @@ class ConsoleTest extends TestCase
      */
     protected $client = null;
     protected $endpoint = 'http://localhost/v1';
+    protected $demoEmail = '';
+    protected $demoPassword = '';
 
     public function setUp()
     {
-        $this->client = new Client(null);
-
+        $this->client = new Client();
+    
         $this->client
             ->setEndpoint($this->endpoint)
         ;
+
+        $this->demoEmail = 'user.' . rand(0,1000000) . '@appwrite.io';
+        $this->demoPassword = 'password.' . rand(0,1000000);
     }
 
     public function tearDown()
@@ -33,44 +38,34 @@ class ConsoleTest extends TestCase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ], [
-            'email' => 'username1@appwrite.io',
-            'password' => 'password',
+            'email' => $this->demoEmail,
+            'password' => $this->demoPassword,
             'redirect' => 'http://localhost/confirm',
             'success' => 'http://localhost/success',
             'failure' => 'http://localhost/failure',
-            'name' => 'User 1',
+            'name' => 'Demo User',
         ]);
 
-        var_dump($response);
-
-        $this->assertEquals('http://localhost/failure', $response['headers']['location']);
+        $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("\n", $response['body']);
+
+        return [
+            'demoEmail' => $this->demoEmail,
+            'demoPassword' => $this->demoPassword,
+        ];
     }
 
-    public function testLoginFailure()
+    /**
+     * @depends testRegisterSuccess
+     */
+    public function testLoginSuccess($data)
     {
         $response = $this->client->call(Client::METHOD_POST, '/auth/login', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ], [
-            'email' => 'username@appwrite.io',
-            'password' => 'password1',
-            'success' => 'http://localhost/success',
-            'failure' => 'http://localhost/failure',
-        ]);
-
-        $this->assertEquals('http://localhost/failure', $response['headers']['location']);
-        $this->assertEquals("\n", $response['body']);
-    }
-
-    public function testLoginSuccess()
-    {
-        $response = $this->client->call(Client::METHOD_POST, '/auth/login', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-        ], [
-            'email' => 'username@appwrite.io',
-            'password' => 'password',
+            'email' => $data['demoEmail'],
+            'password' => $data['demoPassword'],
             'success' => 'http://localhost/success',
             'failure' => 'http://localhost/failure',
         ]);
