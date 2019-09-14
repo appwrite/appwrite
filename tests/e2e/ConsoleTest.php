@@ -41,6 +41,8 @@ class ConsoleTest extends TestCase
             'name' => 'User 1',
         ]);
 
+        var_dump($response);
+
         $this->assertEquals('http://localhost/failure', $response['headers']['location']);
         $this->assertEquals("\n", $response['body']);
     }

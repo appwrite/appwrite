@@ -25,4 +25,5 @@ install:
 - sleep 60
 
 script:
+- docker ps
 - vendor/bin/phpunit --configuration phpunit.xml
