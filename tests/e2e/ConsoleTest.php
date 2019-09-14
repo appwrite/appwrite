@@ -35,7 +35,7 @@ class ConsoleTest extends TestCase
         ], [
             'email' => 'username1@appwrite.io',
             'password' => 'password',
-            'confirm' => 'http://localhost/confirm',
+            'redirect' => 'http://localhost/confirm',
             'success' => 'http://localhost/success',
             'failure' => 'http://localhost/failure',
             'name' => 'User 1',
