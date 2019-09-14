@@ -28,3 +28,4 @@ script:
 - php -v
 - ls storage
 - ls tests/resources/storage
+- vendor/bin/phpunit --configuration phpunit.xml
