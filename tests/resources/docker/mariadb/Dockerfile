@@ -6,5 +6,3 @@ LABEL maintainer="team@appwrite.io"
 ADD ./all.sql /docker-entrypoint-initdb.d/all.sql
 
 RUN chown -R mysql:mysql /docker-entrypoint-initdb.d/
-
-CMD [ "mysqld", "--innodb-flush-method=fsync" ]

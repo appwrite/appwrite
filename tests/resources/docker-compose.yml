@@ -35,6 +35,7 @@ services:
     - ./storage/db:/var/lib/mysql:rw
     ports:
     - 3306:3306/tcp
+    command: mysqld --innodb-flush-method=fsync
 
   smtp:
     image: appwrite/smtp:1.0.0
