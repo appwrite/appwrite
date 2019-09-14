@@ -27,7 +27,7 @@ services:
     - _APP_STATSD_PORT=8125
 
   mariadb:
-    image: mariadb:10.2
+    build: ./docker/mariadb
     restart: unless-stopped
     environment:
     - MYSQL_ROOT_PASSWORD=password
@@ -35,7 +35,6 @@ services:
     - ./storage/db:/var/lib/mysql:rw
     ports:
     - 3306:3306/tcp
-    command: mysqld --innodb-flush-method=fsync
 
   smtp:
     image: appwrite/smtp:1.0.0
