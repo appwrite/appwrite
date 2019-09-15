@@ -75,15 +75,41 @@ class ConsoleTest extends TestCase
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("\n", $response['body']);
 
-        return ['session' => $session];
+        return [
+            'email' => $data['demoEmail'],
+            'password' => $data['demoPassword'],
+            'session' => $session
+        ];
     }
 
     /**
      * @depends testLoginSuccess
      */
+    public function testAccountSuccess($data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a-session-console=' . $data['session'],
+        ], []);
+
+        $this->assertEquals('Demo User', $response['body']['name']);
+        $this->assertEquals($data['demoEmail'], $data['body']['email']);
+        $this->assertEquals($data['demoPassword'], $data['body']['password']);
+        $this->assertEquals(false, $response['body']['confirm']);
+        $this->assertIsArray($response['body']['roles']);
+        $this->assertEquals('*', $response['body']['roles'][0]);
+        $this->assertEquals('user:' . $response['body']['$uid'], $response['body']['roles'][1]);
+        $this->assertEquals('role:1', $response['body']['roles'][2]);
+
+        return $data;
+    }
+
+    /**
+     * @depends testAccountSuccess
+     */
     public function testLogoutSuccess($data)
     {
-        var_dump($data);
         $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
