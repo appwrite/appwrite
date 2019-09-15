@@ -49,6 +49,11 @@ use Utopia\Locale\Locale;
                                     <input data-forms-copy type="text" disabled data-ls-bind="{{console-project.$uid}}" />
                                 </div>
 
+                                <label for="name">API Endpoint</label>
+                                <div class="input-copy">
+                                    <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1" />
+                                </div>
+
                                 <label for="description">Description &nbsp;<small>(optional)</small></label>
                                 <textarea name="description" id="description" autocomplete="off" placeholder="Help us make the world a better place" data-ls-bind="{{console-project.description}}" data-forms-text-direction data-forms-text-count></textarea>
 
