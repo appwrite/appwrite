@@ -71,7 +71,7 @@ class ConsoleTest extends TestCase
         ]);
 
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
-var_dump($response['headers']);
+
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("\n", $response['body']);
 
@@ -81,26 +81,26 @@ var_dump($response['headers']);
     /**
      * @depends testLoginSuccess
      */
-    public function xtestLogoutSuccess($data)
+    public function testLogoutSuccess($data)
     {
+        var_dump($data);
         $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a-session-console=' . $data['session'],
         ], []);
 
-        var_dump($response);
-        $this->assertEquals('http://localhost/success', $response['headers']['location']);
-        $this->assertEquals("\n", $response['body']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('success', $response['body']['result']);
     }
 
-    // public function testLogoutFailure()
-    // {
-    //     $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
-    //         'origin' => 'http://localhost',
-    //         'content-type' => 'application/json',
-    //     ], []);
+    public function testLogoutFailure()
+    {
+        $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+        ], []);
 
-    //     $this->assertEquals('401', $response['body']['code']);
-    // }
+        $this->assertEquals('401', $response['body']['code']);
+    }
 }

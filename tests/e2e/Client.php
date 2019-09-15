@@ -187,7 +187,7 @@ class Client
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
-            $header = explode(':', strtolower($header), 2);
+            $header = explode(':', $header, 2);
 
             if (count($header) < 2) { // ignore invalid headers
                 return $len;
