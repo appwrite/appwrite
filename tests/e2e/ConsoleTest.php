@@ -94,10 +94,10 @@ class ConsoleTest extends TestCase
         ], []);
 
         $this->assertEquals('Demo User', $response['body']['name']);
-        $this->assertEquals($data['demoEmail'], $data['body']['email']);
-        $this->assertEquals($data['demoPassword'], $data['body']['password']);
+        $this->assertEquals($data['email'], $response['body']['email']);
         $this->assertEquals(false, $response['body']['confirm']);
         $this->assertIsArray($response['body']['roles']);
+        $this->assertIsInt($response['body']['registration']);
         $this->assertEquals('*', $response['body']['roles'][0]);
         $this->assertEquals('user:' . $response['body']['$uid'], $response['body']['roles'][1]);
         $this->assertEquals('role:1', $response['body']['roles'][2]);
