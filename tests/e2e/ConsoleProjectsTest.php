@@ -97,5 +97,32 @@ class ConsoleProjectsTest extends Base
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
+
+        $data['project'] = $response['body'];
+
+        return $data;
+    }
+
+    /**
+     * @depends testProjectsCreateSuccess
+     */
+    public function testProjectsUpdateSuccess($data) {
+  
+        $response = $this->client->call(Client::METHOD_POST, '/projects', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a-session-console=' . $data['session'],
+        ], array_merge($data['project'], [
+            'name' => 'New Project Name',
+            'description' => 'New Demo Project Description',
+            'logo' => '',
+            'url' => 'https://appwrite.io/new',
+        ]));
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('New Project Name', $response['body']['name']);
+        $this->assertEquals('New Demo Project Description', $response['body']['description']);
+        $this->assertEquals('https://appwrite.io/new', $response['body']['url']);
     }
 }
