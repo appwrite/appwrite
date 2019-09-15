@@ -385,6 +385,7 @@ $utopia->post('/v1/database/:collectionId/documents')
                 throw new Exception('Collection not found', 404);
             }
 
+            $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
             $data['$permissions'] = [
                 'read' => $read,
                 'write' => $write,
