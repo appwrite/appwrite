@@ -224,10 +224,27 @@ class Client
 
         curl_close($ch);
 
+        $responseHeaders['status-code'] = $responseStatus;
+
         return [
             'headers' => $responseHeaders,
             'body' => $responseBody
         ];
+    }
+
+    /**
+     * Parse Cookie String
+     *
+     * @param string $cookie
+     * @return array
+     */
+    public function parseCookie($cookie)
+    {
+        $cookies = [];
+
+        parse_str(strtr($cookie, array('&' => '%26', '+' => '%2B', ';' => '&')), $cookies);
+
+        return $cookies;
     }
 
     /**

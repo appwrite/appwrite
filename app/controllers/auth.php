@@ -65,9 +65,9 @@ $utopia->post('/v1/auth/register')
 
             if (!empty($profile)) {
                 if ($failure) {
-                    //$response->redirect($failure);
+                    $response->redirect($failure . '?message=User already registered');
 
-                    //return;
+                    return;
                 }
 
                 throw new Exception('User already registered', 400);
@@ -331,9 +331,9 @@ $utopia->post('/v1/auth/login')
                 ;
 
                 if ($failure) {
-                    //$response->redirect($failure);
+                    $response->redirect($failure);
 
-                    //return;
+                    return;
                 }
 
                 throw new Exception('Invalid credentials', 401); // Wrong password or username
@@ -390,7 +390,7 @@ $utopia->delete('/v1/auth/logout')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'auth')
     ->label('sdk.method', 'logout')
-    ->label('sdk.description', 'Use this endpoint to log out the currently logged in user from his account. When succeed this endpoint will delete the user session and remove the session secret cookie.')
+    ->label('sdk.description', 'Use this endpoint to log out the currently logged in user from his account. When succeed this endpoint will delete the user session and remove the session secret cookie from the user client.')
     ->label('abuse-limit', 100)
     ->action(
         function () use ($response, $request, $user, $projectDB, $audit, $webhook) {

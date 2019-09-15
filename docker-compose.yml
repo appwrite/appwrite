@@ -32,10 +32,7 @@ services:
     - _APP_INFLUXDB_PORT=8086
     - _APP_STATSD_HOST=telegraf
     - _APP_STATSD_PORT=8125
-    #- _APP_CONSOLE_WHITELIST_EMAILS=user1@example.com,user2@example.com
-    #- _APP_CONSOLE_WHITELIST_IPS=192.1.1.100,192.1.1.101
-    #- _APP_CONSOLE_WHITELIST_DOMAINS=appwrite.io,example.com
-
+    
   mariadb:
     image: appwrite/mariadb:1.0.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     restart: unless-stopped
