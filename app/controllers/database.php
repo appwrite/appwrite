@@ -131,7 +131,7 @@ $utopia->post('/v1/database')
     ->param('name', '', function () {return new Text(256);}, 'Collection name.')
     ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of collection structure rules. Each rule define a collection field name, data type and validation', true)
+    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
         function ($name, $read, $write, $rules) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
             try {
@@ -187,7 +187,7 @@ $utopia->put('/v1/database/:collectionId')
     ->param('name', null, function () {return new Text(256);}, 'Collection name.')
     ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of collection structure rules. Each rule define a collection field name, data type and validation', true)
+    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
         function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB) {
             $collection = $projectDB->getDocument($collectionId, false);
@@ -474,6 +474,12 @@ $utopia->patch('/v1/database/:collectionId/documents/:documentId')
         function ($collectionId, $documentId, $data, $read, $write) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
             $document = $projectDB->getDocument($documentId, $isDev);
+
+            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
+
+            if (!is_array($data)) {
+                throw new Exception('Data param should be a valid JSON', 400);
+            }
 
             if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
