@@ -89,7 +89,7 @@ class Structure extends Validator
     /**
      * @var string
      */
-    protected $message = 'Unknown Error';
+    protected $message = 'General Error';
 
     /**
      * Structure constructor.
@@ -110,7 +110,7 @@ class Structure extends Validator
      */
     public function getDescription()
     {
-        return 'Invalid document (#'.$this->id.'): '.$this->message;
+        return 'Invalid document structure: '.$this->message;
     }
 
     /**

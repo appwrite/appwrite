@@ -25,7 +25,7 @@ class Authorization extends Validator
     /**
      * @var string
      */
-    protected $message = 'Unknown Error';
+    protected $message = 'Authorization Error';
 
     /**
      * Structure constructor.

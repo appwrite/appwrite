@@ -10,7 +10,7 @@ class Permissions extends Validator
     /**
      * @var string
      */
-    protected $message = 'Unknown Error';
+    protected $message = 'Permissions Error';
 
     /**
      * @var Document
