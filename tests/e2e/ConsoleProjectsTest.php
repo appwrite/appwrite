@@ -4,33 +4,8 @@ namespace Tests\E2E;
 
 use Tests\E2E\Client;
 
-class ConsoleProjectsTest extends Base
-{
-    /**
-     * @var Client
-     */
-    protected $client = null;
-    protected $endpoint = 'http://localhost/v1';
-    protected $demoEmail = '';
-    protected $demoPassword = '';
-
-    public function setUp()
-    {
-        $this->client = new Client();
-    
-        $this->client
-            ->setEndpoint($this->endpoint)
-        ;
-
-        $this->demoEmail = 'user.' . rand(0,1000000) . '@appwrite.io';
-        $this->demoPassword = 'password.' . rand(0,1000000);
-    }
-
-    public function tearDown()
-    {
-        $this->client = null;
-    }
-    
+class ConsoleProjectsTest extends BaseConsole
+{   
     public function testRegisterSuccess()
     {
         $response = $this->register();

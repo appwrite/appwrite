@@ -4,7 +4,7 @@ namespace Tests\E2E;
 
 use Tests\E2E\Client;
 
-class ConsoleTest extends Base
+class ConsoleTest extends BaseConsole
 {
     public function testRegisterSuccess()
     {

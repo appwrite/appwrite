@@ -5,7 +5,7 @@ namespace Tests\E2E;
 use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
 
-class Base extends TestCase
+class BaseConsole extends TestCase
 {
     /**
      * @var Client
