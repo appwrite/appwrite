@@ -71,24 +71,36 @@ class ProjectDatabaseTest extends BaseProjects
             'password' => $this->demoPassword,
             'session' => $session,
             'projectUid' => $project['body']['$uid'],
-            'projectAPIKeyUid' => $key['body']['$uid'],
             'projectAPIKeySecret' => $key['body']['secret'],
-            'projectSession' => $this->projectClient->parseCookie($user['headers']['set-cookie'])['a-session-' . $project['body']['$uid']],
+            'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a-session-' . $project['body']['$uid']],
         ];
     }
 
     /**
      * @depends testRegisterSuccess
      */
-    public function testProjectsList($data) {
-        $response = $this->client->call(Client::METHOD_GET, '/projects', [
-            'origin' => 'http://localhost',
+    public function testCollectionCreateSuccess($data) {
+        $collection = $this->client->call(Client::METHOD_POST, '/database', [
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
-        ], []);
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'name' => 'Test Collection',
+            'read' => ['*'],
+            'write' => ['role:1', 'role:2'],
+        ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']);
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['$collection'], 0);
+        $this->assertEquals($collection['body']['name'], 'Test Collection');
+        $this->assertIsArray($collection['body']['$permissions']);
+        $this->assertIsArray($collection['body']['$permissions']['read']);
+        $this->assertIsArray($collection['body']['$permissions']['write']);
+        $this->assertEquals(count($collection['body']['$permissions']['read']), 1);
+        $this->assertEquals(count($collection['body']['$permissions']['write']), 2);
+
+        return [
+            'collectionId' => $collection['body']['$uid']
+        ];
     }
-
 }
