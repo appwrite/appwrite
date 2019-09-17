@@ -73,7 +73,7 @@ class ProjectDatabaseTest extends BaseProjects
             'projectUid' => $project['body']['$uid'],
             'projectAPIKeyUid' => $key['body']['$uid'],
             'projectAPIKeySecret' => $key['body']['secret'],
-            'projectSession' => $this->projectClient->parseCookie($user['headers']['set-cookie'])['a-session-console'],
+            'projectSession' => $this->projectClient->parseCookie($user['headers']['set-cookie'])['a-session-' . $project['body']['$uid']],
         ];
     }
 
