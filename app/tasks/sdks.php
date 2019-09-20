@@ -34,8 +34,6 @@ $cli
             return $result;
         }
 
-        Console::success('Fetching API Spec');
-
         $clients = [
             'php' => [
                 'version' => 'v1.0.7',
@@ -100,6 +98,7 @@ $cli
         ];
 
         foreach ($clients as $name => $client) {
+            Console::success('Fetching API Spec for ' . $name . ' (' . $client['platform'] . ')');
             $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform=' . $client['platform']);
             $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1&platform=' . $client['platform']);
 
@@ -191,18 +190,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 echo $exception->getMessage()."\n";
             }
 
-            exec('rm -rf '.$target.' && \
-                mkdir -p '.$target.' && \
-                cd '.$target.' && \
-                git init && \
-                git remote add origin '.$client['gitRepo'].' && \
-                git fetch && \
-                git pull '.$client['gitRepo'].' && \
-                rm -rf '.$target.'/* && \
-                cp -r '.$client['result'].' '.$target.' && \
-                git add . && \
-                git commit -m "Initial commit" && \
-                git push -u origin master');
+            // exec('rm -rf '.$target.' && \
+            //     mkdir -p '.$target.' && \
+            //     cd '.$target.' && \
+            //     git init && \
+            //     git remote add origin '.$client['gitRepo'].' && \
+            //     git fetch && \
+            //     git pull '.$client['gitRepo'].' && \
+            //     rm -rf '.$target.'/* && \
+            //     cp -r '.$client['result'].' '.$target.' && \
+            //     git add . && \
+            //     git commit -m "Initial commit" && \
+            //     git push -u origin master');
 
             Console::success("Pushing {$name} SDK to {$client['gitRepo']}");
 
