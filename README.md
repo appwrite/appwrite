@@ -14,7 +14,9 @@
 
 ---
 
-Appwrite is a simple to use backend for frontend and mobile apps. Appwrite provides client side (and server) developers with a set of REST APIs to speed up their app development times.
+Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy to use REST API.
+
+Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitve software development tasks.
 
 Using Appwrite you can easily manage user authentication with multiple sign-in methods, database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
