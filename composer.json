@@ -62,6 +62,12 @@
     "require-dev": {
         "phpunit/phpunit": "^7.0"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/appwrite/sdk-generator"
+        }
+    ],
     "provide": {
         "ext-phpiredis": "*"
     },

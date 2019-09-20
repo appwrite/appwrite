@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "c3d6f82565cc5606980451221b8f0a28af6af2f5"
+                "reference": "769067d0f5b78f968d7d080dc6347c5d6a3eb661"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/c3d6f82565cc5606980451221b8f0a28af6af2f5",
-                "reference": "c3d6f82565cc5606980451221b8f0a28af6af2f5",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/769067d0f5b78f968d7d080dc6347c5d6a3eb661",
+                "reference": "769067d0f5b78f968d7d080dc6347c5d6a3eb661",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-09-12T16:19:16+00:00"
+            "time": "2019-09-20T05:36:18+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,12 +92,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "609c832bef763adfc64919574e866ac527515000"
+                "reference": "aa2cb7d561e33c610d58314616af3a4f0a5ebcab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/609c832bef763adfc64919574e866ac527515000",
-                "reference": "609c832bef763adfc64919574e866ac527515000",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/aa2cb7d561e33c610d58314616af3a4f0a5ebcab",
+                "reference": "aa2cb7d561e33c610d58314616af3a4f0a5ebcab",
                 "shasum": ""
             },
             "require": {
@@ -129,7 +129,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-09-12 15:56:58"
+            "time": "2019-09-20 05:54:51"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1387,12 +1387,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "b42a2f66e8f1b15ccf25652c3424265923eb4f17"
+                "reference": "a874bbf9135bd76175baa2c26d14312c9ef25543"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/b42a2f66e8f1b15ccf25652c3424265923eb4f17",
-                "reference": "b42a2f66e8f1b15ccf25652c3424265923eb4f17",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/a874bbf9135bd76175baa2c26d14312c9ef25543",
+                "reference": "a874bbf9135bd76175baa2c26d14312c9ef25543",
                 "shasum": ""
             },
             "require": {
@@ -1438,7 +1438,7 @@
                 "portable",
                 "shim"
             ],
-            "time": "2019-08-06 08:03:45"
+            "time": "2019-09-17 10:46:08"
         },
         {
             "name": "twig/twig",
@@ -1446,12 +1446,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "1fcf9143e2cb4da5ce77cace7aee927c1c7cf7c7"
+                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/1fcf9143e2cb4da5ce77cace7aee927c1c7cf7c7",
-                "reference": "1fcf9143e2cb4da5ce77cace7aee927c1c7cf7c7",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d83802c011b99b5326ccd13e7fc87bacebd4c724",
+                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724",
                 "shasum": ""
             },
             "require": {
@@ -1505,7 +1505,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-09-07 07:25:39"
+            "time": "2019-09-17 06:08:14"
         },
         {
             "name": "utopia-php/abuse",
@@ -2420,12 +2420,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-token-stream.git",
-                "reference": "e899757bb3df5ff6e95089132f32cd59aac2220a"
+                "reference": "995192df77f63a59e47f025390d2d1fdf8f425ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-token-stream/zipball/e899757bb3df5ff6e95089132f32cd59aac2220a",
-                "reference": "e899757bb3df5ff6e95089132f32cd59aac2220a",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-token-stream/zipball/995192df77f63a59e47f025390d2d1fdf8f425ff",
+                "reference": "995192df77f63a59e47f025390d2d1fdf8f425ff",
                 "shasum": ""
             },
             "require": {
@@ -2461,7 +2461,7 @@
             "keywords": [
                 "tokenizer"
             ],
-            "time": "2019-07-25T05:29:42+00:00"
+            "time": "2019-09-17T06:23:10+00:00"
         },
         {
             "name": "phpunit/phpunit",
@@ -2469,12 +2469,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "d434b33075b4b6f3575660acfdb0daafd0b32515"
+                "reference": "316afa6888d2562e04aeb67ea7f2017a0eb41661"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d434b33075b4b6f3575660acfdb0daafd0b32515",
-                "reference": "d434b33075b4b6f3575660acfdb0daafd0b32515",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/316afa6888d2562e04aeb67ea7f2017a0eb41661",
+                "reference": "316afa6888d2562e04aeb67ea7f2017a0eb41661",
                 "shasum": ""
             },
             "require": {
@@ -2545,7 +2545,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-09-09T11:32:03+00:00"
+            "time": "2019-09-14T09:08:39+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -2771,12 +2771,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/exporter.git",
-                "reference": "05e2a220e5e41ed9e8a38d4a5a1cf9bf1fa9fded"
+                "reference": "68609e1261d215ea5b21b7987539cbfbe156ec3e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/exporter/zipball/05e2a220e5e41ed9e8a38d4a5a1cf9bf1fa9fded",
-                "reference": "05e2a220e5e41ed9e8a38d4a5a1cf9bf1fa9fded",
+                "url": "https://api.github.com/repos/sebastianbergmann/exporter/zipball/68609e1261d215ea5b21b7987539cbfbe156ec3e",
+                "reference": "68609e1261d215ea5b21b7987539cbfbe156ec3e",
                 "shasum": ""
             },
             "require": {
@@ -2830,7 +2830,7 @@
                 "export",
                 "exporter"
             ],
-            "time": "2019-09-10T15:13:45+00:00"
+            "time": "2019-09-14T09:02:43+00:00"
         },
         {
             "name": "sebastian/global-state",
@@ -3146,8 +3146,8 @@
             "authors": [
                 {
                     "name": "Arne Blankerts",
-                    "role": "Developer",
-                    "email": "arne@blankerts.de"
+                    "email": "arne@blankerts.de",
+                    "role": "Developer"
                 }
             ],
             "description": "A small library for converting tokenized PHP source code into XML and potentially other formats",
