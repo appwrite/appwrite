@@ -86,7 +86,7 @@ $cli
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
             ],
             'dart' => [
-                'version' => 'v0.0.1',
+                'version' => '0.0.1',
                 'result' => __DIR__.'/../sdks/dart/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-dart',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-dart.git',
