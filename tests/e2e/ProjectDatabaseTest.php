@@ -259,4 +259,77 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(2019, $documents['body']['documents'][1]['releaseYear']);
         $this->assertCount(2, $documents['body']['documents']);
     }
+
+    /**
+     * @depends testDocumentCreateSuccess
+     */
+    public function testDocumentsListSuccessFirstAndLast($data) {
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'limit' => 1,
+            'order-field' => 'releaseYear',
+            'order-type' => 'ASC',
+            'order-cast' => 'int',
+            'first' => true,
+        ]);
+            
+        $this->assertEquals(1944, $documents['body']['releaseYear']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'limit' => 2,
+            'offset' => 1,
+            'order-field' => 'releaseYear',
+            'order-type' => 'ASC',
+            'order-cast' => 'int',
+            'last' => true,
+        ]);
+            
+        $this->assertEquals(2019, $documents['body']['releaseYear']);
+    }
+
+    /**
+     * @depends testDocumentCreateSuccess
+     */
+    public function testDocumentsListSuccessSerach($data) {
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'search' => 'Captain America',
+        ]);
+
+        $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'search' => 'Homecoming',
+        ]);
+
+        $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'search' => 'spider',
+        ]);
+
+        $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
+        $this->assertCount(2, $documents['body']['documents']);
+    }
 }

@@ -209,7 +209,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
 
     $abuse = new Abuse($timeLimit);
 
-    if($timeLimit->limit() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if($timeLimit->limit()) {
         $response
             ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
             ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
@@ -217,7 +217,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
         ;
     }
     
-    if($abuse->check()) {
+    if($abuse->check() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         throw new Exception('Too many requests', 429);
     }
 });
