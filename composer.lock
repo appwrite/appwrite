@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "bcdcb2d9926740fea4a0515f87c58a3c",
+    "content-hash": "470f543ebf989400a43a6269f0b4d60a",
     "packages": [
         {
             "name": "appwrite/appwrite",
@@ -91,14 +91,8 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "aa2cb7d561e33c610d58314616af3a4f0a5ebcab"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/aa2cb7d561e33c610d58314616af3a4f0a5ebcab",
-                "reference": "aa2cb7d561e33c610d58314616af3a4f0a5ebcab",
-                "shasum": ""
+                "url": "https://github.com/appwrite/sdk-generator",
+                "reference": "e456fafb3d32a83c104a47ad064b2295281e58c0"
             },
             "require": {
                 "ext-curl": "*",
@@ -118,7 +112,6 @@
                     "Appwrite\\Spec\\": "src/Spec"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -129,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-09-20 05:54:51"
+            "time": "2019-09-20 06:30:54"
         },
         {
             "name": "bacon/bacon-qr-code",

@@ -1,5 +1,5 @@
-import "package:dart_appwrite/service.dart";
-import "package:dart_appwrite/client.dart";
+import "package:appwrite/service.dart";
+import "package:appwrite/client.dart";
 import 'package:dio/dio.dart';
 
 class Storage extends Service {

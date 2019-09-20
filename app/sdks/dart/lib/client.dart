@@ -79,8 +79,9 @@ class Client {
         String reqPath = path;
         bool isGet = method.toUpperCase() == "GET";
 
+        // Origin is hardcoded for testing
         Options options = Options(
-            headers: {...this.headers, ...headers},
+            headers: {...this.headers, ...headers, "Origin": "http://localhost"},
             method: method.toUpperCase(),
         );
 
