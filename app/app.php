@@ -18,6 +18,7 @@ use Auth\Auth;
 use Database\Document;
 use Database\Validator\Authorization;
 use Event\Event;
+use Utopia\Validator\WhiteList;
 
 /**
  * Configuration files
@@ -435,9 +436,10 @@ $utopia->get('/v1/proxy')
 $utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
+    ->param('platform', 'client' , function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
     ->param('extensions', 0 , function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->action(
-        function($extensions) use ($response, $request, $utopia, $domain, $version, $services) {
+        function($platform, $extensions) use ($response, $request, $utopia, $domain, $version, $services) {
 
             function fromCamelCase($input) {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -451,6 +453,40 @@ $utopia->get('/v1/open-api-2.json')
             function fromCamelCaseToDash($input) {
                 return str_replace([' ', '_'], '-', strtolower(preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
             }
+
+            $auth = [
+                'client' => [
+
+                ],
+                'server' => [
+                    'Key' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Key',
+                        'description' => 'Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.',
+                        'in' => 'header',
+                    ],
+                ],
+                'all' => [
+                    'Project' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Project',
+                        'description' => 'Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.',
+                        'in' => 'header',
+                    ],
+                    'Locale' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Locale',
+                        'description' => '',
+                        'in' => 'header',
+                    ],
+                    'Mode' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Mode',
+                        'description' => '',
+                        'in' => 'header',
+                    ],
+                ]
+            ];
 
             /*$scopes = [
                 'client' => [
@@ -505,58 +541,24 @@ $utopia->get('/v1/open-api-2.json')
                 'schemes' => ['https'],
                 'consumes' => ['application/json', 'multipart/form-data'],
                 'produces' => ['application/json'],
-                'securityDefinitions' => [
-                    'Project' => [
-                        'type' => 'apiKey',
-                        'name' => 'X-Appwrite-Project',
-                        'description' => 'Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.',
-                        'in' => 'header',
-                    ],
-                    'Key' => [
-                        'type' => 'apiKey',
-                        'name' => 'X-Appwrite-Key',
-                        'description' => 'Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.',
-                        'in' => 'header',
-                    ],
-                    'Locale' => [
-                        'type' => 'apiKey',
-                        'name' => 'X-Appwrite-Locale',
-                        'description' => '',
-                        'in' => 'header',
-                    ],
-                    'Mode' => [
-                        'type' => 'apiKey',
-                        'name' => 'X-Appwrite-Mode',
-                        'description' => '',
-                        'in' => 'header',
-                    ],
-                ],
+                'securityDefinitions' => [],
                 'paths' => [],
-                'definitions' => array (
-                    'Pet' =>
-                        array (
-                            'required' =>
-                                array (
-                                    0 => 'id',
-                                    1 => 'name',
-                                ),
-                            'properties' =>
-                                array (
-                                    'id' =>
-                                        array (
-                                            'type' => 'integer',
-                                            'format' => 'int64',
-                                        ),
-                                    'name' =>
-                                        array (
-                                            'type' => 'string',
-                                        ),
-                                    'tag' =>
-                                        array (
-                                            'type' => 'string',
-                                        ),
-                                ),
-                        ),
+                'definitions' => [
+                    'Pet' => [
+                        'required' => ['id', 'name'],
+                        'properties' => [
+                            'id' => [
+                                'type' => 'integer',
+                                'format' => 'int64',
+                            ],
+                            'name' => [
+                                'type' => 'string',
+                            ],
+                            'tag' => [
+                                'type' => 'string',
+                            ],
+                        ],
+                    ],
                     'Pets' =>
                         array (
                             'type' => 'array',
@@ -585,12 +587,20 @@ $utopia->get('/v1/open-api-2.json')
                                         ),
                                 ),
                         ),
-                ),
+                ],
                 'externalDocs' => [
                     'description' => 'Full API docs, specs and tutorials',
                     'url' => $request->getServer('REQUEST_SCHEME', 'https') . '://' . $domain . '/docs'
                 ]
             ];
+
+            foreach ($auth['all'] as $key => $value) {
+                $output['securityDefinitions'][$key] = $value;
+            }
+
+            foreach ($auth[$platform] as $key => $value) {
+                $output['securityDefinitions'][$key] = $value;
+            }
 
             foreach ($utopia->getRoutes() as $key => $method) {
                 foreach ($method as $route) { /* @var $route \Utopia\Route */
@@ -687,9 +697,8 @@ $utopia->get('/v1/open-api-2.json')
                                 //$node['format'] = 'json';
                                 break;
                             case 'Storage\Validators\File':
-                                $consumes[] = ['multipart/form-data'];
+                                $consumes[] = 'multipart/form-data';
                                 $node['type'] = 'file';
-                                $temp['consumes'] = ['multipart/form-data'];
                                 break;
                             case 'Utopia\Validator\ArrayList':
                                 $node['type'] = 'array';

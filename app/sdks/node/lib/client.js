@@ -28,21 +28,6 @@ class Client {
     }
 
     /**
-     * Set Key
-     *
-     * Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
-     *
-     * @param string value
-     *
-     * @return self
-     */
-    setKey(value) {
-        this.addHeader('X-Appwrite-Key', value);
-
-        return this;
-    }
-
-    /**
      * Set Locale
      *
      * @param string value
@@ -64,6 +49,21 @@ class Client {
      */
     setMode(value) {
         this.addHeader('X-Appwrite-Mode', value);
+
+        return this;
+    }
+
+    /**
+     * Set Key
+     *
+     * Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
+     *
+     * @param string value
+     *
+     * @return self
+     */
+    setKey(value) {
+        this.addHeader('X-Appwrite-Key', value);
 
         return this;
     }

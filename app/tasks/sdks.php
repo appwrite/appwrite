@@ -36,9 +36,6 @@ $cli
 
         Console::success('Fetching API Spec');
 
-        $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1');
-        $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1');
-
         $clients = [
             'php' => [
                 'version' => 'v1.0.7',
@@ -48,6 +45,7 @@ $cli
                 'gitRepoName' => 'sdk-for-php',
                 'gitUserName' => 'appwrite',
                 'warning' => '',
+                'platform' => 'server',
             ],
             'js' => [
                 'version' => 'v1.0.20',
@@ -57,6 +55,7 @@ $cli
                 'gitRepoName' => 'sdk-for-js',
                 'gitUserName' => 'appwrite',
                 'warning' => '',
+                'platform' => 'client',
             ],
             'node' => [
                 'version' => 'v1.0.24',
@@ -66,6 +65,7 @@ $cli
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
                 'warning' => '',
+                'platform' => 'server',
             ],
             'python' => [
                 'version' => 'v1.0.0',
@@ -75,6 +75,7 @@ $cli
                 'gitRepoName' => 'sdk-for-python',
                 'gitUserName' => 'appwrite',
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'platform' => 'server',
             ],
             'ruby' => [
                 'version' => 'v1.0.0',
@@ -84,6 +85,7 @@ $cli
                 'gitRepoName' => 'sdk-for-ruby',
                 'gitUserName' => 'appwrite',
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'platform' => 'server',
             ],
             'dart' => [
                 'version' => '0.0.1',
@@ -93,10 +95,14 @@ $cli
                 'gitRepoName' => 'sdk-for-dart',
                 'gitUserName' => 'appwrite',
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'platform' => 'client',
             ],
         ];
 
         foreach ($clients as $name => $client) {
+            $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform=' . $client['platform']);
+            $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1&platform=' . $client['platform']);
+
             switch ($name) {
                 case 'php':
                     $language = new PHP();

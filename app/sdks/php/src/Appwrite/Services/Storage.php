@@ -61,7 +61,7 @@ class Storage extends Service
         $params['folderId'] = $folderId;
 
         return $this->client->call(Client::METHOD_POST, $path, [
-            'content-type' => 'Array',
+            'content-type' => 'multipart/form-data',
         ], $params);
     }
 
