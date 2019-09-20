@@ -13,7 +13,6 @@ class Database
     // System Core
     const SYSTEM_COLLECTION_COLLECTIONS = 0;
     const SYSTEM_COLLECTION_RULES = 'rules';
-    const SYSTEM_COLLECTION_OPTIONS = 'options';
 
     // Project
     const SYSTEM_COLLECTION_PROJECTS = 'projects';

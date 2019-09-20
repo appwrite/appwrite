@@ -80,7 +80,45 @@ class ProjectDatabaseTest extends BaseProjects
      * @depends testRegisterSuccess
      */
     public function testCollectionCreateSuccess($data) {
-        $collection = $this->client->call(Client::METHOD_POST, '/database', [
+        
+        $actors = $this->client->call(Client::METHOD_POST, '/database', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'name' => 'Actors',
+            'read' => ['*'],
+            'write' => ['role:1', 'role:2'],
+            'rules' => [
+                [
+                    'label' => 'First Name',
+                    'key' => 'firstName',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => true,
+                    'array' => false
+                ],
+                [
+                    'label' => 'Last Name',
+                    'key' => 'lastName',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => true,
+                    'array' => false
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($actors['headers']['status-code'], 201);
+        $this->assertEquals($actors['body']['$collection'], 0);
+        $this->assertEquals($actors['body']['name'], 'Actors');
+        $this->assertIsArray($actors['body']['$permissions']);
+        $this->assertIsArray($actors['body']['$permissions']['read']);
+        $this->assertIsArray($actors['body']['$permissions']['write']);
+        $this->assertEquals(count($actors['body']['$permissions']['read']), 1);
+        $this->assertEquals(count($actors['body']['$permissions']['write']), 2);
+        
+        $movies = $this->client->call(Client::METHOD_POST, '/database', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -94,7 +132,7 @@ class ProjectDatabaseTest extends BaseProjects
                     'key' => 'name',
                     'type' => 'text',
                     'default' => '',
-                    'required' => false,
+                    'required' => true,
                     'array' => false
                 ],
                 [
@@ -105,26 +143,35 @@ class ProjectDatabaseTest extends BaseProjects
                     'required' => false,
                     'array' => false
                 ],
+                [
+                    'label' => 'Actors',
+                    'key' => 'actors',
+                    'type' => 'document',
+                    'default' => [],
+                    'required' => false,
+                    'array' => true,
+                    'list' => [$actors['body']['$uid']],
+                ],
             ],
         ]);
 
-        $this->assertEquals($collection['headers']['status-code'], 201);
-        $this->assertEquals($collection['body']['$collection'], 0);
-        $this->assertEquals($collection['body']['name'], 'Movies');
-        $this->assertIsArray($collection['body']['$permissions']);
-        $this->assertIsArray($collection['body']['$permissions']['read']);
-        $this->assertIsArray($collection['body']['$permissions']['write']);
-        $this->assertEquals(count($collection['body']['$permissions']['read']), 1);
-        $this->assertEquals(count($collection['body']['$permissions']['write']), 2);
+        $this->assertEquals($movies['headers']['status-code'], 201);
+        $this->assertEquals($movies['body']['$collection'], 0);
+        $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertIsArray($movies['body']['$permissions']);
+        $this->assertIsArray($movies['body']['$permissions']['read']);
+        $this->assertIsArray($movies['body']['$permissions']['write']);
+        $this->assertEquals(count($movies['body']['$permissions']['read']), 1);
+        $this->assertEquals(count($movies['body']['$permissions']['write']), 2);
 
-        return array_merge($data, ['collectionId' => $collection['body']['$uid']]);
+        return array_merge($data, ['moviesId' => $movies['body']['$uid'], 'actorsId' => $actors['body']['$uid']]);
     }
 
     /**
      * @depends testCollectionCreateSuccess
      */
     public function testDocumentCreateSuccess($data) {
-        $document1 = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
+        $document1 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -132,10 +179,24 @@ class ProjectDatabaseTest extends BaseProjects
             'data' => [
                 'name' => 'Captain America',
                 'releaseYear' => 1944,
+                'actors' => [
+                    [
+                        '$collection' => $data['actorsId'],
+                        '$permissions' => ['read' => [], 'write' => []],
+                        'firstName' => 'Chris',
+                        'lastName' => 'Evans',
+                    ],
+                    [
+                        '$collection' => $data['actorsId'],
+                        '$permissions' => ['read' => [], 'write' => []],
+                        'firstName' => 'Samuel',
+                        'lastName' => 'Jackson',
+                    ],
+                ]
             ]
         ]);
 
-        $document2 = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
+        $document2 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -146,7 +207,7 @@ class ProjectDatabaseTest extends BaseProjects
             ]
         ]);
 
-        $document3 = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
+        $document3 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -157,8 +218,18 @@ class ProjectDatabaseTest extends BaseProjects
             ]
         ]);
 
+        $document4 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'data' => [
+                'releaseYear' => 2020, // Missing title, expect an 400 error
+            ]
+        ]);
+
         $this->assertEquals($document1['headers']['status-code'], 201);
-        $this->assertEquals($document1['body']['$collection'], $data['collectionId']);
+        $this->assertEquals($document1['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document1['body']['name'], 'Captain America');
         $this->assertEquals($document1['body']['releaseYear'], 1944);
         $this->assertIsArray($document1['body']['$permissions']);
@@ -166,9 +237,10 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertIsArray($document1['body']['$permissions']['write']);
         $this->assertEquals(count($document1['body']['$permissions']['read']), 0);
         $this->assertEquals(count($document1['body']['$permissions']['write']), 0);
+        $this->assertEquals(count($document1['body']['actors']), 2);
 
         $this->assertEquals($document2['headers']['status-code'], 201);
-        $this->assertEquals($document2['body']['$collection'], $data['collectionId']);
+        $this->assertEquals($document2['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document2['body']['name'], 'Spider-Man: Far From Home');
         $this->assertEquals($document2['body']['releaseYear'], 2019);
         $this->assertIsArray($document2['body']['$permissions']);
@@ -178,7 +250,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(count($document2['body']['$permissions']['write']), 0);
 
         $this->assertEquals($document3['headers']['status-code'], 201);
-        $this->assertEquals($document3['body']['$collection'], $data['collectionId']);
+        $this->assertEquals($document3['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document3['body']['name'], 'Spider-Man: Homecoming');
         $this->assertEquals($document3['body']['releaseYear'], 2017);
         $this->assertIsArray($document3['body']['$permissions']);
@@ -186,6 +258,8 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertIsArray($document3['body']['$permissions']['write']);
         $this->assertEquals(count($document3['body']['$permissions']['read']), 0);
         $this->assertEquals(count($document3['body']['$permissions']['write']), 0);
+
+        $this->assertEquals($document4['headers']['status-code'], 400);
         
         return $data;
     }
@@ -194,7 +268,7 @@ class ProjectDatabaseTest extends BaseProjects
      * @depends testDocumentCreateSuccess
      */
     public function testDocumentsListSuccessOrderAndCasting($data) {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -209,7 +283,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -229,7 +303,7 @@ class ProjectDatabaseTest extends BaseProjects
      * @depends testDocumentCreateSuccess
      */
     public function testDocumentsListSuccessLimitAndOffset($data) {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -243,7 +317,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -264,7 +338,7 @@ class ProjectDatabaseTest extends BaseProjects
      * @depends testDocumentCreateSuccess
      */
     public function testDocumentsListSuccessFirstAndLast($data) {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -278,7 +352,7 @@ class ProjectDatabaseTest extends BaseProjects
             
         $this->assertEquals(1944, $documents['body']['releaseYear']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -298,7 +372,7 @@ class ProjectDatabaseTest extends BaseProjects
      * @depends testDocumentCreateSuccess
      */
     public function testDocumentsListSuccessSerach($data) {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -309,7 +383,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
@@ -320,7 +394,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],

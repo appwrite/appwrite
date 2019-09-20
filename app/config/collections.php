@@ -108,10 +108,7 @@ $collections = [
                 'default' => [],
                 'required' => true,
                 'array' => true,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_RULES],
-                ],
+                'list' => [Database::SYSTEM_COLLECTION_RULES],
             ],
         ],
     ],
@@ -178,32 +175,10 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Options',
-                'key' => 'options',
-                'type' => 'document',
-                'default' => [],
-                'required' => false,
-                'array' => false,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_OPTIONS],
-                ],
-            ],
-        ],
-    ],
-    Database::SYSTEM_COLLECTION_OPTIONS => [
-        '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_OPTIONS,
-        '$permissions' => ['read' => ['*']],
-        'name' => 'Collections Rule Option',
-        'structure' => true,
-        'rules' => [
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Whitelist',
-                'key' => 'whitelist',
+                'label' => 'list',
+                'key' => 'list',
                 'type' => 'text',
-                'default' => '',
+                //'default' => '',
                 'required' => false,
                 'array' => true,
             ],
@@ -305,10 +280,7 @@ $collections = [
                 'default' => [],
                 'required' => false,
                 'array' => true,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_TOKENS],
-                ],
+                'list' => [Database::SYSTEM_COLLECTION_TOKENS],
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
@@ -318,10 +290,7 @@ $collections = [
                 'default' => [],
                 'required' => false,
                 'array' => true,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_MEMBERSHIPS],
-                ],
+                'list' => [Database::SYSTEM_COLLECTION_MEMBERSHIPS],
             ],
         ],
     ],
@@ -593,10 +562,7 @@ $collections = [
                 'default' => [],
                 'required' => false,
                 'array' => true,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_WEBHOOKS],
-                ],
+                'list' => [Database::SYSTEM_COLLECTION_WEBHOOKS],
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
@@ -606,10 +572,7 @@ $collections = [
                 'default' => [],
                 'required' => false,
                 'array' => true,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_KEYS],
-                ],
+                'list' => [Database::SYSTEM_COLLECTION_KEYS],
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
@@ -619,10 +582,7 @@ $collections = [
                 'default' => [],
                 'required' => false,
                 'array' => true,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_TASKS],
-                ],
+                'list' => [Database::SYSTEM_COLLECTION_TASKS],
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
@@ -632,10 +592,7 @@ $collections = [
                 'default' => [],
                 'required' => false,
                 'array' => true,
-                'options' => [
-                    '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-                    'whitelist' => [Database::SYSTEM_COLLECTION_PLATFORMS],
-                ],
+                'list' => [Database::SYSTEM_COLLECTION_PLATFORMS],
             ],
         ],
     ],

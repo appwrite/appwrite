@@ -32,9 +32,6 @@ class Structure extends Validator
             'default' => null,
             'required' => false,
             'array' => false,
-            'options' => [
-                '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-            ],
         ],
         [
             'label' => '$collection',
@@ -44,9 +41,6 @@ class Structure extends Validator
             'default' => null,
             'required' => true,
             'array' => false,
-            'options' => [
-                '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-            ],
         ],
         [
             'label' => '$permissions',
@@ -56,9 +50,6 @@ class Structure extends Validator
             'default' => null,
             'required' => true,
             'array' => false,
-            'options' => [
-                '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-            ],
         ],
         [
             'label' => '$createdAt',
@@ -68,9 +59,6 @@ class Structure extends Validator
             'default' => null,
             'required' => false,
             'array' => false,
-            'options' => [
-                '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-            ],
         ],
         [
             'label' => '$updatedAt',
@@ -80,9 +68,6 @@ class Structure extends Validator
             'default' => null,
             'required' => false,
             'array' => false,
-            'options' => [
-                '$collection' => Database::SYSTEM_COLLECTION_OPTIONS,
-            ],
         ],
     ];
 
@@ -157,7 +142,6 @@ class Structure extends Validator
         foreach ($array as $key => $value) {
             $rule = $collection->search('key', $key, $rules);
             $ruleType = (isset($rule['type'])) ? $rule['type'] : '';
-            $ruleOptions = (isset($rule['options'])) ? $rule['options'] : '';
             $ruleRequired = (isset($rule['required'])) ? $rule['required'] : true;
             $ruleArray = (isset($rule['array'])) ? $rule['array'] : false;
             $validator = null;
@@ -194,14 +178,17 @@ class Structure extends Validator
                     $validator = new Key();
                     break;
                 case 'document':
-                    $validator = new Collection($this->database, (isset($ruleOptions['whitelist'])) ? $ruleOptions['whitelist'] : []);
+                    $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : []);
+                    // $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : [],
+                    //     ['$permissions' => (isset($document['$permissions'])) ? $document['$permissions'] : []]);
                     $value = $document->getAttribute($key);
                     break;
             }
 
             if (empty($validator)) { // Error creating validator for property
-                $this->message = 'Unknown property "'.$key.'"'.
-                    '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
+                $this->message = 'Unknown rule type "' . $ruleType . '" for property "' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . '"';
+                // $this->message = 'Unknown property "'.$key.'" type'.
+                //     '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
                 return false;
             }
 
