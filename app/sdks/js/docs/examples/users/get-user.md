@@ -2,7 +2,6 @@ let sdk = new Appwrite();
 
 sdk
     setProject('')
-    setKey('')
 ;
 
 let promise = sdk.users.getUser('[USER_ID]');

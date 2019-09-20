@@ -2,7 +2,6 @@ let sdk = new Appwrite();
 
 sdk
     setProject('')
-    setKey('')
 ;
 
 let promise = sdk.account.updateEmail('email@example.com', 'password');

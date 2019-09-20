@@ -2,7 +2,6 @@ let sdk = new Appwrite();
 
 sdk
     setProject('')
-    setKey('')
 ;
 
 let promise = sdk.projects.getPlatform('[PROJECT_ID]', '[PLATFORM_ID]');

@@ -31,6 +31,14 @@ class Client {
     }
 
 
+     /// Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
+    Client setKey(value) {
+        this.addHeader('X-Appwrite-Key', value);
+
+        return this;
+    }
+
+
     Client setLocale(value) {
         this.addHeader('X-Appwrite-Locale', value);
 

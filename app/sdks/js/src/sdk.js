@@ -4,6 +4,7 @@
         let config = {
             endpoint: 'https://appwrite.test/v1',
             project: '',
+            key: '',
             locale: '',
             mode: '',
         };
@@ -33,6 +34,25 @@
             http.addGlobalHeader('X-Appwrite-Project', value);
 
             config.project = value;
+
+            return this;
+        };
+
+        /**
+         * Set Key
+         *
+         * Your Appwrite project secret key. You can can create a new API key from
+\         * your Appwrite console API keys dashboard.
+         *
+         * @param value string
+         *
+         * @return this
+         */
+        let setKey = function (value)
+        {
+            http.addGlobalHeader('X-Appwrite-Key', value);
+
+            config.key = value;
 
             return this;
         };
@@ -2993,6 +3013,7 @@
         return {
             setEndpoint: setEndpoint,
             setProject: setProject,
+            setKey: setKey,
             setLocale: setLocale,
             setMode: setMode,
             account: account,

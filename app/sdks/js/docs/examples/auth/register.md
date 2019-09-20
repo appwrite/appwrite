@@ -2,7 +2,6 @@ let sdk = new Appwrite();
 
 sdk
     setProject('')
-    setKey('')
 ;
 
 let promise = sdk.auth.register('email@example.com', 'password', 'https://example.com', 'https://example.com', 'https://example.com');

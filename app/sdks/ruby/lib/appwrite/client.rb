@@ -30,6 +30,12 @@ module Appwrite
             return self
         end
 
+        def set_key(value)
+            add_header('x-appwrite-key', value)
+
+            return self
+        end
+
         def set_locale(value)
             add_header('x-appwrite-locale', value)
 
@@ -38,12 +44,6 @@ module Appwrite
 
         def set_mode(value)
             add_header('x-appwrite-mode', value)
-
-            return self
-        end
-
-        def set_key(value)
-            add_header('x-appwrite-key', value)
 
             return self
         end

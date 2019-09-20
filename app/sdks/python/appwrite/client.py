@@ -28,18 +28,18 @@ class Client:
         self._global_headers['x-appwrite-project'] = value.lower()
         return self
 
+    def set_key(self, value):
+        """Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard."""
+
+        self._global_headers['x-appwrite-key'] = value.lower()
+        return self
+
     def set_locale(self, value):
         self._global_headers['x-appwrite-locale'] = value.lower()
         return self
 
     def set_mode(self, value):
         self._global_headers['x-appwrite-mode'] = value.lower()
-        return self
-
-    def set_key(self, value):
-        """Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard."""
-
-        self._global_headers['x-appwrite-key'] = value.lower()
         return self
 
     def call(self, method, path='', headers=None, params=None):
