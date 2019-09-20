@@ -27,7 +27,7 @@ When not using the success or failure redirect arguments this endpoint will resu
 DELETE https://appwrite.test/v1/auth/logout
 ```
 
-** Use this endpoint to log out the currently logged in user from his account. When succeed this endpoint will delete the user session and remove the session secret cookie. **
+** Use this endpoint to log out the currently logged in user from his account. When succeed this endpoint will delete the user session and remove the session secret cookie from the user client. **
 
 ## Logout Specific Session
 
@@ -126,10 +126,10 @@ When not using the success or failure redirect arguments this endpoint will resu
 | --- | --- | --- | --- |
 | email | string | Account email |  |
 | password | string | User password |  |
-| name | string | User name |  |
 | redirect | string | Confirmation page to redirect user after confirm token has been sent to user email |  |
 | success | string | Redirect when registration succeed |  |
 | failure | string | Redirect when registration failed |  |
+| name | string | User name |  |
 
 ## Confirm User
 

@@ -512,13 +512,21 @@
              * @param {string} failure
              * @throws {Error}
              * @return {null}             */
-            login: function(email, password, success = '', failure = '') {
+            login: function(email, password, success, failure) {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
                 
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
+                }
+                
+                if(success === undefined) {
+                    throw new Error('Missing required parameter: "success"');
+                }
+                
+                if(failure === undefined) {
+                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/auth/login';
@@ -536,7 +544,7 @@
              *
              * Use this endpoint to log out the currently logged in user from his account.
              * When succeed this endpoint will delete the user session and remove the
-             * session secret cookie.
+             * session secret cookie from the user client.
              *
              * @throws {Error}
              * @return {Promise}             */
@@ -737,12 +745,12 @@
              * @param {string} email
              * @param {string} password
              * @param {string} redirect
-             * @param {string} name
              * @param {string} success
              * @param {string} failure
+             * @param {string} name
              * @throws {Error}
              * @return {null}             */
-            register: function(email, password, redirect, name = '', success = '', failure = '') {
+            register: function(email, password, redirect, success, failure, name = '') {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
@@ -755,15 +763,23 @@
                     throw new Error('Missing required parameter: "redirect"');
                 }
                 
+                if(success === undefined) {
+                    throw new Error('Missing required parameter: "success"');
+                }
+                
+                if(failure === undefined) {
+                    throw new Error('Missing required parameter: "failure"');
+                }
+                
                 let path = '/auth/register';
 
                 return iframe('post', path, {project: config.project,
                     'email': email, 
                     'password': password, 
-                    'name': name, 
                     'redirect': redirect, 
                     'success': success, 
-                    'failure': failure
+                    'failure': failure, 
+                    'name': name
                 });
             },
 

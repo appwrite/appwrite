@@ -12,6 +12,7 @@ use Appwrite\SDK\Language\JS;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
+use Appwrite\SDK\Language\Dart;
 
 $cli = new CLI();
 
@@ -84,6 +85,15 @@ $cli
                 'gitUserName' => 'appwrite',
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
             ],
+            'dart' => [
+                'version' => 'v0.0.1',
+                'result' => __DIR__.'/../sdks/dart/',
+                'gitURL' => 'https://github.com/appwrite/sdk-for-dart',
+                'gitRepo' => 'git@github.com:appwrite/sdk-for-dart.git',
+                'gitRepoName' => 'sdk-for-dart',
+                'gitUserName' => 'appwrite',
+                'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+            ],
         ];
 
         foreach ($clients as $name => $client) {
@@ -119,6 +129,12 @@ $cli
                     $language = new Ruby();
                     $language
                         ->setGemPackage('appwrite')
+                    ;
+                    break;
+                case 'dart':
+                    $language = new Dart();
+                    $language
+                        ->setPackageName('appwrite')
                     ;
                     break;
                 default:

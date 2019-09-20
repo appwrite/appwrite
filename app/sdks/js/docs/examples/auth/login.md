@@ -5,7 +5,7 @@ sdk
     setKey('')
 ;
 
-let promise = sdk.auth.login('email@example.com', 'password');
+let promise = sdk.auth.login('email@example.com', 'password', 'https://example.com', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

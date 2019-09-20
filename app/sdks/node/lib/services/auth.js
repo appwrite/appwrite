@@ -27,7 +27,7 @@ class Auth extends Service {
      * @throws Exception
      * @return {}
      */
-    async login(email, password, success = '', failure = '') {
+    async login(email, password, success, failure) {
         let path = '/auth/login';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
@@ -44,7 +44,7 @@ class Auth extends Service {
      *
      * Use this endpoint to log out the currently logged in user from his account.
      * When succeed this endpoint will delete the user session and remove the
-     * session secret cookie.
+     * session secret cookie from the user client.
      *
      * @throws Exception
      * @return {}
@@ -199,23 +199,23 @@ class Auth extends Service {
      * @param string email
      * @param string password
      * @param string redirect
-     * @param string name
      * @param string success
      * @param string failure
+     * @param string name
      * @throws Exception
      * @return {}
      */
-    async register(email, password, redirect, name = '', success = '', failure = '') {
+    async register(email, password, redirect, success, failure, name = '') {
         let path = '/auth/register';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
             {
                 'email': email,
                 'password': password,
-                'name': name,
                 'redirect': redirect,
                 'success': success,
-                'failure': failure
+                'failure': failure,
+                'name': name
             });
     }
 

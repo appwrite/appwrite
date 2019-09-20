@@ -85,22 +85,64 @@ class ProjectDatabaseTest extends BaseProjects
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
         ], [
-            'name' => 'Test Collection',
+            'name' => 'Movies',
             'read' => ['*'],
             'write' => ['role:1', 'role:2'],
+            'rules' => [
+                [
+                    'label' => 'Name',
+                    'key' => 'name',
+                    'type' => 'text',
+                    'default' => '',
+                    'required' => false,
+                    'array' => false
+                ],
+                [
+                    'label' => 'Release Year',
+                    'key' => 'releaseYear',
+                    'type' => 'numeric',
+                    'default' => 0,
+                    'required' => false,
+                    'array' => false
+                ],
+            ],
         ]);
 
         $this->assertEquals($collection['headers']['status-code'], 201);
         $this->assertEquals($collection['body']['$collection'], 0);
-        $this->assertEquals($collection['body']['name'], 'Test Collection');
+        $this->assertEquals($collection['body']['name'], 'Movies');
         $this->assertIsArray($collection['body']['$permissions']);
         $this->assertIsArray($collection['body']['$permissions']['read']);
         $this->assertIsArray($collection['body']['$permissions']['write']);
         $this->assertEquals(count($collection['body']['$permissions']['read']), 1);
         $this->assertEquals(count($collection['body']['$permissions']['write']), 2);
 
-        return [
-            'collectionId' => $collection['body']['$uid']
-        ];
+        return array_merge($data, ['collectionId' => $collection['body']['$uid']]);
+    }
+
+    /**
+     * @depends testCollectionCreateSuccess
+     */
+    public function testDocumentCreateSuccess($data) {
+        $collection = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'data' => [
+                'name' => 'Avengers',
+                'releaseYear' => 2019,
+            ]
+        ]);
+
+        $this->assertEquals($collection['headers']['status-code'], 201);
+        $this->assertEquals($collection['body']['$collection'], $data['collectionId']);
+        $this->assertEquals($collection['body']['name'], 'Avengers');
+        $this->assertEquals($collection['body']['releaseYear'], 2019);
+        $this->assertIsArray($collection['body']['$permissions']);
+        $this->assertIsArray($collection['body']['$permissions']['read']);
+        $this->assertIsArray($collection['body']['$permissions']['write']);
+        $this->assertEquals(count($collection['body']['$permissions']['read']), 0);
+        $this->assertEquals(count($collection['body']['$permissions']['write']), 0);
     }
 }

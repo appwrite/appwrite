@@ -3,7 +3,7 @@ from ..service import Service
 
 class Auth(Service):
 
-    def login(self, email, password, success='', failure=''):
+    def login(self, email, password, success, failure):
         """Login User"""
 
         params = {}
@@ -84,17 +84,17 @@ class Auth(Service):
         return self.client.call('put', path, {
         }, params)
 
-    def register(self, email, password, redirect, name='', success='', failure=''):
+    def register(self, email, password, redirect, success, failure, name=''):
         """Register User"""
 
         params = {}
         path = '/auth/register'
         params['email'] = email
         params['password'] = password
-        params['name'] = name
         params['redirect'] = redirect
         params['success'] = success
         params['failure'] = failure
+        params['name'] = name
 
         return self.client.call('post', path, {
         }, params)

@@ -33,7 +33,7 @@ class Auth extends Service
      * @throws Exception
      * @return array
      */
-    public function login($email, $password, $success = '', $failure = '')
+    public function login($email, $password, $success, $failure)
     {
         $path   = str_replace([], [], '/auth/login');
         $params = [];
@@ -52,7 +52,7 @@ class Auth extends Service
      *
      * Use this endpoint to log out the currently logged in user from his account.
      * When succeed this endpoint will delete the user session and remove the
-     * session secret cookie.
+     * session secret cookie from the user client.
      *
      * @throws Exception
      * @return array
@@ -219,23 +219,23 @@ class Auth extends Service
      * @param string $email
      * @param string $password
      * @param string $redirect
-     * @param string $name
      * @param string $success
      * @param string $failure
+     * @param string $name
      * @throws Exception
      * @return array
      */
-    public function register($email, $password, $redirect, $name = '', $success = '', $failure = '')
+    public function register($email, $password, $redirect, $success, $failure, $name = '')
     {
         $path   = str_replace([], [], '/auth/register');
         $params = [];
 
         $params['email'] = $email;
         $params['password'] = $password;
-        $params['name'] = $name;
         $params['redirect'] = $redirect;
         $params['success'] = $success;
         $params['failure'] = $failure;
+        $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_POST, $path, [
         ], $params);

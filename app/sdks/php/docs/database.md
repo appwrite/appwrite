@@ -32,7 +32,7 @@ POST https://appwrite.test/v1/database
 | name | string | Collection name. |  |
 | read | array | An array of read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
 | write | array | An array of write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| rules | array | Array of collection structure rules. Each rule define a collection field name, data type and validation | [] |
+| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
 
 ## Get Collection
 
@@ -64,7 +64,7 @@ PUT https://appwrite.test/v1/database/{collectionId}
 | name | string | Collection name. |  |
 | read | array | An array of read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
 | write | array | An array of write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| rules | array | Array of collection structure rules. Each rule define a collection field name, data type and validation | [] |
+| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
 
 ## Delete Collection
 

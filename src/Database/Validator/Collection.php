@@ -8,22 +8,24 @@ use Database\Document;
 class Collection extends Structure
 {
     /**
-     * @var string
-     */
-    protected $message = 'Unknown Error';
-
-    /**
      * @var array
      */
     protected $collections = [];
 
     /**
+     * @var array
+     */
+    protected $merge = [];
+
+    /**
      * @param Database $database
      * @param array    $collections
+     * @param array    $merge
      */
-    public function __construct(Database $database, array $collections)
+    public function __construct(Database $database, array $collections, array $merge = [])
     {
         $this->collections = $collections;
+        $this->merge = $merge;
 
         return parent::__construct($database);
     }
@@ -35,8 +37,9 @@ class Collection extends Structure
      */
     public function isValid($document)
     {
-        $document = (is_array($document)) ? new Document($document) : $document;
-
+        $document = new Document(
+            array_merge($this->merge, ($document instanceof Document) ? $document->getArrayCopy() : $document));
+            
         if (is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
 

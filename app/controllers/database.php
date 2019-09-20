@@ -19,41 +19,7 @@ use Database\Validator\Authorization;
 use Database\Exception\Authorization as AuthorizationException;
 use Database\Exception\Structure as StructureException;
 
-$output = array();
-
 $isDev = (App::ENV_TYPE_PRODUCTION !== $utopia->getEnv());
-
-$utopia
-    ->shutdown(
-        function () use ($request, $response, $projectDB, $register, &$output) {
-            /*$lastModified       = $projectDB->lastModified();
-            $etag               = md5(json_encode($output));
-            $ifNotModelledSince = strtotime($request->getServer('HTTP_IF_MODIFIED_SINCE', 'now'));
-            $ifNoneMatch        = trim($request->getServer('HTTP_IF_NONE_MATCH', ''));
-
-            // exit if not modified
-            if ($ifNotModelledSince === $lastModified || $ifNoneMatch == $etag) {
-                return $response
-                    ->setStatusCode(304)
-                    ->send('', 100);
-            }
-            else {
-                $response
-                    ->addHeader('Cache-Control', 'private, max-age=0') // max-age=' . (60 * 60 * 24 * 30) 1 month
-                    ->addHeader('Last-Modified', gmdate('D, d M Y H:i:s', $lastModified) . ' GMT')
-                    ->addHeader('Etag', $etag)
-                ;
-            }
-            */
-
-            // Debug Stats
-            //$cache = $register->get('cache'); /* @var $cache Debug\Redis */
-
-            //$response
-            //    ->addHeader('X-Debug-Cache-Hit', $cache::getCounter('get') + $cache::getCounter('mget'))
-            //    ->addHeader('X-Debug-Cache-Miss', $cache::getCounter('set'));
-        }
-    );
 
 $utopia->get('/v1/database')
     ->desc('List Collections')
@@ -131,9 +97,21 @@ $utopia->post('/v1/database')
     ->param('name', '', function () {return new Text(256);}, 'Collection name.')
     ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
+    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]]));}, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
-        function ($name, $read, $write, $rules) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
+        function ($name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
+            $parsedRules = [];
+            
+            foreach($rules as &$rule) {
+                $parsedRules[] = array_merge([
+                    '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                    '$permissions' => [
+                        'read' => $read,
+                        'write' => $write,
+                    ]
+                ], $rule);
+            }
+            
             try {
                 $data = $projectDB->createDocument([
                     '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -145,7 +123,7 @@ $utopia->post('/v1/database')
                         'read' => $read,
                         'write' => $write,
                     ],
-                    'rules' => $rules,
+                    'rules' => $parsedRules,
                 ]);
             } catch (AuthorizationException $exception) {
                 throw new Exception('Unauthorized action', 401);
@@ -187,13 +165,25 @@ $utopia->put('/v1/database/:collectionId')
     ->param('name', null, function () {return new Text(256);}, 'Collection name.')
     ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES]));}, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
+    ->param('rules', [], function () use ($projectDB) {return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]]));}, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
         function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB) {
             $collection = $projectDB->getDocument($collectionId, false);
 
             if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
+            }
+            
+            $parsedRules = [];
+            
+            foreach($rules as &$rule) {
+                $parsedRules[] = array_merge([
+                    '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                    '$permissions' => [
+                        'read' => $read,
+                        'write' => $write,
+                    ]
+                ], $rule);
             }
 
             $collection = $projectDB->updateDocument(array_merge($collection->getArrayCopy(), [
@@ -261,7 +251,7 @@ $utopia->get('/v1/database/:collectionId/documents')
     ->param('first', 0, function () {return new Range(0, 1);}, 'Return only first document. Pass 1 for true or 0 for false. The default value is 0.', true)
     ->param('last', 0, function () {return new Range(0, 1);}, 'Return only last document. Pass 1 for true or 0 for false. The default value is 0.', true)
     ->action(
-        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search, $first, $last) use ($response, $request, $projectDB, &$output, $isDev) {
+        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search, $first, $last) use ($response, $projectDB, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);
 
             if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
@@ -319,7 +309,7 @@ $utopia->get('/v1/database/:collectionId/documents/:documentId')
     ->param('collectionId', null, function () {return new UID();}, 'Collection unique ID')
     ->param('documentId', null, function () {return new UID();}, 'Document unique ID')
     ->action(
-        function ($collectionId, $documentId) use ($response, $request, $projectDB, &$output, $isDev) {
+        function ($collectionId, $documentId) use ($response, $request, $projectDB, $isDev) {
             $document = $projectDB->getDocument($documentId, $isDev);
             $collection = $projectDB->getDocument($collectionId, $isDev);
 
@@ -342,7 +332,6 @@ $utopia->get('/v1/database/:collectionId/documents/:documentId')
 
                 $output = ($output instanceof Document) ? $output->getArrayCopy() : $output;
 
-                var_dump($output);
                 if (!is_array($output)) {
                     throw new Exception('No document found', 404);
                 }
@@ -370,7 +359,7 @@ $utopia->post('/v1/database/:collectionId/documents')
     ->param('parentProperty', '', function () {return new Key();}, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () {return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]);}, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->action(
-        function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
+        function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
             if (empty($data)) {
                 throw new Exception('Missing payload', 400);
             }

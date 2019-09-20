@@ -1,7 +1,7 @@
 module Appwrite
     class Auth < Service
 
-        def login(email:, password:, success: '', failure: '')
+        def login(email:, password:, success:, failure:)
             path = '/auth/login'
 
             params = {
@@ -89,16 +89,16 @@ module Appwrite
             }, params);
         end
 
-        def register(email:, password:, redirect:, name: '', success: '', failure: '')
+        def register(email:, password:, redirect:, success:, failure:, name: '')
             path = '/auth/register'
 
             params = {
                 'email': email, 
                 'password': password, 
-                'name': name, 
                 'redirect': redirect, 
                 'success': success, 
-                'failure': failure
+                'failure': failure, 
+                'name': name
             }
 
             return @client.call('post', path, {
