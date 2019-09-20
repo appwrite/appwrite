@@ -124,25 +124,139 @@ class ProjectDatabaseTest extends BaseProjects
      * @depends testCollectionCreateSuccess
      */
     public function testDocumentCreateSuccess($data) {
-        $collection = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
+        $document1 = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
         ], [
             'data' => [
-                'name' => 'Avengers',
+                'name' => 'Captain America',
+                'releaseYear' => 1944,
+            ]
+        ]);
+
+        $document2 = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'data' => [
+                'name' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
             ]
         ]);
 
-        $this->assertEquals($collection['headers']['status-code'], 201);
-        $this->assertEquals($collection['body']['$collection'], $data['collectionId']);
-        $this->assertEquals($collection['body']['name'], 'Avengers');
-        $this->assertEquals($collection['body']['releaseYear'], 2019);
-        $this->assertIsArray($collection['body']['$permissions']);
-        $this->assertIsArray($collection['body']['$permissions']['read']);
-        $this->assertIsArray($collection['body']['$permissions']['write']);
-        $this->assertEquals(count($collection['body']['$permissions']['read']), 0);
-        $this->assertEquals(count($collection['body']['$permissions']['write']), 0);
+        $document3 = $this->client->call(Client::METHOD_POST, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'data' => [
+                'name' => 'Spider-Man: Homecoming',
+                'releaseYear' => 2017,
+            ]
+        ]);
+
+        $this->assertEquals($document1['headers']['status-code'], 201);
+        $this->assertEquals($document1['body']['$collection'], $data['collectionId']);
+        $this->assertEquals($document1['body']['name'], 'Captain America');
+        $this->assertEquals($document1['body']['releaseYear'], 1944);
+        $this->assertIsArray($document1['body']['$permissions']);
+        $this->assertIsArray($document1['body']['$permissions']['read']);
+        $this->assertIsArray($document1['body']['$permissions']['write']);
+        $this->assertEquals(count($document1['body']['$permissions']['read']), 0);
+        $this->assertEquals(count($document1['body']['$permissions']['write']), 0);
+
+        $this->assertEquals($document2['headers']['status-code'], 201);
+        $this->assertEquals($document2['body']['$collection'], $data['collectionId']);
+        $this->assertEquals($document2['body']['name'], 'Spider-Man: Far From Home');
+        $this->assertEquals($document2['body']['releaseYear'], 2019);
+        $this->assertIsArray($document2['body']['$permissions']);
+        $this->assertIsArray($document2['body']['$permissions']['read']);
+        $this->assertIsArray($document2['body']['$permissions']['write']);
+        $this->assertEquals(count($document2['body']['$permissions']['read']), 0);
+        $this->assertEquals(count($document2['body']['$permissions']['write']), 0);
+
+        $this->assertEquals($document3['headers']['status-code'], 201);
+        $this->assertEquals($document3['body']['$collection'], $data['collectionId']);
+        $this->assertEquals($document3['body']['name'], 'Spider-Man: Homecoming');
+        $this->assertEquals($document3['body']['releaseYear'], 2017);
+        $this->assertIsArray($document3['body']['$permissions']);
+        $this->assertIsArray($document3['body']['$permissions']['read']);
+        $this->assertIsArray($document3['body']['$permissions']['write']);
+        $this->assertEquals(count($document3['body']['$permissions']['read']), 0);
+        $this->assertEquals(count($document3['body']['$permissions']['write']), 0);
+        
+        return $data;
+    }
+    
+    /**
+     * @depends testDocumentCreateSuccess
+     */
+    public function testDocumentsListSuccessOrderAndCasting($data) {
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'order-field' => 'releaseYear',
+            'order-type' => 'ASC',
+            'order-cast' => 'int',
+        ]);
+            
+        $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
+        $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
+        $this->assertCount(3, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'order-field' => 'releaseYear',
+            'order-type' => 'DESC',
+            'order-cast' => 'int',
+        ]);
+            
+        $this->assertEquals(1944, $documents['body']['documents'][2]['releaseYear']);
+        $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
+        $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertCount(3, $documents['body']['documents']);
+    }
+
+    /**
+     * @depends testDocumentCreateSuccess
+     */
+    public function testDocumentsListSuccessLimitAndOffset($data) {
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'limit' => 1,
+            'order-field' => 'releaseYear',
+            'order-type' => 'ASC',
+            'order-cast' => 'int',
+        ]);
+            
+        $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertCount(1, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['collectionId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'limit' => 2,
+            'offset' => 1,
+            'order-field' => 'releaseYear',
+            'order-type' => 'ASC',
+            'order-cast' => 'int',
+        ]);
+            
+        $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
+        $this->assertEquals(2019, $documents['body']['documents'][1]['releaseYear']);
+        $this->assertCount(2, $documents['body']['documents']);
     }
 }
