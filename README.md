@@ -80,7 +80,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
 
-We really ❤️ pull requests! If you wish to help, you can learn more about how you can conribute to this project in the [contribution guide](CONTRIBUTING.md).
+We really ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
 ## Security
 
