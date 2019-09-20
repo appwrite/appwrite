@@ -8,14 +8,14 @@ use Storage\Storage;
 use Appwrite\ClamAV\Network;
 
 $utopia->get('/v1/health')
-    ->desc('Check DB Health')
+    ->desc('Check API HTTP Health')
     ->label('scope', 'health.read')
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getDB')
     ->label('docs', false)
     ->action(
-        function () use ($response, $register) {
-            $response->json(array('OK'));
+        function () use ($response) {
+            $response->json(['status' => 'OK']);
         }
     );
 
@@ -29,7 +29,7 @@ $utopia->get('/v1/health/db')
         function () use ($response, $register) {
             $register->get('db'); /* @var $db PDO */
 
-            $response->json(array('OK'));
+            $response->json(['status' => 'OK']);
         }
     );
 
@@ -43,7 +43,7 @@ $utopia->get('/v1/health/cache')
         function () use ($response, $register) {
             $register->get('cache'); /* @var $cache Predis\Client */
 
-            $response->json(array('OK'));
+            $response->json(['status' => 'OK']);
         }
     );
 
@@ -115,15 +115,15 @@ $utopia->get('/v1/health/storage/local')
         function () use ($response) {
             $device = new Local();
 
-            if (!is_readable($device->getRoot())) {
+            if (!is_readable($device->getRoot(). '/..')) {
                 throw new Exception('Device is not readable');
             }
 
-            if (!is_writable($device->getRoot())) {
+            if (!is_writable($device->getRoot(). '/..')) {
                 throw new Exception('Device is not writable');
             }
 
-            $response->json(array('OK'));
+            $response->json(['status' => 'OK']);
         }
     );
 
@@ -151,7 +151,7 @@ $utopia->get('/v1/health/stats')
     ->label('sdk.method', 'getStats')
     ->label('docs', false)
     ->action(
-        function () use ($request, $response, $register, $project) {
+        function () use ($response, $register) {
             $device = Storage::getDevice('local');
             $cache = $register->get('cache');
 
