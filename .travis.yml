@@ -22,7 +22,7 @@ before_install:
 
 install:
 - docker-compose -f tests/resources/docker-compose.yml up -d
-- sleep 60
+- sleep 120
 
 script:
 - docker ps
