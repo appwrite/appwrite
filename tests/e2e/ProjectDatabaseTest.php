@@ -204,6 +204,26 @@ class ProjectDatabaseTest extends BaseProjects
             'data' => [
                 'name' => 'Spider-Man: Far From Home',
                 'releaseYear' => 2019,
+                'actors' => [
+                    [
+                        '$collection' => $data['actorsId'],
+                        '$permissions' => ['read' => [], 'write' => []],
+                        'firstName' => 'Tom',
+                        'lastName' => 'Holland',
+                    ],
+                    [
+                        '$collection' => $data['actorsId'],
+                        '$permissions' => ['read' => [], 'write' => []],
+                        'firstName' => 'Zendaya',
+                        'lastName' => 'Maree Stoermer',
+                    ],
+                    [
+                        '$collection' => $data['actorsId'],
+                        '$permissions' => ['read' => [], 'write' => []],
+                        'firstName' => 'Samuel',
+                        'lastName' => 'Jackson',
+                    ],
+                ]
             ]
         ]);
 
@@ -215,6 +235,20 @@ class ProjectDatabaseTest extends BaseProjects
             'data' => [
                 'name' => 'Spider-Man: Homecoming',
                 'releaseYear' => 2017,
+                'actors' => [
+                    [
+                        '$collection' => $data['actorsId'],
+                        '$permissions' => ['read' => [], 'write' => []],
+                        'firstName' => 'Tom',
+                        'lastName' => 'Holland',
+                    ],
+                    [
+                        '$collection' => $data['actorsId'],
+                        '$permissions' => ['read' => [], 'write' => []],
+                        'firstName' => 'Zendaya',
+                        'lastName' => 'Maree Stoermer',
+                    ],
+                ],
             ]
         ]);
 
@@ -238,7 +272,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(count($document1['body']['$permissions']['read']), 0);
         $this->assertEquals(count($document1['body']['$permissions']['write']), 0);
         $this->assertEquals(count($document1['body']['actors']), 2);
-
+        
         $this->assertEquals($document2['headers']['status-code'], 201);
         $this->assertEquals($document2['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document2['body']['name'], 'Spider-Man: Far From Home');
@@ -248,7 +282,14 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertIsArray($document2['body']['$permissions']['write']);
         $this->assertEquals(count($document2['body']['$permissions']['read']), 0);
         $this->assertEquals(count($document2['body']['$permissions']['write']), 0);
-
+        $this->assertEquals(count($document2['body']['actors']), 3);
+        $this->assertEquals($document2['body']['actors'][0]['firstName'], 'Tom');
+        $this->assertEquals($document2['body']['actors'][0]['lastName'], 'Holland');
+        $this->assertEquals($document2['body']['actors'][1]['firstName'], 'Zendaya');
+        $this->assertEquals($document2['body']['actors'][1]['lastName'], 'Maree Stoermer');
+        $this->assertEquals($document2['body']['actors'][2]['firstName'], 'Samuel');
+        $this->assertEquals($document2['body']['actors'][2]['lastName'], 'Jackson');
+        
         $this->assertEquals($document3['headers']['status-code'], 201);
         $this->assertEquals($document3['body']['$collection'], $data['moviesId']);
         $this->assertEquals($document3['body']['name'], 'Spider-Man: Homecoming');
@@ -258,7 +299,12 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertIsArray($document3['body']['$permissions']['write']);
         $this->assertEquals(count($document3['body']['$permissions']['read']), 0);
         $this->assertEquals(count($document3['body']['$permissions']['write']), 0);
-
+        $this->assertEquals(count($document3['body']['actors']), 2);
+        $this->assertEquals($document3['body']['actors'][0]['firstName'], 'Tom');
+        $this->assertEquals($document3['body']['actors'][0]['lastName'], 'Holland');
+        $this->assertEquals($document3['body']['actors'][1]['firstName'], 'Zendaya');
+        $this->assertEquals($document3['body']['actors'][1]['lastName'], 'Maree Stoermer');
+        
         $this->assertEquals($document4['headers']['status-code'], 400);
         
         return $data;
@@ -405,5 +451,51 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(2019, $documents['body']['documents'][0]['releaseYear']);
         $this->assertEquals(2017, $documents['body']['documents'][1]['releaseYear']);
         $this->assertCount(2, $documents['body']['documents']);
+    }
+
+    /**
+     * @depends testDocumentCreateSuccess
+     */
+    public function testDocumentsListSuccessFilters($data) {
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'filters' => [
+                'actors.firstName=Tom'
+            ],
+        ]);
+
+        $this->assertCount(2, $documents['body']['documents']);
+        $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
+        $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'filters' => [
+                'releaseYear=1944'
+            ],
+        ]);
+
+        $this->assertCount(1, $documents['body']['documents']);
+        $this->assertEquals('Captain America', $documents['body']['documents'][0]['name']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'filters' => [
+                'releaseYear!=1944'
+            ],
+        ]);
+
+        $this->assertCount(2, $documents['body']['documents']);
+        $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
+        $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
     }
 }
