@@ -209,7 +209,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
 
     $abuse = new Abuse($timeLimit);
 
-    if($timeLimit->limit()) {
+    if($timeLimit->limit() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $response
             ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
             ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())

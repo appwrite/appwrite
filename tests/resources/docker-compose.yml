@@ -13,6 +13,7 @@ services:
     - "443:443"
     environment:
     - _APP_ENV=development
+    - _APP_OPTIONS_ABUSE=disabled
     - _APP_OPENSSL_KEY_V1=just-a-random-key
     - _APP_REDIS_HOST=redis
     - _APP_REDIS_PORT=6379
