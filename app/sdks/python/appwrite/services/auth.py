@@ -60,13 +60,13 @@ class Auth(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def recovery(self, email, confirmation):
+    def recovery(self, email, redirect):
         """Password Recovery"""
 
         params = {}
         path = '/auth/recovery'
         params['email'] = email
-        params['confirmation'] = confirmation
+        params['redirect'] = redirect
 
         return self.client.call('post', path, {
         }, params)
@@ -84,14 +84,14 @@ class Auth(Service):
         return self.client.call('put', path, {
         }, params)
 
-    def register(self, email, password, confirmation, success='', failure='', name=''):
+    def register(self, email, password, redirect, success, failure, name=''):
         """Register User"""
 
         params = {}
         path = '/auth/register'
         params['email'] = email
         params['password'] = password
-        params['confirmation'] = confirmation
+        params['redirect'] = redirect
         params['success'] = success
         params['failure'] = failure
         params['name'] = name
@@ -110,12 +110,12 @@ class Auth(Service):
         return self.client.call('post', path, {
         }, params)
 
-    def confirm_resend(self, confirmation):
+    def confirm_resend(self, redirect):
         """Resend Confirmation"""
 
         params = {}
         path = '/auth/register/confirm/resend'
-        params['confirmation'] = confirmation
+        params['redirect'] = redirect
 
         return self.client.call('post', path, {
         }, params)

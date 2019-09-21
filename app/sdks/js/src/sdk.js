@@ -138,7 +138,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:v1.0.20');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.21');
             addGlobalHeader('content-type', '');
 
             /**
@@ -500,11 +500,11 @@
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
              * 
-             * When accessing this route using Javascript from the browser, success and
-             * failure parameter URLs are required. Appwrite server will respond with a
-             * 301 redirect status code and will set the user session cookie. This
-             * behavior is enforced because modern browsers are limiting 3rd party cookies
-             * in XHR of fetch request to protect user privacy.
+             * When not using the success or failure redirect arguments this endpoint will
+             * result with a 200 status code and the user account object on success and
+             * with 401 status error on failure. This behavior was applied to help the web
+             * clients deal with browsers who don't allow to set 3rd party HTTP cookies
+             * needed for saving the account session token.
              *
              * @param {string} email
              * @param {string} password
@@ -648,16 +648,16 @@
              * process.
              *
              * @param {string} email
-             * @param {string} confirmation
+             * @param {string} redirect
              * @throws {Error}
              * @return {Promise}             */
-            recovery: function(email, confirmation) {
+            recovery: function(email, redirect) {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
                 
-                if(confirmation === undefined) {
-                    throw new Error('Missing required parameter: "confirmation"');
+                if(redirect === undefined) {
+                    throw new Error('Missing required parameter: "redirect"');
                 }
                 
                 let path = '/auth/recovery';
@@ -666,7 +666,7 @@
                     .post(path, {'content-type': 'application/json'},
                         {
                             'email': email, 
-                            'confirmation': confirmation
+                            'redirect': redirect
                         });
             },
 
@@ -727,7 +727,7 @@
              * 
              * If registration completes successfully user will be sent with a
              * confirmation email in order to confirm he is the owner of the account email
-             * address. Use the confirmation parameter to redirect the user from the
+             * address. Use the redirect parameter to redirect the user from the
              * confirmation email back to your app. When the user is redirected, use the
              * /auth/confirm endpoint to complete the account confirmation.
              * 
@@ -736,21 +736,21 @@
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
              * 
-             * When accessing this route using Javascript from the browser, success and
-             * failure parameter URLs are required. Appwrite server will respond with a
-             * 301 redirect status code and will set the user session cookie. This
-             * behavior is enforced because modern browsers are limiting 3rd party cookies
-             * in XHR of fetch request to protect user privacy.
+             * When not using the success or failure redirect arguments this endpoint will
+             * result with a 200 status code and the user account object on success and
+             * with 401 status error on failure. This behavior was applied to help the web
+             * clients deal with browsers who don't allow to set 3rd party HTTP cookies
+             * needed for saving the account session token.
              *
              * @param {string} email
              * @param {string} password
-             * @param {string} confirmation
+             * @param {string} redirect
              * @param {string} success
              * @param {string} failure
              * @param {string} name
              * @throws {Error}
              * @return {null}             */
-            register: function(email, password, confirmation, success = '', failure = '', name = '') {
+            register: function(email, password, redirect, success, failure, name = '') {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
@@ -759,8 +759,16 @@
                     throw new Error('Missing required parameter: "password"');
                 }
                 
-                if(confirmation === undefined) {
-                    throw new Error('Missing required parameter: "confirmation"');
+                if(redirect === undefined) {
+                    throw new Error('Missing required parameter: "redirect"');
+                }
+                
+                if(success === undefined) {
+                    throw new Error('Missing required parameter: "success"');
+                }
+                
+                if(failure === undefined) {
+                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/auth/register';
@@ -768,7 +776,7 @@
                 return iframe('post', path, {project: config.project,
                     'email': email, 
                     'password': password, 
-                    'confirmation': confirmation, 
+                    'redirect': redirect, 
                     'success': success, 
                     'failure': failure, 
                     'name': name
@@ -818,12 +826,12 @@
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
              *
-             * @param {string} confirmation
+             * @param {string} redirect
              * @throws {Error}
              * @return {Promise}             */
-            confirmResend: function(confirmation) {
-                if(confirmation === undefined) {
-                    throw new Error('Missing required parameter: "confirmation"');
+            confirmResend: function(redirect) {
+                if(redirect === undefined) {
+                    throw new Error('Missing required parameter: "redirect"');
                 }
                 
                 let path = '/auth/register/confirm/resend';
@@ -831,7 +839,7 @@
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'confirmation': confirmation
+                            'redirect': redirect
                         });
             }
         };

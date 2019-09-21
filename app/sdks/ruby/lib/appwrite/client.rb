@@ -19,7 +19,7 @@ module Appwrite
             @headers = {
                 'content-type': '',
                 'user-agent': RUBY_PLATFORM + ':ruby-' + RUBY_VERSION,
-                'x-sdk-version': 'appwrite:ruby:v1.0.0'
+                'x-sdk-version': 'appwrite:ruby:1.0.1'
             }
             @endpoint = 'https://appwrite.test/v1';
         end

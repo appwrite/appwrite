@@ -15,11 +15,11 @@ class Auth extends Service {
      /// the only valid redirect URL&#039;s are the once from domains you have set when
      /// added your platforms in the console interface.
      /// 
-     /// When accessing this route using Javascript from the browser, success and
-     /// failure parameter URLs are required. Appwrite server will respond with a
-     /// 301 redirect status code and will set the user session cookie. This
-     /// behavior is enforced because modern browsers are limiting 3rd party cookies
-     /// in XHR of fetch request to protect user privacy.
+     /// When not using the success or failure redirect arguments this endpoint will
+     /// result with a 200 status code and the user account object on success and
+     /// with 401 status error on failure. This behavior was applied to help the web
+     /// clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies
+     /// needed for saving the account session token.
     Future<Response> login({email, password, success, failure}) async {
        String path = '/auth/login';
 
@@ -80,12 +80,12 @@ class Auth extends Service {
      /// values attached to the URL query string. Use the query string params to
      /// submit a request to the /auth/password/reset endpoint to complete the
      /// process.
-    Future<Response> recovery({email, confirmation}) async {
+    Future<Response> recovery({email, redirect}) async {
        String path = '/auth/recovery';
 
        Map<String, dynamic> params = {
          'email': email,
-         'confirmation': confirmation,
+         'redirect': redirect,
        };
 
        return await this.client.call('post', path: path, params: params);
@@ -117,7 +117,7 @@ class Auth extends Service {
      /// 
      /// If registration completes successfully user will be sent with a
      /// confirmation email in order to confirm he is the owner of the account email
-     /// address. Use the confirmation parameter to redirect the user from the
+     /// address. Use the redirect parameter to redirect the user from the
      /// confirmation email back to your app. When the user is redirected, use the
      /// /auth/confirm endpoint to complete the account confirmation.
      /// 
@@ -126,18 +126,18 @@ class Auth extends Service {
      /// the only valid redirect URL&#039;s are the once from domains you have set when
      /// added your platforms in the console interface.
      /// 
-     /// When accessing this route using Javascript from the browser, success and
-     /// failure parameter URLs are required. Appwrite server will respond with a
-     /// 301 redirect status code and will set the user session cookie. This
-     /// behavior is enforced because modern browsers are limiting 3rd party cookies
-     /// in XHR of fetch request to protect user privacy.
-    Future<Response> register({email, password, confirmation, success = null, failure = null, name = null}) async {
+     /// When not using the success or failure redirect arguments this endpoint will
+     /// result with a 200 status code and the user account object on success and
+     /// with 401 status error on failure. This behavior was applied to help the web
+     /// clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies
+     /// needed for saving the account session token.
+    Future<Response> register({email, password, redirect, success, failure, name = null}) async {
        String path = '/auth/register';
 
        Map<String, dynamic> params = {
          'email': email,
          'password': password,
-         'confirmation': confirmation,
+         'redirect': redirect,
          'success': success,
          'failure': failure,
          'name': name,
@@ -167,11 +167,11 @@ class Auth extends Service {
      /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      /// the only valid redirect URL&#039;s are the once from domains you have set when
      /// added your platforms in the console interface.
-    Future<Response> confirmResend({confirmation}) async {
+    Future<Response> confirmResend({redirect}) async {
        String path = '/auth/register/confirm/resend';
 
        Map<String, dynamic> params = {
-         'confirmation': confirmation,
+         'redirect': redirect,
        };
 
        return await this.client.call('post', path: path, params: params);
