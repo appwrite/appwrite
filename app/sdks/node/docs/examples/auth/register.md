@@ -10,7 +10,7 @@ client
     setKey('')
 ;
 
-let promise = auth.register('email@example.com', 'password', 'https://example.com', 'https://example.com', 'https://example.com');
+let promise = auth.register('email@example.com', 'password', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

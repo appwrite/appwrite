@@ -12,4 +12,4 @@ $client
 
 $projects = new Projects($client);
 
-$result = $projects->updateTask('[PROJECT_ID]', '[TASK_ID]', '[NAME]', 'play', '', 0, 'GET', 'https://example.com');
+$result = $projects->updateTask('[PROJECT_ID]', '[TASK_ID]', '[NAME]', 'play', '', 1, 'GET', 'https://example.com');

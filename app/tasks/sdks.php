@@ -36,7 +36,7 @@ $cli
 
         $clients = [
             'php' => [
-                'version' => 'v1.0.7',
+                'version' => '1.0.8',
                 'result' => __DIR__.'/../sdks/php/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
@@ -46,7 +46,7 @@ $cli
                 'platform' => 'server',
             ],
             'js' => [
-                'version' => 'v1.0.20',
+                'version' => '1.0.21',
                 'result' => __DIR__.'/../sdks/js/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
@@ -56,7 +56,7 @@ $cli
                 'platform' => 'client',
             ],
             'node' => [
-                'version' => 'v1.0.24',
+                'version' => '1.0.25',
                 'result' => __DIR__.'/../sdks/node/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-node.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
@@ -66,7 +66,7 @@ $cli
                 'platform' => 'server',
             ],
             'python' => [
-                'version' => 'v1.0.0',
+                'version' => '1.0.0',
                 'result' => __DIR__.'/../sdks/python/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-python.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-python.git',
@@ -76,7 +76,7 @@ $cli
                 'platform' => 'server',
             ],
             'ruby' => [
-                'version' => 'v1.0.0',
+                'version' => '1.0.1',
                 'result' => __DIR__.'/../sdks/ruby/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-ruby.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-ruby.git',
@@ -86,7 +86,7 @@ $cli
                 'platform' => 'server',
             ],
             'dart' => [
-                'version' => '0.0.1',
+                'version' => '0.0.2',
                 'result' => __DIR__.'/../sdks/dart/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-dart',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-dart.git',

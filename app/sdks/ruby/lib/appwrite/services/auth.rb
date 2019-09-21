@@ -63,12 +63,12 @@ module Appwrite
             }, params);
         end
 
-        def recovery(email:, redirect:)
+        def recovery(email:, confirmation:)
             path = '/auth/recovery'
 
             params = {
                 'email': email, 
-                'redirect': redirect
+                'confirmation': confirmation
             }
 
             return @client.call('post', path, {
@@ -89,13 +89,13 @@ module Appwrite
             }, params);
         end
 
-        def register(email:, password:, redirect:, success:, failure:, name: '')
+        def register(email:, password:, confirmation:, success: '', failure: '', name: '')
             path = '/auth/register'
 
             params = {
                 'email': email, 
                 'password': password, 
-                'redirect': redirect, 
+                'confirmation': confirmation, 
                 'success': success, 
                 'failure': failure, 
                 'name': name
@@ -117,11 +117,11 @@ module Appwrite
             }, params);
         end
 
-        def confirm_resend(redirect:)
+        def confirm_resend(confirmation:)
             path = '/auth/register/confirm/resend'
 
             params = {
-                'redirect': redirect
+                'confirmation': confirmation
             }
 
             return @client.call('post', path, {
