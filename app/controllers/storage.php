@@ -401,8 +401,8 @@ $utopia->post('/v1/storage/files')
     ->label('sdk.description', 'Create a new file. The user who creates the file will automatically be assigned to read and write access unless he has passed custom values for read and write arguments.')
     ->label('sdk.consumes', 'multipart/form-data')
     ->param('files', [], function () {return new File();}, 'Binary Files.', false)
-    ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('folderId', '', function () {return new UID();}, 'Folder to associate files with.', true)
     ->action(
         function ($files, $read, $write, $folderId) use ($request, $response, $user, $projectDB, $audit, $usage) {
@@ -523,8 +523,8 @@ $utopia->put('/v1/storage/files/:fileId')
     ->label('sdk.method', 'updateFile')
     ->label('sdk.description', 'Update file by its unique ID. Only users with write permissions have access to update this resource.')
     ->param('fileId', '', function () {return new UID();}, 'File unique ID.')
-    ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('read', [], function () {return new ArrayList(new Text(64));}, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('write', [], function () {return new ArrayList(new Text(64));}, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->param('folderId', '', function () {return new UID();}, 'Folder to associate files with.', true)
     ->action(
         function ($fileId, $read, $write, $folderId) use ($response, $projectDB) {
