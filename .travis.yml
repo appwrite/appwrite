@@ -9,7 +9,7 @@ addons:
 
 notifications:
   email:
-  - eldad@appwrite.io
+  - team@appwrite.io
 
 services:
 - docker
