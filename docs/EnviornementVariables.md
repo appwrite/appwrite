@@ -16,6 +16,22 @@ Allows you to disabled abuse checks and API rate limiting. By default set to 'en
 
 This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server is encrypting all secret data on your server like webhooks HTTP passwords, user sessions, and the storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to keep it a secret.
 
+### _APP_CONSOLE_WHITELIST_EMAILS
+
+This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.
+
+### _APP_CONSOLE_WHITELIST_DOMAINS
+
+This option allows you to restrict access to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.
+
+To enable this option, pass a list of allowed email domains separated by a comma.
+
+### _APP_CONSOLE_WHITELIST_IPS
+
+This last option available allows you to restrict access to Appwrite console for users sharing the same set op IP addresses. This option is very useful for team working with a VPN service or a company IP.
+
+To enable activate this option, pass a list of allowed IP addresses separated by a comma.
+
 ## Redis Server
 
 Appwrite is using a Redis server for managing cache, queues and scheduled tasks. The Redis env vars are used to allow Appwrite server to connect to the Redis container.
