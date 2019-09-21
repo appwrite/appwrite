@@ -37,7 +37,11 @@ curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?port=80 && \
 docker-compose up -d --remove-orphans
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes. For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes.
+
+For advanced, production and custon installation check out our Docker [enviornemnt variables](/docs/EnviornementVariables.md) docs.
+
+For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
 
 ### Changing Port Number
 
