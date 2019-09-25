@@ -128,6 +128,7 @@ Locale::$exceptions = false;
 
 Locale::setLanguage('en', include __DIR__ . '/config/locale/en.php');
 Locale::setLanguage('he', include __DIR__ . '/config/locale/he.php');
+Locale::setLanguage('ua', include __DIR__ . '/config/locale/ua.php');
 Locale::setLanguage('pt-br', include __DIR__ . '/config/locale/pt-br.php');
 Locale::setLanguage('es', include __DIR__ . '/config/locale/es.php');
 
