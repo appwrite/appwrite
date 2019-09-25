@@ -143,6 +143,7 @@ Locale::setLanguage('nl', include __DIR__.'/config/locale/nl.php');
 Locale::setLanguage('pt-br', include __DIR__.'/config/locale/pt-br.php');
 Locale::setLanguage('pt-pt', include __DIR__.'/config/locale/pt-pt.php');
 Locale::setLanguage('ro', include __DIR__.'/config/locale/ro.php');
+Locale::setLanguage('ru', include __DIR__ . '/config/locale/ru.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
 Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
 
