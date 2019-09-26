@@ -5,9 +5,6 @@ return [
     'settings.locale' => 'he',
     'settings.direction' => 'rtl',
 
-    // General
-    'general.loading' => 'Loading...',
-
     // Service - Users
     'auth.emails.team' => 'צוות %s',
     'auth.emails.confirm.title' => 'אימות חשבון',

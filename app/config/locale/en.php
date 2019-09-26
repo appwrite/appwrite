@@ -5,9 +5,6 @@ return [
     'settings.locale' => 'en',
     'settings.direction' => 'ltr',
 
-    // General
-    'general.loading' => 'Loading...',
-
     // Service - Users
     'auth.emails.team' => '%s Team',
     'auth.emails.confirm.title' => 'Account Confirmation',
