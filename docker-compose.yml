@@ -26,8 +26,8 @@ services:
     - _APP_DB_HOST=mariadb
     - _APP_DB_PORT=3306
     - _APP_DB_SCHEMA=appwrite
-    - _APP_DB_USER=user1
-    - _APP_DB_PASS=pass1
+    - _APP_DB_USER=user
+    - _APP_DB_PASS=pass
     - _APP_INFLUXDB_HOST=influxdb
     - _APP_INFLUXDB_PORT=8086
     - _APP_STATSD_HOST=telegraf
@@ -37,12 +37,12 @@ services:
     image: appwrite/mariadb:1.0.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     restart: unless-stopped
     environment:
-    - MYSQL_ROOT_PASSWORD=password
+    - MYSQL_ROOT_PASSWORD=rootpassword
     - MYSQL_DATABASE=appwrite
-    - MYSQL_USER=user1
-    - MYSQL_PASSWORD=pass1
+    - MYSQL_USER=user
+    - MYSQL_PASSWORD=pass
     volumes:
-    - ./storage/db2:/var/lib/mysql:rw
+    - ./storage/db:/var/lib/mysql:rw
     ports:
     - 3306:3306/tcp
 
