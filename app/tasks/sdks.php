@@ -62,7 +62,7 @@ $cli
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
-                'warning' => '',
+                'warning' => 'This SDK if compitable with Appwrite server version 0.2.0 for older versions check previous releases.',
                 'platform' => 'server',
             ],
             'python' => [
