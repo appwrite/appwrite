@@ -1,8 +1,12 @@
 <?php
 
 return [
+    'settings.inspire' => '"The art of being wise is the art of knowing what to overlook."',
     'settings.locale' => 'he',
     'settings.direction' => 'rtl',
+
+    // General
+    'general.loading' => 'Loading...',
 
     // Service - Users
     'auth.emails.team' => 'צוות %s',
