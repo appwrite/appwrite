@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'settings.inspire' => '"The art of being wise is the art of knowing what to overlook."',
+    'settings.inspire' => '"The art of being wise is the art of knowing what to overlook."', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'he',
     'settings.direction' => 'rtl',
 
