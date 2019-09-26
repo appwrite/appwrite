@@ -1,8 +1,3 @@
-<?php
-
-use Utopia\Locale\Locale;
-
-?>
 <div
     data-service="users.getUser"
     data-name="user"
@@ -13,7 +8,7 @@ use Utopia\Locale\Locale;
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> <?php echo $this->escape(Locale::getText('console.users.title')); ?></a>
+            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Users</a>
             <br />
 
             <span data-ls-bind="{{user.name}}">&nbsp;</span>
