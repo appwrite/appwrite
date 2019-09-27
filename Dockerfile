@@ -82,8 +82,11 @@ ADD ./public /usr/share/nginx/html/public
 ADD ./src /usr/share/nginx/html/src
 ADD ./vendor /usr/share/nginx/html/vendor
 
-RUN mkdir -R /storage/uploads && chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads
-RUN mkdir -R /storage/cache && chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache
+WORKDIR /storage/uploads
+RUN chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads
+
+WORKDIR /storage/cache
+RUN chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache
 
 EXPOSE 80
 
