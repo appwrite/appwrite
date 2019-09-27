@@ -7,8 +7,8 @@ services:
     volumes:
     - ./../../:/usr/share/nginx/html
     - ./../../docker/nginx.conf:/etc/nginx/nginx.conf:rw
-    - ./storage/uploads:/storage/uploads:rw
-    - ./storage/cache:/storage/cache:rw
+    - ./../../storage/uploads:/storage/uploads:rw
+    - ./../../storage/cache:/storage/cache:rw
     ports:
     - "80:80"
     - "443:443"
@@ -33,6 +33,7 @@ services:
     restart: unless-stopped
     environment:
     - MYSQL_ROOT_PASSWORD=rootsecretpassword
+    - MYSQL_DATABASE=appwrite
     - MYSQL_USER=user
     - MYSQL_PASSWORD=password
     ports:

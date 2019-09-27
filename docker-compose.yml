@@ -39,6 +39,7 @@ services:
     restart: unless-stopped
     environment:
     - MYSQL_ROOT_PASSWORD=rootsecretpassword
+    - MYSQL_DATABASE=appwrite
     - MYSQL_USER=user
     - MYSQL_PASSWORD=password
     volumes:
