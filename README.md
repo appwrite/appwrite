@@ -97,5 +97,5 @@ We really ❤️ pull requests! If you wish to help, you can learn more about ho
 Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
 
 * 🇺🇸Justin Dorfman ([Github](https://github.com/@jdorfman), [Twitter](https://twitter.com/jdorfman))
-* 🇺🇳@0xflotus ([Github](https://github.com/0xflotus))
-* 🇳🇴@Chaaarles ([Github](https://github.com/Chaaarles))
+* 🇺🇳0xflotus ([Github](https://github.com/0xflotus))
+* 🇳🇴Chaaarles ([Github](https://github.com/Chaaarles))
