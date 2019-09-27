@@ -30,7 +30,7 @@ $utopia->post('/v1/auth/register')
     ->label('abuse-limit', 10)
     ->param('email', '', function () {return new Email();}, 'Account email')
     ->param('password', '', function () {return new Password();}, 'User password')
-    ->param('confirmation', '', function () use ($clients) {return new Host($clients);}, 'Confirmation URL to redirect user after confirm token has been sent to user email')
+    ->param('confirmation', '', function () use ($clients) {return new Host($clients);}, 'Confirmation URL to redirect user after confirm token has been sent to user email') // TODO add our own built-in confirm page
     ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed', true)
     ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed', true)
     ->param('name', '', function () {return new Text(100);}, 'User name', true)
