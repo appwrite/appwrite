@@ -41,8 +41,6 @@ Once the Docker installation completes, go to http://localhost to access the App
 
 For advanced, production and custon installation check out our Docker [enviornemnt variables](/docs/EnviornementVariables.md) docs.
 
-For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
-
 ### Changing Port Number
 
 In case your port 80 is already taken, change the port number in the command above. Make sure to set the correct endpoint in your selected SDK, including your new port number.
@@ -66,6 +64,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Storage**](https://appwrite.io/docs/storage) - Manage storage files. Read, create, delete and preview files. Manipulate your files preview to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
 * [**Locale**](https://appwrite.io/docs/locale) - Track users location, and manage your app locale based data.
 * [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users avatars, countries flags, browser icons, credit card symbols and generate QR codes.
+
+For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcments checkout our [blog](https://medium.com/appwrite-io).
 
 ### SDKs
 
