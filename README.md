@@ -80,12 +80,22 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅ [Python](https://github.com/appwrite/sdk-for-python) - **Work in progress** (Maintained by the Appwrite Team)
 * ✳️ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
+## Security
+
+For security issues, please email [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+
+## Follow us
+
+Join our growing commuinty around the world! Follow us on both [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Gitter community](https://gitter.im/appwrite/community) for more help, ideas and discussions.
+
 ## Contributing
 
 All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
 
 We really ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
-## Security
+Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
 
-For security issues, please email [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+* 🇺🇸Justin Dorfman ([Github](https://github.com/@jdorfman), [Twitter](https://twitter.com/jdorfman))
+* 🇺🇳@0xflotus ([Github](https://github.com/0xflotus))
+* 🇳🇴@Chaaarles ([Github](https://github.com/Chaaarles))
