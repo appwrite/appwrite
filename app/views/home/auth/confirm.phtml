@@ -1,6 +1,3 @@
-<?php
-use Utopia\Locale\Locale;
-?>
 <section class="zone xl">
     <form
       data-service="auth.confirm"
@@ -10,13 +7,13 @@ use Utopia\Locale\Locale;
       data-param-user-id="{{router.params.userId}}"
       data-success="redirect,alert,trigger"
       data-success-redirect-url="/console"
-      data-success-alert="<?php echo $this->escape(Locale::getText('home.auth.confirm.success')); ?>"
+      data-success-alert="Confirmation Completed Successfully"
       data-success-triggers="account.update"
       data-failure="alert"
-      data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('home.auth.confirm.failure')); ?>"
+      data-failure-param-alert-text="Confirmation Failed"
       data-failure-param-alert-classname="error">
 
-        <h2 class="margin-bottom-small"><?php echo $this->escape(Locale::getText('home.auth.confirm.title')); ?></h2>
-        <p><?php echo $this->escape(Locale::getText('home.auth.confirm.subtitle')); ?></p>
+        <h2 class="margin-bottom-small">Account Confirmation in Progress</h2>
+        <p>Please wait a few seconds while your account is verified.</p>
     </form>
 </section>

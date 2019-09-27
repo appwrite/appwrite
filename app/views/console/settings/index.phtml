@@ -1,12 +1,6 @@
-<?php
-
-use Utopia\Locale\Locale;
-
-?>
-
 <div class="cover">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <?php echo Locale::getText('console.settings.title'); ?>
+        Settings
     </h1>
 </div>
 
@@ -22,7 +16,7 @@ use Utopia\Locale\Locale;
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/settings?project={{router.params.project}}">
-                <h2><?php echo Locale::getText('console.settings.section.overview.title'); ?></h2>
+                <h2>Overview</h2>
 
                 <form
                     data-service="projects.updateProject"
@@ -127,7 +121,7 @@ use Utopia\Locale\Locale;
                 </form>
             </li>
             <li data-state="/console/settings/members?project={{router.params.project}}">
-                <h2><?php echo Locale::getText('console.settings.section.members.title'); ?></h2>
+                <h2>Members</h2>
 
                 <div class="zone xl"
                     data-service="teams.getTeamMembers"
@@ -146,16 +140,16 @@ use Utopia\Locale\Locale;
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger"
-                                    data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.success'); ?>"
+                                    data-success-param-alert-text="Member Removed Successfully"
                                     data-success-param-trigger-events="membership-delete"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.leave.failure'); ?>"
+                                    data-failure-param-alert-text="Failed to Remove Member"
                                     data-failure-param-alert-classname="error">
 
                                     <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                     <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
 
-                                    <button class="danger"><?php echo Locale::getText('console.settings.section.members.labels.leave'); ?></button>
+                                    <button class="danger">Leave</button>
                                 </form>
 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
@@ -165,34 +159,34 @@ use Utopia\Locale\Locale;
                                         data-event="submit"
                                         data-loading="Resending invitation, please wait..."
                                         data-success="alert,trigger"
-                                        data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
+                                        data-success-param-alert-text="Invitation Sent Successfully"
                                         data-success-param-trigger-events="membership-resend"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>"
+                                        data-failure-param-alert-text="Failed to Send Invite"
                                         data-failure-param-alert-classname="error">
                                         
                                         <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                                         <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
                                         <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
-                                        <button class="reverse"><?php echo Locale::getText('console.settings.section.members.labels.resend'); ?></button>
+                                        <button class="reverse">Resend</button>
                                     </form>
                                 </div>
 
                                 <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                 <div class="margin-bottom-small">
-                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;"><?php echo Locale::getText('console.settings.section.members.labels.pending'); ?></span>
+                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;">Pending Approval</span>
                                 </div>
                                 <small data-ls-bind="{{member.email}}"></small>
                             </li>
                         </ul>
                     </div>
 
-                    <div data-ui-modal class="modal close width-small" data-button-text="<?php echo Locale::getText('console.settings.section.members.labels.invite'); ?>" data-button-class="">
+                    <div data-ui-modal class="modal close width-small" data-button-text="Invite Member" data-button-class="">
                         <button type="button" class="close pull-end" data-ui-modal-close><i class="icon-cancel"></i></button>
 
-                        <h1><?php echo Locale::getText('console.settings.section.members.labels.invite'); ?></h1>
+                        <h1>Invite Member</h1>
 
                         <form name="teams.createTeamMembership"
                             data-service="teams.createTeamMembership"
@@ -200,29 +194,29 @@ use Utopia\Locale\Locale;
                             data-event="submit"
                             data-loading="Sending invitation, please wait..."
                             data-success="alert,trigger,reset"
-                            data-success-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.success'); ?>"
+                            data-success-param-alert-text="Invitation Sent Successfully"
                             data-success-param-trigger-events="membership-create,modal-close"
                             data-failure="alert"
-                            data-failure-param-alert-text="<?php echo Locale::getText('console.settings.section.members.invite.failure'); ?>"
+                            data-failure-param-alert-text="Failed to Send Invite"
                             data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
-                            <label for="name"><?php echo Locale::getText('console.settings.section.members.labels.name'); ?> <small>(<?php echo Locale::getText('general.optional'); ?>)</small></label>
+                            <label for="name">Name <small>(optional)</small></label>
                             <input name="name" id="name" type="text" autocomplete="name">
 
-                            <label for="email"><?php echo Locale::getText('console.settings.section.members.labels.email'); ?></label>
+                            <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
 
-                            <label for="roles"><?php echo Locale::getText('console.settings.section.members.labels.role'); ?></label>
+                            <label for="roles">Role</label>
                             <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array">
                                 <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
                             </select>
 
                             <div class="clear">
-                                <button><?php echo Locale::getText('console.settings.section.members.labels.send'); ?></button>
-                                &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo Locale::getText('console.settings.section.members.labels.cancel'); ?></button>
+                                <button>Send Invite</button>
+                                &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </div>
                         </form>
                     </div>

@@ -9,7 +9,7 @@ use Utopia\Locale\Locale;
 
 $layout
     ->setParam('title', APP_NAME)
-    ->setParam('description', Locale::getText('general.description'))
+    ->setParam('description', '')
     ->setParam('class', 'home')
     ->setParam('header', [new View(__DIR__.'/../views/home/comps/header.phtml')])
 ;
@@ -35,7 +35,7 @@ $utopia->get('/auth/signin')
         $page = new View(__DIR__.'/../views/home/auth/signin.phtml');
 
         $layout
-            ->setParam('title', Locale::getText('home.auth.signin.title').' - '.APP_NAME)
+            ->setParam('title', 'Sign In - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -47,7 +47,7 @@ $utopia->get('/auth/signup')
         $page = new View(__DIR__.'/../views/home/auth/signup.phtml');
 
         $layout
-            ->setParam('title', Locale::getText('home.auth.signup.title').' - '.APP_NAME)
+            ->setParam('title', 'Sign Up - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -59,7 +59,7 @@ $utopia->get('/auth/recovery')
         $page = new View(__DIR__.'/../views/home/auth/recovery.phtml');
 
         $layout
-            ->setParam('title', Locale::getText('home.auth.recovery.title').' - '.APP_NAME)
+            ->setParam('title', 'Password Recovery - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -71,7 +71,7 @@ $utopia->get('/auth/confirm')
         $page = new View(__DIR__.'/../views/home/auth/confirm.phtml');
 
         $layout
-            ->setParam('title', Locale::getText('home.auth.confirm.title').' - '.APP_NAME)
+            ->setParam('title', 'Account Confirmation - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -83,7 +83,7 @@ $utopia->get('/auth/join')
         $page = new View(__DIR__.'/../views/home/auth/join.phtml');
 
         $layout
-            ->setParam('title', Locale::getText('home.auth.join.title').' - '.APP_NAME)
+            ->setParam('title', 'Invitation - '.APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -95,7 +95,7 @@ $utopia->get('/auth/recovery/reset')
         $page = new View(__DIR__.'/../views/home/auth/recovery/reset.phtml');
 
         $layout
-            ->setParam('title', Locale::getText('home.auth.reset.title').' - '.APP_NAME)
+            ->setParam('title', 'Password Reset - '.APP_NAME)
             ->setParam('body', $page);
     });
 

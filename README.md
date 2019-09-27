@@ -41,8 +41,6 @@ Once the Docker installation completes, go to http://localhost to access the App
 
 For advanced, production and custon installation check out our Docker [enviornemnt variables](/docs/EnviornementVariables.md) docs.
 
-For complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs)
-
 ### Changing Port Number
 
 In case your port 80 is already taken, change the port number in the command above. Make sure to set the correct endpoint in your selected SDK, including your new port number.
@@ -67,6 +65,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Locale**](https://appwrite.io/docs/locale) - Track users location, and manage your app locale based data.
 * [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users avatars, countries flags, browser icons, credit card symbols and generate QR codes.
 
+For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcments checkout our [blog](https://medium.com/appwrite-io).
+
 ### SDKs
 
 Currently we are supporting a few SDK libraries and we are constantly working on adding new ones.
@@ -80,12 +80,24 @@ Below is a list of currently supported platforms and languages. If you wish to h
 * ✅ [Python](https://github.com/appwrite/sdk-for-python) - **Work in progress** (Maintained by the Appwrite Team)
 * ✳️ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
+## Security
+
+For security issues, please email [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+
+## Follow Us
+
+Join our growing commuinty around the world! Follow us on both [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Gitter community](https://gitter.im/appwrite/community) for more help, ideas and discussions.
+
 ## Contributing
 
 All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
 
 We really ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
-## Security
+## Credits
 
-For security issues, please email [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
+
+* 🇺🇸Justin Dorfman ([Github](https://github.com/@jdorfman), [Twitter](https://twitter.com/jdorfman))
+* 🇺🇳0xflotus ([Github](https://github.com/0xflotus))
+* 🇳🇴Chaaarles ([Github](https://github.com/Chaaarles))

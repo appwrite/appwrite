@@ -66,7 +66,7 @@ $utopia->get('/console')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.title'))
+            ->setParam('title', APP_NAME.' - Console')
             ->setParam('body', $page);
     });
 
@@ -83,7 +83,7 @@ $utopia->get('/console/account')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.account.title'))
+            ->setParam('title', 'Account - ' . APP_NAME)
             ->setParam('body', $page);
     });
 
@@ -95,7 +95,7 @@ $utopia->get('/console/notifications')
         $page = new View(__DIR__.'/../views/v1/console/notifications/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.notifications.title'))
+            ->setParam('title', APP_NAME.' - Notifications')
             ->setParam('body', $page);
     });
 
@@ -107,7 +107,7 @@ $utopia->get('/console/home')
         $page = new View(__DIR__.'/../views/console/home/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.home.title'))
+            ->setParam('title', APP_NAME.' - Console')
             ->setParam('body', $page);
     });
 
@@ -119,7 +119,7 @@ $utopia->get('/console/settings')
         $page = new View(__DIR__.'/../views/console/settings/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.settings.title'))
+            ->setParam('title', APP_NAME.' - Settings')
             ->setParam('body', $page);
     });
 
@@ -131,7 +131,7 @@ $utopia->get('/console/webhooks')
         $page = new View(__DIR__.'/../views/console/webhooks/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.webhooks.title'))
+            ->setParam('title', APP_NAME.' - Webhooks')
             ->setParam('body', $page);
     });
 
@@ -143,7 +143,7 @@ $utopia->get('/console/keys')
         $page = new View(__DIR__.'/../views/console/keys/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.keys.title'))
+            ->setParam('title', APP_NAME.' - API Keys')
             ->setParam('body', $page);
     });
 
@@ -155,7 +155,7 @@ $utopia->get('/console/tasks')
         $page = new View(__DIR__.'/../views/console/tasks/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.tasks.title'))
+            ->setParam('title', APP_NAME.' - Tasks')
             ->setParam('body', $page);
     });
 
@@ -167,7 +167,7 @@ $utopia->get('/console/database')
         $page = new View(__DIR__.'/../views/console/database/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.database.title'))
+            ->setParam('title', APP_NAME.' - Database')
             ->setParam('body', $page);
     });
 
@@ -190,7 +190,7 @@ $utopia->get('/console/database/collection')
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.database.title'))
+            ->setParam('title', APP_NAME.' - Database')
             ->setParam('body', $page);
     });
 
@@ -202,7 +202,7 @@ $utopia->get('/console/storage')
         $page = new View(__DIR__.'/../views/console/storage/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.storage.title'))
+            ->setParam('title', APP_NAME.' - Storage')
             ->setParam('body', $page);
     });
 

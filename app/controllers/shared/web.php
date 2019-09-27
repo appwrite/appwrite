@@ -6,9 +6,9 @@ use Utopia\Locale\Locale;
 Locale::$exceptions = false;
 
 $roles = [
-    ['type' => 'owner', 'label' => Locale::getText('general.roles.owner')],
-    ['type' => 'developer', 'label' => Locale::getText('general.roles.developer')],
-    ['type' => 'admin', 'label' => Locale::getText('general.roles.admin')],
+    ['type' => 'owner', 'label' => 'Owner'],
+    ['type' => 'developer', 'label' => 'Developer'],
+    ['type' => 'admin', 'label' => 'Admin'],
 ];
 
 $layout = new View(__DIR__.'/../../views/layouts/default.phtml');
@@ -20,7 +20,6 @@ if (!empty($request->getQuery('version', ''))) {
 
 $layout
     ->setParam('title', APP_NAME)
-    ->setParam('description', Locale::getText('general.description'))
     ->setParam('protocol', $request->getServer('REQUEST_SCHEME', 'https'))
     ->setParam('domain', $domain)
     ->setParam('home', $request->getServer('_APP_HOME'))

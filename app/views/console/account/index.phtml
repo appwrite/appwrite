@@ -1,10 +1,6 @@
-<?php
-
-use Utopia\Locale\Locale;
-?>
 <div class="cover">
     <h1 class="zone xl margin-bottom-large margin-top">
-        <?php echo Locale::getText('console.account.title'); ?>
+        Account
     </h1>
 </div>
 
@@ -19,7 +15,7 @@ use Utopia\Locale\Locale;
                 data-failure="trigger"
                 data-failure-param-trigger-events="logout">
 
-                <h2><span class="number"><i class="icon-user"></i></span><?php echo Locale::getText('console.account.section.overview.title'); ?></h2>
+                <h2><span class="number"><i class="icon-user"></i></span>Overview</h2>
                 <div class="row responsive">
                     <div class="col span-9">
                         <div class="box margin-bottom-xl">
@@ -35,14 +31,14 @@ use Utopia\Locale\Locale;
                                     data-failure-param-alert-text="Failed to update your name"
                                     data-failure-param-alert-classname="error">
 
-                                    <label for="name"><?php echo Locale::getText('console.account.section.overview.labels.name'); ?></label>
+                                    <label for="name">Name</label>
 
                                     <div class="row">
                                         <div class="col span-8">
                                             <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{account.name}}" required class="margin-bottom-no">
                                         </div>
                                         <div class="col span-4">
-                                            <button type="submit" class="fill reverse"><?php echo Locale::getText('console.account.section.overview.actions.update-name'); ?></button>
+                                            <button type="submit" class="fill reverse">Update Name</button>
                                         </div>
                                     </div>
 
@@ -64,18 +60,18 @@ use Utopia\Locale\Locale;
                                 data-failure-param-alert-text="Failed updating email address"
                                 data-failure-param-alert-classname="error">
 
-                                <label><?php echo Locale::getText('console.account.section.overview.labels.email'); ?></label>
+                                <label>Email</label>
                                 <div class="row">
                                     <div class="col span-8">
                                         <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="me@example.com" data-ls-bind="{{account.email}}" required>
                                     </div>
                                     <div class="col span-4">
-                                        <div data-ui-modal class="modal close width-small height-small" data-button-text="<?php echo $this->escape(Locale::getText('console.account.section.overview.actions.update-email')); ?>" data-button-class="fill reverse">
-                                            <label><?php echo Locale::getText('console.account.section.overview.labels.password'); ?></label>
+                                        <div data-ui-modal class="modal close width-small height-small" data-button-text="Update Email" data-button-class="fill reverse">
+                                            <label>Password</label>
                                             <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
 
                                             <footer>
-                                                <button type="submit"><?php echo Locale::getText('console.account.section.overview.actions.update'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo Locale::getText('console.account.section.overview.actions.cancel'); ?></button>
+                                                <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                             </footer>
                                         </div>
                                     </div>
@@ -84,8 +80,8 @@ use Utopia\Locale\Locale;
 
                             <hr />
 
-                            <div data-ui-modal class="modal close width-small" data-button-text="<?php echo $this->escape(Locale::getText('console.account.section.overview.actions.update-password')); ?>" data-button-class="reverse">
-                                <h1><?php echo Locale::getText('console.account.section.overview.actions.update-password'); ?></h1>
+                            <div data-ui-modal class="modal close width-small" data-button-text="Update Password" data-button-class="reverse">
+                                <h1>Update Password</h1>
 
                                 <form name="update-password"
                                     data-service="account.updatePassword"
@@ -98,14 +94,14 @@ use Utopia\Locale\Locale;
                                     data-failure-param-alert-text="Failed updating password"
                                     data-failure-param-alert-classname="error">
 
-                                    <label><?php echo Locale::getText('console.account.section.overview.labels.password1'); ?></label>
+                                    <label>Current Password</label>
                                     <input name="oldPassword" type="password" class="full-width" autocomplete="off" placeholder="" required>
 
-                                    <label><?php echo Locale::getText('console.account.section.overview.labels.password2'); ?></label>
+                                    <label>New Password</label>
                                     <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required data-forms-password-meter>
 
                                     <footer>
-                                        <button type="submit"><?php echo Locale::getText('console.account.section.overview.actions.update-password'); ?></button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse"><?php echo Locale::getText('console.account.section.overview.actions.cancel'); ?></button>
+                                        <button type="submit">Update Password</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                     </footer>
                                 </form>
                             </div>
@@ -122,7 +118,7 @@ use Utopia\Locale\Locale;
                                 data-failure-param-alert-text="Logout failed"
                                 data-failure-param-alert-classname="error">
 
-                                <button class="fill danger icon fill"><i class="icon-login"></i> <?php echo Locale::getText('console.account.section.overview.actions.logout'); ?></button>
+                                <button class="fill danger icon fill"><i class="icon-login"></i> Logout</button>
                             </form>
                         </div>
 
@@ -133,25 +129,25 @@ use Utopia\Locale\Locale;
 
                         <br />
 
-                        <a href="https://en.gravatar.com/gravatars/new/" rel="noopener" class="button margin-bottom-small" target="_blank"><i class="icon-upload"></i> <?php echo Locale::getText('console.account.section.overview.actions.update-avatar'); ?></a>
+                        <a href="https://en.gravatar.com/gravatars/new/" rel="noopener" class="button margin-bottom-small" target="_blank"><i class="icon-upload"></i> Upload</a>
 
                         <br />
 
-                        <small class="text-size-small">(<?php echo Locale::getText('console.account.section.overview.actions.update-avatar-via'); ?> <a href="https://gravatar.com/" target="_blank" rel="noopener">gravatar.com <i class="icon-link-ext"></i></a>)</small>
+                        <small class="text-size-small">(via <a href="https://gravatar.com/" target="_blank" rel="noopener">gravatar.com <i class="icon-link-ext"></i></a>)</small>
                     </div>
                 </div>
 
                 <div class="row responsive">
                     <div class="col span-9">
 
-                        <h3 class="text-danger"><?php echo Locale::getText('console.account.section.overview.danger.title'); ?></h3>
+                        <h3 class="text-danger">Danger Zone</h3>
 
                         <div class="box danger">
-                            <p><?php echo Locale::getText('console.account.section.overview.danger.subtitle'); ?></p>
+                            <p>This is the area where you can delete your account.</p>
 
-                            <p><?php echo Locale::getText('console.account.section.overview.danger.disclaimer'); ?></p>
+                            <p>By deleting your account you will lose access to any of your teams and shared data.</p>
 
-                            <p><?php echo Locale::getText('console.account.section.overview.danger.note'); ?></p>
+                            <p>PLEASE NOTICE: Account deletion is irreversible.</p>
 
                             <form class="inline"
                                 data-service="account.deactivate"
@@ -163,7 +159,7 @@ use Utopia\Locale\Locale;
                                 data-failure="alert"
                                 data-failure-param-alert-text="Account deactivation failed"
                                 data-failure-param-alert-classname="error">
-                                <button class="danger reverse"><?php echo Locale::getText('console.account.section.overview.danger.action'); ?></button>
+                                <button class="danger reverse">Delete Account</button>
                             </form>
                         </div>
                     </div>
@@ -172,9 +168,9 @@ use Utopia\Locale\Locale;
             </div>
         </li>
         <li data-state="/console/account/security">
-            <h2><span class="number"><i class="icon-shield"></i></span><?php echo Locale::getText('console.account.section.security.title'); ?></h2>
+            <h2><span class="number"><i class="icon-shield"></i></span>Security</h2>
 
-            <h3><?php echo Locale::getText('console.account.section.security.devices.title'); ?></h3>
+            <h3>Devices and Sessions</h3>
 
             <div class="box margin-bottom"
                 data-service="account.getSessions"
@@ -190,15 +186,15 @@ use Utopia\Locale\Locale;
                                 data-service="auth.logoutBySession"
                                 data-scope="console"
                                 data-event="submit"
-                                data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
+                                data-loading="Loading..."
                                 data-success="trigger"
                                 data-success-param-trigger-events="session-delete"
                                 data-failure="alert"
-                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>"
+                                data-failure-param-alert-text="Logout from Session Failed"
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="id" data-ls-bind="{{session.id}}">
-                                <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
+                                <button class="danger">Logout</button>
                             </form>
                         </span>
 
@@ -208,15 +204,15 @@ use Utopia\Locale\Locale;
                                 data-service="auth.logoutBySession"
                                 data-scope="console"
                                 data-event="submit"
-                                data-loading="<?php echo $this->escape(Locale::getText('general.loading')); ?>"
+                                data-loading="Loading..."
                                 data-success="trigger,redirect"
                                 data-success-param-trigger-events="logout"
                                 data-success-param-redirect-url="/"
                                 data-failure="alert"
-                                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout.failure')); ?>"
+                                data-failure-param-alert-text="Logout from Session Failed"
                                 data-failure-param-alert-classname="error">
                                 <input type="hidden" name="id" data-ls-bind="{{session.id}}">
-                                <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout'); ?></button>
+                                <button class="danger">Logout</button>
                             </form>
                         </span>
 
@@ -225,7 +221,7 @@ use Utopia\Locale\Locale;
                         <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
                         &nbsp;
                         <span data-ls-if="true == {{session.current}}" style="display: none;">
-                            <span class="tag green"><?php echo Locale::getText('console.account.section.security.devices.current'); ?></span>
+                            <span class="tag green">Current Session</span>
                         </span>
 
                         <div class="margin-top-small">
@@ -244,10 +240,10 @@ use Utopia\Locale\Locale;
                 data-success-param-trigger-events="session-delete"
                 data-success-redirect-url="/"
                 data-failure="alert"
-                data-failure-param-alert-text="<?php echo $this->escape(Locale::getText('console.account.section.security.devices.logout-all')); ?>"
+                data-failure-param-alert-text="Logout from All Sessions Failed"
                 data-failure-param-alert-classname="error">
                 <input type="hidden" name="id" value="0">
-                <button class="danger"><?php echo Locale::getText('console.account.section.security.devices.logout-all'); ?></button>
+                <button class="danger">Logout from all devices</button>
             </form>
         </li>
         <li data-state="/console/account/activity">
@@ -263,26 +259,26 @@ use Utopia\Locale\Locale;
                     <table class="vertical small">
                         <thead>
                             <tr>
-                                <th width="140"><?php echo Locale::getText('console.account.section.security.recent-activity.date'); ?></th>
-                                <th width="175"><?php echo Locale::getText('console.account.section.security.recent-activity.event'); ?></th>
-                                <th><?php echo Locale::getText('console.account.section.security.recent-activity.client'); ?></th>
-                                <th width="90"><?php echo Locale::getText('console.account.section.security.recent-activity.location'); ?></th>
-                                <th width="90"><?php echo Locale::getText('console.account.section.security.recent-activity.ip'); ?></th>
+                                <th width="140">Date</th>
+                                <th width="175">Event</th>
+                                <th>Client</th>
+                                <th width="90">Location</th>
+                                <th width="90">IP</th>
                             </tr>
                         </thead>
                         <tbody data-ls-loop="securityLogs" data-ls-as="log">
                             <tr>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.client')); ?>: ">
+                                <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
+                                <td data-title="Client: ">
                                     <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80,title={{log.client.name}},alt={{log.client.name}}" class="avatar xs inline margin-end-small" />
                                     <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                                 </td>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.location')); ?>: ">
+                                <td data-title="Location: ">
                                     <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
                                     <span data-ls-bind="{{log.geo.country}}"></span>
                                 </td>
-                                <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
                             </tr>
                         </tbody>
                     </table>

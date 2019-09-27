@@ -51,7 +51,7 @@ class ConsoleHealthTest extends BaseConsole
         $this->assertIsInt($response['body']['local']);
         $this->assertNotEmpty($response['body']['remote']);
         $this->assertNotEmpty($response['body']['local']);
-        $this->assertEquals(0, $response['body']['diff']);
+        $this->assertLessThan(10, $response['body']['diff']);
     }
 
     public function testWebhooksSuccess()

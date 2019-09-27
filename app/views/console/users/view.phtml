@@ -1,8 +1,3 @@
-<?php
-
-use Utopia\Locale\Locale;
-
-?>
 <div
     data-service="users.getUser"
     data-name="user"
@@ -13,7 +8,7 @@ use Utopia\Locale\Locale;
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> <?php echo $this->escape(Locale::getText('console.users.title')); ?></a>
+            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Users</a>
             <br />
 
             <span data-ls-bind="{{user.name}}">&nbsp;</span>
@@ -201,26 +196,26 @@ use Utopia\Locale\Locale;
                         <table class="vertical small">
                             <thead>
                                 <tr>
-                                    <th width="140"><?php echo Locale::getText('console.account.section.security.recent-activity.date'); ?></th>
-                                    <th width="175"><?php echo Locale::getText('console.account.section.security.recent-activity.event'); ?></th>
-                                    <th><?php echo Locale::getText('console.account.section.security.recent-activity.client'); ?></th>
-                                    <th width="90"><?php echo Locale::getText('console.account.section.security.recent-activity.location'); ?></th>
-                                    <th width="90"><?php echo Locale::getText('console.account.section.security.recent-activity.ip'); ?></th>
+                                    <th width="140">Date</th>
+                                    <th width="175">Event</th>
+                                    <th>Client</th>
+                                    <th width="90">Location</th>
+                                    <th width="90">IP</th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="logs" data-ls-as="log">
                                 <tr>
-                                    <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.date')); ?>: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
-                                    <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.event')); ?>: "><span data-ls-bind="{{log.event}}"></span></td>
-                                    <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.client')); ?>: ">
+                                    <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                    <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
+                                    <td data-title="Client: ">
                                         <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80,title={{log.client.name}},alt={{log.client.name}}" class="avatar xs inline margin-end-small" />
                                         <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                                     </td>
-                                    <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.location')); ?>: ">
+                                    <td data-title="Location: ">
                                         <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80" class="avatar xs inline margin-end-small" />
                                         <span data-ls-bind="{{log.geo.country}}"></span>
                                     </td>
-                                    <td data-title="<?php echo $this->escape(Locale::getText('console.account.section.security.recent-activity.ip')); ?>: "><span data-ls-bind="{{log.ip}}"></span></td>
+                                    <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
                                 </tr>
                             </tbody>
                         </table>
