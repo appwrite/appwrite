@@ -10,7 +10,7 @@
     Salut {{name}},
     <br />
     <br />
-    Accesează linkul următor pentru a-ți confirma mailul.
+    Accesează link-ul următor pentru a-ți confirma mail-ul.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
