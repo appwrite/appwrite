@@ -307,8 +307,13 @@ $providers = $this->getParam('providers', []);
         
         <li data-state="/console/users/providers?project={{router.params.project}}">
             <h2>Providers</h2>
-
-            <div class="box margin-bottom margin-top-large">
+            
+            <div class="box margin-bottom margin-top-large"
+                data-service="projects.getProject"
+                data-event="load,platform-create,platform-update,platform-delete"
+                data-name="console-project"
+                data-param-project-id="{{router.params.project}}"
+                data-scope="console">
                 <ul class="list">
                     <?php foreach ($providers as $provider => $data): if(isset($data['enabled']) && !$data['enabled']) { continue; } ?>
                         <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
@@ -357,7 +362,9 @@ $providers = $this->getParam('providers', []);
 
                             <span>
                                 <?php echo ucfirst($provider); ?>
-                                <span data-ls-if="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} === '' || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}} == '' || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} === undefined || {{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}} === undefined">
+                                <span data-ls-if="
+                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} ||
+                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}" data-debug="1">
                                     &nbsp;<span class="tag red">Disabled</span>
                                 </span>
                             </span>
