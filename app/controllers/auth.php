@@ -30,12 +30,12 @@ $utopia->post('/v1/auth/register')
     ->label('abuse-limit', 10)
     ->param('email', '', function () {return new Email();}, 'Account email')
     ->param('password', '', function () {return new Password();}, 'User password')
-    ->param('confirmation', '', function () use ($clients) {return new Host($clients);}, 'Confirmation URL to redirect user after confirm token has been sent to user email') // TODO add our own built-in confirm page
+    ->param('confirm', '', function () use ($clients) {return new Host($clients);}, 'Confirmation URL to redirect user after confirm token has been sent to user email') // TODO add our own built-in confirm page
     ->param('success', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration succeed', true)
     ->param('failure', null, function () use ($clients) {return new Host($clients);}, 'Redirect when registration failed', true)
     ->param('name', '', function () {return new Text(100);}, 'User name', true)
     ->action(
-        function ($email, $password, $confirmation, $success, $failure, $name) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
+        function ($email, $password, $confirm, $success, $failure, $name) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
             if('console' === $project->getUid()) {
                 $whitlistEmails     = $project->getAttribute('authWhitelistEmails');
                 $whitlistIPs        = $project->getAttribute('authWhitelistIPs');
@@ -132,16 +132,16 @@ $utopia->post('/v1/auth/register')
 
             // Send email address confirmation email
 
-            $confirmation = Template::parseURL($confirmation);
-            $confirmation['query'] = Template::mergeQuery(((isset($confirmation['query'])) ? $confirmation['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
-            $confirmation = Template::unParseURL($confirmation);
+            $confirm = Template::parseURL($confirm);
+            $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
+            $confirm = Template::unParseURL($confirm);
 
             $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{name}}', $name)
-                ->setParam('{{redirect}}', $confirmation)
+                ->setParam('{{redirect}}', $confirm)
             ;
 
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
@@ -244,9 +244,9 @@ $utopia->post('/v1/auth/register/confirm/resend')
     ->label('sdk.description', "This endpoint allows the user to request your app to resend him his email confirmation message. The redirect arguments acts the same way as in /auth/register endpoint.\n\nPlease notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL's are the once from domains you have set when added your platforms in the console interface.")
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('confirmation', '', function () use ($clients) {return new Host($clients);}, 'Confirmation URL to redirect user to your app after confirm token has been sent to user email.')
+    ->param('confirm', '', function () use ($clients) {return new Host($clients);}, 'Confirmation URL to redirect user to your app after confirm token has been sent to user email.')
     ->action(
-        function ($confirmation) use ($response, $request, $projectDB, $user, $register, $project) {
+        function ($confirm) use ($response, $request, $projectDB, $user, $register, $project) {
             if ($user->getAttribute('confirm', false)) {
                 throw new Exception('Email address is already confirmed', 400);
             }
@@ -269,16 +269,16 @@ $utopia->post('/v1/auth/register/confirm/resend')
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            $confirmation = Template::parseURL($confirmation);
-            $confirmation['query'] = Template::mergeQuery(((isset($confirmation['query'])) ? $confirmation['query'] : ''), ['userId' => $user->getUid(), 'token' => $secret]);
-            $confirmation = Template::unParseURL($confirmation);
+            $confirm = Template::parseURL($confirm);
+            $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $secret]);
+            $confirm = Template::unParseURL($confirm);
 
             $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{name}}', $user->getAttribute('name'))
-                ->setParam('{{redirect}}', $confirmation)
+                ->setParam('{{redirect}}', $confirm)
             ;
 
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */

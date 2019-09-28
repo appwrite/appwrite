@@ -36,7 +36,7 @@ class BaseProjects extends BaseConsole
         ], [
             'email' => $this->projectsDemoEmail,
             'password' => $this->projectsDemoPassword,
-            'confirmation' => 'http://localhost/confirm',
+            'confirm' => 'http://localhost/confirm',
             'success' => 'http://localhost/success',
             'failure' => 'http://localhost/failure',
             'name' => 'Porject Demo User',
