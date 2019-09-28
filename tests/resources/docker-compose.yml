@@ -5,13 +5,23 @@ services:
     build: ../../
     restart: unless-stopped
     volumes:
-    - ./../../:/usr/share/nginx/html
+    - ./../../app:/usr/share/nginx/html/app
+    - ./../../public:/usr/share/nginx/html/public
+    - ./../../src:/usr/share/nginx/html/src
+    - ./../../vendor:/usr/share/nginx/html/vendor
     - ./../../docker/nginx.conf:/etc/nginx/nginx.conf:rw
     - ./../../storage/uploads:/storage/uploads:rw
     - ./../../storage/cache:/storage/cache:rw
     ports:
     - "80:80"
     - "443:443"
+    depends_on:
+    - mariadb
+    - redis
+    - smtp
+    - clamav
+    - influxdb
+    - telegraf
     environment:
     - _APP_ENV=development
     - _APP_OPTIONS_ABUSE=disabled
