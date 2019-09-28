@@ -13,8 +13,6 @@ class ConsoleHealthTest extends BaseConsole
             'content-type' => 'application/json',
         ], []);
 
-        var_dump($response);
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('OK', $response['body']['status']);
     }
