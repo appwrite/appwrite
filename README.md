@@ -101,3 +101,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇺🇸Justin Dorfman ([Github](https://github.com/@jdorfman), [Twitter](https://twitter.com/jdorfman))
 * 🇺🇳0xflotus ([Github](https://github.com/0xflotus))
 * 🇳🇴Chaaarles ([Github](https://github.com/Chaaarles))
+* 🇧🇷Jessé Souza ([Github](https://github.com/jessescn))
