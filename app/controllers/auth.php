@@ -753,7 +753,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
                     ],
                 ]);
 
-                if (empty($user->getUid())) { // Last option -> create user alone, generate random password
+                if (!$user || empty($user->getUid())) { // Last option -> create user alone, generate random password
                     Authorization::disable();
 
                     $user = $projectDB->createDocument([
