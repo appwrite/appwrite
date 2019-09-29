@@ -9,8 +9,7 @@ class Google extends OAuth
     /**
      * @var string
      */
-    protected $version = 'v2.8';
-
+    protected $version = 'v4';
     /**
      * @var array
      */
@@ -19,7 +18,7 @@ class Google extends OAuth
     /**
      * @return string
      */
-    public function getName():string
+    public function getName(): string
     {
         return 'google';
     }
@@ -27,9 +26,14 @@ class Google extends OAuth
     /**
      * @return string
      */
-    public function getLoginURL():string
+    public function getLoginURL(): string
     {
-        return 'https://www.google.com/'.$this->version.'/dialog/oauth?client_id='.urlencode($this->appID).'&redirect_uri='.urlencode($this->callback).'&scope=email&state='.urlencode(json_encode($this->state));
+        return 'https://accounts.google.com/o/oauth2/v2/auth?' .
+            'client_id=' . urlencode($this->appID) .
+            '&redirect_uri=' . urlencode($this->callback) .
+            '&scope=https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile' .
+            '&state=' . urlencode(json_encode($this->state)) .
+            '&response_type=code';
     }
 
     /**
@@ -37,16 +41,20 @@ class Google extends OAuth
      *
      * @return string
      */
-    public function getAccessToken(string $code):string
+    public function getAccessToken(string $code): string
     {
-        $accessToken = $this->request('GET', 'https://graph.google.com/'.$this->version.'/oauth/access_token?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&client_secret='.urlencode($this->appSecret).
-            '&code='.urlencode($code)
+        $accessToken = $this->request(
+            'POST',
+            'https://www.googleapis.com/oauth2/' . $this->version . '/token?' .
+                'code=' . urlencode($code) .
+                '&client_id=' . urlencode($this->appID) .
+                '&client_secret=' . urlencode($this->appSecret) .
+                '&redirect_uri=' . urlencode($this->callback) .
+                '&scope=' .
+                '&grant_type=authorization_code'
         );
 
-        $accessToken = json_decode($accessToken, true); //
+        $accessToken = json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -60,7 +68,7 @@ class Google extends OAuth
      *
      * @return string
      */
-    public function getUserID(string $accessToken):string
+    public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -76,7 +84,7 @@ class Google extends OAuth
      *
      * @return string
      */
-    public function getUserEmail(string $accessToken):string
+    public function getUserEmail(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -92,7 +100,7 @@ class Google extends OAuth
      *
      * @return string
      */
-    public function getUserName(string $accessToken):string
+    public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
 
@@ -108,14 +116,12 @@ class Google extends OAuth
      *
      * @return array
      */
-    protected function getUser(string $accessToken):array
+    protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://graph.google.com/'.$this->version.'/me?fields=email,name&access_token='.urlencode($accessToken));
-
+            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v2/userinfo?access_token=' . urlencode($accessToken));
             $this->user = json_decode($user, true);
         }
-
         return $this->user;
     }
 }

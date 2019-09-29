@@ -716,7 +716,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             }
 
             $oauthID = $oauth->getUserID($accessToken);
-
+           
             if (empty($oauthID)) {
                 if (!empty($state['failure'])) {
                     $response->redirect($state['failure'], 301, 0);
@@ -726,7 +726,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             }
 
             $current = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-
+            
             if ($current) {
                 $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
             }
@@ -739,6 +739,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
                     'oauth'.ucfirst($provider).'='.$oauthID,
                 ],
             ]) : $user;
+
 
             if (empty($user)) { // No user logged in or with oauth provider ID, create new one or connect with account with same email
                 $name = $oauth->getUserName($accessToken);
