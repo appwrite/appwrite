@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6"
+                "reference": "457a20948a7f1e9b8e4cea09205b6fd42f8ca811"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6",
-                "reference": "6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/457a20948a7f1e9b8e4cea09205b6fd42f8ca811",
+                "reference": "457a20948a7f1e9b8e4cea09205b6fd42f8ca811",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-09-20T06:34:28+00:00"
+            "time": "2019-09-21T12:46:08+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "e456fafb3d32a83c104a47ad064b2295281e58c0"
+                "reference": "22cd594e2406fbcfc64262fdcdfa78069bf29aa0"
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-09-20 06:30:54"
+            "time": "2019-09-28 23:31:14"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1017,13 +1017,13 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/mustangostang/spyc.git",
-                "reference": "576c42ecbc9630b52a95da3279f07278572c6b15"
+                "url": "git@github.com:mustangostang/spyc.git",
+                "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mustangostang/spyc/zipball/576c42ecbc9630b52a95da3279f07278572c6b15",
-                "reference": "576c42ecbc9630b52a95da3279f07278572c6b15",
+                "url": "https://api.github.com/repos/mustangostang/spyc/zipball/4627c838b16550b666d15aeae1e5289dd5b77da0",
+                "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0",
                 "shasum": ""
             },
             "require": {
@@ -1060,7 +1060,7 @@
                 "yaml",
                 "yml"
             ],
-            "time": "2017-07-23 16:38:44"
+            "time": "2019-09-10 13:16:29"
         },
         {
             "name": "phpmailer/phpmailer",
@@ -1439,12 +1439,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724"
+                "reference": "c2fd9990fcab344b67a12ead04890a88141d5897"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d83802c011b99b5326ccd13e7fc87bacebd4c724",
-                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c2fd9990fcab344b67a12ead04890a88141d5897",
+                "reference": "c2fd9990fcab344b67a12ead04890a88141d5897",
                 "shasum": ""
             },
             "require": {
@@ -1498,7 +1498,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-09-17 06:08:14"
+            "time": "2019-09-20 12:53:54"
         },
         {
             "name": "utopia-php/abuse",
