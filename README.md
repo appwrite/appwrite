@@ -98,8 +98,8 @@ We really ❤️ pull requests! If you wish to help, you can learn more about ho
 
 Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
 
-* 🇺🇸Justin Dorfman ([Github](https://github.com/@jdorfman), [Twitter](https://twitter.com/jdorfman))
+* 🇺🇸Justin Dorfman ([Github](https://github.com/jdorfman), [Twitter](https://twitter.com/jdorfman))
 * 🇺🇳0xflotus ([Github](https://github.com/0xflotus))
-* 🇳🇴Chaaarles ([Github](https://github.com/Chaaarles))
+* 🇳🇴Petter Charles Redfern ([Github](https://github.com/Chaaarles))
 * 🇧🇷Jessé Souza ([Github](https://github.com/jessescn))
 * 🇪🇸Esther Álvarez Feijoo ([Github](https://github.com/EstherAF))
