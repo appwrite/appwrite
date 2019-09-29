@@ -10,6 +10,8 @@ class ConsoleTest extends BaseConsole
     {
         $response = $this->register();
 
+        var_dump($_SERVER);
+
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("\n", $response['body']);
 

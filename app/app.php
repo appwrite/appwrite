@@ -611,6 +611,7 @@ $utopia->get('/v1/open-api-2.json')
                         $temp['extensions'] = [
                             'weight' => $route->getOrder(),
                             'cookies' => $route->getLabel('sdk.cookies', false),
+                            'location' => $route->getLabel('sdk.location', false),
                             'demo' => 'docs/examples/' . fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . fromCamelCaseToDash($temp['operationId']) . '.md',
                         ];
                     }

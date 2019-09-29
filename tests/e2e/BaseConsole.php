@@ -39,7 +39,7 @@ class BaseConsole extends TestCase
         ], [
             'email' => $this->demoEmail,
             'password' => $this->demoPassword,
-            'confirmation' => 'http://localhost/confirm',
+            'confirm' => 'http://localhost/confirm',
             'success' => 'http://localhost/success',
             'failure' => 'http://localhost/failure',
             'name' => 'Demo User',
