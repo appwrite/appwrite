@@ -16,7 +16,7 @@
 
 Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy to use REST API.
 
-Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitve software development tasks.
+Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
 Using Appwrite you can easily manage user authentication with multiple sign-in methods, database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
@@ -37,7 +37,7 @@ curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?port=80 && \
 docker-compose up -d --remove-orphans
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 For advanced, production and custon installation check out our Docker [enviornemnt variables](/docs/EnviornementVariables.md) docs.
 
@@ -47,7 +47,7 @@ In case your port 80 is already taken, change the port number in the command abo
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our getting started tutorials.
+Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * Getting Started for Android (soon...)
@@ -56,7 +56,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ### Services
 
-* [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple signin methods and account recovery.
+* [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple sign-in methods and account recovery.
 * [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices and security audit log.
 * [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
 * [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and users roles within a team.
@@ -71,7 +71,7 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 
 Currently we are supporting a few SDK libraries and we are constantly working on adding new ones.
 
-Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
+Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
 * ✅ [JS](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
 * ✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
@@ -86,7 +86,7 @@ For security issues, please email [security@appwrite.io](mailto:security@appwrit
 
 ## Follow Us
 
-Join our growing commuinty around the world! Follow us on both [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Gitter community](https://gitter.im/appwrite/community) for more help, ideas and discussions.
+Join our growing community around the world! Follow us on [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Gitter community](https://gitter.im/appwrite/community) for more help, ideas and discussions.
 
 ## Contributing
 
