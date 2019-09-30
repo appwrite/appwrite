@@ -1,5 +1,4 @@
 # Version 0.2.0 (PRE-RELEASE)
--------------
 
 ## Features
 
@@ -20,4 +19,3 @@
 * Updated all SDKs to sync with API changes
 
 # Version 0.1.15 (NOT-RELEASED)
--------------
