@@ -108,3 +108,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇮🇩 Zeet ([Github](https://github.com/Kiy4h))
 * 🇫🇮 Pessi Päivärinne ([Github](https://github.com/pessip))
 * 🇺🇳 Sergi Vos ([Github](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
+* 🇮🇱 Tomer Cohen ([Github](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
