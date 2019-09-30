@@ -104,3 +104,7 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇧🇷 Jessé Souza ([Github](https://github.com/jessescn))
 * 🇪🇸 Esther Álvarez Feijoo ([Github](https://github.com/EstherAF))
 * 🇮🇳 Christy Jacob ([Github](https://github.com/christyjacob4), [Linkedin](https://www.linkedin.com/in/christyjacob4/))
+* 🇺🇦 Dmitriy Danilov ([Github](https://github.com/daniloff200), [Twitter](https://twitter.com/daniloff200))
+* 🇮🇩 Zeet ([Github](https://github.com/Kiy4h))
+* 🇫🇮 Pessi Päivärinne ([Github](https://github.com/pessip))
+* 🇺🇳 Sergi Vos ([Github](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
