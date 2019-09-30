@@ -1,8 +1,8 @@
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img width="260px" height="39px" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>Simple Backend Server for your [Vue / Angular / React / iOS / Android / Flutter / *ANY*] Frontend App</b>
+    <b>Simple Backend Server for your [Vue / Angular / React / iOS / Android / Flutter / *ANY OTHER*] Frontend App</b>
     <br />
     <br />
 </p>
@@ -37,9 +37,9 @@ curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?port=80 && \
 docker-compose up -d --remove-orphans
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes.
+Once the Docker installation is completed, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after the completion of the installation.
 
-For advanced, production and custom installation check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
+For advanced, production and custom installation, check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
 
 ### Changing Port Number
 
@@ -50,9 +50,9 @@ In case your port 80 is already taken, change the port number in the command abo
 Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our getting started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
+* [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 * Getting Started for Android (soon...)
 * Getting Started for iOS (soon...)
-* [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 
 ### Services
 
@@ -69,20 +69,20 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 
 ### SDKs
 
-Currently we are supporting a few SDK libraries and we are constantly working on adding new ones.
+Currently, we are supporting only a few SDK libraries and are constantly working on including new ones.
 
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
-* ✅ [JS](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
-* ✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-* ✅ [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
-* ✅ [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Work in progress** (Maintained by the Appwrite Team)
-* ✅ [Python](https://github.com/appwrite/sdk-for-python) - **Work in progress** (Maintained by the Appwrite Team)
-* ✳️ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
+✅ [JS](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
+✅ [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
+✅ [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Work in progress** (Maintained by the Appwrite Team)
+✅ [Python](https://github.com/appwrite/sdk-for-python) - **Work in progress** (Maintained by the Appwrite Team)
+✳️ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
 ## Security
 
-For security issues, please email [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
 
 ## Follow Us
 
