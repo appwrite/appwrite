@@ -7,11 +7,13 @@
 * Added input field with the server API endpoint for easy access
 * Added new OAuth providers for Google and Gitlab
 * Added 8 new locales for locale service and email tempaltes (no, pt-br, es, ua, ru, id, fi, cat)
+* Improved test coverage for the project and synced DEV & CI enviornments settings
 
 ## Bug Fixes
 
 * Fixed bug not allowing to update OAuth providers settings
 * Fixed some broken API examples in docs
+* Fixed bug that caused the Appwrite container to change DB directory file permissions.
 
 ## Breaking Changes
 
