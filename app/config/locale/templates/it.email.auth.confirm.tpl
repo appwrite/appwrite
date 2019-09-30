@@ -21,5 +21,5 @@
     <br />
     Grazie,
     <br />
-    {{project}} squadra
+    Il team di {{project}}
 </div>
