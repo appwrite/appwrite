@@ -19,7 +19,6 @@ $cli = new CLI();
 $cli
     ->task('generate')
     ->action(function () {
-
         function getSSLPage($url)
         {
             $ch = curl_init();

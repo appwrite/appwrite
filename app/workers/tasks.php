@@ -91,7 +91,10 @@ class TasksV1
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_USERAGENT, sprintf(APP_USERAGENT, $version));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, [
+        curl_setopt(
+            $ch,
+            CURLOPT_HTTPHEADER,
+            array_merge($headers, [
                 'X-'.APP_NAME.'-Task-UID: '.$task->getAttribute('$uid', ''),
                 'X-'.APP_NAME.'-Task-Name: '.$task->getAttribute('name', ''),
             ])

@@ -23,10 +23,18 @@ $utopia->get('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'listUsers')
     ->label('sdk.description', 'Get a list of all the project users. You can use the query params to filter your results.')
-    ->param('search', '', function () {return new Text(256);}, 'Search term to filter your list results.', true)
-    ->param('limit', 25, function () {return new Range(0, 100);}, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () {return new Range(0, 2000);}, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () {return new WhiteList(['ASC', 'DESC']);}, 'Order result by ASC or DESC order.', true)
+    ->param('search', '', function () {
+        return new Text(256);
+    }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () {
+        return new Range(0, 100);
+    }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () {
+        return new Range(0, 2000);
+    }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () {
+        return new WhiteList(['ASC', 'DESC']);
+    }, 'Order result by ASC or DESC order.', true)
     ->action(
         function ($search, $limit, $offset, $orderType) use ($response, $projectDB, $providers) {
             $results = $projectDB->getCollection([
@@ -60,7 +68,8 @@ $utopia->get('/v1/users')
                         'registration',
                         'confirm',
                         'name',
-                    ], $oauthKeys
+                    ],
+                    $oauthKeys
                 ));
             }, $results);
 
@@ -74,7 +83,9 @@ $utopia->get('/v1/users/:userId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getUser')
     ->label('sdk.description', 'Get user by its unique ID.')
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
     ->action(
         function ($userId) use ($response, $projectDB, $providers) {
             $user = $projectDB->getDocument($userId);
@@ -101,7 +112,8 @@ $utopia->get('/v1/users/:userId')
                     'registration',
                     'confirm',
                     'name',
-                ], $oauthKeys
+                ],
+                $oauthKeys
             )), ['roles' => Authorization::getRoles()]));
         }
     );
@@ -112,7 +124,9 @@ $utopia->get('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getUserPrefs')
     ->label('sdk.description', 'Get user preferences by its unique ID.')
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
     ->action(
         function ($userId) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
@@ -143,7 +157,9 @@ $utopia->get('/v1/users/:userId/sessions')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getUserSessions')
     ->label('sdk.description', 'Get user sessions list by its unique ID.')
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
     ->action(
         function ($userId) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
@@ -205,7 +221,9 @@ $utopia->get('/v1/users/:userId/logs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getUserLogs')
     ->label('sdk.description', 'Get user activity logs list by its unique ID.')
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
     ->action(
         function ($userId) use ($response, $register, $projectDB, $project) {
             $user = $projectDB->getDocument($userId);
@@ -266,9 +284,15 @@ $utopia->post('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createUser')
     ->label('sdk.description', 'Create a new user.')
-    ->param('email', '', function () {return new Email();}, 'User account email.')
-    ->param('password', '', function () {return new Password();}, 'User account password.')
-    ->param('name', '', function () {return new Text(100);}, 'User account name.', true)
+    ->param('email', '', function () {
+        return new Email();
+    }, 'User account email.')
+    ->param('password', '', function () {
+        return new Password();
+    }, 'User account password.')
+    ->param('name', '', function () {
+        return new Text(100);
+    }, 'User account name.', true)
     ->action(
         function ($email, $password, $name) use ($response, $register, $projectDB, $providers) {
             $profile = $projectDB->getCollection([ // Get user by email address
@@ -330,8 +354,12 @@ $utopia->patch('/v1/users/:userId/status')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserStatus')
     ->label('sdk.description', 'Update user status by its unique ID.')
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
-    ->param('status', '', function () {return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]);}, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to blocking the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
+    ->param('status', '', function () {
+        return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]);
+    }, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to blocking the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->action(
         function ($userId, $status) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
@@ -360,8 +388,12 @@ $utopia->delete('/v1/users/:userId/sessions/:session')
     ->label('sdk.method', 'deleteUsersSession')
     ->label('sdk.description', 'Delete user sessions by its unique ID.')
     ->label('abuse-limit', 100)
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
-    ->param('sessionId', null, function () {return new UID();}, 'User unique session ID.')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
+    ->param('sessionId', null, function () {
+        return new UID();
+    }, 'User unique session ID.')
     ->action(
         function ($userId, $sessionId) use ($response, $request, $projectDB) {
             $user = $projectDB->getDocument($userId);
@@ -391,7 +423,9 @@ $utopia->delete('/v1/users/:userId/sessions')
     ->label('sdk.method', 'deleteUserSessions')
     ->label('sdk.description', 'Delete all user sessions by its unique ID.')
     ->label('abuse-limit', 100)
-    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
     ->action(
         function ($userId) use ($response, $request, $projectDB) {
             $user = $projectDB->getDocument($userId);

@@ -79,8 +79,8 @@ class ProjectDatabaseTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testCollectionCreateSuccess($data) {
-        
+    public function testCollectionCreateSuccess($data)
+    {
         $actors = $this->client->call(Client::METHOD_POST, '/database', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -170,7 +170,8 @@ class ProjectDatabaseTest extends BaseProjects
     /**
      * @depends testCollectionCreateSuccess
      */
-    public function testDocumentCreateSuccess($data) {
+    public function testDocumentCreateSuccess($data)
+    {
         $document1 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -313,7 +314,8 @@ class ProjectDatabaseTest extends BaseProjects
     /**
      * @depends testDocumentCreateSuccess
      */
-    public function testDocumentsListSuccessOrderAndCasting($data) {
+    public function testDocumentsListSuccessOrderAndCasting($data)
+    {
         $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -348,7 +350,8 @@ class ProjectDatabaseTest extends BaseProjects
     /**
      * @depends testDocumentCreateSuccess
      */
-    public function testDocumentsListSuccessLimitAndOffset($data) {
+    public function testDocumentsListSuccessLimitAndOffset($data)
+    {
         $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -383,7 +386,8 @@ class ProjectDatabaseTest extends BaseProjects
     /**
      * @depends testDocumentCreateSuccess
      */
-    public function testDocumentsListSuccessFirstAndLast($data) {
+    public function testDocumentsListSuccessFirstAndLast($data)
+    {
         $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -417,7 +421,8 @@ class ProjectDatabaseTest extends BaseProjects
     /**
      * @depends testDocumentCreateSuccess
      */
-    public function testDocumentsListSuccessSerach($data) {
+    public function testDocumentsListSuccessSerach($data)
+    {
         $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -456,7 +461,8 @@ class ProjectDatabaseTest extends BaseProjects
     /**
      * @depends testDocumentCreateSuccess
      */
-    public function testDocumentsListSuccessFilters($data) {
+    public function testDocumentsListSuccessFilters($data)
+    {
         $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],

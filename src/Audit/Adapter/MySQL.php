@@ -46,14 +46,14 @@ class MySQL extends Adapter
 
         $data = mb_strcut(json_encode($data), 0, 64000, 'UTF-8'); // Limit data to MySQL 64kb limit
 
-        $st->bindValue(':userId',           $userId,            PDO::PARAM_STR);
-        $st->bindValue(':userType',         $userType,          PDO::PARAM_INT);
-        $st->bindValue(':event',            $event,             PDO::PARAM_STR);
-        $st->bindValue(':resource',         $resource,          PDO::PARAM_STR);
-        $st->bindValue(':userAgent',        $userAgent,         PDO::PARAM_STR);
-        $st->bindValue(':ip',               $ip,                PDO::PARAM_STR);
-        $st->bindValue(':location',         $location,          PDO::PARAM_STR);
-        $st->bindValue(':data',             $data,              PDO::PARAM_STR);
+        $st->bindValue(':userId', $userId, PDO::PARAM_STR);
+        $st->bindValue(':userType', $userType, PDO::PARAM_INT);
+        $st->bindValue(':event', $event, PDO::PARAM_STR);
+        $st->bindValue(':resource', $resource, PDO::PARAM_STR);
+        $st->bindValue(':userAgent', $userAgent, PDO::PARAM_STR);
+        $st->bindValue(':ip', $ip, PDO::PARAM_STR);
+        $st->bindValue(':location', $location, PDO::PARAM_STR);
+        $st->bindValue(':data', $data, PDO::PARAM_STR);
 
         $st->execute();
 
@@ -69,8 +69,8 @@ class MySQL extends Adapter
             ORDER BY `time` DESC LIMIT 10
         ');
 
-        $st->bindValue(':userId',           $userId,            PDO::PARAM_STR);
-        $st->bindValue(':userType',         $userType,          PDO::PARAM_INT);
+        $st->bindValue(':userId', $userId, PDO::PARAM_STR);
+        $st->bindValue(':userType', $userType, PDO::PARAM_INT);
 
         $st->execute();
 
@@ -95,8 +95,8 @@ class MySQL extends Adapter
             ORDER BY `time` DESC LIMIT 10
         ');
 
-        $st->bindValue(':userId',           $userId,            PDO::PARAM_STR);
-        $st->bindValue(':userType',         $userType,          PDO::PARAM_INT);
+        $st->bindValue(':userId', $userId, PDO::PARAM_STR);
+        $st->bindValue(':userType', $userType, PDO::PARAM_INT);
 
         foreach ($actions as $k => $id) {
             $st->bindValue(':action_'.$k, $id);
