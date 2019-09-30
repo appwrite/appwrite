@@ -36,7 +36,7 @@ Appwrite uses PHPs Composer for managing dependencies on the server-side and JS 
 
 Appwrite is following the PHP-FIG standards. Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
 
-We use prettier for our JS coding standards and for auto-formmating our code.
+We use prettier for our JS coding standards and for auto-formatting our code.
 
 ## Scalability, Speed and Performance
 
