@@ -83,7 +83,7 @@ Adding a new dependency should have vital value on the product with minimum poss
 
 ## Introducing New Features
 
-We whould 💖 you to contribute to Appwrite, but we whould also like to make sure Appwrite is as great as possible and loyal to its vision and mission statement 🙏.
+We would 💖 you to contribute to Appwrite, but we would also like to make sure Appwrite is as great as possible and loyal to its vision and mission statement 🙏.
 
 For us to find the right balance, please open an issue explaining your ideas before intoducing a new pull requests.
 
