@@ -610,5 +610,4 @@ class Projects extends Service
         return $this->client->call(Client::METHOD_DELETE, $path, [
         ], $params);
     }
-
 }

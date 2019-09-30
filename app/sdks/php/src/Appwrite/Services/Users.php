@@ -195,5 +195,4 @@ class Users extends Service
         return $this->client->call(Client::METHOD_PATCH, $path, [
         ], $params);
     }
-
 }

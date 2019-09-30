@@ -5,7 +5,7 @@ namespace Tests\E2E;
 use Tests\E2E\Client;
 
 class ConsoleHealthTest extends BaseConsole
-{   
+{
     public function testHTTPSuccess()
     {
         $response = $this->client->call(Client::METHOD_GET, '/health', [

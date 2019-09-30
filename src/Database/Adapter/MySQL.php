@@ -189,11 +189,11 @@ class MySQL extends Adapter
             $data['$uid'] = $this->getUid();
         }
 
-        $st1->bindValue(':uid',         $data['$uid'],                      PDO::PARAM_STR);
-        $st1->bindValue(':revision',    $revision,                          PDO::PARAM_STR);
-        $st1->bindValue(':signature',   $signature,                         PDO::PARAM_STR);
-        $st1->bindValue(':createdAt',   date('Y-m-d H:i:s', time()), PDO::PARAM_STR);
-        $st1->bindValue(':updatedAt',   date('Y-m-d H:i:s', time()), PDO::PARAM_STR);
+        $st1->bindValue(':uid', $data['$uid'], PDO::PARAM_STR);
+        $st1->bindValue(':revision', $revision, PDO::PARAM_STR);
+        $st1->bindValue(':signature', $signature, PDO::PARAM_STR);
+        $st1->bindValue(':createdAt', date('Y-m-d H:i:s', time()), PDO::PARAM_STR);
+        $st1->bindValue(':updatedAt', date('Y-m-d H:i:s', time()), PDO::PARAM_STR);
         $st1->bindValue(':permissions', json_encode($data['$permissions']), PDO::PARAM_STR);
 
         $st1->execute();
@@ -274,14 +274,14 @@ class MySQL extends Adapter
             if (is_array($prop['value'])) {
                 throw new Exception('Value can\'t be an array: '.json_encode($prop['value']));
             }
-            $st2->bindValue(':documentUid',        $data['$uid'],  PDO::PARAM_STR);
-            $st2->bindValue(':documentRevision',   $revision,      PDO::PARAM_STR);
+            $st2->bindValue(':documentUid', $data['$uid'], PDO::PARAM_STR);
+            $st2->bindValue(':documentRevision', $revision, PDO::PARAM_STR);
 
-            $st2->bindValue(':key',                $prop['key'],   PDO::PARAM_STR);
-            $st2->bindValue(':value',              $prop['value'], PDO::PARAM_STR);
-            $st2->bindValue(':primitive',          $prop['type'],  PDO::PARAM_STR);
-            $st2->bindValue(':array',              $prop['array'], PDO::PARAM_BOOL);
-            $st2->bindValue(':order',              $prop['order'], PDO::PARAM_STR);
+            $st2->bindValue(':key', $prop['key'], PDO::PARAM_STR);
+            $st2->bindValue(':value', $prop['value'], PDO::PARAM_STR);
+            $st2->bindValue(':primitive', $prop['type'], PDO::PARAM_STR);
+            $st2->bindValue(':array', $prop['array'], PDO::PARAM_BOOL);
+            $st2->bindValue(':order', $prop['order'], PDO::PARAM_STR);
 
             $st2->execute();
         }
@@ -367,12 +367,12 @@ class MySQL extends Adapter
                 (`revision`, `start`, `end`, `key`, `array`, `order`)
             VALUES (:revision, :start, :end, :key, :array, :order)');
 
-        $st2->bindValue(':revision',       $revision,      PDO::PARAM_STR);
-        $st2->bindValue(':start',          $start,         PDO::PARAM_STR);
-        $st2->bindValue(':end',            $end,           PDO::PARAM_STR);
-        $st2->bindValue(':key',            $key,           PDO::PARAM_STR);
-        $st2->bindValue(':array',          $isArray,       PDO::PARAM_INT);
-        $st2->bindValue(':order',          $order,         PDO::PARAM_INT);
+        $st2->bindValue(':revision', $revision, PDO::PARAM_STR);
+        $st2->bindValue(':start', $start, PDO::PARAM_STR);
+        $st2->bindValue(':end', $end, PDO::PARAM_STR);
+        $st2->bindValue(':key', $key, PDO::PARAM_STR);
+        $st2->bindValue(':array', $isArray, PDO::PARAM_INT);
+        $st2->bindValue(':order', $order, PDO::PARAM_INT);
 
         $st2->execute();
 

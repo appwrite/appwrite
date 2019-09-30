@@ -185,7 +185,7 @@ class Client
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_USERAGENT, php_uname('s') . '-' . php_uname('r') . ':php-' . phpversion());
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$responseHeaders) {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $header = explode(':', strtolower($header), 2);
 
@@ -198,12 +198,12 @@ class Client
             return $len;
         });
 
-        if($method != self::METHOD_GET) {
+        if ($method != self::METHOD_GET) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
         }
 
         // Allow self signed certificates
-        if($this->selfSigned) {
+        if ($this->selfSigned) {
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
@@ -212,7 +212,7 @@ class Client
         $responseType   = (isset($responseHeaders['content-type'])) ? $responseHeaders['content-type'] : '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         
-        switch(substr($responseType, 0, strpos($responseType, ';'))) {
+        switch (substr($responseType, 0, strpos($responseType, ';'))) {
             case 'application/json':
                 $responseBody = json_decode($responseBody, true);
             break;
@@ -234,16 +234,16 @@ class Client
      * @param string $prefix
      * @return array
      */
-    protected function flatten(array $data, $prefix = '') {
+    protected function flatten(array $data, $prefix = '')
+    {
         $output = [];
 
-        foreach($data as $key => $value) {
+        foreach ($data as $key => $value) {
             $finalKey = $prefix ? "{$prefix}[{$key}]" : $key;
 
             if (is_array($value)) {
                 $output += $this->flatten($value, $finalKey); // @todo: handle name collision here if needed
-            }
-            else {
+            } else {
                 $output[$finalKey] = $value;
             }
         }

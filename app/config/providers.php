@@ -24,7 +24,7 @@ return [
     'google' => [
         'developers' => 'https://developers.google.com/',
         'icon' => 'icon-google',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'instagram' => [
         'developers' => 'https://www.instagram.com/developer/',

@@ -1,7 +1,7 @@
 <?php
 
 // Init
-if(file_exists(__DIR__ . '/../vendor/autoload.php')) {
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
@@ -51,7 +51,7 @@ define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) === 'localhost' 
 /**
  * Registry
  */
-$register->set('db', function() use ($request) { // Register DB connection
+$register->set('db', function () use ($request) { // Register DB connection
     $dbHost     = $request->getServer('_APP_DB_HOST', '');
     $dbUser     = $request->getServer('_APP_DB_USER', '');
     $dbPass     = $request->getServer('_APP_DB_PASS', '');
@@ -68,11 +68,11 @@ $register->set('db', function() use ($request) { // Register DB connection
 
     return $pdo;
 });
-$register->set('influxdb', function() use ($request) { // Register DB connection
+$register->set('influxdb', function () use ($request) { // Register DB connection
     $host = $request->getServer('_APP_INFLUXDB_HOST', '');
     $port = $request->getServer('_APP_INFLUXDB_PORT', '');
 
-    if(empty($host) || empty($port)) {
+    if (empty($host) || empty($port)) {
         return null;
     }
 
@@ -80,7 +80,7 @@ $register->set('influxdb', function() use ($request) { // Register DB connection
 
     return $client;
 });
-$register->set('statsd', function() use ($request) { // Register DB connection
+$register->set('statsd', function () use ($request) { // Register DB connection
     $host = $request->getServer('_APP_STATSD_HOST', 'telegraf');
     $port = $request->getServer('_APP_STATSD_PORT', 8125);
 
@@ -89,13 +89,13 @@ $register->set('statsd', function() use ($request) { // Register DB connection
 
     return $statsd;
 });
-$register->set('cache', function() use ($redisHost, $redisPort) { // Register cache connection
+$register->set('cache', function () use ($redisHost, $redisPort) { // Register cache connection
     $redis = new Redis();
 
     $redis->connect($redisHost, $redisPort);
     return $redis;
 });
-$register->set('smtp', function() use ($request) {
+$register->set('smtp', function () use ($request) {
     $mail = new PHPMailer(true);
 
     $mail->isSMTP();
@@ -131,7 +131,7 @@ Locale::setLanguage('he', include __DIR__ . '/config/locale/he.php');
 Locale::setLanguage('pt-br', include __DIR__ . '/config/locale/pt-br.php');
 Locale::setLanguage('es', include __DIR__ . '/config/locale/es.php');
 
-if(in_array($locale, APP_LOCALES)) {
+if (in_array($locale, APP_LOCALES)) {
     Locale::setDefault($locale);
 }
 
@@ -159,7 +159,7 @@ Authorization::enable();
 
 $console = $consoleDB->getDocument('console');
 
-if(is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
+if (is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
     $project = $console;
 }
 
@@ -167,7 +167,7 @@ $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'defau
 
 Auth::setCookieName('a-session-' . $project->getUid());
 
-if(APP_MODE_ADMIN === $mode) {
+if (APP_MODE_ADMIN === $mode) {
     Auth::setCookieName('a-session-' . $console->getUid());
 }
 
@@ -182,7 +182,7 @@ $projectDB->setMocks($collections);
 
 $user = $projectDB->getDocument(Auth::$unique);
 
-if(APP_MODE_ADMIN === $mode) {
+if (APP_MODE_ADMIN === $mode) {
     $user = $consoleDB->getDocument(Auth::$unique);
 
     $user
@@ -190,17 +190,16 @@ if(APP_MODE_ADMIN === $mode) {
     ;
 }
 
-if(empty($user->getUid()) // Check a document has been found in the DB
+if (empty($user->getUid()) // Check a document has been found in the DB
     || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
     || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
     $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
 }
 
-if(APP_MODE_ADMIN === $mode) {
-    if(!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+if (APP_MODE_ADMIN === $mode) {
+    if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
         Authorization::disable();
-    }
-    else {
+    } else {
         $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
     }
 }

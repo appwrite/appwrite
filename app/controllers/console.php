@@ -175,7 +175,9 @@ $utopia->get('/console/database/collection')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->param('id', '', function () {return new UID();}, 'Collection unique ID.')
+    ->param('id', '', function () {
+        return new UID();
+    }, 'Collection unique ID.')
     ->action(function ($id) use ($layout, $projectDB) {
         $collection = $projectDB->getDocument($id, false);
 

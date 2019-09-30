@@ -61,7 +61,10 @@ class LinkedIn extends OAuth
      */
     public function getAccessToken(string $code):string
     {
-        $accessToken = $this->request('POST', 'https://www.linkedin.com/oauth/v2/accessToken', ['Content-Type: application/x-www-form-urlencoded'],
+        $accessToken = $this->request(
+            'POST',
+            'https://www.linkedin.com/oauth/v2/accessToken',
+            ['Content-Type: application/x-www-form-urlencoded'],
             http_build_query([
                 'grant_type' => 'authorization_code',
                 'code' => $code,
