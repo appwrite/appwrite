@@ -16,7 +16,7 @@
 
 Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy to use REST API.
 
-Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitve software development tasks.
+Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
 Using Appwrite you can easily manage user authentication with multiple sign-in methods, database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
@@ -39,7 +39,7 @@ docker-compose up -d --remove-orphans
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes.
 
-For advanced, production and custon installation check out our Docker [enviornemnt variables](/docs/EnviornementVariables.md) docs.
+For advanced, production and custom installation check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
 
 ### Changing Port Number
 
