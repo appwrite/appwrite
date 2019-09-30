@@ -7,10 +7,6 @@ use Auth\OAuth;
 class Gitlab extends OAuth
 {
     /**
-     * @var string
-     */
-    // protected $version = 'v4';
-    /**
      * @var array
      */
     protected $user = [];
