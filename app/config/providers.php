@@ -34,7 +34,7 @@ return [
     'microsoft' => [
         'developers' => 'https://developer.microsoft.com/en-us/',
         'icon' => 'icon-windows',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
