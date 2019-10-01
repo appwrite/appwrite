@@ -4,7 +4,7 @@ return [
     'bitbucket' => [
         'developers' => 'https://developer.atlassian.com/bitbucket',
         'icon' => 'icon-bitbucket',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'facebook' => [
         'developers' => 'https://developers.facebook.com/',
