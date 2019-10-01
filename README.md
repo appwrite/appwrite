@@ -39,7 +39,6 @@ docker-compose up -d --remove-orphans
 
 Once the Docker installation completed, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-Linux native hosts the server might take a few minutes to start after installation completes.
 
-
 For advanced, production and custom installation, check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
 
 ### Changing Port Number
@@ -48,7 +47,7 @@ In case your port 80 is already taken, change the port number in the command abo
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our getting started tutorials.
+Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
@@ -57,8 +56,8 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ### Services
 
-* [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple signs in methods and account recovery.
-* [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices, and security audit log.
+* [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple sign-in methods and account recovery.
+* [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices and security audit log.
 * [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
 * [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and user roles within a team.
 * [**Database**](https://appwrite.io/docs/database) - Manage database collections and document. Read, create, update and delete documents and filter lists of documents collections using an advanced filter with a graph like capabilities.
@@ -72,7 +71,7 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 
 Currently, we are supporting only a few SDK libraries and are constantly working on including new ones.
 
-Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
+Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
 * ✅ [JS](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
 * ✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
@@ -99,12 +98,6 @@ We really ❤️ pull requests! If you wish to help, you can learn more about ho
 
 Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
 
-* 🇺🇸 Justin Dorfman ([Github](https://github.com/jdorfman), [Twitter](https://twitter.com/jdorfman))
-* 🇺🇳 0xflotus ([Github](https://github.com/0xflotus))
-* 🇳🇴 Petter Charles Redfern ([Github](https://github.com/Chaaarles))
-* 🇧🇷 Jessé Souza ([Github](https://github.com/jessescn))
-* 🇪🇸 Esther Álvarez Feijoo ([Github](https://github.com/EstherAF))
-* 🇮🇳 Christy Jacob ([Github](https://github.com/christyjacob4), [Linkedin](https://www.linkedin.com/in/christyjacob4/))
 * 🇺🇦 Dmitriy Danilov ([Github](https://github.com/daniloff200), [Twitter](https://twitter.com/daniloff200))
 * 🇮🇩 Zeet ([Github](https://github.com/Kiy4h))
 * 🇫🇮 Pessi Päivärinne ([Github](https://github.com/pessip))
