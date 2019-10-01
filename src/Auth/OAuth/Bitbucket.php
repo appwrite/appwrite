@@ -46,7 +46,7 @@ class Bitbucket extends OAuth
 
         $accessToken = $this->request(
             'POST',
-            'https://bitbucket.org/site/oauth2/access_token', 
+            'https://bitbucket.org/site/oauth2/access_token',
             $headers,
             'code=' . urlencode($code) .
             '&client_id=' . urlencode($this->appID) .
@@ -127,5 +127,4 @@ class Bitbucket extends OAuth
         }
         return $this->user;
     }
-
 }
