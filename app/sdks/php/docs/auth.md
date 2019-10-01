@@ -10,7 +10,7 @@ POST https://appwrite.test/v1/auth/login
 
 Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
 
-When not using the success or failure redirect arguments this endpoint will result with a 200 status code and the user account object on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies needed for saving the account session token. **
+When accessing this route using Javascript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
 
 ### Parameters
 
@@ -43,21 +43,6 @@ DELETE https://appwrite.test/v1/auth/logout/{id}
 | --- | --- | --- | --- |
 | id | string | **Required** User specific session unique ID number. if 0 delete all sessions. |  |
 
-## OAuth Callback
-
-```http request
-GET https://appwrite.test/v1/auth/oauth/callback/{provider}/{projectId}
-```
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| projectId | string | **Required** Project unique ID |  |
-| provider | string | **Required** OAuth provider |  |
-| code | string | **Required** OAuth code |  |
-| state | string | Login state params |  |
-
 ## OAuth Login
 
 ```http request
@@ -85,7 +70,7 @@ POST https://appwrite.test/v1/auth/recovery
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | email | string | User account email address. |  |
-| redirect | string | Reset page in your app to redirect user after reset token has been sent to user email. |  |
+| reset | string | Reset URL in your app to redirect the user after the reset token has been sent to the user email. |  |
 
 ## Password Reset
 
@@ -114,11 +99,11 @@ POST https://appwrite.test/v1/auth/register
 
 ** Use this endpoint to allow a new user to register an account in your project. Use the success and failure URL&#039;s to redirect users back to your application after signup completes.
 
-If registration completes successfully user will be sent with a confirmation email in order to confirm he is the owner of the account email address. Use the redirect parameter to redirect the user from the confirmation email back to your app. When the user is redirected, use the /auth/confirm endpoint to complete the account confirmation.
+If registration completes successfully user will be sent with a confirmation email in order to confirm he is the owner of the account email address. Use the confirmation parameter to redirect the user from the confirmation email back to your app. When the user is redirected, use the /auth/confirm endpoint to complete the account confirmation.
 
 Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
 
-When not using the success or failure redirect arguments this endpoint will result with a 200 status code and the user account object on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies needed for saving the account session token. **
+When accessing this route using Javascript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
 
 ### Parameters
 
@@ -126,7 +111,7 @@ When not using the success or failure redirect arguments this endpoint will resu
 | --- | --- | --- | --- |
 | email | string | Account email |  |
 | password | string | User password |  |
-| redirect | string | Confirmation page to redirect user after confirm token has been sent to user email |  |
+| confirm | string | Confirmation URL to redirect user after confirm token has been sent to user email |  |
 | success | string | Redirect when registration succeed |  |
 | failure | string | Redirect when registration failed |  |
 | name | string | User name |  |
@@ -160,5 +145,5 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| redirect | string | Confirmation page to redirect user to your app after confirm token has been sent to user email. |  |
+| confirm | string | Confirmation URL to redirect user to your app after confirm token has been sent to user email. |  |
 

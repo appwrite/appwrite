@@ -35,19 +35,6 @@ class Auth(Service):
         return self.client.call('delete', path, {
         }, params)
 
-    def oauth_callback(self, project_id, provider, code, state=''):
-        """OAuth Callback"""
-
-        params = {}
-        path = '/auth/oauth/callback/{provider}/{projectId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{provider}', provider)                
-        params['code'] = code
-        params['state'] = state
-
-        return self.client.call('get', path, {
-        }, params)
-
     def oauth(self, provider, success='', failure=''):
         """OAuth Login"""
 
@@ -60,13 +47,13 @@ class Auth(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def recovery(self, email, redirect):
+    def recovery(self, email, reset):
         """Password Recovery"""
 
         params = {}
         path = '/auth/recovery'
         params['email'] = email
-        params['redirect'] = redirect
+        params['reset'] = reset
 
         return self.client.call('post', path, {
         }, params)
@@ -84,14 +71,14 @@ class Auth(Service):
         return self.client.call('put', path, {
         }, params)
 
-    def register(self, email, password, redirect, success, failure, name=''):
+    def register(self, email, password, confirm, success='', failure='', name=''):
         """Register User"""
 
         params = {}
         path = '/auth/register'
         params['email'] = email
         params['password'] = password
-        params['redirect'] = redirect
+        params['confirm'] = confirm
         params['success'] = success
         params['failure'] = failure
         params['name'] = name
@@ -110,12 +97,12 @@ class Auth(Service):
         return self.client.call('post', path, {
         }, params)
 
-    def confirm_resend(self, redirect):
+    def confirm_resend(self, confirm):
         """Resend Confirmation"""
 
         params = {}
         path = '/auth/register/confirm/resend'
-        params['redirect'] = redirect
+        params['confirm'] = confirm
 
         return self.client.call('post', path, {
         }, params)

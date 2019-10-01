@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    setProject('')
+    .setProject('')
 ;
 
 let promise = sdk.teams.deleteTeamMembership('[TEAM_ID]', '[INVITE_ID]');
