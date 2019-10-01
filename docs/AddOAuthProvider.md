@@ -31,7 +31,7 @@ Once you have finished setting up all the metadata for the new provider, you nee
 Create a new class that extends the basic OAuth provider abstract class in this location:
 
 ```bash
-src/Auth/OAuth/ProviderName
+./src/Auth/OAuth/ProviderName
 ```
 
 Note that the class name should start with a capital letter as PHP FIG standards suggest.
