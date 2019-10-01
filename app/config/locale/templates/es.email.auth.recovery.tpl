@@ -10,12 +10,12 @@
     Hola {{name}},
     <br />
     <br />
-    Sigue este enlace para reestablecer tu contraseña de {{project}}.
+    Sigue este enlace para reestablecer tu contrase&ntilde;a de {{project}}.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Si no has pedido reestablecer tu contraseña, puedes ignorar este mensaje.
+    Si no has pedido reestablecer tu contrase&ntilde;a, puedes ignorar este mensaje.
     <br />
     <br />
     Gracias,

@@ -10,12 +10,12 @@
     Hola {{name}},
     <br />
     <br />
-    Sigue este enlace para verificar tu dirección de correo:
+    Sigue este enlace para verificar tu direcci&oacute;n de correo:
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Si no has solicitado verificar esta dirección, puedes ignorar este mensaje.
+    Si no has solicitado verificar esta direcci&oacute;n, puedes ignorar este mensaje.
     <br />
     <br />
     Gracias,

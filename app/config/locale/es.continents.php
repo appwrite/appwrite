@@ -1,11 +1,11 @@
 <?php
 
 return [
-    'AF' => 'África',
-    'AN' => 'Antártica',
+    'AF' => '&Aacute;frica',
+    'AN' => 'Ant&aacute;rtida',
     'AS' => 'Asia',
     'EU' => 'Europa',
-    'NA' => 'América del Norte',
-    'OC' => 'Oceanía',
-    'SA' => 'América del Sur',
+    'NA' => 'Am&eacute;rica del Norte',
+    'OC' => 'Ocean&iacute;a',
+    'SA' => 'Am&eacute;rica del Sur',
 ];
