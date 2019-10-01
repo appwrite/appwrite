@@ -111,3 +111,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇮🇱 Tomer Cohen ([Github](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
 * 🇬🇷 Panagiotis Skarlas ([Github](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
 * 🇷🇺 Alexey Pyltsyn ([Github](https://github.com/lex111))
+* 🇩🇪 Robin C ([Github](https://github.com/Taminoful))
