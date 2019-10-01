@@ -18,11 +18,11 @@ The first step in adding a new OAuth provider is to list it in providers config 
 ./app/config/providers.php
 ```
 
-Make sure to fill all data needed and that your provider array key name is in camelcase format and has no spaces or special characters.
+Make sure to fill all data needed and that your provider array key name is in camelCase format and has no spaces or special characters.
 
 ### Add Provider Logo
 
-Add a logo image to your new provider in this path: ./public/images/oauth. Your logo should be a png 100X100px file with the name ofyour provider (all lowercase). Please make sure to leave about 20px padding around the logo to be consistent with other logos.
+Add a logo image to your new provider in this path: ./public/images/oauth. Your logo should be a png 100×100px file with the name of your provider (all lowercase). Please make sure to leave about 20px padding around the logo to be consistent with other logos.
 
 ### Add Provider Class
 
@@ -30,8 +30,8 @@ Once finished setting all the metadata for the new provider you need to start co
 
 Create a new class that extends the basic OAuth provider abstract class in this location:
 
-```
-\Auth\OAuth\ProviderName
+```bash
+src/Auth/OAuth/ProviderName
 ```
 
 Note that the class name should start with a capital letter as PHP FIG standards suggest.

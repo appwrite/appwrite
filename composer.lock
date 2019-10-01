@@ -4,6 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
+    "hash": "cf3e9453a93f3ee5cfec76f6cd6bc139",
     "content-hash": "470f543ebf989400a43a6269f0b4d60a",
     "packages": [
         {
@@ -92,7 +93,15 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
+<<<<<<< HEAD
+<<<<<<< HEAD
+                "reference": "2cdf218f735e5c52a47f1d8977f460261fd9017f"
+=======
                 "reference": "22cd594e2406fbcfc64262fdcdfa78069bf29aa0"
+>>>>>>> upstream/master
+=======
+                "reference": "22cd594e2406fbcfc64262fdcdfa78069bf29aa0"
+>>>>>>> upstream/master
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +131,15 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
+<<<<<<< HEAD
+<<<<<<< HEAD
+            "time": "2019-09-22 12:47:11"
+=======
             "time": "2019-09-28 23:31:14"
+>>>>>>> upstream/master
+=======
+            "time": "2019-09-28 23:31:14"
+>>>>>>> upstream/master
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -171,7 +188,7 @@
             ],
             "description": "BaconQrCode is a QR code generator for PHP.",
             "homepage": "https://github.com/Bacon/BaconQrCode",
-            "time": "2018-04-25T17:53:56+00:00"
+            "time": "2018-04-25 17:53:56"
         },
         {
             "name": "chrisboulton/php-resque",
@@ -304,7 +321,7 @@
             ],
             "description": "Credis is a lightweight interface to the Redis key-value store which wraps the phpredis library when available for better performance.",
             "homepage": "https://github.com/colinmollenhour/credis",
-            "time": "2019-03-05T16:29:14+00:00"
+            "time": "2019-03-05 16:29:14"
         },
         {
             "name": "composer/ca-bundle",
@@ -402,7 +419,7 @@
                 "enum",
                 "map"
             ],
-            "time": "2017-10-25T22:45:27+00:00"
+            "time": "2017-10-25 22:45:27"
         },
         {
             "name": "domnikl/statsd",
@@ -449,7 +466,7 @@
                 "statsd",
                 "udp"
             ],
-            "time": "2014-12-09T09:37:49+00:00"
+            "time": "2014-12-09 09:37:49"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -498,7 +515,7 @@
                 "cron",
                 "schedule"
             ],
-            "time": "2018-06-06T03:12:17+00:00"
+            "time": "2018-06-06 03:12:17"
         },
         {
             "name": "geoip2/geoip2",
@@ -550,7 +567,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2018-04-10T15:32:59+00:00"
+            "time": "2018-04-10 15:32:59"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -799,7 +816,7 @@
                 "influxdb library",
                 "time series"
             ],
-            "time": "2019-05-30T00:15:14+00:00"
+            "time": "2019-05-30 00:15:14"
         },
         {
             "name": "matthiasmullie/minify",
@@ -859,7 +876,7 @@
                 "minifier",
                 "minify"
             ],
-            "time": "2018-11-26T23:10:39+00:00"
+            "time": "2018-11-26 23:10:39"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -908,7 +925,7 @@
                 "paths",
                 "relative"
             ],
-            "time": "2018-10-25T15:19:41+00:00"
+            "time": "2018-10-25 15:19:41"
         },
         {
             "name": "maxmind-db/reader",
@@ -964,7 +981,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2019-01-04T19:55:56+00:00"
+            "time": "2019-01-04 19:55:56"
         },
         {
             "name": "maxmind/web-service-common",
@@ -1010,7 +1027,7 @@
             ],
             "description": "Internal MaxMind Web Service API",
             "homepage": "https://github.com/maxmind/web-service-common-php",
-            "time": "2018-02-12T22:31:54+00:00"
+            "time": "2018-02-12 22:31:54"
         },
         {
             "name": "mustangostang/spyc",
@@ -1126,7 +1143,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2019-02-01T15:04:28+00:00"
+            "time": "2019-02-01 15:04:28"
         },
         {
             "name": "piwik/device-detector",
@@ -1177,7 +1194,7 @@
                 "parser",
                 "useragent"
             ],
-            "time": "2016-01-21T22:26:37+00:00"
+            "time": "2016-01-21 22:26:37"
         },
         {
             "name": "psr/http-message",
@@ -1314,7 +1331,7 @@
                 }
             ],
             "description": "A polyfill for getallheaders.",
-            "time": "2019-03-08T08:55:37+00:00"
+            "time": "2019-03-08 08:55:37"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -1498,7 +1515,15 @@
             "keywords": [
                 "templating"
             ],
+<<<<<<< HEAD
+<<<<<<< HEAD
+            "time": "2019-09-20 12:53:54"
+=======
             "time": "2019-09-20T12:53:54+00:00"
+>>>>>>> upstream/master
+=======
+            "time": "2019-09-20T12:53:54+00:00"
+>>>>>>> upstream/master
         },
         {
             "name": "utopia-php/abuse",
@@ -1778,6 +1803,8 @@
                 "utopia"
             ],
             "time": "2019-05-08T20:25:57+00:00"
+<<<<<<< HEAD
+=======
         }
     ],
     "packages-dev": [
@@ -3195,8 +3222,10 @@
                 "validate"
             ],
             "time": "2019-08-24T08:43:50+00:00"
+>>>>>>> upstream/master
         }
     ],
+    "packages-dev": null,
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": [],

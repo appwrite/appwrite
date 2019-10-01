@@ -16,8 +16,8 @@ class BaseProjects extends BaseConsole
     {
         parent::setUp();
 
-        $this->projectsDemoEmail = 'user.' . rand(0,1000000) . '@appwrite.io';
-        $this->projectsDemoPassword = 'password.' . rand(0,1000000);
+        $this->projectsDemoEmail = 'user.' . rand(0, 1000000) . '@appwrite.io';
+        $this->projectsDemoPassword = 'password.' . rand(0, 1000000);
     }
 
     public function tearDown()

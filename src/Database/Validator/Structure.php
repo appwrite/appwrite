@@ -186,18 +186,19 @@ class Structure extends Validator
             }
 
             if (empty($validator)) { // Error creating validator for property
-                $this->message = 'Unknown rule type "' . $ruleType . '" for property "' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . '"';
-                
-                if(empty($ruleType)) {
+                $this->message = 'Unknown rule type "'.$ruleType.'" for property "'.htmlspecialchars($key, ENT_QUOTES, 'UTF-8').'"';
+
+                if (empty($ruleType)) {
                     $this->message = 'Unknown property "'.$key.'" type'.
                         '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
                 }
-                
+
                 return false;
             }
 
             if ($ruleRequired && ('' === $value || null === $value)) {
                 $this->message = 'Required property "'.$key.'" has no value';
+
                 return false;
             }
 
@@ -211,6 +212,7 @@ class Structure extends Validator
             if ($ruleArray) { // Array of values validation
                 if (!is_array($value)) {
                     $this->message = 'Property "'.$key.'" must be an array';
+
                     return false;
                 }
 
@@ -219,12 +221,14 @@ class Structure extends Validator
                 foreach ($value as $node) {
                     if (!$validator->isValid($node)) { // Check if property is valid, if not required can also be empty
                         $this->message = 'Property "'.$key.'" has invalid input. '.$validator->getDescription();
+
                         return false;
                     }
                 }
             } else { // Single value validation
                 if ((!$validator->isValid($value)) && !('' === $value && !$ruleRequired)) {  // Error when value is not valid, and is not optional and empty
                     $this->message = 'Property "'.$key.'" has invalid input. '.$validator->getDescription();
+
                     return false;
                 }
             }
