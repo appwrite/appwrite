@@ -122,3 +122,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇳🇱 Kolkies ([Github](https://github.com/kolkies.dev))
 * 🇹🇷 Mustafa Dur ([Github](https://github.com/tosbaha))
 * 🇵🇹 Luís Pinto ([Github](https://github.com/LiTO773))
+* 🇮🇳 Saksham Saxena ([Github](https://github.com/sakkshm))
