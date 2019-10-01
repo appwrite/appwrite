@@ -10,8 +10,10 @@ class ConsoleProjectsTest extends BaseConsole
     {
         $response = $this->register();
 
+        var_dump($response);
+
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
-        $this->assertEquals("\n", $response['body']);
+        $this->assertEquals("", $response['body']);
         
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
 

@@ -11,7 +11,7 @@ class ProjectDatabaseTest extends BaseProjects
         $response = $this->register();
 
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
-        $this->assertEquals("\n", $response['body']);
+        $this->assertEquals("", $response['body']);
         
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
 
@@ -64,7 +64,7 @@ class ProjectDatabaseTest extends BaseProjects
         $user = $this->projectRegister($project['body']['$uid']);
         
         $this->assertEquals('http://localhost/success', $user['headers']['location']);
-        $this->assertEquals("\n", $user['body']);
+        $this->assertEquals("", $user['body']);
         
         return [
             'email' => $this->demoEmail,

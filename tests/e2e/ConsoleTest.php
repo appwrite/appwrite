@@ -10,10 +10,8 @@ class ConsoleTest extends BaseConsole
     {
         $response = $this->register();
 
-        var_dump($_SERVER);
-
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
-        $this->assertEquals("\n", $response['body']);
+        $this->assertEquals("", $response['body']);
 
         return [
             'email' => $this->demoEmail,
@@ -39,7 +37,7 @@ class ConsoleTest extends BaseConsole
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
 
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
-        $this->assertEquals("\n", $response['body']);
+        $this->assertEquals("", $response['body']);
 
         return [
             'email' => $data['email'],
