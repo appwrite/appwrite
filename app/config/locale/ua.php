@@ -3,7 +3,7 @@
 return [
     'settings.inspire' => '"The art of being wise is the art of knowing what to overlook."', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'ua',
-    'settings.direction' => 'rtl',
+    'settings.direction' => 'ltr',
 
     'auth.emails.team' => '%s Команда',
     'auth.emails.confirm.title' => 'Підтвердження Акаунту' ,
