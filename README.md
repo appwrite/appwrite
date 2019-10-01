@@ -119,3 +119,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇫🇷 Corentin Le Fur ([Github](https://github.com/crtlf))
 * 🇬🇧 Callum Lowry ([Github](https://github.com/Girxffe))
 * 🇷🇴 Bogdan Covrig ([Github](https://github.com/BogDAAAMN), [Twitter](https://twitter.com/BogdanCovrig))
+* 🇳🇱 Kolkies ([Github](https://github.com/kolkies.dev))
