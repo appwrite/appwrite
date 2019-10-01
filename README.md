@@ -73,12 +73,12 @@ Currently, we are supporting only a few SDK libraries and are constantly working
 
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
-✅ [JS](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
-✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-✅ [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
-✅ [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Work in progress** (Maintained by the Appwrite Team)
-✅ [Python](https://github.com/appwrite/sdk-for-python) - **Work in progress** (Maintained by the Appwrite Team)
-✳️ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
+* ✅ [JS](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+* ✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
+* ✅ [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
+* ✅ [Ruby](https://github.com/appwrite/sdk-for-ruby) - **Work in progress** (Maintained by the Appwrite Team)
+* ✅ [Python](https://github.com/appwrite/sdk-for-python) - **Work in progress** (Maintained by the Appwrite Team)
+* ✳️ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
 ## Security
 
