@@ -132,6 +132,7 @@ Locale::setLanguage('he', include __DIR__ . '/config/locale/he.php');
 Locale::setLanguage('ua', include __DIR__ . '/config/locale/ua.php');
 Locale::setLanguage('pt-br', include __DIR__ . '/config/locale/pt-br.php');
 Locale::setLanguage('es', include __DIR__ . '/config/locale/es.php');
+Locale::setLanguage('ro', include __DIR__ . '/config/locale/ro.php');
 
 if (in_array($locale, APP_LOCALES)) {
     Locale::setDefault($locale);
