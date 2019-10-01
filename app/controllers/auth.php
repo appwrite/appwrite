@@ -1,4 +1,3 @@
-
 <?php
 
 global $utopia, $register, $request, $response, $user, $audit, $webhook, $project, $domain, $projectDB, $providers, $clients;
@@ -49,9 +48,9 @@ $utopia->post('/v1/auth/register')
     ->action(
         function ($email, $password, $confirm, $success, $failure, $name) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
             if ('console' === $project->getUid()) {
-                $whitlistEmails     = $project->getAttribute('authWhitelistEmails');
-                $whitlistIPs        = $project->getAttribute('authWhitelistIPs');
-                $whitlistDomains    = $project->getAttribute('authWhitelistDomains');
+                $whitlistEmails = $project->getAttribute('authWhitelistEmails');
+                $whitlistIPs = $project->getAttribute('authWhitelistIPs');
+                $whitlistDomains = $project->getAttribute('authWhitelistDomains');
 
                 if (!empty($whitlistEmails) && !in_array($email, $whitlistEmails)) {
                     throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
@@ -61,11 +60,11 @@ $utopia->post('/v1/auth/register')
                     throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
                 }
 
-                if (!empty($whitlistDomains) && !in_array(substr(strrchr($email, "@"), 1), $whitlistDomains)) {
+                if (!empty($whitlistDomains) && !in_array(substr(strrchr($email, '@'), 1), $whitlistDomains)) {
                     throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
                 }
             }
-            
+
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -77,7 +76,7 @@ $utopia->post('/v1/auth/register')
 
             if (!empty($profile)) {
                 if ($failure) {
-                    $response->redirect($failure . '?message=User already registered');
+                    $response->redirect($failure.'?message=User already registered');
 
                     return;
                 }
@@ -778,7 +777,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             }
 
             $oauthID = $oauth->getUserID($accessToken);
-           
+
             if (empty($oauthID)) {
                 if (!empty($state['failure'])) {
                     $response->redirect($state['failure'], 301, 0);
@@ -788,7 +787,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             }
 
             $current = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-            
+
             if ($current) {
                 $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
             }
@@ -801,7 +800,6 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
                     'oauth'.ucfirst($provider).'='.$oauthID,
                 ],
             ]) : $user;
-
 
             if (empty($user)) { // No user logged in or with oauth provider ID, create new one or connect with account with same email
                 $name = $oauth->getUserName($accessToken);

@@ -15,7 +15,7 @@ fi
 
 echo "Setting Version #"
 
-echo -e "<?php\nconst VERSION = '$1';\n\nreturn VERSION;" > app/config/version.php
+echo -e "<?php\n\nconst VERSION = '$1';\n\nreturn VERSION;" > app/config/version.php
 
 echo 'Updating PHP dependencies and auto-loading...'
 

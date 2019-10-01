@@ -27,7 +27,7 @@ $canonical  = $this->getParam('canonical', '');
     <link href="https://fonts.googleapis.com/css?family=Poppins:100,300,400,500,600" rel="stylesheet">
     <link rel="apple-touch-icon" href="/images/apple.png">
     <link rel="preconnect" href="<?php echo $api; ?>" />
-    <?php if(!empty($canonical)): ?>
+    <?php if (!empty($canonical)): ?>
         <link rel="canonical" href="<?php echo $canonical; ?>" />
     <?php endif; ?>
     <?php foreach ($this->getParam('prefetch', []) as $prefetch): ?>
@@ -63,7 +63,7 @@ $canonical  = $this->getParam('canonical', '');
             PAGING_LIMIT: <?PHP echo APP_PAGING_LIMIT; ?>
         };
 
-        <?php if($litespeed): ?>
+        <?php if ($litespeed): ?>
         document.addEventListener("DOMContentLoaded", function() {
             var head      = document.getElementsByTagName('head')[0];
             var script    = document.createElement('script');
