@@ -5,7 +5,6 @@ include_once 'shared/web.php';
 global $utopia, $response, $request, $layout, $version, $providers, $sdks;
 
 use Utopia\View;
-use Utopia\Locale\Locale;
 
 $layout
     ->setParam('title', APP_NAME)

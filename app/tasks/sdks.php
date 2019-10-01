@@ -97,9 +97,9 @@ $cli
         ];
 
         foreach ($clients as $name => $client) {
-            Console::info('Fetching API Spec for ' . $name . ' (' . $client['platform'] . ')');
-            $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform=' . $client['platform']);
-            $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1&platform=' . $client['platform']);
+            Console::info('Fetching API Spec for '.$name.' ('.$client['platform'].')');
+            $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
+            $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
 
             switch ($name) {
                 case 'php':

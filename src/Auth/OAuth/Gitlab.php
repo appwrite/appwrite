@@ -24,11 +24,11 @@ class Gitlab extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://gitlab.com/oauth/authorize?' .
-            'client_id=' . urlencode($this->appID) .
-            '&redirect_uri=' . urlencode($this->callback) .
-            '&scope=read_user' .
-            '&state=' . urlencode(json_encode($this->state)) .
+        return 'https://gitlab.com/oauth/authorize?'.
+            'client_id='.urlencode($this->appID).
+            '&redirect_uri='.urlencode($this->callback).
+            '&scope=read_user'.
+            '&state='.urlencode(json_encode($this->state)).
             '&response_type=code';
     }
 
@@ -42,10 +42,10 @@ class Gitlab extends OAuth
         $accessToken = $this->request(
             'POST',
             'https://gitlab.com/oauth/token?'.
-                'code=' . urlencode($code) .
-                '&client_id=' . urlencode($this->appID) .
-                '&client_secret=' . urlencode($this->appSecret) .
-                '&redirect_uri=' . urlencode($this->callback) .
+                'code='.urlencode($code).
+                '&client_id='.urlencode($this->appID).
+                '&client_secret='.urlencode($this->appSecret).
+                '&redirect_uri='.urlencode($this->callback).
                 '&grant_type=authorization_code'
         );
 
@@ -54,7 +54,6 @@ class Gitlab extends OAuth
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
         }
-
 
         return '';
     }
@@ -115,9 +114,10 @@ class Gitlab extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://gitlab.com/api/v4/user?access_token=' . urlencode($accessToken));
+            $user = $this->request('GET', 'https://gitlab.com/api/v4/user?access_token='.urlencode($accessToken));
             $this->user = json_decode($user, true);
         }
+
         return $this->user;
     }
 }
