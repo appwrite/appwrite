@@ -98,6 +98,12 @@ We really ❤️ pull requests! If you wish to help, you can learn more about ho
 
 Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
 
+* 🇺🇸 Justin Dorfman ([Github](https://github.com/jdorfman), [Twitter](https://twitter.com/jdorfman))
+* 🇺🇳 0xflotus ([Github](https://github.com/0xflotus))
+* 🇳🇴 Petter Charles Redfern ([Github](https://github.com/Chaaarles))
+* 🇧🇷 Jessé Souza ([Github](https://github.com/jessescn))
+* 🇪🇸 Esther Álvarez Feijoo ([Github](https://github.com/EstherAF))
+* 🇮🇳 Christy Jacob ([Github](https://github.com/christyjacob4), [Linkedin](https://www.linkedin.com/in/christyjacob4/))
 * 🇺🇦 Dmitriy Danilov ([Github](https://github.com/daniloff200), [Twitter](https://twitter.com/daniloff200))
 * 🇮🇩 Zeet ([Github](https://github.com/Kiy4h))
 * 🇫🇮 Pessi Päivärinne ([Github](https://github.com/pessip))
@@ -106,3 +112,6 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇬🇷 Panagiotis Skarlas ([Github](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
 * 🇷🇺 Alexey Pyltsyn ([Github](https://github.com/lex111))
 * 🇩🇪 Robin C ([Github](https://github.com/Taminoful))
+* 🇮🇳 Parikshit Hooda ([Github](https://github.com/Parikshit-Hooda))
+* 🇮🇳 Rishabh Singh ([Github](https://github.com/Rishabhs343))
+
