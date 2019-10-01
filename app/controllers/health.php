@@ -115,11 +115,11 @@ $utopia->get('/v1/health/storage/local')
         function () use ($response) {
             $device = new Local();
 
-            if (!is_readable($device->getRoot(). '/..')) {
+            if (!is_readable($device->getRoot().'/..')) {
                 throw new Exception('Device is not readable');
             }
 
-            if (!is_writable($device->getRoot(). '/..')) {
+            if (!is_writable($device->getRoot().'/..')) {
                 throw new Exception('Device is not writable');
             }
 

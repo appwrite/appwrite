@@ -5,7 +5,6 @@ include_once 'shared/web.php';
 global $utopia, $response, $request, $layout, $version, $providers;
 
 use Utopia\View;
-use Utopia\Locale\Locale;
 use Database\Database;
 use Database\Validator\UID;
 
@@ -83,7 +82,7 @@ $utopia->get('/console/account')
         ;
 
         $layout
-            ->setParam('title', 'Account - ' . APP_NAME)
+            ->setParam('title', 'Account - '.APP_NAME)
             ->setParam('body', $page);
     });
 
