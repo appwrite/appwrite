@@ -13,7 +13,7 @@
     Bu posta size gönderildi, çünkü <b>{{owner}}</b> sizi {{project}} için <b>{{team}}</b> ekibinde takım üyesi olmaya davet etmek istedi.
     <br />
     <br />
-    Aşağıdaki bağlantıyı takip ederen <b>{{team}}</b> takımına takılın:
+    Aşağıdaki bağlantıyı takip ederek <b>{{team}}</b> takımına takılın:
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />

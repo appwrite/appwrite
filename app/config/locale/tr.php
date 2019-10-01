@@ -14,7 +14,7 @@ return [
     'auth.emails.invitation.title' => '%s takımına davet %s',
     'auth.emails.invitation.body' => 'tr.email.auth.invitation.tpl',
 
-    'locale.country.unknown' => 'Bilinmiyen',
+    'locale.country.unknown' => 'Bilinmeyen',
 
     'countries' => include 'tr.countries.php',
     'continents' => include 'tr.continents.php',

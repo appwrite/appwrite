@@ -15,7 +15,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Bu adresi doğrulamayı istemediyseniz, bu mesajı yok sayabilirsiniz .
+    Bu adresi doğrulamayı istemediyseniz, bu mesajı yok sayabilirsiniz.
     <br />
     <br />
     Teşekkürler,
