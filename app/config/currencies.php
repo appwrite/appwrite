@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * List Of World Currencies.

@@ -13,18 +13,18 @@ class Auth extends Service
      *
      * Allow the user to login into his account by providing a valid email and
      * password combination. Use the success and failure arguments to provide a
-     * redirect URL\'s back to your app when login is completed.
-     *
+     * redirect URL\'s back to your app when login is completed. 
+     * 
      * Please notice that in order to avoid a [Redirect
      * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
-     *
-     * When not using the success or failure redirect arguments this endpoint will
-     * result with a 200 status code and the user account object on success and
-     * with 401 status error on failure. This behavior was applied to help the web
-     * clients deal with browsers who don't allow to set 3rd party HTTP cookies
-     * needed for saving the account session token.
+     * 
+     * When accessing this route using Javascript from the browser, success and
+     * failure parameter URLs are required. Appwrite server will respond with a
+     * 301 redirect status code and will set the user session cookie. This
+     * behavior is enforced because modern browsers are limiting 3rd party cookies
+     * in XHR of fetch requests to protect user privacy.
      *
      * @param string $email
      * @param string $password
@@ -89,28 +89,6 @@ class Auth extends Service
     }
 
     /**
-     * OAuth Callback
-     *
-     * @param string $projectId
-     * @param string $provider
-     * @param string $code
-     * @param string $state
-     * @throws Exception
-     * @return array
-     */
-    public function oauthCallback($projectId, $provider, $code, $state = '')
-    {
-        $path   = str_replace(['{projectId}', '{provider}'], [$projectId, $provider], '/auth/oauth/callback/{provider}/{projectId}');
-        $params = [];
-
-        $params['code'] = $code;
-        $params['state'] = $state;
-
-        return $this->client->call(Client::METHOD_GET, $path, [
-        ], $params);
-    }
-
-    /**
      * OAuth Login
      *
      * @param string $provider
@@ -142,17 +120,17 @@ class Auth extends Service
      * process.
      *
      * @param string $email
-     * @param string $redirect
+     * @param string $reset
      * @throws Exception
      * @return array
      */
-    public function recovery($email, $redirect)
+    public function recovery($email, $reset)
     {
         $path   = str_replace([], [], '/auth/recovery');
         $params = [];
 
         $params['email'] = $email;
-        $params['redirect'] = $redirect;
+        $params['reset'] = $reset;
 
         return $this->client->call(Client::METHOD_POST, $path, [
         ], $params);
@@ -165,7 +143,7 @@ class Auth extends Service
      * **userId** and **token** arguments will be passed as query parameters to
      * the redirect URL you have provided when sending your request to the
      * /auth/recovery endpoint.
-     *
+     * 
      * Please notice that in order to avoid a [Redirect
      * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      * the only valid redirect URL's are the once from domains you have set when
@@ -198,41 +176,41 @@ class Auth extends Service
      * Use this endpoint to allow a new user to register an account in your
      * project. Use the success and failure URL's to redirect users back to your
      * application after signup completes.
-     *
+     * 
      * If registration completes successfully user will be sent with a
      * confirmation email in order to confirm he is the owner of the account email
-     * address. Use the redirect parameter to redirect the user from the
+     * address. Use the confirmation parameter to redirect the user from the
      * confirmation email back to your app. When the user is redirected, use the
      * /auth/confirm endpoint to complete the account confirmation.
-     *
+     * 
      * Please notice that in order to avoid a [Redirect
      * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
-     *
-     * When not using the success or failure redirect arguments this endpoint will
-     * result with a 200 status code and the user account object on success and
-     * with 401 status error on failure. This behavior was applied to help the web
-     * clients deal with browsers who don't allow to set 3rd party HTTP cookies
-     * needed for saving the account session token.
+     * 
+     * When accessing this route using Javascript from the browser, success and
+     * failure parameter URLs are required. Appwrite server will respond with a
+     * 301 redirect status code and will set the user session cookie. This
+     * behavior is enforced because modern browsers are limiting 3rd party cookies
+     * in XHR of fetch requests to protect user privacy.
      *
      * @param string $email
      * @param string $password
-     * @param string $redirect
+     * @param string $confirm
      * @param string $success
      * @param string $failure
      * @param string $name
      * @throws Exception
      * @return array
      */
-    public function register($email, $password, $redirect, $success, $failure, $name = '')
+    public function register($email, $password, $confirm, $success = '', $failure = '', $name = '')
     {
         $path   = str_replace([], [], '/auth/register');
         $params = [];
 
         $params['email'] = $email;
         $params['password'] = $password;
-        $params['redirect'] = $redirect;
+        $params['confirm'] = $confirm;
         $params['success'] = $success;
         $params['failure'] = $failure;
         $params['name'] = $name;
@@ -272,24 +250,25 @@ class Auth extends Service
      * This endpoint allows the user to request your app to resend him his email
      * confirmation message. The redirect arguments acts the same way as in
      * /auth/register endpoint.
-     *
+     * 
      * Please notice that in order to avoid a [Redirect
      * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
      *
-     * @param string $redirect
+     * @param string $confirm
      * @throws Exception
      * @return array
      */
-    public function confirmResend($redirect)
+    public function confirmResend($confirm)
     {
         $path   = str_replace([], [], '/auth/register/confirm/resend');
         $params = [];
 
-        $params['redirect'] = $redirect;
+        $params['confirm'] = $confirm;
 
         return $this->client->call(Client::METHOD_POST, $path, [
         ], $params);
     }
+
 }

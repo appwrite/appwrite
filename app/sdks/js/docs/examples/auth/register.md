@@ -1,10 +1,10 @@
 let sdk = new Appwrite();
 
 sdk
-    setProject('')
+    .setProject('')
 ;
 
-let promise = sdk.auth.register('email@example.com', 'password', 'https://example.com', 'https://example.com', 'https://example.com');
+let promise = sdk.auth.register('email@example.com', 'password', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

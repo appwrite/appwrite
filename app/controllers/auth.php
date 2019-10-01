@@ -1,4 +1,3 @@
-
 <?php
 
 global $utopia, $register, $request, $response, $user, $audit, $webhook, $project, $domain, $projectDB, $providers, $clients;

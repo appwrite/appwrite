@@ -6,8 +6,8 @@ let client = new Projects.Client();
 let projects = new sdk.Projects(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = projects.deleteWebhook('[PROJECT_ID]', '[WEBHOOK_ID]');

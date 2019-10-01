@@ -6,8 +6,8 @@ use Appwrite\Services\Auth;
 $client = new Client();
 
 $client
-    setProject('')
-    setKey('')
+    ->setProject('')
+    ->setKey('')
 ;
 
 $auth = new Auth($client);

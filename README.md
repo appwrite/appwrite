@@ -33,7 +33,7 @@ The easiest way to start running your Appwrite server is by running our docker c
 ```bash
 mkdir appwrite-ce && \
 cd appwrite-ce && \
-curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?port=80 && \
+curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?version=0.2.0 && \
 docker-compose up -d --remove-orphans
 ```
 
@@ -111,7 +111,7 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇫🇮 Pessi Päivärinne ([Github](https://github.com/pessip))
 * 🇺🇳 Sergi Vos ([Github](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
 * 🇮🇱 Tomer Cohen ([Github](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
-* 🇧🇷 Tatiana ([Github](https://github.com/tacoelho))
+* 🇮🇹 Tatiana ([Github](https://github.com/tacoelho))
 * 🇬🇷 Panagiotis Skarlas ([Github](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
 * 🇷🇺 Alexey Pyltsyn ([Github](https://github.com/lex111))
 * 🇩🇪 Robin C ([Github](https://github.com/Taminoful))
