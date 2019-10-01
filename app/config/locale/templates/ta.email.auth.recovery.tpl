@@ -7,7 +7,7 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Hello {{name}},
+    வணக்கம் {{name}},
     <br />
     <br />
     இந்த இணைப்பைப் பின்தொடர்ந்து உங்கள் {{project}} திட்டத்தின் கடவுச்சொல்லை மீட்கவும்.
