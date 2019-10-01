@@ -62,14 +62,14 @@ $scopes = [ // TODO sync with project list
                         <div class="row thin margin-bottom">
                             <?php foreach ($scopes as $i => $scope) : ?>
                                 <div class="col span-6">
-                                    <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
+                                    <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?= $scope ?>" /> <?= $scope ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
                                 <div class="row thin margin-bottom">
-                                <?php endif; ?>
+                                <?php endif ?>
 
-                            <?php endforeach; ?>
+                            <?php endforeach ?>
                         </div>
 
                         <hr />
@@ -142,14 +142,14 @@ $scopes = [ // TODO sync with project list
                 <div class="row thin margin-bottom">
                     <?php foreach ($scopes as $i => $scope) : ?>
                         <div class="col span-6">
-                            <input type="checkbox" name="scopes" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
+                            <input type="checkbox" name="scopes" value="<?= $scope ?>" /> <?= $scope ?>
                         </div>
                         <?php if (($i + 1) % 2 === 0) : ?>
                         </div>
                         <div class="row thin margin-bottom">
-                        <?php endif; ?>
+                        <?php endif ?>
 
-                    <?php endforeach; ?>
+                    <?php endforeach ?>
                 </div>
 
                 <hr />

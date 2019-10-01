@@ -26,10 +26,10 @@
             <input type="file" name="files" id="file-files" required>
 
             <label for="file-read">Read Permissions</label>
-            <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
+            <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?= htmlentities(json_encode(['*'])) ?>" />
             
             <label for="file-write">Write Permissions</label>
-            <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
+            <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?= htmlentities(json_encode(['*'])) ?>" />
 
             <hr />
 
@@ -41,7 +41,7 @@
         data-service="storage.listFiles"
         data-event="submit"
         data-param-search="{{router.params.search}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-limit="<?= APP_PAGING_LIMIT ?>"
         data-param-offset=""
         data-param-order-type="DESC"
         data-scope="sdk"
@@ -62,7 +62,7 @@
         data-service="storage.listFiles"
         data-event="load,file-create,file-update,file-delete"
         data-param-search="{{router.params.search}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-limit="<?= APP_PAGING_LIMIT ?>"
         data-param-offset="{{router.params.offset}}"
         data-param-order-type="DESC"
         data-scope="sdk"
@@ -152,7 +152,7 @@
                 data-service="storage.listFiles"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-files"
@@ -167,7 +167,7 @@
                 data-service="storage.listFiles"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-files"

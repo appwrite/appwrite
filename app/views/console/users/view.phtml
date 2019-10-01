@@ -20,7 +20,7 @@
             <li data-state="/console/users/view?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>General</h2>
 
-                <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl">
+                <div data-ls-if="{{user.status}} === <?= \Auth\Auth::USER_STATUS_BLOCKED ?>" style="display: none" class="box padding-small danger margin-bottom-xxl">
                     This user account is blocked.
                 </div>
 
@@ -85,7 +85,7 @@
                             <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{user.$uid}}" disabled data-forms-copy>
                         </div>
 
-                        <div data-ls-if="{{user.status}} !== <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
+                        <div data-ls-if="{{user.status}} !== <?= \Auth\Auth::USER_STATUS_BLOCKED ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-service="users.updateUserStatus"
                                 data-event="submit"
@@ -97,11 +97,11 @@
                                 data-failure-param-alert-text="Failed to Block User"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="danger fill" value="<?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
+                                <button name="status" type="submit" class="danger fill" value="<?= \Auth\Auth::USER_STATUS_BLOCKED ?>">Block Account</button>
                             </form>
                         </div>
 
-                        <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
+                        <div data-ls-if="{{user.status}} === <?= \Auth\Auth::USER_STATUS_BLOCKED ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
                                 data-service="users.updateUserStatus"
                                 data-event="submit"
@@ -113,7 +113,7 @@
                                 data-failure-param-alert-text="Failed to Activate User"
                                 data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="fill" value="<?php echo \Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>
+                                <button name="status" type="submit" class="fill" value="<?= \Auth\Auth::USER_STATUS_ACTIVATED ?>">Activate Account</button>
                             </form>
                         </div>
                     </div>

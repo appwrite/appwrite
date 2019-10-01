@@ -48,7 +48,7 @@ $providers = $this->getParam('providers', []);
                 data-service="users.listUsers"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-offset=""
                 data-param-order-type="DESC"
                 data-scope="sdk"
@@ -69,7 +69,7 @@ $providers = $this->getParam('providers', []);
                 data-service="users.listUsers"
                 data-event="load,user-create,user-update,user-delete"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-offset="{{router.params.offset}}"
                 data-param-order-type="DESC"
                 data-scope="sdk"
@@ -115,7 +115,7 @@ $providers = $this->getParam('providers', []);
                                             &nbsp;<span class="tag">Unverified</span>
                                         </span>
 
-                                        <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
+                                        <span data-ls-if="{{user.status}} === <?= \Auth\Auth::USER_STATUS_BLOCKED ?>">
                                             &nbsp;<span class="tag red">Blocked</span>
                                         </span>
                                     </td>
@@ -131,7 +131,7 @@ $providers = $this->getParam('providers', []);
                         data-service="users.listUsers"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-limit="<?= APP_PAGING_LIMIT ?>"
                         data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-users"
@@ -146,7 +146,7 @@ $providers = $this->getParam('providers', []);
                         data-service="users.listUsers"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-limit="<?= APP_PAGING_LIMIT ?>"
                         data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-users"
@@ -187,7 +187,7 @@ $providers = $this->getParam('providers', []);
                 data-service="teams.listTeams"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-offset=""
                 data-param-order-type="DESC"
                 data-scope="sdk"
@@ -208,7 +208,7 @@ $providers = $this->getParam('providers', []);
                 data-service="teams.listTeams"
                 data-event="load,team-create,team-update,team-delete"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-offset="{{router.params.offset}}"
                 data-param-order-type="DESC"
                 data-scope="sdk"
@@ -278,7 +278,7 @@ $providers = $this->getParam('providers', []);
                         data-service="teams.listTeams"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-limit="<?= APP_PAGING_LIMIT ?>"
                         data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-teams"
@@ -293,7 +293,7 @@ $providers = $this->getParam('providers', []);
                         data-service="teams.listTeams"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
-                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-limit="<?= APP_PAGING_LIMIT ?>"
                         data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-teams"
@@ -316,11 +316,11 @@ $providers = $this->getParam('providers', []);
                 data-scope="console">
                 <ul class="list">
                     <?php foreach ($providers as $provider => $data): if (isset($data['enabled']) && !$data['enabled']) { continue; } ?>
-                        <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
+                        <li class="clear <?= (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : '' ?>">
                             <div data-ui-modal class="modal close" data-button-text="Settings" data-button-class="pull-end">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
+                                <h1><?= ucfirst($provider) ?> OAuth Settings</h1>
 
                                 <form
                                     data-service="projects.updateProjectOAuth"
@@ -333,23 +333,23 @@ $providers = $this->getParam('providers', []);
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to update project OAuth settings"
                                     data-failure-param-alert-classname="error">
-                                    <input name="provider" id="provider<?php echo ucfirst($provider); ?>" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
+                                    <input name="provider" id="provider<?= ucfirst($provider) ?>" type="hidden" autocomplete="off" value="<?= $provider ?>">
 
-                                    <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>
-                                    <input name="appId" id="oauth<?php echo ucfirst($provider); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}}">
+                                    <label for="oauth<?= ucfirst($provider) ?>Appid">App ID</label>
+                                    <input name="appId" id="oauth<?= ucfirst($provider) ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?= ucfirst($provider) ?>Appid}}">
 
-                                    <label for="oauth<?php echo ucfirst($provider); ?>Secret">App Secret</label>
-                                    <input name="secret" id="oauth<?php echo ucfirst($provider); ?>Secret" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}">
+                                    <label for="oauth<?= ucfirst($provider) ?>Secret">App Secret</label>
+                                    <input name="secret" id="oauth<?= ucfirst($provider) ?>Secret" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?= ucfirst($provider) ?>Secret}}">
 
                                     <div class="info row thin margin-bottom margin-top">
                                         <div class="col span-1">
                                             <i class="icon-info-circled text-sign"></i>
                                         </div>
                                         <div class="col span-11">
-                                            <p>To complete set up, add this OAuth redirect URI to your <?php echo ucfirst($provider); ?> app configuration.</p>
+                                            <p>To complete set up, add this OAuth redirect URI to your <?= ucfirst($provider) ?> app configuration.</p>
 
                                             <div class="input-copy">
-                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/auth/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
+                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/auth/oauth/callback/<?= $provider ?>/{{router.params.project}}" class="margin-bottom-no" />
                                             </div>
                                         </div>
                                     </div>
@@ -358,21 +358,21 @@ $providers = $this->getParam('providers', []);
                                 </form>
                             </div>
 
-                            <img src="/images/oauth/<?php echo strtolower($provider); ?>.png" alt="<?php echo ucfirst($provider); ?> Logo" class="pull-start provider margin-end" />
+                            <img src="/images/oauth/<?= strtolower($provider) ?>.png" alt="<?= ucfirst($provider) ?> Logo" class="pull-start provider margin-end" />
 
                             <span>
-                                <?php echo ucfirst($provider); ?>
+                                <?= ucfirst($provider) ?>
                                 <span data-ls-if="
-                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} ||
-                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}" data-debug="1">
+                                    !{{console-project.usersOauth<?= ucfirst($provider) ?>Appid}} ||
+                                    !{{console-project.usersOauth<?= ucfirst($provider) ?>Secret}}" data-debug="1">
                                     &nbsp;<span class="tag red">Disabled</span>
                                 </span>
                             </span>
                             <p class="margin-bottom-no margin-top-small text-one-liner">
-                                <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth Developer Docs<i class="icon-link-ext"></i></a>
+                                <a href="<?= $data['developers'] ?>" target="_blank" rel="noopener">OAuth Developer Docs<i class="icon-link-ext"></i></a>
                             </p>
                         </li>
-                    <?php endforeach; ?>
+                    <?php endforeach ?>
                 </ul>
             </div>
         </li>

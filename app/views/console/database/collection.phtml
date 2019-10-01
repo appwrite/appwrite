@@ -45,7 +45,7 @@ $collection = $this->getParam('collection', []);
         data-event="submit"
         data-param-collection-id="{{router.params.id}}"
         data-param-search="{{router.params.search}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-limit="<?= APP_PAGING_LIMIT ?>"
         data-param-offset=""
         data-param-order-type="DESC"
         data-scope="sdk"
@@ -67,7 +67,7 @@ $collection = $this->getParam('collection', []);
         data-event="load,document-create,document-update,document-delete"
         data-param-collection-id="{{router.params.id}}"
         data-param-search="{{router.params.search}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-limit="<?= APP_PAGING_LIMIT ?>"
         data-param-offset="{{router.params.offset}}"
         data-param-order-type="DESC"
         data-scope="sdk"
@@ -88,15 +88,15 @@ $collection = $this->getParam('collection', []);
                         <tr>
                             <?php foreach ($collection['rules'] as $rule): ?>
                             <th width="220">
-                                <?php echo $rule['label']; ?>
+                                <?= $rule['label'] ?>
 
                                 <?php if (!empty($rule['description'])): ?>
-                                    <span class="tooltip large" data-tooltip="<?php echo $rule['description']; ?>"><i class="icon-question"></i></span>
-                                <?php endif; ?>
+                                    <span class="tooltip large" data-tooltip="<?= $rule['description'] ?>"><i class="icon-question"></i></span>
+                                <?php endif ?>
                             </th>
 
                             
-                            <?php endforeach; ?>
+                            <?php endforeach ?>
                         </tr>
                     </thead>
                     <tbody data-ls-loop="project-documents.documents" data-ls-as="document">
@@ -105,7 +105,7 @@ $collection = $this->getParam('collection', []);
                             <td>
                                 <?php switch ($rule['type']):
                                     case 'numeric':?>
-                                        <span class="tag" data-ls-bind="{{document.<?php echo $rule['key']; ?>|emptyDash}}" data-ls-attrs="title={{document.<?php echo $rule['key']; ?>}}"></span>
+                                        <span class="tag" data-ls-bind="{{document.<?= $rule['key'] ?>|emptyDash}}" data-ls-attrs="title={{document.<?= $rule['key'] ?>}}"></span>
                                     <?php break;?>
 
                                     <?php case 'uuid':?>
@@ -113,12 +113,12 @@ $collection = $this->getParam('collection', []);
                                     <?php break;?>
                                         
                                     <?php default:?>
-                                        <span class="text-one-liner" data-ls-bind="{{document.<?php echo $rule['key']; ?>|emptyDash}}" data-ls-attrs="title={{document.<?php echo $rule['key']; ?>}}"></span>
+                                        <span class="text-one-liner" data-ls-bind="{{document.<?= $rule['key'] ?>|emptyDash}}" data-ls-attrs="title={{document.<?= $rule['key'] ?>}}"></span>
                                     <?php break;?>
                                 <?php endswitch;?>
 
                             </td>
-                            <?php endforeach; ?>
+                            <?php endforeach ?>
                         </tr>
                     </tbody>
                 </table>
@@ -131,7 +131,7 @@ $collection = $this->getParam('collection', []);
                 data-event="submit"
                 data-param-collection-id="{{router.params.id}}"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-documents"
@@ -147,7 +147,7 @@ $collection = $this->getParam('collection', []);
                 data-event="submit"
                 data-param-collection-id="{{router.params.id}}"
                 data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-limit="<?= APP_PAGING_LIMIT ?>"
                 data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-documents"

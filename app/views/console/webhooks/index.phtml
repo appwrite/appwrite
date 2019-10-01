@@ -65,14 +65,14 @@ $events = [
                         <div class="row thin margin-bottom">
                             <?php foreach ($events as $i => $event) : ?>
                                 <div class="col span-6">
-                                    <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
+                                    <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?= $event ?>" /> <?= $event ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
                                 <div class="row thin margin-bottom">
-                                <?php endif; ?>
+                                <?php endif ?>
 
-                            <?php endforeach; ?>
+                            <?php endforeach ?>
                         </div>
 
                         <label data-ls-attrs="for=url-{{webhook.$uid}}">POST URL</label>
@@ -171,14 +171,14 @@ $events = [
                 <div class="row thin margin-bottom">
                     <?php foreach ($events as $i => $event) : ?>
                         <div class="col span-6">
-                            <input type="checkbox" name="events" value="<?php echo $event; ?>" /> <?php echo $event; ?>
+                            <input type="checkbox" name="events" value="<?= $event ?>" /> <?= $event ?>
                         </div>
                         <?php if (($i + 1) % 2 === 0) : ?>
                         </div>
                         <div class="row thin margin-bottom">
-                        <?php endif; ?>
+                        <?php endif ?>
 
-                    <?php endforeach; ?>
+                    <?php endforeach ?>
                 </div>
 
                 <label for="url">POST URL</label>

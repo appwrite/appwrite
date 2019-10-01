@@ -7,15 +7,15 @@ $projectURL = $this->getParam('projectURL', '');
 ?>
 
 <section class="zone large margin-top-xl">
-    <h1 class="margin-bottom">Error <?php echo $code; ?></h1>
+    <h1 class="margin-bottom">Error <?= $code ?></h1>
 
-    <p><?php echo $message; ?></p>
+    <p><?= $message ?></p>
 
-    <small>Error ID: <?php echo $errorID; ?></small>
+    <small>Error ID: <?= $errorID ?></small>
 
     <?php if (!empty($projectURL)): ?>
         <hr class="margin-top margin-bottom" />
 
-        <p><a href="<?php echo $this->escape($projectURL); ?>" rel="noopener">Back to <?php echo $projectName; ?></a></p>
-    <?php endif; ?>
+        <p><a href="<?= $this->escape($projectURL) ?>" rel="noopener">Back to <?= $projectName ?></a></p>
+    <?php endif ?>
 </section>
