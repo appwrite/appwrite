@@ -16,9 +16,11 @@ use Appwrite\SDK\Language\Dart;
 
 $cli = new CLI();
 
+$version = '0.2.0'; // Server version
+
 $cli
     ->task('generate')
-    ->action(function () {
+    ->action(function () use ($version) {
         function getSSLPage($url)
         {
             $ch = curl_init();
@@ -41,7 +43,7 @@ $cli
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
                 'gitRepoName' => 'sdk-for-php',
                 'gitUserName' => 'appwrite',
-                'warning' => '',
+                'warning' => 'This SDK if compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'server',
             ],
             'js' => [
@@ -51,7 +53,7 @@ $cli
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
                 'gitRepoName' => 'sdk-for-js',
                 'gitUserName' => 'appwrite',
-                'warning' => '',
+                'warning' => 'This SDK if compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'client',
             ],
             'node' => [
@@ -61,7 +63,7 @@ $cli
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
-                'warning' => 'This SDK if compitable with Appwrite server version 0.2.0 for older versions check previous releases.',
+                'warning' => 'This SDK if compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'server',
             ],
             'python' => [
