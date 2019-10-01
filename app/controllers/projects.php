@@ -67,7 +67,9 @@ $utopia->get('/v1/projects/:projectId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getProject')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
     ->action(
         function ($projectId) use ($request, $response, $providers, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -94,7 +96,9 @@ $utopia->get('/v1/projects/:projectId/usage')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getProjectUsage')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
     ->action(
         function ($projectId) use ($response, $consoleDB, $projectDB, $register) {
             $project = $consoleDB->getDocument($projectId);
@@ -182,11 +186,15 @@ $utopia->get('/v1/projects/:projectId/usage')
             $response->json([
                 'requests' => [
                     'data' => $requests,
-                    'total' => array_sum(array_map(function ($item) {return $item['value'];}, $requests)),
+                    'total' => array_sum(array_map(function ($item) {
+                        return $item['value'];
+                    }, $requests)),
                 ],
                 'network' => [
                     'data' => $network,
-                    'total' => array_sum(array_map(function ($item) {return $item['value'];}, $network)),
+                    'total' => array_sum(array_map(function ($item) {
+                        return $item['value'];
+                    }, $network)),
                 ],
                 'collections' => [
                     'data' => $collections,
@@ -194,7 +202,9 @@ $utopia->get('/v1/projects/:projectId/usage')
                 ],
                 'documents' => [
                     'data' => $documents,
-                    'total' => array_sum(array_map(function ($item) {return $item['total'];}, $documents)),
+                    'total' => array_sum(array_map(function ($item) {
+                        return $item['total'];
+                    }, $documents)),
                 ],
                 'users' => [
                     'data' => [],
@@ -205,7 +215,8 @@ $utopia->get('/v1/projects/:projectId/usage')
                     'total' => $tasksTotal,
                 ],
                 'storage' => [
-                    'total' => $projectDB->getCount([
+                    'total' => $projectDB->getCount(
+                        [
                             'filters' => [
                                 '$collection='.Database::SYSTEM_COLLECTION_FILES,
                             ],
@@ -221,17 +232,39 @@ $utopia->post('/v1/projects')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createProject')
-    ->param('name', null, function () {return new Text(100);}, 'Project name')
-    ->param('teamId', '', function () {return new UID();}, 'Team unique ID.')
-    ->param('description', '', function () {return new Text(255);}, 'Project description', true)
-    ->param('logo', '', function () {return new Text(1024);}, 'Project logo', true)
-    ->param('url', '', function () {return new URL();}, 'Project URL', true)
-    ->param('legalName', '', function () {return new Text(256);}, 'Project Legal Name', true)
-    ->param('legalCountry', '', function () {return new Text(256);}, 'Project Legal Country', true)
-    ->param('legalState', '', function () {return new Text(256);}, 'Project Legal State', true)
-    ->param('legalCity', '', function () {return new Text(256);}, 'Project Legal City', true)
-    ->param('legalAddress', '', function () {return new Text(256);}, 'Project Legal Address', true)
-    ->param('legalTaxId', '', function () {return new Text(256);}, 'Project Legal Tax ID', true)
+    ->param('name', null, function () {
+        return new Text(100);
+    }, 'Project name')
+    ->param('teamId', '', function () {
+        return new UID();
+    }, 'Team unique ID.')
+    ->param('description', '', function () {
+        return new Text(255);
+    }, 'Project description', true)
+    ->param('logo', '', function () {
+        return new Text(1024);
+    }, 'Project logo', true)
+    ->param('url', '', function () {
+        return new URL();
+    }, 'Project URL', true)
+    ->param('legalName', '', function () {
+        return new Text(256);
+    }, 'Project Legal Name', true)
+    ->param('legalCountry', '', function () {
+        return new Text(256);
+    }, 'Project Legal Country', true)
+    ->param('legalState', '', function () {
+        return new Text(256);
+    }, 'Project Legal State', true)
+    ->param('legalCity', '', function () {
+        return new Text(256);
+    }, 'Project Legal City', true)
+    ->param('legalAddress', '', function () {
+        return new Text(256);
+    }, 'Project Legal Address', true)
+    ->param('legalTaxId', '', function () {
+        return new Text(256);
+    }, 'Project Legal Tax ID', true)
     ->action(
         function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB) {
             $team = $projectDB->getDocument($teamId);
@@ -260,7 +293,8 @@ $utopia->post('/v1/projects')
                     'teamId' => $team->getUid(),
                     'webhooks' => [],
                     'keys' => [],
-                ]);
+                ]
+            );
 
             if (false === $project) {
                 throw new Exception('Failed saving project to DB', 500);
@@ -280,17 +314,39 @@ $utopia->patch('/v1/projects/:projectId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateProject')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
-    ->param('name', null, function () {return new Text(100);}, 'Project name')
-    ->param('description', '', function () {return new Text(255);}, 'Project description', true)
-    ->param('logo', '', function () {return new Text(1024);}, 'Project logo', true)
-    ->param('url', '', function () {return new URL();}, 'Project URL', true)
-    ->param('legalName', '', function () {return new Text(256);}, 'Project Legal Name', true)
-    ->param('legalCountry', '', function () {return new Text(256);}, 'Project Legal Country', true)
-    ->param('legalState', '', function () {return new Text(256);}, 'Project Legal State', true)
-    ->param('legalCity', '', function () {return new Text(256);}, 'Project Legal City', true)
-    ->param('legalAddress', '', function () {return new Text(256);}, 'Project Legal Address', true)
-    ->param('legalTaxId', '', function () {return new Text(256);}, 'Project Legal Tax ID', true)
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('name', null, function () {
+        return new Text(100);
+    }, 'Project name')
+    ->param('description', '', function () {
+        return new Text(255);
+    }, 'Project description', true)
+    ->param('logo', '', function () {
+        return new Text(1024);
+    }, 'Project logo', true)
+    ->param('url', '', function () {
+        return new URL();
+    }, 'Project URL', true)
+    ->param('legalName', '', function () {
+        return new Text(256);
+    }, 'Project Legal Name', true)
+    ->param('legalCountry', '', function () {
+        return new Text(256);
+    }, 'Project Legal Country', true)
+    ->param('legalState', '', function () {
+        return new Text(256);
+    }, 'Project Legal State', true)
+    ->param('legalCity', '', function () {
+        return new Text(256);
+    }, 'Project Legal City', true)
+    ->param('legalAddress', '', function () {
+        return new Text(256);
+    }, 'Project Legal Address', true)
+    ->param('legalTaxId', '', function () {
+        return new Text(256);
+    }, 'Project Legal Tax ID', true)
     ->action(
         function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -325,10 +381,18 @@ $utopia->patch('/v1/projects/:projectId/oauth')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateProjectOAuth')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
-    ->param('provider', '', function () use ($providers) {return new WhiteList(array_keys($providers));}, 'Provider Name', false)
-    ->param('appId', '', function () {return new Text(256);}, 'Provider App ID', true)
-    ->param('secret', '', function () {return new text(256);}, 'Provider Secret Key', true)
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('provider', '', function () use ($providers) {
+        return new WhiteList(array_keys($providers));
+    }, 'Provider Name', false)
+    ->param('appId', '', function () {
+        return new Text(256);
+    }, 'Provider App ID', true)
+    ->param('secret', '', function () {
+        return new text(256);
+    }, 'Provider Secret Key', true)
     ->action(
         function ($projectId, $provider, $appId, $secret) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -366,7 +430,9 @@ $utopia->delete('/v1/projects/:projectId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteProject')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
     ->action(
         function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -400,7 +466,9 @@ $utopia->get('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listWebhooks')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
     ->action(
         function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -432,8 +500,12 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getWebhook')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('webhookId', null, function () {return new UID();}, 'Webhook unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('webhookId', null, function () {
+        return new UID();
+    }, 'Webhook unique ID.')
     ->action(
         function ($projectId, $webhookId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -464,13 +536,27 @@ $utopia->post('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createWebhook')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('name', null, function () {return new Text(256);}, 'Webhook name')
-    ->param('events', null, function () {return new ArrayList(new Text(256));}, 'Webhook events list')
-    ->param('url', null, function () {return new Text(2000);}, 'Webhook URL')
-    ->param('security', null, function () {return new Range(0, 1);}, 'Certificate verification, 0 for disabled or 1 for enabled')
-    ->param('httpUser', '', function () {return new Text(256);}, 'Webhook HTTP user', true)
-    ->param('httpPass', '', function () {return new Text(256);}, 'Webhook HTTP password', true)
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Webhook name')
+    ->param('events', null, function () {
+        return new ArrayList(new Text(256));
+    }, 'Webhook events list')
+    ->param('url', null, function () {
+        return new Text(2000);
+    }, 'Webhook URL')
+    ->param('security', null, function () {
+        return new Range(0, 1);
+    }, 'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('httpUser', '', function () {
+        return new Text(256);
+    }, 'Webhook HTTP user', true)
+    ->param('httpPass', '', function () {
+        return new Text(256);
+    }, 'Webhook HTTP password', true)
     ->action(
         function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -528,14 +614,30 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateWebhook')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('webhookId', null, function () {return new UID();}, 'Webhook unique ID.')
-    ->param('name', null, function () {return new Text(256);}, 'Webhook name')
-    ->param('events', null, function () {return new ArrayList(new Text(256));}, 'Webhook events list')
-    ->param('url', null, function () {return new Text(2000);}, 'Webhook URL')
-    ->param('security', null, function () {return new Range(0, 1);}, 'Certificate verification, 0 for disabled or 1 for enabled')
-    ->param('httpUser', '', function () {return new Text(256);}, 'Webhook HTTP user', true)
-    ->param('httpPass', '', function () {return new Text(256);}, 'Webhook HTTP password', true)
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('webhookId', null, function () {
+        return new UID();
+    }, 'Webhook unique ID.')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Webhook name')
+    ->param('events', null, function () {
+        return new ArrayList(new Text(256));
+    }, 'Webhook events list')
+    ->param('url', null, function () {
+        return new Text(2000);
+    }, 'Webhook URL')
+    ->param('security', null, function () {
+        return new Range(0, 1);
+    }, 'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('httpUser', '', function () {
+        return new Text(256);
+    }, 'Webhook HTTP user', true)
+    ->param('httpPass', '', function () {
+        return new Text(256);
+    }, 'Webhook HTTP password', true)
     ->action(
         function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -583,8 +685,12 @@ $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteWebhook')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('webhookId', null, function () {return new UID();}, 'Webhook unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('webhookId', null, function () {
+        return new UID();
+    }, 'Webhook unique ID.')
     ->action(
         function ($projectId, $webhookId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -614,7 +720,9 @@ $utopia->get('/v1/projects/:projectId/keys')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
     ->action(
         function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -632,8 +740,12 @@ $utopia->get('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('keyId', null, function () {return new UID();}, 'Key unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('keyId', null, function () {
+        return new UID();
+    }, 'Key unique ID.')
     ->action(
         function ($projectId, $keyId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -657,9 +769,15 @@ $utopia->post('/v1/projects/:projectId/keys')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('name', null, function () {return new Text(256);}, 'Key name')
-    ->param('scopes', null, function () use ($scopes) {return new ArrayList(new WhiteList($scopes));}, 'Key scopes list')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Key name')
+    ->param('scopes', null, function () use ($scopes) {
+        return new ArrayList(new WhiteList($scopes));
+    }, 'Key scopes list')
     ->action(
         function ($projectId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -703,10 +821,18 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('keyId', null, function () {return new UID();}, 'Key unique ID.')
-    ->param('name', null, function () {return new Text(256);}, 'Key name')
-    ->param('scopes', null, function () use ($scopes) {return new ArrayList(new WhiteList($scopes));}, 'Key scopes list')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('keyId', null, function () {
+        return new UID();
+    }, 'Key unique ID.')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Key name')
+    ->param('scopes', null, function () use ($scopes) {
+        return new ArrayList(new WhiteList($scopes));
+    }, 'Key scopes list')
     ->action(
         function ($projectId, $keyId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -739,8 +865,12 @@ $utopia->delete('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('keyId', null, function () {return new UID();}, 'Key unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('keyId', null, function () {
+        return new UID();
+    }, 'Key unique ID.')
     ->action(
         function ($projectId, $keyId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -770,7 +900,9 @@ $utopia->get('/v1/projects/:projectId/tasks')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listTasks')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
     ->action(
         function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -802,8 +934,12 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getTask')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('taskId', null, function () {return new UID();}, 'Task unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('taskId', null, function () {
+        return new UID();
+    }, 'Task unique ID.')
     ->action(
         function ($projectId, $taskId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -834,16 +970,36 @@ $utopia->post('/v1/projects/:projectId/tasks')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createTask')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('name', null, function () {return new Text(256);}, 'Task name')
-    ->param('status', null, function () {return new WhiteList(['play', 'pause']);}, 'Task status')
-    ->param('schedule', null, function () {return new Cron();}, 'Task schedule syntax')
-    ->param('security', null, function () {return new Range(0, 1);}, 'Certificate verification, 0 for disabled or 1 for enabled')
-    ->param('httpMethod', '', function () {return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']);}, 'Task HTTP method')
-    ->param('httpUrl', '', function () {return new URL();}, 'Task HTTP URL')
-    ->param('httpHeaders', null, function () {return new ArrayList(new Text(256));}, 'Task HTTP headers list', true)
-    ->param('httpUser', '', function () {return new Text(256);}, 'Task HTTP user', true)
-    ->param('httpPass', '', function () {return new Text(256);}, 'Task HTTP password', true)
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Task name')
+    ->param('status', null, function () {
+        return new WhiteList(['play', 'pause']);
+    }, 'Task status')
+    ->param('schedule', null, function () {
+        return new Cron();
+    }, 'Task schedule syntax')
+    ->param('security', null, function () {
+        return new Range(0, 1);
+    }, 'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('httpMethod', '', function () {
+        return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']);
+    }, 'Task HTTP method')
+    ->param('httpUrl', '', function () {
+        return new URL();
+    }, 'Task HTTP URL')
+    ->param('httpHeaders', null, function () {
+        return new ArrayList(new Text(256));
+    }, 'Task HTTP headers list', true)
+    ->param('httpUser', '', function () {
+        return new Text(256);
+    }, 'Task HTTP user', true)
+    ->param('httpPass', '', function () {
+        return new Text(256);
+    }, 'Task HTTP password', true)
     ->action(
         function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -916,17 +1072,39 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateTask')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('taskId', null, function () {return new UID();}, 'Task unique ID.')
-    ->param('name', null, function () {return new Text(256);}, 'Task name')
-    ->param('status', null, function () {return new WhiteList(['play', 'pause']);}, 'Task status')
-    ->param('schedule', null, function () {return new Cron();}, 'Task schedule syntax')
-    ->param('security', null, function () {return new Range(0, 1);}, 'Certificate verification, 0 for disabled or 1 for enabled')
-    ->param('httpMethod', '', function () {return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']);}, 'Task HTTP method')
-    ->param('httpUrl', '', function () {return new URL();}, 'Task HTTP URL')
-    ->param('httpHeaders', null, function () {return new ArrayList(new Text(256));}, 'Task HTTP headers list', true)
-    ->param('httpUser', '', function () {return new Text(256);}, 'Task HTTP user', true)
-    ->param('httpPass', '', function () {return new Text(256);}, 'Task HTTP password', true)
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('taskId', null, function () {
+        return new UID();
+    }, 'Task unique ID.')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Task name')
+    ->param('status', null, function () {
+        return new WhiteList(['play', 'pause']);
+    }, 'Task status')
+    ->param('schedule', null, function () {
+        return new Cron();
+    }, 'Task schedule syntax')
+    ->param('security', null, function () {
+        return new Range(0, 1);
+    }, 'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('httpMethod', '', function () {
+        return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']);
+    }, 'Task HTTP method')
+    ->param('httpUrl', '', function () {
+        return new URL();
+    }, 'Task HTTP URL')
+    ->param('httpHeaders', null, function () {
+        return new ArrayList(new Text(256));
+    }, 'Task HTTP headers list', true)
+    ->param('httpUser', '', function () {
+        return new Text(256);
+    }, 'Task HTTP user', true)
+    ->param('httpPass', '', function () {
+        return new Text(256);
+    }, 'Task HTTP password', true)
     ->action(
         function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -986,8 +1164,12 @@ $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteTask')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('taskId', null, function () {return new UID();}, 'Task unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('taskId', null, function () {
+        return new UID();
+    }, 'Task unique ID.')
     ->action(
         function ($projectId, $taskId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -1017,7 +1199,9 @@ $utopia->get('/v1/projects/:projectId/platforms')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
-    ->param('projectId', '', function () {return new UID();}, 'Project unique ID.')
+    ->param('projectId', '', function () {
+        return new UID();
+    }, 'Project unique ID.')
     ->action(
         function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -1037,8 +1221,12 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('platformId', null, function () {return new UID();}, 'Platform unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('platformId', null, function () {
+        return new UID();
+    }, 'Platform unique ID.')
     ->action(
         function ($projectId, $platformId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -1062,12 +1250,24 @@ $utopia->post('/v1/projects/:projectId/platforms')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('type', null, function () {return new WhiteList(['web', 'ios', 'android', 'unity']);}, 'Platform name')
-    ->param('name', null, function () {return new Text(256);}, 'Platform name')
-    ->param('key', '', function () {return new Text(256);}, 'Package name for android or bundle ID for iOS', true)
-    ->param('store', '', function () {return new Text(256);}, 'App store or Google Play store ID', true)
-    ->param('url', '', function () {return new URL();}, 'Platform client URL', true)
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('type', null, function () {
+        return new WhiteList(['web', 'ios', 'android', 'unity']);
+    }, 'Platform name')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Platform name')
+    ->param('key', '', function () {
+        return new Text(256);
+    }, 'Package name for android or bundle ID for iOS', true)
+    ->param('store', '', function () {
+        return new Text(256);
+    }, 'App store or Google Play store ID', true)
+    ->param('url', '', function () {
+        return new URL();
+    }, 'Platform client URL', true)
     ->action(
         function ($projectId, $type, $name, $key, $store, $url) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -1115,12 +1315,24 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('platformId', null, function () {return new UID();}, 'Platform unique ID.')
-    ->param('name', null, function () {return new Text(256);}, 'Platform name')
-    ->param('key', '', function () {return new Text(256);}, 'Package name for android or bundle ID for iOS', true)
-    ->param('store', '', function () {return new Text(256);}, 'App store or Google Play store ID', true)
-    ->param('url', '', function () {return new URL();}, 'Platform client URL', true)
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('platformId', null, function () {
+        return new UID();
+    }, 'Platform unique ID.')
+    ->param('name', null, function () {
+        return new Text(256);
+    }, 'Platform name')
+    ->param('key', '', function () {
+        return new Text(256);
+    }, 'Package name for android or bundle ID for iOS', true)
+    ->param('store', '', function () {
+        return new Text(256);
+    }, 'App store or Google Play store ID', true)
+    ->param('url', '', function () {
+        return new URL();
+    }, 'Platform client URL', true)
     ->action(
         function ($projectId, $platformId, $name, $key, $store, $url) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -1156,8 +1368,12 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
-    ->param('projectId', null, function () {return new UID();}, 'Project unique ID.')
-    ->param('platformId', null, function () {return new UID();}, 'Platform unique ID.')
+    ->param('projectId', null, function () {
+        return new UID();
+    }, 'Project unique ID.')
+    ->param('platformId', null, function () {
+        return new UID();
+    }, 'Platform unique ID.')
     ->action(
         function ($projectId, $platformId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);

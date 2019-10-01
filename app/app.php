@@ -31,26 +31,25 @@ $webhook    = new Event('v1-webhooks', 'WebhooksV1');
 $audit      = new Event('v1-audits', 'AuditsV1');
 $usage      = new Event('v1-usage', 'UsageV1');
 
-$clientsConsole = array_map(function($node) {
+$clientsConsole = array_map(function ($node) {
     return $node['url'];
-}, array_filter($console->getAttribute('platforms', []), function($node) {
-    if(isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
+}, array_filter($console->getAttribute('platforms', []), function ($node) {
+    if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
         return true;
     }
     return false;
 }));
 
-$clients = array_merge($clientsConsole, array_map(function($node) {
+$clients = array_merge($clientsConsole, array_map(function ($node) {
     return $node['url'];
-}, array_filter($project->getAttribute('platforms', []), function($node) {
-    if(isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
+}, array_filter($project->getAttribute('platforms', []), function ($node) {
+    if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
         return true;
     }
     return false;
 })));
 
-$utopia->init(function() use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
-    
+$utopia->init(function () use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
     $route = $utopia->match($request);
 
     $referrer   = $request->getServer('HTTP_REFERER', '');
@@ -82,7 +81,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
      */
     $hostValidator = new Host($clients);
 
-    if(!$hostValidator->isValid($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')))
+    if (!$hostValidator->isValid($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')))
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && empty($request->getHeader('X-Appwrite-Key', ''))) {
         throw new Exception('Access from this client host is forbidden. ' . $hostValidator->getDescription(), 403);
@@ -96,7 +95,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     // Add user roles
     $membership = $user->search('teamId', $project->getAttribute('teamId', null), $user->getAttribute('memberships', []));
 
-    if($membership) {
+    if ($membership) {
         foreach ($membership->getAttribute('roles', []) as $memberRole) {
             switch ($memberRole) {
                 case 'owner':
@@ -122,7 +121,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
      * Try app auth when we have project key and no user
      *  Mock user to app and grant API key scopes in addition to default app scopes
      */
-    if(null !== $key && $user->isEmpty()) {
+    if (null !== $key && $user->isEmpty()) {
         $user = new Document([
             '$uid' 	        => 0,
             'status' 	    => Auth::USER_STATUS_ACTIVATED,
@@ -141,7 +140,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     Authorization::setRole('role:' . $role);
 
     array_map(function ($node) {
-        if(isset($node['teamId']) && isset($node['roles'])) {
+        if (isset($node['teamId']) && isset($node['roles'])) {
             Authorization::setRole('team:' . $node['teamId']);
 
             foreach ($node['roles'] as $nodeRole) { // Set all team roles
@@ -150,15 +149,15 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
         }
     }, $user->getAttribute('memberships', []));
 
-    if(!in_array($scope, $scopes)) {
+    if (!in_array($scope, $scopes)) {
         throw new Exception($user->getAttribute('email', 'Guest') .  ' (role: ' . strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')', 401);
     }
 
-    if(Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
+    if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
         throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
     }
 
-    if($user->getAttribute('reset')) {
+    if ($user->getAttribute('reset')) {
         throw new Exception('Password reset is required', 412);
     }
 
@@ -193,7 +192,9 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
     /**
      * Abuse Check
      */
-    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {return $register->get('db');});
+    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
+        return $register->get('db');
+    });
     $timeLimit->setNamespace('app_' . $project->getUid());
     $timeLimit
         ->setParam('{userId}', $user->getUid())
@@ -204,13 +205,13 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
 
     //TODO make sure we get array here
 
-    foreach($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+    foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
         $timeLimit->setParam('{param-' . $key . '}', (is_array($value)) ? json_encode($value) : $value);
     }
 
     $abuse = new Abuse($timeLimit);
 
-    if($timeLimit->limit()) {
+    if ($timeLimit->limit()) {
         $response
             ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
             ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
@@ -218,7 +219,7 @@ $utopia->init(function() use ($utopia, $request, $response, $register, &$user, $
         ;
     }
     
-    if($abuse->check() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if ($abuse->check() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         throw new Exception('Too many requests', 429);
     }
 });
@@ -228,11 +229,11 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     /**
      * Trigger Events for background jobs
      */
-    if(!empty($webhook->getParam('event'))) {
+    if (!empty($webhook->getParam('event'))) {
         $webhook->trigger();
     }
 
-    if(!empty($audit->getParam('event'))) {
+    if (!empty($audit->getParam('event'))) {
         $audit->trigger();
     }
 
@@ -243,7 +244,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     ;
 });
 
-$utopia->options(function() use ($request, $response, $domain, $project) {
+$utopia->options(function () use ($request, $response, $domain, $project) {
     $origin = $request->getServer('HTTP_ORIGIN');
 
     $response
@@ -255,8 +256,8 @@ $utopia->options(function() use ($request, $response, $domain, $project) {
     ;
 });
 
-$utopia->error(function($error /* @var $error Exception */) use ($request, $response, $utopia, $project, $env, $version, $sentry, $user) {
-    switch($error->getCode()) {
+$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project, $env, $version, $sentry, $user) {
+    switch ($error->getCode()) {
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
         case 402: // Error allowed publicly
@@ -297,7 +298,7 @@ $utopia->error(function($error /* @var $error Exception */) use ($request, $resp
     $route      = $utopia->match($request);
     $template   = ($route) ? $route->getLabel('error', null): null;
 
-    if($template) {
+    if ($template) {
         $layout     = new View(__DIR__ . '/views/layouts/default.phtml');
         $comp       = new View($template);
 
@@ -329,8 +330,7 @@ $utopia->get('/manifest.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response) {
-
+        function () use ($response) {
             $response->json([
                 'name' => APP_NAME,
                 'short_name' => APP_NAME,
@@ -356,8 +356,7 @@ $utopia->get('/robots.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response) {
-
+        function () use ($response) {
             $response->text("# robotstxt.org/
 
 User-agent: *
@@ -370,8 +369,7 @@ $utopia->get('/humans.txt')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response) {
-
+        function () use ($response) {
             $response->text("# humanstxt.org/
 # The humans responsible & technology colophon
 
@@ -387,7 +385,7 @@ $utopia->get('/v1/info') // This is only visible to gods
 ->label('scope', 'god')
     ->label('docs', false)
     ->action(
-        function() use ($response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
+        function () use ($response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
             $response->json([
                 'name'          => 'API',
                 'version'       => $version,
@@ -410,7 +408,7 @@ $utopia->get('/v1/xss')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() {
+        function () {
             throw new Exception('XSS detected and reported by a browser client', 500);
         }
     );
@@ -419,7 +417,7 @@ $utopia->get('/v1/proxy')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
-        function() use ($response, $console, $clients) {
+        function () use ($response, $console, $clients) {
             $view = new View(__DIR__ . '/views/proxy.phtml');
             $view
                 ->setParam('routes', '')
@@ -436,12 +434,16 @@ $utopia->get('/v1/proxy')
 $utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('platform', 'client' , function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
-    ->param('extensions', 0 , function () {return new Range(0, 1);}, 'Show extra data.', true)
+    ->param('platform', 'client', function () {
+        return new WhiteList(['client', 'server']);
+    }, 'Choose target platform.', true)
+    ->param('extensions', 0, function () {
+        return new Range(0, 1);
+    }, 'Show extra data.', true)
     ->action(
-        function($platform, $extensions) use ($response, $request, $utopia, $domain, $version, $services) {
-
-            function fromCamelCase($input) {
+        function ($platform, $extensions) use ($response, $request, $utopia, $domain, $version, $services) {
+            function fromCamelCase($input)
+            {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
                 $ret = $matches[0];
                 foreach ($ret as &$match) {
@@ -450,12 +452,13 @@ $utopia->get('/v1/open-api-2.json')
                 return implode('_', $ret);
             }
 
-            function fromCamelCaseToDash($input) {
+            function fromCamelCaseToDash($input)
+            {
                 return str_replace([' ', '_'], '-', strtolower(preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
             }
 
             foreach ($services as $service) { /** @noinspection PhpIncludeInspection */
-                if(!$service['sdk']) {
+                if (!$service['sdk']) {
                     continue;
                 }
 
@@ -538,29 +541,29 @@ $utopia->get('/v1/open-api-2.json')
                         ],
                     ],
                     'Pets' =>
-                        array (
+                        array(
                             'type' => 'array',
                             'items' =>
-                                array (
+                                array(
                                     '$ref' => '#/definitions/Pet',
                                 ),
                         ),
                     'Error' =>
-                        array (
+                        array(
                             'required' =>
-                                array (
+                                array(
                                     0 => 'code',
                                     1 => 'message',
                                 ),
                             'properties' =>
-                                array (
+                                array(
                                     'code' =>
-                                        array (
+                                        array(
                                             'type' => 'integer',
                                             'format' => 'int32',
                                         ),
                                     'message' =>
-                                        array (
+                                        array(
                                             'type' => 'string',
                                         ),
                                 ),
@@ -574,11 +577,11 @@ $utopia->get('/v1/open-api-2.json')
 
             foreach ($utopia->getRoutes() as $key => $method) {
                 foreach ($method as $route) { /* @var $route \Utopia\Route */
-                    if(!$route->getLabel('docs', true)) {
+                    if (!$route->getLabel('docs', true)) {
                         continue;
                     }
 
-                    if(empty($route->getLabel('sdk.namespace', null))) {
+                    if (empty($route->getLabel('sdk.namespace', null))) {
                         continue;
                     }
 
@@ -587,7 +590,7 @@ $utopia->get('/v1/open-api-2.json')
                     $hide       = $route->getLabel('sdk.hide', false);
                     $consumes   = [];
 
-                    if($hide) {
+                    if ($hide) {
                         continue;
                     }
 
@@ -607,15 +610,16 @@ $utopia->get('/v1/open-api-2.json')
                         ],
                     ];
 
-                    if($extensions) {
+                    if ($extensions) {
                         $temp['extensions'] = [
                             'weight' => $route->getOrder(),
                             'cookies' => $route->getLabel('sdk.cookies', false),
+                            'location' => $route->getLabel('sdk.location', false),
                             'demo' => 'docs/examples/' . fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . fromCamelCaseToDash($temp['operationId']) . '.md',
                         ];
                     }
 
-                    if((!empty($scope) && 'public' != $scope)) {
+                    if ((!empty($scope) && 'public' != $scope)) {
                         $temp['security'][] = $route->getLabel('sdk.security', $security[$platform]);
                     }
 
@@ -708,24 +712,22 @@ $utopia->get('/v1/open-api-2.json')
                                 break;
                         }
 
-                        if($param['optional'] && !is_null($param['default'])) { // Param has default value
+                        if ($param['optional'] && !is_null($param['default'])) { // Param has default value
                             $node['default'] = $param['default'];
                         }
 
                         if (false !== strpos($url, ':' . $name)) { // Param is in URL path
                             $node['in'] = 'path';
                             $temp['parameters'][] = $node;
-                        }
-                        elseif ($key == 'GET') { // Param is in query
+                        } elseif ($key == 'GET') { // Param is in query
                             $node['in'] = 'query';
                             $temp['parameters'][] = $node;
-                        }
-                        else { // Param is in payload
+                        } else { // Param is in payload
                             $node['in'] = 'formData';
                             $temp['parameters'][] = $node;
                             $requestBody['content']['application/x-www-form-urlencoded']['schema']['properties'][] = $node;
 
-                            if(!$param['optional']) {
+                            if (!$param['optional']) {
                                 $requestBody['content']['application/x-www-form-urlencoded']['required'][] = $name;
                             }
                         }
@@ -751,11 +753,10 @@ $utopia->get('/v1/open-api-2.json')
 
 $name = APP_NAME;
 
-if(array_key_exists($service, $services)) { /** @noinspection PhpIncludeInspection */
+if (array_key_exists($service, $services)) { /** @noinspection PhpIncludeInspection */
     include_once $services[$service]['controller'];
     $name = APP_NAME . ' ' . ucfirst($services[$service]['name']);
-}
-else {
+} else {
     /** @noinspection PhpIncludeInspection */
     include_once $services['/']['controller'];
 }

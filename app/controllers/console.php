@@ -175,7 +175,9 @@ $utopia->get('/console/database/collection')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->param('id', '', function () {return new UID();}, 'Collection unique ID.')
+    ->param('id', '', function () {
+        return new UID();
+    }, 'Collection unique ID.')
     ->action(function ($id) use ($layout, $projectDB) {
         $collection = $projectDB->getDocument($id, false);
 
@@ -216,7 +218,7 @@ $utopia->get('/console/users')
         $page->setParam('providers', $providers);
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.users.title'))
+            ->setParam('title', APP_NAME.' - Users')
             ->setParam('body', $page);
     });
 
@@ -228,6 +230,6 @@ $utopia->get('/console/users/view')
         $page = new View(__DIR__.'/../views/console/users/view.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - '.Locale::getText('console.users.title'))
+            ->setParam('title', APP_NAME.' - View User')
             ->setParam('body', $page);
     });

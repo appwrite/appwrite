@@ -36,7 +36,7 @@ Appwrite uses PHPs Composer for managing dependencies on the server-side and JS 
 
 Appwrite is following the PHP-FIG standards. Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
 
-We use prettier for our JS coding standards and for auto-formmating our code.
+We use prettier for our JS coding standards and for auto-formatting our code.
 
 ## Scalability, Speed and Performance
 
@@ -83,9 +83,9 @@ Adding a new dependency should have vital value on the product with minimum poss
 
 ## Introducing New Features
 
-We whould 💖 you to contribute to Appwrite, but we whould also like to make sure Appwrite is as great as possible and loyal to its vision and mission statement 🙏.
+We would 💖 you to contribute to Appwrite, but we would also like to make sure Appwrite is as great as possible and loyal to its vision and mission statement 🙏.
 
-For us to find the right balance, please open an issue explaining your ideas before intoducing a new pull requests.
+For us to find the right balance, please open an issue explaining your ideas before introducing a new pull requests.
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
@@ -121,6 +121,6 @@ Before running the command make sure you have proper write permissions to Appwri
 
 ## Tutorials
 
-From time to time our team will add tutorials that will help contributers find there way in the Appwrite source code. Below is a list of currently available tutorials:
+From time to time our team will add tutorials that will help contributors find there way in the Appwrite source code. Below is a list of currently available tutorials:
 
 * [Adding Support for a New OAuth Provider](./docs/AddOAuthProvider.md)

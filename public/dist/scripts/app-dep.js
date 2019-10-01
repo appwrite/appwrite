@@ -38,15 +38,15 @@ let path='/auth/recovery';return http.post(path,{'content-type':'application/jso
 if(token===undefined){throw new Error('Missing required parameter: "token"');}
 if(passwordA===undefined){throw new Error('Missing required parameter: "passwordA"');}
 if(passwordB===undefined){throw new Error('Missing required parameter: "passwordB"');}
-let path='/auth/recovery/reset';return http.put(path,{'content-type':'application/json'},{'userId':userId,'token':token,'password-a':passwordA,'password-b':passwordB});},register:function(email,password,confirmation,success,failure,name=''){if(email===undefined){throw new Error('Missing required parameter: "email"');}
+let path='/auth/recovery/reset';return http.put(path,{'content-type':'application/json'},{'userId':userId,'token':token,'password-a':passwordA,'password-b':passwordB});},register:function(email,password,confirm,success,failure,name=''){if(email===undefined){throw new Error('Missing required parameter: "email"');}
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
-if(confirmation===undefined){throw new Error('Missing required parameter: "confirmation"');}
+if(confirm===undefined){throw new Error('Missing required parameter: "confirm"');}
 if(success===undefined){throw new Error('Missing required parameter: "success"');}
 if(failure===undefined){throw new Error('Missing required parameter: "failure"');}
-let path='/auth/register';return iframe('post',path,{project:config.project,'email':email,'password':password,'confirmation':confirmation,'success':success,'failure':failure,'name':name});},confirm:function(userId,token){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+let path='/auth/register';return iframe('post',path,{project:config.project,'email':email,'password':password,'confirm':confirm,'success':success,'failure':failure,'name':name});},confirm:function(userId,token){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(token===undefined){throw new Error('Missing required parameter: "token"');}
-let path='/auth/register/confirm';return http.post(path,{'content-type':'application/json'},{'userId':userId,'token':token});},confirmResend:function(redirect){if(redirect===undefined){throw new Error('Missing required parameter: "redirect"');}
-let path='/auth/register/confirm/resend';return http.post(path,{'content-type':'application/json'},{'redirect':redirect});}};let avatars={getBrowser:function(code,width=100,height=100,quality=100){if(code===undefined){throw new Error('Missing required parameter: "code"');}
+let path='/auth/register/confirm';return http.post(path,{'content-type':'application/json'},{'userId':userId,'token':token});},confirmResend:function(confirm){if(confirm===undefined){throw new Error('Missing required parameter: "confirm"');}
+let path='/auth/register/confirm/resend';return http.post(path,{'content-type':'application/json'},{'confirm':confirm});}};let avatars={getBrowser:function(code,width=100,height=100,quality=100){if(code===undefined){throw new Error('Missing required parameter: "code"');}
 let path='/avatars/browsers/{code}'.replace(new RegExp('{code}','g'),code);return http.get(path,{'content-type':'application/json'},{'width':width,'height':height,'quality':quality});},getCreditCard:function(code,width=100,height=100,quality=100){if(code===undefined){throw new Error('Missing required parameter: "code"');}
 let path='/avatars/credit-cards/{code}'.replace(new RegExp('{code}','g'),code);return http.get(path,{'content-type':'application/json'},{'width':width,'height':height,'quality':quality});},getFavicon:function(url){if(url===undefined){throw new Error('Missing required parameter: "url"');}
 let path='/avatars/favicon';return http.get(path,{'content-type':'application/json'},{'url':url});},getFlag:function(code,width=100,height=100,quality=100){if(code===undefined){throw new Error('Missing required parameter: "code"');}

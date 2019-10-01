@@ -34,7 +34,10 @@ class Github extends OAuth
      */
     public function getAccessToken(string $code):string
     {
-        $accessToken = $this->request('POST', 'https://github.com/login/oauth/access_token', [],
+        $accessToken = $this->request(
+            'POST',
+            'https://github.com/login/oauth/access_token',
+            [],
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
             '&client_secret='.urlencode($this->appSecret).

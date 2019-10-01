@@ -23,8 +23,8 @@ class BaseConsole extends TestCase
             ->setEndpoint($this->endpoint)
         ;
 
-        $this->demoEmail = 'user.' . rand(0,1000000) . '@appwrite.io';
-        $this->demoPassword = 'password.' . rand(0,1000000);
+        $this->demoEmail = 'user.' . rand(0, 1000000) . '@appwrite.io';
+        $this->demoPassword = 'password.' . rand(0, 1000000);
     }
 
     public function tearDown()
@@ -32,14 +32,15 @@ class BaseConsole extends TestCase
         $this->client = null;
     }
 
-    public function register() {
+    public function register()
+    {
         $response = $this->client->call(Client::METHOD_POST, '/auth/register', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
         ], [
             'email' => $this->demoEmail,
             'password' => $this->demoPassword,
-            'confirmation' => 'http://localhost/confirm',
+            'confirm' => 'http://localhost/confirm',
             'success' => 'http://localhost/success',
             'failure' => 'http://localhost/failure',
             'name' => 'Demo User',

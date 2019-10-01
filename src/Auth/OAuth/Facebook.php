@@ -39,7 +39,9 @@ class Facebook extends OAuth
      */
     public function getAccessToken(string $code):string
     {
-        $accessToken = $this->request('GET', 'https://graph.facebook.com/'.$this->version.'/oauth/access_token?'.
+        $accessToken = $this->request(
+            'GET',
+            'https://graph.facebook.com/'.$this->version.'/oauth/access_token?'.
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
             '&client_secret='.urlencode($this->appSecret).

@@ -16,7 +16,7 @@
 
 Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy to use REST API.
 
-Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitve software development tasks.
+Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
 Using Appwrite you can easily manage user authentication with multiple sign-in methods, database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
@@ -39,7 +39,7 @@ docker-compose up -d --remove-orphans
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts the server might take a few minutes to start after installation completes.
 
-For advanced, production and custon installation check out our Docker [enviornemnt variables](/docs/EnviornementVariables.md) docs.
+For advanced, production and custom installation check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
 
 ### Changing Port Number
 
@@ -98,6 +98,15 @@ We really ❤️ pull requests! If you wish to help, you can learn more about ho
 
 Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
 
-* 🇺🇸Justin Dorfman ([Github](https://github.com/@jdorfman), [Twitter](https://twitter.com/jdorfman))
-* 🇺🇳0xflotus ([Github](https://github.com/0xflotus))
-* 🇳🇴Chaaarles ([Github](https://github.com/Chaaarles))
+* 🇺🇸 Justin Dorfman ([Github](https://github.com/jdorfman), [Twitter](https://twitter.com/jdorfman))
+* 🇺🇳 0xflotus ([Github](https://github.com/0xflotus))
+* 🇳🇴 Petter Charles Redfern ([Github](https://github.com/Chaaarles))
+* 🇧🇷 Jessé Souza ([Github](https://github.com/jessescn))
+* 🇪🇸 Esther Álvarez Feijoo ([Github](https://github.com/EstherAF))
+* 🇮🇳 Christy Jacob ([Github](https://github.com/christyjacob4), [Linkedin](https://www.linkedin.com/in/christyjacob4/))
+* 🇺🇦 Dmitriy Danilov ([Github](https://github.com/daniloff200), [Twitter](https://twitter.com/daniloff200))
+* 🇮🇩 Zeet ([Github](https://github.com/Kiy4h))
+* 🇫🇮 Pessi Päivärinne ([Github](https://github.com/pessip))
+* 🇺🇳 Sergi Vos ([Github](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
+* 🇮🇱 Tomer Cohen ([Github](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
+* 🇬🇷 Panagiotis Skarlas ([Github](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))

@@ -4,6 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
+    "hash": "cf3e9453a93f3ee5cfec76f6cd6bc139",
     "content-hash": "470f543ebf989400a43a6269f0b4d60a",
     "packages": [
         {
@@ -12,12 +13,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6"
+                "reference": "457a20948a7f1e9b8e4cea09205b6fd42f8ca811"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6",
-                "reference": "6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/457a20948a7f1e9b8e4cea09205b6fd42f8ca811",
+                "reference": "457a20948a7f1e9b8e4cea09205b6fd42f8ca811",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +40,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-09-20T06:34:28+00:00"
+            "time": "2019-09-21T12:46:08+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -84,7 +85,7 @@
                 "clamav",
                 "php"
             ],
-            "time": "2019-09-08 17:36:32"
+            "time": "2019-09-08T17:36:32+00:00"
         },
         {
             "name": "appwrite/sdk-generator",
@@ -92,7 +93,15 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "e456fafb3d32a83c104a47ad064b2295281e58c0"
+<<<<<<< HEAD
+<<<<<<< HEAD
+                "reference": "2cdf218f735e5c52a47f1d8977f460261fd9017f"
+=======
+                "reference": "22cd594e2406fbcfc64262fdcdfa78069bf29aa0"
+>>>>>>> upstream/master
+=======
+                "reference": "22cd594e2406fbcfc64262fdcdfa78069bf29aa0"
+>>>>>>> upstream/master
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +131,15 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-09-20 06:30:54"
+<<<<<<< HEAD
+<<<<<<< HEAD
+            "time": "2019-09-22 12:47:11"
+=======
+            "time": "2019-09-28 23:31:14"
+>>>>>>> upstream/master
+=======
+            "time": "2019-09-28 23:31:14"
+>>>>>>> upstream/master
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -171,7 +188,7 @@
             ],
             "description": "BaconQrCode is a QR code generator for PHP.",
             "homepage": "https://github.com/Bacon/BaconQrCode",
-            "time": "2018-04-25T17:53:56+00:00"
+            "time": "2018-04-25 17:53:56"
         },
         {
             "name": "chrisboulton/php-resque",
@@ -228,7 +245,7 @@
                 "resque"
             ],
             "abandoned": "resque/php-resque",
-            "time": "2017-04-12 21:58:19"
+            "time": "2017-04-12T21:58:19+00:00"
         },
         {
             "name": "chrisboulton/php-resque-scheduler",
@@ -264,7 +281,7 @@
                 }
             ],
             "description": "php-resque-scheduler is a PHP port of resque-scheduler, which adds support for scheduling items in the future to Resque.",
-            "time": "2016-11-28 22:38:06"
+            "time": "2016-11-28T22:38:06+00:00"
         },
         {
             "name": "colinmollenhour/credis",
@@ -304,7 +321,7 @@
             ],
             "description": "Credis is a lightweight interface to the Redis key-value store which wraps the phpredis library when available for better performance.",
             "homepage": "https://github.com/colinmollenhour/credis",
-            "time": "2019-03-05T16:29:14+00:00"
+            "time": "2019-03-05 16:29:14"
         },
         {
             "name": "composer/ca-bundle",
@@ -360,7 +377,7 @@
                 "ssl",
                 "tls"
             ],
-            "time": "2019-08-30 08:44:50"
+            "time": "2019-08-30T08:44:50+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -402,7 +419,7 @@
                 "enum",
                 "map"
             ],
-            "time": "2017-10-25T22:45:27+00:00"
+            "time": "2017-10-25 22:45:27"
         },
         {
             "name": "domnikl/statsd",
@@ -449,7 +466,7 @@
                 "statsd",
                 "udp"
             ],
-            "time": "2014-12-09T09:37:49+00:00"
+            "time": "2014-12-09 09:37:49"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -498,7 +515,7 @@
                 "cron",
                 "schedule"
             ],
-            "time": "2018-06-06T03:12:17+00:00"
+            "time": "2018-06-06 03:12:17"
         },
         {
             "name": "geoip2/geoip2",
@@ -550,7 +567,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2018-04-10T15:32:59+00:00"
+            "time": "2018-04-10 15:32:59"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -616,7 +633,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2019-08-23 22:16:30"
+            "time": "2019-08-23T22:16:30+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -667,7 +684,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2019-07-02 14:54:06"
+            "time": "2019-07-02T14:54:06+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -738,7 +755,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2019-08-13 16:05:52"
+            "time": "2019-08-13T16:05:52+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -799,7 +816,7 @@
                 "influxdb library",
                 "time series"
             ],
-            "time": "2019-05-30T00:15:14+00:00"
+            "time": "2019-05-30 00:15:14"
         },
         {
             "name": "matthiasmullie/minify",
@@ -859,7 +876,7 @@
                 "minifier",
                 "minify"
             ],
-            "time": "2018-11-26T23:10:39+00:00"
+            "time": "2018-11-26 23:10:39"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -908,7 +925,7 @@
                 "paths",
                 "relative"
             ],
-            "time": "2018-10-25T15:19:41+00:00"
+            "time": "2018-10-25 15:19:41"
         },
         {
             "name": "maxmind-db/reader",
@@ -964,7 +981,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2019-01-04T19:55:56+00:00"
+            "time": "2019-01-04 19:55:56"
         },
         {
             "name": "maxmind/web-service-common",
@@ -1010,20 +1027,20 @@
             ],
             "description": "Internal MaxMind Web Service API",
             "homepage": "https://github.com/maxmind/web-service-common-php",
-            "time": "2018-02-12T22:31:54+00:00"
+            "time": "2018-02-12 22:31:54"
         },
         {
             "name": "mustangostang/spyc",
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/mustangostang/spyc.git",
-                "reference": "576c42ecbc9630b52a95da3279f07278572c6b15"
+                "url": "git@github.com:mustangostang/spyc.git",
+                "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mustangostang/spyc/zipball/576c42ecbc9630b52a95da3279f07278572c6b15",
-                "reference": "576c42ecbc9630b52a95da3279f07278572c6b15",
+                "url": "https://api.github.com/repos/mustangostang/spyc/zipball/4627c838b16550b666d15aeae1e5289dd5b77da0",
+                "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0",
                 "shasum": ""
             },
             "require": {
@@ -1060,7 +1077,7 @@
                 "yaml",
                 "yml"
             ],
-            "time": "2017-07-23 16:38:44"
+            "time": "2019-09-10T13:16:29+00:00"
         },
         {
             "name": "phpmailer/phpmailer",
@@ -1126,7 +1143,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2019-02-01T15:04:28+00:00"
+            "time": "2019-02-01 15:04:28"
         },
         {
             "name": "piwik/device-detector",
@@ -1177,7 +1194,7 @@
                 "parser",
                 "useragent"
             ],
-            "time": "2016-01-21T22:26:37+00:00"
+            "time": "2016-01-21 22:26:37"
         },
         {
             "name": "psr/http-message",
@@ -1227,7 +1244,7 @@
                 "request",
                 "response"
             ],
-            "time": "2019-08-29 13:16:46"
+            "time": "2019-08-29T13:16:46+00:00"
         },
         {
             "name": "psr/log",
@@ -1274,7 +1291,7 @@
                 "psr",
                 "psr-3"
             ],
-            "time": "2018-11-21 13:42:00"
+            "time": "2018-11-21T13:42:00+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -1314,7 +1331,7 @@
                 }
             ],
             "description": "A polyfill for getallheaders.",
-            "time": "2019-03-08T08:55:37+00:00"
+            "time": "2019-03-08 08:55:37"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -1372,7 +1389,7 @@
                 "polyfill",
                 "portable"
             ],
-            "time": "2019-08-06 08:03:45"
+            "time": "2019-08-06T08:03:45+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -1431,7 +1448,7 @@
                 "portable",
                 "shim"
             ],
-            "time": "2019-09-17 10:46:08"
+            "time": "2019-09-17T10:46:08+00:00"
         },
         {
             "name": "twig/twig",
@@ -1439,12 +1456,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724"
+                "reference": "c2fd9990fcab344b67a12ead04890a88141d5897"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d83802c011b99b5326ccd13e7fc87bacebd4c724",
-                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c2fd9990fcab344b67a12ead04890a88141d5897",
+                "reference": "c2fd9990fcab344b67a12ead04890a88141d5897",
                 "shasum": ""
             },
             "require": {
@@ -1498,7 +1515,15 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-09-17 06:08:14"
+<<<<<<< HEAD
+<<<<<<< HEAD
+            "time": "2019-09-20 12:53:54"
+=======
+            "time": "2019-09-20T12:53:54+00:00"
+>>>>>>> upstream/master
+=======
+            "time": "2019-09-20T12:53:54+00:00"
+>>>>>>> upstream/master
         },
         {
             "name": "utopia-php/abuse",
@@ -1545,7 +1570,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:26:59"
+            "time": "2019-05-08T20:26:59+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1592,7 +1617,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:28:54"
+            "time": "2019-05-08T20:28:54+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -1640,7 +1665,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:27:54"
+            "time": "2019-05-08T20:27:54+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -1684,7 +1709,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2019-08-15 06:36:30"
+            "time": "2019-08-15T06:36:30+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1730,7 +1755,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-08-17 08:18:24"
+            "time": "2019-08-17T08:18:24+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -1777,7 +1802,9 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:25:57"
+            "time": "2019-05-08T20:25:57+00:00"
+<<<<<<< HEAD
+=======
         }
     ],
     "packages-dev": [
@@ -3195,8 +3222,10 @@
                 "validate"
             ],
             "time": "2019-08-24T08:43:50+00:00"
+>>>>>>> upstream/master
         }
     ],
+    "packages-dev": null,
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": [],

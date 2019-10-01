@@ -60,7 +60,7 @@ return [
         'tag' => 'Soon',
     ],
     [
-        'label' => '.NET',
+        'label' => 'C#',
         'versions' => [],
         'logo' => 'dotnet.svg',
         'link' => 'https://...',

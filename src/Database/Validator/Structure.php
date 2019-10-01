@@ -187,8 +187,12 @@ class Structure extends Validator
 
             if (empty($validator)) { // Error creating validator for property
                 $this->message = 'Unknown rule type "' . $ruleType . '" for property "' . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . '"';
-                // $this->message = 'Unknown property "'.$key.'" type'.
-                //     '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
+                
+                if (empty($ruleType)) {
+                    $this->message = 'Unknown property "'.$key.'" type'.
+                        '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
+                }
+                
                 return false;
             }
 
