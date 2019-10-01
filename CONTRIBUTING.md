@@ -63,7 +63,7 @@ Appwrite current structure is a combination of both Monolithic and Microservice 
 
 Appwrite main API container is designed as a monolithic app. This is a decision we made to allow us to develop the project faster while still being a very small team.
 
-Although the Appwrite API is a monolithic app, it has a very clear separation of concern as each internal service or worker is separated by it its container which will allow us as we grow to start breaking services for better maintenance and scalability.
+Although the Appwrite API is a monolithic app, it has a very clear separation of concern as each internal service or worker is separated by its container which will allow us as we grow to start breaking services for better maintenance and scalability.
 
 ### The Microservice Part
 
@@ -85,7 +85,7 @@ Adding a new dependency should have vital value on the product with minimum poss
 
 We would 💖 you to contribute to Appwrite, but we would also like to make sure Appwrite is as great as possible and loyal to its vision and mission statement 🙏.
 
-For us to find the right balance, please open an issue explaining your ideas before introducing a new pull requests.
+For us to find the right balance, please open an issue explaining your ideas before introducing a new pull request.
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
