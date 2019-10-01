@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    setProject('')
+    .setProject('')
 ;
 
 let promise = sdk.projects.deleteTask('[PROJECT_ID]', '[TASK_ID]');

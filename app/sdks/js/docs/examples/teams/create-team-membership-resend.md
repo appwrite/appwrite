@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    setProject('')
+    .setProject('')
 ;
 
 let promise = sdk.teams.createTeamMembershipResend('[TEAM_ID]', '[INVITE_ID]', 'https://example.com');

@@ -14,11 +14,11 @@ class Auth extends Service {
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
      * 
-     * When not using the success or failure redirect arguments this endpoint will
-     * result with a 200 status code and the user account object on success and
-     * with 401 status error on failure. This behavior was applied to help the web
-     * clients deal with browsers who don't allow to set 3rd party HTTP cookies
-     * needed for saving the account session token.
+     * When accessing this route using Javascript from the browser, success and
+     * failure parameter URLs are required. Appwrite server will respond with a
+     * 301 redirect status code and will set the user session cookie. This
+     * behavior is enforced because modern browsers are limiting 3rd party cookies
+     * in XHR of fetch requests to protect user privacy.
      *
      * @param string email
      * @param string password
@@ -77,26 +77,6 @@ class Auth extends Service {
     }
 
     /**
-     * OAuth Callback
-     *
-     * @param string projectId
-     * @param string provider
-     * @param string code
-     * @param string state
-     * @throws Exception
-     * @return {}
-     */
-    async oauthCallback(projectId, provider, code, state = '') {
-        let path = '/auth/oauth/callback/{provider}/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{provider}', 'g'), provider);
-        
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
-                'code': code,
-                'state': state
-            });
-    }
-
-    /**
      * OAuth Login
      *
      * @param string provider
@@ -126,17 +106,17 @@ class Auth extends Service {
      * process.
      *
      * @param string email
-     * @param string redirect
+     * @param string reset
      * @throws Exception
      * @return {}
      */
-    async recovery(email, redirect) {
+    async recovery(email, reset) {
         let path = '/auth/recovery';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
             {
                 'email': email,
-                'redirect': redirect
+                'reset': reset
             });
     }
 
@@ -181,7 +161,7 @@ class Auth extends Service {
      * 
      * If registration completes successfully user will be sent with a
      * confirmation email in order to confirm he is the owner of the account email
-     * address. Use the redirect parameter to redirect the user from the
+     * address. Use the confirmation parameter to redirect the user from the
      * confirmation email back to your app. When the user is redirected, use the
      * /auth/confirm endpoint to complete the account confirmation.
      * 
@@ -190,29 +170,29 @@ class Auth extends Service {
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
      * 
-     * When not using the success or failure redirect arguments this endpoint will
-     * result with a 200 status code and the user account object on success and
-     * with 401 status error on failure. This behavior was applied to help the web
-     * clients deal with browsers who don't allow to set 3rd party HTTP cookies
-     * needed for saving the account session token.
+     * When accessing this route using Javascript from the browser, success and
+     * failure parameter URLs are required. Appwrite server will respond with a
+     * 301 redirect status code and will set the user session cookie. This
+     * behavior is enforced because modern browsers are limiting 3rd party cookies
+     * in XHR of fetch requests to protect user privacy.
      *
      * @param string email
      * @param string password
-     * @param string redirect
+     * @param string confirm
      * @param string success
      * @param string failure
      * @param string name
      * @throws Exception
      * @return {}
      */
-    async register(email, password, redirect, success, failure, name = '') {
+    async register(email, password, confirm, success = '', failure = '', name = '') {
         let path = '/auth/register';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
             {
                 'email': email,
                 'password': password,
-                'redirect': redirect,
+                'confirm': confirm,
                 'success': success,
                 'failure': failure,
                 'name': name
@@ -254,16 +234,16 @@ class Auth extends Service {
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
      *
-     * @param string redirect
+     * @param string confirm
      * @throws Exception
      * @return {}
      */
-    async confirmResend(redirect) {
+    async confirmResend(confirm) {
         let path = '/auth/register/confirm/resend';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},
             {
-                'redirect': redirect
+                'confirm': confirm
             });
     }
 }

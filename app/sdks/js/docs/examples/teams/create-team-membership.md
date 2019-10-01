@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    setProject('')
+    .setProject('')
 ;
 
 let promise = sdk.teams.createTeamMembership('[TEAM_ID]', 'email@example.com', [], 'https://example.com');

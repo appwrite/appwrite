@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    setProject('')
+    .setProject('')
 ;
 
 let promise = sdk.projects.createWebhook('[PROJECT_ID]', '[NAME]', [], '[URL]', 0);

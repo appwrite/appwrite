@@ -6,8 +6,8 @@ use Appwrite\Services\Locale;
 $client = new Client();
 
 $client
-    setProject('')
-    setKey('')
+    ->setProject('')
+    ->setKey('')
 ;
 
 $locale = new Locale($client);

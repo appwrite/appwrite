@@ -6,8 +6,8 @@ use Appwrite\Services\Database;
 $client = new Client();
 
 $client
-    setProject('')
-    setKey('')
+    ->setProject('')
+    ->setKey('')
 ;
 
 $database = new Database($client);

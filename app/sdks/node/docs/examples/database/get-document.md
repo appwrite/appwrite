@@ -6,8 +6,8 @@ let client = new Database.Client();
 let database = new sdk.Database(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = database.getDocument('[COLLECTION_ID]', '[DOCUMENT_ID]');

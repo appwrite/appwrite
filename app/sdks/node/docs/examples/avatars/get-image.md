@@ -6,8 +6,8 @@ let client = new Avatars.Client();
 let avatars = new sdk.Avatars(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = avatars.getImage('https://example.com');
