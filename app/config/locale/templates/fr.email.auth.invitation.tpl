@@ -10,7 +10,6 @@
     Bonjour,
     <br />
     <br />
-    This mail was sent to you because <b>{{owner}}</b> wanted to invite you to become a team member at the <b>{{team}}</b> team over at {{project}}.
     Ce mail vous a été envoyé car <b>{{owner}}</b> vous invite à devenir membre de l'équipe <b>{{team}}</b> sur le projet {{project}}.
     <br />
     <br />
