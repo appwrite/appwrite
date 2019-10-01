@@ -2,7 +2,7 @@
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>Simple Backend Server for your [Vue / Angular / React / iOS / Android / Flutter / *ANY*] Frontend App</b>
+    <b>Simple Backend Server for your [Vue / Angular / React / iOS / Android / Flutter / *ANY OTHER*] Frontend App</b>
     <br />
     <br />
 </p>
@@ -37,9 +37,10 @@ curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?port=80 && \
 docker-compose up -d --remove-orphans
 ```
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-Linux native hosts the server might take a few minutes to start after installation completes.
+Once the Docker installation completed, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-Linux native hosts the server might take a few minutes to start after installation completes.
 
-For advanced, production and custom installation check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
+
+For advanced, production and custom installation, check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
 
 ### Changing Port Number
 
@@ -50,9 +51,9 @@ In case your port 80 is already taken, change the port number in the command abo
 Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our getting started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
+* [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 * Getting Started for Android (soon...)
 * Getting Started for iOS (soon...)
-* [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 
 ### Services
 
@@ -69,7 +70,7 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 
 ### SDKs
 
-Currently, we are supporting a few SDK libraries and we are constantly working on adding new ones.
+Currently, we are supporting only a few SDK libraries and are constantly working on including new ones.
 
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
@@ -82,7 +83,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 ## Security
 
-For security issues, please email [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
 
 ## Follow Us
 
@@ -110,3 +111,5 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇺🇳 Sergi Vos ([Github](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
 * 🇮🇱 Tomer Cohen ([Github](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
 * 🇬🇷 Panagiotis Skarlas ([Github](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
+* 🇷🇺 Alexey Pyltsyn ([Github](https://github.com/lex111))
+* 🇩🇪 Robin C ([Github](https://github.com/Taminoful))

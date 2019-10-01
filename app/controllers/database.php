@@ -119,17 +119,17 @@ $utopia->post('/v1/database')
     ->action(
         function ($name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
             $parsedRules = [];
-            
+
             foreach ($rules as &$rule) {
                 $parsedRules[] = array_merge([
                     '$collection' => Database::SYSTEM_COLLECTION_RULES,
                     '$permissions' => [
                         'read' => $read,
                         'write' => $write,
-                    ]
+                    ],
                 ], $rule);
             }
-            
+
             try {
                 $data = $projectDB->createDocument([
                     '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -201,16 +201,16 @@ $utopia->put('/v1/database/:collectionId')
             if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
-            
+
             $parsedRules = [];
-            
+
             foreach ($rules as &$rule) {
                 $parsedRules[] = array_merge([
                     '$collection' => Database::SYSTEM_COLLECTION_RULES,
                     '$permissions' => [
                         'read' => $read,
                         'write' => $write,
-                    ]
+                    ],
                 ], $rule);
             }
 
