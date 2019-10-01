@@ -29,7 +29,6 @@ class Bitbucket extends OAuth
     {
         return 'https://bitbucket.org/site/oauth2/authorize?' .
             'client_id=' . urlencode($this->appID).
-            // '&redirect_uri=' . urlencode($this->callback).
             '&state=' . urlencode(json_encode($this->state)).
             '&response_type=code';
     }

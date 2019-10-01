@@ -29,7 +29,7 @@ return [
     'instagram' => [
         'developers' => 'https://www.instagram.com/developer/',
         'icon' => 'icon-instagram',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'microsoft' => [
         'developers' => 'https://developer.microsoft.com/en-us/',
