@@ -99,7 +99,7 @@ abstract class OAuth
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
-        $headers[] = "Content-length: ".strlen($payload);
+        $headers[] = 'Content-length: '.strlen($payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         // Send the request & save response to $response
