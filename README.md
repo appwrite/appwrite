@@ -110,3 +110,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇺🇳 Sergi Vos ([Github](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
 * 🇮🇱 Tomer Cohen ([Github](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
 * 🇬🇷 Panagiotis Skarlas ([Github](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
+* 🇷🇺 Alexey Pyltsyn ([Github](https://github.com/lex111))
