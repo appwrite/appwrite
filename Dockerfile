@@ -63,24 +63,24 @@ RUN \
 RUN echo "upload_max_filesize = 4M" > /etc/php/7.3/fpm/conf.d/appwrite.ini
 
 # nginx conf (with ssl certificates)
-ADD ./docker/nginx.conf /etc/nginx/nginx.conf
-ADD ./docker/ssl/nginx.crt /etc/nginx/ssl/nginx.crt
-ADD ./docker/ssl/nginx.key /etc/nginx/ssl/nginx.key
+COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/ssl/nginx.crt /etc/nginx/ssl/nginx.crt
+COPY ./docker/ssl/nginx.key /etc/nginx/ssl/nginx.key
 
 # php conf
 RUN mkdir -p /var/run/php
-ADD ./docker/www.conf /etc/php/7.3/fpm/pool.d/www.conf
+COPY ./docker/www.conf /etc/php/7.3/fpm/pool.d/www.conf
 
 # supervisord conf
-ADD ./docker/supervisord.conf /etc/supervisord.conf
-ADD ./docker/entrypoint.sh /entrypoint.sh
+COPY ./docker/supervisord.conf /etc/supervisord.conf
+COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod 775 /entrypoint.sh
 
 # add PHP files
-ADD ./app /usr/share/nginx/html/app
-ADD ./public /usr/share/nginx/html/public
-ADD ./src /usr/share/nginx/html/src
-ADD ./vendor /usr/share/nginx/html/vendor
+COPY ./app /usr/share/nginx/html/app
+COPY ./public /usr/share/nginx/html/public
+COPY ./src /usr/share/nginx/html/src
+COPY ./vendor /usr/share/nginx/html/vendor
 
 WORKDIR /storage/uploads
 RUN chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads

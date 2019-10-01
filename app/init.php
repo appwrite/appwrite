@@ -1,8 +1,8 @@
 <?php
 
 // Init
-if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require_once __DIR__ . '/../vendor/autoload.php';
+if (file_exists(__DIR__.'/../vendor/autoload.php')) {
+    require_once __DIR__.'/../vendor/autoload.php';
 }
 
 use Utopia\App;
@@ -18,48 +18,48 @@ use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use PHPMailer\PHPMailer\PHPMailer;
 
-const APP_NAME                      = 'Appwrite';
-const APP_DOMAIN                    = 'appwrite.io';
-const APP_EMAIL_TEAM                = 'team@' . APP_DOMAIN;
-const APP_EMAIL_SECURITY            = 'security@' . APP_DOMAIN;
-const APP_USERAGENT                 = APP_NAME . '-Server/%s Please report abuse at ' . APP_EMAIL_SECURITY;
-const APP_MODE_ADMIN                = 'admin';
-const APP_LOCALES                   = ['en', 'he', 'pt-br', 'es'];
-const APP_PAGING_LIMIT              = 15;
+const APP_NAME = 'Appwrite';
+const APP_DOMAIN = 'appwrite.io';
+const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
+const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
+const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
+const APP_MODE_ADMIN = 'admin';
+const APP_LOCALES = ['en', 'he', 'pt-br', 'es'];
+const APP_PAGING_LIMIT = 15;
 
-$register   = new Registry();
-$request    = new Request();
-$response   = new Response();
+$register = new Registry();
+$request = new Request();
+$response = new Response();
 
-/**
+/*
  * ENV vars
  */
-$env            = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
-$domain         = $request->getServer('HTTP_HOST', '');
-$version        = include __DIR__ . '/../app/config/version.php';
-$providers      = include __DIR__ . '/../app/config/providers.php'; // OAuth providers list
-$collections    = include __DIR__ . '/../app/config/collections.php'; // OAuth providers list
-$redisHost      = $request->getServer('_APP_REDIS_HOST', '');
-$redisPort      = $request->getServer('_APP_REDIS_PORT', '');
-$utopia         = new App('Asia/Tel_Aviv', $env);
-$port           = (string)(isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT) : '';
+$env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
+$domain = $request->getServer('HTTP_HOST', '');
+$version = include __DIR__.'/../app/config/version.php';
+$providers = include __DIR__.'/../app/config/providers.php'; // OAuth providers list
+$collections = include __DIR__.'/../app/config/collections.php'; // OAuth providers list
+$redisHost = $request->getServer('_APP_REDIS_HOST', '');
+$redisPort = $request->getServer('_APP_REDIS_PORT', '');
+$utopia = new App('Asia/Tel_Aviv', $env);
+$port = (string) (isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT) : '';
 
-Resque::setBackend($redisHost . ':' . $redisPort);
+Resque::setBackend($redisHost.':'.$redisPort);
 
-define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) === 'localhost' || $request->getServer('HTTP_HOST', null) === 'localhost:' . $port) ? false : '.' . $request->getServer('HTTP_HOST', false));
+define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) === 'localhost' || $request->getServer('HTTP_HOST', null) === 'localhost:'.$port) ? false : '.'.$request->getServer('HTTP_HOST', false));
 
-/**
+/*
  * Registry
  */
 $register->set('db', function () use ($request) { // Register DB connection
-    $dbHost     = $request->getServer('_APP_DB_HOST', '');
-    $dbUser     = $request->getServer('_APP_DB_USER', '');
-    $dbPass     = $request->getServer('_APP_DB_PASS', '');
-    $dbScheme   = $request->getServer('_APP_DB_SCHEMA', '');
+    $dbHost = $request->getServer('_APP_DB_HOST', '');
+    $dbUser = $request->getServer('_APP_DB_USER', '');
+    $dbPass = $request->getServer('_APP_DB_PASS', '');
+    $dbScheme = $request->getServer('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDO::ATTR_TIMEOUT => 5 // Seconds
+        PDO::ATTR_TIMEOUT => 5, // Seconds
     ));
 
     // Connection settings
@@ -73,7 +73,7 @@ $register->set('influxdb', function () use ($request) { // Register DB connectio
     $port = $request->getServer('_APP_INFLUXDB_PORT', '');
 
     if (empty($host) || empty($port)) {
-        return null;
+        return;
     }
 
     $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
@@ -93,6 +93,7 @@ $register->set('cache', function () use ($redisHost, $redisPort) { // Register c
     $redis = new Redis();
 
     $redis->connect($redisHost, $redisPort);
+
     return $redis;
 });
 $register->set('smtp', function () use ($request) {
@@ -103,23 +104,23 @@ $register->set('smtp', function () use ($request) {
     $username = $request->getServer('_APP_SMTP_USERNAME', '');
     $password = $request->getServer('_APP_SMTP_PASSWORD', '');
 
-    $mail->XMailer    = 'Appwrite Mailer';
-    $mail->Host       = $request->getServer('_APP_SMTP_HOST', 'smtp');
-    $mail->Port       = $request->getServer('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth   = (!empty($username) && !empty($password));
-    $mail->Username   = $username;
-    $mail->Password   = $password;
+    $mail->XMailer = 'Appwrite Mailer';
+    $mail->Host = $request->getServer('_APP_SMTP_HOST', 'smtp');
+    $mail->Port = $request->getServer('_APP_SMTP_PORT', 25);
+    $mail->SMTPAuth = (!empty($username) && !empty($password));
+    $mail->Username = $username;
+    $mail->Password = $password;
     $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', '');
 
-    $mail->setFrom('team@appwrite.io', APP_NAME . ' Team');
-    $mail->addReplyTo('team@appwrite.io', APP_NAME . ' Team');
+    $mail->setFrom('team@appwrite.io', APP_NAME.' Team');
+    $mail->addReplyTo('team@appwrite.io', APP_NAME.' Team');
 
     $mail->isHTML(true);
-    
+
     return $mail;
 });
 
-/**
+/*
  * Localization
  */
 $locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', null));
@@ -128,6 +129,7 @@ Locale::$exceptions = false;
 
 Locale::setLanguage('en', include __DIR__ . '/config/locale/en.php');
 Locale::setLanguage('he', include __DIR__ . '/config/locale/he.php');
+Locale::setLanguage('ua', include __DIR__ . '/config/locale/ua.php');
 Locale::setLanguage('pt-br', include __DIR__ . '/config/locale/pt-br.php');
 Locale::setLanguage('es', include __DIR__ . '/config/locale/es.php');
 
@@ -139,11 +141,11 @@ stream_context_set_default([ // Set global user agent and http settings
     'http' => [
         'method' => 'GET',
         'user_agent' => sprintf(APP_USERAGENT, $version),
-        'timeout' => 2
-    ]
+        'timeout' => 2,
+    ],
 ]);
 
-/**
+/*
  * Auth & Project Scope
  */
 $consoleDB = new Database();
@@ -165,19 +167,19 @@ if (is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $pro
 
 $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 
-Auth::setCookieName('a-session-' . $project->getUid());
+Auth::setCookieName('a-session-'.$project->getUid());
 
 if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a-session-' . $console->getUid());
+    Auth::setCookieName('a-session-'.$console->getUid());
 }
 
-$session        = Auth::decodeSession($request->getCookie(Auth::$cookieName, $request->getHeader('X-Appwrite-Key', '')));
-Auth::$unique   = $session['id'];
-Auth::$secret   = $session['secret'];
+$session = Auth::decodeSession($request->getCookie(Auth::$cookieName, $request->getHeader('X-Appwrite-Key', '')));
+Auth::$unique = $session['id'];
+Auth::$secret = $session['secret'];
 
 $projectDB = new Database();
 $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_' . $project->getUid());
+$projectDB->setNamespace('app_'.$project->getUid());
 $projectDB->setMocks($collections);
 
 $user = $projectDB->getDocument(Auth::$unique);
@@ -186,7 +188,7 @@ if (APP_MODE_ADMIN === $mode) {
     $user = $consoleDB->getDocument(Auth::$unique);
 
     $user
-        ->setAttribute('$uid', 'admin-' . $user->getAttribute('$uid'))
+        ->setAttribute('$uid', 'admin-'.$user->getAttribute('$uid'))
     ;
 }
 

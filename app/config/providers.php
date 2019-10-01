@@ -19,7 +19,7 @@ return [
     'gitlab' => [
         'developers' => 'https://docs.gitlab.com/ee/api/',
         'icon' => 'icon-gitlab',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'google' => [
         'developers' => 'https://developers.google.com/',

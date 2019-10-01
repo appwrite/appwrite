@@ -10,7 +10,7 @@
     Hello,
     <br />
     <br />
-    This mail was sent to you because <b>{{owner}}</b> wanted to invite to become a team member at the <b>{{team}}</b> team over at {{project}}.
+    This mail was sent to you because <b>{{owner}}</b> wanted to invite you to become a team member at the <b>{{team}}</b> team over at {{project}}.
     <br />
     <br />
     Follow this link to join the <b>{{team}}</b> team:
