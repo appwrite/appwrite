@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * List Of World Currencies.
@@ -491,12 +491,12 @@ return [
     [
         'symbol' => 'Rs',
         'name' => 'Indian Rupee',
-        'symbolNative' => 'টকা',
+        'symbolNative' => '₹',
         'decimalDigits' => 2,
         'rounding' => 0,
         'code' => 'INR',
-        'namePlural' => 'Indian rupees',
-        'locations' => [],
+        'namePlural' => 'Indian Rupees',
+        'locations' => ['IN'],
     ],
     [
         'symbol' => 'IQD',
