@@ -115,3 +115,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇷🇺 Alexey Pyltsyn ([Github](https://github.com/lex111))
 * 🇩🇪 Robin C ([Github](https://github.com/Taminoful))
 * 🇮🇳 Parikshit Hooda ([Github](https://github.com/Parikshit-Hooda))
+* 🇫🇷 Corentin Le Fur ([Github](https://github.com/crtlf))
