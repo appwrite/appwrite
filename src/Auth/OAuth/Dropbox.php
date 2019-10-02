@@ -72,8 +72,8 @@ class Dropbox extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['account_id'])) {
+            return $user['account_id'];
         }
 
         return '';
@@ -88,8 +88,8 @@ class Dropbox extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['userPrincipalName'])) {
-            return $user['userPrincipalName'];
+        if (isset($user['email'])) {
+            return $user['email'];
         }
 
         return '';
@@ -104,8 +104,8 @@ class Dropbox extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['displayName'])) {
-            return $user['displayName'];
+        if (isset($user['name'])) {
+            return $user['name']['display_name'];
         }
 
         return '';
@@ -120,8 +120,9 @@ class Dropbox extends OAuth
     {
         if (empty($this->user)) {
             $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
-            $user = $this->request('GET', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
+            $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = json_decode($user, true);
+
         }
 
         return $this->user;
