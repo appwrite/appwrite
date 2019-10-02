@@ -31,9 +31,21 @@ return [
         'icon' => 'icon-instagram',
         'enabled' => false,
     ],
+    'linkedin' => [
+        'developers' => 'https://developer.linkedin.com/',
+        'icon' => 'icon-linkedin',
+        'enabled' => true,
+    ],
     'microsoft' => [
         'developers' => 'https://developer.microsoft.com/en-us/',
         'icon' => 'icon-windows',
+        'enabled' => true,
+    ],
+    'twitch' => [
+        'developers' => 'https://dev.twitch.tv/',
+        // To-Do: Add twitch icon to appwrite so the 
+        //        next line can be uncommented.
+        // 'icon' => 'icon-twitch',
         'enabled' => true,
     ],
     'twitter' => [
