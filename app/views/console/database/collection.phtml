@@ -86,11 +86,11 @@ $collection = $this->getParam('collection', []);
                 <table class="vertical">
                     <thead>
                         <tr>
-                            <?php foreach($collection['rules'] as $rule): ?>
+                            <?php foreach ($collection['rules'] as $rule): ?>
                             <th width="220">
                                 <?php echo $rule['label']; ?>
 
-                                <?php if(!empty($rule['description'])): ?>
+                                <?php if (!empty($rule['description'])): ?>
                                     <span class="tooltip large" data-tooltip="<?php echo $rule['description']; ?>"><i class="icon-question"></i></span>
                                 <?php endif; ?>
                             </th>
@@ -101,9 +101,9 @@ $collection = $this->getParam('collection', []);
                     </thead>
                     <tbody data-ls-loop="project-documents.documents" data-ls-as="document">
                         <tr>
-                            <?php foreach($collection['rules'] as $rule): ?>
+                            <?php foreach ($collection['rules'] as $rule): ?>
                             <td>
-                                <?php switch($rule['type']):
+                                <?php switch ($rule['type']):
                                     case 'numeric':?>
                                         <span class="tag" data-ls-bind="{{document.<?php echo $rule['key']; ?>|emptyDash}}" data-ls-attrs="title={{document.<?php echo $rule['key']; ?>}}"></span>
                                     <?php break;?>

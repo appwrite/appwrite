@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6"
+                "reference": "456e2f153393bd67b7d706db1ec104ba211cf25a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6",
-                "reference": "6d920c6f7aa7c36a06915bbe4b91ab5a9cf7ebb6",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/456e2f153393bd67b7d706db1ec104ba211cf25a",
+                "reference": "456e2f153393bd67b7d706db1ec104ba211cf25a",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-09-20T06:34:28+00:00"
+            "time": "2019-10-01T18:05:56+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -84,7 +84,7 @@
                 "clamav",
                 "php"
             ],
-            "time": "2019-09-08 17:36:32"
+            "time": "2019-09-08T17:36:32+00:00"
         },
         {
             "name": "appwrite/sdk-generator",
@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "e456fafb3d32a83c104a47ad064b2295281e58c0"
+                "reference": "21f848c7c8a6f3f721c23d9c8bbdf8fff886863d"
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-09-20 06:30:54"
+            "time": "2019-10-01 17:57:36"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -228,7 +228,7 @@
                 "resque"
             ],
             "abandoned": "resque/php-resque",
-            "time": "2017-04-12 21:58:19"
+            "time": "2017-04-12T21:58:19+00:00"
         },
         {
             "name": "chrisboulton/php-resque-scheduler",
@@ -264,7 +264,7 @@
                 }
             ],
             "description": "php-resque-scheduler is a PHP port of resque-scheduler, which adds support for scheduling items in the future to Resque.",
-            "time": "2016-11-28 22:38:06"
+            "time": "2016-11-28T22:38:06+00:00"
         },
         {
             "name": "colinmollenhour/credis",
@@ -360,7 +360,7 @@
                 "ssl",
                 "tls"
             ],
-            "time": "2019-08-30 08:44:50"
+            "time": "2019-08-30T08:44:50+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -616,7 +616,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2019-08-23 22:16:30"
+            "time": "2019-08-23T22:16:30+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -667,7 +667,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2019-07-02 14:54:06"
+            "time": "2019-07-02T14:54:06+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -738,7 +738,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2019-08-13 16:05:52"
+            "time": "2019-08-13T16:05:52+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -912,25 +912,26 @@
         },
         {
             "name": "maxmind-db/reader",
-            "version": "v1.4.1",
+            "version": "v1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/maxmind/MaxMind-DB-Reader-php.git",
-                "reference": "eb83d0ee1c1f9b8a340206302136bc81ee02ae74"
+                "reference": "bd436094fc0a9b0558a899fb80b0ae34fe1808a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/maxmind/MaxMind-DB-Reader-php/zipball/eb83d0ee1c1f9b8a340206302136bc81ee02ae74",
-                "reference": "eb83d0ee1c1f9b8a340206302136bc81ee02ae74",
+                "url": "https://api.github.com/repos/maxmind/MaxMind-DB-Reader-php/zipball/bd436094fc0a9b0558a899fb80b0ae34fe1808a0",
+                "reference": "bd436094fc0a9b0558a899fb80b0ae34fe1808a0",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4"
+                "php": ">=5.6"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "2.*",
-                "phpunit/phpunit": "4.* || 5.*",
-                "satooshi/php-coveralls": "1.0.*",
+                "php-coveralls/php-coveralls": "^2.1",
+                "phpunit/phpcov": "^3.0",
+                "phpunit/phpunit": "5.*",
                 "squizlabs/php_codesniffer": "3.*"
             },
             "suggest": {
@@ -952,7 +953,7 @@
                 {
                     "name": "Gregory J. Oschwald",
                     "email": "goschwald@maxmind.com",
-                    "homepage": "http://www.maxmind.com/"
+                    "homepage": "https://www.maxmind.com/"
                 }
             ],
             "description": "MaxMind DB Reader API",
@@ -964,7 +965,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2019-01-04T19:55:56+00:00"
+            "time": "2019-09-30T22:56:38+00:00"
         },
         {
             "name": "maxmind/web-service-common",
@@ -1017,13 +1018,13 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/mustangostang/spyc.git",
-                "reference": "576c42ecbc9630b52a95da3279f07278572c6b15"
+                "url": "git@github.com:mustangostang/spyc.git",
+                "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mustangostang/spyc/zipball/576c42ecbc9630b52a95da3279f07278572c6b15",
-                "reference": "576c42ecbc9630b52a95da3279f07278572c6b15",
+                "url": "https://api.github.com/repos/mustangostang/spyc/zipball/4627c838b16550b666d15aeae1e5289dd5b77da0",
+                "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0",
                 "shasum": ""
             },
             "require": {
@@ -1060,7 +1061,7 @@
                 "yaml",
                 "yml"
             ],
-            "time": "2017-07-23 16:38:44"
+            "time": "2019-09-10T13:16:29+00:00"
         },
         {
             "name": "phpmailer/phpmailer",
@@ -1227,7 +1228,7 @@
                 "request",
                 "response"
             ],
-            "time": "2019-08-29 13:16:46"
+            "time": "2019-08-29T13:16:46+00:00"
         },
         {
             "name": "psr/log",
@@ -1274,7 +1275,7 @@
                 "psr",
                 "psr-3"
             ],
-            "time": "2018-11-21 13:42:00"
+            "time": "2018-11-21T13:42:00+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -1372,7 +1373,7 @@
                 "polyfill",
                 "portable"
             ],
-            "time": "2019-08-06 08:03:45"
+            "time": "2019-08-06T08:03:45+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -1431,7 +1432,7 @@
                 "portable",
                 "shim"
             ],
-            "time": "2019-09-17 10:46:08"
+            "time": "2019-09-17T10:46:08+00:00"
         },
         {
             "name": "twig/twig",
@@ -1439,16 +1440,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724"
+                "reference": "4625774716e3737580e407a02e53ff4defd3cdfa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d83802c011b99b5326ccd13e7fc87bacebd4c724",
-                "reference": "d83802c011b99b5326ccd13e7fc87bacebd4c724",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/4625774716e3737580e407a02e53ff4defd3cdfa",
+                "reference": "4625774716e3737580e407a02e53ff4defd3cdfa",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.1.3",
+                "php": "^7.0",
                 "symfony/polyfill-ctype": "^1.8",
                 "symfony/polyfill-mbstring": "^1.3"
             },
@@ -1498,7 +1499,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-09-17 06:08:14"
+            "time": "2019-10-01T10:31:38+00:00"
         },
         {
             "name": "utopia-php/abuse",
@@ -1545,7 +1546,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:26:59"
+            "time": "2019-05-08T20:26:59+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1592,7 +1593,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:28:54"
+            "time": "2019-05-08T20:28:54+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -1640,7 +1641,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:27:54"
+            "time": "2019-05-08T20:27:54+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -1684,7 +1685,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2019-08-15 06:36:30"
+            "time": "2019-08-15T06:36:30+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1730,7 +1731,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-08-17 08:18:24"
+            "time": "2019-08-17T08:18:24+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -1777,7 +1778,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-05-08 20:25:57"
+            "time": "2019-05-08T20:25:57+00:00"
         }
     ],
     "packages-dev": [

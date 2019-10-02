@@ -59,7 +59,10 @@ class WebhooksV1
             curl_setopt($ch, CURLOPT_HEADER, 0);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_USERAGENT, sprintf(APP_USERAGENT, $version));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            curl_setopt(
+                $ch,
+                CURLOPT_HTTPHEADER,
+                [
                     'Content-Type: application/json',
                     'Content-Length: '.strlen($payload),
                     'X-'.APP_NAME.'-Event: '.$event,

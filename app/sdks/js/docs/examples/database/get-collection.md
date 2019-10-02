@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    setProject('')
+    .setProject('')
 ;
 
 let promise = sdk.database.getCollection('[COLLECTION_ID]');

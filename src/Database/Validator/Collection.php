@@ -38,8 +38,9 @@ class Collection extends Structure
     public function isValid($document)
     {
         $document = new Document(
-            array_merge($this->merge, ($document instanceof Document) ? $document->getArrayCopy() : $document));
-            
+            array_merge($this->merge, ($document instanceof Document) ? $document->getArrayCopy() : $document)
+        );
+
         if (is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
 

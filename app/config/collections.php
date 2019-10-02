@@ -38,13 +38,13 @@ $collections = [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 'name' => 'Localhost (SSL)',
                 'type' => 'web',
-                'url' => 'https://' . $request->getServer('HTTP_HOST'),
+                'url' => 'https://'.$request->getServer('HTTP_HOST'),
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 'name' => 'Localhost (Non-SSL)',
                 'type' => 'web',
-                'url' => 'http://' . $request->getServer('HTTP_HOST'),
+                'url' => 'http://'.$request->getServer('HTTP_HOST'),
             ],
         ],
         'legalName' => '',
@@ -1076,7 +1076,7 @@ foreach ($providers as $key => $provider) {
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
         'label' => 'OAuth '.ucfirst($key).' ID',
-        'key' => 'oauth'.ucfirst($key),
+        'key' => 'usersOauth'.ucfirst($key).'Appid',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1085,8 +1085,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' Access Token',
-        'key' => 'oauth'.ucfirst($key).'AccessToken',
+        'label' => 'OAuth '.ucfirst($key).' Secret',
+        'key' => 'usersOauth'.ucfirst($key).'Secret',
         'type' => 'text',
         'default' => '',
         'required' => false,

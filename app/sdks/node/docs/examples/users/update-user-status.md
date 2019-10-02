@@ -6,8 +6,8 @@ let client = new Users.Client();
 let users = new sdk.Users(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = users.updateUserStatus('[USER_ID]', '1');

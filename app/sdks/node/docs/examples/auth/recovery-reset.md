@@ -6,8 +6,8 @@ let client = new Auth.Client();
 let auth = new sdk.Auth(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = auth.recoveryReset('[USER_ID]', '[TOKEN]', 'password', 'password');

@@ -30,8 +30,8 @@ POST https://appwrite.test/v1/storage/files
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | files | file | Binary Files. |  |
-| read | array | An array of read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
 | folderId | string | Folder to associate files with. |  |
 
 ## Get File
@@ -61,8 +61,8 @@ PUT https://appwrite.test/v1/storage/files/{fileId}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | fileId | string | **Required** File unique ID. |  |
-| read | array | An array of read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
 | folderId | string | Folder to associate files with. |  |
 
 ## Delete File

@@ -5,13 +5,15 @@ namespace Tests\E2E;
 use Tests\E2E\Client;
 
 class ConsoleProjectsTest extends BaseConsole
-{   
+{
     public function testRegisterSuccess()
     {
         $response = $this->register();
 
+        var_dump($response);
+
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
-        $this->assertEquals("\n", $response['body']);
+        $this->assertEquals("", $response['body']);
         
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
 
@@ -25,7 +27,8 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testRegisterSuccess
      */
-    public function testProjectsList($data) {
+    public function testProjectsList($data)
+    {
         $response = $this->client->call(Client::METHOD_GET, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -39,7 +42,8 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testRegisterSuccess
      */
-    public function testProjectsCreateSuccess($data) {
+    public function testProjectsCreateSuccess($data)
+    {
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -81,8 +85,8 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testProjectsCreateSuccess
      */
-    public function testProjectsUpdateSuccess($data) {
-  
+    public function testProjectsUpdateSuccess($data)
+    {
         $response = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',

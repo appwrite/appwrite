@@ -94,13 +94,15 @@ abstract class OAuth
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Console_OAuth_Agent');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (!empty($payload)) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         }
 
-        // Send the request & save response to $resp
+        $headers[] = 'Content-length: '.strlen($payload);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Send the request & save response to $response
         $response = curl_exec($ch);
 
         curl_close($ch);

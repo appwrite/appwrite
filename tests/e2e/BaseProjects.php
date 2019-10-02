@@ -16,8 +16,8 @@ class BaseProjects extends BaseConsole
     {
         parent::setUp();
 
-        $this->projectsDemoEmail = 'user.' . rand(0,1000000) . '@appwrite.io';
-        $this->projectsDemoPassword = 'password.' . rand(0,1000000);
+        $this->projectsDemoEmail = 'user.' . rand(0, 1000000) . '@appwrite.io';
+        $this->projectsDemoPassword = 'password.' . rand(0, 1000000);
     }
 
     public function tearDown()
@@ -36,7 +36,7 @@ class BaseProjects extends BaseConsole
         ], [
             'email' => $this->projectsDemoEmail,
             'password' => $this->projectsDemoPassword,
-            'confirmation' => 'http://localhost/confirm',
+            'confirm' => 'http://localhost/confirm',
             'success' => 'http://localhost/success',
             'failure' => 'http://localhost/failure',
             'name' => 'Porject Demo User',

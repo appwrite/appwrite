@@ -4,7 +4,7 @@ return [
     'bitbucket' => [
         'developers' => 'https://developer.atlassian.com/bitbucket',
         'icon' => 'icon-bitbucket',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'facebook' => [
         'developers' => 'https://developers.facebook.com/',
@@ -19,12 +19,12 @@ return [
     'gitlab' => [
         'developers' => 'https://docs.gitlab.com/ee/api/',
         'icon' => 'icon-gitlab',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'google' => [
         'developers' => 'https://developers.google.com/',
         'icon' => 'icon-google',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'instagram' => [
         'developers' => 'https://www.instagram.com/developer/',

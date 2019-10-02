@@ -34,9 +34,9 @@ class OpenSSL
      *
      * @return string
      */
-    public static function decrypt($data, $method, $password, $options = 1, $iv = '', $tag = '',  $aad = '')
+    public static function decrypt($data, $method, $password, $options = 1, $iv = '', $tag = '', $aad = '')
     {
-        return openssl_decrypt($data, $method, $password, $options, $iv, $tag,  $aad);
+        return openssl_decrypt($data, $method, $password, $options, $iv, $tag, $aad);
     }
 
     /**
