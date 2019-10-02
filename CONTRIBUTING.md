@@ -26,7 +26,7 @@ Appwrite stack is combined from a variety of open-source technologies and tools.
 
 ## Package Managers
 
-Appwrite is using a package manager for managing code dependencies for both backend and frontend development. We try our best to avoid creating any unnecessary and any new dependency to the project is subjected to a lead developer review and approval.
+Appwrite is using a package manager for managing code dependencies for both backend and frontend development. We try our best to avoid creating any unnecessary and any new dependency on the project is subjected to a lead developer review and approval.
 
 Many of Appwrite internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
 
@@ -67,7 +67,7 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 ### The Microservice Part
 
-Each container in Appwrite is a microservice by its own. Each service is an independent process which can scale without regard to any of the other services.
+Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
 Currently, all of the Appwrite microservices are intended to communicate using TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443 who by default are used to expose the Appwrite HTTP API.
 

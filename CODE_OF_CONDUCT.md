@@ -3,9 +3,9 @@
 ## Our Pledge
 
 In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to making participation in our project and
+contributors and maintainers pledge to make participation in our project and
 our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, sex characteristics, gender identity and expression,
+size, disability, ethnicity, sex characteristics, gender identity, expression,
 level of experience, education, socio-economic status, nationality, personal
 appearance, race, religion, or sexual identity and orientation.
 
@@ -48,7 +48,7 @@ threatening, offensive, or harmful.
 This Code of Conduct applies both within project spaces and in public spaces
 when an individual is representing the project or its community. Examples of
 representing a project or community include using an official project e-mail
-address, posting via an official social media account, or acting as an appointed
+address, posting via an official social media account or acting as an appointed
 representative at an online or offline event. Representation of a project may be
 further defined and clarified by project maintainers.
 
