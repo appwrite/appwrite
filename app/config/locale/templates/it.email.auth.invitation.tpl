@@ -11,10 +11,10 @@
     Ciao,
     <br />
     <br />
-    Questa mail ti è stata inviata perché <b>{{owner}}</b> volevo invitarti a diventare un membro del team al <b>{{team}}</b> squadra a {{project}}.
+    Questa mail ti Ã¨ stata inviata perchÃ¨ <b>{{owner}}</b> vuole invitarti a diventare un membro del team <b>{{team}}</b> del progetto {{project}}.
     <br />
     <br />
-    Segui questo link per unirti a <b>{{team}}</b> squadra:
+    Segui questo link per unirti al team <b>{{team}}</b>:
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
@@ -24,5 +24,5 @@
     <br />
     Grazie,
     <br />
-    {{project}} squadra
+    Il team di {{project}}
 </div>
