@@ -124,3 +124,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇵🇹 Luís Pinto ([GitHub](https://github.com/LiTO773))
 * 🇮🇳 Saksham Saxena ([GitHub](https://github.com/sakkshm))
 * 🇮🇱 Dima Vishnevetsky ([GitHub](https://github.com/dimshik100), [Twitter](https://twitter.com/dimshik100))
+* 🇭🇺 lacexd ([GitHub](https://github.com/lacexd))
