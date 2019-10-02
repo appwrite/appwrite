@@ -46,9 +46,9 @@ return [
         'icon' => 'icon-linkedin',
         'enabled' => true,
     ],
-    'reddit' => [
-        'developers' => 'https://www.reddit.com/dev/api/',
-        'icon' => 'icon-reddit',
+    'dropbox' => [
+        'developers' => 'https://www.dropbox.com/developers/documentation',
+        'icon' => 'icon-dropbox',
         'enabled' => true,
     ],
 ];
