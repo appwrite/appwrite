@@ -43,7 +43,7 @@ $cli
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
                 'gitRepoName' => 'sdk-for-php',
                 'gitUserName' => 'appwrite',
-                'warning' => 'This SDK if compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
+                'warning' => 'This SDK is compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'server',
             ],
             'js' => [
@@ -53,7 +53,7 @@ $cli
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
                 'gitRepoName' => 'sdk-for-js',
                 'gitUserName' => 'appwrite',
-                'warning' => 'This SDK if compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
+                'warning' => 'This SDK is compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'client',
             ],
             'node' => [
@@ -63,7 +63,7 @@ $cli
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
-                'warning' => 'This SDK if compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
+                'warning' => 'This SDK is compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'server',
             ],
             'python' => [

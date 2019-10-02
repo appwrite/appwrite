@@ -42,7 +42,7 @@ We use prettier for our JS coding standards and for auto-formatting our code.
 
 Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
 
-We wish Appwrite will be as easy to set up and in a single, local host and easy to grow to a large environment with thousands and even hundreds of instances.
+We wish Appwrite will be as easy to set up and in a single, localhost and easy to grow to a large environment with thousands and even hundreds of instances.
 
 When contributing code please take into account the following considerations:
 
@@ -67,7 +67,7 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 ### The Microservice Part
 
-Each container in Appwrite is a microservice by its own. Each service is an independent process which can scale without regard to any of the other services.
+Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
 Currently, all of the Appwrite microservices are intended to communicate using TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443 who by default are used to expose the Appwrite HTTP API.
 
