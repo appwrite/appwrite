@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'settings.inspire' => '"புத்திசாலித்தனம் என்னும் கலை என்பது எதனை புறக்கணிப்பது என்னும் கலையாகும்."', // This is the line printed in the homepage and console 'view-source'
+    'settings.inspire' => '"புத்திசாலித்தனம் என்னும் கலை என்பது எதனை புறக்கணிக்க வேண்டும் என அறியும் கலையாகும்."', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'ta',
     'settings.direction' => 'ltr',
 
