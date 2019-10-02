@@ -5,7 +5,7 @@
 * Added option to limit access to the Appwrite console
 * Added option to disable abuse check and rate limits
 * Added input field with the server API endpoint for easy access
-* Added new OAuth providers for Google and Gitlab
+* Added new OAuth providers for Google and GitLab
 * Added 15 new locales for locale service and email templates (cat, de, es, fi, fr, gr, hi, id, it, nl, pt-br, pt-pt, ro, tr, ua)
 * Improved test coverage for the project and synced DEV & CI environments settings
 

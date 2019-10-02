@@ -10,7 +10,7 @@ POST https://appwrite.test/v1/auth/login
 
 Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
 
-When accessing this route using Javascript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
+When accessing this route using JavaScript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
 
 ### Parameters
 
@@ -103,7 +103,7 @@ If registration completes successfully user will be sent with a confirmation ema
 
 Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
 
-When accessing this route using Javascript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
+When accessing this route using JavaScript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
 
 ### Parameters
 
@@ -146,4 +146,3 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | confirm | string | Confirmation URL to redirect user to your app after confirm token has been sent to user email. |  |
-
