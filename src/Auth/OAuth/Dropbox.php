@@ -27,13 +27,11 @@ class Dropbox extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.
+        return 'https://www.dropbox.com/oauth2/authorize?'.
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
             '&state='.urlencode(json_encode($this->state)).
-            '&scope=offline_access+user.read'.
-            '&response_type=code'.
-            '&response_mode=query';
+            '&response_type=code';
     }
 
     /**
@@ -43,17 +41,16 @@ class Dropbox extends OAuth
      */
     public function getAccessToken(string $code): string
     {
+        
         $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-
         $accessToken = $this->request(
             'POST',
-            'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+            'https://api.dropboxapi.com/oauth2/token',
             $headers,
             'code='.urlencode($code).
             '&client_id='.urlencode($this->appID).
             '&client_secret='.urlencode($this->appSecret).
             '&redirect_uri='.urlencode($this->callback).
-            '&scope=offline_access+user.read'.
             '&grant_type=authorization_code'
         );
 
@@ -123,7 +120,7 @@ class Dropbox extends OAuth
     {
         if (empty($this->user)) {
             $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
-            $user = $this->request('GET', 'https://graph.microsoft.com/v1.0/me', $headers);
+            $user = $this->request('GET', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = json_decode($user, true);
         }
 
