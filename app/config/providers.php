@@ -46,4 +46,9 @@ return [
         'icon' => 'icon-linkedin',
         'enabled' => true,
     ],
+    'slack' => [
+        'developers' => 'https://api.slack.com/',
+        'icon' => 'icon-slack',
+        'enabled' => true,
+    ],
 ];
