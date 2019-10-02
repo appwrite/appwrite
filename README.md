@@ -33,7 +33,7 @@ The easiest way to start running your Appwrite server is by running our docker c
 ```bash
 mkdir appwrite-ce && \
 cd appwrite-ce && \
-curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?port=80 && \
+curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?version=0.2.0 && \
 docker-compose up -d --remove-orphans
 ```
 
@@ -111,7 +111,7 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇫🇮 Pessi Päivärinne ([GitHub](https://github.com/pessip))
 * 🇺🇳 Sergi Vos ([GitHub](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
 * 🇮🇱 Tomer Cohen ([GitHub](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
-* 🇧🇷 Tatiana ([GitHub](https://github.com/tacoelho))
+* 🇮🇹 Tatiana ([GitHub](https://github.com/tacoelho))
 * 🇬🇷 Panagiotis Skarlas ([GitHub](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
 * 🇷🇺 Alexey Pyltsyn ([GitHub](https://github.com/lex111))
 * 🇩🇪 Robin C ([GitHub](https://github.com/Taminoful))
@@ -123,3 +123,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇹🇷 Mustafa Dur ([GitHub](https://github.com/tosbaha))
 * 🇵🇹 Luís Pinto ([GitHub](https://github.com/LiTO773))
 * 🇮🇳 Saksham Saxena ([GitHub](https://github.com/sakkshm))
+* 🇮🇱 Dima Vishnevetsky ([GitHub](https://github.com/dimshik100), [Twitter](https://twitter.com/dimshik100))

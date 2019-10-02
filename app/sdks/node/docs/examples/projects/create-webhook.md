@@ -6,8 +6,8 @@ let client = new Projects.Client();
 let projects = new sdk.Projects(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = projects.createWebhook('[PROJECT_ID]', '[NAME]', [], '[URL]', 0);

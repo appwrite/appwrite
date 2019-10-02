@@ -8,18 +8,18 @@ class Auth extends Service {
 
      /// Allow the user to login into his account by providing a valid email and
      /// password combination. Use the success and failure arguments to provide a
-     /// redirect URL\&#039;s back to your app when login is completed. 
+     /// redirect URL\'s back to your app when login is completed. 
      /// 
      /// Please notice that in order to avoid a [Redirect
      /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     /// the only valid redirect URL&#039;s are the once from domains you have set when
+     /// the only valid redirect URL's are the once from domains you have set when
      /// added your platforms in the console interface.
      /// 
-     /// When not using the success or failure redirect arguments this endpoint will
-     /// result with a 200 status code and the user account object on success and
-     /// with 401 status error on failure. This behavior was applied to help the web
-     /// clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies
-     /// needed for saving the account session token.
+     /// When accessing this route using Javascript from the browser, success and
+     /// failure parameter URLs are required. Appwrite server will respond with a
+     /// 301 redirect status code and will set the user session cookie. This
+     /// behavior is enforced because modern browsers are limiting 3rd party cookies
+     /// in XHR of fetch requests to protect user privacy.
     Future<Response> login({email, password, success, failure}) async {
        String path = '/auth/login';
 
@@ -54,16 +54,6 @@ class Auth extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-    Future<Response> oauthCallback({projectId, provider, code, state = null}) async {
-       String path = '/auth/oauth/callback/{provider}/{projectId}'.replaceAll(RegExp('{projectId}'), projectId).replaceAll(RegExp('{provider}'), provider);
-
-       Map<String, dynamic> params = {
-         'code': code,
-         'state': state,
-       };
-
-       return await this.client.call('get', path: path, params: params);
-    }
     Future<Response> oauth({provider, success = null, failure = null}) async {
        String path = '/auth/oauth/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
@@ -80,12 +70,12 @@ class Auth extends Service {
      /// values attached to the URL query string. Use the query string params to
      /// submit a request to the /auth/password/reset endpoint to complete the
      /// process.
-    Future<Response> recovery({email, redirect}) async {
+    Future<Response> recovery({email, reset}) async {
        String path = '/auth/recovery';
 
        Map<String, dynamic> params = {
          'email': email,
-         'redirect': redirect,
+         'reset': reset,
        };
 
        return await this.client.call('post', path: path, params: params);
@@ -97,7 +87,7 @@ class Auth extends Service {
      /// 
      /// Please notice that in order to avoid a [Redirect
      /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     /// the only valid redirect URL&#039;s are the once from domains you have set when
+     /// the only valid redirect URL's are the once from domains you have set when
      /// added your platforms in the console interface.
     Future<Response> recoveryReset({userId, token, passwordA, passwordB}) async {
        String path = '/auth/recovery/reset';
@@ -112,32 +102,32 @@ class Auth extends Service {
        return await this.client.call('put', path: path, params: params);
     }
      /// Use this endpoint to allow a new user to register an account in your
-     /// project. Use the success and failure URL&#039;s to redirect users back to your
+     /// project. Use the success and failure URL's to redirect users back to your
      /// application after signup completes.
      /// 
      /// If registration completes successfully user will be sent with a
      /// confirmation email in order to confirm he is the owner of the account email
-     /// address. Use the redirect parameter to redirect the user from the
+     /// address. Use the confirmation parameter to redirect the user from the
      /// confirmation email back to your app. When the user is redirected, use the
      /// /auth/confirm endpoint to complete the account confirmation.
      /// 
      /// Please notice that in order to avoid a [Redirect
      /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     /// the only valid redirect URL&#039;s are the once from domains you have set when
+     /// the only valid redirect URL's are the once from domains you have set when
      /// added your platforms in the console interface.
      /// 
-     /// When not using the success or failure redirect arguments this endpoint will
-     /// result with a 200 status code and the user account object on success and
-     /// with 401 status error on failure. This behavior was applied to help the web
-     /// clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies
-     /// needed for saving the account session token.
-    Future<Response> register({email, password, redirect, success, failure, name = null}) async {
+     /// When accessing this route using Javascript from the browser, success and
+     /// failure parameter URLs are required. Appwrite server will respond with a
+     /// 301 redirect status code and will set the user session cookie. This
+     /// behavior is enforced because modern browsers are limiting 3rd party cookies
+     /// in XHR of fetch requests to protect user privacy.
+    Future<Response> register({email, password, confirm, success = null, failure = null, name = null}) async {
        String path = '/auth/register';
 
        Map<String, dynamic> params = {
          'email': email,
          'password': password,
-         'redirect': redirect,
+         'confirm': confirm,
          'success': success,
          'failure': failure,
          'name': name,
@@ -165,13 +155,13 @@ class Auth extends Service {
      /// 
      /// Please notice that in order to avoid a [Redirect
      /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     /// the only valid redirect URL&#039;s are the once from domains you have set when
+     /// the only valid redirect URL's are the once from domains you have set when
      /// added your platforms in the console interface.
-    Future<Response> confirmResend({redirect}) async {
+    Future<Response> confirmResend({confirm}) async {
        String path = '/auth/register/confirm/resend';
 
        Map<String, dynamic> params = {
-         'redirect': redirect,
+         'confirm': confirm,
        };
 
        return await this.client.call('post', path: path, params: params);

@@ -123,9 +123,6 @@ class Bitbucket extends OAuth
 
             $email = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.urlencode($accessToken));
             $this->user['email'] = json_decode($email, true)['values'][0]['email'];
-
-            // var_dump($user);
-            // exit();
         }
         return $this->user;
     }

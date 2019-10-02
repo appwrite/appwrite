@@ -113,7 +113,7 @@ $utopia->get('/v1/projects/:projectId/usage')
             $network = [];
 
             if ($client) {
-                $start = DateTime::createFromFormat('U', strtotime('first day of this month'));
+                $start = DateTime::createFromFormat('U', strtotime('last day of last month'));
                 $start = $start->format(DateTime::RFC3339);
                 $end = DateTime::createFromFormat('U', strtotime('last day of this month'));
                 $end = $end->format(DateTime::RFC3339);

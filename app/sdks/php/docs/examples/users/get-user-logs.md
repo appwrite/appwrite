@@ -6,8 +6,8 @@ use Appwrite\Services\Users;
 $client = new Client();
 
 $client
-    setProject('')
-    setKey('')
+    ->setProject('')
+    ->setKey('')
 ;
 
 $users = new Users($client);

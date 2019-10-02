@@ -70,7 +70,7 @@ class Storage extends Service {
        return await this.client.call('delete', path: path, params: params);
     }
      /// Get file content by its unique ID. The endpoint response return with a
-     /// &#039;Content-Disposition: attachment&#039; header that tells the browser to start
+     /// 'Content-Disposition: attachment' header that tells the browser to start
      /// downloading the file to user downloads directory.
     Future<Response> getFileDownload({fileId}) async {
        String path = '/storage/files/{fileId}/download'.replaceAll(RegExp('{fileId}'), fileId);
@@ -98,7 +98,7 @@ class Storage extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Get file content by its unique ID. This endpoint is similar to the download
-     /// method but returns with no  &#039;Content-Disposition: attachment&#039; header.
+     /// method but returns with no  'Content-Disposition: attachment' header.
     Future<Response> getFileView({fileId, as = null}) async {
        String path = '/storage/files/{fileId}/view'.replaceAll(RegExp('{fileId}'), fileId);
 
