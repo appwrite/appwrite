@@ -123,3 +123,4 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇹🇷 Mustafa Dur ([Github](https://github.com/tosbaha))
 * 🇵🇹 Luís Pinto ([Github](https://github.com/LiTO773))
 * 🇮🇳 Saksham Saxena ([Github](https://github.com/sakkshm))
+* 🇮🇱 Dima Vishnevetsky ([Github](https://github.com/dimshik100), [Twitter](https://twitter.com/dimshik100))
