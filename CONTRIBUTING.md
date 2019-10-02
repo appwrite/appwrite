@@ -42,7 +42,7 @@ We use prettier for our JS coding standards and for auto-formatting our code.
 
 Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
 
-We wish Appwrite will be as easy to set up and in a single, local host and easy to grow to a large environment with thousands and even hundreds of instances.
+We wish Appwrite will be as easy to set up and in a single, localhost and easy to grow to a large environment with thousands and even hundreds of instances.
 
 When contributing code please take into account the following considerations:
 
