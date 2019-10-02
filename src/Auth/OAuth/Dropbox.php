@@ -6,7 +6,7 @@ use Auth\OAuth;
 
 // Reference Material
 // https://www.dropbox.com/developers/reference/oauth-guide
-// https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account 
+// https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
 class Dropbox extends OAuth
 {
     /**
@@ -41,7 +41,6 @@ class Dropbox extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        
         $headers[] = 'Content-Type: application/x-www-form-urlencoded';
         $accessToken = $this->request(
             'POST',
@@ -122,7 +121,6 @@ class Dropbox extends OAuth
             $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
             $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = json_decode($user, true);
-
         }
 
         return $this->user;
