@@ -21,7 +21,7 @@ class Microsoft extends OAuth
     {
         return 'microsoft';
     }
-
+    
     /**
      * @return string
      */
