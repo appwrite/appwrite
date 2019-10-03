@@ -48,6 +48,13 @@ return [
         // 'icon' => 'icon-twitch',
         'enabled' => true,
     ],
+    'twitch' => [
+        'developers' => 'https://dev.twitch.tv/',
+        // To-Do: Add twitch icon to appwrite so the 
+        //        next line can be uncommented.
+        // 'icon' => 'icon-twitch',
+        'enabled' => true,
+    ],
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
         'icon' => 'icon-twitter',
