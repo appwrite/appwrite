@@ -14,7 +14,7 @@ return [
     'auth.emails.invitation.title' => 'इनविटेशन  %s टीम  %s',
     'auth.emails.invitation.body' => 'hi.email.auth.invitation.tpl',
 
-    'locale.country.unknown' => 'Unknown',
+    'locale.country.unknown' => 'अज्ञात',
 
     'countries' => include 'hi.countries.php',
     'continents' => include 'hi.continents.php',
