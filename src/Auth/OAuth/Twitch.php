@@ -32,7 +32,7 @@ class Twitch extends OAuth
             '&redirect_uri='.urlencode($this->callback).
             '&state=' . urlencode(json_encode($this->state)).
             '&response_type=code'.
-            '&scope=read_user';
+            '&scope=user:edit';
     }
 
     /**
@@ -59,5 +59,59 @@ class Twitch extends OAuth
         }
 
         return '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserID(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+        if (isset($user['id'])) {
+            return $user['id'];
+        }
+        return '';
+    }
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserEmail(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+        if (isset($user['email'])) {
+            return $user['email'];
+        }
+        return '';
+    }
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserName(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+        if (isset($user['display_name'])) {
+            return $user['display_name'];
+        }
+        return '';
+    }
+    /**
+     * @param string $accessToken
+     *
+     * @return array
+     */
+    protected function getUser(string $accessToken): array
+    {
+        if (empty($this->user)) {
+            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
+            $user = $this->request('GET', 'https://api.twitch.tv/helix/users', $headers);
+            $this->user = json_decode($user, true);
+        }
+        return $this->user;
     }
 }
