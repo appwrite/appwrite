@@ -435,6 +435,8 @@ $utopia->post('/v1/database/:collectionId/documents')
             if (isset($data['$uid'])) {
                 throw new Exception('$uid is not allowed for creating new documents, try update instead', 400);
             }
+            
+            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
 
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
 
