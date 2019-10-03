@@ -34,7 +34,7 @@ return [
     'microsoft' => [
         'developers' => 'https://developer.microsoft.com/en-us/',
         'icon' => 'icon-windows',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
@@ -49,6 +49,11 @@ return [
     'slack' => [
         'developers' => 'https://api.slack.com/',
         'icon' => 'icon-slack',
+        'enabled' => true,
+    ],
+    'dropbox' => [
+        'developers' => 'https://www.dropbox.com/developers/documentation',
+        'icon' => 'icon-dropbox',
         'enabled' => true,
     ],
 ];
