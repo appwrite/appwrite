@@ -14,7 +14,7 @@
 
 ---
 
-Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy to use REST API.
+Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and an extremely easy to use REST API.
 
 Appwrite API services aim to make developers life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
@@ -38,18 +38,18 @@ docker-compose up -d --remove-orphans
 ```
 
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation is completed, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
 
 
-For advanced, production and custom installation, check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
+For advanced production and custom installation, check out our Docker [environment variables](/docs/EnviornementVariables.md) docs.
 
 ### Changing Port Number
 
-In case your port 80 is already taken, change the port number in the command above. Make sure to set the correct endpoint in your selected SDK, including your new port number.
+In case your port 80 is already taken, change the port number in the command above(Port 81 works in most cases). Make sure to set the correct endpoint in your selected SDK, including your new port number.
 
 ## Getting Started
 
-Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
+Getting started with Appwrite is as easy as creating a new project, simply choose your platform and integrate its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
@@ -67,7 +67,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Locale**](https://appwrite.io/docs/locale) - Track user's location, and manage your app locale based data.
 * [**Avatars**](https://appwrite.io/docs/avatars) - Manage your user's avatars, country's flags, browser icons, credit card symbols and generate QR codes.
 
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcments check out our [blog](https://medium.com/appwrite-io).
+For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io).
 
 ### SDKs
 
@@ -84,7 +84,7 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 ## Security
 
-For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
+For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
 
 ## Follow Us
 
