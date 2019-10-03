@@ -24,7 +24,7 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['cat', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'id', 'it', 'nl', /* 'no',*/ 'pt-br', 'pt-pt', 'ro', 'tr', 'ua', 'zh'];
+const APP_LOCALES = ['cat', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'id', 'it', 'nl', /* 'no',*/ 'pt-br', 'pt-pt', 'ro', 'tr', 'ua', 'zh', 'zh-tw'];
 const APP_PAGING_LIMIT = 15;
 
 $register = new Registry();
@@ -147,6 +147,7 @@ Locale::setLanguage('ru', include __DIR__ . '/config/locale/ru.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
 Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
 Locale::setLanguage('zh', include __DIR__.'/config/locale/zh.php');
+Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/zh-tw.php');
 
 if (in_array($locale, APP_LOCALES)) {
     Locale::setDefault($locale);
