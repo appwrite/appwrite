@@ -146,3 +146,4 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | confirm | string | Confirmation URL to redirect user to your app after confirm token has been sent to user email. |  |
+
