@@ -435,12 +435,8 @@ $utopia->get('/v1/proxy')
 $utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('platform', 'client', function () {
-        return new WhiteList(['client', 'server']);
-    }, 'Choose target platform.', true)
-    ->param('extensions', 0, function () {
-        return new Range(0, 1);
-    }, 'Show extra data.', true)
+    ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
+    ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->action(
         function ($platform, $extensions) use ($response, $request, $utopia, $domain, $version, $services) {
             function fromCamelCase($input)
@@ -494,7 +490,7 @@ $utopia->get('/v1/open-api-2.json')
                         'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                     ],
                 ],
-                'host' => $domain,
+                'host' => $request->getServer('_APP_HOME', $domain),
                 'basePath' => '/v1',
                 'schemes' => ['https'],
                 'consumes' => ['application/json', 'multipart/form-data'],
