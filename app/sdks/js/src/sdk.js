@@ -133,12 +133,12 @@
             let addGlobalHeader = function(key, value) {
                 globalHeaders[key] = {key: key.toLowerCase(), value: value.toLowerCase()};
             };
-            
+
             let addGlobalParam = function(key, value) {
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.21');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.22');
             addGlobalHeader('content-type', '');
 
             /**
@@ -346,17 +346,17 @@
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
-                
+
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
                 }
-                
+
                 let path = '/account/email';
 
                 return http
                     .patch(path, {'content-type': 'application/json'},
                         {
-                            'email': email, 
+                            'email': email,
                             'password': password
                         });
             },
@@ -373,7 +373,7 @@
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/account/name';
 
                 return http
@@ -397,17 +397,17 @@
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
                 }
-                
+
                 if(oldPassword === undefined) {
                     throw new Error('Missing required parameter: "oldPassword"');
                 }
-                
+
                 let path = '/account/password';
 
                 return http
                     .patch(path, {'content-type': 'application/json'},
                         {
-                            'password': password, 
+                            'password': password,
                             'old-password': oldPassword
                         });
             },
@@ -441,7 +441,7 @@
                 if(prefs === undefined) {
                     throw new Error('Missing required parameter: "prefs"');
                 }
-                
+
                 let path = '/account/prefs';
 
                 return http
@@ -493,18 +493,18 @@
              *
              * Allow the user to login into his account by providing a valid email and
              * password combination. Use the success and failure arguments to provide a
-             * redirect URL\'s back to your app when login is completed. 
-             * 
+             * redirect URL\'s back to your app when login is completed.
+             *
              * Please notice that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
-             * 
-             * When not using the success or failure redirect arguments this endpoint will
-             * result with a 200 status code and the user account object on success and
-             * with 401 status error on failure. This behavior was applied to help the web
-             * clients deal with browsers who don't allow to set 3rd party HTTP cookies
-             * needed for saving the account session token.
+             *
+             * When accessing this route using JavaScript from the browser, success and
+             * failure parameter URLs are required. Appwrite server will respond with a
+             * 301 redirect status code and will set the user session cookie. This
+             * behavior is enforced because modern browsers are limiting 3rd party cookies
+             * in XHR of fetch requests to protect user privacy.
              *
              * @param {string} email
              * @param {string} password
@@ -516,25 +516,25 @@
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
-                
+
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
                 }
-                
+
                 if(success === undefined) {
                     throw new Error('Missing required parameter: "success"');
                 }
-                
+
                 if(failure === undefined) {
                     throw new Error('Missing required parameter: "failure"');
                 }
-                
+
                 let path = '/auth/login';
 
                 return iframe('post', path, {project: config.project,
-                    'email': email, 
-                    'password': password, 
-                    'success': success, 
+                    'email': email,
+                    'password': password,
+                    'success': success,
                     'failure': failure
                 });
             },
@@ -571,45 +571,12 @@
                 if(id === undefined) {
                     throw new Error('Missing required parameter: "id"');
                 }
-                
+
                 let path = '/auth/logout/{id}'.replace(new RegExp('{id}', 'g'), id);
 
                 return http
                     .delete(path, {'content-type': 'application/json'},
                         {
-                        });
-            },
-
-            /**
-             * OAuth Callback
-             *
-             *
-             * @param {string} projectId
-             * @param {string} provider
-             * @param {string} code
-             * @param {string} state
-             * @throws {Error}
-             * @return {Promise}             */
-            oauthCallback: function(projectId, provider, code, state = '') {
-                if(projectId === undefined) {
-                    throw new Error('Missing required parameter: "projectId"');
-                }
-                
-                if(provider === undefined) {
-                    throw new Error('Missing required parameter: "provider"');
-                }
-                
-                if(code === undefined) {
-                    throw new Error('Missing required parameter: "code"');
-                }
-                
-                let path = '/auth/oauth/callback/{provider}/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{provider}', 'g'), provider);
-
-                return http
-                    .get(path, {'content-type': 'application/json'},
-                        {
-                            'code': code, 
-                            'state': state
                         });
             },
 
@@ -626,13 +593,13 @@
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
-                
+
                 let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'success': success, 
+                            'success': success,
                             'failure': failure
                         });
             },
@@ -648,25 +615,25 @@
              * process.
              *
              * @param {string} email
-             * @param {string} redirect
+             * @param {string} reset
              * @throws {Error}
              * @return {Promise}             */
-            recovery: function(email, redirect) {
+            recovery: function(email, reset) {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
-                
-                if(redirect === undefined) {
-                    throw new Error('Missing required parameter: "redirect"');
+
+                if(reset === undefined) {
+                    throw new Error('Missing required parameter: "reset"');
                 }
-                
+
                 let path = '/auth/recovery';
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'email': email, 
-                            'redirect': redirect
+                            'email': email,
+                            'reset': reset
                         });
             },
 
@@ -677,7 +644,7 @@
              * **userId** and **token** arguments will be passed as query parameters to
              * the redirect URL you have provided when sending your request to the
              * /auth/recovery endpoint.
-             * 
+             *
              * Please notice that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
              * the only valid redirect URL's are the once from domains you have set when
@@ -693,27 +660,27 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 if(token === undefined) {
                     throw new Error('Missing required parameter: "token"');
                 }
-                
+
                 if(passwordA === undefined) {
                     throw new Error('Missing required parameter: "passwordA"');
                 }
-                
+
                 if(passwordB === undefined) {
                     throw new Error('Missing required parameter: "passwordB"');
                 }
-                
+
                 let path = '/auth/recovery/reset';
 
                 return http
                     .put(path, {'content-type': 'application/json'},
                         {
-                            'userId': userId, 
-                            'token': token, 
-                            'password-a': passwordA, 
+                            'userId': userId,
+                            'token': token,
+                            'password-a': passwordA,
                             'password-b': passwordB
                         });
             },
@@ -724,61 +691,53 @@
              * Use this endpoint to allow a new user to register an account in your
              * project. Use the success and failure URL's to redirect users back to your
              * application after signup completes.
-             * 
+             *
              * If registration completes successfully user will be sent with a
              * confirmation email in order to confirm he is the owner of the account email
-             * address. Use the redirect parameter to redirect the user from the
+             * address. Use the confirmation parameter to redirect the user from the
              * confirmation email back to your app. When the user is redirected, use the
              * /auth/confirm endpoint to complete the account confirmation.
-             * 
+             *
              * Please notice that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
-             * 
-             * When not using the success or failure redirect arguments this endpoint will
-             * result with a 200 status code and the user account object on success and
-             * with 401 status error on failure. This behavior was applied to help the web
-             * clients deal with browsers who don't allow to set 3rd party HTTP cookies
-             * needed for saving the account session token.
+             *
+             * When accessing this route using JavaScript from the browser, success and
+             * failure parameter URLs are required. Appwrite server will respond with a
+             * 301 redirect status code and will set the user session cookie. This
+             * behavior is enforced because modern browsers are limiting 3rd party cookies
+             * in XHR of fetch requests to protect user privacy.
              *
              * @param {string} email
              * @param {string} password
-             * @param {string} redirect
+             * @param {string} confirm
              * @param {string} success
              * @param {string} failure
              * @param {string} name
              * @throws {Error}
              * @return {null}             */
-            register: function(email, password, redirect, success, failure, name = '') {
+            register: function(email, password, confirm, success = '', failure = '', name = '') {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
-                
+
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
                 }
-                
-                if(redirect === undefined) {
-                    throw new Error('Missing required parameter: "redirect"');
+
+                if(confirm === undefined) {
+                    throw new Error('Missing required parameter: "confirm"');
                 }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
-                }
-                
+
                 let path = '/auth/register';
 
                 return iframe('post', path, {project: config.project,
-                    'email': email, 
-                    'password': password, 
-                    'redirect': redirect, 
-                    'success': success, 
-                    'failure': failure, 
+                    'email': email,
+                    'password': password,
+                    'confirm': confirm,
+                    'success': success,
+                    'failure': failure,
                     'name': name
                 });
             },
@@ -799,17 +758,17 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 if(token === undefined) {
                     throw new Error('Missing required parameter: "token"');
                 }
-                
+
                 let path = '/auth/register/confirm';
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'userId': userId, 
+                            'userId': userId,
                             'token': token
                         });
             },
@@ -820,26 +779,26 @@
              * This endpoint allows the user to request your app to resend him his email
              * confirmation message. The redirect arguments acts the same way as in
              * /auth/register endpoint.
-             * 
+             *
              * Please notice that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
              *
-             * @param {string} redirect
+             * @param {string} confirm
              * @throws {Error}
              * @return {Promise}             */
-            confirmResend: function(redirect) {
-                if(redirect === undefined) {
-                    throw new Error('Missing required parameter: "redirect"');
+            confirmResend: function(confirm) {
+                if(confirm === undefined) {
+                    throw new Error('Missing required parameter: "confirm"');
                 }
-                
+
                 let path = '/auth/register/confirm/resend';
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'redirect': redirect
+                            'confirm': confirm
                         });
             }
         };
@@ -864,14 +823,14 @@
                 if(code === undefined) {
                     throw new Error('Missing required parameter: "code"');
                 }
-                
+
                 let path = '/avatars/browsers/{code}'.replace(new RegExp('{code}', 'g'), code);
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'width': width, 
-                            'height': height, 
+                            'width': width,
+                            'height': height,
                             'quality': quality
                         });
             },
@@ -894,14 +853,14 @@
                 if(code === undefined) {
                     throw new Error('Missing required parameter: "code"');
                 }
-                
+
                 let path = '/avatars/credit-cards/{code}'.replace(new RegExp('{code}', 'g'), code);
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'width': width, 
-                            'height': height, 
+                            'width': width,
+                            'height': height,
                             'quality': quality
                         });
             },
@@ -919,7 +878,7 @@
                 if(url === undefined) {
                     throw new Error('Missing required parameter: "url"');
                 }
-                
+
                 let path = '/avatars/favicon';
 
                 return http
@@ -946,14 +905,14 @@
                 if(code === undefined) {
                     throw new Error('Missing required parameter: "code"');
                 }
-                
+
                 let path = '/avatars/flags/{code}'.replace(new RegExp('{code}', 'g'), code);
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'width': width, 
-                            'height': height, 
+                            'width': width,
+                            'height': height,
                             'quality': quality
                         });
             },
@@ -975,14 +934,14 @@
                 if(url === undefined) {
                     throw new Error('Missing required parameter: "url"');
                 }
-                
+
                 let path = '/avatars/image';
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'url': url, 
-                            'width': width, 
+                            'url': url,
+                            'width': width,
                             'height': height
                         });
             },
@@ -1003,15 +962,15 @@
                 if(text === undefined) {
                     throw new Error('Missing required parameter: "text"');
                 }
-                
+
                 let path = '/avatars/qr';
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'text': text, 
-                            'size': size, 
-                            'margin': margin, 
+                            'text': text,
+                            'size': size,
+                            'margin': margin,
                             'download': download
                         });
             }
@@ -1039,9 +998,9 @@
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'search': search, 
-                            'limit': limit, 
-                            'offset': offset, 
+                            'search': search,
+                            'limit': limit,
+                            'offset': offset,
                             'orderType': orderType
                         });
             },
@@ -1061,15 +1020,15 @@
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/database';
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'read': read, 
-                            'write': write, 
+                            'name': name,
+                            'read': read,
+                            'write': write,
                             'rules': rules
                         });
             },
@@ -1087,7 +1046,7 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 return http
@@ -1112,19 +1071,19 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 return http
                     .put(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'read': read, 
-                            'write': write, 
+                            'name': name,
+                            'read': read,
+                            'write': write,
                             'rules': rules
                         });
             },
@@ -1142,7 +1101,7 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 return http
@@ -1175,20 +1134,20 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'filters': filters, 
-                            'offset': offset, 
-                            'limit': limit, 
-                            'order-field': orderField, 
-                            'order-type': orderType, 
-                            'order-cast': orderCast, 
-                            'search': search, 
-                            'first': first, 
+                            'filters': filters,
+                            'offset': offset,
+                            'limit': limit,
+                            'order-field': orderField,
+                            'order-type': orderType,
+                            'order-cast': orderCast,
+                            'search': search,
+                            'first': first,
                             'last': last
                         });
             },
@@ -1211,21 +1170,21 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 if(data === undefined) {
                     throw new Error('Missing required parameter: "data"');
                 }
-                
+
                 let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'data': data, 
-                            'read': read, 
-                            'write': write, 
-                            'parentDocument': parentDocument, 
-                            'parentProperty': parentProperty, 
+                            'data': data,
+                            'read': read,
+                            'write': write,
+                            'parentDocument': parentDocument,
+                            'parentProperty': parentProperty,
                             'parentPropertyType': parentPropertyType
                         });
             },
@@ -1244,11 +1203,11 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 if(documentId === undefined) {
                     throw new Error('Missing required parameter: "documentId"');
                 }
-                
+
                 let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 return http
@@ -1272,22 +1231,22 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 if(documentId === undefined) {
                     throw new Error('Missing required parameter: "documentId"');
                 }
-                
+
                 if(data === undefined) {
                     throw new Error('Missing required parameter: "data"');
                 }
-                
+
                 let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 return http
                     .patch(path, {'content-type': 'application/json'},
                         {
-                            'data': data, 
-                            'read': read, 
+                            'data': data,
+                            'read': read,
                             'write': write
                         });
             },
@@ -1307,11 +1266,11 @@
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
-                
+
                 if(documentId === undefined) {
                     throw new Error('Missing required parameter: "documentId"');
                 }
-                
+
                 let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 return http
@@ -1451,26 +1410,26 @@
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 let path = '/projects';
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'teamId': teamId, 
-                            'description': description, 
-                            'logo': logo, 
-                            'url': url, 
-                            'legalName': legalName, 
-                            'legalCountry': legalCountry, 
-                            'legalState': legalState, 
-                            'legalCity': legalCity, 
-                            'legalAddress': legalAddress, 
+                            'name': name,
+                            'teamId': teamId,
+                            'description': description,
+                            'logo': logo,
+                            'url': url,
+                            'legalName': legalName,
+                            'legalCountry': legalCountry,
+                            'legalState': legalState,
+                            'legalCity': legalCity,
+                            'legalAddress': legalAddress,
                             'legalTaxId': legalTaxId
                         });
             },
@@ -1486,7 +1445,7 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
@@ -1516,25 +1475,25 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
                     .patch(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'description': description, 
-                            'logo': logo, 
-                            'url': url, 
-                            'legalName': legalName, 
-                            'legalCountry': legalCountry, 
-                            'legalState': legalState, 
-                            'legalCity': legalCity, 
-                            'legalAddress': legalAddress, 
+                            'name': name,
+                            'description': description,
+                            'logo': logo,
+                            'url': url,
+                            'legalName': legalName,
+                            'legalCountry': legalCountry,
+                            'legalState': legalState,
+                            'legalCity': legalCity,
+                            'legalAddress': legalAddress,
                             'legalTaxId': legalTaxId
                         });
             },
@@ -1550,7 +1509,7 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
@@ -1570,7 +1529,7 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 let path = '/projects/{projectId}/keys'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
@@ -1592,21 +1551,21 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 if(scopes === undefined) {
                     throw new Error('Missing required parameter: "scopes"');
                 }
-                
+
                 let path = '/projects/{projectId}/keys'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
+                            'name': name,
                             'scopes': scopes
                         });
             },
@@ -1623,11 +1582,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(keyId === undefined) {
                     throw new Error('Missing required parameter: "keyId"');
                 }
-                
+
                 let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
 
                 return http
@@ -1650,25 +1609,25 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(keyId === undefined) {
                     throw new Error('Missing required parameter: "keyId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 if(scopes === undefined) {
                     throw new Error('Missing required parameter: "scopes"');
                 }
-                
+
                 let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
 
                 return http
                     .put(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
+                            'name': name,
                             'scopes': scopes
                         });
             },
@@ -1685,11 +1644,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(keyId === undefined) {
                     throw new Error('Missing required parameter: "keyId"');
                 }
-                
+
                 let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
 
                 return http
@@ -1712,18 +1671,18 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
-                
+
                 let path = '/projects/{projectId}/oauth'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
                     .patch(path, {'content-type': 'application/json'},
                         {
-                            'provider': provider, 
-                            'appId': appId, 
+                            'provider': provider,
+                            'appId': appId,
                             'secret': secret
                         });
             },
@@ -1739,7 +1698,7 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 let path = '/projects/{projectId}/platforms'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
@@ -1764,24 +1723,24 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(type === undefined) {
                     throw new Error('Missing required parameter: "type"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/projects/{projectId}/platforms'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'type': type, 
-                            'name': name, 
-                            'key': key, 
-                            'store': store, 
+                            'type': type,
+                            'name': name,
+                            'key': key,
+                            'store': store,
                             'url': url
                         });
             },
@@ -1798,11 +1757,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(platformId === undefined) {
                     throw new Error('Missing required parameter: "platformId"');
                 }
-                
+
                 let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
 
                 return http
@@ -1827,23 +1786,23 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(platformId === undefined) {
                     throw new Error('Missing required parameter: "platformId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
 
                 return http
                     .put(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'key': key, 
-                            'store': store, 
+                            'name': name,
+                            'key': key,
+                            'store': store,
                             'url': url
                         });
             },
@@ -1860,11 +1819,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(platformId === undefined) {
                     throw new Error('Missing required parameter: "platformId"');
                 }
-                
+
                 let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
 
                 return http
@@ -1884,7 +1843,7 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 let path = '/projects/{projectId}/tasks'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
@@ -1913,44 +1872,44 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 if(status === undefined) {
                     throw new Error('Missing required parameter: "status"');
                 }
-                
+
                 if(schedule === undefined) {
                     throw new Error('Missing required parameter: "schedule"');
                 }
-                
+
                 if(security === undefined) {
                     throw new Error('Missing required parameter: "security"');
                 }
-                
+
                 if(httpMethod === undefined) {
                     throw new Error('Missing required parameter: "httpMethod"');
                 }
-                
+
                 if(httpUrl === undefined) {
                     throw new Error('Missing required parameter: "httpUrl"');
                 }
-                
+
                 let path = '/projects/{projectId}/tasks'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'status': status, 
-                            'schedule': schedule, 
-                            'security': security, 
-                            'httpMethod': httpMethod, 
-                            'httpUrl': httpUrl, 
-                            'httpHeaders': httpHeaders, 
-                            'httpUser': httpUser, 
+                            'name': name,
+                            'status': status,
+                            'schedule': schedule,
+                            'security': security,
+                            'httpMethod': httpMethod,
+                            'httpUrl': httpUrl,
+                            'httpHeaders': httpHeaders,
+                            'httpUser': httpUser,
                             'httpPass': httpPass
                         });
             },
@@ -1967,11 +1926,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(taskId === undefined) {
                     throw new Error('Missing required parameter: "taskId"');
                 }
-                
+
                 let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
 
                 return http
@@ -2001,48 +1960,48 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(taskId === undefined) {
                     throw new Error('Missing required parameter: "taskId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 if(status === undefined) {
                     throw new Error('Missing required parameter: "status"');
                 }
-                
+
                 if(schedule === undefined) {
                     throw new Error('Missing required parameter: "schedule"');
                 }
-                
+
                 if(security === undefined) {
                     throw new Error('Missing required parameter: "security"');
                 }
-                
+
                 if(httpMethod === undefined) {
                     throw new Error('Missing required parameter: "httpMethod"');
                 }
-                
+
                 if(httpUrl === undefined) {
                     throw new Error('Missing required parameter: "httpUrl"');
                 }
-                
+
                 let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
 
                 return http
                     .put(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'status': status, 
-                            'schedule': schedule, 
-                            'security': security, 
-                            'httpMethod': httpMethod, 
-                            'httpUrl': httpUrl, 
-                            'httpHeaders': httpHeaders, 
-                            'httpUser': httpUser, 
+                            'name': name,
+                            'status': status,
+                            'schedule': schedule,
+                            'security': security,
+                            'httpMethod': httpMethod,
+                            'httpUrl': httpUrl,
+                            'httpHeaders': httpHeaders,
+                            'httpUser': httpUser,
                             'httpPass': httpPass
                         });
             },
@@ -2059,11 +2018,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(taskId === undefined) {
                     throw new Error('Missing required parameter: "taskId"');
                 }
-                
+
                 let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
 
                 return http
@@ -2083,7 +2042,7 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 let path = '/projects/{projectId}/usage'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
@@ -2103,7 +2062,7 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 let path = '/projects/{projectId}/webhooks'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
@@ -2129,33 +2088,33 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 if(events === undefined) {
                     throw new Error('Missing required parameter: "events"');
                 }
-                
+
                 if(url === undefined) {
                     throw new Error('Missing required parameter: "url"');
                 }
-                
+
                 if(security === undefined) {
                     throw new Error('Missing required parameter: "security"');
                 }
-                
+
                 let path = '/projects/{projectId}/webhooks'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'events': events, 
-                            'url': url, 
-                            'security': security, 
-                            'httpUser': httpUser, 
+                            'name': name,
+                            'events': events,
+                            'url': url,
+                            'security': security,
+                            'httpUser': httpUser,
                             'httpPass': httpPass
                         });
             },
@@ -2172,11 +2131,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(webhookId === undefined) {
                     throw new Error('Missing required parameter: "webhookId"');
                 }
-                
+
                 let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
 
                 return http
@@ -2203,37 +2162,37 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(webhookId === undefined) {
                     throw new Error('Missing required parameter: "webhookId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 if(events === undefined) {
                     throw new Error('Missing required parameter: "events"');
                 }
-                
+
                 if(url === undefined) {
                     throw new Error('Missing required parameter: "url"');
                 }
-                
+
                 if(security === undefined) {
                     throw new Error('Missing required parameter: "security"');
                 }
-                
+
                 let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
 
                 return http
                     .put(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
-                            'events': events, 
-                            'url': url, 
-                            'security': security, 
-                            'httpUser': httpUser, 
+                            'name': name,
+                            'events': events,
+                            'url': url,
+                            'security': security,
+                            'httpUser': httpUser,
                             'httpPass': httpPass
                         });
             },
@@ -2250,11 +2209,11 @@
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
-                
+
                 if(webhookId === undefined) {
                     throw new Error('Missing required parameter: "webhookId"');
                 }
-                
+
                 let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
 
                 return http
@@ -2285,9 +2244,9 @@
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'search': search, 
-                            'limit': limit, 
-                            'offset': offset, 
+                            'search': search,
+                            'limit': limit,
+                            'offset': offset,
                             'orderType': orderType
                         });
             },
@@ -2309,15 +2268,15 @@
                 if(files === undefined) {
                     throw new Error('Missing required parameter: "files"');
                 }
-                
+
                 let path = '/storage/files';
 
                 return http
                     .post(path, {'content-type': 'multipart/form-data'},
                         {
-                            'files': files, 
-                            'read': read, 
-                            'write': write, 
+                            'files': files,
+                            'read': read,
+                            'write': write,
                             'folderId': folderId
                         });
             },
@@ -2335,7 +2294,7 @@
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
-                
+
                 let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
 
                 return http
@@ -2360,14 +2319,14 @@
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
-                
+
                 let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
 
                 return http
                     .put(path, {'content-type': 'application/json'},
                         {
-                            'read': read, 
-                            'write': write, 
+                            'read': read,
+                            'write': write,
                             'folderId': folderId
                         });
             },
@@ -2385,7 +2344,7 @@
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
-                
+
                 let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
 
                 return http
@@ -2408,7 +2367,7 @@
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
-                
+
                 let path = '/storage/files/{fileId}/download'.replace(new RegExp('{fileId}', 'g'), fileId);
 
                 return http
@@ -2437,16 +2396,16 @@
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
-                
+
                 let path = '/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}', 'g'), fileId);
 
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'width': width, 
-                            'height': height, 
-                            'quality': quality, 
-                            'background': background, 
+                            'width': width,
+                            'height': height,
+                            'quality': quality,
+                            'background': background,
                             'output': output
                         });
             },
@@ -2465,7 +2424,7 @@
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
-                
+
                 let path = '/storage/files/{fileId}/view'.replace(new RegExp('{fileId}', 'g'), fileId);
 
                 return http
@@ -2497,9 +2456,9 @@
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'search': search, 
-                            'limit': limit, 
-                            'offset': offset, 
+                            'search': search,
+                            'limit': limit,
+                            'offset': offset,
                             'orderType': orderType
                         });
             },
@@ -2520,13 +2479,13 @@
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/teams';
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'name': name, 
+                            'name': name,
                             'roles': roles
                         });
             },
@@ -2544,7 +2503,7 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
 
                 return http
@@ -2567,11 +2526,11 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
-                
+
                 let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
 
                 return http
@@ -2594,7 +2553,7 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
 
                 return http
@@ -2616,7 +2575,7 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 let path = '/teams/{teamId}/members'.replace(new RegExp('{teamId}', 'g'), teamId);
 
                 return http
@@ -2631,12 +2590,12 @@
              * Use this endpoint to invite a new member to your team. An email with a link
              * to join the team will be sent to the new member email address. If member
              * doesn't exists in the project it will be automatically created.
-             * 
+             *
              * Use the redirect parameter to redirect the user from the invitation email
              * back to your app. When the user is redirected, use the
              * /teams/{teamId}/memberships/{inviteId}/status endpoint to finally join the
              * user to the team.
-             * 
+             *
              * Please notice that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
              * the only valid redirect URL's are the once from domains you have set when
@@ -2653,27 +2612,27 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
-                
+
                 if(roles === undefined) {
                     throw new Error('Missing required parameter: "roles"');
                 }
-                
+
                 if(redirect === undefined) {
                     throw new Error('Missing required parameter: "redirect"');
                 }
-                
+
                 let path = '/teams/{teamId}/memberships'.replace(new RegExp('{teamId}', 'g'), teamId);
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'email': email, 
-                            'name': name, 
-                            'roles': roles, 
+                            'email': email,
+                            'name': name,
+                            'roles': roles,
                             'redirect': redirect
                         });
             },
@@ -2692,11 +2651,11 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 if(inviteId === undefined) {
                     throw new Error('Missing required parameter: "inviteId"');
                 }
-                
+
                 let path = '/teams/{teamId}/memberships/{inviteId}'.replace(new RegExp('{teamId}', 'g'), teamId).replace(new RegExp('{inviteId}', 'g'), inviteId);
 
                 return http
@@ -2720,15 +2679,15 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 if(inviteId === undefined) {
                     throw new Error('Missing required parameter: "inviteId"');
                 }
-                
+
                 if(redirect === undefined) {
                     throw new Error('Missing required parameter: "redirect"');
                 }
-                
+
                 let path = '/teams/{teamId}/memberships/{inviteId}/resend'.replace(new RegExp('{teamId}', 'g'), teamId).replace(new RegExp('{inviteId}', 'g'), inviteId);
 
                 return http
@@ -2745,12 +2704,12 @@
              * is being redirect back to your app from the invitation email. Use the
              * success and failure URL's to redirect users back to your application after
              * the request completes.
-             * 
+             *
              * Please notice that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
-             * 
+             *
              * When not using the success or failure redirect arguments this endpoint will
              * result with a 200 status code on success and with 401 status error on
              * failure. This behavior was applied to help the web clients deal with
@@ -2769,25 +2728,25 @@
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
-                
+
                 if(inviteId === undefined) {
                     throw new Error('Missing required parameter: "inviteId"');
                 }
-                
+
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 if(secret === undefined) {
                     throw new Error('Missing required parameter: "secret"');
                 }
-                
+
                 let path = '/teams/{teamId}/memberships/{inviteId}/status'.replace(new RegExp('{teamId}', 'g'), teamId).replace(new RegExp('{inviteId}', 'g'), inviteId);
 
                 return iframe('patch', path, {project: config.project,
-                    'userId': userId, 
-                    'secret': secret, 
-                    'success': success, 
+                    'userId': userId,
+                    'secret': secret,
+                    'success': success,
                     'failure': failure
                 });
             }
@@ -2813,9 +2772,9 @@
                 return http
                     .get(path, {'content-type': 'application/json'},
                         {
-                            'search': search, 
-                            'limit': limit, 
-                            'offset': offset, 
+                            'search': search,
+                            'limit': limit,
+                            'offset': offset,
                             'orderType': orderType
                         });
             },
@@ -2834,18 +2793,18 @@
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
-                
+
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
                 }
-                
+
                 let path = '/users';
 
                 return http
                     .post(path, {'content-type': 'application/json'},
                         {
-                            'email': email, 
-                            'password': password, 
+                            'email': email,
+                            'password': password,
                             'name': name
                         });
             },
@@ -2862,7 +2821,7 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 let path = '/users/{userId}'.replace(new RegExp('{userId}', 'g'), userId);
 
                 return http
@@ -2883,7 +2842,7 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 let path = '/users/{userId}/logs'.replace(new RegExp('{userId}', 'g'), userId);
 
                 return http
@@ -2904,7 +2863,7 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 let path = '/users/{userId}/prefs'.replace(new RegExp('{userId}', 'g'), userId);
 
                 return http
@@ -2925,7 +2884,7 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 let path = '/users/{userId}/sessions'.replace(new RegExp('{userId}', 'g'), userId);
 
                 return http
@@ -2946,7 +2905,7 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 let path = '/users/{userId}/sessions'.replace(new RegExp('{userId}', 'g'), userId);
 
                 return http
@@ -2968,11 +2927,11 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 if(sessionId === undefined) {
                     throw new Error('Missing required parameter: "sessionId"');
                 }
-                
+
                 let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
 
                 return http
@@ -2995,11 +2954,11 @@
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
-                
+
                 if(status === undefined) {
                     throw new Error('Missing required parameter: "status"');
                 }
-                
+
                 let path = '/users/{userId}/status'.replace(new RegExp('{userId}', 'g'), userId);
 
                 return http

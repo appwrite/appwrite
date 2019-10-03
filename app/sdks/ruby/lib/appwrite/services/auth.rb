@@ -36,20 +36,6 @@ module Appwrite
             }, params);
         end
 
-        def oauth_callback(project_id:, provider:, code:, state: '')
-            path = '/auth/oauth/callback/{provider}/{projectId}'
-                .gsub('{project_id}', project_id)
-                .gsub('{provider}', provider)
-
-            params = {
-                'code': code, 
-                'state': state
-            }
-
-            return @client.call('get', path, {
-            }, params);
-        end
-
         def oauth(provider:, success: '', failure: '')
             path = '/auth/oauth/{provider}'
                 .gsub('{provider}', provider)
@@ -63,12 +49,12 @@ module Appwrite
             }, params);
         end
 
-        def recovery(email:, redirect:)
+        def recovery(email:, reset:)
             path = '/auth/recovery'
 
             params = {
                 'email': email, 
-                'redirect': redirect
+                'reset': reset
             }
 
             return @client.call('post', path, {
@@ -89,13 +75,13 @@ module Appwrite
             }, params);
         end
 
-        def register(email:, password:, redirect:, success:, failure:, name: '')
+        def register(email:, password:, confirm:, success: '', failure: '', name: '')
             path = '/auth/register'
 
             params = {
                 'email': email, 
                 'password': password, 
-                'redirect': redirect, 
+                'confirm': confirm, 
                 'success': success, 
                 'failure': failure, 
                 'name': name
@@ -117,11 +103,11 @@ module Appwrite
             }, params);
         end
 
-        def confirm_resend(redirect:)
+        def confirm_resend(confirm:)
             path = '/auth/register/confirm/resend'
 
             params = {
-                'redirect': redirect
+                'confirm': confirm
             }
 
             return @client.call('post', path, {

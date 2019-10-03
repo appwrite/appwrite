@@ -8,7 +8,7 @@ echo "Updating git repository"
 git fetch origin
 git reset --hard origin/master
 
-if test `find "./app/db/GeoLite2/GeoLite2-Country.mmdb" -mmin +259200`
+if test $(find "./app/db/GeoLite2/GeoLite2-Country.mmdb" -mmin +259200)
 then
     printf "${RED}GEO country DB has not been updated for more than 6 months. Go to https://dev.maxmind.com/geoip/geoip2/geolite2/ for more info${NC}\n"
 fi
@@ -23,8 +23,8 @@ composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugi
 
 echo 'Starting build...'
 
-docker build -t appwrite/appwrite:$1 .
+docker build -t appwrite/appwrite:"$1" .
 
 echo 'Pushing build to registry...'
 
-docker push appwrite/appwrite:$1
+docker push appwrite/appwrite:"$1"

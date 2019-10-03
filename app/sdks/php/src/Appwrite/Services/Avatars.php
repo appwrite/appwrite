@@ -165,4 +165,5 @@ class Avatars extends Service
         return $this->client->call(Client::METHOD_GET, $path, [
         ], $params);
     }
+
 }

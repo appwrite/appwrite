@@ -16,9 +16,11 @@ use Appwrite\SDK\Language\Dart;
 
 $cli = new CLI();
 
+$version = '0.2.0'; // Server version
+
 $cli
     ->task('generate')
-    ->action(function () {
+    ->action(function () use ($version) {
         function getSSLPage($url)
         {
             $ch = curl_init();
@@ -35,33 +37,33 @@ $cli
 
         $clients = [
             'php' => [
-                'version' => '1.0.8',
+                'version' => '1.0.9',
                 'result' => __DIR__.'/../sdks/php/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
                 'gitRepoName' => 'sdk-for-php',
                 'gitUserName' => 'appwrite',
-                'warning' => '',
+                'warning' => 'This SDK is compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'server',
             ],
             'js' => [
-                'version' => '1.0.21',
+                'version' => '1.0.22',
                 'result' => __DIR__.'/../sdks/js/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
                 'gitRepoName' => 'sdk-for-js',
                 'gitUserName' => 'appwrite',
-                'warning' => '',
+                'warning' => 'This SDK is compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'client',
             ],
             'node' => [
-                'version' => '1.0.25',
+                'version' => '1.0.26',
                 'result' => __DIR__.'/../sdks/node/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-node.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
-                'warning' => 'This SDK if compitable with Appwrite server version 0.2.0 for older versions check previous releases.',
+                'warning' => 'This SDK is compitable with Appwrite server version ' . $version . ' for older versions check previous releases.',
                 'platform' => 'server',
             ],
             'python' => [

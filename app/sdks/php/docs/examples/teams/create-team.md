@@ -6,8 +6,8 @@ use Appwrite\Services\Teams;
 $client = new Client();
 
 $client
-    setProject('')
-    setKey('')
+    ->setProject('')
+    ->setKey('')
 ;
 
 $teams = new Teams($client);

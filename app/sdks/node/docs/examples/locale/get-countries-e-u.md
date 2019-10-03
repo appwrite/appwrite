@@ -6,8 +6,8 @@ let client = new Locale.Client();
 let locale = new sdk.Locale(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = locale.getCountriesEU();

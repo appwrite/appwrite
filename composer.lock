@@ -4,7 +4,6 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "cf3e9453a93f3ee5cfec76f6cd6bc139",
     "content-hash": "470f543ebf989400a43a6269f0b4d60a",
     "packages": [
         {
@@ -13,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "457a20948a7f1e9b8e4cea09205b6fd42f8ca811"
+                "reference": "456e2f153393bd67b7d706db1ec104ba211cf25a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/457a20948a7f1e9b8e4cea09205b6fd42f8ca811",
-                "reference": "457a20948a7f1e9b8e4cea09205b6fd42f8ca811",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/456e2f153393bd67b7d706db1ec104ba211cf25a",
+                "reference": "456e2f153393bd67b7d706db1ec104ba211cf25a",
                 "shasum": ""
             },
             "require": {
@@ -40,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-09-21T12:46:08+00:00"
+            "time": "2019-10-01T18:05:56+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -93,15 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-<<<<<<< HEAD
-<<<<<<< HEAD
-                "reference": "2cdf218f735e5c52a47f1d8977f460261fd9017f"
-=======
-                "reference": "22cd594e2406fbcfc64262fdcdfa78069bf29aa0"
->>>>>>> upstream/master
-=======
-                "reference": "22cd594e2406fbcfc64262fdcdfa78069bf29aa0"
->>>>>>> upstream/master
+                "reference": "21f848c7c8a6f3f721c23d9c8bbdf8fff886863d"
             },
             "require": {
                 "ext-curl": "*",
@@ -131,15 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-<<<<<<< HEAD
-<<<<<<< HEAD
-            "time": "2019-09-22 12:47:11"
-=======
-            "time": "2019-09-28 23:31:14"
->>>>>>> upstream/master
-=======
-            "time": "2019-09-28 23:31:14"
->>>>>>> upstream/master
+            "time": "2019-10-01 17:57:36"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -188,7 +171,7 @@
             ],
             "description": "BaconQrCode is a QR code generator for PHP.",
             "homepage": "https://github.com/Bacon/BaconQrCode",
-            "time": "2018-04-25 17:53:56"
+            "time": "2018-04-25T17:53:56+00:00"
         },
         {
             "name": "chrisboulton/php-resque",
@@ -321,7 +304,7 @@
             ],
             "description": "Credis is a lightweight interface to the Redis key-value store which wraps the phpredis library when available for better performance.",
             "homepage": "https://github.com/colinmollenhour/credis",
-            "time": "2019-03-05 16:29:14"
+            "time": "2019-03-05T16:29:14+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -419,7 +402,7 @@
                 "enum",
                 "map"
             ],
-            "time": "2017-10-25 22:45:27"
+            "time": "2017-10-25T22:45:27+00:00"
         },
         {
             "name": "domnikl/statsd",
@@ -466,7 +449,7 @@
                 "statsd",
                 "udp"
             ],
-            "time": "2014-12-09 09:37:49"
+            "time": "2014-12-09T09:37:49+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -515,7 +498,7 @@
                 "cron",
                 "schedule"
             ],
-            "time": "2018-06-06 03:12:17"
+            "time": "2018-06-06T03:12:17+00:00"
         },
         {
             "name": "geoip2/geoip2",
@@ -567,7 +550,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2018-04-10 15:32:59"
+            "time": "2018-04-10T15:32:59+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -816,7 +799,7 @@
                 "influxdb library",
                 "time series"
             ],
-            "time": "2019-05-30 00:15:14"
+            "time": "2019-05-30T00:15:14+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -876,7 +859,7 @@
                 "minifier",
                 "minify"
             ],
-            "time": "2018-11-26 23:10:39"
+            "time": "2018-11-26T23:10:39+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -925,29 +908,30 @@
                 "paths",
                 "relative"
             ],
-            "time": "2018-10-25 15:19:41"
+            "time": "2018-10-25T15:19:41+00:00"
         },
         {
             "name": "maxmind-db/reader",
-            "version": "v1.4.1",
+            "version": "v1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/maxmind/MaxMind-DB-Reader-php.git",
-                "reference": "eb83d0ee1c1f9b8a340206302136bc81ee02ae74"
+                "reference": "bd436094fc0a9b0558a899fb80b0ae34fe1808a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/maxmind/MaxMind-DB-Reader-php/zipball/eb83d0ee1c1f9b8a340206302136bc81ee02ae74",
-                "reference": "eb83d0ee1c1f9b8a340206302136bc81ee02ae74",
+                "url": "https://api.github.com/repos/maxmind/MaxMind-DB-Reader-php/zipball/bd436094fc0a9b0558a899fb80b0ae34fe1808a0",
+                "reference": "bd436094fc0a9b0558a899fb80b0ae34fe1808a0",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.4"
+                "php": ">=5.6"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "2.*",
-                "phpunit/phpunit": "4.* || 5.*",
-                "satooshi/php-coveralls": "1.0.*",
+                "php-coveralls/php-coveralls": "^2.1",
+                "phpunit/phpcov": "^3.0",
+                "phpunit/phpunit": "5.*",
                 "squizlabs/php_codesniffer": "3.*"
             },
             "suggest": {
@@ -969,7 +953,7 @@
                 {
                     "name": "Gregory J. Oschwald",
                     "email": "goschwald@maxmind.com",
-                    "homepage": "http://www.maxmind.com/"
+                    "homepage": "https://www.maxmind.com/"
                 }
             ],
             "description": "MaxMind DB Reader API",
@@ -981,7 +965,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2019-01-04 19:55:56"
+            "time": "2019-09-30T22:56:38+00:00"
         },
         {
             "name": "maxmind/web-service-common",
@@ -1027,7 +1011,7 @@
             ],
             "description": "Internal MaxMind Web Service API",
             "homepage": "https://github.com/maxmind/web-service-common-php",
-            "time": "2018-02-12 22:31:54"
+            "time": "2018-02-12T22:31:54+00:00"
         },
         {
             "name": "mustangostang/spyc",
@@ -1143,7 +1127,7 @@
                 }
             ],
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
-            "time": "2019-02-01 15:04:28"
+            "time": "2019-02-01T15:04:28+00:00"
         },
         {
             "name": "piwik/device-detector",
@@ -1194,7 +1178,7 @@
                 "parser",
                 "useragent"
             ],
-            "time": "2016-01-21 22:26:37"
+            "time": "2016-01-21T22:26:37+00:00"
         },
         {
             "name": "psr/http-message",
@@ -1331,7 +1315,7 @@
                 }
             ],
             "description": "A polyfill for getallheaders.",
-            "time": "2019-03-08 08:55:37"
+            "time": "2019-03-08T08:55:37+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -1456,16 +1440,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "c2fd9990fcab344b67a12ead04890a88141d5897"
+                "reference": "4625774716e3737580e407a02e53ff4defd3cdfa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c2fd9990fcab344b67a12ead04890a88141d5897",
-                "reference": "c2fd9990fcab344b67a12ead04890a88141d5897",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/4625774716e3737580e407a02e53ff4defd3cdfa",
+                "reference": "4625774716e3737580e407a02e53ff4defd3cdfa",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.1.3",
+                "php": "^7.0",
                 "symfony/polyfill-ctype": "^1.8",
                 "symfony/polyfill-mbstring": "^1.3"
             },
@@ -1515,15 +1499,7 @@
             "keywords": [
                 "templating"
             ],
-<<<<<<< HEAD
-<<<<<<< HEAD
-            "time": "2019-09-20 12:53:54"
-=======
-            "time": "2019-09-20T12:53:54+00:00"
->>>>>>> upstream/master
-=======
-            "time": "2019-09-20T12:53:54+00:00"
->>>>>>> upstream/master
+            "time": "2019-10-01T10:31:38+00:00"
         },
         {
             "name": "utopia-php/abuse",
@@ -1803,8 +1779,6 @@
                 "utopia"
             ],
             "time": "2019-05-08T20:25:57+00:00"
-<<<<<<< HEAD
-=======
         }
     ],
     "packages-dev": [
@@ -3222,10 +3196,8 @@
                 "validate"
             ],
             "time": "2019-08-24T08:43:50+00:00"
->>>>>>> upstream/master
         }
     ],
-    "packages-dev": null,
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": [],

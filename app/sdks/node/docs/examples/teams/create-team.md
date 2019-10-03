@@ -6,8 +6,8 @@ let client = new Teams.Client();
 let teams = new sdk.Teams(client);
 
 client
-    setProject('')
-    setKey('')
+    .setProject('')
+    .setKey('')
 ;
 
 let promise = teams.createTeam('[NAME]');
