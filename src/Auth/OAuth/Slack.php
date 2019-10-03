@@ -24,10 +24,12 @@ class Slack extends OAuth
      */
     public function getLoginURL():string
     {
+        // https://api.slack.com/docs/oauth#step_1_-_sending_users_to_authorize_and_or_install
         return 'https://slack.com/oauth/authorize'.
             '?client_id='.urlencode($this->appID).
-            '&scope='.urlencode("identity.avatar,identity.basic,identity.email,identity.team").
-            '&redirect_uri='.urlencode($this->callback);
+            '&scope=identity.avatar+identity.basic+identity.email+identity.team'.
+            '&redirect_uri='.urlencode($this->callback).
+            '&state='.urlencode(json_encode($this->state));
     }
 
     /**
@@ -37,13 +39,14 @@ class Slack extends OAuth
      */
     public function getAccessToken(string $code):string
     {
+        // https://api.slack.com/docs/oauth#step_3_-_exchanging_a_verification_code_for_an_access_token
         $accessToken = $this->request(
             'GET',
             'https://slack.com/api/oauth.access'.
             '?client_id='.urlencode($this->appID).
             '&client_secret='.urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback).
-            '&code='.urlencode($code)
+            '&code='.urlencode($code).
+            '&redirect_uri='.urlencode($this->callback)
         );
 
         $accessToken = json_decode($accessToken, true); //
@@ -110,10 +113,13 @@ class Slack extends OAuth
      */
     protected function getUser(string $accessToken):array
     {
+
         if (empty($this->user)) {
+            // https://api.slack.com/methods/users.identity
             $user = $this->request(
                 'GET',
-                'https://slack.com/api/users.identity&token='.urlencode($accessToken));
+                'https://slack.com/api/users.identity?token='.urlencode($accessToken),
+            );
 
             $this->user = json_decode($user, true);
         }
@@ -121,5 +127,3 @@ class Slack extends OAuth
         return $this->user;
     }
 }
-
-//http://localhost:8080/v1/auth/oauth/slack?project=5d94eda5e2b8a&success=http://localhost:8080/?success=1&failure=http://localhost:8080/auth/signin?failure=2
