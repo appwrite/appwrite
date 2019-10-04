@@ -17,7 +17,7 @@ use Appwrite\SDK\Language\Dart;
 $cli = new CLI();
 
 $version = '0.2.0'; // Server version
-$warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check [previous releases](/releases).**';
+$warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
 $cli
     ->task('generate')
