@@ -46,6 +46,11 @@ return [
         'icon' => 'icon-linkedin',
         'enabled' => true,
     ],
+    'slack' => [
+        'developers' => 'https://api.slack.com/',
+        'icon' => 'icon-slack',
+        'enabled' => true,
+    ],
     'dropbox' => [
         'developers' => 'https://www.dropbox.com/developers/documentation',
         'icon' => 'icon-dropbox',

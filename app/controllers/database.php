@@ -428,6 +428,8 @@ $utopia->post('/v1/database/:collectionId/documents')
     }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->action(
         function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
+            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
+            
             if (empty($data)) {
                 throw new Exception('Missing payload', 400);
             }
@@ -435,7 +437,7 @@ $utopia->post('/v1/database/:collectionId/documents')
             if (isset($data['$uid'])) {
                 throw new Exception('$uid is not allowed for creating new documents, try update instead', 400);
             }
-
+            
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
 
             if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {

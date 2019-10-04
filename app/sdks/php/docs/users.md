@@ -3,7 +3,7 @@
 ## List Users
 
 ```http request
-GET https://appwrite.test/v1/users
+GET https://https://appwrite.io/v1/users
 ```
 
 ** Get a list of all the project users. You can use the query params to filter your results. **
@@ -20,7 +20,7 @@ GET https://appwrite.test/v1/users
 ## Create User
 
 ```http request
-POST https://appwrite.test/v1/users
+POST https://https://appwrite.io/v1/users
 ```
 
 ** Create a new user. **
@@ -36,7 +36,7 @@ POST https://appwrite.test/v1/users
 ## Get User
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}
+GET https://https://appwrite.io/v1/users/{userId}
 ```
 
 ** Get user by its unique ID. **
@@ -50,7 +50,7 @@ GET https://appwrite.test/v1/users/{userId}
 ## Get User Logs
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}/logs
+GET https://https://appwrite.io/v1/users/{userId}/logs
 ```
 
 ** Get user activity logs list by its unique ID. **
@@ -64,7 +64,7 @@ GET https://appwrite.test/v1/users/{userId}/logs
 ## Get User Prefs
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}/prefs
+GET https://https://appwrite.io/v1/users/{userId}/prefs
 ```
 
 ** Get user preferences by its unique ID. **
@@ -78,7 +78,7 @@ GET https://appwrite.test/v1/users/{userId}/prefs
 ## Get User Sessions
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}/sessions
+GET https://https://appwrite.io/v1/users/{userId}/sessions
 ```
 
 ** Get user sessions list by its unique ID. **
@@ -92,7 +92,7 @@ GET https://appwrite.test/v1/users/{userId}/sessions
 ## Delete User Sessions
 
 ```http request
-DELETE https://appwrite.test/v1/users/{userId}/sessions
+DELETE https://https://appwrite.io/v1/users/{userId}/sessions
 ```
 
 ** Delete all user sessions by its unique ID. **
@@ -106,7 +106,7 @@ DELETE https://appwrite.test/v1/users/{userId}/sessions
 ## Delete User Session
 
 ```http request
-DELETE https://appwrite.test/v1/users/{userId}/sessions/:session
+DELETE https://https://appwrite.io/v1/users/{userId}/sessions/:session
 ```
 
 ** Delete user sessions by its unique ID. **
@@ -121,7 +121,7 @@ DELETE https://appwrite.test/v1/users/{userId}/sessions/:session
 ## Update user status
 
 ```http request
-PATCH https://appwrite.test/v1/users/{userId}/status
+PATCH https://https://appwrite.io/v1/users/{userId}/status
 ```
 
 ** Update user status by its unique ID. **
