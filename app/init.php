@@ -26,6 +26,7 @@ const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SE
 const APP_MODE_ADMIN = 'admin';
 const APP_LOCALES = ['cat', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'id', 'it', 'nl', /* 'no',*/ 'pt-br', 'pt-pt', 'ro', 'tr', 'ua', 'zh'];
 const APP_PAGING_LIMIT = 15;
+const APP_VERSION_STABLE = '0.2.0';
 
 $register = new Registry();
 $request = new Request();

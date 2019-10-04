@@ -438,7 +438,7 @@ $utopia->get('/v1/open-api-2.json')
     ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->action(
-        function ($platform, $extensions) use ($response, $request, $utopia, $domain, $version, $services) {
+        function ($platform, $extensions) use ($response, $request, $utopia, $domain, $services) {
             function fromCamelCase($input)
             {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -476,7 +476,7 @@ $utopia->get('/v1/open-api-2.json')
             $output = [
                 'swagger' => '2.0',
                 'info' => [
-                    'version' => $version,
+                    'version' => APP_VERSION_STABLE,
                     'title' => APP_NAME,
                     'description' => 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)',
                     'termsOfService' => 'https://appwrite.io/policy/terms',
