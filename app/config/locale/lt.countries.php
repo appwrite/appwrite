@@ -71,7 +71,7 @@ return [
     'GR' => 'Graikija',
     'GD' => 'Grenada',
     'GT' => 'Gvatemala',
-    'GY' => 'Gajana ",
+    'GY' => 'Gajana',
     'HN' => 'Hondūras',
     'HR' => 'Kroatija',
     'HT' => 'Haitis',
