@@ -381,6 +381,35 @@ $utopia->patch('/v1/users/:userId/status')
         }
     );
 
+$utopia->patch('/v1/users/:userId/prefs')
+    ->desc('Update Account Prefs')
+    ->label('scope', 'users.write')
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateUserPrefs')
+    ->param('prefs', '', function () {
+        return new \Utopia\Validator\Mock();
+    }, 'Prefs key-value JSON object string.')
+    ->label('sdk.description', 'Update user preferences by its unique ID. You can pass only the specific settings you wish to update.')
+    ->action(
+        function ($userId, $prefs) use ($response, $projectDB) {
+            $user = $projectDB->getDocument($userId);
+
+            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+                throw new Exception('User not found', 404);
+            }
+
+            $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
+                'prefs' => json_encode(array_merge(json_decode($user->getAttribute('prefs', '{}'), true), $prefs)),
+            ]));
+            if (false === $user) {
+                throw new Exception('Failed saving user to DB', 500);
+            }
+
+            $response->json(array('result' => 'success'));
+        }
+    );
+
+
 $utopia->delete('/v1/users/:userId/sessions/:session')
     ->desc('Delete User Session')
     ->label('scope', 'users.write')
