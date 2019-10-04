@@ -18,7 +18,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Jeigu jums neįdomu, ignoruokite šį pranešimą.
+    Jei Jums neįdomu, ignoruokite šį laišką.
     <br />
     <br />
     Ačiū,
