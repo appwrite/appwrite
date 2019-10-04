@@ -16,9 +16,9 @@
 
 Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy to use REST API.
 
-Appwrite API services aims to make developers life a lot easier by hiding the complexity of common and repetitive software development tasks.
+Appwrite API services aim to make developers life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
-Using Appwrite you can easily manage user authentication with multiple sign-in methods, database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
+Using Appwrite you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
 [https://appwrite.io](https://appwrite.io)
 
@@ -26,7 +26,7 @@ Using Appwrite you can easily manage user authentication with multiple sign-in m
 
 ## Installation
 
-Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm or Rancher.
+Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm or Rancher.
 
 The easiest way to start running your Appwrite server is by running our docker compose file:
 
@@ -61,13 +61,13 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple sign-in methods and account recovery.
 * [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices and security audit log.
 * [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
-* [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and users roles within a team.
-* [**Database**](https://appwrite.io/docs/database) - Manage database collections and document. Read, create, update and delete documents and filter lists of documents collections using advanced filter with graph like capabilities.
-* [**Storage**](https://appwrite.io/docs/storage) - Manage storage files. Read, create, delete and preview files. Manipulate your files preview to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
-* [**Locale**](https://appwrite.io/docs/locale) - Track users location, and manage your app locale based data.
-* [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users avatars, countries flags, browser icons, credit card symbols and generate QR codes.
+* [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and user roles within a team.
+* [**Database**](https://appwrite.io/docs/database) - Manage database collections and document. Read, create, update and delete documents and filter lists of documents collections using an advanced filter with graph like capabilities.
+* [**Storage**](https://appwrite.io/docs/storage) - Manage storage files. Read, create, delete and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
+* [**Locale**](https://appwrite.io/docs/locale) - Track user's location, and manage your app locale based data.
+* [**Avatars**](https://appwrite.io/docs/avatars) - Manage your user's avatars, country's flags, browser icons, credit card symbols and generate QR codes.
 
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcments checkout our [blog](https://medium.com/appwrite-io).
+For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcments check out our [blog](https://medium.com/appwrite-io).
 
 ### SDKs
 
@@ -94,33 +94,34 @@ Join our growing community around the world! Follow us on [Twitter](https://twit
 
 All code contributions - including those of people having commit access - must go through a pull request and approved by a core developer before being merged. This is to ensure proper review of all the code.
 
-We really ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
+We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
 ## Credits
 
 Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
 
-* 🇺🇸 Justin Dorfman ([Github](https://github.com/jdorfman), [Twitter](https://twitter.com/jdorfman))
-* 🇺🇳 0xflotus ([Github](https://github.com/0xflotus))
-* 🇳🇴 Petter Charles Redfern ([Github](https://github.com/Chaaarles))
-* 🇧🇷 Jessé Souza ([Github](https://github.com/jessescn))
-* 🇪🇸 Esther Álvarez Feijoo ([Github](https://github.com/EstherAF))
-* 🇮🇳 Christy Jacob ([Github](https://github.com/christyjacob4), [Linkedin](https://www.linkedin.com/in/christyjacob4/))
-* 🇺🇦 Dmitriy Danilov ([Github](https://github.com/daniloff200), [Twitter](https://twitter.com/daniloff200))
-* 🇮🇩 Zeet ([Github](https://github.com/Kiy4h))
-* 🇫🇮 Pessi Päivärinne ([Github](https://github.com/pessip))
-* 🇺🇳 Sergi Vos ([Github](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [Linkedin](https://www.linkedin.com/in/sergivb01/))
-* 🇮🇱 Tomer Cohen ([Github](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
-* 🇮🇹 Tatiana ([Github](https://github.com/tacoelho))
-* 🇬🇷 Panagiotis Skarlas ([Github](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
-* 🇷🇺 Alexey Pyltsyn ([Github](https://github.com/lex111))
-* 🇩🇪 Robin C ([Github](https://github.com/Taminoful))
-* 🇮🇳 Parikshit Hooda ([Github](https://github.com/Parikshit-Hooda))
-* 🇫🇷 Corentin Le Fur ([Github](https://github.com/crtlf))
-* 🇬🇧 Callum Lowry ([Github](https://github.com/Girxffe))
-* 🇷🇴 Bogdan Covrig ([Github](https://github.com/BogDAAAMN), [Twitter](https://twitter.com/BogdanCovrig))
-* 🇳🇱 Kolkies ([Github](https://github.com/kolkies.dev))
-* 🇹🇷 Mustafa Dur ([Github](https://github.com/tosbaha))
-* 🇵🇹 Luís Pinto ([Github](https://github.com/LiTO773))
-* 🇮🇳 Saksham Saxena ([Github](https://github.com/sakkshm))
-* 🇮🇱 Dima Vishnevetsky ([Github](https://github.com/dimshik100), [Twitter](https://twitter.com/dimshik100))
+* 🇺🇸 Justin Dorfman ([GitHub](https://github.com/jdorfman), [Twitter](https://twitter.com/jdorfman))
+* 🇺🇳 0xflotus ([GitHub](https://github.com/0xflotus))
+* 🇳🇴 Petter Charles Redfern ([GitHub](https://github.com/Chaaarles))
+* 🇧🇷 Jessé Souza ([GitHub](https://github.com/jessescn))
+* 🇪🇸 Esther Álvarez Feijoo ([GitHub](https://github.com/EstherAF))
+* 🇮🇳 Christy Jacob ([GitHub](https://github.com/christyjacob4), [LinkedIn](https://www.linkedin.com/in/christyjacob4/))
+* 🇺🇦 Dmitriy Danilov ([GitHub](https://github.com/daniloff200), [Twitter](https://twitter.com/daniloff200))
+* 🇮🇩 Zeet ([GitHub](https://github.com/Kiy4h))
+* 🇫🇮 Pessi Päivärinne ([GitHub](https://github.com/pessip))
+* 🇺🇳 Sergi Vos ([GitHub](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [LinkedIn](https://www.linkedin.com/in/sergivb01/))
+* 🇮🇱 Tomer Cohen ([GitHub](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
+* 🇮🇹 Tatiana ([GitHub](https://github.com/tacoelho))
+* 🇬🇷 Panagiotis Skarlas ([GitHub](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
+* 🇷🇺 Alexey Pyltsyn ([GitHub](https://github.com/lex111))
+* 🇩🇪 Robin C ([GitHub](https://github.com/Taminoful))
+* 🇮🇳 Parikshit Hooda ([GitHub](https://github.com/Parikshit-Hooda))
+* 🇫🇷 Corentin Le Fur ([GitHub](https://github.com/crtlf))
+* 🇬🇧 Callum Lowry ([GitHub](https://github.com/Girxffe))
+* 🇷🇴 Bogdan Covrig ([GitHub](https://github.com/BogDAAAMN), [Twitter](https://twitter.com/BogdanCovrig))
+* 🇳🇱 Kolkies ([GitHub](https://github.com/kolkies.dev))
+* 🇹🇷 Mustafa Dur ([GitHub](https://github.com/tosbaha))
+* 🇵🇹 Luís Pinto ([GitHub](https://github.com/LiTO773))
+* 🇮🇳 Saksham Saxena ([GitHub](https://github.com/sakkshm))
+* 🇮🇱 Dima Vishnevetsky ([GitHub](https://github.com/dimshik100), [Twitter](https://twitter.com/dimshik100))
+* 🇭🇺 lacexd ([GitHub](https://github.com/lacexd))

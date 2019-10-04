@@ -1,3 +1,14 @@
+# Version 0.3.0 (PRE-RELEASE)
+
+## Planned Issues
+
+* Added 7 new locales for locale service and email templates (cz, hu, no*, ru, sv, ta, vi, zh)
+* New users service routes to allow updates pref, email and name update
+* 2 stage Docker build
+* New database rule validation options
+* Update docs example with auth info
+* Limit HTTP origin check only to browser integrations
+
 # Version 0.2.0 (PRE-RELEASE)
 
 ## Features
@@ -5,7 +16,7 @@
 * Added option to limit access to the Appwrite console
 * Added option to disable abuse check and rate limits
 * Added input field with the server API endpoint for easy access
-* Added new OAuth providers for Google and Gitlab
+* Added new OAuth providers for Google and GitLab
 * Added 15 new locales for locale service and email templates (cat, de, es, fi, fr, gr, hi, id, it, nl, pt-br, pt-pt, ro, tr, ua)
 * Improved test coverage for the project and synced DEV & CI environments settings
 

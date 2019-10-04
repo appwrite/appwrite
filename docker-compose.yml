@@ -36,7 +36,7 @@ services:
     - _APP_INFLUXDB_PORT=8086
     - _APP_STATSD_HOST=telegraf
     - _APP_STATSD_PORT=8125
-    
+
   mariadb:
     image: appwrite/mariadb:1.0.0 # fix issues when upgrading using: mysql_upgrade -u root -p
     restart: unless-stopped
@@ -63,7 +63,7 @@ services:
     restart: unless-stopped
     volumes:
     - ./storage:/storage:rw
-      
+
   redis:
     image: redis:5.0
     restart: unless-stopped
