@@ -10,7 +10,7 @@
     Olá {{name}},
     <br />
     <br />
-    Acesse este link para redefinir sua senha do {{project}}.
+    Acesse o link abaixo para redefinir sua senha do {{project}}.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
