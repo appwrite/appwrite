@@ -3,9 +3,9 @@
 return [
     'AF' => 'Afrika',
     'AN' => 'Antarktika',
-    'AS' => 'Asië',
+    'AS' => 'AsiÃ«',
     'EU' => 'Europa',
     'NA' => 'Noord-Amerika',
-    'OC' => 'Oseanië',
+    'OC' => 'OseaniÃ«',
     'SA' => 'Suid-Amerika',
 ];
