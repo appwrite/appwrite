@@ -11,6 +11,7 @@
 [![Chat With Us](https://img.shields.io/gitter/room/appwrite/community.svg)](https://gitter.im/appwrite/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 [![Build Status](https://travis-ci.org/appwrite/appwrite.svg?branch=master)](https://travis-ci.org/appwrite/appwrite)
 [![Follow  Appwrite on StackShare](https://img.stackshare.io/misc/follow-on-stackshare-badge.svg)](https://stackshare.io/appwrite)
+[![Follow new releases](https://app.releasly.co/assets/badges/badge-blue.svg)](https://app.releasly.co/sites/appwrite/appwrite?utm_source=github_badge)
 
 ---
 
