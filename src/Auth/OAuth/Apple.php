@@ -4,16 +4,11 @@ namespace Auth\OAuth;
 
 use Auth\OAuth;
 
-// Reference Material 
-// https://developers.google.com/oauthplayground/
-// https://developers.google.com/identity/protocols/OAuth2
-// https://developers.google.com/identity/protocols/OAuth2WebServer
-class Google extends OAuth
+// Reference Material
+// https://developer.okta.com/blog/2019/06/04/what-the-heck-is-sign-in-with-apple
+
+class Apple extends OAuth
 {
-    /**
-     * @var string
-     */
-    protected $version = 'v4';
     /**
      * @var array
      */
@@ -24,20 +19,21 @@ class Google extends OAuth
      */
     public function getName(): string
     {
-        return 'google';
+        return 'apple';
     }
-
+    
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://accounts.google.com/o/oauth2/v2/auth?'.
+        return 'https://appleid.apple.com/auth/authorize?'.
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
-            '&scope=https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile'.
             '&state='.urlencode(json_encode($this->state)).
-            '&response_type=code';
+            '&response_type=code'.
+            '&response_mode=form_post'.
+            '&scope=name+email';
     }
 
     /**
@@ -47,16 +43,20 @@ class Google extends OAuth
      */
     public function getAccessToken(string $code): string
     {
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
         $accessToken = $this->request(
             'POST',
-            'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.
-                'code='.urlencode($code).
-                '&client_id='.urlencode($this->appID).
-                '&client_secret='.urlencode($this->appSecret).
-                '&redirect_uri='.urlencode($this->callback).
-                '&scope='.
-                '&grant_type=authorization_code'
+            'https://appleid.apple.com/auth/token',
+            $headers,
+            'code='.urlencode($code).
+            '&client_id='.urlencode($this->appID).
+            '&client_secret='.urlencode($this->appSecret).
+            '&redirect_uri='.urlencode($this->callback).
+            '&grant_type=authorization_code'
         );
+
+        var_dump($accessToken);
+        exit();
 
         $accessToken = json_decode($accessToken, true);
 
@@ -76,8 +76,8 @@ class Google extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['account_id'])) {
+            return $user['account_id'];
         }
 
         return '';
@@ -109,7 +109,7 @@ class Google extends OAuth
         $user = $this->getUser($accessToken);
 
         if (isset($user['name'])) {
-            return $user['name'];
+            return $user['name']['display_name'];
         }
 
         return '';
@@ -123,7 +123,8 @@ class Google extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v2/userinfo?access_token='.urlencode($accessToken));
+            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
+            $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = json_decode($user, true);
         }
 
