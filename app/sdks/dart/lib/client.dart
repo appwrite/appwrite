@@ -9,7 +9,7 @@ class Client {
     Dio http;
     
     Client() {
-        this.endPoint = 'https://appwrite.test/v1';
+        this.endPoint = 'https://https://appwrite.io/v1';
         this.headers = {
             'content-type': 'application/json',
             'x-sdk-version': 'appwrite:dart:0.0.2',
