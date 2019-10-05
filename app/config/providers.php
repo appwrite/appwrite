@@ -64,6 +64,6 @@ return [
     'amazon' => [
         'developers' => 'https://www.dropbox.com/developers/documentation',
         'icon' => 'icon-amazon',
-        'enabled' => true,
+        'enabled' => false,
     ],
 ];
