@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'settings.inspire' => '"बुद्धिमान होने कला यह जानने की कला है कि क्या अनदेखी करना चाहिए।"', // This is the line printed in the homepage and console 'view-source'
+    'settings.inspire' => '"यह जान लेना की क्या अनदेखा किया जा सकता है, ही बुद्धिमता का प्रतीक है |"', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'hi',
     'settings.direction' => 'ltr',
 
@@ -14,7 +14,7 @@ return [
     'auth.emails.invitation.title' => 'इनविटेशन  %s टीम  %s',
     'auth.emails.invitation.body' => 'hi.email.auth.invitation.tpl',
 
-    'locale.country.unknown' => 'Unknown',
+    'locale.country.unknown' => 'अज्ञात',
 
     'countries' => include 'hi.countries.php',
     'continents' => include 'hi.continents.php',

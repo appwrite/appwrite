@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'settings.inspire' => '"The art of being wise is the art of knowing what to overlook."', // This is the line printed in the homepage and console 'view-source'
+    'settings.inspire' => '"Seni menjadi bijak adalah seni mengetahui apa yang harus diabaikan."', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'id',
     'settings.direction' => 'ltr',
 

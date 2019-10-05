@@ -24,8 +24,9 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['cat', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'id', 'it', 'nl', /* 'no',*/ 'pt-br', 'pt-pt', 'ro', 'tr', 'ua', 'zh'];
+const APP_LOCALES = ['cat', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'id', 'it', 'nl', 'no', 'pt-br', 'pt-pt', 'ro', 'tr', 'ua', 'zh-cn', 'zh-tw'];
 const APP_PAGING_LIMIT = 15;
+const APP_VERSION_STABLE = '0.2.0';
 
 $register = new Registry();
 $request = new Request();
@@ -127,6 +128,7 @@ $locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', 
 
 Locale::$exceptions = false;
 
+
 Locale::setLanguage('cat', include __DIR__.'/config/locale/cat.php');
 Locale::setLanguage('de', include __DIR__.'/config/locale/de.php');
 Locale::setLanguage('en', include __DIR__.'/config/locale/en.php');
@@ -146,7 +148,9 @@ Locale::setLanguage('ro', include __DIR__.'/config/locale/ro.php');
 Locale::setLanguage('ru', include __DIR__ . '/config/locale/ru.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
 Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
-Locale::setLanguage('zh', include __DIR__.'/config/locale/zh.php');
+Locale::setLanguage('si', include __DIR__ . '/config/locale/si.php');
+Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/zh-cn.php');
+Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/zh-tw.php');
 
 if (in_array($locale, APP_LOCALES)) {
     Locale::setDefault($locale);

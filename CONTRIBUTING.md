@@ -93,10 +93,10 @@ This is also important for the Appwrite lead developers to be able to give techn
 
 ## Setup
 
-To set up a working development environment just clone the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+To set up a working development environment just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
 
 ```bash
-git clone git@github.com:appwrite/appwrite.git
+git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 

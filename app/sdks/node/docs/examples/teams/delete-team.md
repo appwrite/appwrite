@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Teams.Client();
+let client = new sdk.Client();
 
 let teams = new sdk.Teams(client);
 
