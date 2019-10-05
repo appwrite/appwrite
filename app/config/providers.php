@@ -57,8 +57,13 @@ return [
         'enabled' => true,
     ],
     'apple' => [
-        'developers' => 'https://www.dropbox.com/developers/documentation',
+        'developers' => 'https://developer.apple.com/',
         'icon' => 'icon-apple',
+        'enabled' => false,
+    ],
+    'amazon' => [
+        'developers' => 'https://www.dropbox.com/developers/documentation',
+        'icon' => 'icon-amazon',
         'enabled' => false,
     ],
     'amazon' => [
