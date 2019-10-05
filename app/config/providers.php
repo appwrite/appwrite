@@ -59,6 +59,6 @@ return [
     'apple' => [
         'developers' => 'https://www.dropbox.com/developers/documentation',
         'icon' => 'icon-apple',
-        'enabled' => true,
+        'enabled' => false,
     ],
 ];
