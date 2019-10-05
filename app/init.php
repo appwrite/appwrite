@@ -128,6 +128,7 @@ $locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', 
 
 Locale::$exceptions = false;
 
+
 Locale::setLanguage('cat', include __DIR__.'/config/locale/cat.php');
 Locale::setLanguage('de', include __DIR__.'/config/locale/de.php');
 Locale::setLanguage('en', include __DIR__.'/config/locale/en.php');
@@ -147,6 +148,7 @@ Locale::setLanguage('ro', include __DIR__.'/config/locale/ro.php');
 Locale::setLanguage('ru', include __DIR__ . '/config/locale/ru.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
 Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
+Locale::setLanguage('si', include __DIR__ . '/config/locale/si.php');
 Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/zh-cn.php');
 Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/zh-tw.php');
 
