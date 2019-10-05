@@ -66,9 +66,9 @@ return [
         'icon' => 'icon-amazon',
         'enabled' => false,
     ],
-    'amazon' => [
-        'developers' => 'https://www.dropbox.com/developers/documentation',
-        'icon' => 'icon-amazon',
+    'vk' => [
+        'developers' => 'https://vk.com/dev',
+        'icon' => 'icon-vk',
         'enabled' => false,
     ],
 ];
