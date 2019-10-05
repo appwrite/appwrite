@@ -6,7 +6,7 @@ Appwrite environment variables allow you to edit your server setup configuration
 
 ### _APP_ENV
 
-Set your server running environment. By default the var is set to 'development' when deploying to production, change to: 'production'.
+Set your server running environment. By default the var is set to 'development' when deploying to production, change it to: 'production'.
 
 ### _APP_OPTIONS_ABUSE
 
@@ -28,9 +28,9 @@ To enable this option, pass a list of allowed email domains separated by a comma
 
 ### _APP_CONSOLE_WHITELIST_IPS
 
-This last option available allows you to restrict access to Appwrite console for users sharing the same set op IP addresses. This option is very useful for team working with a VPN service or a company IP.
+This last option allows you to restrict access to Appwrite console for users sharing the same set op IP addresses. This option is very useful for team working with a VPN service or a company IP.
 
-To enable activate this option, pass a list of allowed IP addresses separated by a comma.
+To enable/activate this option, pass a list of allowed IP addresses separated by a comma.
 
 ## Redis Server
 
