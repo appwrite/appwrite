@@ -7,18 +7,18 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Hello {{name}},
+    Witaj {{name}},
     <br />
     <br />
-    Follow this link to reset your {{project}} password.
+    Kliknij ten link, aby zresetować hasło do {{project}}.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    If you didn’t ask to reset your password, you can ignore this message.
+    Jeśli nie prosiłeś o zresetowanie hasła, możesz zignorować tę wiadomość.
     <br />
     <br />
-    Thanks,
+    Dziękujemy,
     <br />
-    {{project}} team
+    zaspół {{project}}
 </div>

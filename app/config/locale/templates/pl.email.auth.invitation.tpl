@@ -7,21 +7,21 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Hello,
+    Witaj,
     <br />
     <br />
-    This mail was sent to you because <b>{{owner}}</b> wanted to invite you to become a team member at the <b>{{team}}</b> team over at {{project}}.
+    Ta wiadomość została do Ciebie wysłana, ponieważ <b>{{owner}}</b> chciałby zaprosić Cię do dołączenia do zespołu <b>{{team}}</b> w {{project}}.
     <br />
     <br />
-    Follow this link to join the <b>{{team}}</b> team:
+    Kliknij ten link, aby dołączyć do zespołu <b>{{team}}</b>:
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    If you are not interested, you can ignore this message.
+    Jeśli nie jesteś zainteresowany, możesz zignorować tę wiadomość.
     <br />
     <br />
-    Thanks,
+    Dziękujemy,
     <br />
-    {{project}} team
+    zaspół {{project}}
 </div>
