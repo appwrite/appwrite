@@ -124,7 +124,7 @@ class Apple extends OAuth
     {
         if (empty($this->user)) {
             $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
-            $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
+            $user = $this->request('POST', '', $headers);
             $this->user = json_decode($user, true);
         }
 
