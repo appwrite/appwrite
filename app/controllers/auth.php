@@ -731,7 +731,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             $validateURL = new URL();
 
             // Uncomment this while testing amazon oAuth
-            $state = html_entity_decode($state);
+            // $state = html_entity_decode($state);
 
             if (!empty($state)) {
                 try {

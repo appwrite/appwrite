@@ -42,7 +42,6 @@ class Amazon extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-
         $headers[] = 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8';
         $accessToken = $this->request(
             'POST',
