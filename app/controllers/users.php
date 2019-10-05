@@ -386,6 +386,9 @@ $utopia->patch('/v1/users/:userId/prefs')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserPrefs')
+    ->param('userId', '', function () {
+        return new UID();
+    }, 'User unique ID.')
     ->param('prefs', '', function () {
         return new \Utopia\Validator\Mock();
     }, 'Prefs key-value JSON object string.')
