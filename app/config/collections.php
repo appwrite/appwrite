@@ -197,7 +197,7 @@ $collections = [
                 'key' => 'name',
                 'type' => 'text',
                 'default' => '',
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
             [
