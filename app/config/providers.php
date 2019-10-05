@@ -62,7 +62,7 @@ return [
         'enabled' => false,
     ],
     'amazon' => [
-        'developers' => 'https://www.dropbox.com/developers/documentation',
+        'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
         'icon' => 'icon-amazon',
         'enabled' => false,
     ],
