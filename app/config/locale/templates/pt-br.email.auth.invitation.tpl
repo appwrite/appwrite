@@ -10,10 +10,10 @@
     Olá,
     <br />
     <br />
-    Este email foi enviado a você porque <br>{{owner}} deseja lhe convidar a se tornar membro da equipe <b>{{team}}<b> no {{project}}.
+    Este email foi enviado a você porque <br>{{owner}} deseja convida-lo para se tornar membro da equipe <b>{{team}}<b> no {{project}}.
     <br />
     <br />
-    Siga este link para se juntar a equipe <b>{{team}}<b>:
+    Siga o link abaixo para se juntar a equipe <b>{{team}}<b>:
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
