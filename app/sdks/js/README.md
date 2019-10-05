@@ -19,6 +19,12 @@ To install via [NPM](https://www.npmjs.com/):
 npm install appwrite --save
 ```
 
+Install with CDN:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/appwrite@1.0.22"></script>
+```
+
 ## License
 
 Please see the [BSD-3-Clause license](https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE) file for more information.

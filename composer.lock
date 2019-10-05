@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "bc702c165342f3d943e17d580ab3eb66e100eb44"
+                "reference": "ab0fe8f5669e6a8fc7a8d5e8c711f939412fb33e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/bc702c165342f3d943e17d580ab3eb66e100eb44",
-                "reference": "bc702c165342f3d943e17d580ab3eb66e100eb44",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/ab0fe8f5669e6a8fc7a8d5e8c711f939412fb33e",
+                "reference": "ab0fe8f5669e6a8fc7a8d5e8c711f939412fb33e",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-10-03T17:57:02+00:00"
+            "time": "2019-10-03T22:07:26+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "e0cfa4cb8d45b3faf8222f4e7f803f3054431ce8"
+                "reference": "0ece44cf81c04ebb8784a60830b088238189ec78"
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-10-03 22:01:52"
+            "time": "2019-10-04 05:50:53"
         },
         {
             "name": "bacon/bacon-qr-code",

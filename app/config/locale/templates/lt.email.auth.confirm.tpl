@@ -7,18 +7,18 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Olá {{name}},
+    Sveiki, {{name}},
     <br />
     <br />
-    Acesse o link abaixo para redefinir sua senha do {{project}}.
+    Paspauskite nuorodą, kad patvirtinti savo el. paštą.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Se você não solicitou a redefinição de senha, por favor ignore esta mensagem.
+    Jei neprašėte el. pašto patvirtinimo, ignoruokite šį laišką
     <br />
     <br />
-    Atenciosamente,
+    Ačiū,
     <br />
-    Equipe {{project}}
+    komanda {{project}}
 </div>

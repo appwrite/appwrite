@@ -16,6 +16,6 @@ return [
 
     'locale.country.unknown' => '未知',
 
-    'countries' => include 'zh.countries.php',
-    'continents' => include 'zh.continents.php',
+    'countries' => include 'zh-cn.countries.php',
+    'continents' => include 'zh-cn.continents.php',
 ];

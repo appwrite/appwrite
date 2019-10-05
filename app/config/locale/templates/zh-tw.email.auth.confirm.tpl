@@ -7,18 +7,18 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Olá {{name}},
+    {{name}} 你好，
     <br />
     <br />
-    Acesse o link abaixo para redefinir sua senha do {{project}}.
+    請點擊下方的鏈接驗證你的電子郵箱地址。
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Se você não solicitou a redefinição de senha, por favor ignore esta mensagem.
+    如果你沒有請求驗證本郵箱，請忽略這份郵件。
     <br />
     <br />
-    Atenciosamente,
+    謝謝。
     <br />
-    Equipe {{project}}
+    來自 {{project}}
 </div>

@@ -7,18 +7,19 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Olá {{name}},
+    {{name}} 你好，
     <br />
     <br />
-    Acesse o link abaixo para redefinir sua senha do {{project}}.
+    请点击下方的链接重新设置{{project}}的密码。
+    Follow this link to reset your {{project}} password.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Se você não solicitou a redefinição de senha, por favor ignore esta mensagem.
+    如果您未曾申请重设密码，请忽略本邮件。
     <br />
     <br />
-    Atenciosamente,
+    谢谢。
     <br />
-    Equipe {{project}}
+    来自 {{project}}
 </div>

@@ -2,12 +2,13 @@
 
 ## Planned Issues
 
-* Added 7 new locales for locale service and email templates (cz, hu, no*, ru, sv, ta, vi, zh)
+* Added 7 new locales for locale service and email templates (af, cz, hu, lt, no, ru, sv, ta, vi, zh-cn, zh-tw)
 * New users service routes to allow updates pref, email and name update
 * 2 stage Docker build
 * New database rule validation options
 * Update docs example with auth info
 * Limit HTTP origin check only to browser integrations
+* Allow electron apps to not pass origin header
 
 # Version 0.2.0 (PRE-RELEASE)
 

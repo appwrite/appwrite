@@ -7,18 +7,21 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Olá {{name}},
+    你好,
     <br />
     <br />
-    Acesse o link abaixo para redefinir sua senha do {{project}}.
+    <b>{{owner}}</b>邀請您加入{{project}}項目的<b>{{team}}</b>小組。
+    <br />
+    <br />
+    請點擊下方的鏈接加入{{team}}小組：
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Se você não solicitou a redefinição de senha, por favor ignore esta mensagem.
+    如果您沒有加入該小組的計劃，請忽略本郵件。
     <br />
     <br />
-    Atenciosamente,
+    謝謝。
     <br />
-    Equipe {{project}}
+    來自 {{project}}
 </div>

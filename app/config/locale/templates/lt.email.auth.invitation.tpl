@@ -7,21 +7,21 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Olá,
+    Sveiki,
     <br />
     <br />
-    Este email foi enviado a você porque <br>{{owner}} deseja convida-lo para se tornar membro da equipe <b>{{team}}<b> no {{project}}.
+    Šis laiškas buvo išsiųstas dėl to, kad <b>{{owner}}</b> kviečia tapti komandos <b>{{team}}</b> nariu projekte {{project}}.
     <br />
     <br />
-    Siga o link abaixo para se juntar a equipe <b>{{team}}<b>:
+    Paspauskite nuorodą, kad prisijungti prie komandos <b>{{team}}</b> :
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Se não estiver interessado, por favor ignore esta mensagem.
+    Jei Jums neįdomu, ignoruokite šį laišką.
     <br />
     <br />
-    Atenciosamente,
+    Ačiū,
     <br />
-    Equipe {{project}}
+    komanda {{project}}
 </div>
