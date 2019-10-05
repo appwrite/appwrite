@@ -7,6 +7,7 @@ use Auth\OAuth;
 // Reference Material
 // https://developer.amazon.com/docs/login-with-amazon/authorization-code-grant.html
 // https://developer.amazon.com/docs/login-with-amazon/register-web.html
+// https://developer.amazon.com/docs/login-with-amazon/obtain-customer-profile.html
 class Amazon extends OAuth
 {
     /**
