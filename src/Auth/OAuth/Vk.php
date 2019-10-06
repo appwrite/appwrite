@@ -5,9 +5,12 @@ namespace Auth\OAuth;
 use Auth\OAuth;
 
 // Reference Material
-// https://developer.okta.com/blog/2019/06/04/what-the-heck-is-sign-in-with-apple
+// https://vk.com/dev/first_guide
+// https://vk.com/dev/auth_sites
+// https://vk.com/dev/api_requests
+// https://plugins.miniorange.com/guide-to-configure-vkontakte-as-oauth-server
 
-class Apple extends OAuth
+class Vk extends OAuth
 {
     /**
      * @var array
@@ -15,25 +18,31 @@ class Apple extends OAuth
     protected $user = [];
 
     /**
+     * @var string
+     */
+    protected $version = '5.101';
+
+
+    /**
      * @return string
      */
     public function getName(): string
     {
-        return 'apple';
+        return 'vk';
     }
-    
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://appleid.apple.com/auth/authorize?'.
+        return 'https://oauth.vk.com/authorize?' .
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
-            '&state='.urlencode(json_encode($this->state)).
             '&response_type=code'.
-            '&response_mode=form_post'.
-            '&scope=name+email';
+            '&state='.urlencode(json_encode($this->state)).
+            '&v='.urlencode($this->version).
+            '&scope=openid+email';
     }
 
     /**
@@ -43,27 +52,29 @@ class Apple extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8';
         $accessToken = $this->request(
             'POST',
-            'https://appleid.apple.com/auth/token',
+            'https://oauth.vk.com/access_token?',
             $headers,
-            'code='.urlencode($code).
-            '&client_id='.urlencode($this->appID).
-            '&client_secret='.urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback).
-            '&grant_type=authorization_code'
+            'code=' . urlencode($code) .
+            '&client_id=' . urlencode($this->appID) .
+            '&client_secret=' . urlencode($this->appSecret).
+            '&redirect_uri='.urlencode($this->callback)
         );
-
-        var_dump($accessToken);
-        exit();
-
         $accessToken = json_decode($accessToken, true);
+
+        if (isset($accessToken['email'])) {
+            $this->user['email'] = $accessToken['email'];
+        }
+
+        if (isset($accessToken['user_id'])) {
+            $this->user['user_id'] = $accessToken['user_id'];
+        }
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
         }
-
         return '';
     }
 
@@ -76,8 +87,8 @@ class Apple extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['account_id'])) {
-            return $user['account_id'];
+        if (isset($user['user_id'])) {
+            return $user['user_id'];
         }
 
         return '';
@@ -109,7 +120,7 @@ class Apple extends OAuth
         $user = $this->getUser($accessToken);
 
         if (isset($user['name'])) {
-            return $user['name']['display_name'];
+            return $user['name'];
         }
 
         return '';
@@ -122,12 +133,18 @@ class Apple extends OAuth
      */
     protected function getUser(string $accessToken): array
     {
-        if (empty($this->user)) {
-            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
-            $user = $this->request('POST', '', $headers);
-            $this->user = json_decode($user, true);
+        if (empty($this->user['name'])) {
+            $user = $this->request(
+                'GET',
+                'https://api.vk.com/method/users.get?'.
+                'v='.urlencode($this->version).
+                '&fields=id,name,email,first_name,last_name'.
+                '&access_token='.urlencode($accessToken)
+            );
+            
+            $user = json_decode($user, true);
+            $this->user['name'] = $user['response'][0]['first_name'] ." ".$user['response'][0]['last_name'];
         }
-
         return $this->user;
     }
 }
