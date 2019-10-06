@@ -2,13 +2,14 @@
 
 ## Planned Issues
 
-* Added 7 new locales for locale service and email templates (af, cz, hu, lt, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
-* New users service routes to allow updates pref, email and name update
+* Added 7 new locales for locale service and email templates (af, ar, cz, hu, lt, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
+* New users service routes to allow updates pref and name update
 * 2 stage Docker build
 * New database rule validation options
 * Update docs example with auth info
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
+* New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
 
 # Version 0.2.0 (PRE-RELEASE)
 
@@ -17,7 +18,7 @@
 * Added option to limit access to the Appwrite console
 * Added option to disable abuse check and rate limits
 * Added input field with the server API endpoint for easy access
-* Added new OAuth providers for Google and GitLab
+* Added new OAuth providers for Google, Bitbucket and GitLab
 * Added 15 new locales for locale service and email templates (cat, de, es, fi, fr, gr, hi, id, it, nl, pt-br, pt-pt, ro, tr, ua)
 * Improved test coverage for the project and synced DEV & CI environments settings
 

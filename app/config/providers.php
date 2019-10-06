@@ -57,8 +57,18 @@ return [
         'enabled' => true,
     ],
     'apple' => [
-        'developers' => 'https://www.dropbox.com/developers/documentation',
+        'developers' => 'https://developer.apple.com/',
         'icon' => 'icon-apple',
         'enabled' => false,
+    ],
+    'amazon' => [
+        'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
+        'icon' => 'icon-amazon',
+        'enabled' => true,
+    ],
+    'vk' => [
+        'developers' => 'https://vk.com/dev',
+        'icon' => 'icon-vk',
+        'enabled' => true,
     ],
 ];

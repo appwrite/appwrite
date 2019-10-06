@@ -7,18 +7,18 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Hallo {{name}},
+    Pozdravljeni {{name}},
     <br />
     <br />
-    bitte folge diesem Link um deine E-Mail Adresse zu verifizieren.
+    Za ponastavitev vašega {{project}} gesla sledite tej povezavi.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Bitte ignoriere diese Nachricht, wenn du das Verifizieren deiner E-Mail Adresse nicht beantragt hast.
+    Če niste zahtevali ponastavitve gesla, lahko to sporočilo prezrete.
     <br />
     <br />
-    Vielen Dank,
+    Hvala,
     <br />
-    {{project}} Team
+    {{project}} ekipa
 </div>

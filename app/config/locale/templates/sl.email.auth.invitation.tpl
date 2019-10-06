@@ -7,21 +7,21 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Hallo,
+    Pozdravljeni,
     <br />
     <br />
-    diese E-Mail wurde dir geschickt, weil <b>{{owner}}</b> dich eingeladen hat Teammitglied im Team <b>{{team}}</b> bei {{project}} zu werden.
+    To sporočilo vam je bilo posredovano, ker vas je <b>{{owner}}</b> povabil/a, da postanete član <b>{{team}}</b> ekipe za {{project}}.
     <br />
     <br />
-    Folge diesem Link um dem Team <b>{{team}}</b> beizutreten:
+    Sledite tej povezavi, da se pridružite <b>{{team}}</b> ekipi:
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Wenn du daran nicht interessiert bist, kannst du diese Nachricht ignorieren.
+    Če vas ne zanima, lahko to sporočilo prezrete.
     <br />
     <br />
-    Vielen Dank,
+    Hvala,
     <br />
-    {{project}} Team
+    {{project}} ekipa
 </div>

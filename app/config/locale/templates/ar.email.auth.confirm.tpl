@@ -7,18 +7,18 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Hallo {{name}},
+    مرحبا {{name}},
     <br />
     <br />
-    bitte folge diesem Link um deine E-Mail Adresse zu verifizieren.
+    اتبع هذا الرابط للتحقق من عنوان بريدك الإلكتروني.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Bitte ignoriere diese Nachricht, wenn du das Verifizieren deiner E-Mail Adresse nicht beantragt hast.
+    إذا لم تطلب التحقق من هذا العنوان، فيمكنك تجاهل هذه الرسالة.
     <br />
     <br />
-    Vielen Dank,
+    Thanks,
     <br />
-    {{project}} Team
+    فريق {{project}}
 </div>

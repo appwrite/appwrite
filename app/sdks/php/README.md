@@ -13,7 +13,7 @@ Appwrite backend as a service cuts up to 70% of the time and costs required for 
 
 ## Installation
 
-To install via [Composer](http://getcomposer.org/):
+To install via [Composer](https://getcomposer.org/):
 
 ```bash
 composer require appwrite/appwrite

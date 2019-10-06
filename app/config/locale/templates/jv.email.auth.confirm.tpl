@@ -7,18 +7,18 @@
 </style>
 
 <div style="direction: {{direction}}">
-    Hallo {{name}},
+    Halo, {{name}},
     <br />
     <br />
-    bitte folge diesem Link um deine E-Mail Adresse zu verifizieren.
+    Tindakake tautan iki kanggo verifikasi alamat email sampeyan.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Bitte ignoriere diese Nachricht, wenn du das Verifizieren deiner E-Mail Adresse nicht beantragt hast.
+    Yen sampeyan ora njaluk verifikasi alamat iki, sampeyan bisa nglalekake pesen iki.
     <br />
     <br />
-    Vielen Dank,
+    Matur suwun,
     <br />
-    {{project}} Team
+    tim {{project}}
 </div>

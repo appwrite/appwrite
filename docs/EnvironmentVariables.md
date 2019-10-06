@@ -6,15 +6,15 @@ Appwrite environment variables allow you to edit your server setup configuration
 
 ### _APP_ENV
 
-Set your server running environment. By default the var is set to 'development' when deploying to production, change it to: 'production'.
+Set your server running environment. By default the var is set to 'development'. When deploying to production, change it to: 'production'.
 
 ### _APP_OPTIONS_ABUSE
 
-Allows you to disabled abuse checks and API rate limiting. By default set to 'enabled'. To cancel the abuse checking set to 'disabled'. It is not recommended to disable this check-in production environment.
+Allows you to disable abuse checks and API rate limiting. By default set to 'enabled'. To cancel the abuse checking, set to 'disabled'. It is not recommended to disable this check in a production environment.
 
 ### _APP_OPENSSL_KEY_V1
 
-This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server is encrypting all secret data on your server like webhooks HTTP passwords, user sessions, and the storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to keep it a secret.
+This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to keep it a secret.
 
 ### _APP_CONSOLE_WHITELIST_EMAILS
 
@@ -34,7 +34,7 @@ To enable/activate this option, pass a list of allowed IP addresses separated by
 
 ## Redis Server
 
-Appwrite is using a Redis server for managing cache, queues and scheduled tasks. The Redis env vars are used to allow Appwrite server to connect to the Redis container.
+Appwrite uses a Redis server for managing cache, queues and scheduled tasks. The Redis env vars are used to allow Appwrite server to connect to the Redis container.
 
 ### _APP_REDIS_HOST
 
@@ -70,7 +70,7 @@ MariaDB server database schema. Default value is: 'appwrite'
 
 ## InfluxDB
 
-Appwrite is using an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.
+Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.
 
 ### _APP_INFLUXDB_HOST
 
@@ -82,7 +82,7 @@ InfluxDB server TCP port. Default value is: '8086'
 
 ## StatsD
 
-Appwrite is using a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.
+Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.
 
 ### _APP_INFLUXDB_HOST
 
