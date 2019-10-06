@@ -71,4 +71,9 @@ return [
         'icon' => 'icon-vk',
         'enabled' => true,
     ],
+    'twitter' => [
+        'developers' => 'https://developer.twitter.com/',
+        'icon' => 'icon-twitter',
+        'enabled' => true,
+    ],
 ];
