@@ -123,4 +123,4 @@ Before running the command make sure you have proper write permissions to Appwri
 
 From time to time our team will add tutorials that will help contributors find there way in the Appwrite source code. Below is a list of currently available tutorials:
 
-* [Adding Support for a New OAuth Provider](./docs/AddOAuthProvider.md)
+* [Adding Support for a New OAuth Provider](./docs/tutorials/add-oauth-provider.md)
