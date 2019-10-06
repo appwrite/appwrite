@@ -69,6 +69,6 @@ return [
     'vk' => [
         'developers' => 'https://vk.com/dev',
         'icon' => 'icon-vk',
-        'enabled' => false,
+        'enabled' => true,
     ],
 ];
