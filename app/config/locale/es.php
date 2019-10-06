@@ -6,7 +6,7 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Equipo',
+    'auth.emails.team' => 'Equipo de %s',
     'auth.emails.confirm.title' => 'Confirmación de la cuenta',
     'auth.emails.confirm.body' => 'es.email.auth.confirm.tpl',
     'auth.emails.recovery.title' => 'Reestablecer contraseña',
