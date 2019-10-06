@@ -79,7 +79,7 @@ abstract class OAuth
     abstract public function getUserName(string $accessToken):string;
 
     // The parseState function was designed specifically for Amazon OAuth Adapter to override.
-    // The response from Amazon is html encoded and hence it needs to be html_decoded before 
+    // The response from Amazon is html encoded and hence it needs to be html_decoded before
     // json_decoding
 
     /**
@@ -87,7 +87,8 @@ abstract class OAuth
      *
      * @return json
      */
-    public function parseState(string $state) {
+    public function parseState(string $state)
+    {
         return json_decode($state, true);
     }
 

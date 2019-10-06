@@ -28,7 +28,8 @@ class Amazon extends OAuth
      *
      * @return json
      */
-    public function parseState(string $state) {
+    public function parseState(string $state)
+    {
         return json_decode(html_entity_decode($state), true);
     }
 
