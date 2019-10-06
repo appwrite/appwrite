@@ -24,7 +24,7 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['cat', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'id', 'it', 'nl', 'no', 'pt-br', 'pt-pt', 'ro', 'tr', 'ua', 'zh-cn', 'zh-tw'];
+const APP_LOCALES = ['ar', 'cat', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'id', 'it', 'nl', 'no', 'pt-br', 'pt-pt', 'ro', 'tr', 'ua', 'zh-cn', 'zh-tw'];
 const APP_PAGING_LIMIT = 15;
 const APP_VERSION_STABLE = '0.2.0';
 
@@ -129,6 +129,7 @@ $locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', 
 Locale::$exceptions = false;
 
 
+Locale::setLanguage('ar', include __DIR__.'/config/locale/ar.php');
 Locale::setLanguage('cat', include __DIR__.'/config/locale/cat.php');
 Locale::setLanguage('de', include __DIR__.'/config/locale/de.php');
 Locale::setLanguage('en', include __DIR__.'/config/locale/en.php');
