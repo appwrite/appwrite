@@ -40,7 +40,7 @@ class Vk extends OAuth
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
             '&response_type=code'.
-            '&state='.urlencode(json_encode($this->state)). 
+            '&state='.urlencode(json_encode($this->state)).
             '&v='.urlencode($this->version).
             '&scope=openid+email';
     }
@@ -52,7 +52,6 @@ class Vk extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-
         $headers[] = 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8';
         $accessToken = $this->request(
             'POST',
@@ -65,11 +64,11 @@ class Vk extends OAuth
         );
         $accessToken = json_decode($accessToken, true);
 
-        if(isset($accessToken['email'])){
+        if (isset($accessToken['email'])) {
             $this->user['email'] = $accessToken['email'];
         }
 
-        if(isset($accessToken['user_id'])){
+        if (isset($accessToken['user_id'])) {
             $this->user['user_id'] = $accessToken['user_id'];
         }
 
@@ -86,8 +85,7 @@ class Vk extends OAuth
      */
     public function getUserID(string $accessToken): string
     {
-
-        $user = $this->getUser($accessToken); 
+        $user = $this->getUser($accessToken);
 
         if (isset($user['user_id'])) {
             return $user['user_id'];
@@ -103,8 +101,7 @@ class Vk extends OAuth
      */
     public function getUserEmail(string $accessToken): string
     {
-
-        $user = $this->getUser($accessToken); 
+        $user = $this->getUser($accessToken);
 
         if (isset($user['email'])) {
             return $user['email'];
@@ -138,7 +135,7 @@ class Vk extends OAuth
     {
         if (empty($this->user['name'])) {
             $user = $this->request(
-                'GET', 
+                'GET',
                 'https://api.vk.com/method/users.get?'.
                 'v='.urlencode($this->version).
                 '&fields=id,name,email,first_name,last_name'.
@@ -147,7 +144,6 @@ class Vk extends OAuth
             
             $user = json_decode($user, true);
             $this->user['name'] = $user['response'][0]['first_name'] ." ".$user['response'][0]['last_name'];
-            
         }
         return $this->user;
     }
