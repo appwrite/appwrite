@@ -202,9 +202,7 @@ $utopia->patch('/v1/account/name')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', 'Update currently logged in user account name.')
-    ->param('name', '', function () {
-        return new Text(100);
-    }, 'User name')
+    ->param('name', '', function () { return new Text(100); }, 'User name')
     ->action(
         function ($name) use ($response, $user, $projectDB, $audit) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
@@ -228,12 +226,8 @@ $utopia->patch('/v1/account/password')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', 'Update currently logged in user password. For validation, user is required to pass the password twice.')
-    ->param('password', '', function () {
-        return new Password();
-    }, 'New password')
-    ->param('old-password', '', function () {
-        return new Password();
-    }, 'Old password')
+    ->param('password', '', function () { return new Password(); }, 'New password')
+    ->param('old-password', '', function () { return new Password(); }, 'Old password')
     ->action(
         function ($password, $oldPassword) use ($response, $user, $projectDB, $audit) {
             if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -261,12 +255,8 @@ $utopia->patch('/v1/account/email')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', 'Update currently logged in user account email address. After changing user address, user confirmation status is being reset and a new confirmation mail is sent. For security measures, user password is required to complete this request.')
-    ->param('email', '', function () {
-        return new Email();
-    }, 'Email Address')
-    ->param('password', '', function () {
-        return new Password();
-    }, 'User Password')
+    ->param('email', '', function () { return new Email(); }, 'Email Address')
+    ->param('password', '', function () { return new Password(); }, 'User Password')
     ->action(
         function ($email, $password) use ($response, $user, $projectDB, $audit) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
@@ -308,9 +298,7 @@ $utopia->patch('/v1/account/prefs')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
-    ->param('prefs', '', function () {
-        return new \Utopia\Validator\Mock();
-    }, 'Prefs key-value JSON object string.')
+    ->param('prefs', '', function () { return new \Utopia\Validator\Mock();}, 'Prefs key-value JSON object string.')
     ->label('sdk.description', 'Update currently logged in user account preferences. You can pass only the specific settings you wish to update.')
     ->action(
         function ($prefs) use ($response, $user, $projectDB, $audit) {
