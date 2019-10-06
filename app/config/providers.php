@@ -64,7 +64,7 @@ return [
     'amazon' => [
         'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
         'icon' => 'icon-amazon',
-        'enabled' => false,
+        'enabled' => true,
     ],
     'vk' => [
         'developers' => 'https://vk.com/dev',

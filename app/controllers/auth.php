@@ -733,24 +733,6 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             // Uncomment this while testing amazon oAuth
             // $state = html_entity_decode($state);
 
-            if (!empty($state)) {
-                try {
-                    $state = array_merge($defaultState, json_decode($state, true));
-                } catch (\Exception $exception) {
-                    throw new Exception('Failed to parse login state params as passed from OAuth provider');
-                }
-            } else {
-                $state = $defaultState;
-            }
-
-            if (!$validateURL->isValid($state['success'])) {
-                throw new Exception('Invalid redirect URL for success login', 400);
-            }
-
-            if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
-                throw new Exception('Invalid redirect URL for failure login', 400);
-            }
-
             $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
             $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
 
@@ -768,6 +750,24 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             }
 
             $oauth = new $classname($appId, $appSecret, $callback);
+
+            if (!empty($state)) {
+                try {
+                    $state = array_merge($defaultState, $oauth->parseState($state));
+                } catch (\Exception $exception) {
+                    throw new Exception('Failed to parse login state params as passed from OAuth provider');
+                }
+            } else {
+                $state = $defaultState;
+            }
+
+            if (!$validateURL->isValid($state['success'])) {
+                throw new Exception('Invalid redirect URL for success login', 400);
+            }
+
+            if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
+                throw new Exception('Invalid redirect URL for failure login', 400);
+            }
 
             $accessToken = $oauth->getAccessToken($code);
 

@@ -24,6 +24,16 @@ class Amazon extends OAuth
     }
 
     /**
+     * @param $state
+     *
+     * @return json
+     */
+    public function parseState(string $state) {
+        return json_decode(html_entity_decode($state), true);
+    }
+
+
+    /**
      * @return string
      */
     public function getLoginURL(): string
