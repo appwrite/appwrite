@@ -2,7 +2,7 @@
 
 ## Planned Issues
 
-* Added 7 new locales for locale service and email templates (af, cz, hu, lt, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
+* Added 7 new locales for locale service and email templates (af, ar, cz, hu, lt, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
 * New users service routes to allow updates pref and name update
 * 2 stage Docker build
 * New database rule validation options
