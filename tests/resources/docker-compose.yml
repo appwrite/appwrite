@@ -2,13 +2,17 @@ version: '3'
 
 services:
   appwrite:
-    build: ../../
+    build:
+      context: ../../
+      args:
+        - TESTING=true
     restart: unless-stopped
     volumes:
+    - ./../../phpunit.xml:/usr/share/nginx/html/phpunit.xml
+    - ./../../tests:/usr/share/nginx/html/tests
     - ./../../app:/usr/share/nginx/html/app
     - ./../../public:/usr/share/nginx/html/public
     - ./../../src:/usr/share/nginx/html/src
-    - ./../../vendor:/usr/share/nginx/html/vendor
     - ./../../docker/nginx.conf:/etc/nginx/nginx.conf:rw
     - ./../../storage/uploads:/storage/uploads:rw
     - ./../../storage/cache:/storage/cache:rw

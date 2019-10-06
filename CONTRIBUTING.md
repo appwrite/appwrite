@@ -100,8 +100,6 @@ git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 
-composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
-
 npm install
 
 docker-compose up -d

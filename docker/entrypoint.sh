@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PHP_VERSION=$PHP_VERSION
+
 chown -Rf www-data.www-data /usr/share/nginx/html/
 
 # Function to update the fpm configuration to make the service environment variables available
@@ -10,12 +12,12 @@ function setEnvironmentVariable() {
     fi
 
     # Check whether variable already exists
-    if grep -q $1 /etc/php/7.3/fpm/pool.d/www.conf; then
+    if grep -q $1 /etc/php/$PHP_VERSION/fpm/pool.d/www.conf; then
         # Reset variable
-        sed -i "s/^env\[$1.*/env[$1] = $2/g" /etc/php/7.3/fpm/pool.d/www.conf
+        sed -i "s/^env\[$1.*/env[$1] = $2/g" /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
     else
         # Add variable
-        echo "env[$1] = $2" >> /etc/php/7.3/fpm/pool.d/www.conf
+        echo "env[$1] = $2" >> /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
     fi
 }
 
@@ -26,8 +28,8 @@ for _curVar in `env | grep _APP_ | awk -F = '{print $1}'`;do
     setEnvironmentVariable ${_curVar} ${!_curVar}
 done
 
-echo newrelic.license = \"$_APP_NEWRELIC_KEY\" > /etc/php/7.3/fpm/conf.d/newrelic.ini
-echo newrelic.license = \"$_APP_NEWRELIC_KEY\" > /etc/php/7.3/cli/conf.d/newrelic.ini
+echo newrelic.license = \"$_APP_NEWRELIC_KEY\" > /etc/php/$PHP_VERSION/fpm/conf.d/newrelic.ini
+echo newrelic.license = \"$_APP_NEWRELIC_KEY\" > /etc/php/$PHP_VERSION/cli/conf.d/newrelic.ini
 
 # Start supervisord and services
 /usr/bin/supervisord -n -c /etc/supervisord.conf
