@@ -1,9 +1,24 @@
 <?php
 
 return [
+    'amazon' => [
+        'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
+        'icon' => 'icon-amazon',
+        'enabled' => true,
+    ],
+    'apple' => [
+        'developers' => 'https://developer.apple.com/',
+        'icon' => 'icon-apple',
+        'enabled' => false,
+    ],
     'bitbucket' => [
         'developers' => 'https://developer.atlassian.com/bitbucket',
         'icon' => 'icon-bitbucket',
+        'enabled' => true,
+    ],
+    'dropbox' => [
+        'developers' => 'https://www.dropbox.com/developers/documentation',
+        'icon' => 'icon-dropbox',
         'enabled' => true,
     ],
     'facebook' => [
@@ -31,19 +46,14 @@ return [
         'icon' => 'icon-instagram',
         'enabled' => false,
     ],
-    'microsoft' => [
-        'developers' => 'https://developer.microsoft.com/en-us/',
-        'icon' => 'icon-windows',
-        'enabled' => true,
-    ],
-    'twitter' => [
-        'developers' => 'https://developer.twitter.com/',
-        'icon' => 'icon-twitter',
-        'enabled' => false,
-    ],
     'linkedin' => [
         'developers' => 'https://developer.linkedin.com/',
         'icon' => 'icon-linkedin',
+        'enabled' => true,
+    ],
+    'microsoft' => [
+        'developers' => 'https://developer.microsoft.com/en-us/',
+        'icon' => 'icon-windows',
         'enabled' => true,
     ],
     'slack' => [
@@ -51,20 +61,15 @@ return [
         'icon' => 'icon-slack',
         'enabled' => true,
     ],
-    'dropbox' => [
-        'developers' => 'https://www.dropbox.com/developers/documentation',
-        'icon' => 'icon-dropbox',
+    'twitch' => [
+        'developers' => 'https://dev.twitch.tv/',
+        'icon' => 'icon-twitch',
         'enabled' => true,
     ],
-    'apple' => [
-        'developers' => 'https://developer.apple.com/',
-        'icon' => 'icon-apple',
+    'twitter' => [
+        'developers' => 'https://developer.twitter.com/',
+        'icon' => 'icon-twitter',
         'enabled' => false,
-    ],
-    'amazon' => [
-        'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
-        'icon' => 'icon-amazon',
-        'enabled' => true,
     ],
     'vk' => [
         'developers' => 'https://vk.com/dev',
