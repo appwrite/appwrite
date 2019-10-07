@@ -24,7 +24,7 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['af', 'ar', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'id', 'it', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
+const APP_LOCALES = ['af', 'ar', 'bn', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'id', 'it', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
 const APP_PAGING_LIMIT = 15;
 const APP_VERSION_STABLE = '0.2.0';
 
@@ -131,6 +131,7 @@ Locale::$exceptions = false;
 
 Locale::setLanguage('af', include __DIR__.'/config/locale/af.php');
 Locale::setLanguage('ar', include __DIR__.'/config/locale/ar.php');
+Locale::setLanguage('bn', include __DIR__.'/config/locale/bn.php');
 Locale::setLanguage('cat', include __DIR__.'/config/locale/cat.php');
 Locale::setLanguage('cz', include __DIR__.'/config/locale/cz.php');
 Locale::setLanguage('de', include __DIR__.'/config/locale/de.php');
