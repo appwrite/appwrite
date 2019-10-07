@@ -1,0 +1,1 @@
+The avatars service aims to help you complete common and recitative tasks related to your app images, icons and avatars. Using this service we hope to save you some precious time and help you focus on solving your app real challenges.
