@@ -10,7 +10,7 @@
     Hola {{name}},
     <br />
     <br />
-    Sigue este enlace para verificar tu dirección de correo:
+    Sigue este enlace para verificar tu dirección de correo.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />

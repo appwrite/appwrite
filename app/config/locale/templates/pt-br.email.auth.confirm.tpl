@@ -10,7 +10,7 @@
     Olá {{name}},
     <br />
     <br />
-    Por favor, confirme o seu email acessando este link abaixo.
+    Por favor, confirme o seu email acessando o link abaixo.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />

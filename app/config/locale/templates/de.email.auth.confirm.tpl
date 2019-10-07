@@ -18,7 +18,7 @@
     Bitte ignoriere diese Nachricht, wenn du das Verifizieren deiner E-Mail Adresse nicht beantragt hast.
     <br />
     <br />
-    Vielen dank,
+    Vielen Dank,
     <br />
     {{project}} Team
 </div>

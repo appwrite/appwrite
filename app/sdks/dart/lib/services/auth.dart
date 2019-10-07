@@ -15,7 +15,7 @@ class Auth extends Service {
      /// the only valid redirect URL's are the once from domains you have set when
      /// added your platforms in the console interface.
      /// 
-     /// When accessing this route using Javascript from the browser, success and
+     /// When accessing this route using JavaScript from the browser, success and
      /// failure parameter URLs are required. Appwrite server will respond with a
      /// 301 redirect status code and will set the user session cookie. This
      /// behavior is enforced because modern browsers are limiting 3rd party cookies
@@ -116,7 +116,7 @@ class Auth extends Service {
      /// the only valid redirect URL's are the once from domains you have set when
      /// added your platforms in the console interface.
      /// 
-     /// When accessing this route using Javascript from the browser, success and
+     /// When accessing this route using JavaScript from the browser, success and
      /// failure parameter URLs are required. Appwrite server will respond with a
      /// 301 redirect status code and will set the user session cookie. This
      /// behavior is enforced because modern browsers are limiting 3rd party cookies

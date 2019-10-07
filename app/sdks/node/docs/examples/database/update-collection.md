@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Database.Client();
+let client = new sdk.Client();
 
 let database = new sdk.Database(client);
 

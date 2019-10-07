@@ -10,7 +10,7 @@
     Ciao {{name}},
     <br />
     <br />
-     Segui questo link per reimpostare la tua {{project}} password.
+     Segui questo link per reimpostare la tua password per {{project}}.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
@@ -20,5 +20,5 @@
     <br />
     Grazie,
     <br />
-    {{project}} squadra
+    Il team di {{project}}
 </div>

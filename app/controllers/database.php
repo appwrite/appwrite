@@ -27,18 +27,10 @@ $utopia->get('/v1/database')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', 'Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/modes).')
-    ->param('search', '', function () {
-        return new Text(256);
-    }, 'Search term to filter your list results.', true)
-    ->param('limit', 25, function () {
-        return new Range(0, 100);
-    }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () {
-        return new Range(0, 40000);
-    }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () {
-        return new WhiteList(['ASC', 'DESC']);
-    }, 'Order result by ASC or DESC order.', true)
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 40000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
         function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
             /*$vl = new Structure($projectDB);
@@ -82,9 +74,7 @@ $utopia->get('/v1/database/:collectionId')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', 'Get collection by its unique ID. This endpoint response returns a JSON object with the collection metadata.')
-    ->param('collectionId', '', function () {
-        return new UID();
-    }, 'Collection unique ID.')
+    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
     ->action(
         function ($collectionId) use ($response, $projectDB) {
             $collection = $projectDB->getDocument($collectionId, false);
@@ -104,18 +94,10 @@ $utopia->post('/v1/database')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', 'Create a new Collection.')
-    ->param('name', '', function () {
-        return new Text(256);
-    }, 'Collection name.')
-    ->param('read', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () use ($projectDB) {
-        return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]]));
-    }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
+    ->param('name', '', function () { return new Text(256); }, 'Collection name.')
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
         function ($name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
             $parsedRules = [];
@@ -179,21 +161,11 @@ $utopia->put('/v1/database/:collectionId')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', 'Update collection by its unique ID.')
-    ->param('collectionId', '', function () {
-        return new UID();
-    }, 'Collection unique ID.')
-    ->param('name', null, function () {
-        return new Text(256);
-    }, 'Collection name.')
-    ->param('read', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () use ($projectDB) {
-        return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]]));
-    }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
+    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->param('name', null, function () { return new Text(256); }, 'Collection name.')
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
         function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB) {
             $collection = $projectDB->getDocument($collectionId, false);
@@ -239,9 +211,7 @@ $utopia->delete('/v1/database/:collectionId')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', 'Delete a collection by its unique ID. Only users with write permissions have access to delete this resource.')
-    ->param('collectionId', '', function () {
-        return new UID();
-    }, 'Collection unique ID.')
+    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
     ->action(
         function ($collectionId) use ($response, $projectDB, $audit) {
             $collection = $projectDB->getDocument($collectionId, false);
@@ -270,36 +240,16 @@ $utopia->get('/v1/database/:collectionId/documents')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', 'Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/modes).')
-    ->param('collectionId', null, function () {
-        return new UID();
-    }, 'Collection unique ID.')
-    ->param('filters', [], function () {
-        return new ArrayList(new Text(128));
-    }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$uid>=5bed2d152c362\'', true)
-    ->param('offset', 0, function () {
-        return new Range(0, 900000000);
-    }, 'Offset value. Use this value to manage pagination.', true)
-    ->param('limit', 50, function () {
-        return new Range(0, 1000);
-    }, 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
-    ->param('order-field', '$uid', function () {
-        return new Text(128);
-    }, 'Document field that results will be sorted by.', true)
-    ->param('order-type', 'ASC', function () {
-        return new WhiteList(array('DESC', 'ASC'));
-    }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
-    ->param('order-cast', 'string', function () {
-        return new WhiteList(array('int', 'string', 'date', 'time', 'datetime'));
-    }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
-    ->param('search', '', function () {
-        return new Text(256);
-    }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
-    ->param('first', 0, function () {
-        return new Range(0, 1);
-    }, 'Return only first document. Pass 1 for true or 0 for false. The default value is 0.', true)
-    ->param('last', 0, function () {
-        return new Range(0, 1);
-    }, 'Return only last document. Pass 1 for true or 0 for false. The default value is 0.', true)
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID.')
+    ->param('filters', [], function () { return new ArrayList(new Text(128)); }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$uid>=5bed2d152c362\'', true)
+    ->param('offset', 0, function () { return new Range(0, 900000000); }, 'Offset value. Use this value to manage pagination.', true)
+    ->param('limit', 50, function () { return new Range(0, 1000); }, 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
+    ->param('order-field', '$uid', function () { return new Text(128); }, 'Document field that results will be sorted by.', true)
+    ->param('order-type', 'ASC', function () { return new WhiteList(array('DESC', 'ASC')); }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
+    ->param('order-cast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
+    ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
+    ->param('first', 0, function () { return new Range(0, 1); }, 'Return only first document. Pass 1 for true or 0 for false. The default value is 0.', true)
+    ->param('last', 0, function () { return new Range(0, 1); }, 'Return only last document. Pass 1 for true or 0 for false. The default value is 0.', true)
     ->action(
         function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search, $first, $last) use ($response, $projectDB, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);
@@ -356,12 +306,8 @@ $utopia->get('/v1/database/:collectionId/documents/:documentId')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', 'Get document by its unique ID. This endpoint response returns a JSON object with the document data.')
-    ->param('collectionId', null, function () {
-        return new UID();
-    }, 'Collection unique ID')
-    ->param('documentId', null, function () {
-        return new UID();
-    }, 'Document unique ID')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID')
+    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
     ->action(
         function ($collectionId, $documentId) use ($response, $request, $projectDB, $isDev) {
             $document = $projectDB->getDocument($documentId, $isDev);
@@ -405,29 +351,17 @@ $utopia->post('/v1/database/:collectionId/documents')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', 'Create a new Document.')
-    ->param('collectionId', null, function () {
-        return new UID();
-    }, 'Collection unique ID.')
-    ->param('data', [], function () {
-        return new \Utopia\Validator\Mock();
-    }, 'Document data as JSON string.')
-    ->param('read', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('parentDocument', '', function () {
-        return new UID();
-    }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
-    ->param('parentProperty', '', function () {
-        return new Key();
-    }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
-    ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () {
-        return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]);
-    }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID.')
+    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string.')
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
+    ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
+    ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->action(
         function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
+            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
+            
             if (empty($data)) {
                 throw new Exception('Missing payload', 400);
             }
@@ -435,7 +369,7 @@ $utopia->post('/v1/database/:collectionId/documents')
             if (isset($data['$uid'])) {
                 throw new Exception('$uid is not allowed for creating new documents, try update instead', 400);
             }
-
+            
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
 
             if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
@@ -522,21 +456,11 @@ $utopia->patch('/v1/database/:collectionId/documents/:documentId')
     ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateDocument')
-    ->param('collectionId', null, function () {
-        return new UID();
-    }, 'Collection unique ID')
-    ->param('documentId', null, function () {
-        return new UID();
-    }, 'Document unique ID')
-    ->param('data', [], function () {
-        return new \Utopia\Validator\Mock();
-    }, 'Document data as JSON string')
-    ->param('read', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID')
+    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
+    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string')
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
     ->action(
         function ($collectionId, $documentId, $data, $read, $write) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
@@ -609,12 +533,8 @@ $utopia->delete('/v1/database/:collectionId/documents/:documentId')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', 'Delete document by its unique ID. This endpoint deletes only the parent documents, his attributes and relations to other documents. Child documents **will not** be deleted.')
-    ->param('collectionId', null, function () {
-        return new UID();
-    }, 'Collection unique ID')
-    ->param('documentId', null, function () {
-        return new UID();
-    }, 'Document unique ID')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID')
+    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
     ->action(
         function ($collectionId, $documentId) use ($response, $projectDB, $audit, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);

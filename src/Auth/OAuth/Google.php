@@ -4,6 +4,10 @@ namespace Auth\OAuth;
 
 use Auth\OAuth;
 
+// Reference Material 
+// https://developers.google.com/oauthplayground/
+// https://developers.google.com/identity/protocols/OAuth2
+// https://developers.google.com/identity/protocols/OAuth2WebServer
 class Google extends OAuth
 {
     /**

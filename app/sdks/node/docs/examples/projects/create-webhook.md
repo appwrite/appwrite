@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Projects.Client();
+let client = new sdk.Client();
 
 let projects = new sdk.Projects(client);
 
@@ -10,7 +10,7 @@ client
     .setKey('')
 ;
 
-let promise = projects.createWebhook('[PROJECT_ID]', '[NAME]', [], '[URL]', 0);
+let promise = projects.createWebhook('[PROJECT_ID]', '[NAME]', [], '[URL]', 1);
 
 promise.then(function (response) {
     console.log(response);

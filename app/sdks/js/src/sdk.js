@@ -2,7 +2,7 @@
     window.Appwrite = function () {
 
         let config = {
-            endpoint: 'https://appwrite.test/v1',
+            endpoint: 'https://https://appwrite.io/v1',
             project: '',
             key: '',
             locale: '',
@@ -500,7 +500,7 @@
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
              * 
-             * When accessing this route using Javascript from the browser, success and
+             * When accessing this route using JavaScript from the browser, success and
              * failure parameter URLs are required. Appwrite server will respond with a
              * 301 redirect status code and will set the user session cookie. This
              * behavior is enforced because modern browsers are limiting 3rd party cookies
@@ -703,7 +703,7 @@
              * the only valid redirect URL's are the once from domains you have set when
              * added your platforms in the console interface.
              * 
-             * When accessing this route using Javascript from the browser, success and
+             * When accessing this route using JavaScript from the browser, success and
              * failure parameter URLs are required. Appwrite server will respond with a
              * 301 redirect status code and will set the user session cookie. This
              * behavior is enforced because modern browsers are limiting 3rd party cookies
@@ -1356,9 +1356,9 @@
             /**
              * List of currencies
              *
-             * List of all currencies, including currency symol, name, plural, and decimal
-             * digits for all major and minor currencies. You can use the locale header to
-             * get the data in supported language.
+             * List of all currencies, including currency symbol, name, plural, and
+             * decimal digits for all major and minor currencies. You can use the locale
+             * header to get the data in supported language.
              *
              * @throws {Error}
              * @return {Promise}             */

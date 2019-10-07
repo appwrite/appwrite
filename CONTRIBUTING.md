@@ -1,6 +1,6 @@
 # Contributing
 
-We would ❤️ for you to contribute to Appwrite and help make it  better! As a contributor, here are the guidelines we would like you to follow:
+We would ❤️ for you to contribute to Appwrite and help make it better! As a contributor, here are the guidelines we would like you to follow:
 
 ## Code of Conduct
 
@@ -8,7 +8,7 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Technology Stack
 
-To start helping us to improve Appwrite server, prior knowledge of Appwrite technology stack can help you with getting started.
+To start helping us to improve Appwrite server, prior knowledge of Appwrite's technology stack can help you with getting started.
 
 Appwrite stack is combined from a variety of open-source technologies and tools. Appwrite backend API is written primarily with PHP version 7 and above on top of the Utopia PHP framework. Appwrite frontend is built with tools like gulp, less and litespeed.js. We use Docker as the container technology to package the Appwrite server for easy integration on cloud, on-premise or local hosts.
 
@@ -26,9 +26,9 @@ Appwrite stack is combined from a variety of open-source technologies and tools.
 
 ## Package Managers
 
-Appwrite is using a package manager for managing code dependencies for both backend and frontend development. We try our best to avoid creating any unnecessary and any new dependency to the project is subjected to a lead developer review and approval.
+Appwrite uses a package manager for managing code dependencies for both backend and frontend development. We try our best to avoid creating any unnecessary and any new dependency to the project is subjected to a lead developer review and approval.
 
-Many of Appwrite internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
+Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
 
 Appwrite uses PHPs Composer for managing dependencies on the server-side and JS NPM for managing dependencies on the frontend side.
 
@@ -42,9 +42,9 @@ We use prettier for our JS coding standards and for auto-formatting our code.
 
 Appwrite is built to scale. Please keep in mind that the Appwrite stack can run in different environments and different scales.
 
-We wish Appwrite will be as easy to set up and in a single, local host and easy to grow to a large environment with thousands and even hundreds of instances.
+We wish Appwrite will be as easy to set up and in a single, localhost and easy to grow to a large environment with thousands and even hundreds of instances.
 
-When contributing code please take into account the following considerations:
+When contributing code, please take into account the following considerations:
 
 * Response Time
 * Throughput
@@ -57,17 +57,17 @@ When contributing code please take into account the following considerations:
 
 ## Architecture
 
-Appwrite current structure is a combination of both Monolithic and Microservice architectures, but our final goal, as we grow is to be using only microservices.
+Appwrite's current structure is a combination of both Monolithic and Microservice architectures, but our final goal, as we grow is to be using only microservices.
 
 ### The Monolithic Part
 
-Appwrite main API container is designed as a monolithic app. This is a decision we made to allow us to develop the project faster while still being a very small team.
+Appwrite's main API container is designed as a monolithic app. This is a decision we made to allow us to develop the project faster while still being a very small team.
 
 Although the Appwrite API is a monolithic app, it has a very clear separation of concern as each internal service or worker is separated by its container which will allow us as we grow to start breaking services for better maintenance and scalability.
 
 ### The Microservice Part
 
-Each container in Appwrite is a microservice by its own. Each service is an independent process which can scale without regard to any of the other services.
+Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
 Currently, all of the Appwrite microservices are intended to communicate using TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443 who by default are used to expose the Appwrite HTTP API.
 
@@ -93,10 +93,10 @@ This is also important for the Appwrite lead developers to be able to give techn
 
 ## Setup
 
-To set up a working development environment just clone the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+To set up a working development environment just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
 
 ```bash
-git clone git@github.com:appwrite/appwrite.git
+git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 
@@ -121,6 +121,6 @@ Before running the command make sure you have proper write permissions to Appwri
 
 ## Tutorials
 
-From time to time our team will add tutorials that will help contributors find there way in the Appwrite source code. Below is a list of currently available tutorials:
+From time to time our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
-* [Adding Support for a New OAuth Provider](./docs/AddOAuthProvider.md)
+* [Adding Support for a New OAuth Provider](./docs/tutorials/add-oauth-provider.md)

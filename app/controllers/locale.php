@@ -132,7 +132,7 @@ $utopia->get('/v1/locale/currencies')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCurrencies')
-    ->label('sdk.description', 'List of all currencies, including currency symol, name, plural, and decimal digits for all major and minor currencies. You can use the locale header to get the data in supported language.')
+    ->label('sdk.description', 'List of all currencies, including currency symbol, name, plural, and decimal digits for all major and minor currencies. You can use the locale header to get the data in supported language.')
     ->action(
         function () use ($response) {
             $currencies = include __DIR__.'/../config/currencies.php';

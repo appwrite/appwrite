@@ -4,6 +4,9 @@ namespace Auth\OAuth;
 
 use Auth\OAuth;
 
+// Reference Material 
+// https://docs.gitlab.com/ee/api/oauth2.html
+
 class Gitlab extends OAuth
 {
     /**

@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Account.Client();
+let client = new sdk.Client();
 
 let account = new sdk.Account(client);
 
