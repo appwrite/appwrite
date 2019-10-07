@@ -74,6 +74,6 @@ return [
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
         'icon' => 'icon-twitter',
-        'enabled' => true,
+        'enabled' => false,
     ],
 ];

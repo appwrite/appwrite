@@ -730,9 +730,6 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
 
-            // Uncomment this while testing amazon oAuth
-            // $state = html_entity_decode($state);
-
             $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
             $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
 
