@@ -1,0 +1,1 @@
+The users' service allows you to to manage your users in admin mode, you can search, block and view your users' current sessions and latest activity.

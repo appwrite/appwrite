@@ -1,0 +1,1 @@
+The account service allow you to fetch and update information related to the currently logged in user. You can also retrieve a list of all the user sessions across different devices and a security log with the account recent activity.

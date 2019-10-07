@@ -18,7 +18,7 @@
     Bitte ignoriere diese Nachricht, wenn du das Zurücksetzen deines Passworts nicht beantragt hast.
     <br />
     <br />
-    Vielen dank,
+    Vielen Dank,
     <br />
     {{project}} Team
 </div>

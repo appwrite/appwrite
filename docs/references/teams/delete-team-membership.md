@@ -1,0 +1,1 @@
+This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member.

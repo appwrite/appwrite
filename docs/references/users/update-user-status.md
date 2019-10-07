@@ -1,0 +1,1 @@
+Update user status by its unique ID.
