@@ -1,0 +1,1 @@
+Update currently logged in user account preferences. You can pass only the specific settings you wish to update.

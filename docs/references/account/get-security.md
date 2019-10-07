@@ -1,0 +1,1 @@
+Get currently logged in user list of latest security activity logs. Each log returns user IP address, location and date and time of log.

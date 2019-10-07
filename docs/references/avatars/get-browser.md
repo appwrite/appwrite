@@ -1,0 +1,1 @@
+You can use this endpoint to show different browser icons to your users, The code argument receives the browser code as appear in your user /account/sessions endpoint. Use width, height and quality arguments to change the output settings.

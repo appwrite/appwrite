@@ -1,0 +1,1 @@
+Update team by its unique ID. Only team owners have write access for this resource.
