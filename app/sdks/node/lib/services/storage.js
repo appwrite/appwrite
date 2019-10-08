@@ -45,12 +45,14 @@ class Storage extends Service {
     async createFile(files, read = [], write = [], folderId = '') {
         let path = '/storage/files';
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
+        return await this.client.call('post', path, {'content-type': 'multipart/form-data'},
             {
+              formData: {
                 'files': files,
                 'read': read,
                 'write': write,
                 'folderId': folderId
+              },
             });
     }
 

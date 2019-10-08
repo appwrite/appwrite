@@ -112,8 +112,16 @@ class Client {
             qs: (method.toUpperCase() === 'GET') ? params : {},
             headers: headers,
             body: (method.toUpperCase() === 'GET') ? '' : params,
+            formData: params.formData,
             json: (headers['content-type'].toLowerCase().startsWith('application/json')),
         };
+
+        if (!params.formData) {
+          delete options.formData;
+        } else {
+          delete options.body;
+        }
+
 
         return request(options);      
     }
