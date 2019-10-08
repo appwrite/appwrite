@@ -39,14 +39,14 @@ docker-compose up -d --remove-orphans
 ```
 
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost/${PORT} to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 
 For advanced, production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs.
 
 ### Changing Port Number
 
-In case your port 80 is already taken, change the port number in the command above. Make sure to set the correct endpoint in your selected SDK, including your new port number.
+In case your port 80 is already taken, change the port number in the above command and in the URL also replace ${PORT} with listening port. Make sure to set the correct endpoint in your selected SDK, including your new port number.
 
 ## Getting Started
 
