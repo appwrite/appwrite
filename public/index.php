@@ -32,3 +32,5 @@ switch ($version) { // Switch between API version
         include __DIR__ . '/../app/app.php';
         break;
 }
+
+?>
