@@ -19,7 +19,7 @@ Appwrite is a simple self-hosted backend server for web and mobile developers wi
 
 Appwrite API services aim to make developer's life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
-Using Appwrite you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
+Using Appwrite you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron (a command to an operating system or server for a job that is to be executed at a specified time.) tasks and many other features to help you get more results in faster times and with a lot less code.
 
 [https://appwrite.io](https://appwrite.io)
 
@@ -38,9 +38,7 @@ curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?version=0.2.0 
 docker-compose up -d --remove-orphans
 ```
 
-
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
-
 
 For advanced, production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs.
 
