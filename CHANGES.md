@@ -13,7 +13,7 @@
 
 ## Breaking Changs
 
-* deleteUsersSession method name changed to deleteUserSession in all SDKs for better consistency
+* users/deleteUsersSession method name changed to users/deleteUserSession in all SDKs for better consistency
 
 # Version 0.2.0 (PRE-RELEASE)
 
