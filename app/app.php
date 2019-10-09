@@ -590,7 +590,7 @@ $utopia->get('/v1/open-api-2.json')
                         'operationId' => $route->getLabel('sdk.method', uniqid()),
                         'consumes' => [],
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
-                        'description' => file_get_contents('../' . $route->getLabel('sdk.description', '')),
+                        'description' => file_get_contents('..' . $route->getLabel('sdk.description', '')),
                         'responses' => [
                             200 => [
                                 'description' => 'An paged array of pets',
