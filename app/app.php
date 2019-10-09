@@ -490,7 +490,7 @@ $utopia->get('/v1/open-api-2.json')
                         'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                     ],
                 ],
-                'host' => $request->getServer('_APP_HOME', $domain),
+                'host' => parse_url($request->getServer('_APP_HOME', $domain), PHP_URL_HOST),
                 'basePath' => '/v1',
                 'schemes' => ['https'],
                 'consumes' => ['application/json', 'multipart/form-data'],
