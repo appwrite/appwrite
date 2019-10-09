@@ -590,7 +590,7 @@ $utopia->get('/v1/open-api-2.json')
                         'operationId' => $route->getLabel('sdk.method', uniqid()),
                         'consumes' => [],
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
-                        'description' => $route->getLabel('sdk.description', ''),
+                        'description' => file_get_contents(realpath('../') . $route->getLabel('sdk.description', '')),
                         'responses' => [
                             200 => [
                                 'description' => 'An paged array of pets',
@@ -607,6 +607,7 @@ $utopia->get('/v1/open-api-2.json')
                             'cookies' => $route->getLabel('sdk.cookies', false),
                             'location' => $route->getLabel('sdk.location', false),
                             'demo' => 'docs/examples/'.fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.fromCamelCaseToDash($temp['operationId']).'.md',
+                            'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                         ];
                     }
 
