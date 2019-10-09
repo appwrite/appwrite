@@ -94,7 +94,7 @@ $utopia->get('/v1/avatars/credit-cards/:code')
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getCreditCard')
-    ->label('sdk.description', '/docs/references/avatars/get-credit-cards.md')
+    ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
 

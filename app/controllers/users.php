@@ -419,7 +419,7 @@ $utopia->delete('/v1/users/:userId/sessions')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteUserSessions')
-    ->label('sdk.description', 'Delete all user sessions by its unique ID.')
+    ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
     ->label('abuse-limit', 100)
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(
