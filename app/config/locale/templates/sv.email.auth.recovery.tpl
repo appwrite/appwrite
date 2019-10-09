@@ -15,7 +15,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Om du inte bett om att ändr ditt lösenord så kan du ignorera detta meddelande.
+    Om du inte bett om att ändra ditt lösenord så kan du ignorera detta meddelande.
     <br />
     <br />
     Tack,
