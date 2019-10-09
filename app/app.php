@@ -499,13 +499,13 @@ $utopia->get('/v1/open-api-2.json')
                     'Project' => [
                         'type' => 'apiKey',
                         'name' => 'X-Appwrite-Project',
-                        'description' => 'Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.',
+                        'description' => 'Your Appwrite project ID',
                         'in' => 'header',
                     ],
                     'Key' => [
                         'type' => 'apiKey',
                         'name' => 'X-Appwrite-Key',
-                        'description' => 'Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.',
+                        'description' => 'Your Appwrite project secret key',
                         'in' => 'header',
                     ],
                     'Locale' => [
