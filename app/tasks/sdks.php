@@ -48,7 +48,7 @@ $cli
                 'platform' => 'server',
             ],
             'js' => [
-                'version' => '1.0.22',
+                'version' => '1.0.23',
                 'result' => __DIR__.'/../sdks/js/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',

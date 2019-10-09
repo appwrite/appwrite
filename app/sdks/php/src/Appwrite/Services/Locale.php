@@ -11,7 +11,10 @@ class Locale extends Service
     /**
      * Get User Locale
      *
-     * /docs/references/locale/get-locale.md
+     * Get the current user location based on IP. Returns an object with user
+     * country code, country name, continent name, continent code, ip address and
+     * suggested currency. You can use the locale header to get the data in
+     * supported language.
      *
      * @throws Exception
      * @return array
@@ -29,7 +32,8 @@ class Locale extends Service
     /**
      * List Countries
      *
-     * /docs/references/locale/get-countires.md
+     * List of all countries. You can use the locale header to get the data in
+     * supported language.
      *
      * @throws Exception
      * @return array
@@ -47,7 +51,9 @@ class Locale extends Service
     /**
      * List EU Countries
      *
-     * /docs/references/locale/get-countries-eu.md
+     * List of all countries that are currently members of the EU. You can use the
+     * locale header to get the data in supported language. UK brexit date is
+     * currently set to 2019-10-31 and will be updated if and when needed.
      *
      * @throws Exception
      * @return array
@@ -65,7 +71,8 @@ class Locale extends Service
     /**
      * List Countries Phone Codes
      *
-     * /docs/references/locale/get-countries-phones.md
+     * List of all countries phone codes. You can use the locale header to get the
+     * data in supported language.
      *
      * @throws Exception
      * @return array
@@ -83,7 +90,9 @@ class Locale extends Service
     /**
      * List of currencies
      *
-     * /docs/references/locale/get-currencies.md
+     * List of all currencies, including currency symol, name, plural, and decimal
+     * digits for all major and minor currencies. You can use the locale header to
+     * get the data in supported language.
      *
      * @throws Exception
      * @return array

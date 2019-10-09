@@ -5,7 +5,10 @@ class Database extends Service {
     /**
      * List Collections
      *
-     * /docs/references/database/list-collections.md
+     * Get a list of all the user collections. You can use the query params to
+     * filter your results. On admin mode, this endpoint will return a list of all
+     * of the project collections. [Learn more about different API
+     * modes](/docs/modes).
      *
      * @param string search
      * @param number limit
@@ -29,7 +32,7 @@ class Database extends Service {
     /**
      * Create Collection
      *
-     * /docs/references/database/create-collection.md
+     * Create a new Collection.
      *
      * @param string name
      * @param array read
@@ -53,7 +56,8 @@ class Database extends Service {
     /**
      * Get Collection
      *
-     * /docs/references/database/get-collection.md
+     * Get collection by its unique ID. This endpoint response returns a JSON
+     * object with the collection metadata.
      *
      * @param string collectionId
      * @throws Exception
@@ -70,7 +74,7 @@ class Database extends Service {
     /**
      * Update Collection
      *
-     * /docs/references/database/update-collection.md
+     * Update collection by its unique ID.
      *
      * @param string collectionId
      * @param string name
@@ -95,7 +99,8 @@ class Database extends Service {
     /**
      * Delete Collection
      *
-     * /docs/references/database/delete-collection.md
+     * Delete a collection by its unique ID. Only users with write permissions
+     * have access to delete this resource.
      *
      * @param string collectionId
      * @throws Exception
@@ -112,7 +117,10 @@ class Database extends Service {
     /**
      * List Documents
      *
-     * /docs/references/database/list-documents.md
+     * Get a list of all the user documents. You can use the query params to
+     * filter your results. On admin mode, this endpoint will return a list of all
+     * of the project documents. [Learn more about different API
+     * modes](/docs/modes).
      *
      * @param string collectionId
      * @param array filters
@@ -147,7 +155,7 @@ class Database extends Service {
     /**
      * Create Document
      *
-     * /docs/references/database/create-document.md
+     * Create a new Document.
      *
      * @param string collectionId
      * @param string data
@@ -176,7 +184,8 @@ class Database extends Service {
     /**
      * Get Document
      *
-     * /docs/references/database/get-document.md
+     * Get document by its unique ID. This endpoint response returns a JSON object
+     * with the document data.
      *
      * @param string collectionId
      * @param string documentId
@@ -193,8 +202,6 @@ class Database extends Service {
 
     /**
      * Update Document
-     *
-     * /docs/references/database/update-document.md
      *
      * @param string collectionId
      * @param string documentId
@@ -218,7 +225,9 @@ class Database extends Service {
     /**
      * Delete Document
      *
-     * /docs/references/database/delete-document.md
+     * Delete document by its unique ID. This endpoint deletes only the parent
+     * documents, his attributes and relations to other documents. Child documents
+     * **will not** be deleted.
      *
      * @param string collectionId
      * @param string documentId

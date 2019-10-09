@@ -6,7 +6,8 @@ class Users extends Service {
      
      Users(Client client): super(client);
 
-     /// /docs/references/users/list-users.md
+     /// Get a list of all the project users. You can use the query params to filter
+     /// your results.
     Future<Response> listUsers({search = null, limit = 25, offset = null, orderType = 'ASC'}) async {
        String path = '/users';
 
@@ -19,7 +20,7 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/users/create-user.md
+     /// Create a new user.
     Future<Response> createUser({email, password, name = null}) async {
        String path = '/users';
 
@@ -31,7 +32,7 @@ class Users extends Service {
 
        return await this.client.call('post', path: path, params: params);
     }
-     /// /docs/references/users/get-user.md
+     /// Get user by its unique ID.
     Future<Response> getUser({userId}) async {
        String path = '/users/{userId}'.replaceAll(RegExp('{userId}'), userId);
 
@@ -40,7 +41,7 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/users/get-user-logs.md
+     /// Get user activity logs list by its unique ID.
     Future<Response> getUserLogs({userId}) async {
        String path = '/users/{userId}/logs'.replaceAll(RegExp('{userId}'), userId);
 
@@ -49,7 +50,7 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/users/get-user-prefs.md
+     /// Get user preferences by its unique ID.
     Future<Response> getUserPrefs({userId}) async {
        String path = '/users/{userId}/prefs'.replaceAll(RegExp('{userId}'), userId);
 
@@ -58,7 +59,8 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/users/update-user-prefs.md
+     /// Update user preferences by its unique ID. You can pass only the specific
+     /// settings you wish to update.
     Future<Response> updateUserPrefs({userId, prefs}) async {
        String path = '/users/{userId}/prefs'.replaceAll(RegExp('{userId}'), userId);
 
@@ -68,7 +70,7 @@ class Users extends Service {
 
        return await this.client.call('patch', path: path, params: params);
     }
-     /// /docs/references/users/get-user-sessions.md
+     /// Get user sessions list by its unique ID.
     Future<Response> getUserSessions({userId}) async {
        String path = '/users/{userId}/sessions'.replaceAll(RegExp('{userId}'), userId);
 
@@ -86,7 +88,7 @@ class Users extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-     /// /docs/references/users/delete-user-session.md
+     /// Delete user sessions by its unique ID.
     Future<Response> deleteUserSession({userId, sessionId}) async {
        String path = '/users/{userId}/sessions/:session'.replaceAll(RegExp('{userId}'), userId);
 
@@ -96,7 +98,7 @@ class Users extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-     /// /docs/references/users/update-user-status.md
+     /// Update user status by its unique ID.
     Future<Response> updateUserStatus({userId, status}) async {
        String path = '/users/{userId}/status'.replaceAll(RegExp('{userId}'), userId);
 

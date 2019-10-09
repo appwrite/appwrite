@@ -5,7 +5,7 @@ class Account extends Service {
     /**
      * Get Account
      *
-     * /docs/references/account/get.md
+     * Get currently logged in user data as JSON object.
      *
      * @throws Exception
      * @return {}
@@ -21,7 +21,7 @@ class Account extends Service {
     /**
      * Delete Account
      *
-     * /docs/references/account/delete.md
+     * Delete currently logged in user account.
      *
      * @throws Exception
      * @return {}
@@ -37,7 +37,10 @@ class Account extends Service {
     /**
      * Update Account Email
      *
-     * /docs/references/account/update-email.md
+     * Update currently logged in user account email address. After changing user
+     * address, user confirmation status is being reset and a new confirmation
+     * mail is sent. For security measures, user password is required to complete
+     * this request.
      *
      * @param string email
      * @param string password
@@ -57,7 +60,7 @@ class Account extends Service {
     /**
      * Update Account Name
      *
-     * /docs/references/account/update-name.md
+     * Update currently logged in user account name.
      *
      * @param string name
      * @throws Exception
@@ -75,7 +78,8 @@ class Account extends Service {
     /**
      * Update Account Password
      *
-     * /docs/references/account/update-password.md
+     * Update currently logged in user password. For validation, user is required
+     * to pass the password twice.
      *
      * @param string password
      * @param string oldPassword
@@ -95,7 +99,7 @@ class Account extends Service {
     /**
      * Get Account Preferences
      *
-     * /docs/references/account/get-prefs.md
+     * Get currently logged in user preferences key-value object.
      *
      * @throws Exception
      * @return {}
@@ -111,7 +115,8 @@ class Account extends Service {
     /**
      * Update Account Prefs
      *
-     * /docs/references/account/update-prefs.md
+     * Update currently logged in user account preferences. You can pass only the
+     * specific settings you wish to update.
      *
      * @param string prefs
      * @throws Exception
@@ -129,7 +134,8 @@ class Account extends Service {
     /**
      * Get Account Security Log
      *
-     * /docs/references/account/get-security.md
+     * Get currently logged in user list of latest security activity logs. Each
+     * log returns user IP address, location and date and time of log.
      *
      * @throws Exception
      * @return {}
@@ -145,7 +151,8 @@ class Account extends Service {
     /**
      * Get Account Active Sessions
      *
-     * /docs/references/account/get-sessions.md
+     * Get currently logged in user list of active sessions across different
+     * devices.
      *
      * @throws Exception
      * @return {}

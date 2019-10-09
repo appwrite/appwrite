@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/storage/files
 ```
 
-** /docs/references/storage/list-files.md **
+** Get a list of all the user files. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project files. [Learn more about different API modes](/docs/modes). **
 
 ### Parameters
 
@@ -23,7 +23,7 @@ GET https://appwrite.io/v1/storage/files
 POST https://appwrite.io/v1/storage/files
 ```
 
-** /docs/references/storage/create-file.md **
+** Create a new file. The user who creates the file will automatically be assigned to read and write access unless he has passed custom values for read and write arguments. **
 
 ### Parameters
 
@@ -40,7 +40,7 @@ POST https://appwrite.io/v1/storage/files
 GET https://appwrite.io/v1/storage/files/{fileId}
 ```
 
-** /docs/references/storage/get-file.md **
+** Get file by its unique ID. This endpoint response returns a JSON object with the file metadata. **
 
 ### Parameters
 
@@ -54,7 +54,7 @@ GET https://appwrite.io/v1/storage/files/{fileId}
 PUT https://appwrite.io/v1/storage/files/{fileId}
 ```
 
-** /docs/references/storage/update-file.md **
+** Update file by its unique ID. Only users with write permissions have access to update this resource. **
 
 ### Parameters
 
@@ -71,7 +71,7 @@ PUT https://appwrite.io/v1/storage/files/{fileId}
 DELETE https://appwrite.io/v1/storage/files/{fileId}
 ```
 
-** /docs/references/storage/delete-file.md **
+** Delete a file by its unique ID. Only users with write permissions have access to delete this resource. **
 
 ### Parameters
 
@@ -85,7 +85,7 @@ DELETE https://appwrite.io/v1/storage/files/{fileId}
 GET https://appwrite.io/v1/storage/files/{fileId}/download
 ```
 
-** /docs/references/storage/get-file-download.md **
+** Get file content by its unique ID. The endpoint response return with a &#039;Content-Disposition: attachment&#039; header that tells the browser to start downloading the file to user downloads directory. **
 
 ### Parameters
 
@@ -99,7 +99,7 @@ GET https://appwrite.io/v1/storage/files/{fileId}/download
 GET https://appwrite.io/v1/storage/files/{fileId}/preview
 ```
 
-** /docs/references/storage/get-file-preview.md **
+** Get file preview image. Currently, this method supports preview for image files (jpg, png, and gif), other supported formats, like pdf, docs, slides, and spreadsheets will return file icon image. You can also pass query string arguments for cutting and resizing your preview image. **
 
 ### Parameters
 
@@ -118,7 +118,7 @@ GET https://appwrite.io/v1/storage/files/{fileId}/preview
 GET https://appwrite.io/v1/storage/files/{fileId}/view
 ```
 
-** /docs/references/storage/get-file-view.md **
+** Get file content by its unique ID. This endpoint is similar to the download method but returns with no  &#039;Content-Disposition: attachment&#039; header. **
 
 ### Parameters
 

@@ -5,7 +5,8 @@ class Users extends Service {
     /**
      * List Users
      *
-     * /docs/references/users/list-users.md
+     * Get a list of all the project users. You can use the query params to filter
+     * your results.
      *
      * @param string search
      * @param number limit
@@ -29,7 +30,7 @@ class Users extends Service {
     /**
      * Create User
      *
-     * /docs/references/users/create-user.md
+     * Create a new user.
      *
      * @param string email
      * @param string password
@@ -51,7 +52,7 @@ class Users extends Service {
     /**
      * Get User
      *
-     * /docs/references/users/get-user.md
+     * Get user by its unique ID.
      *
      * @param string userId
      * @throws Exception
@@ -68,7 +69,7 @@ class Users extends Service {
     /**
      * Get User Logs
      *
-     * /docs/references/users/get-user-logs.md
+     * Get user activity logs list by its unique ID.
      *
      * @param string userId
      * @throws Exception
@@ -85,7 +86,7 @@ class Users extends Service {
     /**
      * Get User Prefs
      *
-     * /docs/references/users/get-user-prefs.md
+     * Get user preferences by its unique ID.
      *
      * @param string userId
      * @throws Exception
@@ -102,7 +103,8 @@ class Users extends Service {
     /**
      * Update Account Prefs
      *
-     * /docs/references/users/update-user-prefs.md
+     * Update user preferences by its unique ID. You can pass only the specific
+     * settings you wish to update.
      *
      * @param string userId
      * @param string prefs
@@ -121,7 +123,7 @@ class Users extends Service {
     /**
      * Get User Sessions
      *
-     * /docs/references/users/get-user-sessions.md
+     * Get user sessions list by its unique ID.
      *
      * @param string userId
      * @throws Exception
@@ -155,7 +157,7 @@ class Users extends Service {
     /**
      * Delete User Session
      *
-     * /docs/references/users/delete-user-session.md
+     * Delete user sessions by its unique ID.
      *
      * @param string userId
      * @param string sessionId
@@ -174,7 +176,7 @@ class Users extends Service {
     /**
      * Update user status
      *
-     * /docs/references/users/update-user-status.md
+     * Update user status by its unique ID.
      *
      * @param string userId
      * @param string status

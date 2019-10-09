@@ -68,7 +68,7 @@ $utopia->get('/v1/locale/countries')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountries')
-    ->label('sdk.description', '/docs/references/locale/get-countires.md')
+    ->label('sdk.description', '/docs/references/locale/get-countries.md')
     ->action(
         function () use ($response, $request) {
             $list = Locale::getText('countries'); /* @var $list array */

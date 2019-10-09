@@ -6,7 +6,10 @@ class Locale extends Service {
      
      Locale(Client client): super(client);
 
-     /// /docs/references/locale/get-locale.md
+     /// Get the current user location based on IP. Returns an object with user
+     /// country code, country name, continent name, continent code, ip address and
+     /// suggested currency. You can use the locale header to get the data in
+     /// supported language.
     Future<Response> getLocale() async {
        String path = '/locale';
 
@@ -15,7 +18,8 @@ class Locale extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/locale/get-countires.md
+     /// List of all countries. You can use the locale header to get the data in
+     /// supported language.
     Future<Response> getCountries() async {
        String path = '/locale/countries';
 
@@ -24,7 +28,9 @@ class Locale extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/locale/get-countries-eu.md
+     /// List of all countries that are currently members of the EU. You can use the
+     /// locale header to get the data in supported language. UK brexit date is
+     /// currently set to 2019-10-31 and will be updated if and when needed.
     Future<Response> getCountriesEU() async {
        String path = '/locale/countries/eu';
 
@@ -33,7 +39,8 @@ class Locale extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/locale/get-countries-phones.md
+     /// List of all countries phone codes. You can use the locale header to get the
+     /// data in supported language.
     Future<Response> getCountriesPhones() async {
        String path = '/locale/countries/phones';
 
@@ -42,7 +49,9 @@ class Locale extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/locale/get-currencies.md
+     /// List of all currencies, including currency symol, name, plural, and decimal
+     /// digits for all major and minor currencies. You can use the locale header to
+     /// get the data in supported language.
     Future<Response> getCurrencies() async {
        String path = '/locale/currencies';
 

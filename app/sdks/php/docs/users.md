@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/users
 ```
 
-** /docs/references/users/list-users.md **
+** Get a list of all the project users. You can use the query params to filter your results. **
 
 ### Parameters
 
@@ -23,7 +23,7 @@ GET https://appwrite.io/v1/users
 POST https://appwrite.io/v1/users
 ```
 
-** /docs/references/users/create-user.md **
+** Create a new user. **
 
 ### Parameters
 
@@ -39,7 +39,7 @@ POST https://appwrite.io/v1/users
 GET https://appwrite.io/v1/users/{userId}
 ```
 
-** /docs/references/users/get-user.md **
+** Get user by its unique ID. **
 
 ### Parameters
 
@@ -53,7 +53,7 @@ GET https://appwrite.io/v1/users/{userId}
 GET https://appwrite.io/v1/users/{userId}/logs
 ```
 
-** /docs/references/users/get-user-logs.md **
+** Get user activity logs list by its unique ID. **
 
 ### Parameters
 
@@ -67,7 +67,7 @@ GET https://appwrite.io/v1/users/{userId}/logs
 GET https://appwrite.io/v1/users/{userId}/prefs
 ```
 
-** /docs/references/users/get-user-prefs.md **
+** Get user preferences by its unique ID. **
 
 ### Parameters
 
@@ -81,7 +81,7 @@ GET https://appwrite.io/v1/users/{userId}/prefs
 PATCH https://appwrite.io/v1/users/{userId}/prefs
 ```
 
-** /docs/references/users/update-user-prefs.md **
+** Update user preferences by its unique ID. You can pass only the specific settings you wish to update. **
 
 ### Parameters
 
@@ -96,7 +96,7 @@ PATCH https://appwrite.io/v1/users/{userId}/prefs
 GET https://appwrite.io/v1/users/{userId}/sessions
 ```
 
-** /docs/references/users/get-user-sessions.md **
+** Get user sessions list by its unique ID. **
 
 ### Parameters
 
@@ -124,7 +124,7 @@ DELETE https://appwrite.io/v1/users/{userId}/sessions
 DELETE https://appwrite.io/v1/users/{userId}/sessions/:session
 ```
 
-** /docs/references/users/delete-user-session.md **
+** Delete user sessions by its unique ID. **
 
 ### Parameters
 
@@ -139,7 +139,7 @@ DELETE https://appwrite.io/v1/users/{userId}/sessions/:session
 PATCH https://appwrite.io/v1/users/{userId}/status
 ```
 
-** /docs/references/users/update-user-status.md **
+** Update user status by its unique ID. **
 
 ### Parameters
 

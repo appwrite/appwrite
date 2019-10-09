@@ -6,7 +6,7 @@ class Account extends Service {
      
      Account(Client client): super(client);
 
-     /// /docs/references/account/get.md
+     /// Get currently logged in user data as JSON object.
     Future<Response> get() async {
        String path = '/account';
 
@@ -15,7 +15,7 @@ class Account extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/account/delete.md
+     /// Delete currently logged in user account.
     Future<Response> delete() async {
        String path = '/account';
 
@@ -24,7 +24,10 @@ class Account extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-     /// /docs/references/account/update-email.md
+     /// Update currently logged in user account email address. After changing user
+     /// address, user confirmation status is being reset and a new confirmation
+     /// mail is sent. For security measures, user password is required to complete
+     /// this request.
     Future<Response> updateEmail({email, password}) async {
        String path = '/account/email';
 
@@ -35,7 +38,7 @@ class Account extends Service {
 
        return await this.client.call('patch', path: path, params: params);
     }
-     /// /docs/references/account/update-name.md
+     /// Update currently logged in user account name.
     Future<Response> updateName({name}) async {
        String path = '/account/name';
 
@@ -45,7 +48,8 @@ class Account extends Service {
 
        return await this.client.call('patch', path: path, params: params);
     }
-     /// /docs/references/account/update-password.md
+     /// Update currently logged in user password. For validation, user is required
+     /// to pass the password twice.
     Future<Response> updatePassword({password, oldPassword}) async {
        String path = '/account/password';
 
@@ -56,7 +60,7 @@ class Account extends Service {
 
        return await this.client.call('patch', path: path, params: params);
     }
-     /// /docs/references/account/get-prefs.md
+     /// Get currently logged in user preferences key-value object.
     Future<Response> getPrefs() async {
        String path = '/account/prefs';
 
@@ -65,7 +69,8 @@ class Account extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/account/update-prefs.md
+     /// Update currently logged in user account preferences. You can pass only the
+     /// specific settings you wish to update.
     Future<Response> updatePrefs({prefs}) async {
        String path = '/account/prefs';
 
@@ -75,7 +80,8 @@ class Account extends Service {
 
        return await this.client.call('patch', path: path, params: params);
     }
-     /// /docs/references/account/get-security.md
+     /// Get currently logged in user list of latest security activity logs. Each
+     /// log returns user IP address, location and date and time of log.
     Future<Response> getSecurity() async {
        String path = '/account/security';
 
@@ -84,7 +90,8 @@ class Account extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// /docs/references/account/get-sessions.md
+     /// Get currently logged in user list of active sessions across different
+     /// devices.
     Future<Response> getSessions() async {
        String path = '/account/sessions';
 

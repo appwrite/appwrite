@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/database
 ```
 
-** /docs/references/database/list-collections.md **
+** Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/modes). **
 
 ### Parameters
 
@@ -23,7 +23,7 @@ GET https://appwrite.io/v1/database
 POST https://appwrite.io/v1/database
 ```
 
-** /docs/references/database/create-collection.md **
+** Create a new Collection. **
 
 ### Parameters
 
@@ -40,7 +40,7 @@ POST https://appwrite.io/v1/database
 GET https://appwrite.io/v1/database/{collectionId}
 ```
 
-** /docs/references/database/get-collection.md **
+** Get collection by its unique ID. This endpoint response returns a JSON object with the collection metadata. **
 
 ### Parameters
 
@@ -54,7 +54,7 @@ GET https://appwrite.io/v1/database/{collectionId}
 PUT https://appwrite.io/v1/database/{collectionId}
 ```
 
-** /docs/references/database/update-collection.md **
+** Update collection by its unique ID. **
 
 ### Parameters
 
@@ -72,7 +72,7 @@ PUT https://appwrite.io/v1/database/{collectionId}
 DELETE https://appwrite.io/v1/database/{collectionId}
 ```
 
-** /docs/references/database/delete-collection.md **
+** Delete a collection by its unique ID. Only users with write permissions have access to delete this resource. **
 
 ### Parameters
 
@@ -86,7 +86,7 @@ DELETE https://appwrite.io/v1/database/{collectionId}
 GET https://appwrite.io/v1/database/{collectionId}/documents
 ```
 
-** /docs/references/database/list-documents.md **
+** Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/modes). **
 
 ### Parameters
 
@@ -109,7 +109,7 @@ GET https://appwrite.io/v1/database/{collectionId}/documents
 POST https://appwrite.io/v1/database/{collectionId}/documents
 ```
 
-** /docs/references/database/create-document.md **
+** Create a new Document. **
 
 ### Parameters
 
@@ -129,7 +129,7 @@ POST https://appwrite.io/v1/database/{collectionId}/documents
 GET https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
 
-** /docs/references/database/get-document.md **
+** Get document by its unique ID. This endpoint response returns a JSON object with the document data. **
 
 ### Parameters
 
@@ -143,8 +143,6 @@ GET https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```http request
 PATCH https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
-
-** /docs/references/database/update-document.md **
 
 ### Parameters
 
@@ -162,7 +160,7 @@ PATCH https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 DELETE https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
 
-** /docs/references/database/delete-document.md **
+** Delete document by its unique ID. This endpoint deletes only the parent documents, his attributes and relations to other documents. Child documents **will not** be deleted. **
 
 ### Parameters
 

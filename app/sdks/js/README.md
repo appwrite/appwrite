@@ -22,7 +22,7 @@ npm install appwrite --save
 Install with CDN:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite@1.0.22"></script>
+<script src="https://cdn.jsdelivr.net/npm/appwrite@1.0.23"></script>
 ```
 
 ## License

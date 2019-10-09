@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/account
 ```
 
-** /docs/references/account/get.md **
+** Get currently logged in user data as JSON object. **
 
 ## Delete Account
 
@@ -14,7 +14,7 @@ GET https://appwrite.io/v1/account
 DELETE https://appwrite.io/v1/account
 ```
 
-** /docs/references/account/delete.md **
+** Delete currently logged in user account. **
 
 ## Update Account Email
 
@@ -22,7 +22,7 @@ DELETE https://appwrite.io/v1/account
 PATCH https://appwrite.io/v1/account/email
 ```
 
-** /docs/references/account/update-email.md **
+** Update currently logged in user account email address. After changing user address, user confirmation status is being reset and a new confirmation mail is sent. For security measures, user password is required to complete this request. **
 
 ### Parameters
 
@@ -37,7 +37,7 @@ PATCH https://appwrite.io/v1/account/email
 PATCH https://appwrite.io/v1/account/name
 ```
 
-** /docs/references/account/update-name.md **
+** Update currently logged in user account name. **
 
 ### Parameters
 
@@ -51,7 +51,7 @@ PATCH https://appwrite.io/v1/account/name
 PATCH https://appwrite.io/v1/account/password
 ```
 
-** /docs/references/account/update-password.md **
+** Update currently logged in user password. For validation, user is required to pass the password twice. **
 
 ### Parameters
 
@@ -66,7 +66,7 @@ PATCH https://appwrite.io/v1/account/password
 GET https://appwrite.io/v1/account/prefs
 ```
 
-** /docs/references/account/get-prefs.md **
+** Get currently logged in user preferences key-value object. **
 
 ## Update Account Prefs
 
@@ -74,7 +74,7 @@ GET https://appwrite.io/v1/account/prefs
 PATCH https://appwrite.io/v1/account/prefs
 ```
 
-** /docs/references/account/update-prefs.md **
+** Update currently logged in user account preferences. You can pass only the specific settings you wish to update. **
 
 ### Parameters
 
@@ -88,7 +88,7 @@ PATCH https://appwrite.io/v1/account/prefs
 GET https://appwrite.io/v1/account/security
 ```
 
-** /docs/references/account/get-security.md **
+** Get currently logged in user list of latest security activity logs. Each log returns user IP address, location and date and time of log. **
 
 ## Get Account Active Sessions
 
@@ -96,5 +96,5 @@ GET https://appwrite.io/v1/account/security
 GET https://appwrite.io/v1/account/sessions
 ```
 
-** /docs/references/account/get-sessions.md **
+** Get currently logged in user list of active sessions across different devices. **
 

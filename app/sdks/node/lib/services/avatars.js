@@ -5,7 +5,10 @@ class Avatars extends Service {
     /**
      * Get Browser Icon
      *
-     * /docs/references/avatars/get-browser.md
+     * You can use this endpoint to show different browser icons to your users,
+     * The code argument receives the browser code as appear in your user
+     * /account/sessions endpoint. Use width, height and quality arguments to
+     * change the output settings.
      *
      * @param string code
      * @param number width
@@ -28,7 +31,10 @@ class Avatars extends Service {
     /**
      * Get Credit Card Icon
      *
-     * /docs/references/avatars/get-credit-cards.md
+     * Need to display your users with your billing method or there payment
+     * methods? The credit card endpoint will return you the icon of the credit
+     * card provider you need. Use width, height and quality arguments to change
+     * the output settings.
      *
      * @param string code
      * @param number width
@@ -51,7 +57,8 @@ class Avatars extends Service {
     /**
      * Get Favicon
      *
-     * /docs/references/avatars/get-favicon.md
+     * Use this endpoint to fetch the favorite icon (AKA favicon) of a  any remote
+     * website URL.
      *
      * @param string url
      * @throws Exception
@@ -69,7 +76,9 @@ class Avatars extends Service {
     /**
      * Get Country Flag
      *
-     * /docs/references/avatars/get-flag.md
+     * You can use this endpoint to show different country flags icons to your
+     * users, The code argument receives the a 2 letter country code. Use width,
+     * height and quality arguments to change the output settings.
      *
      * @param string code
      * @param number width
@@ -92,7 +101,10 @@ class Avatars extends Service {
     /**
      * Get Image from URL
      *
-     * /docs/references/avatars/get-image.md
+     * Use this endpoint to fetch a remote image URL and crop it to any image size
+     * you want. This endpoint is very useful if you need to crop and display
+     * remote images in your app or in cases, you want to make sure a 3rd party
+     * image is properly served using a TLS protocol.
      *
      * @param string url
      * @param number width
@@ -114,7 +126,8 @@ class Avatars extends Service {
     /**
      * Text to QR Generator
      *
-     * /docs/references/avatars/get-qr.md
+     * Converts a given plain text to a QR code image. You can use the query
+     * parameters to change the size and style of the resulting image.
      *
      * @param string text
      * @param number size

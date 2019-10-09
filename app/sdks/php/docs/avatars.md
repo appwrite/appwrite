@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/avatars/browsers/{code}
 ```
 
-** /docs/references/avatars/get-browser.md **
+** You can use this endpoint to show different browser icons to your users, The code argument receives the browser code as appear in your user /account/sessions endpoint. Use width, height and quality arguments to change the output settings. **
 
 ### Parameters
 
@@ -23,7 +23,7 @@ GET https://appwrite.io/v1/avatars/browsers/{code}
 GET https://appwrite.io/v1/avatars/credit-cards/{code}
 ```
 
-** /docs/references/avatars/get-credit-cards.md **
+** Need to display your users with your billing method or there payment methods? The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings. **
 
 ### Parameters
 
@@ -40,7 +40,7 @@ GET https://appwrite.io/v1/avatars/credit-cards/{code}
 GET https://appwrite.io/v1/avatars/favicon
 ```
 
-** /docs/references/avatars/get-favicon.md **
+** Use this endpoint to fetch the favorite icon (AKA favicon) of a  any remote website URL. **
 
 ### Parameters
 
@@ -54,7 +54,7 @@ GET https://appwrite.io/v1/avatars/favicon
 GET https://appwrite.io/v1/avatars/flags/{code}
 ```
 
-** /docs/references/avatars/get-flag.md **
+** You can use this endpoint to show different country flags icons to your users, The code argument receives the a 2 letter country code. Use width, height and quality arguments to change the output settings. **
 
 ### Parameters
 
@@ -71,7 +71,7 @@ GET https://appwrite.io/v1/avatars/flags/{code}
 GET https://appwrite.io/v1/avatars/image
 ```
 
-** /docs/references/avatars/get-image.md **
+** Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in cases, you want to make sure a 3rd party image is properly served using a TLS protocol. **
 
 ### Parameters
 
@@ -87,7 +87,7 @@ GET https://appwrite.io/v1/avatars/image
 GET https://appwrite.io/v1/avatars/qr
 ```
 
-** /docs/references/avatars/get-qr.md **
+** Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image. **
 
 ### Parameters
 
