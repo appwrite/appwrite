@@ -10,6 +10,7 @@
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
 * New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
+* Added support for ES6 require statements in JS SDK
 
 ## Breaking Changs
 
