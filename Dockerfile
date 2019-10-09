@@ -78,6 +78,7 @@ RUN chmod 775 /entrypoint.sh
 
 # add PHP files
 COPY ./app /usr/share/nginx/html/app
+COPY ./docs /usr/share/nginx/html/docs
 COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
 COPY ./vendor /usr/share/nginx/html/vendor
