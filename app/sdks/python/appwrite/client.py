@@ -4,7 +4,7 @@ import requests
 class Client:
     def __init__(self):
         self._self_signed = False
-        self._endpoint = 'https://https://appwrite.io/v1'
+        self._endpoint = 'https://appwrite.io/v1'
         self._global_headers = {
             'content-type': '',
             'x-sdk-version': 'appwrite:python:1.0.0',

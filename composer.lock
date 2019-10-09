@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "ab0fe8f5669e6a8fc7a8d5e8c711f939412fb33e"
+                "reference": "546b96a443162464f7496beb5e77c837a4380a29"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/ab0fe8f5669e6a8fc7a8d5e8c711f939412fb33e",
-                "reference": "ab0fe8f5669e6a8fc7a8d5e8c711f939412fb33e",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/546b96a443162464f7496beb5e77c837a4380a29",
+                "reference": "546b96a443162464f7496beb5e77c837a4380a29",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-10-03T22:07:26+00:00"
+            "time": "2019-10-04T05:52:03+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "0ece44cf81c04ebb8784a60830b088238189ec78"
+                "reference": "7a1fa9d9612663d3f57d11c7c08fd61eb748dbc1"
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-10-04 05:50:53"
+            "time": "2019-10-09 03:51:24"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1440,12 +1440,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "4625774716e3737580e407a02e53ff4defd3cdfa"
+                "reference": "23419a940881f50525515726eec7507792ace5e0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/4625774716e3737580e407a02e53ff4defd3cdfa",
-                "reference": "4625774716e3737580e407a02e53ff4defd3cdfa",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/23419a940881f50525515726eec7507792ace5e0",
+                "reference": "23419a940881f50525515726eec7507792ace5e0",
                 "shasum": ""
             },
             "require": {
@@ -1499,7 +1499,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-10-01T10:31:38+00:00"
+            "time": "2019-10-05T16:44:39+00:00"
         },
         {
             "name": "utopia-php/abuse",
@@ -2409,12 +2409,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-token-stream.git",
-                "reference": "995192df77f63a59e47f025390d2d1fdf8f425ff"
+                "reference": "36bdcb91de0484f77e256fd3d6119dcf7171c164"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-token-stream/zipball/995192df77f63a59e47f025390d2d1fdf8f425ff",
-                "reference": "995192df77f63a59e47f025390d2d1fdf8f425ff",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-token-stream/zipball/36bdcb91de0484f77e256fd3d6119dcf7171c164",
+                "reference": "36bdcb91de0484f77e256fd3d6119dcf7171c164",
                 "shasum": ""
             },
             "require": {
@@ -2450,7 +2450,7 @@
             "keywords": [
                 "tokenizer"
             ],
-            "time": "2019-09-17T06:23:10+00:00"
+            "time": "2019-10-05T05:20:56+00:00"
         },
         {
             "name": "phpunit/phpunit",

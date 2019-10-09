@@ -3,26 +3,26 @@
 ## Get Account
 
 ```http request
-GET https://https://appwrite.io/v1/account
+GET https://appwrite.io/v1/account
 ```
 
-** Get currently logged in user data as JSON object. **
+** /docs/references/account/get.md **
 
 ## Delete Account
 
 ```http request
-DELETE https://https://appwrite.io/v1/account
+DELETE https://appwrite.io/v1/account
 ```
 
-** Delete currently logged in user account. **
+** /docs/references/account/delete.md **
 
 ## Update Account Email
 
 ```http request
-PATCH https://https://appwrite.io/v1/account/email
+PATCH https://appwrite.io/v1/account/email
 ```
 
-** Update currently logged in user account email address. After changing user address, user confirmation status is being reset and a new confirmation mail is sent. For security measures, user password is required to complete this request. **
+** /docs/references/account/update-email.md **
 
 ### Parameters
 
@@ -34,10 +34,10 @@ PATCH https://https://appwrite.io/v1/account/email
 ## Update Account Name
 
 ```http request
-PATCH https://https://appwrite.io/v1/account/name
+PATCH https://appwrite.io/v1/account/name
 ```
 
-** Update currently logged in user account name. **
+** /docs/references/account/update-name.md **
 
 ### Parameters
 
@@ -48,10 +48,10 @@ PATCH https://https://appwrite.io/v1/account/name
 ## Update Account Password
 
 ```http request
-PATCH https://https://appwrite.io/v1/account/password
+PATCH https://appwrite.io/v1/account/password
 ```
 
-** Update currently logged in user password. For validation, user is required to pass the password twice. **
+** /docs/references/account/update-password.md **
 
 ### Parameters
 
@@ -63,18 +63,18 @@ PATCH https://https://appwrite.io/v1/account/password
 ## Get Account Preferences
 
 ```http request
-GET https://https://appwrite.io/v1/account/prefs
+GET https://appwrite.io/v1/account/prefs
 ```
 
-** Get currently logged in user preferences key-value object. **
+** /docs/references/account/get-prefs.md **
 
 ## Update Account Prefs
 
 ```http request
-PATCH https://https://appwrite.io/v1/account/prefs
+PATCH https://appwrite.io/v1/account/prefs
 ```
 
-** Update currently logged in user account preferences. You can pass only the specific settings you wish to update. **
+** /docs/references/account/update-prefs.md **
 
 ### Parameters
 
@@ -85,16 +85,16 @@ PATCH https://https://appwrite.io/v1/account/prefs
 ## Get Account Security Log
 
 ```http request
-GET https://https://appwrite.io/v1/account/security
+GET https://appwrite.io/v1/account/security
 ```
 
-** Get currently logged in user list of latest security activity logs. Each log returns user IP address, location and date and time of log. **
+** /docs/references/account/get-security.md **
 
 ## Get Account Active Sessions
 
 ```http request
-GET https://https://appwrite.io/v1/account/sessions
+GET https://appwrite.io/v1/account/sessions
 ```
 
-** Get currently logged in user list of active sessions across different devices. **
+** /docs/references/account/get-sessions.md **
 

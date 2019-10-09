@@ -3,10 +3,10 @@
 ## List Collections
 
 ```http request
-GET https://https://appwrite.io/v1/database
+GET https://appwrite.io/v1/database
 ```
 
-** Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/modes). **
+** /docs/references/database/list-collections.md **
 
 ### Parameters
 
@@ -20,10 +20,10 @@ GET https://https://appwrite.io/v1/database
 ## Create Collection
 
 ```http request
-POST https://https://appwrite.io/v1/database
+POST https://appwrite.io/v1/database
 ```
 
-** Create a new Collection. **
+** /docs/references/database/create-collection.md **
 
 ### Parameters
 
@@ -37,10 +37,10 @@ POST https://https://appwrite.io/v1/database
 ## Get Collection
 
 ```http request
-GET https://https://appwrite.io/v1/database/{collectionId}
+GET https://appwrite.io/v1/database/{collectionId}
 ```
 
-** Get collection by its unique ID. This endpoint response returns a JSON object with the collection metadata. **
+** /docs/references/database/get-collection.md **
 
 ### Parameters
 
@@ -51,10 +51,10 @@ GET https://https://appwrite.io/v1/database/{collectionId}
 ## Update Collection
 
 ```http request
-PUT https://https://appwrite.io/v1/database/{collectionId}
+PUT https://appwrite.io/v1/database/{collectionId}
 ```
 
-** Update collection by its unique ID. **
+** /docs/references/database/update-collection.md **
 
 ### Parameters
 
@@ -69,10 +69,10 @@ PUT https://https://appwrite.io/v1/database/{collectionId}
 ## Delete Collection
 
 ```http request
-DELETE https://https://appwrite.io/v1/database/{collectionId}
+DELETE https://appwrite.io/v1/database/{collectionId}
 ```
 
-** Delete a collection by its unique ID. Only users with write permissions have access to delete this resource. **
+** /docs/references/database/delete-collection.md **
 
 ### Parameters
 
@@ -83,10 +83,10 @@ DELETE https://https://appwrite.io/v1/database/{collectionId}
 ## List Documents
 
 ```http request
-GET https://https://appwrite.io/v1/database/{collectionId}/documents
+GET https://appwrite.io/v1/database/{collectionId}/documents
 ```
 
-** Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/modes). **
+** /docs/references/database/list-documents.md **
 
 ### Parameters
 
@@ -106,10 +106,10 @@ GET https://https://appwrite.io/v1/database/{collectionId}/documents
 ## Create Document
 
 ```http request
-POST https://https://appwrite.io/v1/database/{collectionId}/documents
+POST https://appwrite.io/v1/database/{collectionId}/documents
 ```
 
-** Create a new Document. **
+** /docs/references/database/create-document.md **
 
 ### Parameters
 
@@ -126,10 +126,10 @@ POST https://https://appwrite.io/v1/database/{collectionId}/documents
 ## Get Document
 
 ```http request
-GET https://https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
+GET https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
 
-** Get document by its unique ID. This endpoint response returns a JSON object with the document data. **
+** /docs/references/database/get-document.md **
 
 ### Parameters
 
@@ -141,8 +141,10 @@ GET https://https://appwrite.io/v1/database/{collectionId}/documents/{documentId
 ## Update Document
 
 ```http request
-PATCH https://https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
+PATCH https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
+
+** /docs/references/database/update-document.md **
 
 ### Parameters
 
@@ -157,10 +159,10 @@ PATCH https://https://appwrite.io/v1/database/{collectionId}/documents/{document
 ## Delete Document
 
 ```http request
-DELETE https://https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
+DELETE https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
 
-** Delete document by its unique ID. This endpoint deletes only the parent documents, his attributes and relations to other documents. Child documents **will not** be deleted. **
+** /docs/references/database/delete-document.md **
 
 ### Parameters
 

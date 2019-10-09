@@ -3,14 +3,14 @@ const sdk = require('node-appwrite');
 // Init SDK
 let client = new sdk.Client();
 
-let projects = new sdk.Projects(client);
+let users = new sdk.Users(client);
 
 client
     .setProject('')
     .setKey('')
 ;
 
-let promise = projects.updateWebhook('[PROJECT_ID]', '[WEBHOOK_ID]', '[NAME]', [], '[URL]', 1);
+let promise = users.updateUserPrefs('[USER_ID]', '{}');
 
 promise.then(function (response) {
     console.log(response);

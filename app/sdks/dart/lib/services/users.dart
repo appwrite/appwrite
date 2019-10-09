@@ -6,8 +6,7 @@ class Users extends Service {
      
      Users(Client client): super(client);
 
-     /// Get a list of all the project users. You can use the query params to filter
-     /// your results.
+     /// /docs/references/users/list-users.md
     Future<Response> listUsers({search = null, limit = 25, offset = null, orderType = 'ASC'}) async {
        String path = '/users';
 
@@ -20,7 +19,7 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Create a new user.
+     /// /docs/references/users/create-user.md
     Future<Response> createUser({email, password, name = null}) async {
        String path = '/users';
 
@@ -32,7 +31,7 @@ class Users extends Service {
 
        return await this.client.call('post', path: path, params: params);
     }
-     /// Get user by its unique ID.
+     /// /docs/references/users/get-user.md
     Future<Response> getUser({userId}) async {
        String path = '/users/{userId}'.replaceAll(RegExp('{userId}'), userId);
 
@@ -41,7 +40,7 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Get user activity logs list by its unique ID.
+     /// /docs/references/users/get-user-logs.md
     Future<Response> getUserLogs({userId}) async {
        String path = '/users/{userId}/logs'.replaceAll(RegExp('{userId}'), userId);
 
@@ -50,7 +49,7 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Get user preferences by its unique ID.
+     /// /docs/references/users/get-user-prefs.md
     Future<Response> getUserPrefs({userId}) async {
        String path = '/users/{userId}/prefs'.replaceAll(RegExp('{userId}'), userId);
 
@@ -59,7 +58,17 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Get user sessions list by its unique ID.
+     /// /docs/references/users/update-user-prefs.md
+    Future<Response> updateUserPrefs({userId, prefs}) async {
+       String path = '/users/{userId}/prefs'.replaceAll(RegExp('{userId}'), userId);
+
+       Map<String, dynamic> params = {
+         'prefs': prefs,
+       };
+
+       return await this.client.call('patch', path: path, params: params);
+    }
+     /// /docs/references/users/get-user-sessions.md
     Future<Response> getUserSessions({userId}) async {
        String path = '/users/{userId}/sessions'.replaceAll(RegExp('{userId}'), userId);
 
@@ -77,8 +86,8 @@ class Users extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-     /// Delete user sessions by its unique ID.
-    Future<Response> deleteUsersSession({userId, sessionId}) async {
+     /// /docs/references/users/delete-user-session.md
+    Future<Response> deleteUserSession({userId, sessionId}) async {
        String path = '/users/{userId}/sessions/:session'.replaceAll(RegExp('{userId}'), userId);
 
        Map<String, dynamic> params = {
@@ -87,7 +96,7 @@ class Users extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-     /// Update user status by its unique ID.
+     /// /docs/references/users/update-user-status.md
     Future<Response> updateUserStatus({userId, status}) async {
        String path = '/users/{userId}/status'.replaceAll(RegExp('{userId}'), userId);
 

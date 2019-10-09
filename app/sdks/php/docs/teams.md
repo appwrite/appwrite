@@ -3,10 +3,10 @@
 ## List Teams
 
 ```http request
-GET https://https://appwrite.io/v1/teams
+GET https://appwrite.io/v1/teams
 ```
 
-** Get a list of all the current user teams. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project teams. [Learn more about different API modes](/docs/modes). **
+** /docs/references/teams/list-teams.md **
 
 ### Parameters
 
@@ -20,10 +20,10 @@ GET https://https://appwrite.io/v1/teams
 ## Create Team
 
 ```http request
-POST https://https://appwrite.io/v1/teams
+POST https://appwrite.io/v1/teams
 ```
 
-** Create a new team. The user who creates the team will automatically be assigned as the owner of the team. The team owner can invite new members, who will be able add new owners and update or delete the team from your project. **
+** /docs/references/teams/create-team.md **
 
 ### Parameters
 
@@ -35,10 +35,10 @@ POST https://https://appwrite.io/v1/teams
 ## Get Team
 
 ```http request
-GET https://https://appwrite.io/v1/teams/{teamId}
+GET https://appwrite.io/v1/teams/{teamId}
 ```
 
-** Get team by its unique ID. All team members have read access for this resource. **
+** /docs/references/teams/get-team.md **
 
 ### Parameters
 
@@ -49,10 +49,10 @@ GET https://https://appwrite.io/v1/teams/{teamId}
 ## Update Team
 
 ```http request
-PUT https://https://appwrite.io/v1/teams/{teamId}
+PUT https://appwrite.io/v1/teams/{teamId}
 ```
 
-** Update team by its unique ID. Only team owners have write access for this resource. **
+** /docs/references/teams/update-team.md **
 
 ### Parameters
 
@@ -64,10 +64,10 @@ PUT https://https://appwrite.io/v1/teams/{teamId}
 ## Delete Team
 
 ```http request
-DELETE https://https://appwrite.io/v1/teams/{teamId}
+DELETE https://appwrite.io/v1/teams/{teamId}
 ```
 
-** Delete team by its unique ID. Only team owners have write access for this resource. **
+** /docs/references/teams/delete-team.md **
 
 ### Parameters
 
@@ -78,10 +78,10 @@ DELETE https://https://appwrite.io/v1/teams/{teamId}
 ## Get Team Members
 
 ```http request
-GET https://https://appwrite.io/v1/teams/{teamId}/members
+GET https://appwrite.io/v1/teams/{teamId}/members
 ```
 
-** Get team members by the team unique ID. All team members have read access for this list of resources. **
+** /docs/references/teams/get-team-members.md **
 
 ### Parameters
 
@@ -92,14 +92,10 @@ GET https://https://appwrite.io/v1/teams/{teamId}/members
 ## Create Team Membership
 
 ```http request
-POST https://https://appwrite.io/v1/teams/{teamId}/memberships
+POST https://appwrite.io/v1/teams/{teamId}/memberships
 ```
 
-** Use this endpoint to invite a new member to your team. An email with a link to join the team will be sent to the new member email address. If member doesn&#039;t exists in the project it will be automatically created.
-
-Use the redirect parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the /teams/{teamId}/memberships/{inviteId}/status endpoint to finally join the user to the team.
-
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface. **
+** /docs/references/teams/create-team-membership.md **
 
 ### Parameters
 
@@ -114,10 +110,10 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 ## Delete Team Membership
 
 ```http request
-DELETE https://https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
+DELETE https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
 ```
 
-** This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member. **
+** /docs/references/teams/delete-team-membership.md **
 
 ### Parameters
 
@@ -129,10 +125,10 @@ DELETE https://https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
 ## Create Team Membership (Resend)
 
 ```http request
-POST https://https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/resend
+POST https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/resend
 ```
 
-** Use this endpoint to resend your invitation email for a user to join a team. **
+** /docs/references/teams/create-team-membership-resend.md **
 
 ### Parameters
 
@@ -145,14 +141,10 @@ POST https://https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/resend
 ## Update Team Membership Status
 
 ```http request
-PATCH https://https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/status
+PATCH https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/status
 ```
 
-** Use this endpoint to let user accept an invitation to join a team after he is being redirect back to your app from the invitation email. Use the success and failure URL&#039;s to redirect users back to your application after the request completes.
-
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
-
-When not using the success or failure redirect arguments this endpoint will result with a 200 status code on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies needed for saving the account session token. **
+** /docs/references/teams/update-team-membership-status.md **
 
 ### Parameters
 

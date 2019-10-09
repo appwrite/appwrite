@@ -5,8 +5,7 @@ class Users extends Service {
     /**
      * List Users
      *
-     * Get a list of all the project users. You can use the query params to filter
-     * your results.
+     * /docs/references/users/list-users.md
      *
      * @param string search
      * @param number limit
@@ -30,7 +29,7 @@ class Users extends Service {
     /**
      * Create User
      *
-     * Create a new user.
+     * /docs/references/users/create-user.md
      *
      * @param string email
      * @param string password
@@ -52,7 +51,7 @@ class Users extends Service {
     /**
      * Get User
      *
-     * Get user by its unique ID.
+     * /docs/references/users/get-user.md
      *
      * @param string userId
      * @throws Exception
@@ -69,7 +68,7 @@ class Users extends Service {
     /**
      * Get User Logs
      *
-     * Get user activity logs list by its unique ID.
+     * /docs/references/users/get-user-logs.md
      *
      * @param string userId
      * @throws Exception
@@ -86,7 +85,7 @@ class Users extends Service {
     /**
      * Get User Prefs
      *
-     * Get user preferences by its unique ID.
+     * /docs/references/users/get-user-prefs.md
      *
      * @param string userId
      * @throws Exception
@@ -101,9 +100,28 @@ class Users extends Service {
     }
 
     /**
+     * Update Account Prefs
+     *
+     * /docs/references/users/update-user-prefs.md
+     *
+     * @param string userId
+     * @param string prefs
+     * @throws Exception
+     * @return {}
+     */
+    async updateUserPrefs(userId, prefs) {
+        let path = '/users/{userId}/prefs'.replace(new RegExp('{userId}', 'g'), userId);
+        
+        return await this.client.call('patch', path, {'content-type': 'application/json'},
+            {
+                'prefs': prefs
+            });
+    }
+
+    /**
      * Get User Sessions
      *
-     * Get user sessions list by its unique ID.
+     * /docs/references/users/get-user-sessions.md
      *
      * @param string userId
      * @throws Exception
@@ -137,14 +155,14 @@ class Users extends Service {
     /**
      * Delete User Session
      *
-     * Delete user sessions by its unique ID.
+     * /docs/references/users/delete-user-session.md
      *
      * @param string userId
      * @param string sessionId
      * @throws Exception
      * @return {}
      */
-    async deleteUsersSession(userId, sessionId) {
+    async deleteUserSession(userId, sessionId) {
         let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('delete', path, {'content-type': 'application/json'},
@@ -156,7 +174,7 @@ class Users extends Service {
     /**
      * Update user status
      *
-     * Update user status by its unique ID.
+     * /docs/references/users/update-user-status.md
      *
      * @param string userId
      * @param string status

@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.projects.createWebhook('[PROJECT_ID]', '[NAME]', [], '[URL]', 1);
+let promise = sdk.users.deleteUserSession('[USER_ID]', '[SESSION_ID]');
 
 promise.then(function (response) {
     console.log(response);

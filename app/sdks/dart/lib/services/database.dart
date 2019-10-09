@@ -6,10 +6,7 @@ class Database extends Service {
      
      Database(Client client): super(client);
 
-     /// Get a list of all the user collections. You can use the query params to
-     /// filter your results. On admin mode, this endpoint will return a list of all
-     /// of the project collections. [Learn more about different API
-     /// modes](/docs/modes).
+     /// /docs/references/database/list-collections.md
     Future<Response> listCollections({search = null, limit = 25, offset = null, orderType = 'ASC'}) async {
        String path = '/database';
 
@@ -22,7 +19,7 @@ class Database extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Create a new Collection.
+     /// /docs/references/database/create-collection.md
     Future<Response> createCollection({name, read = const [], write = const [], rules = const []}) async {
        String path = '/database';
 
@@ -35,8 +32,7 @@ class Database extends Service {
 
        return await this.client.call('post', path: path, params: params);
     }
-     /// Get collection by its unique ID. This endpoint response returns a JSON
-     /// object with the collection metadata.
+     /// /docs/references/database/get-collection.md
     Future<Response> getCollection({collectionId}) async {
        String path = '/database/{collectionId}'.replaceAll(RegExp('{collectionId}'), collectionId);
 
@@ -45,7 +41,7 @@ class Database extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Update collection by its unique ID.
+     /// /docs/references/database/update-collection.md
     Future<Response> updateCollection({collectionId, name, read = const [], write = const [], rules = const []}) async {
        String path = '/database/{collectionId}'.replaceAll(RegExp('{collectionId}'), collectionId);
 
@@ -58,8 +54,7 @@ class Database extends Service {
 
        return await this.client.call('put', path: path, params: params);
     }
-     /// Delete a collection by its unique ID. Only users with write permissions
-     /// have access to delete this resource.
+     /// /docs/references/database/delete-collection.md
     Future<Response> deleteCollection({collectionId}) async {
        String path = '/database/{collectionId}'.replaceAll(RegExp('{collectionId}'), collectionId);
 
@@ -68,10 +63,7 @@ class Database extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-     /// Get a list of all the user documents. You can use the query params to
-     /// filter your results. On admin mode, this endpoint will return a list of all
-     /// of the project documents. [Learn more about different API
-     /// modes](/docs/modes).
+     /// /docs/references/database/list-documents.md
     Future<Response> listDocuments({collectionId, filters = const [], offset = null, limit = 50, orderField = '\$uid', orderType = 'ASC', orderCast = 'string', search = null, first = null, last = null}) async {
        String path = '/database/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
@@ -89,7 +81,7 @@ class Database extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Create a new Document.
+     /// /docs/references/database/create-document.md
     Future<Response> createDocument({collectionId, data, read = const [], write = const [], parentDocument = null, parentProperty = null, parentPropertyType = 'assign'}) async {
        String path = '/database/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
@@ -104,8 +96,7 @@ class Database extends Service {
 
        return await this.client.call('post', path: path, params: params);
     }
-     /// Get document by its unique ID. This endpoint response returns a JSON object
-     /// with the document data.
+     /// /docs/references/database/get-document.md
     Future<Response> getDocument({collectionId, documentId}) async {
        String path = '/database/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 
@@ -114,6 +105,7 @@ class Database extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
+     /// /docs/references/database/update-document.md
     Future<Response> updateDocument({collectionId, documentId, data, read = const [], write = const []}) async {
        String path = '/database/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 
@@ -125,9 +117,7 @@ class Database extends Service {
 
        return await this.client.call('patch', path: path, params: params);
     }
-     /// Delete document by its unique ID. This endpoint deletes only the parent
-     /// documents, his attributes and relations to other documents. Child documents
-     /// **will not** be deleted.
+     /// /docs/references/database/delete-document.md
     Future<Response> deleteDocument({collectionId, documentId}) async {
        String path = '/database/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 

@@ -28,7 +28,7 @@ class Client
      *
      * @var string
      */
-    protected $endpoint = 'https://https://appwrite.io/v1';
+    protected $endpoint = 'https://appwrite.io/v1';
 
     /**
      * Global Headers

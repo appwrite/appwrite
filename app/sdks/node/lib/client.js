@@ -4,7 +4,7 @@ const request = require('request-promise-native');
 class Client {
     
     constructor() {
-        this.endpoint = 'https://https://appwrite.io/v1';
+        this.endpoint = 'https://appwrite.io/v1';
         this.headers = {
             'content-type': '',
             'x-sdk-version': 'appwrite:nodejs:1.0.26',
