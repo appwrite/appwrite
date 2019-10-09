@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response;
+global $utopia, $request, $response, $version;
 
 use Utopia\Exception;
 use Utopia\Validator\Text;
@@ -134,7 +134,7 @@ $utopia->get('/v1/avatars/image')
     ->label('sdk.method', 'getImage')
     ->label('sdk.description', '/docs/references/avatars/get-image.md')
     ->action(
-        function ($url, $width, $height) use ($response, $request, $version) {
+        function ($url, $width, $height) use ($response) {
             $quality = 80;
             $output = 'png';
             $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
@@ -199,7 +199,7 @@ $utopia->get('/v1/avatars/favicon')
     ->label('sdk.method', 'getFavicon')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
-        function ($url) use ($response, $request, $version) {
+        function ($url) use ($response, $version) {
             $width = 56;
             $height = 56;
             $quality = 80;
