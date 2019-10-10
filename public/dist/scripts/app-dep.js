@@ -37,7 +37,7 @@ let path='/auth/login';let payload={};if(email){payload['email']=email;}
 if(password){payload['password']=password;}
 if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
-payload['project']=config.project;return iframe('post',path,payload);},logout:function(){let path='/auth/logout';let payload={};return http.delete(path,{'content-type':'application/json'},payload);},logoutBySession:function(id){if(id===undefined){throw new Error('Missing required parameter: "id"');}
+return http.post(path,{'content-type':'application/json'},payload);},logout:function(){let path='/auth/logout';let payload={};return http.delete(path,{'content-type':'application/json'},payload);},logoutBySession:function(id){if(id===undefined){throw new Error('Missing required parameter: "id"');}
 let path='/auth/logout/{id}'.replace(new RegExp('{id}','g'),id);let payload={};return http.delete(path,{'content-type':'application/json'},payload);},oauth:function(provider,success='',failure=''){if(provider===undefined){throw new Error('Missing required parameter: "provider"');}
 let path='/auth/oauth/{provider}'.replace(new RegExp('{provider}','g'),provider);let payload={};if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
@@ -62,7 +62,7 @@ if(confirm){payload['confirm']=confirm;}
 if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
 if(name){payload['name']=name;}
-payload['project']=config.project;return iframe('post',path,payload);},confirm:function(userId,token){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+return http.post(path,{'content-type':'application/json'},payload);},confirm:function(userId,token){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(token===undefined){throw new Error('Missing required parameter: "token"');}
 let path='/auth/register/confirm';let payload={};if(userId){payload['userId']=userId;}
 if(token){payload['token']=token;}
@@ -330,7 +330,7 @@ let path='/teams/{teamId}/memberships/{inviteId}/status'.replace(new RegExp('{te
 if(secret){payload['secret']=secret;}
 if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
-payload['project']=config.project;return iframe('patch',path,payload);}};let users={listUsers:function(search='',limit=25,offset=0,orderType='ASC'){let path='/users';let payload={};if(search){payload['search']=search;}
+return http.patch(path,{'content-type':'application/json'},payload);}};let users={listUsers:function(search='',limit=25,offset=0,orderType='ASC'){let path='/users';let payload={};if(search){payload['search']=search;}
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}
