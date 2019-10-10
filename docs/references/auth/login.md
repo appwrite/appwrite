@@ -1,4 +1,4 @@
-Allow the user to login into his account by providing a valid email and password combination. Use the success and failure arguments to provide a redirect URL\'s back to your app when login is completed. 
+Allow the user to login into their account by providing a valid email and password combination. Use the success and failure arguments to provide a redirect URL\'s back to your app when login is completed. 
 
 Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL's are the once from domains you have set when added your platforms in the console interface.
 
