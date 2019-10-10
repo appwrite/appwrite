@@ -327,7 +327,7 @@ $utopia->post('/v1/users')
     );
 
 $utopia->patch('/v1/users/:userId/status')
-    ->desc('Update user status')
+    ->desc('Update User Status')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserStatus')
@@ -356,7 +356,7 @@ $utopia->patch('/v1/users/:userId/status')
     );
 
 $utopia->patch('/v1/users/:userId/prefs')
-    ->desc('Update Account Prefs')
+    ->desc('Update User Prefs')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserPrefs')
