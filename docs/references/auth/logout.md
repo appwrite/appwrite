@@ -1,1 +1,1 @@
-Use this endpoint to log out the currently logged in user from his account. When succeed this endpoint will delete the user session and remove the session secret cookie from the user client.
+Use this endpoint to log out the currently logged in user from their account. When succeed this endpoint will delete the user session and remove the session secret cookie from the user client.
