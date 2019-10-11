@@ -681,7 +681,7 @@ $utopia->get('/v1/open-api-2.json')
                             case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
                                 $node['type'] = 'integer';
                                 $node['format'] = 'int32';
-                                $node['x-example'] = rand($validator->getMin(), $validator->getMax());
+                                $node['x-example'] = $validator->getMin();
                                 break;
                             case 'Utopia\Validator\Numeric':
                                 $node['type'] = 'integer';
