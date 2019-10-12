@@ -609,6 +609,8 @@ $utopia->get('/v1/open-api-2.json')
                             'location' => $route->getLabel('sdk.location', false),
                             'demo' => 'docs/examples/'.fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.fromCamelCaseToDash($temp['operationId']).'.md',
                             'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
+                            'rate-limit' => $route->getLabel('abuse-limit', 0),
+                            'rate-time' => $route->getLabel('abuse-time', 3600),
                         ];
                     }
 
