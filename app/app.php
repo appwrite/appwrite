@@ -41,7 +41,7 @@ $clientsConsole = array_map(function ($node) {
     return false;
 }));
 
-$clients = array_merge($clientsConsole, array_map(function ($node) {
+$clients = array_unique(array_merge($clientsConsole, array_map(function ($node) {
     return $node['url'];
 }, array_filter($project->getAttribute('platforms', []), function ($node) {
     if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
@@ -49,7 +49,7 @@ $clients = array_merge($clientsConsole, array_map(function ($node) {
     }
 
     return false;
-})));
+}))));
 
 $utopia->init(function () use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
     $route = $utopia->match($request);
@@ -82,8 +82,9 @@ $utopia->init(function () use ($utopia, $request, $response, $register, &$user, 
      *  Adding appwrite api domains to allow XDOMAIN communication
      */
     $hostValidator = new Host($clients);
-
-    if (!$hostValidator->isValid($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')))
+    $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
+    
+    if (!$hostValidator->isValid($origin)
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && empty($request->getHeader('X-Appwrite-Key', ''))) {
         throw new Exception('Access from this client host is forbidden. '.$hostValidator->getDescription(), 403);
