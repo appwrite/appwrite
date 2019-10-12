@@ -1,0 +1,1 @@
+Create a new file. The user who creates the file will automatically be assigned to read and write access unless he has passed custom values for read and write arguments.

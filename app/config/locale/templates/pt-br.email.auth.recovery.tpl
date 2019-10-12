@@ -15,7 +15,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Se você não solicitou a redefinição de senha, por favor ignore esta mensagem.
+    Caso você não solicitou a redefinição de senha, por favor ignore esta mensagem.
     <br />
     <br />
     Atenciosamente,

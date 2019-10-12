@@ -1,0 +1,1 @@
+The users' service allows you to manage your users in admin mode (AKA server-side integration). Use this service to search, block, and view your Users info, current sessions, and latest activities. You can also use the Users service to edit your users' preferences and personal info.

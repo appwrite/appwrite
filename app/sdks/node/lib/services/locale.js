@@ -76,9 +76,9 @@ class Locale extends Service {
     /**
      * List of currencies
      *
-     * List of all currencies, including currency symbol, name, plural, and
-     * decimal digits for all major and minor currencies. You can use the locale
-     * header to get the data in supported language.
+     * List of all currencies, including currency symol, name, plural, and decimal
+     * digits for all major and minor currencies. You can use the locale header to
+     * get the data in supported language.
      *
      * @throws Exception
      * @return {}

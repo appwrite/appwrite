@@ -24,7 +24,7 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['af', 'ar', 'bn', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'id', 'it', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
+const APP_LOCALES = ['af', 'ar', 'bn', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'hy', 'id', 'it', 'ja', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
 const APP_PAGING_LIMIT = 15;
 const APP_VERSION_STABLE = '0.2.0';
 
@@ -128,7 +128,6 @@ $locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', 
 
 Locale::$exceptions = false;
 
-
 Locale::setLanguage('af', include __DIR__.'/config/locale/af.php');
 Locale::setLanguage('ar', include __DIR__.'/config/locale/ar.php');
 Locale::setLanguage('bn', include __DIR__.'/config/locale/bn.php');
@@ -143,8 +142,10 @@ Locale::setLanguage('gr', include __DIR__.'/config/locale/gr.php');
 Locale::setLanguage('he', include __DIR__.'/config/locale/he.php');
 Locale::setLanguage('hi', include __DIR__.'/config/locale/hi.php');
 Locale::setLanguage('hu', include __DIR__.'/config/locale/hu.php');
+Locale::setLanguage('hy', include __DIR__.'/config/locale/hy.php');
 Locale::setLanguage('id', include __DIR__.'/config/locale/id.php');
 Locale::setLanguage('it', include __DIR__.'/config/locale/it.php');
+Locale::setLanguage('jv', include __DIR__.'/config/locale/ja.php');
 Locale::setLanguage('jv', include __DIR__.'/config/locale/jv.php');
 Locale::setLanguage('lt', include __DIR__.'/config/locale/lt.php');
 Locale::setLanguage('nl', include __DIR__.'/config/locale/nl.php');
@@ -163,6 +164,8 @@ Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
 Locale::setLanguage('vi', include __DIR__.'/config/locale/vi.php');
 Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/zh-cn.php');
 Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/zh-tw.php');
+
+Locale::setDefault('en');
 
 if (in_array($locale, APP_LOCALES)) {
     Locale::setDefault($locale);

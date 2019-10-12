@@ -11,7 +11,7 @@ $utopia->get('/v1/locale')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getLocale')
-    ->label('sdk.description', 'Get the current user location based on IP. Returns an object with user country code, country name, continent name, continent code, ip address and suggested currency. You can use the locale header to get the data in supported language.')
+    ->label('sdk.description', '/docs/references/locale/get-locale.md')
     ->action(
         function () use ($response, $request, $utopia) {
             $eu = include __DIR__.'/../config/eu.php';
@@ -68,7 +68,7 @@ $utopia->get('/v1/locale/countries')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountries')
-    ->label('sdk.description', 'List of all countries. You can use the locale header to get the data in supported language.')
+    ->label('sdk.description', '/docs/references/locale/get-countries.md')
     ->action(
         function () use ($response, $request) {
             $list = Locale::getText('countries'); /* @var $list array */
@@ -84,7 +84,7 @@ $utopia->get('/v1/locale/countries/eu')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountriesEU')
-    ->label('sdk.description', 'List of all countries that are currently members of the EU. You can use the locale header to get the data in supported language. UK brexit date is currently set to 2019-10-31 and will be updated if and when needed.')
+    ->label('sdk.description', '/docs/references/locale/get-countries-eu.md')
     ->action(
         function () use ($response) {
             $countries = Locale::getText('countries'); /* @var $countries array */
@@ -108,7 +108,7 @@ $utopia->get('/v1/locale/countries/phones')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCountriesPhones')
-    ->label('sdk.description', 'List of all countries phone codes. You can use the locale header to get the data in supported language.')
+    ->label('sdk.description', '/docs/references/locale/get-countries-phones.md')
     ->action(
         function () use ($response) {
             $list = include __DIR__.'/../config/phones.php'; /* @var $list array */
@@ -132,7 +132,7 @@ $utopia->get('/v1/locale/currencies')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCurrencies')
-    ->label('sdk.description', 'List of all currencies, including currency symbol, name, plural, and decimal digits for all major and minor currencies. You can use the locale header to get the data in supported language.')
+    ->label('sdk.description', '/docs/references/locale/get-currencies.md')
     ->action(
         function () use ($response) {
             $currencies = include __DIR__.'/../config/currencies.php';

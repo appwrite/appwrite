@@ -101,6 +101,26 @@ class Users extends Service {
     }
 
     /**
+     * Update Account Prefs
+     *
+     * Update user preferences by its unique ID. You can pass only the specific
+     * settings you wish to update.
+     *
+     * @param string userId
+     * @param string prefs
+     * @throws Exception
+     * @return {}
+     */
+    async updateUserPrefs(userId, prefs) {
+        let path = '/users/{userId}/prefs'.replace(new RegExp('{userId}', 'g'), userId);
+        
+        return await this.client.call('patch', path, {'content-type': 'application/json'},
+            {
+                'prefs': prefs
+            });
+    }
+
+    /**
      * Get User Sessions
      *
      * Get user sessions list by its unique ID.
@@ -144,7 +164,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async deleteUsersSession(userId, sessionId) {
+    async deleteUserSession(userId, sessionId) {
         let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('delete', path, {'content-type': 'application/json'},

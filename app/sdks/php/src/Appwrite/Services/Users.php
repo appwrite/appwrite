@@ -117,6 +117,28 @@ class Users extends Service
     }
 
     /**
+     * Update Account Prefs
+     *
+     * Update user preferences by its unique ID. You can pass only the specific
+     * settings you wish to update.
+     *
+     * @param string $userId
+     * @param string $prefs
+     * @throws Exception
+     * @return array
+     */
+    public function updateUserPrefs($userId, $prefs)
+    {
+        $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/prefs');
+        $params = [];
+
+        $params['prefs'] = $prefs;
+
+        return $this->client->call(Client::METHOD_PATCH, $path, [
+        ], $params);
+    }
+
+    /**
      * Get User Sessions
      *
      * Get user sessions list by its unique ID.
@@ -164,7 +186,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function deleteUsersSession($userId, $sessionId)
+    public function deleteUserSession($userId, $sessionId)
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions/:session');
         $params = [];
