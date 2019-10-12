@@ -24,7 +24,7 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['af', 'ar', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'id', 'it', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
+const APP_LOCALES = ['af', 'ar', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'id', 'it', 'ja', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
 const APP_PAGING_LIMIT = 15;
 const APP_VERSION_STABLE = '0.2.0';
 
@@ -143,6 +143,7 @@ Locale::setLanguage('hi', include __DIR__.'/config/locale/hi.php');
 Locale::setLanguage('hu', include __DIR__.'/config/locale/hu.php');
 Locale::setLanguage('id', include __DIR__.'/config/locale/id.php');
 Locale::setLanguage('it', include __DIR__.'/config/locale/it.php');
+Locale::setLanguage('jv', include __DIR__.'/config/locale/ja.php');
 Locale::setLanguage('jv', include __DIR__.'/config/locale/jv.php');
 Locale::setLanguage('lt', include __DIR__.'/config/locale/lt.php');
 Locale::setLanguage('nl', include __DIR__.'/config/locale/nl.php');
