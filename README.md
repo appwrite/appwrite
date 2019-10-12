@@ -66,7 +66,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Database**](https://appwrite.io/docs/database) - Manage database collections and document. Read, create, update and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
 * [**Storage**](https://appwrite.io/docs/storage) - Manage storage files. Read, create, delete and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
 * [**Locale**](https://appwrite.io/docs/locale) - Track user's location, and manage your app locale-based data.
-* [**Avatars**](https://appwrite.io/docs/avatars) - Manage your user's avatars, country's flags, browser icons, credit card symbols and generate QR codes.
+* [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols and generate QR codes.
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io).
 
