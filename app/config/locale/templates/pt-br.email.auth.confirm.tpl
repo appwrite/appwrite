@@ -15,7 +15,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Se a confirmação de email não foi solicitada por você, ignore esta mensagem.  
+    Caso a confirmação de email não foi solicitada por você, ignore esta mensagem.  
     <br />
     <br />
     Atenciosamente,

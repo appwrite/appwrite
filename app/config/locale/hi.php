@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'settings.inspire' => '"यह जान लेना की क्या अनदेखा किया जा सकता है, ही बुद्धिमता का प्रतीक है |"', // This is the line printed in the homepage and console 'view-source'
+    'settings.inspire' => '"बुद्धिमान होने की कला यह जानने की कला है कि क्या अनदेखा करना चाहिए |"', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'hi',
     'settings.direction' => 'ltr',
 

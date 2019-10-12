@@ -6,6 +6,7 @@ services:
     restart: unless-stopped
     volumes:
     - ./app:/usr/share/nginx/html/app
+    - ./docs:/usr/share/nginx/html/docs
     - ./public:/usr/share/nginx/html/public
     - ./src:/usr/share/nginx/html/src
     - ./vendor:/usr/share/nginx/html/vendor

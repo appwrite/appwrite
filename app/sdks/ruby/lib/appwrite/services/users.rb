@@ -61,6 +61,18 @@ module Appwrite
             }, params);
         end
 
+        def update_user_prefs(user_id:, prefs:)
+            path = '/users/{userId}/prefs'
+                .gsub('{user_id}', user_id)
+
+            params = {
+                'prefs': prefs
+            }
+
+            return @client.call('patch', path, {
+            }, params);
+        end
+
         def get_user_sessions(user_id:)
             path = '/users/{userId}/sessions'
                 .gsub('{user_id}', user_id)
@@ -83,7 +95,7 @@ module Appwrite
             }, params);
         end
 
-        def delete_users_session(user_id:, session_id:)
+        def delete_user_session(user_id:, session_id:)
             path = '/users/{userId}/sessions/:session'
                 .gsub('{user_id}', user_id)
 

@@ -1,7 +1,7 @@
 # Appwrite SDK for PHP
 
 ![License](https://img.shields.io/github/license/appwrite/sdk-for-php.svg?v=1)
-![Version](https://img.shields.io/badge/api%20version-latest-blue.svg?v=1)
+![Version](https://img.shields.io/badge/api%20version-0.2.0-blue.svg?v=1)
 
 **This SDK is compatible with Appwrite server version 0.2.0. For older versions, please check previous releases.**
 
@@ -13,7 +13,7 @@ Appwrite backend as a service cuts up to 70% of the time and costs required for 
 
 ## Installation
 
-To install via [Composer](https://getcomposer.org/):
+To install via [Composer](http://getcomposer.org/):
 
 ```bash
 composer require appwrite/appwrite

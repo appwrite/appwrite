@@ -1,6 +1,6 @@
-# Version 0.3.0 (PRE-RELEASE)
+# Version 0.3.0 (PRE-RELEASE) - PLANNED
 
-## Planned Issues
+## Features
 
 * Added 7 new locales for locale service and email templates (af, ar, cz, hu, lt, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
 * New users service routes to allow updates pref and name update
@@ -10,6 +10,11 @@
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
 * New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
+* Added support for ES6 require statements in JS SDK
+
+## Breaking Changs
+
+* users/deleteUsersSession method name changed to users/deleteUserSession in all SDKs for better consistency
 
 # Version 0.2.0 (PRE-RELEASE)
 
