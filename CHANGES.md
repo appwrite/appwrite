@@ -11,7 +11,10 @@
 * Allow electron apps to not pass origin header
 * New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
 * Added support for ES6 require statements in JS SDK
+
+## Bugs
 * Fix for typos in PT-BR translations
+* Fix for UI crash when project user was missing a name
 
 ## Breaking Changs
 
