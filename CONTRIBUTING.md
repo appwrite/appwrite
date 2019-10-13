@@ -124,3 +124,11 @@ Before running the command make sure you have proper write permissions to Appwri
 From time to time our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
 * [Adding Support for a New OAuth Provider](./docs/tutorials/add-oauth-provider.md)
+
+## API Keys
+
+Using your API Keys you can access Appwrite services using the SDK of your choice. To create a new API key go to your API keys tab in your project setting using your Appwrite console and click the 'Add API Key' button.
+
+When adding a new API Key, you can choose which permission scope to grant your application. It is a best practice to grant only the permissions you need in order to meed your project goals.
+
+If you need to replace your API Key, just create a new key, update your app credentials and once ready, delete your old key.
