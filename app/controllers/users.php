@@ -327,7 +327,7 @@ $utopia->post('/v1/users')
     );
 
 $utopia->patch('/v1/users/:userId/status')
-    ->desc('Update user status')
+    ->desc('Update User Status')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserStatus')
@@ -356,7 +356,7 @@ $utopia->patch('/v1/users/:userId/status')
     );
 
 $utopia->patch('/v1/users/:userId/prefs')
-    ->desc('Update Account Prefs')
+    ->desc('Update User Prefs')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserPrefs')
@@ -419,7 +419,7 @@ $utopia->delete('/v1/users/:userId/sessions')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteUserSessions')
-    ->label('sdk.description', 'Delete all user sessions by its unique ID.')
+    ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
     ->label('abuse-limit', 100)
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(

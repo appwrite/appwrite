@@ -45,16 +45,18 @@ $cli
                 'gitRepoName' => 'sdk-for-php',
                 'gitUserName' => 'appwrite',
                 'warning' => $warning,
+                'readme' => false,
                 'platform' => 'server',
             ],
             'js' => [
-                'version' => '1.0.22',
+                'version' => '1.0.23',
                 'result' => __DIR__.'/../sdks/js/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
                 'gitRepoName' => 'sdk-for-js',
                 'gitUserName' => 'appwrite',
                 'warning' => $warning,
+                'readme' => realpath(__DIR__ . '/../../docs/sdks/js.md'),
                 'platform' => 'client',
             ],
             'node' => [
@@ -65,6 +67,7 @@ $cli
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',
                 'warning' => $warning,
+                'readme' => false,
                 'platform' => 'server',
             ],
             'python' => [
@@ -75,6 +78,7 @@ $cli
                 'gitRepoName' => 'sdk-for-python',
                 'gitUserName' => 'appwrite',
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'readme' => false,
                 'platform' => 'server',
             ],
             'ruby' => [
@@ -85,6 +89,7 @@ $cli
                 'gitRepoName' => 'sdk-for-ruby',
                 'gitUserName' => 'appwrite',
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'readme' => false,
                 'platform' => 'server',
             ],
             'dart' => [
@@ -95,6 +100,7 @@ $cli
                 'gitRepoName' => 'sdk-for-dart',
                 'gitUserName' => 'appwrite',
                 'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'readme' => false,
                 'platform' => 'client',
             ],
         ];
@@ -176,8 +182,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 ->setShareURL('http://appwrite.io')
                 ->setShareTags('JS,javascript,reactjs,angular,ios,android')
                 ->setShareVia('appwrite_io')
-                //->setWarning('**WORK IN PROGRESS - NOT READY FOR USAGE**')
                 ->setWarning($client['warning'])
+                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '')
             ;
 
             $target = __DIR__.'/../sdks/git/'.$name;

@@ -30,7 +30,7 @@ Appwrite uses a package manager for managing code dependencies for both backend 
 
 Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
 
-Appwrite uses PHPs Composer for managing dependencies on the server-side and JS NPM for managing dependencies on the frontend side.
+Appwrite uses PHP's Composer for managing dependencies on the server-side and JS NPM for managing dependencies on the frontend side.
 
 ## Coding Standards
 

@@ -1,7 +1,7 @@
 # Appwrite SDK for NodeJS
 
 ![License](https://img.shields.io/github/license/appwrite/sdk-for-node.svg?v=1)
-![Version](https://img.shields.io/badge/api%20version-latest-blue.svg?v=1)
+![Version](https://img.shields.io/badge/api%20version-0.2.0-blue.svg?v=1)
 
 **This SDK is compatible with Appwrite server version 0.2.0. For older versions, please check previous releases.**
 

@@ -57,7 +57,8 @@
 
         redirect: function(url) {
           return function(router) {
-            router.change(url || "/");
+            //router.change(url || "/");
+            window.location = url || "/";
           };
         },
 

@@ -197,8 +197,12 @@ $utopia->get('/console/storage')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout) {
+    ->action(function () use ($request, $layout) {
         $page = new View(__DIR__.'/../views/console/storage/index.phtml');
+
+        $page
+            ->setParam('home', $request->getServer('_APP_HOME', ''))
+        ;
 
         $layout
             ->setParam('title', APP_NAME.' - Storage')

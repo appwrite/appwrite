@@ -310,8 +310,8 @@ $utopia->post('/v1/auth/login')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User account email address')
     ->param('password', '', function () { return new Password(); }, 'User account password')
-    ->param('success', null, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
-    ->param('failure', null, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
+    ->param('success', null, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.', true)
+    ->param('failure', null, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.', true)
     ->action(
         function ($email, $password, $success, $failure) use ($response, $request, $projectDB, $audit, $webhook) {
             $profile = $projectDB->getCollection([ // Get user by email address
@@ -597,6 +597,7 @@ $utopia->get('/v1/auth/oauth/:provider')
     ->label('sdk.namespace', 'auth')
     ->label('sdk.method', 'oauth')
     ->label('sdk.location', true)
+    ->label('sdk.cookies', true)
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider')

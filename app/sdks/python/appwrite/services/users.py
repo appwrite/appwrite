@@ -58,6 +58,17 @@ class Users(Service):
         return self.client.call('get', path, {
         }, params)
 
+    def update_user_prefs(self, user_id, prefs):
+        """Update Account Prefs"""
+
+        params = {}
+        path = '/users/{userId}/prefs'
+        path.replace('{userId}', user_id)                
+        params['prefs'] = prefs
+
+        return self.client.call('patch', path, {
+        }, params)
+
     def get_user_sessions(self, user_id):
         """Get User Sessions"""
 
@@ -78,7 +89,7 @@ class Users(Service):
         return self.client.call('delete', path, {
         }, params)
 
-    def delete_users_session(self, user_id, session_id):
+    def delete_user_session(self, user_id, session_id):
         """Delete User Session"""
 
         params = {}

@@ -215,6 +215,9 @@ window.ls.filter
     let size = element.dataset["size"] || 80;
     let email = $value.email || $value || "";
     let name = $value.name || $value || "";
+    
+    name = (typeof stringValue !== 'string') ? '' : name;
+
     let theme = name
       .split("")
       .map(char => char.charCodeAt(0))

@@ -41,7 +41,7 @@ $clientsConsole = array_map(function ($node) {
     return false;
 }));
 
-$clients = array_merge($clientsConsole, array_map(function ($node) {
+$clients = array_unique(array_merge($clientsConsole, array_map(function ($node) {
     return $node['url'];
 }, array_filter($project->getAttribute('platforms', []), function ($node) {
     if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
@@ -49,7 +49,7 @@ $clients = array_merge($clientsConsole, array_map(function ($node) {
     }
 
     return false;
-})));
+}))));
 
 $utopia->init(function () use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
     $route = $utopia->match($request);
@@ -72,7 +72,7 @@ $utopia->init(function () use ($utopia, $request, $response, $register, &$user, 
         //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
     ;
@@ -82,8 +82,9 @@ $utopia->init(function () use ($utopia, $request, $response, $register, &$user, 
      *  Adding appwrite api domains to allow XDOMAIN communication
      */
     $hostValidator = new Host($clients);
-
-    if (!$hostValidator->isValid($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')))
+    $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
+    
+    if (!$hostValidator->isValid($origin)
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && empty($request->getHeader('X-Appwrite-Key', ''))) {
         throw new Exception('Access from this client host is forbidden. '.$hostValidator->getDescription(), 403);
@@ -251,7 +252,7 @@ $utopia->options(function () use ($request, $response, $domain, $project) {
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-SDK-Version')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
         ->send();
@@ -490,7 +491,7 @@ $utopia->get('/v1/open-api-2.json')
                         'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                     ],
                 ],
-                'host' => $request->getServer('_APP_HOME', $domain),
+                'host' => parse_url($request->getServer('_APP_HOME', $domain), PHP_URL_HOST),
                 'basePath' => '/v1',
                 'schemes' => ['https'],
                 'consumes' => ['application/json', 'multipart/form-data'],
@@ -499,13 +500,13 @@ $utopia->get('/v1/open-api-2.json')
                     'Project' => [
                         'type' => 'apiKey',
                         'name' => 'X-Appwrite-Project',
-                        'description' => 'Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.',
+                        'description' => 'Your Appwrite project ID',
                         'in' => 'header',
                     ],
                     'Key' => [
                         'type' => 'apiKey',
                         'name' => 'X-Appwrite-Key',
-                        'description' => 'Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.',
+                        'description' => 'Your Appwrite project secret key',
                         'in' => 'header',
                     ],
                     'Locale' => [
@@ -590,7 +591,7 @@ $utopia->get('/v1/open-api-2.json')
                         'operationId' => $route->getLabel('sdk.method', uniqid()),
                         'consumes' => [],
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
-                        'description' => $route->getLabel('sdk.description', ''),
+                        'description' => file_get_contents(realpath(__DIR__ . '/..' . $route->getLabel('sdk.description', ''))),
                         'responses' => [
                             200 => [
                                 'description' => 'An paged array of pets',
@@ -607,6 +608,9 @@ $utopia->get('/v1/open-api-2.json')
                             'cookies' => $route->getLabel('sdk.cookies', false),
                             'location' => $route->getLabel('sdk.location', false),
                             'demo' => 'docs/examples/'.fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.fromCamelCaseToDash($temp['operationId']).'.md',
+                            'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
+                            'rate-limit' => $route->getLabel('abuse-limit', 0),
+                            'rate-time' => $route->getLabel('abuse-time', 3600),
                         ];
                     }
 
@@ -680,7 +684,7 @@ $utopia->get('/v1/open-api-2.json')
                             case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
                                 $node['type'] = 'integer';
                                 $node['format'] = 'int32';
-                                $node['x-example'] = rand($validator->getMin(), $validator->getMax());
+                                $node['x-example'] = $validator->getMin();
                                 break;
                             case 'Utopia\Validator\Numeric':
                                 $node['type'] = 'integer';
