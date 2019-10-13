@@ -15,7 +15,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    As jy  nie gevra het om you wagwoord te verander nie, kan jy die boodskap ignoreer.
+    As jy nie gevra het om you wagwoord te verander nie, kan jy hierdie boodskap ignoreer.
     <br />
     <br />
     Baie dankie,
