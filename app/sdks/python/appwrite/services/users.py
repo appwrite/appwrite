@@ -59,7 +59,7 @@ class Users(Service):
         }, params)
 
     def update_user_prefs(self, user_id, prefs):
-        """Update Account Prefs"""
+        """Update User Prefs"""
 
         params = {}
         path = '/users/{userId}/prefs'
@@ -101,7 +101,7 @@ class Users(Service):
         }, params)
 
     def update_user_status(self, user_id, status):
-        """Update user status"""
+        """Update User Status"""
 
         params = {}
         path = '/users/{userId}/status'

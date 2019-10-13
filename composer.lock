@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "ac310ede83c8520c038fdab6e646322eb634d9e3"
+                "reference": "b826507d4499bc76a72fc58885a0a5dfcdf7e79a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/ac310ede83c8520c038fdab6e646322eb634d9e3",
-                "reference": "ac310ede83c8520c038fdab6e646322eb634d9e3",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/b826507d4499bc76a72fc58885a0a5dfcdf7e79a",
+                "reference": "b826507d4499bc76a72fc58885a0a5dfcdf7e79a",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-10-09T10:26:29+00:00"
+            "time": "2019-10-13T11:47:56+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "45d82c2c53c38926a45c5e153aaa4794860954a0"
+                "reference": "91ee951cea9fdd916dd4f95b83a252482a0b61b4"
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-10-09 14:12:31"
+            "time": "2019-10-12 17:13:36"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1892,12 +1892,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phar-io/manifest.git",
-                "reference": "8c8bd1bb1a22f311b1b4886662b989d0d02aab77"
+                "reference": "6008a32fa23816a6ac71889c80da7d58c056c2bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phar-io/manifest/zipball/8c8bd1bb1a22f311b1b4886662b989d0d02aab77",
-                "reference": "8c8bd1bb1a22f311b1b4886662b989d0d02aab77",
+                "url": "https://api.github.com/repos/phar-io/manifest/zipball/6008a32fa23816a6ac71889c80da7d58c056c2bb",
+                "reference": "6008a32fa23816a6ac71889c80da7d58c056c2bb",
                 "shasum": ""
             },
             "require": {
@@ -1943,7 +1943,7 @@
                 }
             ],
             "description": "Component for reading phar.io manifest information from a PHP Archive (PHAR)",
-            "time": "2019-07-09T12:18:04+00:00"
+            "time": "2019-10-11T06:20:36+00:00"
         },
         {
             "name": "phar-io/version",

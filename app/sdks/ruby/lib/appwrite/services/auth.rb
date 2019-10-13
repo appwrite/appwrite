@@ -1,7 +1,7 @@
 module Appwrite
     class Auth < Service
 
-        def login(email:, password:, success:, failure:)
+        def login(email:, password:, success: '', failure: '')
             path = '/auth/login'
 
             params = {

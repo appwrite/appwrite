@@ -3,7 +3,7 @@ from ..service import Service
 
 class Auth(Service):
 
-    def login(self, email, password, success, failure):
+    def login(self, email, password, success='', failure=''):
         """Login User"""
 
         params = {}

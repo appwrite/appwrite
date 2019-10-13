@@ -16,9 +16,9 @@ class Auth extends Service
      * redirect URL\'s back to your app when login is completed. 
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      * 
      * When accessing this route using Javascript from the browser, success and
      * failure parameter URLs are required. Appwrite server will respond with a
@@ -33,7 +33,7 @@ class Auth extends Service
      * @throws Exception
      * @return array
      */
-    public function login($email, $password, $success, $failure)
+    public function login($email, $password, $success = '', $failure = '')
     {
         $path   = str_replace([], [], '/auth/login');
         $params = [];
@@ -51,7 +51,7 @@ class Auth extends Service
      * Logout Current Session
      *
      * Use this endpoint to log out the currently logged in user from his account.
-     * When succeed this endpoint will delete the user session and remove the
+     * When successful this endpoint will delete the user session and remove the
      * session secret cookie from the user client.
      *
      * @throws Exception
@@ -145,9 +145,9 @@ class Auth extends Service
      * /auth/recovery endpoint.
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      *
      * @param string $userId
      * @param string $token
@@ -174,7 +174,7 @@ class Auth extends Service
      * Register User
      *
      * Use this endpoint to allow a new user to register an account in your
-     * project. Use the success and failure URL's to redirect users back to your
+     * project. Use the success and failure URLs to redirect users back to your
      * application after signup completes.
      * 
      * If registration completes successfully user will be sent with a
@@ -184,9 +184,9 @@ class Auth extends Service
      * /auth/confirm endpoint to complete the account confirmation.
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      * 
      * When accessing this route using Javascript from the browser, success and
      * failure parameter URLs are required. Appwrite server will respond with a
@@ -248,13 +248,13 @@ class Auth extends Service
      * Resend Confirmation
      *
      * This endpoint allows the user to request your app to resend him his email
-     * confirmation message. The redirect arguments acts the same way as in
+     * confirmation message. The redirect arguments act the same way as in
      * /auth/register endpoint.
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      *
      * @param string $confirm
      * @throws Exception

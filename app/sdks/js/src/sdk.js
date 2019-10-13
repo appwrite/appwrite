@@ -139,7 +139,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.23');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.24');
             addGlobalHeader('content-type', '');
 
             /**
@@ -524,9 +524,9 @@
              * redirect URL\'s back to your app when login is completed. 
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              * 
              * When accessing this route using Javascript from the browser, success and
              * failure parameter URLs are required. Appwrite server will respond with a
@@ -541,21 +541,13 @@
              * @throws {Error}
              * @return {null}             
              */
-            login: function(email, password, success, failure) {
+            login: function(email, password, success = '', failure = '') {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
                 
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
-                }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/auth/login';
@@ -587,7 +579,7 @@
              * Logout Current Session
              *
              * Use this endpoint to log out the currently logged in user from his account.
-             * When succeed this endpoint will delete the user session and remove the
+             * When successful this endpoint will delete the user session and remove the
              * session secret cookie from the user client.
              *
              * @throws {Error}
@@ -634,7 +626,7 @@
              * @param {string} success
              * @param {string} failure
              * @throws {Error}
-             * @return {Promise}             
+             * @return {null}             
              */
             oauth: function(provider, success = '', failure = '') {
                 if(provider === undefined) {
@@ -653,8 +645,9 @@
                     payload['failure'] = failure;
                 }
 
-                return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                payload['project'] = config.project;
+
+                return iframe('get', path, payload);
             },
 
             /**
@@ -706,9 +699,9 @@
              * /auth/recovery endpoint.
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              *
              * @param {string} userId
              * @param {string} token
@@ -762,7 +755,7 @@
              * Register User
              *
              * Use this endpoint to allow a new user to register an account in your
-             * project. Use the success and failure URL's to redirect users back to your
+             * project. Use the success and failure URLs to redirect users back to your
              * application after signup completes.
              * 
              * If registration completes successfully user will be sent with a
@@ -772,9 +765,9 @@
              * /auth/confirm endpoint to complete the account confirmation.
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              * 
              * When accessing this route using Javascript from the browser, success and
              * failure parameter URLs are required. Appwrite server will respond with a
@@ -879,13 +872,13 @@
              * Resend Confirmation
              *
              * This endpoint allows the user to request your app to resend him his email
-             * confirmation message. The redirect arguments acts the same way as in
+             * confirmation message. The redirect arguments act the same way as in
              * /auth/register endpoint.
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              *
              * @param {string} confirm
              * @throws {Error}
@@ -914,8 +907,8 @@
             /**
              * Get Browser Icon
              *
-             * You can use this endpoint to show different browser icons to your users,
-             * The code argument receives the browser code as appear in your user
+             * You can use this endpoint to show different browser icons to your users.
+             * The code argument receives the browser code as it appears in your user
              * /account/sessions endpoint. Use width, height and quality arguments to
              * change the output settings.
              *
@@ -954,7 +947,7 @@
             /**
              * Get Credit Card Icon
              *
-             * Need to display your users with your billing method or there payment
+             * Need to display your users with your billing method or their payment
              * methods? The credit card endpoint will return you the icon of the credit
              * card provider you need. Use width, height and quality arguments to change
              * the output settings.
@@ -1022,7 +1015,7 @@
              * Get Country Flag
              *
              * You can use this endpoint to show different country flags icons to your
-             * users, The code argument receives the a 2 letter country code. Use width,
+             * users. The code argument receives the 2 letter country code. Use width,
              * height and quality arguments to change the output settings.
              *
              * @param {string} code
@@ -1062,7 +1055,7 @@
              *
              * Use this endpoint to fetch a remote image URL and crop it to any image size
              * you want. This endpoint is very useful if you need to crop and display
-             * remote images in your app or in cases, you want to make sure a 3rd party
+             * remote images in your app or in case you want to make sure a 3rd party
              * image is properly served using a TLS protocol.
              *
              * @param {string} url
@@ -3515,7 +3508,7 @@
             },
 
             /**
-             * Update Account Prefs
+             * Update User Prefs
              *
              * Update user preferences by its unique ID. You can pass only the specific
              * settings you wish to update.
@@ -3622,7 +3615,7 @@
             },
 
             /**
-             * Update user status
+             * Update User Status
              *
              * Update user status by its unique ID.
              *
