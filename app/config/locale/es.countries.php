@@ -145,7 +145,7 @@ return [
     'KP' => 'Corea del Norte',
     'PT' => 'Portugal',
     'PY' => 'Paraguay',
-    'QA' => 'Katar',
+    'QA' => 'Catar',
     'RO' => 'Rumania',
     'RU' => 'Rusia',
     'RW' => 'Ruanda',

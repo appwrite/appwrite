@@ -23,7 +23,7 @@ class Client {
     }
 
 
-     /// Your Appwrite project ID. You can find your project ID in your Appwrite console project settings.
+     /// Your Appwrite project ID
     Client setProject(value) {
         this.addHeader('X-Appwrite-Project', value);
 
@@ -31,7 +31,7 @@ class Client {
     }
 
 
-     /// Your Appwrite project secret key. You can can create a new API key from your Appwrite console API keys dashboard.
+     /// Your Appwrite project secret key
     Client setKey(value) {
         this.addHeader('X-Appwrite-Key', value);
 

@@ -19,7 +19,7 @@ To install via [NPM](https://www.npmjs.com/):
 npm install appwrite --save
 ```
 
-If you're using a bundler (like Browserify or webpack), you can import the Appwrite module when you need it:
+If you're using a bundler (like [Browserify](http://browserify.org/) or [webpack](https://webpack.js.org/)), you can import the Appwrite module when you need it:
 
 ```js
 import * as Appwrite from "appwrite";
@@ -31,6 +31,22 @@ To install with a CDN (content delivery network) add the following scripts to th
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/appwrite@1.0.23"></script>
+```
+
+## Getting Started
+
+Initialise the Appwrite SDK in your code, and setup your API credentials:
+
+```js
+
+// Init your JS SDK
+var appwrite = new Appwrite();
+
+appwrite
+    .setEndpoint('http://localhost/v1') // Set only when using self-hosted solution
+    .setProject('455x34dfkj') // Your Appwrite Project UID
+;
+
 ```
 
 ## License
