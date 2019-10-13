@@ -5,13 +5,15 @@ namespace Auth\OAuth;
 use Auth\OAuth;
 
 // Reference Material 
-// https://api.stackexchange.com/docs/authentication
-class Stackoverflow extends OAuth
+// https://developers.google.com/oauthplayground/
+// https://developers.google.com/identity/protocols/OAuth2
+// https://developers.google.com/identity/protocols/OAuth2WebServer
+class Google extends OAuth
 {
-    // /**
-    //  * @var string
-    //  */
-    // protected $version = 'v4';
+    /**
+     * @var string
+     */
+    protected $version = 'v4';
     /**
      * @var array
      */
@@ -22,7 +24,7 @@ class Stackoverflow extends OAuth
      */
     public function getName(): string
     {
-        return 'stackoverflow';
+        return 'google';
     }
 
     /**
