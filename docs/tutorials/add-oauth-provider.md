@@ -39,7 +39,7 @@ Create a new class that extends the basic OAuth provider abstract class in this 
 
 Note that the class name should start with a capital letter as PHP FIG standards suggest.
 
-Once a new class is created, you can start to implement your new provider's login flow. The best way to do this corrrectly is to have a look at another provider's implementation and try to follow the same standards.
+Once a new class is created, you can start to implement your new provider's login flow. The best way to do this correctly is to have a look at another provider's implementation and try to follow the same standards.
 
 Please mention in your documentation what resources or API docs you used to implement the provider's OAuth protocol.
 
