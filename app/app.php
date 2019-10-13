@@ -13,6 +13,7 @@ use Utopia\Validator\Range;
 use Utopia\View;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
+use Utopia\App\Request;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Auth\Auth;
 use Database\Document;
@@ -23,6 +24,31 @@ use Utopia\Validator\WhiteList;
 /*
  * Configuration files
  */
+se Utopia\Controller;
+
+class DefaultController extends Controller {
+
+    public function init()
+    {
+
+        $this->getResponse()
+            ->addHeader('X-UA-Compatible', 'IE=Edge');
+
+        $this->getLayout()
+            ->setPath('../app/views/layout.phtml')
+            ->addStyle('/styles/normalize.css')
+            ->setTitle('Utopia Skeleton Application')
+        ;
+    }
+
+    public function indexAction()
+    {
+        $this->getView()
+            ->setParam('param1', 'value1')
+            ->setParam('param2', 'value2')
+        ;
+    }
+}
 $roles = include __DIR__.'/config/roles.php'; // User roles and scopes
 $sdks = include __DIR__.'/config/sdks.php'; // List of SDK clients
 $services = include __DIR__.'/config/services.php'; // List of SDK clients
