@@ -10,10 +10,10 @@ use Auth\OAuth;
 
 class Stackoverflow extends OAuth
 {
-    // /**
-    //  * @var string
-    //  */
-    // protected $version = 'v4';
+    /**
+     * @var string
+     */
+    protected $version = 'v2.2';
     /**
      * @var array
      */
@@ -35,7 +35,7 @@ class Stackoverflow extends OAuth
         return 'https://stackoverflow.com/oauth?'.
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
-            '&scope=https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile'.
+            '&scope=private_info'.
             '&state='.urlencode(json_encode($this->state));
     }
 
