@@ -5,15 +5,15 @@ namespace Auth\OAuth;
 use Auth\OAuth;
 
 // Reference Material 
-// https://developers.google.com/oauthplayground/
-// https://developers.google.com/identity/protocols/OAuth2
-// https://developers.google.com/identity/protocols/OAuth2WebServer
-class Google extends OAuth
+// https://api.stackexchange.com/docs/me
+// https://api.stackexchange.com/docs/authentication
+
+class Stackoverflow extends OAuth
 {
-    /**
-     * @var string
-     */
-    protected $version = 'v4';
+    // /**
+    //  * @var string
+    //  */
+    // protected $version = 'v4';
     /**
      * @var array
      */
@@ -24,7 +24,7 @@ class Google extends OAuth
      */
     public function getName(): string
     {
-        return 'google';
+        return 'stackoverflow';
     }
 
     /**
@@ -32,12 +32,11 @@ class Google extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://accounts.google.com/o/oauth2/v2/auth?'.
+        return 'https://stackoverflow.com/oauth?'.
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
             '&scope=https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile'.
-            '&state='.urlencode(json_encode($this->state)).
-            '&response_type=code';
+            '&state='.urlencode(json_encode($this->state));
     }
 
     /**
