@@ -89,7 +89,7 @@ For us to find the right balance, please open an issue explaining your ideas bef
 
 This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
 
-This is also important for the Appwrite lead developers to be able to give technical input and different emphasises regarding the feature design and architecture.
+This is also important for the Appwrite lead developers to be able to give technical input and different emphasise regarding the feature design and architecture.
 
 ## Setup
 
@@ -123,4 +123,4 @@ Before running the command make sure you have proper write permissions to Appwri
 
 From time to time our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
-* [Adding Support for a New OAuth Provider](./docs/tutorials/add-oauth-provider.md)
+* [Adding Support for a New OAuth Provider](./docs/tutorials/add-OAuth-provider.md)
