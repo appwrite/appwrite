@@ -75,10 +75,5 @@ return [
         'developers' => 'https://developer.twitter.com/',
         'icon' => 'icon-twitter',
         'enabled' => false,
-    ],
-    'stackoverflow' => [
-        'developers' => 'https://developer.twitter.com/',
-        'icon' => 'icon-stackoverflow',
-        'enabled' => true,
-    ],
+    ]
 ];
