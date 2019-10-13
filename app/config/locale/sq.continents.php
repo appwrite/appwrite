@@ -1,5 +1,4 @@
 <?php
-
 return [
     'AF' => 'Afrika',
     'AN' => 'Antarktik',
