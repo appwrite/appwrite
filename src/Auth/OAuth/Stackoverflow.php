@@ -39,7 +39,7 @@ class Stackoverflow extends OAuth
             '&state='.urlencode(json_encode($this->state));
     }
 
-    
+
     /**
      * @param string $code
      *
@@ -47,22 +47,20 @@ class Stackoverflow extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        var_dump($code);
-        exit();
-        
+
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
         $accessToken = $this->request(
             'POST',
-            'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.
-                'code='.urlencode($code).
-                '&client_id='.urlencode($this->appID).
-                '&client_secret='.urlencode($this->appSecret).
-                '&redirect_uri='.urlencode($this->callback).
-                '&scope='.
-                '&grant_type=authorization_code'
+            'https://stackoverflow.com/oauth/access_token/json',
+            $headers,
+            'code=' . urlencode($code) .
+            '&client_id=' . urlencode($this->appID) .
+            '&client_secret=' . urlencode($this->appSecret).
+            '&redirect_uri='.urlencode($this->callback)
         );
 
         $accessToken = json_decode($accessToken, true);
-
+        
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
         }
