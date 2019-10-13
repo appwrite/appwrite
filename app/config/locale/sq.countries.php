@@ -33,7 +33,7 @@ return [
     'CH' => 'Zvicra',
     'CL' => 'Kili',
     'CN' => 'Kinë',
-    'CI' => 'Cλεte d'Ivoire',
+    'CI' => 'Cλεte de Ivoire',
     'CM' => 'Kamerun',
     'CD' => 'Republika Demokratike e Kongos',
     'CG' => 'Republika e Kongos',
