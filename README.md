@@ -63,7 +63,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices, and security audit log.
 * [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
 * [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and user roles within a team.
-* [**Database**](https://appwrite.io/docs/database) - Manage database collections and document. Read, create, update and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
+* [**Database**](https://appwrite.io/docs/database) - Manage database collections and documents. Read, create, update and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
 * [**Storage**](https://appwrite.io/docs/storage) - Manage storage files. Read, create, delete and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
 * [**Locale**](https://appwrite.io/docs/locale) - Track user's location, and manage your app locale-based data.
 * [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols and generate QR codes.
@@ -89,7 +89,7 @@ For security issues, kindly email us [security@appwrite.io](mailto:security@appw
 
 ## Follow Us
 
-Join our growing community around the world! Follow us on [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Gitter community](https://gitter.im/appwrite/community) for more help, ideas and discussions.
+Join our growing community around the world! Follow us on [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Gitter community](https://gitter.im/appwrite/community) for more help, ideas, and discussions.
 
 ## Contributing
 
