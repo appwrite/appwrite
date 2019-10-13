@@ -39,6 +39,7 @@ class Stackoverflow extends OAuth
             '&state='.urlencode(json_encode($this->state));
     }
 
+    
     /**
      * @param string $code
      *
@@ -46,6 +47,9 @@ class Stackoverflow extends OAuth
      */
     public function getAccessToken(string $code): string
     {
+        var_dump($code);
+        exit();
+        
         $accessToken = $this->request(
             'POST',
             'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.

@@ -87,7 +87,7 @@ abstract class OAuth
      *
      * @return string
      */
-    public function parseState(string $state): string
+    public function parseState(string $state)
     {
         return json_decode($state, true);
     }
