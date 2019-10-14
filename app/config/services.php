@@ -69,4 +69,10 @@ return [
         'controller' => 'controllers/users.php',
         'sdk' => true,
     ],
+    'v1/mock' => [
+        'name' => 'Mock',
+        'description' => '',
+        'controller' => 'controllers/mock.php',
+        'sdk' => false,
+    ],
 ];
