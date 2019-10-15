@@ -16,6 +16,6 @@ return [
 
     'locale.country.unknown' => 'Tidak Diketahui',
 
-    'countries' => include 'my.countries.php',
-    'continents' => include 'my.continents.php',
+    'countries' => include 'ms.countries.php',
+    'continents' => include 'ms.continents.php',
 ];
