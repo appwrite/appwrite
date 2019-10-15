@@ -56,6 +56,7 @@ const APP_LOCALES = [
     'ru', // Russian
     'si', // Sinhala
     'sl', // Slovenian
+    'sq', // Albanian
     'sv', // Swedish
     'ta', // Tamil
     'tr', // Turkish
@@ -198,6 +199,7 @@ Locale::setLanguage('ro', include __DIR__.'/config/locale/ro.php');
 Locale::setLanguage('ru', include __DIR__ . '/config/locale/ru.php');
 Locale::setLanguage('si', include __DIR__ . '/config/locale/si.php');
 Locale::setLanguage('sl', include __DIR__ . '/config/locale/sl.php');
+Locale::setLanguage('sq', include __DIR__ . '/config/locale/sq.php');
 Locale::setLanguage('sv', include __DIR__ . '/config/locale/sv.php');
 Locale::setLanguage('ta', include __DIR__ . '/config/locale/ta.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
