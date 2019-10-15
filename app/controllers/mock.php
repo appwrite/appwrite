@@ -245,6 +245,6 @@ $utopia->shutdown(function() use ($response, $request, &$result, $utopia) {
     if(!file_put_contents($path, json_encode($tests), LOCK_EX)) {
         throw new Exception('Failed to save resutls', 500);
     }
-                
-    $response->json(['result' => 'passed']);
+
+    $response->json(['result' => $route->getMethod() . ':' . $route->getURL() . ':passed']);
 });

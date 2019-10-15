@@ -438,8 +438,9 @@ $utopia->get('/v1/open-api-2.json')
     ->label('docs', false)
     ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
+    ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
-        function ($platform, $extensions) use ($response, $request, $utopia, $domain, $services) {
+        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services) {
             function fromCamelCase($input)
             {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -457,7 +458,11 @@ $utopia->get('/v1/open-api-2.json')
             }
 
             foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
-                if (!$service['sdk']) {
+                if($tests && !$service['tests']) {
+                    continue;
+                }
+                
+                if (!$tests && !$service['sdk']) {
                     continue;
                 }
 
