@@ -8,11 +8,11 @@ return [
     // Servizio - Utenti
     'auth.emails.team' => 'Team %s',
     'auth.emails.confirm.title' => 'Conferma dell\'account',
-    'auth.emails.confirm.body' => 'en.email.auth.confirm.tpl',
+    'auth.emails.confirm.body' => 'it.email.auth.confirm.tpl',
     'auth.emails.recovery.title' => 'Recupero password',
-    'auth.emails.recovery.body' => 'en.email.auth.recovery.tpl',
+    'auth.emails.recovery.body' => 'it.email.auth.recovery.tpl',
     'auth.emails.invitation.title' => 'Invito al team %s di %s',
-    'auth.emails.invitation.body' => 'en.email.auth.invitation.tpl',
+    'auth.emails.invitation.body' => 'it.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Sconosciuto',
 
