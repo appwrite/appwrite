@@ -24,7 +24,44 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['af', 'ar', 'bn', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'hy', 'id', 'it', 'ja', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
+const APP_LOCALES = [
+    'af', // Afrikaans
+    'ar', // Arabic
+    'bn', // Bengali
+    'cat', // Catalan
+    'cz', // Czech
+    'de', // German
+    'en', // English
+    'es', // Spanish
+    'fi', // Finnish
+    'fr', // French
+    'gr', // Greek
+    'he', // Hebrew
+    'hi', // Hindi
+    'hu', // Hungarian
+    'hy', // Armenian
+    'id', // Indonesian
+    'it', // Italian
+    'ja', // Japanese
+    'jv', // Javanese
+    'lt', // Lithuanian
+    'nl', // Dutch
+    'no', // Norwegian
+    'pl', // Polish
+    'pt-br', // Portuguese - Brazil	
+    'pt-pt', // Portuguese - Portugal
+    'ro', // Romanian
+    'ru', // Russian
+    'si', // Sinhala
+    'sl', // Slovenian
+    'sv', // Swedish
+    'ta', // Tamil
+    'tr', // Turkish
+    'ua', // Ukrainian
+    'vi', // Vietnamese
+    'zh-cn', // Chinese - China
+    'zh-tw', // Chinese - Taiwan
+];
 const APP_PAGING_LIMIT = 15;
 const APP_VERSION_STABLE = '0.2.0';
 
