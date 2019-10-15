@@ -2,7 +2,7 @@
 
 ## Features
 
-* Added 17 new locales for locale service and email templates (af, ar, bn, cz, hu, hy, jv, lt, ml, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
+* Added 18 new locales for locale service and email templates (af, ar, bn, cz, hu, hy, jv, ko, lt, ml, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
 * New users service routes to allow updates pref and name update
 * 2 stage Docker build
 * New database rule validation options
