@@ -44,6 +44,7 @@ const APP_LOCALES = [
     'it', // Italian
     'ja', // Japanese
     'jv', // Javanese
+    'ko', // Korean
     'lt', // Lithuanian
     'ms', // Malay
     'nl', // Dutch
@@ -185,6 +186,7 @@ Locale::setLanguage('id', include __DIR__.'/config/locale/id.php');
 Locale::setLanguage('it', include __DIR__.'/config/locale/it.php');
 Locale::setLanguage('jv', include __DIR__.'/config/locale/ja.php');
 Locale::setLanguage('jv', include __DIR__.'/config/locale/jv.php');
+Locale::setLanguage('ko', include __DIR__.'/config/locale/ko.php');
 Locale::setLanguage('lt', include __DIR__.'/config/locale/lt.php');
 Locale::setLanguage('ms', include __DIR__.'/config/locale/ms.php');
 Locale::setLanguage('nl', include __DIR__.'/config/locale/nl.php');
