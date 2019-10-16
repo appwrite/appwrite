@@ -87,6 +87,48 @@ Below is a list of currently supported platforms and languages. If you wish to h
 
 For security issues, kindly email us [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue in GitHub.
 
+## Languages Support
+
+- Afrikaans
+- Arabic
+- Bengali
+- Catalan
+- Czech
+- German
+- English
+- Spanish
+- Finnish
+- French
+- Greek
+- Hebrew
+- Hindi
+- Hungarian
+- Armenian
+- Indonesian
+- Italian
+- Japanese
+- Javanese
+- Lithuanian
+- Dutch
+- Norwegian
+- Polish
+- Portuguese : 
+    - Brazil	 
+    - Portugal
+- Romanian
+- Russian
+- Sinhala
+- Slovenian
+- Swedish
+- Tamil
+- Turkish
+- Ukrainian
+- Vietnamese
+- Chinese : 
+    - China
+    - Taiwan
+
+
 ## Follow Us
 
 Join our growing community around the world! Follow us on [Twitter](https://twitter.com/appwrite_io), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/) or join our live [Gitter community](https://gitter.im/appwrite/community) for more help, ideas, and discussions.
