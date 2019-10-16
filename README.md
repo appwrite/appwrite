@@ -89,6 +89,8 @@ For security issues, kindly email us [security@appwrite.io](mailto:security@appw
 
 ## Languages Support
 
+Currently we support different languages to give users their native experience to enhance usability of the people.
+
 - Afrikaans
 - Arabic
 - Bengali
