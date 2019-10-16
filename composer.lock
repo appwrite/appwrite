@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "91ee951cea9fdd916dd4f95b83a252482a0b61b4"
+                "reference": "cd7d8d0333449e9ce2cdb9b4b740beef59a0d2c8"
             },
             "require": {
                 "ext-curl": "*",
@@ -103,7 +103,7 @@
                 "twig/twig": "^2.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "3.7.35"
+                "phpunit/phpunit": "^7.0"
             },
             "type": "library",
             "autoload": {
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-10-12 17:13:36"
+            "time": "2019-10-14 20:48:21"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -558,12 +558,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "a7010cc9b52ecfa00051bb26e4ae025958fe9851"
+                "reference": "bcbb52f6f8b28de44b7515519e3d2d9c640d40ab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/a7010cc9b52ecfa00051bb26e4ae025958fe9851",
-                "reference": "a7010cc9b52ecfa00051bb26e4ae025958fe9851",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/bcbb52f6f8b28de44b7515519e3d2d9c640d40ab",
+                "reference": "bcbb52f6f8b28de44b7515519e3d2d9c640d40ab",
                 "shasum": ""
             },
             "require": {
@@ -616,7 +616,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2019-08-23T22:16:30+00:00"
+            "time": "2019-10-14T09:23:25+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1440,12 +1440,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "23419a940881f50525515726eec7507792ace5e0"
+                "reference": "c59567371af16b0625e9e099a6b2d34379220e8f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/23419a940881f50525515726eec7507792ace5e0",
-                "reference": "23419a940881f50525515726eec7507792ace5e0",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c59567371af16b0625e9e099a6b2d34379220e8f",
+                "reference": "c59567371af16b0625e9e099a6b2d34379220e8f",
                 "shasum": ""
             },
             "require": {
@@ -1499,7 +1499,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-10-05T16:44:39+00:00"
+            "time": "2019-10-16T08:31:29+00:00"
         },
         {
             "name": "utopia-php/abuse",
@@ -1649,12 +1649,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "5ac8c91de53166ca7c03c82b55ed717a66362876"
+                "reference": "315b97b6558346348e2c3f56a826dcfb6c455791"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/5ac8c91de53166ca7c03c82b55ed717a66362876",
-                "reference": "5ac8c91de53166ca7c03c82b55ed717a66362876",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/315b97b6558346348e2c3f56a826dcfb6c455791",
+                "reference": "315b97b6558346348e2c3f56a826dcfb6c455791",
                 "shasum": ""
             },
             "require": {
@@ -1685,7 +1685,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2019-08-15T06:36:30+00:00"
+            "time": "2019-10-16T14:30:55+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1788,12 +1788,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/instantiator.git",
-                "reference": "7c71fc2932158d00f24f10635bf3b3b8b6ee5b68"
+                "reference": "67dbbd519b584fdfb9f8d028912eb404ab411f8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/7c71fc2932158d00f24f10635bf3b3b8b6ee5b68",
-                "reference": "7c71fc2932158d00f24f10635bf3b3b8b6ee5b68",
+                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/67dbbd519b584fdfb9f8d028912eb404ab411f8a",
+                "reference": "67dbbd519b584fdfb9f8d028912eb404ab411f8a",
                 "shasum": ""
             },
             "require": {
@@ -1836,7 +1836,7 @@
                 "constructor",
                 "instantiate"
             ],
-            "time": "2019-07-02T13:37:32+00:00"
+            "time": "2019-10-14T11:56:32+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -2458,12 +2458,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "316afa6888d2562e04aeb67ea7f2017a0eb41661"
+                "reference": "d1e83a7efedee8f54122328c5db8be1d7fa37317"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/316afa6888d2562e04aeb67ea7f2017a0eb41661",
-                "reference": "316afa6888d2562e04aeb67ea7f2017a0eb41661",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d1e83a7efedee8f54122328c5db8be1d7fa37317",
+                "reference": "d1e83a7efedee8f54122328c5db8be1d7fa37317",
                 "shasum": ""
             },
             "require": {
@@ -2534,7 +2534,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-09-14T09:08:39+00:00"
+            "time": "2019-10-15T08:25:43+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
