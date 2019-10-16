@@ -25,6 +25,18 @@ Using Appwrite you can easily manage user authentication with multiple sign-in m
 
 ![Appwrite](public/images/github.png)
 
+Table of Contents
+=================
+* [Installation](#installation)
+    * [Changing Port Number](#changing-port-number)
+* [Getting Started](#getting-started)
+    * [Services](#services)
+    * [SDKs](#sdks)
+* [Security](#security)
+* [Follow Us](#follow-us)
+* [Contributing](#contributing)
+* [Credits](#credits)
+      
 ## Installation
 
 Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm or Rancher.
