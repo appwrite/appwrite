@@ -39,7 +39,7 @@ docker-compose up -d --remove-orphans
 ```
 
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-Linux native hosts, the server might take a few minutes to start after installation completes.
 
 
 For advanced, production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs.
