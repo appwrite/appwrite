@@ -1,1 +1,634 @@
-{"psp":{"monitors":[{"id":778638622,"friendly_name":"API","customuptimeranges":[{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"}],"oneWeekRange":{"label":"success","ratio":"100.00"},"typeStr":"http","intervalMin":5,"allLogs":[{"statusStr":"up","durationStr":"1988 hrs, 21 mins.","dateTimeStr":"2018-10-05 09:00:19","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"success","timestamp":1538722819000},{"statusStr":"down","durationStr":"0 hrs, 1 mins.","dateTimeStr":"2018-12-27 05:21:50","reasonStr":"Service Unavailable","reasonTitle":"Service Unavailable","label":"danger","timestamp":1545880910000},{"statusStr":"up","durationStr":"1277 hrs, 57 mins.","dateTimeStr":"2018-12-27 05:23:49","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1545881029000},{"statusStr":"down","durationStr":"0 hrs, 3 mins.","dateTimeStr":"2019-02-18 11:21:09","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"danger","timestamp":1550481669000},{"statusStr":"up","durationStr":"573 hrs, 11 mins.","dateTimeStr":"2019-02-18 11:24:10","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1550481850000}],"status":2,"statusLabel":"success","statusNumber":2},{"id":778472755,"friendly_name":"Cache","customuptimeranges":[{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"}],"oneWeekRange":{"label":"success","ratio":"100.00"},"typeStr":"http","intervalMin":5,"allLogs":[{"statusStr":"up","durationStr":"1989 hrs, 0 mins.","dateTimeStr":"2018-10-05 08:21:57","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"success","timestamp":1538720517000},{"statusStr":"down","durationStr":"0 hrs, 0 mins.","dateTimeStr":"2018-12-27 05:22:28","reasonStr":"Service Unavailable","reasonTitle":"Service Unavailable","label":"danger","timestamp":1545880948000},{"statusStr":"up","durationStr":"1277 hrs, 57 mins.","dateTimeStr":"2018-12-27 05:23:14","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1545880994000},{"statusStr":"down","durationStr":"0 hrs, 3 mins.","dateTimeStr":"2019-02-18 11:20:21","reasonStr":"Not Found","reasonTitle":"Not Found","label":"danger","timestamp":1550481621000},{"statusStr":"up","durationStr":"573 hrs, 12 mins.","dateTimeStr":"2019-02-18 11:23:22","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1550481802000}],"status":2,"statusLabel":"success","statusNumber":2},{"id":778472750,"friendly_name":"Console","customuptimeranges":[{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"}],"oneWeekRange":{"label":"success","ratio":"100.00"},"typeStr":"http","intervalMin":5,"allLogs":[{"statusStr":"up","durationStr":"1989 hrs, 0 mins.","dateTimeStr":"2018-10-05 08:21:57","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"success","timestamp":1538720517000},{"statusStr":"down","durationStr":"0 hrs, 0 mins.","dateTimeStr":"2018-12-27 05:22:53","reasonStr":"Service Unavailable","reasonTitle":"Service Unavailable","label":"danger","timestamp":1545880973000},{"statusStr":"up","durationStr":"1851 hrs, 11 mins.","dateTimeStr":"2018-12-27 05:23:50","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1545881030000}],"status":2,"statusLabel":"success","statusNumber":2},{"id":778472751,"friendly_name":"DB","customuptimeranges":[{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"}],"oneWeekRange":{"label":"success","ratio":"100.00"},"typeStr":"http","intervalMin":5,"allLogs":[{"statusStr":"up","durationStr":"3037 hrs, 27 mins.","dateTimeStr":"2018-10-05 08:21:57","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"success","timestamp":1538720517000},{"statusStr":"down","durationStr":"0 hrs, 1 mins.","dateTimeStr":"2019-02-08 21:49:52","reasonStr":"Not Found","reasonTitle":"Not Found","label":"danger","timestamp":1549655392000},{"statusStr":"up","durationStr":"229 hrs, 31 mins.","dateTimeStr":"2019-02-08 21:51:41","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1549655501000},{"statusStr":"down","durationStr":"0 hrs, 2 mins.","dateTimeStr":"2019-02-18 11:22:55","reasonStr":"Not Found","reasonTitle":"Not Found","label":"danger","timestamp":1550481775000},{"statusStr":"up","durationStr":"573 hrs, 10 mins.","dateTimeStr":"2019-02-18 11:25:00","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1550481900000}],"status":2,"statusLabel":"success","statusNumber":2},{"id":778638621,"friendly_name":"Homepage","customuptimeranges":[{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"}],"oneWeekRange":{"label":"success","ratio":"100.00"},"typeStr":"http","intervalMin":5,"allLogs":[{"statusStr":"up","durationStr":"1988 hrs, 21 mins.","dateTimeStr":"2018-10-05 09:00:19","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"success","timestamp":1538722819000},{"statusStr":"down","durationStr":"0 hrs, 1 mins.","dateTimeStr":"2018-12-27 05:21:45","reasonStr":"Service Unavailable","reasonTitle":"Service Unavailable","label":"danger","timestamp":1545880905000},{"statusStr":"up","durationStr":"1048 hrs, 26 mins.","dateTimeStr":"2018-12-27 05:23:44","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1545881024000},{"statusStr":"down","durationStr":"0 hrs, 1 mins.","dateTimeStr":"2019-02-08 21:50:25","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"danger","timestamp":1549655425000},{"statusStr":"up","durationStr":"229 hrs, 29 mins.","dateTimeStr":"2019-02-08 21:51:29","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1549655489000},{"statusStr":"down","durationStr":"0 hrs, 3 mins.","dateTimeStr":"2019-02-18 11:20:49","reasonStr":"Not Found","reasonTitle":"Not Found","label":"danger","timestamp":1550481649000},{"statusStr":"up","durationStr":"573 hrs, 11 mins.","dateTimeStr":"2019-02-18 11:23:50","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1550481830000}],"status":2,"statusLabel":"success","statusNumber":2},{"id":778472753,"friendly_name":"Storage","customuptimeranges":[{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"},{"label":"success","ratio":"100.00"}],"oneWeekRange":{"label":"success","ratio":"100.00"},"typeStr":"http","intervalMin":5,"allLogs":[{"statusStr":"up","durationStr":"1989 hrs, 0 mins.","dateTimeStr":"2018-10-05 08:21:57","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"success","timestamp":1538720517000},{"statusStr":"down","durationStr":"0 hrs, 1 mins.","dateTimeStr":"2018-12-27 05:22:51","reasonStr":"Service Unavailable","reasonTitle":"Service Unavailable","label":"danger","timestamp":1545880971000},{"statusStr":"up","durationStr":"1048 hrs, 25 mins.","dateTimeStr":"2018-12-27 05:24:47","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1545881087000},{"statusStr":"down","durationStr":"0 hrs, 1 mins.","dateTimeStr":"2019-02-08 21:49:57","reasonStr":"Connection Timeout","reasonTitle":"Connection Timeout","label":"danger","timestamp":1549655397000},{"statusStr":"up","durationStr":"229 hrs, 28 mins.","dateTimeStr":"2019-02-08 21:50:57","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1549655457000},{"statusStr":"down","durationStr":"0 hrs, 3 mins.","dateTimeStr":"2019-02-18 11:19:44","reasonStr":"Not Found","reasonTitle":"Not Found","label":"danger","timestamp":1550481584000},{"statusStr":"up","durationStr":"573 hrs, 12 mins.","dateTimeStr":"2019-02-18 11:23:17","reasonStr":"OK","reasonTitle":"OK","label":"success","timestamp":1550481797000}],"status":2,"statusLabel":"success","statusNumber":2}],"name":"Appwrite","logo":"185037-1549778937.png","url_key":"98gvjUN96","hide_ur_links":false,"sort":1,"custom_css":"","announcements":[],"monitorCount":6,"latestDownTimeStr":"It was recorded (for the monitor DB) on 2019-02-18 11:22:55 and the downtime lasted for 0 hrs, 2 mins.","latestDownLog":{"type":1,"datetime":1550481775,"duration":125,"reason":{"code":"404","detail":"Not Found"},"mon":{"friendly_name":"DB"}},"hasActiveAnnounce":false,"activeAnnouncements":0,"firstAnnounceTitle":null,"firstAnnounceDescInline":null,"pspStats":{"ratios":{"l1":{"label":"success","ratio":"100.00"},"l7":{"label":"success","ratio":"100.00"},"l30":{"label":"success","ratio":"99.994"}},"downDurations":{"l1":0,"l7":0,"l30":14},"d":{"l1":0,"l7":0,"l30":881},"counts":{"up":6,"down":0,"paused":0}},"downCount":0,"tzdiff":120},"stat":"ok","days":["14 Mar","13 Mar","12 Mar","11 Mar","10 Mar","09 Mar","08 Mar"]}
+{
+   "psp":{
+      "monitors":[
+         {
+            "id":778638622,
+            "friendly_name":"API",
+            "customuptimeranges":[
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               }
+            ],
+            "oneWeekRange":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "typeStr":"http",
+            "intervalMin":5,
+            "allLogs":[
+               {
+                  "statusStr":"up",
+                  "durationStr":"1988 hrs, 21 mins.",
+                  "dateTimeStr":"2018-10-05 09:00:19",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"success",
+                  "timestamp":1538722819000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 1 mins.",
+                  "dateTimeStr":"2018-12-27 05:21:50",
+                  "reasonStr":"Service Unavailable",
+                  "reasonTitle":"Service Unavailable",
+                  "label":"danger",
+                  "timestamp":1545880910000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"1277 hrs, 57 mins.",
+                  "dateTimeStr":"2018-12-27 05:23:49",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1545881029000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 3 mins.",
+                  "dateTimeStr":"2019-02-18 11:21:09",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"danger",
+                  "timestamp":1550481669000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"573 hrs, 11 mins.",
+                  "dateTimeStr":"2019-02-18 11:24:10",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1550481850000
+               }
+            ],
+            "status":2,
+            "statusLabel":"success",
+            "statusNumber":2
+         },
+         {
+            "id":778472755,
+            "friendly_name":"Cache",
+            "customuptimeranges":[
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               }
+            ],
+            "oneWeekRange":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "typeStr":"http",
+            "intervalMin":5,
+            "allLogs":[
+               {
+                  "statusStr":"up",
+                  "durationStr":"1989 hrs, 0 mins.",
+                  "dateTimeStr":"2018-10-05 08:21:57",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"success",
+                  "timestamp":1538720517000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 0 mins.",
+                  "dateTimeStr":"2018-12-27 05:22:28",
+                  "reasonStr":"Service Unavailable",
+                  "reasonTitle":"Service Unavailable",
+                  "label":"danger",
+                  "timestamp":1545880948000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"1277 hrs, 57 mins.",
+                  "dateTimeStr":"2018-12-27 05:23:14",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1545880994000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 3 mins.",
+                  "dateTimeStr":"2019-02-18 11:20:21",
+                  "reasonStr":"Not Found",
+                  "reasonTitle":"Not Found",
+                  "label":"danger",
+                  "timestamp":1550481621000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"573 hrs, 12 mins.",
+                  "dateTimeStr":"2019-02-18 11:23:22",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1550481802000
+               }
+            ],
+            "status":2,
+            "statusLabel":"success",
+            "statusNumber":2
+         },
+         {
+            "id":778472750,
+            "friendly_name":"Console",
+            "customuptimeranges":[
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               }
+            ],
+            "oneWeekRange":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "typeStr":"http",
+            "intervalMin":5,
+            "allLogs":[
+               {
+                  "statusStr":"up",
+                  "durationStr":"1989 hrs, 0 mins.",
+                  "dateTimeStr":"2018-10-05 08:21:57",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"success",
+                  "timestamp":1538720517000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 0 mins.",
+                  "dateTimeStr":"2018-12-27 05:22:53",
+                  "reasonStr":"Service Unavailable",
+                  "reasonTitle":"Service Unavailable",
+                  "label":"danger",
+                  "timestamp":1545880973000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"1851 hrs, 11 mins.",
+                  "dateTimeStr":"2018-12-27 05:23:50",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1545881030000
+               }
+            ],
+            "status":2,
+            "statusLabel":"success",
+            "statusNumber":2
+         },
+         {
+            "id":778472751,
+            "friendly_name":"DB",
+            "customuptimeranges":[
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               }
+            ],
+            "oneWeekRange":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "typeStr":"http",
+            "intervalMin":5,
+            "allLogs":[
+               {
+                  "statusStr":"up",
+                  "durationStr":"3037 hrs, 27 mins.",
+                  "dateTimeStr":"2018-10-05 08:21:57",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"success",
+                  "timestamp":1538720517000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 1 mins.",
+                  "dateTimeStr":"2019-02-08 21:49:52",
+                  "reasonStr":"Not Found",
+                  "reasonTitle":"Not Found",
+                  "label":"danger",
+                  "timestamp":1549655392000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"229 hrs, 31 mins.",
+                  "dateTimeStr":"2019-02-08 21:51:41",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1549655501000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 2 mins.",
+                  "dateTimeStr":"2019-02-18 11:22:55",
+                  "reasonStr":"Not Found",
+                  "reasonTitle":"Not Found",
+                  "label":"danger",
+                  "timestamp":1550481775000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"573 hrs, 10 mins.",
+                  "dateTimeStr":"2019-02-18 11:25:00",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1550481900000
+               }
+            ],
+            "status":2,
+            "statusLabel":"success",
+            "statusNumber":2
+         },
+         {
+            "id":778638621,
+            "friendly_name":"Homepage",
+            "customuptimeranges":[
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               }
+            ],
+            "oneWeekRange":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "typeStr":"http",
+            "intervalMin":5,
+            "allLogs":[
+               {
+                  "statusStr":"up",
+                  "durationStr":"1988 hrs, 21 mins.",
+                  "dateTimeStr":"2018-10-05 09:00:19",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"success",
+                  "timestamp":1538722819000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 1 mins.",
+                  "dateTimeStr":"2018-12-27 05:21:45",
+                  "reasonStr":"Service Unavailable",
+                  "reasonTitle":"Service Unavailable",
+                  "label":"danger",
+                  "timestamp":1545880905000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"1048 hrs, 26 mins.",
+                  "dateTimeStr":"2018-12-27 05:23:44",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1545881024000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 1 mins.",
+                  "dateTimeStr":"2019-02-08 21:50:25",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"danger",
+                  "timestamp":1549655425000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"229 hrs, 29 mins.",
+                  "dateTimeStr":"2019-02-08 21:51:29",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1549655489000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 3 mins.",
+                  "dateTimeStr":"2019-02-18 11:20:49",
+                  "reasonStr":"Not Found",
+                  "reasonTitle":"Not Found",
+                  "label":"danger",
+                  "timestamp":1550481649000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"573 hrs, 11 mins.",
+                  "dateTimeStr":"2019-02-18 11:23:50",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1550481830000
+               }
+            ],
+            "status":2,
+            "statusLabel":"success",
+            "statusNumber":2
+         },
+         {
+            "id":778472753,
+            "friendly_name":"Storage",
+            "customuptimeranges":[
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               },
+               {
+                  "label":"success",
+                  "ratio":"100.00"
+               }
+            ],
+            "oneWeekRange":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "typeStr":"http",
+            "intervalMin":5,
+            "allLogs":[
+               {
+                  "statusStr":"up",
+                  "durationStr":"1989 hrs, 0 mins.",
+                  "dateTimeStr":"2018-10-05 08:21:57",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"success",
+                  "timestamp":1538720517000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 1 mins.",
+                  "dateTimeStr":"2018-12-27 05:22:51",
+                  "reasonStr":"Service Unavailable",
+                  "reasonTitle":"Service Unavailable",
+                  "label":"danger",
+                  "timestamp":1545880971000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"1048 hrs, 25 mins.",
+                  "dateTimeStr":"2018-12-27 05:24:47",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1545881087000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 1 mins.",
+                  "dateTimeStr":"2019-02-08 21:49:57",
+                  "reasonStr":"Connection Timeout",
+                  "reasonTitle":"Connection Timeout",
+                  "label":"danger",
+                  "timestamp":1549655397000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"229 hrs, 28 mins.",
+                  "dateTimeStr":"2019-02-08 21:50:57",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1549655457000
+               },
+               {
+                  "statusStr":"down",
+                  "durationStr":"0 hrs, 3 mins.",
+                  "dateTimeStr":"2019-02-18 11:19:44",
+                  "reasonStr":"Not Found",
+                  "reasonTitle":"Not Found",
+                  "label":"danger",
+                  "timestamp":1550481584000
+               },
+               {
+                  "statusStr":"up",
+                  "durationStr":"573 hrs, 12 mins.",
+                  "dateTimeStr":"2019-02-18 11:23:17",
+                  "reasonStr":"OK",
+                  "reasonTitle":"OK",
+                  "label":"success",
+                  "timestamp":1550481797000
+               }
+            ],
+            "status":2,
+            "statusLabel":"success",
+            "statusNumber":2
+         }
+      ],
+      "name":"Appwrite",
+      "logo":"185037-1549778937.png",
+      "url_key":"98gvjUN96",
+      "hide_ur_links":false,
+      "sort":1,
+      "custom_css":"",
+      "announcements":[
+
+      ],
+      "monitorCount":6,
+      "latestDownTimeStr":"It was recorded (for the monitor DB) on 2019-02-18 11:22:55 and the downtime lasted for 0 hrs, 2 mins.",
+      "latestDownLog":{
+         "type":1,
+         "datetime":1550481775,
+         "duration":125,
+         "reason":{
+            "code":"404",
+            "detail":"Not Found"
+         },
+         "mon":{
+            "friendly_name":"DB"
+         }
+      },
+      "hasActiveAnnounce":false,
+      "activeAnnouncements":0,
+      "firstAnnounceTitle":null,
+      "firstAnnounceDescInline":null,
+      "pspStats":{
+         "ratios":{
+            "l1":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "l7":{
+               "label":"success",
+               "ratio":"100.00"
+            },
+            "l30":{
+               "label":"success",
+               "ratio":"99.994"
+            }
+         },
+         "downDurations":{
+            "l1":0,
+            "l7":0,
+            "l30":14
+         },
+         "d":{
+            "l1":0,
+            "l7":0,
+            "l30":881
+         },
+         "counts":{
+            "up":6,
+            "down":0,
+            "paused":0
+         }
+      },
+      "downCount":0,
+      "tzdiff":120
+   },
+   "stat":"ok",
+   "days":[
+      "14 Mar",
+      "13 Mar",
+      "12 Mar",
+      "11 Mar",
+      "10 Mar",
+      "09 Mar",
+      "08 Mar"
+   ]
+}
