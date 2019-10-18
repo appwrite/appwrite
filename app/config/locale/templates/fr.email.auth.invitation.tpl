@@ -10,7 +10,7 @@
     Bonjour,
     <br />
     <br />
-    Ce mail vous a été envoyé car <b>{{owner}}</b> vous invite à devenir membre de l'équipe <b>{{team}}</b> sur le projet {{project}}.
+    Ce courriel vous a été envoyé car <b>{{owner}}</b> vous invite à devenir membre de l'équipe <b>{{team}}</b> sur le projet {{project}}.
     <br />
     <br />
     Cliquez sur le lien suivant pour rejoindre l'équipe <b>{{team}}</b>:
