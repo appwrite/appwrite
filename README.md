@@ -15,11 +15,11 @@
 
 ---
 
-Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy to use REST API.
+Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy way to use REST API.
 
-Appwrite API services aim to make developer's life a lot easier by hiding the complexity of common and repetitive software development tasks.
+Appwrite API services aim to make the developer's life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
-Using Appwrite you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
+Using Appwrite, you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and team data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
 [https://appwrite.io](https://appwrite.io)
 
@@ -27,7 +27,7 @@ Using Appwrite you can easily manage user authentication with multiple sign-in m
 
 ## Installation
 
-Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm or Rancher.
+Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one's command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm or Rancher.
 
 The easiest way to start running your Appwrite server is by running our docker-compose file:
 
@@ -39,14 +39,14 @@ docker-compose up -d --remove-orphans
 ```
 
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after the installation has completed.
 
 
 For advanced, production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs.
 
 ### Changing Port Number
 
-In case your port 80 is already taken, change the port number in the command above. Make sure to set the correct endpoint in your selected SDK, including your new port number.
+In case your port 80 is already taken, change the port number in the command above. Make sure to set the correct end-point in your selected SDK, including your new port number.
 
 ## Getting Started
 
