@@ -2556,7 +2556,7 @@ return"< 1s";}).add("markdown",function($value,markdown){return markdown.render(
 let thresh=1000;if(Math.abs($value)<thresh){return $value+" B";}
 let units=["kB","MB","GB","TB","PB","EB","ZB","YB"];let u=-1;do{$value/=thresh;++u;}while(Math.abs($value)>=thresh&&u<units.length-1);return($value.toFixed(1)+'<span class="text-size-small unit">'+
 units[u]+"</span>");}).add("statsTotal",function($value){if(!$value){return 0;}
-$value=abbreviate($value,1,false,false);return $value==="0"?"N/A":$value;});function abbreviate(number,maxPlaces,forcePlaces,forceLetter){number=Number(number);forceLetter=forceLetter||false;if(forceLetter!==false){return annotate(number,maxPlaces,forcePlaces,forceLetter);}
+$value=abbreviate($value,1,false,false);return $value==="0"?"N/A":$value;}).add("isEmptyObject",function($value){return((Object.keys($value).length===0&&$value.constructor===Object)||$value.length===0)});function abbreviate(number,maxPlaces,forcePlaces,forceLetter){number=Number(number);forceLetter=forceLetter||false;if(forceLetter!==false){return annotate(number,maxPlaces,forcePlaces,forceLetter);}
 let abbr;if(number>=1e12){abbr="T";}else if(number>=1e9){abbr="B";}else if(number>=1e6){abbr="M";}else if(number>=1e3){abbr="K";}else{abbr="";}
 return annotate(number,maxPlaces,forcePlaces,abbr);}
 function annotate(number,maxPlaces,forcePlaces,abbr){let rounded=0;switch(abbr){case"T":rounded=number/1e12;break;case"B":rounded=number/1e9;break;case"M":rounded=number/1e6;break;case"K":rounded=number/1e3;break;case"":rounded=number;break;}
