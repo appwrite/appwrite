@@ -15,15 +15,10 @@ $utopia->get('/v1/mock/tests/foo')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -35,15 +30,10 @@ $utopia->post('/v1/mock/tests/foo')
     ->label('sdk.description', 'Mock a post request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -55,15 +45,10 @@ $utopia->patch('/v1/mock/tests/foo')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -75,15 +60,10 @@ $utopia->put('/v1/mock/tests/foo')
     ->label('sdk.description', 'Mock a put request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -95,15 +75,10 @@ $utopia->delete('/v1/mock/tests/foo')
     ->label('sdk.description', 'Mock a delete request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -115,15 +90,10 @@ $utopia->get('/v1/mock/tests/bar')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -135,15 +105,10 @@ $utopia->post('/v1/mock/tests/bar')
     ->label('sdk.description', 'Mock a post request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -155,15 +120,10 @@ $utopia->patch('/v1/mock/tests/bar')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -175,15 +135,10 @@ $utopia->put('/v1/mock/tests/bar')
     ->label('sdk.description', 'Mock a put request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
@@ -195,15 +150,10 @@ $utopia->delete('/v1/mock/tests/bar')
     ->label('sdk.description', 'Mock a delete request for SDK tests')
     ->param('x', '', function () { return new Text(100); }, 'Sample string param')
     ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', [], function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
-        function ($x, $y) {
-            if(empty($x)) {
-                throw new Exception('Missing parameter \'x\'', 400);
-            }
-        
-            if(empty($y)) {
-                throw new Exception('Missing parameter \'y\'', 400);
-            }
+        function ($x, $y, $z) {
+
         }
     );
 
