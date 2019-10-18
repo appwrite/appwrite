@@ -41,7 +41,7 @@ class Database extends Service {
      * @throws Exception
      * @return {}
      */
-    async createCollection(name, read = [], write = [], rules = []) {
+    async createCollection(name, read, write, rules) {
         let path = '/database';
         
         return await this.client.call('post', path, {'content-type': 'application/json'},

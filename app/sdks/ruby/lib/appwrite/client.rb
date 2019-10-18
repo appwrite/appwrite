@@ -5,23 +5,23 @@ require 'json'
 module Appwrite
     class Client
         
-        METHOD_GET = 'GET'
-        METHOD_POST = 'POST'
-        METHOD_PUT = 'PUT'
-        METHOD_PATCH = 'PATCH'
-        METHOD_DELETE = 'DELETE'
-        METHOD_HEAD = 'HEAD'
-        METHOD_OPTIONS = 'OPTIONS'
-        METHOD_CONNECT = 'CONNECT'
-        METHOD_TRACE = 'TRACE'
+        METHOD_GET = 'get'
+        METHOD_POST = 'post'
+        METHOD_PUT = 'put'
+        METHOD_PATCH = 'patch'
+        METHOD_DELETE = 'delete'
+        METHOD_HEAD = 'head'
+        METHOD_OPTIONS = 'options'
+        METHOD_CONNECT = 'connect'
+        METHOD_TRACE = 'trace'
 
         def initialize()
             @headers = {
-                'content-type': '',
-                'user-agent': RUBY_PLATFORM + ':ruby-' + RUBY_VERSION,
-                'x-sdk-version': 'appwrite:ruby:1.0.1'
+                'content-type' => '',
+                'user-agent' => RUBY_PLATFORM + ':ruby-' + RUBY_VERSION,
+                'x-sdk-version' => 'appwrite:ruby:1.0.3'
             }
-            @endpoint = 'https://appwrite.test/v1';
+            @endpoint = 'https://appwrite.io/v1';
         end
 
         def set_project(value)
@@ -64,23 +64,26 @@ module Appwrite
             uri = URI.parse(@endpoint + path + ((method == METHOD_GET) ? '?' + URI.encode_www_form(params) : ''))
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = (uri.scheme == 'https')
+            payload = ''
             
             headers = @headers.merge(headers)
 
-            case headers[:'content-type'][0, headers[:'content-type'].index(';') || headers[:'content-type'].length]
-                when 'application/json'
-                    params = params.to_json
-                else
-                    params = URI.encode_www_form(params)
+            if (method != METHOD_GET)
+                case headers['content-type'][0, headers['content-type'].index(';') || headers['content-type'].length]
+                    when 'application/json'
+                        payload = params.to_json
+                    else
+                        payload = URI.encode_www_form(params)
+                end
             end
 
             begin
-                response = http.send_request(method.upcase, uri.request_uri, '', @headers)
+                response = http.send_request(method.upcase, uri.request_uri, payload, headers)
             rescue => error
                 raise 'Request Failed: '  + error.message
             end
 
-            puts response['content-type']
+            return JSON.parse(response.body);
         end
 
         protected

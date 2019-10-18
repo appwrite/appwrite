@@ -30,9 +30,9 @@ POST https://appwrite.io/v1/database
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | name | string | Collection name. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
+| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). |  |
+| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). |  |
+| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation |  |
 
 ## Get Collection
 

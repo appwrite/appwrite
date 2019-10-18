@@ -12,10 +12,11 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
-        def create_collection(name:, read: [], write: [], rules: [])
+        def create_collection(name:, read:, write:, rules:)
             path = '/database'
 
             params = {
@@ -26,6 +27,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -37,6 +39,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -52,6 +55,7 @@ module Appwrite
             }
 
             return @client.call('put', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -63,6 +67,7 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -83,6 +88,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -100,6 +106,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -112,6 +119,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -127,6 +135,7 @@ module Appwrite
             }
 
             return @client.call('patch', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -139,6 +148,7 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 

@@ -44,6 +44,7 @@ class Auth extends Service
         $params['failure'] = $failure;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -64,6 +65,7 @@ class Auth extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -85,6 +87,7 @@ class Auth extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -97,7 +100,7 @@ class Auth extends Service
      * @throws Exception
      * @return array
      */
-    public function oauth($provider, $success = '', $failure = '')
+    public function oauth($provider, $success, $failure)
     {
         $path   = str_replace(['{provider}'], [$provider], '/auth/oauth/{provider}');
         $params = [];
@@ -106,6 +109,7 @@ class Auth extends Service
         $params['failure'] = $failure;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -133,6 +137,7 @@ class Auth extends Service
         $params['reset'] = $reset;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -167,6 +172,7 @@ class Auth extends Service
         $params['password-b'] = $passwordB;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -216,6 +222,7 @@ class Auth extends Service
         $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -241,6 +248,7 @@ class Auth extends Service
         $params['token'] = $token;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -268,6 +276,7 @@ class Auth extends Service
         $params['confirm'] = $confirm;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

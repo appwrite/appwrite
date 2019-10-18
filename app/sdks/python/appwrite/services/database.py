@@ -16,10 +16,7 @@ class Database(Service):
         return self.client.call('get', path, {
         }, params)
 
-    def create_collection(self, name, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], rulesstring(4) ""[]""
-=[]):
+    def create_collection(self, name, read, write, rules):
         """Create Collection"""
 
         params = {}

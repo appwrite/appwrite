@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "b826507d4499bc76a72fc58885a0a5dfcdf7e79a"
+                "reference": "75363229b8626615d69a0437765c32bee98f9c16"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/b826507d4499bc76a72fc58885a0a5dfcdf7e79a",
-                "reference": "b826507d4499bc76a72fc58885a0a5dfcdf7e79a",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/75363229b8626615d69a0437765c32bee98f9c16",
+                "reference": "75363229b8626615d69a0437765c32bee98f9c16",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-10-13T11:47:56+00:00"
+            "time": "2019-10-18T15:30:24+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,14 +92,14 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "cd7d8d0333449e9ce2cdb9b4b740beef59a0d2c8"
+                "reference": "a130fb6e8fcd88f9dd5da1331dcd24a7d426ec22"
             },
             "require": {
                 "ext-curl": "*",
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "matthiasmullie/minify": "^1.3",
-                "php": ">=7.2.0",
+                "php": ">=7.0.0",
                 "twig/twig": "^2.0"
             },
             "require-dev": {
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-10-14 20:48:21"
+            "time": "2019-10-18 18:08:52"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -558,18 +558,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "bcbb52f6f8b28de44b7515519e3d2d9c640d40ab"
+                "reference": "2b1dfedd8d59a521832c0837be045b83cd746fa0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/bcbb52f6f8b28de44b7515519e3d2d9c640d40ab",
-                "reference": "bcbb52f6f8b28de44b7515519e3d2d9c640d40ab",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/2b1dfedd8d59a521832c0837be045b83cd746fa0",
+                "reference": "2b1dfedd8d59a521832c0837be045b83cd746fa0",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "guzzlehttp/promises": "^1.0",
-                "guzzlehttp/psr7": "^1.4",
+                "guzzlehttp/psr7": "^1.6.1",
                 "php": ">=5.5"
             },
             "require-dev": {
@@ -616,7 +616,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2019-10-14T09:23:25+00:00"
+            "time": "2019-10-18T12:00:04+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1440,12 +1440,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "c59567371af16b0625e9e099a6b2d34379220e8f"
+                "reference": "d86b8ea5804278eef17582421fe1a1c4eb19219c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/c59567371af16b0625e9e099a6b2d34379220e8f",
-                "reference": "c59567371af16b0625e9e099a6b2d34379220e8f",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d86b8ea5804278eef17582421fe1a1c4eb19219c",
+                "reference": "d86b8ea5804278eef17582421fe1a1c4eb19219c",
                 "shasum": ""
             },
             "require": {
@@ -1499,7 +1499,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-10-16T08:31:29+00:00"
+            "time": "2019-10-17T11:01:59+00:00"
         },
         {
             "name": "utopia-php/abuse",

@@ -35,7 +35,7 @@ class Auth(Service):
         return self.client.call('delete', path, {
         }, params)
 
-    def oauth(self, provider, success='', failure=''):
+    def oauth(self, provider, success, failure):
         """OAuth Login"""
 
         params = {}

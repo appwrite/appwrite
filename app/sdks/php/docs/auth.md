@@ -54,8 +54,8 @@ GET https://appwrite.io/v1/auth/oauth/{provider}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | provider | string | **Required** OAuth Provider |  |
-| success | string | URL to redirect back to your app after a successful login attempt. |  |
-| failure | string | URL to redirect back to your app after a failed login attempt. |  |
+| success | string | **Required** URL to redirect back to your app after a successful login attempt. |  |
+| failure | string | **Required** URL to redirect back to your app after a failed login attempt. |  |
 
 ## Password Recovery
 

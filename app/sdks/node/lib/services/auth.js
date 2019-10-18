@@ -85,7 +85,7 @@ class Auth extends Service {
      * @throws Exception
      * @return {}
      */
-    async oauth(provider, success = '', failure = '') {
+    async oauth(provider, success, failure) {
         let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
         
         return await this.client.call('get', path, {'content-type': 'application/json'},

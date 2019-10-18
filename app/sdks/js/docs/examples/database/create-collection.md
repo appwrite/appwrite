@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.database.createCollection('[NAME]');
+let promise = sdk.database.createCollection('[NAME]', [], [], []);
 
 promise.then(function (response) {
     console.log(response);

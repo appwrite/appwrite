@@ -26,6 +26,7 @@ class Locale extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -45,6 +46,7 @@ class Locale extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -65,6 +67,7 @@ class Locale extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -84,6 +87,7 @@ class Locale extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -104,6 +108,7 @@ class Locale extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

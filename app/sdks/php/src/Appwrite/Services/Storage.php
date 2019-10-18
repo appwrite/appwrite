@@ -33,6 +33,7 @@ class Storage extends Service
         $params['orderType'] = $orderType;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -62,6 +63,7 @@ class Storage extends Service
 
         return $this->client->call(Client::METHOD_POST, $path, [
             'content-type' => 'multipart/form-data',
+            'content-type' => 'multipart/form-data',
         ], $params);
     }
 
@@ -82,6 +84,7 @@ class Storage extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -108,6 +111,7 @@ class Storage extends Service
         $params['folderId'] = $folderId;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -128,6 +132,7 @@ class Storage extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -149,6 +154,7 @@ class Storage extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -181,6 +187,7 @@ class Storage extends Service
         $params['output'] = $output;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -203,6 +210,7 @@ class Storage extends Service
         $params['as'] = $as;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

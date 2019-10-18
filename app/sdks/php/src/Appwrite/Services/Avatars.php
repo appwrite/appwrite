@@ -33,6 +33,7 @@ class Avatars extends Service
         $params['quality'] = $quality;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -61,6 +62,7 @@ class Avatars extends Service
         $params['quality'] = $quality;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -82,6 +84,7 @@ class Avatars extends Service
         $params['url'] = $url;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -109,6 +112,7 @@ class Avatars extends Service
         $params['quality'] = $quality;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -136,6 +140,7 @@ class Avatars extends Service
         $params['height'] = $height;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -163,6 +168,7 @@ class Avatars extends Service
         $params['download'] = $download;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

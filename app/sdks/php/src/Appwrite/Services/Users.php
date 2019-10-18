@@ -32,6 +32,7 @@ class Users extends Service
         $params['orderType'] = $orderType;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -56,6 +57,7 @@ class Users extends Service
         $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -75,6 +77,7 @@ class Users extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -94,6 +97,7 @@ class Users extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -113,6 +117,7 @@ class Users extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -135,6 +140,7 @@ class Users extends Service
         $params['prefs'] = $prefs;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -154,6 +160,7 @@ class Users extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -173,6 +180,7 @@ class Users extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -194,6 +202,7 @@ class Users extends Service
         $params['sessionId'] = $sessionId;
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -215,6 +224,7 @@ class Users extends Service
         $params['status'] = $status;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

@@ -23,6 +23,7 @@ class Account extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -41,6 +42,7 @@ class Account extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -66,6 +68,7 @@ class Account extends Service
         $params['password'] = $password;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -86,6 +89,7 @@ class Account extends Service
         $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -109,6 +113,7 @@ class Account extends Service
         $params['old-password'] = $oldPassword;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -127,6 +132,7 @@ class Account extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -148,6 +154,7 @@ class Account extends Service
         $params['prefs'] = $prefs;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -167,6 +174,7 @@ class Account extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -186,6 +194,7 @@ class Account extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

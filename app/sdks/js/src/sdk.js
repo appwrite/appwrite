@@ -628,9 +628,17 @@
              * @throws {Error}
              * @return {null}             
              */
-            oauth: function(provider, success = '', failure = '') {
+            oauth: function(provider, success, failure) {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
+                }
+                
+                if(success === undefined) {
+                    throw new Error('Missing required parameter: "success"');
+                }
+                
+                if(failure === undefined) {
+                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
@@ -1186,9 +1194,21 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createCollection: function(name, read = [], write = [], rules = []) {
+            createCollection: function(name, read, write, rules) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
+                }
+                
+                if(rules === undefined) {
+                    throw new Error('Missing required parameter: "rules"');
                 }
                 
                 let path = '/database';

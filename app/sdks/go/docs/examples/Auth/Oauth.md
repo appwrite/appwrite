@@ -25,7 +25,7 @@
         }
 
         // Call Oauth method and handle results
-        var res, err := srv.Oauth("bitbucket")
+        var res, err := srv.Oauth("bitbucket", "https://example.com", "https://example.com")
         if err != nil {
             panic(err)
         }

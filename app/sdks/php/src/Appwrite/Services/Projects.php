@@ -21,6 +21,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -59,6 +60,7 @@ class Projects extends Service
         $params['legalTaxId'] = $legalTaxId;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -76,6 +78,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -113,6 +116,7 @@ class Projects extends Service
         $params['legalTaxId'] = $legalTaxId;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -130,6 +134,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -147,6 +152,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -168,6 +174,7 @@ class Projects extends Service
         $params['scopes'] = $scopes;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -186,6 +193,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -208,6 +216,7 @@ class Projects extends Service
         $params['scopes'] = $scopes;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -226,6 +235,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -249,6 +259,7 @@ class Projects extends Service
         $params['secret'] = $secret;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -266,6 +277,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -293,6 +305,7 @@ class Projects extends Service
         $params['url'] = $url;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -311,6 +324,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -337,6 +351,7 @@ class Projects extends Service
         $params['url'] = $url;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -355,6 +370,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -372,6 +388,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -407,6 +424,7 @@ class Projects extends Service
         $params['httpPass'] = $httpPass;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -425,6 +443,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -461,6 +480,7 @@ class Projects extends Service
         $params['httpPass'] = $httpPass;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -479,6 +499,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -496,6 +517,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -513,6 +535,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -542,6 +565,7 @@ class Projects extends Service
         $params['httpPass'] = $httpPass;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -560,6 +584,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -590,6 +615,7 @@ class Projects extends Service
         $params['httpPass'] = $httpPass;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -608,6 +634,7 @@ class Projects extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

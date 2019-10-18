@@ -12,6 +12,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -26,6 +27,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'multipart/form-data',
             }, params);
         end
 
@@ -37,6 +39,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -51,6 +54,7 @@ module Appwrite
             }
 
             return @client.call('put', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -62,6 +66,7 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -73,6 +78,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -89,6 +95,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -101,6 +108,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 

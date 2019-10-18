@@ -34,6 +34,7 @@ class Database extends Service
         $params['orderType'] = $orderType;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -49,7 +50,7 @@ class Database extends Service
      * @throws Exception
      * @return array
      */
-    public function createCollection($name, $read = [], $write = [], $rules = [])
+    public function createCollection($name, $read, $write, $rules)
     {
         $path   = str_replace([], [], '/database');
         $params = [];
@@ -60,6 +61,7 @@ class Database extends Service
         $params['rules'] = $rules;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -80,6 +82,7 @@ class Database extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -107,6 +110,7 @@ class Database extends Service
         $params['rules'] = $rules;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -127,6 +131,7 @@ class Database extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -167,6 +172,7 @@ class Database extends Service
         $params['last'] = $last;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -198,6 +204,7 @@ class Database extends Service
         $params['parentPropertyType'] = $parentPropertyType;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -219,6 +226,7 @@ class Database extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -243,6 +251,7 @@ class Database extends Service
         $params['write'] = $write;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -265,6 +274,7 @@ class Database extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

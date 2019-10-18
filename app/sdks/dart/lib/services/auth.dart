@@ -54,7 +54,7 @@ class Auth extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-    Future<Response> oauth({provider, success = null, failure = null}) async {
+    Future<Response> oauth({provider, success, failure}) async {
        String path = '/auth/oauth/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
        Map<String, dynamic> params = {

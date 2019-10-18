@@ -33,6 +33,7 @@ class Teams extends Service
         $params['orderType'] = $orderType;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -58,6 +59,7 @@ class Teams extends Service
         $params['roles'] = $roles;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -78,6 +80,7 @@ class Teams extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -100,6 +103,7 @@ class Teams extends Service
         $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -120,6 +124,7 @@ class Teams extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -140,6 +145,7 @@ class Teams extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -179,6 +185,7 @@ class Teams extends Service
         $params['redirect'] = $redirect;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -200,6 +207,7 @@ class Teams extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -223,6 +231,7 @@ class Teams extends Service
         $params['redirect'] = $redirect;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -265,6 +274,7 @@ class Teams extends Service
         $params['failure'] = $failure;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

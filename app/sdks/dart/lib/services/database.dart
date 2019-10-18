@@ -23,7 +23,7 @@ class Database extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Create a new Collection.
-    Future<Response> createCollection({name, read = const [], write = const [], rules = const []}) async {
+    Future<Response> createCollection({name, read, write, rules}) async {
        String path = '/database';
 
        Map<String, dynamic> params = {
