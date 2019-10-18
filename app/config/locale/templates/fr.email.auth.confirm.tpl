@@ -10,12 +10,12 @@
     Bonjour {{name}},
     <br />
     <br />
-    Cliquez sur le lien suivant pour vérifier votre adresse mail.
+    Cliquez sur le lien suivant pour vérifier votre adresse courriel.
     <br />
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Si vous n'avez pas demandé une vérification de cette adresse mail, vous pouvez ignorer ce message.
+    Si vous n'avez pas demandé de vérification pour cette adresse courriel, vous pouvez ignorer ce message.
     <br />
     <br />
     Merci,
