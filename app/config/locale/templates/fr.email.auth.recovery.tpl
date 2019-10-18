@@ -15,7 +15,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    Si vous n'êtes pas à l'origine de cette demande de réinitialisation de mot de passe, vous pouvez ignorer ce message.
+    Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer ce message.
     <br />
     <br />
     Merci,
