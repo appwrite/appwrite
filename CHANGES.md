@@ -18,7 +18,7 @@
 * Fix for it locale including the en templates by mistake
 * Fix for UI not showing user's prefs properly
 
-## Breaking Changs
+## Breaking Changes
 
 * users/deleteUsersSession method name changed to users/deleteUserSession in all SDKs for better consistency
 
