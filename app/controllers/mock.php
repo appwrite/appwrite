@@ -5,6 +5,7 @@ global $utopia, $request, $response;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
+use Storage\Validators\File;
 
 $result = [];
 
@@ -143,7 +144,7 @@ $utopia->put('/v1/mock/tests/bar')
         }
     );
 
-$utopia->delete('/v1/mock/tests/bar')
+    $utopia->delete('/v1/mock/tests/bar')
     ->desc('Mock a delete request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'bar')
@@ -158,24 +159,27 @@ $utopia->delete('/v1/mock/tests/bar')
         }
     );
 
-$utopia->get('/v1/mock/tests/report')
-    ->desc('Get SDK tests report')
+$utopia->post('/v1/mock/tests/files')
+    ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
+    ->label('sdk.namespace', 'files')
+    ->label('sdk.method', 'upload')
+    ->label('sdk.description', 'Mock a delete request for SDK tests')
+    ->label('sdk.consumes', 'multipart/form-data')
+    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
+    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
+    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('file', [], function () { return new File(); }, 'Sample file param', false)
     ->action(
-        function () use ($response) {
- 
-            $path   = '/storage/cache/tests.json';
-            $tests  = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
-            
-            if(!is_array($tests)) {
-                throw new Exception('Failed to read results', 500);
-            }
-        
-            if(!file_put_contents($path, json_encode([]), LOCK_EX)) {
-                throw new Exception('Failed to save resutls', 500);
-            }
+        function ($x, $y, $z, $file) use ($request) {
+            $file = $request->getFiles('file');
+            $file['tmp_name'] = (is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
 
-            $response->json($tests);
+            foreach ($file['tmp_name'] as $i => $tmpName) {
+                if(md5(file_get_contents($tmpName)) !== 'asdasdasd') {
+                    throw new Exception('Wrong file uploaded', 400);
+                }
+            }
         }
     );
 
