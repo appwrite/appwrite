@@ -1,6 +1,7 @@
 require 'net/http'
 require 'uri'
 require 'json'
+require 'cgi'
 
 module Appwrite
     class Client
@@ -19,7 +20,7 @@ module Appwrite
             @headers = {
                 'content-type' => '',
                 'user-agent' => RUBY_PLATFORM + ':ruby-' + RUBY_VERSION,
-                'x-sdk-version' => 'appwrite:ruby:1.0.3'
+                'x-sdk-version' => 'appwrite:ruby:1.0.4'
             }
             @endpoint = 'https://appwrite.io/v1';
         end
@@ -61,7 +62,7 @@ module Appwrite
         end
         
         def call(method, path = '', headers = {}, params = {})
-            uri = URI.parse(@endpoint + path + ((method == METHOD_GET) ? '?' + URI.encode_www_form(params) : ''))
+            uri = URI.parse(@endpoint + path + ((method == METHOD_GET) ? '?' + encode(params) : ''))
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = (uri.scheme == 'https')
             payload = ''
@@ -73,7 +74,7 @@ module Appwrite
                     when 'application/json'
                         payload = params.to_json
                     else
-                        payload = URI.encode_www_form(params)
+                        payload = encode(params)
                 end
             end
 
@@ -89,5 +90,19 @@ module Appwrite
         protected
 
         private
+
+        def encode(value, key = nil)
+            case value
+            when Hash  then value.map { |k,v| encode(v, append_key(key,k)) }.join('&')
+            when Array then value.map { |v| encode(v, "#{key}[]") }.join('&')
+            when nil   then ''
+            else            
+            "#{key}=#{CGI.escape(value.to_s)}" 
+            end
+        end
+
+        def append_key(root_key, key)
+            root_key.nil? ? key : "#{root_key}[#{key.to_s}]"
+        end
     end 
 end

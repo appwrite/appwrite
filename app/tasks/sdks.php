@@ -39,7 +39,7 @@ $cli
 
         $clients = [
             'php' => [
-                'version' => '1.0.10',
+                'version' => '1.0.11',
                 'result' => __DIR__.'/../sdks/php/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
@@ -83,7 +83,7 @@ $cli
                 'platform' => 'server',
             ],
             'ruby' => [
-                'version' => '1.0.3',
+                'version' => '1.0.4',
                 'result' => __DIR__.'/../sdks/ruby/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-ruby.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-ruby.git',
