@@ -30,8 +30,10 @@ class Auth extends Service {
     async login(email, password, success = '', failure = '') {
         let path = '/auth/login';
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'email': email,
                 'password': password,
                 'success': success,
@@ -52,8 +54,10 @@ class Auth extends Service {
     async logout() {
         let path = '/auth/logout';
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -71,8 +75,10 @@ class Auth extends Service {
     async logoutBySession(id) {
         let path = '/auth/logout/{id}'.replace(new RegExp('{id}', 'g'), id);
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -88,8 +94,10 @@ class Auth extends Service {
     async oauth(provider, success, failure) {
         let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'success': success,
                 'failure': failure
             });
@@ -113,8 +121,10 @@ class Auth extends Service {
     async recovery(email, reset) {
         let path = '/auth/recovery';
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'email': email,
                 'reset': reset
             });
@@ -143,8 +153,10 @@ class Auth extends Service {
     async recoveryReset(userId, token, passwordA, passwordB) {
         let path = '/auth/recovery/reset';
         
-        return await this.client.call('put', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('put', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'userId': userId,
                 'token': token,
                 'password-a': passwordA,
@@ -188,8 +200,10 @@ class Auth extends Service {
     async register(email, password, confirm, success = '', failure = '', name = '') {
         let path = '/auth/register';
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'email': email,
                 'password': password,
                 'confirm': confirm,
@@ -215,8 +229,10 @@ class Auth extends Service {
     async confirm(userId, token) {
         let path = '/auth/register/confirm';
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'userId': userId,
                 'token': token
             });
@@ -241,8 +257,10 @@ class Auth extends Service {
     async confirmResend(confirm) {
         let path = '/auth/register/confirm/resend';
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'confirm': confirm
             });
     }

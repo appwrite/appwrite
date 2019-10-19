@@ -26,14 +26,14 @@ class Auth extends Service
      * behavior is enforced because modern browsers are limiting 3rd party cookies
      * in XHR of fetch requests to protect user privacy.
      *
-     * @param string $email
-     * @param string $password
-     * @param string $success
-     * @param string $failure
+     * @param string  $email
+     * @param string  $password
+     * @param string  $success
+     * @param string  $failure
      * @throws Exception
      * @return array
      */
-    public function login($email, $password, $success = '', $failure = '')
+    public function login(string $email, string $password, string $success = '', string $failure = ''):array
     {
         $path   = str_replace([], [], '/auth/login');
         $params = [];
@@ -58,7 +58,7 @@ class Auth extends Service
      * @throws Exception
      * @return array
      */
-    public function logout()
+    public function logout():array
     {
         $path   = str_replace([], [], '/auth/logout');
         $params = [];
@@ -76,11 +76,11 @@ class Auth extends Service
      * account sessions across all his different devices. When using the option id
      * argument, only the session unique ID provider will be deleted.
      *
-     * @param string $id
+     * @param string  $id
      * @throws Exception
      * @return array
      */
-    public function logoutBySession($id)
+    public function logoutBySession(string $id):array
     {
         $path   = str_replace(['{id}'], [$id], '/auth/logout/{id}');
         $params = [];
@@ -94,13 +94,13 @@ class Auth extends Service
     /**
      * OAuth Login
      *
-     * @param string $provider
-     * @param string $success
-     * @param string $failure
+     * @param string  $provider
+     * @param string  $success
+     * @param string  $failure
      * @throws Exception
      * @return array
      */
-    public function oauth($provider, $success, $failure)
+    public function oauth(string $provider, string $success, string $failure):array
     {
         $path   = str_replace(['{provider}'], [$provider], '/auth/oauth/{provider}');
         $params = [];
@@ -123,12 +123,12 @@ class Auth extends Service
      * submit a request to the /auth/password/reset endpoint to complete the
      * process.
      *
-     * @param string $email
-     * @param string $reset
+     * @param string  $email
+     * @param string  $reset
      * @throws Exception
      * @return array
      */
-    public function recovery($email, $reset)
+    public function recovery(string $email, string $reset):array
     {
         $path   = str_replace([], [], '/auth/recovery');
         $params = [];
@@ -154,14 +154,14 @@ class Auth extends Service
      * the only valid redirect URLs are the ones from domains you have set when
      * adding your platforms in the console interface.
      *
-     * @param string $userId
-     * @param string $token
-     * @param string $passwordA
-     * @param string $passwordB
+     * @param string  $userId
+     * @param string  $token
+     * @param string  $passwordA
+     * @param string  $passwordB
      * @throws Exception
      * @return array
      */
-    public function recoveryReset($userId, $token, $passwordA, $passwordB)
+    public function recoveryReset(string $userId, string $token, string $passwordA, string $passwordB):array
     {
         $path   = str_replace([], [], '/auth/recovery/reset');
         $params = [];
@@ -200,16 +200,16 @@ class Auth extends Service
      * behavior is enforced because modern browsers are limiting 3rd party cookies
      * in XHR of fetch requests to protect user privacy.
      *
-     * @param string $email
-     * @param string $password
-     * @param string $confirm
-     * @param string $success
-     * @param string $failure
-     * @param string $name
+     * @param string  $email
+     * @param string  $password
+     * @param string  $confirm
+     * @param string  $success
+     * @param string  $failure
+     * @param string  $name
      * @throws Exception
      * @return array
      */
-    public function register($email, $password, $confirm, $success = '', $failure = '', $name = '')
+    public function register(string $email, string $password, string $confirm, string $success = '', string $failure = '', string $name = ''):array
     {
         $path   = str_replace([], [], '/auth/register');
         $params = [];
@@ -234,12 +234,12 @@ class Auth extends Service
      * query parameters to the redirect URL you have provided when sending your
      * request to the /auth/register endpoint.
      *
-     * @param string $userId
-     * @param string $token
+     * @param string  $userId
+     * @param string  $token
      * @throws Exception
      * @return array
      */
-    public function confirm($userId, $token)
+    public function confirm(string $userId, string $token):array
     {
         $path   = str_replace([], [], '/auth/register/confirm');
         $params = [];
@@ -264,11 +264,11 @@ class Auth extends Service
      * the only valid redirect URLs are the ones from domains you have set when
      * adding your platforms in the console interface.
      *
-     * @param string $confirm
+     * @param string  $confirm
      * @throws Exception
      * @return array
      */
-    public function confirmResend($confirm)
+    public function confirmResend(string $confirm):array
     {
         $path   = str_replace([], [], '/auth/register/confirm/resend');
         $params = [];

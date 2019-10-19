@@ -14,6 +14,7 @@ class Storage(Service):
         params['orderType'] = order_type
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def create_file(self, files, readstring(4) ""[]""
@@ -40,6 +41,7 @@ class Storage(Service):
         path.replace('{fileId}', file_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_file(self, file_id, readstring(4) ""[]""
@@ -55,6 +57,7 @@ class Storage(Service):
         params['folderId'] = folder_id
 
         return self.client.call('put', path, {
+            'content-type': 'application/json',
         }, params)
 
     def delete_file(self, file_id):
@@ -65,6 +68,7 @@ class Storage(Service):
         path.replace('{fileId}', file_id)                
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_file_download(self, file_id):
@@ -75,6 +79,7 @@ class Storage(Service):
         path.replace('{fileId}', file_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_file_preview(self, file_id, width=0, height=0, quality=100, background='', output=''):
@@ -90,6 +95,7 @@ class Storage(Service):
         params['output'] = output
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_file_view(self, file_id, as=''):
@@ -101,4 +107,5 @@ class Storage(Service):
         params['as'] = as
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)

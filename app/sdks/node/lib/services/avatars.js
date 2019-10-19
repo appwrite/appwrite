@@ -20,8 +20,10 @@ class Avatars extends Service {
     async getBrowser(code, width = 100, height = 100, quality = 100) {
         let path = '/avatars/browsers/{code}'.replace(new RegExp('{code}', 'g'), code);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'width': width,
                 'height': height,
                 'quality': quality
@@ -46,8 +48,10 @@ class Avatars extends Service {
     async getCreditCard(code, width = 100, height = 100, quality = 100) {
         let path = '/avatars/credit-cards/{code}'.replace(new RegExp('{code}', 'g'), code);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'width': width,
                 'height': height,
                 'quality': quality
@@ -67,8 +71,10 @@ class Avatars extends Service {
     async getFavicon(url) {
         let path = '/avatars/favicon';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'url': url
             });
     }
@@ -90,8 +96,10 @@ class Avatars extends Service {
     async getFlag(code, width = 100, height = 100, quality = 100) {
         let path = '/avatars/flags/{code}'.replace(new RegExp('{code}', 'g'), code);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'width': width,
                 'height': height,
                 'quality': quality
@@ -115,8 +123,10 @@ class Avatars extends Service {
     async getImage(url, width = 400, height = 400) {
         let path = '/avatars/image';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'url': url,
                 'width': width,
                 'height': height
@@ -139,8 +149,10 @@ class Avatars extends Service {
     async getQR(text, size = 400, margin = 1, download = 0) {
         let path = '/avatars/qr';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'text': text,
                 'size': size,
                 'margin': margin,

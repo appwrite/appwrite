@@ -19,7 +19,7 @@ class Locale extends Service
      * @throws Exception
      * @return array
      */
-    public function getLocale()
+    public function getLocale():array
     {
         $path   = str_replace([], [], '/locale');
         $params = [];
@@ -39,7 +39,7 @@ class Locale extends Service
      * @throws Exception
      * @return array
      */
-    public function getCountries()
+    public function getCountries():array
     {
         $path   = str_replace([], [], '/locale/countries');
         $params = [];
@@ -60,7 +60,7 @@ class Locale extends Service
      * @throws Exception
      * @return array
      */
-    public function getCountriesEU()
+    public function getCountriesEU():array
     {
         $path   = str_replace([], [], '/locale/countries/eu');
         $params = [];
@@ -80,7 +80,7 @@ class Locale extends Service
      * @throws Exception
      * @return array
      */
-    public function getCountriesPhones()
+    public function getCountriesPhones():array
     {
         $path   = str_replace([], [], '/locale/countries/phones');
         $params = [];
@@ -101,7 +101,7 @@ class Locale extends Service
      * @throws Exception
      * @return array
      */
-    public function getCurrencies()
+    public function getCurrencies():array
     {
         $path   = str_replace([], [], '/locale/currencies');
         $params = [];

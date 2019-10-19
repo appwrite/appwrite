@@ -16,7 +16,7 @@ class Account extends Service
      * @throws Exception
      * @return array
      */
-    public function get()
+    public function get():array
     {
         $path   = str_replace([], [], '/account');
         $params = [];
@@ -35,7 +35,7 @@ class Account extends Service
      * @throws Exception
      * @return array
      */
-    public function delete()
+    public function delete():array
     {
         $path   = str_replace([], [], '/account');
         $params = [];
@@ -54,12 +54,12 @@ class Account extends Service
      * mail is sent. For security measures, user password is required to complete
      * this request.
      *
-     * @param string $email
-     * @param string $password
+     * @param string  $email
+     * @param string  $password
      * @throws Exception
      * @return array
      */
-    public function updateEmail($email, $password)
+    public function updateEmail(string $email, string $password):array
     {
         $path   = str_replace([], [], '/account/email');
         $params = [];
@@ -77,11 +77,11 @@ class Account extends Service
      *
      * Update currently logged in user account name.
      *
-     * @param string $name
+     * @param string  $name
      * @throws Exception
      * @return array
      */
-    public function updateName($name)
+    public function updateName(string $name):array
     {
         $path   = str_replace([], [], '/account/name');
         $params = [];
@@ -99,12 +99,12 @@ class Account extends Service
      * Update currently logged in user password. For validation, user is required
      * to pass the password twice.
      *
-     * @param string $password
-     * @param string $oldPassword
+     * @param string  $password
+     * @param string  $oldPassword
      * @throws Exception
      * @return array
      */
-    public function updatePassword($password, $oldPassword)
+    public function updatePassword(string $password, string $oldPassword):array
     {
         $path   = str_replace([], [], '/account/password');
         $params = [];
@@ -125,7 +125,7 @@ class Account extends Service
      * @throws Exception
      * @return array
      */
-    public function getPrefs()
+    public function getPrefs():array
     {
         $path   = str_replace([], [], '/account/prefs');
         $params = [];
@@ -142,11 +142,11 @@ class Account extends Service
      * Update currently logged in user account preferences. You can pass only the
      * specific settings you wish to update.
      *
-     * @param string $prefs
+     * @param string  $prefs
      * @throws Exception
      * @return array
      */
-    public function updatePrefs($prefs)
+    public function updatePrefs(string $prefs):array
     {
         $path   = str_replace([], [], '/account/prefs');
         $params = [];
@@ -167,7 +167,7 @@ class Account extends Service
      * @throws Exception
      * @return array
      */
-    public function getSecurity()
+    public function getSecurity():array
     {
         $path   = str_replace([], [], '/account/security');
         $params = [];
@@ -187,7 +187,7 @@ class Account extends Service
      * @throws Exception
      * @return array
      */
-    public function getSessions()
+    public function getSessions():array
     {
         $path   = str_replace([], [], '/account/sessions');
         $params = [];

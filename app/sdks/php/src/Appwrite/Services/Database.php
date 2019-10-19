@@ -16,14 +16,14 @@ class Database extends Service
      * of the project collections. [Learn more about different API
      * modes](/docs/modes).
      *
-     * @param string $search
-     * @param integer $limit
-     * @param integer $offset
-     * @param string $orderType
+     * @param string  $search
+     * @param int  $limit
+     * @param int  $offset
+     * @param string  $orderType
      * @throws Exception
      * @return array
      */
-    public function listCollections($search = '', $limit = 25, $offset = 0, $orderType = 'ASC')
+    public function listCollections(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
         $path   = str_replace([], [], '/database');
         $params = [];
@@ -43,14 +43,14 @@ class Database extends Service
      *
      * Create a new Collection.
      *
-     * @param string $name
-     * @param array $read
-     * @param array $write
-     * @param array $rules
+     * @param string  $name
+     * @param array  $read
+     * @param array  $write
+     * @param array  $rules
      * @throws Exception
      * @return array
      */
-    public function createCollection($name, $read, $write, $rules)
+    public function createCollection(string $name, array $read, array $write, array $rules):array
     {
         $path   = str_replace([], [], '/database');
         $params = [];
@@ -71,11 +71,11 @@ class Database extends Service
      * Get collection by its unique ID. This endpoint response returns a JSON
      * object with the collection metadata.
      *
-     * @param string $collectionId
+     * @param string  $collectionId
      * @throws Exception
      * @return array
      */
-    public function getCollection($collectionId)
+    public function getCollection(string $collectionId):array
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
         $params = [];
@@ -91,15 +91,15 @@ class Database extends Service
      *
      * Update collection by its unique ID.
      *
-     * @param string $collectionId
-     * @param string $name
-     * @param array $read
-     * @param array $write
-     * @param array $rules
+     * @param string  $collectionId
+     * @param string  $name
+     * @param array  $read
+     * @param array  $write
+     * @param array  $rules
      * @throws Exception
      * @return array
      */
-    public function updateCollection($collectionId, $name, $read = [], $write = [], $rules = [])
+    public function updateCollection(string $collectionId, string $name, array $read = [], array $write = [], array $rules = []):array
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
         $params = [];
@@ -120,11 +120,11 @@ class Database extends Service
      * Delete a collection by its unique ID. Only users with write permissions
      * have access to delete this resource.
      *
-     * @param string $collectionId
+     * @param string  $collectionId
      * @throws Exception
      * @return array
      */
-    public function deleteCollection($collectionId)
+    public function deleteCollection(string $collectionId):array
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
         $params = [];
@@ -143,20 +143,20 @@ class Database extends Service
      * of the project documents. [Learn more about different API
      * modes](/docs/modes).
      *
-     * @param string $collectionId
-     * @param array $filters
-     * @param integer $offset
-     * @param integer $limit
-     * @param string $orderField
-     * @param string $orderType
-     * @param string $orderCast
-     * @param string $search
-     * @param integer $first
-     * @param integer $last
+     * @param string  $collectionId
+     * @param array  $filters
+     * @param int  $offset
+     * @param int  $limit
+     * @param string  $orderField
+     * @param string  $orderType
+     * @param string  $orderCast
+     * @param string  $search
+     * @param int  $first
+     * @param int  $last
      * @throws Exception
      * @return array
      */
-    public function listDocuments($collectionId, $filters = [], $offset = 0, $limit = 50, $orderField = '$uid', $orderType = 'ASC', $orderCast = 'string', $search = '', $first = 0, $last = 0)
+    public function listDocuments(string $collectionId, array $filters = [], int $offset = 0, int $limit = 50, string $orderField = '$uid', string $orderType = 'ASC', string $orderCast = 'string', string $search = '', int $first = 0, int $last = 0):array
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}/documents');
         $params = [];
@@ -181,17 +181,17 @@ class Database extends Service
      *
      * Create a new Document.
      *
-     * @param string $collectionId
-     * @param string $data
-     * @param array $read
-     * @param array $write
-     * @param string $parentDocument
-     * @param string $parentProperty
-     * @param string $parentPropertyType
+     * @param string  $collectionId
+     * @param string  $data
+     * @param array  $read
+     * @param array  $write
+     * @param string  $parentDocument
+     * @param string  $parentProperty
+     * @param string  $parentPropertyType
      * @throws Exception
      * @return array
      */
-    public function createDocument($collectionId, $data, $read = [], $write = [], $parentDocument = '', $parentProperty = '', $parentPropertyType = 'assign')
+    public function createDocument(string $collectionId, string $data, array $read = [], array $write = [], string $parentDocument = '', string $parentProperty = '', string $parentPropertyType = 'assign'):array
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}/documents');
         $params = [];
@@ -214,12 +214,12 @@ class Database extends Service
      * Get document by its unique ID. This endpoint response returns a JSON object
      * with the document data.
      *
-     * @param string $collectionId
-     * @param string $documentId
+     * @param string  $collectionId
+     * @param string  $documentId
      * @throws Exception
      * @return array
      */
-    public function getDocument($collectionId, $documentId)
+    public function getDocument(string $collectionId, string $documentId):array
     {
         $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
         $params = [];
@@ -233,15 +233,15 @@ class Database extends Service
     /**
      * Update Document
      *
-     * @param string $collectionId
-     * @param string $documentId
-     * @param string $data
-     * @param array $read
-     * @param array $write
+     * @param string  $collectionId
+     * @param string  $documentId
+     * @param string  $data
+     * @param array  $read
+     * @param array  $write
      * @throws Exception
      * @return array
      */
-    public function updateDocument($collectionId, $documentId, $data, $read = [], $write = [])
+    public function updateDocument(string $collectionId, string $documentId, string $data, array $read = [], array $write = []):array
     {
         $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
         $params = [];
@@ -262,12 +262,12 @@ class Database extends Service
      * documents, his attributes and relations to other documents. Child documents
      * **will not** be deleted.
      *
-     * @param string $collectionId
-     * @param string $documentId
+     * @param string  $collectionId
+     * @param string  $documentId
      * @throws Exception
      * @return array
      */
-    public function deleteDocument($collectionId, $documentId)
+    public function deleteDocument(string $collectionId, string $documentId):array
     {
         $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
         $params = [];

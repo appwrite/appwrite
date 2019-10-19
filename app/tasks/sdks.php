@@ -39,7 +39,7 @@ $cli
 
         $clients = [
             'php' => [
-                'version' => '1.0.11',
+                'version' => '1.0.12',
                 'result' => __DIR__.'/../sdks/php/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',

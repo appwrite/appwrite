@@ -14,6 +14,7 @@ class Database(Service):
         params['orderType'] = order_type
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def create_collection(self, name, read, write, rules):
@@ -27,6 +28,7 @@ class Database(Service):
         params['rules'] = rules
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_collection(self, collection_id):
@@ -37,6 +39,7 @@ class Database(Service):
         path.replace('{collectionId}', collection_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_collection(self, collection_id, name, readstring(4) ""[]""
@@ -54,6 +57,7 @@ class Database(Service):
         params['rules'] = rules
 
         return self.client.call('put', path, {
+            'content-type': 'application/json',
         }, params)
 
     def delete_collection(self, collection_id):
@@ -64,6 +68,7 @@ class Database(Service):
         path.replace('{collectionId}', collection_id)                
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)
 
     def list_documents(self, collection_id, filtersstring(4) ""[]""
@@ -84,6 +89,7 @@ class Database(Service):
         params['last'] = last
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def create_document(self, collection_id, data, readstring(4) ""[]""
@@ -102,6 +108,7 @@ class Database(Service):
         params['parentPropertyType'] = parent_property_type
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_document(self, collection_id, document_id):
@@ -113,6 +120,7 @@ class Database(Service):
         path.replace('{documentId}', document_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_document(self, collection_id, document_id, data, readstring(4) ""[]""
@@ -129,6 +137,7 @@ class Database(Service):
         params['write'] = write
 
         return self.client.call('patch', path, {
+            'content-type': 'application/json',
         }, params)
 
     def delete_document(self, collection_id, document_id):
@@ -140,4 +149,5 @@ class Database(Service):
         path.replace('{documentId}', document_id)                
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)

@@ -14,6 +14,7 @@ class Users(Service):
         params['orderType'] = order_type
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def create_user(self, email, password, name=''):
@@ -26,6 +27,7 @@ class Users(Service):
         params['name'] = name
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_user(self, user_id):
@@ -36,6 +38,7 @@ class Users(Service):
         path.replace('{userId}', user_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_user_logs(self, user_id):
@@ -46,6 +49,7 @@ class Users(Service):
         path.replace('{userId}', user_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_user_prefs(self, user_id):
@@ -56,6 +60,7 @@ class Users(Service):
         path.replace('{userId}', user_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_user_prefs(self, user_id, prefs):
@@ -67,6 +72,7 @@ class Users(Service):
         params['prefs'] = prefs
 
         return self.client.call('patch', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_user_sessions(self, user_id):
@@ -77,6 +83,7 @@ class Users(Service):
         path.replace('{userId}', user_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def delete_user_sessions(self, user_id):
@@ -87,6 +94,7 @@ class Users(Service):
         path.replace('{userId}', user_id)                
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)
 
     def delete_user_session(self, user_id, session_id):
@@ -98,6 +106,7 @@ class Users(Service):
         params['sessionId'] = session_id
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_user_status(self, user_id, status):
@@ -109,4 +118,5 @@ class Users(Service):
         params['status'] = status
 
         return self.client.call('patch', path, {
+            'content-type': 'application/json',
         }, params)

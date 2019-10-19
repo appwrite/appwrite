@@ -14,7 +14,7 @@ class Projects extends Service
      * @throws Exception
      * @return array
      */
-    public function listProjects()
+    public function listProjects():array
     {
         $path   = str_replace([], [], '/projects');
         $params = [];
@@ -28,21 +28,21 @@ class Projects extends Service
     /**
      * Create Project
      *
-     * @param string $name
-     * @param string $teamId
-     * @param string $description
-     * @param string $logo
-     * @param string $url
-     * @param string $legalName
-     * @param string $legalCountry
-     * @param string $legalState
-     * @param string $legalCity
-     * @param string $legalAddress
-     * @param string $legalTaxId
+     * @param string  $name
+     * @param string  $teamId
+     * @param string  $description
+     * @param string  $logo
+     * @param string  $url
+     * @param string  $legalName
+     * @param string  $legalCountry
+     * @param string  $legalState
+     * @param string  $legalCity
+     * @param string  $legalAddress
+     * @param string  $legalTaxId
      * @throws Exception
      * @return array
      */
-    public function createProject($name, $teamId, $description = '', $logo = '', $url = '', $legalName = '', $legalCountry = '', $legalState = '', $legalCity = '', $legalAddress = '', $legalTaxId = '')
+    public function createProject(string $name, string $teamId, string $description = '', string $logo = '', string $url = '', string $legalName = '', string $legalCountry = '', string $legalState = '', string $legalCity = '', string $legalAddress = '', string $legalTaxId = ''):array
     {
         $path   = str_replace([], [], '/projects');
         $params = [];
@@ -67,11 +67,11 @@ class Projects extends Service
     /**
      * Get Project
      *
-     * @param string $projectId
+     * @param string  $projectId
      * @throws Exception
      * @return array
      */
-    public function getProject($projectId)
+    public function getProject(string $projectId):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}');
         $params = [];
@@ -85,21 +85,21 @@ class Projects extends Service
     /**
      * Update Project
      *
-     * @param string $projectId
-     * @param string $name
-     * @param string $description
-     * @param string $logo
-     * @param string $url
-     * @param string $legalName
-     * @param string $legalCountry
-     * @param string $legalState
-     * @param string $legalCity
-     * @param string $legalAddress
-     * @param string $legalTaxId
+     * @param string  $projectId
+     * @param string  $name
+     * @param string  $description
+     * @param string  $logo
+     * @param string  $url
+     * @param string  $legalName
+     * @param string  $legalCountry
+     * @param string  $legalState
+     * @param string  $legalCity
+     * @param string  $legalAddress
+     * @param string  $legalTaxId
      * @throws Exception
      * @return array
      */
-    public function updateProject($projectId, $name, $description = '', $logo = '', $url = '', $legalName = '', $legalCountry = '', $legalState = '', $legalCity = '', $legalAddress = '', $legalTaxId = '')
+    public function updateProject(string $projectId, string $name, string $description = '', string $logo = '', string $url = '', string $legalName = '', string $legalCountry = '', string $legalState = '', string $legalCity = '', string $legalAddress = '', string $legalTaxId = ''):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}');
         $params = [];
@@ -123,11 +123,11 @@ class Projects extends Service
     /**
      * Delete Project
      *
-     * @param string $projectId
+     * @param string  $projectId
      * @throws Exception
      * @return array
      */
-    public function deleteProject($projectId)
+    public function deleteProject(string $projectId):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}');
         $params = [];
@@ -141,11 +141,11 @@ class Projects extends Service
     /**
      * List Keys
      *
-     * @param string $projectId
+     * @param string  $projectId
      * @throws Exception
      * @return array
      */
-    public function listKeys($projectId)
+    public function listKeys(string $projectId):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/keys');
         $params = [];
@@ -159,13 +159,13 @@ class Projects extends Service
     /**
      * Create Key
      *
-     * @param string $projectId
-     * @param string $name
-     * @param array $scopes
+     * @param string  $projectId
+     * @param string  $name
+     * @param array  $scopes
      * @throws Exception
      * @return array
      */
-    public function createKey($projectId, $name, $scopes)
+    public function createKey(string $projectId, string $name, array $scopes):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/keys');
         $params = [];
@@ -181,12 +181,12 @@ class Projects extends Service
     /**
      * Get Key
      *
-     * @param string $projectId
-     * @param string $keyId
+     * @param string  $projectId
+     * @param string  $keyId
      * @throws Exception
      * @return array
      */
-    public function getKey($projectId, $keyId)
+    public function getKey(string $projectId, string $keyId):array
     {
         $path   = str_replace(['{projectId}', '{keyId}'], [$projectId, $keyId], '/projects/{projectId}/keys/{keyId}');
         $params = [];
@@ -200,14 +200,14 @@ class Projects extends Service
     /**
      * Update Key
      *
-     * @param string $projectId
-     * @param string $keyId
-     * @param string $name
-     * @param array $scopes
+     * @param string  $projectId
+     * @param string  $keyId
+     * @param string  $name
+     * @param array  $scopes
      * @throws Exception
      * @return array
      */
-    public function updateKey($projectId, $keyId, $name, $scopes)
+    public function updateKey(string $projectId, string $keyId, string $name, array $scopes):array
     {
         $path   = str_replace(['{projectId}', '{keyId}'], [$projectId, $keyId], '/projects/{projectId}/keys/{keyId}');
         $params = [];
@@ -223,12 +223,12 @@ class Projects extends Service
     /**
      * Delete Key
      *
-     * @param string $projectId
-     * @param string $keyId
+     * @param string  $projectId
+     * @param string  $keyId
      * @throws Exception
      * @return array
      */
-    public function deleteKey($projectId, $keyId)
+    public function deleteKey(string $projectId, string $keyId):array
     {
         $path   = str_replace(['{projectId}', '{keyId}'], [$projectId, $keyId], '/projects/{projectId}/keys/{keyId}');
         $params = [];
@@ -242,14 +242,14 @@ class Projects extends Service
     /**
      * Update Project OAuth
      *
-     * @param string $projectId
-     * @param string $provider
-     * @param string $appId
-     * @param string $secret
+     * @param string  $projectId
+     * @param string  $provider
+     * @param string  $appId
+     * @param string  $secret
      * @throws Exception
      * @return array
      */
-    public function updateProjectOAuth($projectId, $provider, $appId = '', $secret = '')
+    public function updateProjectOAuth(string $projectId, string $provider, string $appId = '', string $secret = ''):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/oauth');
         $params = [];
@@ -266,11 +266,11 @@ class Projects extends Service
     /**
      * List Platforms
      *
-     * @param string $projectId
+     * @param string  $projectId
      * @throws Exception
      * @return array
      */
-    public function listPlatforms($projectId)
+    public function listPlatforms(string $projectId):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/platforms');
         $params = [];
@@ -284,16 +284,16 @@ class Projects extends Service
     /**
      * Create Platform
      *
-     * @param string $projectId
-     * @param string $type
-     * @param string $name
-     * @param string $key
-     * @param string $store
-     * @param string $url
+     * @param string  $projectId
+     * @param string  $type
+     * @param string  $name
+     * @param string  $key
+     * @param string  $store
+     * @param string  $url
      * @throws Exception
      * @return array
      */
-    public function createPlatform($projectId, $type, $name, $key = '', $store = '', $url = '')
+    public function createPlatform(string $projectId, string $type, string $name, string $key = '', string $store = '', string $url = ''):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/platforms');
         $params = [];
@@ -312,12 +312,12 @@ class Projects extends Service
     /**
      * Get Platform
      *
-     * @param string $projectId
-     * @param string $platformId
+     * @param string  $projectId
+     * @param string  $platformId
      * @throws Exception
      * @return array
      */
-    public function getPlatform($projectId, $platformId)
+    public function getPlatform(string $projectId, string $platformId):array
     {
         $path   = str_replace(['{projectId}', '{platformId}'], [$projectId, $platformId], '/projects/{projectId}/platforms/{platformId}');
         $params = [];
@@ -331,16 +331,16 @@ class Projects extends Service
     /**
      * Update Platform
      *
-     * @param string $projectId
-     * @param string $platformId
-     * @param string $name
-     * @param string $key
-     * @param string $store
-     * @param string $url
+     * @param string  $projectId
+     * @param string  $platformId
+     * @param string  $name
+     * @param string  $key
+     * @param string  $store
+     * @param string  $url
      * @throws Exception
      * @return array
      */
-    public function updatePlatform($projectId, $platformId, $name, $key = '', $store = '', $url = '')
+    public function updatePlatform(string $projectId, string $platformId, string $name, string $key = '', string $store = '', string $url = ''):array
     {
         $path   = str_replace(['{projectId}', '{platformId}'], [$projectId, $platformId], '/projects/{projectId}/platforms/{platformId}');
         $params = [];
@@ -358,12 +358,12 @@ class Projects extends Service
     /**
      * Delete Platform
      *
-     * @param string $projectId
-     * @param string $platformId
+     * @param string  $projectId
+     * @param string  $platformId
      * @throws Exception
      * @return array
      */
-    public function deletePlatform($projectId, $platformId)
+    public function deletePlatform(string $projectId, string $platformId):array
     {
         $path   = str_replace(['{projectId}', '{platformId}'], [$projectId, $platformId], '/projects/{projectId}/platforms/{platformId}');
         $params = [];
@@ -377,11 +377,11 @@ class Projects extends Service
     /**
      * List Tasks
      *
-     * @param string $projectId
+     * @param string  $projectId
      * @throws Exception
      * @return array
      */
-    public function listTasks($projectId)
+    public function listTasks(string $projectId):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/tasks');
         $params = [];
@@ -395,20 +395,20 @@ class Projects extends Service
     /**
      * Create Task
      *
-     * @param string $projectId
-     * @param string $name
-     * @param string $status
-     * @param string $schedule
-     * @param integer $security
-     * @param string $httpMethod
-     * @param string $httpUrl
-     * @param array $httpHeaders
-     * @param string $httpUser
-     * @param string $httpPass
+     * @param string  $projectId
+     * @param string  $name
+     * @param string  $status
+     * @param string  $schedule
+     * @param int  $security
+     * @param string  $httpMethod
+     * @param string  $httpUrl
+     * @param array  $httpHeaders
+     * @param string  $httpUser
+     * @param string  $httpPass
      * @throws Exception
      * @return array
      */
-    public function createTask($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders = [], $httpUser = '', $httpPass = '')
+    public function createTask(string $projectId, string $name, string $status, string $schedule, int $security, string $httpMethod, string $httpUrl, array $httpHeaders = [], string $httpUser = '', string $httpPass = ''):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/tasks');
         $params = [];
@@ -431,12 +431,12 @@ class Projects extends Service
     /**
      * Get Task
      *
-     * @param string $projectId
-     * @param string $taskId
+     * @param string  $projectId
+     * @param string  $taskId
      * @throws Exception
      * @return array
      */
-    public function getTask($projectId, $taskId)
+    public function getTask(string $projectId, string $taskId):array
     {
         $path   = str_replace(['{projectId}', '{taskId}'], [$projectId, $taskId], '/projects/{projectId}/tasks/{taskId}');
         $params = [];
@@ -450,21 +450,21 @@ class Projects extends Service
     /**
      * Update Task
      *
-     * @param string $projectId
-     * @param string $taskId
-     * @param string $name
-     * @param string $status
-     * @param string $schedule
-     * @param integer $security
-     * @param string $httpMethod
-     * @param string $httpUrl
-     * @param array $httpHeaders
-     * @param string $httpUser
-     * @param string $httpPass
+     * @param string  $projectId
+     * @param string  $taskId
+     * @param string  $name
+     * @param string  $status
+     * @param string  $schedule
+     * @param int  $security
+     * @param string  $httpMethod
+     * @param string  $httpUrl
+     * @param array  $httpHeaders
+     * @param string  $httpUser
+     * @param string  $httpPass
      * @throws Exception
      * @return array
      */
-    public function updateTask($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders = [], $httpUser = '', $httpPass = '')
+    public function updateTask(string $projectId, string $taskId, string $name, string $status, string $schedule, int $security, string $httpMethod, string $httpUrl, array $httpHeaders = [], string $httpUser = '', string $httpPass = ''):array
     {
         $path   = str_replace(['{projectId}', '{taskId}'], [$projectId, $taskId], '/projects/{projectId}/tasks/{taskId}');
         $params = [];
@@ -487,12 +487,12 @@ class Projects extends Service
     /**
      * Delete Task
      *
-     * @param string $projectId
-     * @param string $taskId
+     * @param string  $projectId
+     * @param string  $taskId
      * @throws Exception
      * @return array
      */
-    public function deleteTask($projectId, $taskId)
+    public function deleteTask(string $projectId, string $taskId):array
     {
         $path   = str_replace(['{projectId}', '{taskId}'], [$projectId, $taskId], '/projects/{projectId}/tasks/{taskId}');
         $params = [];
@@ -506,11 +506,11 @@ class Projects extends Service
     /**
      * Get Project
      *
-     * @param string $projectId
+     * @param string  $projectId
      * @throws Exception
      * @return array
      */
-    public function getProjectUsage($projectId)
+    public function getProjectUsage(string $projectId):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/usage');
         $params = [];
@@ -524,11 +524,11 @@ class Projects extends Service
     /**
      * List Webhooks
      *
-     * @param string $projectId
+     * @param string  $projectId
      * @throws Exception
      * @return array
      */
-    public function listWebhooks($projectId)
+    public function listWebhooks(string $projectId):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/webhooks');
         $params = [];
@@ -542,17 +542,17 @@ class Projects extends Service
     /**
      * Create Webhook
      *
-     * @param string $projectId
-     * @param string $name
-     * @param array $events
-     * @param string $url
-     * @param integer $security
-     * @param string $httpUser
-     * @param string $httpPass
+     * @param string  $projectId
+     * @param string  $name
+     * @param array  $events
+     * @param string  $url
+     * @param int  $security
+     * @param string  $httpUser
+     * @param string  $httpPass
      * @throws Exception
      * @return array
      */
-    public function createWebhook($projectId, $name, $events, $url, $security, $httpUser = '', $httpPass = '')
+    public function createWebhook(string $projectId, string $name, array $events, string $url, int $security, string $httpUser = '', string $httpPass = ''):array
     {
         $path   = str_replace(['{projectId}'], [$projectId], '/projects/{projectId}/webhooks');
         $params = [];
@@ -572,12 +572,12 @@ class Projects extends Service
     /**
      * Get Webhook
      *
-     * @param string $projectId
-     * @param string $webhookId
+     * @param string  $projectId
+     * @param string  $webhookId
      * @throws Exception
      * @return array
      */
-    public function getWebhook($projectId, $webhookId)
+    public function getWebhook(string $projectId, string $webhookId):array
     {
         $path   = str_replace(['{projectId}', '{webhookId}'], [$projectId, $webhookId], '/projects/{projectId}/webhooks/{webhookId}');
         $params = [];
@@ -591,18 +591,18 @@ class Projects extends Service
     /**
      * Update Webhook
      *
-     * @param string $projectId
-     * @param string $webhookId
-     * @param string $name
-     * @param array $events
-     * @param string $url
-     * @param integer $security
-     * @param string $httpUser
-     * @param string $httpPass
+     * @param string  $projectId
+     * @param string  $webhookId
+     * @param string  $name
+     * @param array  $events
+     * @param string  $url
+     * @param int  $security
+     * @param string  $httpUser
+     * @param string  $httpPass
      * @throws Exception
      * @return array
      */
-    public function updateWebhook($projectId, $webhookId, $name, $events, $url, $security, $httpUser = '', $httpPass = '')
+    public function updateWebhook(string $projectId, string $webhookId, string $name, array $events, string $url, int $security, string $httpUser = '', string $httpPass = ''):array
     {
         $path   = str_replace(['{projectId}', '{webhookId}'], [$projectId, $webhookId], '/projects/{projectId}/webhooks/{webhookId}');
         $params = [];
@@ -622,12 +622,12 @@ class Projects extends Service
     /**
      * Delete Webhook
      *
-     * @param string $projectId
-     * @param string $webhookId
+     * @param string  $projectId
+     * @param string  $webhookId
      * @throws Exception
      * @return array
      */
-    public function deleteWebhook($projectId, $webhookId)
+    public function deleteWebhook(string $projectId, string $webhookId):array
     {
         $path   = str_replace(['{projectId}', '{webhookId}'], [$projectId, $webhookId], '/projects/{projectId}/webhooks/{webhookId}');
         $params = [];

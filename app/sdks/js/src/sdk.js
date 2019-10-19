@@ -313,7 +313,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -330,7 +332,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -368,7 +372,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -394,7 +400,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -430,7 +438,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -447,7 +457,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -474,7 +486,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -492,7 +506,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -510,7 +526,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -591,7 +609,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -615,7 +635,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -695,7 +717,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -756,7 +780,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -873,7 +899,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -906,7 +934,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -949,7 +979,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -989,7 +1021,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1016,7 +1050,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1055,7 +1091,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1094,7 +1132,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1136,7 +1176,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -1179,7 +1221,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1232,7 +1276,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1255,7 +1301,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1301,7 +1349,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1324,7 +1374,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1394,7 +1446,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1450,7 +1504,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1478,7 +1534,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1523,7 +1581,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1552,7 +1612,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -1575,7 +1637,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1593,7 +1657,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1612,7 +1678,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1630,7 +1698,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1649,7 +1719,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -1668,7 +1740,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1747,7 +1821,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1768,7 +1844,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1843,7 +1921,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1864,7 +1944,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1885,7 +1967,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1924,7 +2008,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1950,7 +2036,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1994,7 +2082,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2020,7 +2110,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2060,7 +2152,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2081,7 +2175,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2135,7 +2231,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2161,7 +2259,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2211,7 +2311,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2237,7 +2339,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2258,7 +2362,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2348,7 +2454,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2374,7 +2482,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2469,7 +2579,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2495,7 +2607,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2516,7 +2630,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2537,7 +2653,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2604,7 +2722,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2630,7 +2750,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2702,7 +2824,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2728,7 +2852,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -2770,7 +2896,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2813,7 +2941,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'multipart/form-data'}, payload);
+                    .post(path, {
+                        'content-type': 'multipart/form-data',
+                    }, payload);
             },
 
             /**
@@ -2836,7 +2966,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2874,7 +3006,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2897,7 +3031,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2921,7 +3057,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2971,7 +3109,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2999,7 +3139,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -3041,7 +3183,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3075,7 +3219,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3098,7 +3244,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3130,7 +3278,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3153,7 +3303,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3176,7 +3328,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3242,7 +3396,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3270,7 +3426,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3307,7 +3465,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3418,7 +3578,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3458,7 +3620,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3480,7 +3644,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3502,7 +3668,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3524,7 +3692,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3556,7 +3726,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3578,7 +3750,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3600,7 +3774,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3631,7 +3807,9 @@
                 }
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3662,7 +3840,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
