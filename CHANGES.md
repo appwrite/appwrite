@@ -16,6 +16,7 @@
 * Fix for typos in PT-BR translations
 * Fix for UI crash when project user was missing a name
 * Fix for it locale including the en templates by mistake
+* Fix for UI not showing user's prefs properly
 
 ## Breaking Changs
 
