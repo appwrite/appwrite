@@ -585,18 +585,20 @@ $utopia->get('/v1/open-api-2.json')
                     $url = str_replace('/v1', '', $route->getURL());
                     $scope = $route->getLabel('scope', '');
                     $hide = $route->getLabel('sdk.hide', false);
-                    $consumes = [];
+                    $consumes = ['application/json'];
 
                     if ($hide) {
                         continue;
                     }
+
+                    $desc = realpath(__DIR__ . '/..' . $route->getLabel('sdk.description', ''));
 
                     $temp = [
                         'summary' => $route->getDesc(),
                         'operationId' => $route->getLabel('sdk.method', uniqid()),
                         'consumes' => [],
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
-                        'description' => file_get_contents(realpath(__DIR__ . '/..' . $route->getLabel('sdk.description', ''))),
+                        'description' => ($desc) ? file_get_contents($desc) : '',
                         'responses' => [
                             200 => [
                                 'description' => 'An paged array of pets',
@@ -671,7 +673,7 @@ $utopia->get('/v1/open-api-2.json')
                                 //$node['format'] = 'json';
                                 break;
                             case 'Storage\Validators\File':
-                                $consumes[] = 'multipart/form-data';
+                                $consumes = ['multipart/form-data'];
                                 $node['type'] = 'file';
                                 break;
                             case 'Utopia\Validator\ArrayList':
