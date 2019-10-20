@@ -12,6 +12,7 @@
 [![Build Status](https://travis-ci.org/appwrite/appwrite.svg?branch=master)](https://travis-ci.org/appwrite/appwrite)
 [![Follow  Appwrite on StackShare](https://img.stackshare.io/misc/follow-on-stackshare-badge.svg)](https://stackshare.io/appwrite)
 [![Follow new releases](https://app.releasly.co/assets/badges/badge-blue.svg)](https://app.releasly.co/sites/appwrite/appwrite?utm_source=github_badge)
+![License](https://img.shields.io/github/license/appwrite/sdk-for-python.svg?v=1)
 
 ---
 
@@ -126,3 +127,8 @@ Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of ou
 * 🇮🇳 Saksham Saxena ([GitHub](https://github.com/sakkshm))
 * 🇮🇱 Dima Vishnevetsky ([GitHub](https://github.com/dimshik100), [Twitter](https://twitter.com/dimshik100))
 * 🇭🇺 lacexd ([GitHub](https://github.com/lacexd))
+
+## License
+
+Please see the [BSD-3-Clause license](https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE) file for more licensing information.
+
