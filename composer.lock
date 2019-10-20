@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "263b9e265b8d49870f5d19cd964124a4dcd27faf"
+                "reference": "56a520e98ba5ccdc2aba4cde525814ecf76220b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/263b9e265b8d49870f5d19cd964124a4dcd27faf",
-                "reference": "263b9e265b8d49870f5d19cd964124a4dcd27faf",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/56a520e98ba5ccdc2aba4cde525814ecf76220b4",
+                "reference": "56a520e98ba5ccdc2aba4cde525814ecf76220b4",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-10-19T00:02:42+00:00"
+            "time": "2019-10-19T17:16:44+00:00"
         },
         {
             "name": "appwrite/php-clamav",

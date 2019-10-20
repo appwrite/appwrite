@@ -523,8 +523,8 @@ $utopia->put('/v1/storage/files/:fileId')
     ->label('sdk.method', 'updateFile')
     ->label('sdk.description', '/docs/references/storage/update-file.md')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions.')
     ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
     ->action(
         function ($fileId, $read, $write, $folderId) use ($response, $projectDB) {
