@@ -17,7 +17,7 @@ use Appwrite\SDK\Language\Go;
 
 $cli = new CLI();
 
-$version = '0.2.0'; // Server version
+$version = '0.3.0'; // Server version
 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
 $cli
@@ -39,7 +39,7 @@ $cli
 
         $clients = [
             'php' => [
-                'version' => '1.0.12',
+                'version' => '1.0.13',
                 'result' => __DIR__.'/../sdks/php/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
@@ -50,7 +50,7 @@ $cli
                 'platform' => 'server',
             ],
             'js' => [
-                'version' => '1.0.24',
+                'version' => '1.0.25',
                 'result' => __DIR__.'/../sdks/js/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
@@ -61,7 +61,7 @@ $cli
                 'platform' => 'client',
             ],
             'node' => [
-                'version' => '1.0.27',
+                'version' => '1.0.28',
                 'result' => __DIR__.'/../sdks/node/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-node.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
@@ -72,7 +72,7 @@ $cli
                 'platform' => 'server',
             ],
             'python' => [
-                'version' => '1.0.0',
+                'version' => '1.0.1',
                 'result' => __DIR__.'/../sdks/python/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-python.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-python.git',
@@ -83,7 +83,7 @@ $cli
                 'platform' => 'server',
             ],
             'ruby' => [
-                'version' => '1.0.4',
+                'version' => '1.0.5',
                 'result' => __DIR__.'/../sdks/ruby/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-ruby.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-ruby.git',
@@ -94,7 +94,7 @@ $cli
                 'platform' => 'server',
             ],
             'dart' => [
-                'version' => '0.0.2',
+                'version' => '0.0.3',
                 'result' => __DIR__.'/../sdks/dart/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-dart',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-dart.git',
@@ -105,7 +105,7 @@ $cli
                 'platform' => 'client',
             ],
             'go' => [
-                'version' => '0.0.1',
+                'version' => '0.0.2',
                 'result' => __DIR__.'/../sdks/go/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-go',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-go.git',
