@@ -1,14 +1,21 @@
-# Version 0.3.0 (PRE-RELEASE) - PLANNED
+# Version 0.4.0 (PRE-RELEASE) - PLANNED
 
 ## Features
 
-* Added 19 new locales for locale service and email templates (af, ar, bn, cz, hu, hy, jv, ko, lt, ml, no, ru, si, sq, sv, ta, vi, zh-cn, zh-tw)
-* New users service routes to allow updates pref and name update
 * 2 stage Docker build
 * New database rule validation options
 * Update docs example with auth info
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
+
+## Bugs
+
+# Version 0.3.0
+
+## Features
+
+* Added 19 new locales for locale service and email templates (af, ar, bn, cz, hu, hy, jv, ko, lt, ml, no, ru, si, sq, sv, ta, vi, zh-cn, zh-tw)
+* New users service routes to allow updates pref and name update
 * New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
 * Added support for ES6 require statements in JS SDK
 
