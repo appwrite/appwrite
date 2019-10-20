@@ -420,6 +420,7 @@ $utopia->post('/v1/database/:collectionId/documents')
             try {
                 $data = $projectDB->createDocument($data);
             } catch (AuthorizationException $exception) {
+                throw new Exception($exception->getMessage(), 400);
                 throw new Exception('Unauthorized action', 401);
             } catch (StructureException $exception) {
                 throw new Exception('Bad structure. '.$exception->getMessage(), 400);
