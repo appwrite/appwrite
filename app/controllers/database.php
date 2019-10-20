@@ -354,7 +354,8 @@ $utopia->post('/v1/database/:collectionId/documents')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID.')
     ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions.')    ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions.')
+    ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->action(
@@ -459,8 +460,8 @@ $utopia->patch('/v1/database/:collectionId/documents/:documentId')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
     ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions.')
     ->action(
         function ($collectionId, $documentId, $data, $read, $write) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
