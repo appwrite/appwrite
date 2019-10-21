@@ -72,6 +72,34 @@ class ProjectUsersTest extends BaseProjects
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']);
 
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ]);
+
+        $this->assertEquals($users['headers']['status-code'], 200);
+        $this->assertIsArray($users['body']);
+        $this->assertIsArray($users['body']['users']);
+        $this->assertIsInt($users['body']['sum']);
+        $this->assertGreaterThan(0, $users['body']['sum']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'search' => 'demo'
+        ]);
+
+        $this->assertEquals($users['headers']['status-code'], 200);
+        $this->assertIsArray($users['body']);
+        $this->assertIsArray($users['body']['users']);
+        $this->assertIsInt($users['body']['sum']);
+        $this->assertEquals(1, $users['body']['sum']);
+        $this->assertGreaterThan(0, $users['body']['sum']);
+        $this->assertCount(1, $users['body']['users']);
+
         return $data;
     }
 
@@ -102,4 +130,30 @@ class ProjectUsersTest extends BaseProjects
 
         return $data;
     }
+
+    /**
+     * @depends testUserReadSuccess
+     */
+    public function testUserUpdatePrefsSuccess($data)
+    {
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/prefs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'prefs' => [
+                'key1' => 'value1',
+                'key2' => 'value2',
+            ],
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['key1'], 'value1');
+        $this->assertEquals($user['body']['key2'], 'value2');
+
+        return $data;
+    }
+
+    // TODO add test for session delete
+    // TODO add test for all sessions delete
 }

@@ -398,26 +398,19 @@ $utopia->patch('/v1/users/:userId/prefs')
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            $oauthKeys = [];
+            $prefs = $user->getAttribute('prefs', '');
 
-            foreach ($providers as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
-
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+            if (empty($prefs)) {
+                $prefs = '[]';
             }
 
-            $response
-                ->json(array_merge($user->getArrayCopy(array_merge([
-                    '$uid',
-                    'status',
-                    'email',
-                    'registration',
-                    'confirm',
-                    'name',
-                ], $oauthKeys)), ['roles' => []]));
+            try {
+                $prefs = json_decode($prefs, true);
+            } catch (\Exception $error) {
+                throw new Exception('Failed to parse prefs', 500);
+            }
+
+            $response->json($prefs);
         }
     );
 
