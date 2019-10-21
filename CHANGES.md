@@ -18,12 +18,14 @@
 * New users service routes to allow updates pref and name update
 * New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
 * Added support for ES6 require statements in JS SDK
+* New Locale API route for fetching list of continents
 
 ## Bugs
 * Fix for typos in PT-BR translations
 * Fix for UI crash when project user was missing a name
 * Fix for it locale including the en templates by mistake
 * Fix for UI not showing user's prefs properly
+* Fixed 401 unexpected error when no permission passed in creation of a new resource
 
 ## Breaking Changes
 
