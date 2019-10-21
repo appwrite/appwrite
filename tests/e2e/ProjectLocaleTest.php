@@ -66,7 +66,37 @@ class ProjectLocaleTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testLocaleContinentReadSuccess($data)
+    public function testLocaleCountriesEUReadSuccess($data)
+    {
+        $countries = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+        ]);
+
+        $this->assertEquals($countries['headers']['status-code'], 200);
+        $this->assertIsArray($countries['body']);
+        $this->assertCount(28, $countries['body']);
+        $this->assertEquals($countries['body']['DE'], 'Germany');
+       
+        // Test locale code change to ES
+
+        $countries = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', [
+            'content-type' => 'application/json',
+            'x-appwrite-locale' => 'es',
+        ]);
+
+        $this->assertEquals($countries['headers']['status-code'], 200);
+        $this->assertIsArray($countries['body']);
+        $this->assertCount(28, $countries['body']);
+        $this->assertEquals($countries['body']['DE'], 'Alemania');
+
+        return $data;
+    }
+
+    /**
+     * @depends testRegisterSuccess
+     */
+    public function testLocaleContinentsReadSuccess($data)
     {
         $continents = $this->client->call(Client::METHOD_GET, '/locale/continents', [
             'content-type' => 'application/json',
@@ -89,6 +119,25 @@ class ProjectLocaleTest extends BaseProjects
         $this->assertCount(7, $continents['body']);
         $this->assertEquals($continents['body']['NA'], 'América del Norte');
 
+        return $data;
+    }
+
+    /**
+     * @depends testRegisterSuccess
+     */
+    public function testLocaleCurrenciesReadSuccess($data)
+    {
+        $continents = $this->client->call(Client::METHOD_GET, '/locale/currencies', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+        ]);
+
+        $this->assertEquals($continents['headers']['status-code'], 200);
+        $this->assertIsArray($continents['body']);
+        $this->assertCount(117, $continents['body']);
+        $this->assertEquals($continents['body'][0]['symbol'], '$');
+        $this->assertEquals($continents['body'][0]['name'], 'US Dollar');
+       
         return $data;
     }
 }
