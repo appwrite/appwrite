@@ -1,1 +1,1 @@
-List of all countries that are currently members of the EU. You can use the locale header to get the data in supported language. UK brexit date is currently set to 2019-10-31 and will be updated if and when needed.
+List of all countries that are currently members of the EU. You can use the locale header to get the data in a supported language. UK brexit date is currently set to 2019-10-31 and will be updated if and when needed.
