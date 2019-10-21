@@ -66,7 +66,7 @@ const APP_LOCALES = [
     'zh-tw', // Chinese - Taiwan
 ];
 const APP_PAGING_LIMIT = 15;
-const APP_VERSION_STABLE = '0.2.0';
+const APP_VERSION_STABLE = '0.3.0';
 
 $register = new Registry();
 $request = new Request();
