@@ -504,4 +504,103 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
         $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
     }
+
+    /**
+     * @depends testDocumentCreateSuccess
+     */
+    public function testDocumentsUpdateSuccess($data)
+    {
+        $document = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'data' => [
+                'name' => 'Thor: Ragnaroc',
+                'releaseYear' => 2017,
+            ]
+        ]);
+
+        $id = $document['body']['$uid'];
+        $collection = $document['body']['$collection'];
+
+        $this->assertEquals($document['headers']['status-code'], 201);
+        $this->assertEquals($document['body']['name'], 'Thor: Ragnaroc');
+        $this->assertEquals($document['body']['releaseYear'], 2017);
+        
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/' . $collection . '/documents/' . $id, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'data' => [
+                'name' => 'Thor: Ragnarok'
+            ]
+        ]);
+
+        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
+        $this->assertEquals($document['body']['releaseYear'], 2017);
+        
+        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ]);
+
+        $id = $document['body']['$uid'];
+        $collection = $document['body']['$collection'];
+
+        $this->assertEquals($document['headers']['status-code'], 200);
+        $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
+        $this->assertEquals($document['body']['releaseYear'], 2017);
+        
+    }
+
+    /**
+     * @depends testDocumentCreateSuccess
+     */
+    public function testDocumentsDeleteSuccess($data)
+    {
+        $document = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ], [
+            'data' => [
+                'name' => 'Thor: Ragnarok',
+                'releaseYear' => 2017,
+            ]
+        ]);
+
+        $id = $document['body']['$uid'];
+        $collection = $document['body']['$collection'];
+
+        $this->assertEquals($document['headers']['status-code'], 201);
+        
+        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ]);
+
+        $this->assertEquals($document['headers']['status-code'], 200);
+
+        $document = $this->client->call(Client::METHOD_DELETE, '/database/' . $collection . '/documents/' . $id, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ]);
+
+        $this->assertEquals($document['headers']['status-code'], 204);
+
+        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ]);
+
+        $this->assertEquals($document['headers']['status-code'], 404);
+
+    }
 }
