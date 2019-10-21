@@ -46,13 +46,31 @@ class ProjectUsersTest extends BaseProjects
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
         ]);
-
+        
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['name'], 'Project User');
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
         $this->assertEquals($user['body']['status'], 0);
         $this->assertGreaterThan(0, $user['body']['registration']);
         $this->assertIsArray($user['body']['roles']);
+        
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ]);
+
+        $this->assertEquals($sessions['headers']['status-code'], 200);
+        $this->assertIsArray($sessions['body']);
+        
+        $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
+            'x-appwrite-key' => $data['projectAPIKeySecret'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']);
 
         return $data;
     }
@@ -79,7 +97,6 @@ class ProjectUsersTest extends BaseProjects
             'x-appwrite-key' => $data['projectAPIKeySecret'],
         ]);
 
-        var_dump($user);
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['status'], 2);
 
