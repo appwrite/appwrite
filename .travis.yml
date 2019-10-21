@@ -1,7 +1,7 @@
 language: php
 
 php:
-  - '7.1'
+  - '7.3'
 
 addons:
   hosts:

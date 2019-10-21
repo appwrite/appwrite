@@ -182,6 +182,8 @@ class ProjectAvatarsTest extends BaseProjects
             'url' => 'https://appwrite.io/',
         ]);
 
+        var_dump($logo);
+
         $this->assertEquals(200, $logo['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $logo['headers']['content-type']);
         $this->assertEquals('5f22187ae9b19c9d92a28b3ce1f74777', md5($logo['body']));
