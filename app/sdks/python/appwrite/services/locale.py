@@ -13,6 +13,16 @@ class Locale(Service):
             'content-type': 'application/json',
         }, params)
 
+    def get_continents(self):
+        """List Countries"""
+
+        params = {}
+        path = '/locale/continents'
+
+        return self.client.call('get', path, {
+            'content-type': 'application/json',
+        }, params)
+
     def get_countries(self):
         """List Countries"""
 

@@ -1,9 +1,9 @@
-# Storage Examples
+# Locale Examples
 
-## UpdateFile
+## GetContinents
 
 ```go
-    package appwrite-updatefile
+    package appwrite-getcontinents
 
     import (
         "fmt"
@@ -19,13 +19,13 @@
         clt.SetProject("")
         clt.SetKey("")
 
-        // Create a new Storage service passing Client
-        var srv := appwrite.Storage{
+        // Create a new Locale service passing Client
+        var srv := appwrite.Locale{
             client: &clt
         }
 
-        // Call UpdateFile method and handle results
-        var res, err := srv.UpdateFile("[FILE_ID]", [], [])
+        // Call GetContinents method and handle results
+        var res, err := srv.GetContinents()
         if err != nil {
             panic(err)
         }

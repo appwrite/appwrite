@@ -44,9 +44,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_file(self, file_id, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], folder_id=''):
+    def update_file(self, file_id, read, write, folder_id=''):
         """Update File"""
 
         params = {}

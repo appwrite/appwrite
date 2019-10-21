@@ -48,7 +48,7 @@ class Storage extends Service {
     }
      /// Update file by its unique ID. Only users with write permissions have access
      /// to update this resource.
-    Future<Response> updateFile({fileId, read = const [], write = const [], folderId = null}) async {
+    Future<Response> updateFile({fileId, read, write, folderId = null}) async {
        String path = '/storage/files/{fileId}'.replaceAll(RegExp('{fileId}'), fileId);
 
        Map<String, dynamic> params = {

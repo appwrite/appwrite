@@ -12,4 +12,4 @@ $client
 
 $storage = new Storage($client);
 
-$result = $storage->updateFile('[FILE_ID]');
+$result = $storage->updateFile('[FILE_ID]', [], []);

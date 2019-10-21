@@ -12,6 +12,17 @@ module Appwrite
             }, params);
         end
 
+        def get_continents()
+            path = '/locale/continents'
+
+            params = {
+            }
+
+            return @client.call('get', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
         def get_countries()
             path = '/locale/countries'
 

@@ -139,7 +139,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.24');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.26');
             addGlobalHeader('content-type', '');
 
             /**
@@ -1466,13 +1466,21 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createDocument: function(collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
+            createDocument: function(collectionId, data, read, write, parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
                 
                 if(data === undefined) {
                     throw new Error('Missing required parameter: "data"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
@@ -1551,7 +1559,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateDocument: function(collectionId, documentId, data, read = [], write = []) {
+            updateDocument: function(collectionId, documentId, data, read, write) {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
@@ -1562,6 +1570,14 @@
                 
                 if(data === undefined) {
                     throw new Error('Missing required parameter: "data"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
@@ -1625,7 +1641,7 @@
              *
              * Get the current user location based on IP. Returns an object with user
              * country code, country name, continent name, continent code, ip address and
-             * suggested currency. You can use the locale header to get the data in
+             * suggested currency. You can use the locale header to get the data in a
              * supported language.
              *
              * @throws {Error}
@@ -1645,7 +1661,27 @@
             /**
              * List Countries
              *
-             * List of all countries. You can use the locale header to get the data in
+             * List of all continents. You can use the locale header to get the data in a
+             * supported language.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getContinents: function() {
+                let path = '/locale/continents';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Countries
+             *
+             * List of all countries. You can use the locale header to get the data in a
              * supported language.
              *
              * @throws {Error}
@@ -1666,7 +1702,7 @@
              * List EU Countries
              *
              * List of all countries that are currently members of the EU. You can use the
-             * locale header to get the data in supported language. UK brexit date is
+             * locale header to get the data in a supported language. UK brexit date is
              * currently set to 2019-10-31 and will be updated if and when needed.
              *
              * @throws {Error}
@@ -1687,7 +1723,7 @@
              * List Countries Phone Codes
              *
              * List of all countries phone codes. You can use the locale header to get the
-             * data in supported language.
+             * data in a supported language.
              *
              * @throws {Error}
              * @return {Promise}             
@@ -1708,7 +1744,7 @@
              *
              * List of all currencies, including currency symol, name, plural, and decimal
              * digits for all major and minor currencies. You can use the locale header to
-             * get the data in supported language.
+             * get the data in a supported language.
              *
              * @throws {Error}
              * @return {Promise}             
@@ -2984,9 +3020,17 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateFile: function(fileId, read = [], write = [], folderId = '') {
+            updateFile: function(fileId, read, write, folderId = '') {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);

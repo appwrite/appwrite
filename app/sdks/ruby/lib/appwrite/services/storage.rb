@@ -43,7 +43,7 @@ module Appwrite
             }, params);
         end
 
-        def update_file(file_id:, read: [], write: [], folder_id: '')
+        def update_file(file_id:, read:, write:, folder_id: '')
             path = '/storage/files/{fileId}'
                 .gsub('{file_id}', file_id)
 

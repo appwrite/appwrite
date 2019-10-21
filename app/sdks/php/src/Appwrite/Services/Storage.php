@@ -100,7 +100,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function updateFile(string $fileId, array $read = [], array $write = [], string $folderId = ''):array
+    public function updateFile(string $fileId, array $read, array $write, string $folderId = ''):array
     {
         $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}');
         $params = [];

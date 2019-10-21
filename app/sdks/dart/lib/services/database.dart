@@ -90,7 +90,7 @@ class Database extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Create a new Document.
-    Future<Response> createDocument({collectionId, data, read = const [], write = const [], parentDocument = null, parentProperty = null, parentPropertyType = 'assign'}) async {
+    Future<Response> createDocument({collectionId, data, read, write, parentDocument = null, parentProperty = null, parentPropertyType = 'assign'}) async {
        String path = '/database/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
        Map<String, dynamic> params = {
@@ -114,7 +114,7 @@ class Database extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-    Future<Response> updateDocument({collectionId, documentId, data, read = const [], write = const []}) async {
+    Future<Response> updateDocument({collectionId, documentId, data, read, write}) async {
        String path = '/database/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 
        Map<String, dynamic> params = {

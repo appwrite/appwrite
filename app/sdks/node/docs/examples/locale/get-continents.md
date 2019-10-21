@@ -3,14 +3,14 @@ const sdk = require('node-appwrite');
 // Init SDK
 let client = new sdk.Client();
 
-let storage = new sdk.Storage(client);
+let locale = new sdk.Locale(client);
 
 client
     .setProject('')
     .setKey('')
 ;
 
-let promise = storage.updateFile('[FILE_ID]', [], []);
+let promise = locale.getContinents();
 
 promise.then(function (response) {
     console.log(response);

@@ -92,9 +92,7 @@ class Database(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_document(self, collection_id, data, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], parent_document='', parent_property='', parent_property_type='assign'):
+    def create_document(self, collection_id, data, read, write, parent_document='', parent_property='', parent_property_type='assign'):
         """Create Document"""
 
         params = {}
@@ -123,9 +121,7 @@ class Database(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_document(self, collection_id, document_id, data, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[]):
+    def update_document(self, collection_id, document_id, data, read, write):
         """Update Document"""
 
         params = {}

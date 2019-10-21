@@ -25,7 +25,7 @@
         }
 
         // Call UpdateDocument method and handle results
-        var res, err := srv.UpdateDocument("[COLLECTION_ID]", "[DOCUMENT_ID]", "{}")
+        var res, err := srv.UpdateDocument("[COLLECTION_ID]", "[DOCUMENT_ID]", "{}", [], [])
         if err != nil {
             panic(err)
         }

@@ -25,7 +25,7 @@
         }
 
         // Call CreateDocument method and handle results
-        var res, err := srv.CreateDocument("[COLLECTION_ID]", "{}")
+        var res, err := srv.CreateDocument("[COLLECTION_ID]", "{}", [], [])
         if err != nil {
             panic(err)
         }

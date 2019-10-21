@@ -179,7 +179,7 @@ class Database extends Service {
      * @throws Exception
      * @return {}
      */
-    async createDocument(collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
+    async createDocument(collectionId, data, read, write, parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
         let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
         return await this.client.call('post', path, {
@@ -227,7 +227,7 @@ class Database extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateDocument(collectionId, documentId, data, read = [], write = []) {
+    async updateDocument(collectionId, documentId, data, read, write) {
         let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
         return await this.client.call('patch', path, {
