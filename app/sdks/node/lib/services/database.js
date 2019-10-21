@@ -90,7 +90,7 @@ class Database extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateCollection(collectionId, name, read = [], write = [], rules = []) {
+    async updateCollection(collectionId, name, read, write, rules = []) {
         let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
         return await this.client.call('put', path, {

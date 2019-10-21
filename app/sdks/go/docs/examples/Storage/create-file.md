@@ -25,7 +25,7 @@
         }
 
         // Call CreateFile method and handle results
-        var res, err := srv.CreateFile(file)
+        var res, err := srv.CreateFile(file, [], [])
         if err != nil {
             panic(err)
         }

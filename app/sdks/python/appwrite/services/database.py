@@ -42,9 +42,7 @@ class Database(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_collection(self, collection_id, name, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], rulesstring(4) ""[]""
+    def update_collection(self, collection_id, name, read, write, rulesstring(4) ""[]""
 =[]):
         """Update Collection"""
 

@@ -46,7 +46,7 @@ class Database extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Update collection by its unique ID.
-    Future<Response> updateCollection({collectionId, name, read = const [], write = const [], rules = const []}) async {
+    Future<Response> updateCollection({collectionId, name, read, write, rules = const []}) async {
        String path = '/database/{collectionId}'.replaceAll(RegExp('{collectionId}'), collectionId);
 
        Map<String, dynamic> params = {

@@ -25,7 +25,7 @@
         }
 
         // Call UpdateCollection method and handle results
-        var res, err := srv.UpdateCollection("[COLLECTION_ID]", "[NAME]")
+        var res, err := srv.UpdateCollection("[COLLECTION_ID]", "[NAME]", [], [])
         if err != nil {
             panic(err)
         }

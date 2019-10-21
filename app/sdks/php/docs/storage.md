@@ -30,8 +30,8 @@ POST https://appwrite.io/v1/storage/files
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | files | file | Binary Files. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 | folderId | string | Folder to associate files with. |  |
 
 ## Get File

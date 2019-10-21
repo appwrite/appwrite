@@ -16,7 +16,7 @@ module Appwrite
             }, params);
         end
 
-        def create_file(files:, read: [], write: [], folder_id: '')
+        def create_file(files:, read:, write:, folder_id: '')
             path = '/storage/files'
 
             params = {

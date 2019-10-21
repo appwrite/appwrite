@@ -44,7 +44,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async createFile(files, read = [], write = [], folderId = '') {
+    async createFile(files, read, write, folderId = '') {
         let path = '/storage/files';
         
         return await this.client.call('post', path, {

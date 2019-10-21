@@ -99,7 +99,7 @@ class Database extends Service
      * @throws Exception
      * @return array
      */
-    public function updateCollection(string $collectionId, string $name, array $read = [], array $write = [], array $rules = []):array
+    public function updateCollection(string $collectionId, string $name, array $read, array $write, array $rules = []):array
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
         $params = [];

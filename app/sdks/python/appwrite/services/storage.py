@@ -17,9 +17,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_file(self, files, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], folder_id=''):
+    def create_file(self, files, read, write, folder_id=''):
         """Create File"""
 
         params = {}

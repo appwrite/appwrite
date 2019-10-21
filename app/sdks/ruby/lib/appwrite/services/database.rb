@@ -43,7 +43,7 @@ module Appwrite
             }, params);
         end
 
-        def update_collection(collection_id:, name:, read: [], write: [], rules: [])
+        def update_collection(collection_id:, name:, read:, write:, rules: [])
             path = '/database/{collectionId}'
                 .gsub('{collection_id}', collection_id)
 

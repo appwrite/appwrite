@@ -139,7 +139,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.26');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.27');
             addGlobalHeader('content-type', '');
 
             /**
@@ -1319,13 +1319,21 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateCollection: function(collectionId, name, read = [], write = [], rules = []) {
+            updateCollection: function(collectionId, name, read, write, rules = []) {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
                 
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
@@ -2951,9 +2959,17 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createFile: function(files, read = [], write = [], folderId = '') {
+            createFile: function(files, read, write, folderId = '') {
                 if(files === undefined) {
                     throw new Error('Missing required parameter: "files"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/storage/files';

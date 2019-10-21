@@ -62,8 +62,8 @@ PUT https://appwrite.io/v1/database/{collectionId}
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. |  |
 | name | string | Collection name. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 | rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
 
 ## Delete Collection
