@@ -10,6 +10,10 @@
 
 ## Bugs
 
+* New loading message when creating a new project
+* Fixed broken redirect URL when creating a new project
+* Fixed broken modal when a user password is too short
+
 # Version 0.3.0
 
 ## Features
