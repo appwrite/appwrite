@@ -2,7 +2,7 @@
 
 return [
     'AF' => 'África',
-    'AN' => 'Antártica',
+    'AN' => 'Antártida',
     'AS' => 'Asia',
     'EU' => 'Europa',
     'NA' => 'América del Norte',
