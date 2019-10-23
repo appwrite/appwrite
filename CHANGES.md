@@ -2,6 +2,7 @@
 
 ## Features
 
+* Added 1 new locales for locale service and email templates (ml,)
 * 2 stage Docker build
 * New database rule validation options
 * Update docs example with auth info
