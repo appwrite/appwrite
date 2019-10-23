@@ -60,6 +60,7 @@ const APP_LOCALES = [
     'sq', // Albanian
     'sv', // Swedish
     'ta', // Tamil
+    'th', // Thai
     'tr', // Turkish
     'ua', // Ukrainian
     'vi', // Vietnamese
@@ -204,6 +205,7 @@ Locale::setLanguage('sl', include __DIR__ . '/config/locale/sl.php');
 Locale::setLanguage('sq', include __DIR__ . '/config/locale/sq.php');
 Locale::setLanguage('sv', include __DIR__ . '/config/locale/sv.php');
 Locale::setLanguage('ta', include __DIR__ . '/config/locale/ta.php');
+Locale::setLanguage('th', include __DIR__.'/config/locale/th.php');
 Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
 Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
 Locale::setLanguage('vi', include __DIR__.'/config/locale/vi.php');
