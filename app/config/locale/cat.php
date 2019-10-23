@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'settings.inspire' => '"L\'art de ser sabi és l\'art de saber què passar per alt"', // This is the line printed in the homepage and console 'view-source'
+    'settings.inspire' => '"L\'art de ser savi és l\'art de saber què passar per alt"', // This is the line printed in the homepage and console 'view-source'
     'settings.locale' => 'cat',
     'settings.direction' => 'ltr',
 
@@ -11,7 +11,7 @@ return [
     'auth.emails.confirm.body' => 'cat.email.auth.confirm.tpl',
     'auth.emails.recovery.title' => 'Restablir contrasenya',
     'auth.emails.recovery.body' => 'cat.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Invitació a l\'Equipo %s a %s',
+    'auth.emails.invitation.title' => 'Invitació a l\'Equip %s a %s',
     'auth.emails.invitation.body' => 'cat.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Desconegut',
