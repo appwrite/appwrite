@@ -352,7 +352,7 @@ $providers = $this->getParam('providers', []);
                                             <p>To complete set up, add this OAuth redirect URI to your <?php echo ucfirst($provider); ?> app configuration.</p>
 
                                             <div class="input-copy">
-                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/auth/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
+                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/auth/login/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
                                             </div>
                                         </div>
                                     </div>

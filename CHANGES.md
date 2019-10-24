@@ -17,7 +17,7 @@
 
 ## Breaking Changes
 
-* OAuth path is now /auth/login/oauth instead of /auth/oauth, this is for better consistency with new login methods we will introduce in the future
+* OAuth path is now /auth/login/oauth instead of /auth/oauth and /auth/oauth/callback is now /auth/login/oauth/callback, this is for better consistency with new login methods we will introduce in the future
 
 # Version 0.3.0
 
