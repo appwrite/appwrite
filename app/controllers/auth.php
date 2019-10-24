@@ -135,7 +135,7 @@ $utopia->post('/v1/auth/register')
             $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
             $confirm = Template::unParseURL($confirm);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -272,7 +272,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
             $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $secret]);
             $confirm = Template::unParseURL($confirm);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -497,7 +497,7 @@ $utopia->post('/v1/auth/recovery')
             $reset['query'] = Template::mergeQuery(((isset($reset['query'])) ? $reset['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
             $reset = Template::unParseURL($reset);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.recovery.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
