@@ -15,6 +15,10 @@
 * Fixed broken redirect URL when creating a new project
 * Fixed broken modal when a user password is too short
 
+## Breaking Changes
+
+* OAuth path is now /auth/login/oauth instead of /auth/oauth, this is for better consistency with new login methods we will introduce in the future
+
 # Version 0.3.0
 
 ## Features
