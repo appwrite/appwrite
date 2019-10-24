@@ -24,50 +24,6 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = [
-    'af', // Afrikaans
-    'ar', // Arabic
-    'bn', // Bengali
-    'cat', // Catalan
-    'cz', // Czech
-    'de', // German
-    'en', // English
-    'es', // Spanish
-    'fi', // Finnish
-    'fr', // French
-    'gr', // Greek
-    'he', // Hebrew
-    'hi', // Hindi
-    'hu', // Hungarian
-    'hy', // Armenian
-    'id', // Indonesian
-    'is', // Icelandic
-    'it', // Italian
-    'ja', // Japanese
-    'jv', // Javanese
-    'ko', // Korean
-    'lt', // Lithuanian
-    'ml', // Malayalam
-    'ms', // Malay
-    'nl', // Dutch
-    'no', // Norwegian
-    'pl', // Polish
-    'pt-br', // Portuguese - Brazil	
-    'pt-pt', // Portuguese - Portugal
-    'ro', // Romanian
-    'ru', // Russian
-    'si', // Sinhala
-    'sl', // Slovenian
-    'sq', // Albanian
-    'sv', // Swedish
-    'ta', // Tamil
-    'th', // Thai
-    'tr', // Turkish
-    'ua', // Ukrainian
-    'vi', // Vietnamese
-    'zh-cn', // Chinese - China
-    'zh-tw', // Chinese - Taiwan
-];
 const APP_PAGING_LIMIT = 15;
 const APP_VERSION_STABLE = '0.3.0';
 
@@ -82,6 +38,7 @@ $env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
 $domain = $request->getServer('HTTP_HOST', '');
 $version = include __DIR__.'/../app/config/version.php';
 $providers = include __DIR__.'/../app/config/providers.php'; // OAuth providers list
+$locales = include __DIR__.'/../app/config/locales.php'; // OAuth providers list
 $collections = include __DIR__.'/../app/config/collections.php'; // OAuth providers list
 $redisHost = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort = $request->getServer('_APP_REDIS_PORT', '');
@@ -216,7 +173,7 @@ Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/zh-tw.php');
 
 Locale::setDefault('en');
 
-if (in_array($locale, APP_LOCALES)) {
+if (in_array($locale, $locales)) {
     Locale::setDefault($locale);
 }
 
