@@ -18,7 +18,7 @@ return [
     'BF' => 'Burkina Faso',
     'BD' => 'Bangladess',
     'BG' => 'Búlgaría',
-    'BH' => 'Barein,
+    'BH' => 'Barein',
     'BS' => 'Bahamaeyjar',
     'BA' => 'Bosnía og Hersegóvína',
     'BY' => 'Hvíta-Rússland',
