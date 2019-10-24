@@ -1,291 +1,773 @@
 <?php
 
 // Init
-if (file_exists(__DIR__.'/../vendor/autoload.php')) {
-    require_once __DIR__.'/../vendor/autoload.php';
-}
+require_once __DIR__.'/init.php';
+
+global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service;
 
 use Utopia\App;
 use Utopia\Request;
 use Utopia\Response;
+use Utopia\Validator\Host;
+use Utopia\Validator\Range;
+use Utopia\View;
+use Utopia\Exception;
+use Utopia\Abuse\Abuse;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Auth\Auth;
-use Database\Database;
 use Database\Document;
 use Database\Validator\Authorization;
-use Database\Adapter\MySQL as MySQLAdapter;
-use Database\Adapter\Redis as RedisAdapter;
-use Utopia\Locale\Locale;
-use Utopia\Registry\Registry;
-use PHPMailer\PHPMailer\PHPMailer;
-
-const APP_NAME = 'Appwrite';
-const APP_DOMAIN = 'appwrite.io';
-const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
-const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
-const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
-const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = [
-    'af', // Afrikaans
-    'ar', // Arabic
-    'bn', // Bengali
-    'cat', // Catalan
-    'cz', // Czech
-    'de', // German
-    'en', // English
-    'es', // Spanish
-    'fi', // Finnish
-    'fr', // French
-    'gr', // Greek
-    'he', // Hebrew
-    'hi', // Hindi
-    'hu', // Hungarian
-    'hy', // Armenian
-    'id', // Indonesian
-    'it', // Italian
-    'ja', // Japanese
-    'jv', // Javanese
-    'ko', // Korean
-    'lt', // Lithuanian
-    'ml', // Malayalam
-    'ms', // Malay
-    'nl', // Dutch
-    'no', // Norwegian
-    'pl', // Polish
-    'pt-br', // Portuguese - Brazil	
-    'pt-pt', // Portuguese - Portugal
-    'ro', // Romanian
-    'ru', // Russian
-    'si', // Sinhala
-    'sl', // Slovenian
-    'sq', // Albanian
-    'sv', // Swedish
-    'ta', // Tamil
-    'th', // Thai
-    'tr', // Turkish
-    'ua', // Ukrainian
-    'vi', // Vietnamese
-    'zh-cn', // Chinese - China
-    'zh-tw', // Chinese - Taiwan
-];
-const APP_PAGING_LIMIT = 15;
-const APP_VERSION_STABLE = '0.3.0';
-
-$register = new Registry();
-$request = new Request();
-$response = new Response();
+use Event\Event;
+use Utopia\Validator\WhiteList;
 
 /*
- * ENV vars
+ * Configuration files
  */
-$env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
-$domain = $request->getServer('HTTP_HOST', '');
-$version = include __DIR__.'/../app/config/version.php';
-$providers = include __DIR__.'/../app/config/providers.php'; // OAuth providers list
-$collections = include __DIR__.'/../app/config/collections.php'; // OAuth providers list
-$redisHost = $request->getServer('_APP_REDIS_HOST', '');
-$redisPort = $request->getServer('_APP_REDIS_PORT', '');
-$utopia = new App('Asia/Tel_Aviv', $env);
-$port = (string) (isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT) : '';
+$roles = include __DIR__.'/config/roles.php'; // User roles and scopes
+$sdks = include __DIR__.'/config/sdks.php'; // List of SDK clients
+$services = include __DIR__.'/config/services.php'; // List of services
 
-Resque::setBackend($redisHost.':'.$redisPort);
+$webhook = new Event('v1-webhooks', 'WebhooksV1');
+$audit = new Event('v1-audits', 'AuditsV1');
+$usage = new Event('v1-usage', 'UsageV1');
 
-define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) === 'localhost' || $request->getServer('HTTP_HOST', null) === 'localhost:'.$port) ? false : '.'.$request->getServer('HTTP_HOST', false));
-
-/*
- * Registry
+/**
+ * Get All verified client URLs for both console and current projects
+ * + Filter for duplicated entries
  */
-$register->set('db', function () use ($request) { // Register DB connection
-    $dbHost = $request->getServer('_APP_DB_HOST', '');
-    $dbUser = $request->getServer('_APP_DB_USER', '');
-    $dbPass = $request->getServer('_APP_DB_PASS', '');
-    $dbScheme = $request->getServer('_APP_DB_SCHEMA', '');
-
-    $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDO::ATTR_TIMEOUT => 5, // Seconds
-    ));
-
-    // Connection settings
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);   // Return arrays
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
-
-    return $pdo;
-});
-$register->set('influxdb', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_INFLUXDB_HOST', '');
-    $port = $request->getServer('_APP_INFLUXDB_PORT', '');
-
-    if (empty($host) || empty($port)) {
-        return;
+$clientsConsole = array_map(function ($node) {
+    return $node['url'];
+}, array_filter($console->getAttribute('platforms', []), function ($node) {
+    if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
+        return true;
     }
 
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    return false;
+}));
 
-    return $client;
-});
-$register->set('statsd', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_STATSD_HOST', 'telegraf');
-    $port = $request->getServer('_APP_STATSD_PORT', 8125);
+$clients = array_unique(array_merge($clientsConsole, array_map(function ($node) {
+    return $node['url'];
+}, array_filter($project->getAttribute('platforms', []), function ($node) {
+    if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
+        return true;
+    }
 
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
+    return false;
+}))));
 
-    return $statsd;
-});
-$register->set('cache', function () use ($redisHost, $redisPort) { // Register cache connection
-    $redis = new Redis();
+$utopia->init(function () use ($utopia, $request, $response, $register, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
+    $route = $utopia->match($request);
 
-    $redis->connect($redisHost, $redisPort);
+    $referrer = $request->getServer('HTTP_REFERER', '');
+    $origin = $request->getServer('HTTP_ORIGIN', parse_url($referrer, PHP_URL_SCHEME).'://'.parse_url($referrer, PHP_URL_HOST));
 
-    return $redis;
-});
-$register->set('smtp', function () use ($request) {
-    $mail = new PHPMailer(true);
+    $refDomain = (in_array($origin, $clients))
+        ? $origin : 'http://localhost';
 
-    $mail->isSMTP();
-
-    $username = $request->getServer('_APP_SMTP_USERNAME', '');
-    $password = $request->getServer('_APP_SMTP_PASSWORD', '');
-
-    $mail->XMailer = 'Appwrite Mailer';
-    $mail->Host = $request->getServer('_APP_SMTP_HOST', 'smtp');
-    $mail->Port = $request->getServer('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth = (!empty($username) && !empty($password));
-    $mail->Username = $username;
-    $mail->Password = $password;
-    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', '');
-
-    $mail->setFrom('team@appwrite.io', APP_NAME.' Team');
-    $mail->addReplyTo('team@appwrite.io', APP_NAME.' Team');
-
-    $mail->isHTML(true);
-
-    return $mail;
-});
-
-/*
- * Localization
- */
-$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', null));
-
-Locale::$exceptions = false;
-
-Locale::setLanguage('af', include __DIR__.'/config/locale/af.php');
-Locale::setLanguage('ar', include __DIR__.'/config/locale/ar.php');
-Locale::setLanguage('bn', include __DIR__.'/config/locale/bn.php');
-Locale::setLanguage('cat', include __DIR__.'/config/locale/cat.php');
-Locale::setLanguage('cz', include __DIR__.'/config/locale/cz.php');
-Locale::setLanguage('de', include __DIR__.'/config/locale/de.php');
-Locale::setLanguage('en', include __DIR__.'/config/locale/en.php');
-Locale::setLanguage('es', include __DIR__.'/config/locale/es.php');
-Locale::setLanguage('fi', include __DIR__.'/config/locale/fi.php');
-Locale::setLanguage('fr', include __DIR__.'/config/locale/fr.php');
-Locale::setLanguage('gr', include __DIR__.'/config/locale/gr.php');
-Locale::setLanguage('he', include __DIR__.'/config/locale/he.php');
-Locale::setLanguage('hi', include __DIR__.'/config/locale/hi.php');
-Locale::setLanguage('hu', include __DIR__.'/config/locale/hu.php');
-Locale::setLanguage('hy', include __DIR__.'/config/locale/hy.php');
-Locale::setLanguage('id', include __DIR__.'/config/locale/id.php');
-Locale::setLanguage('it', include __DIR__.'/config/locale/it.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locale/ja.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locale/jv.php');
-Locale::setLanguage('ko', include __DIR__.'/config/locale/ko.php');
-Locale::setLanguage('lt', include __DIR__.'/config/locale/lt.php');
-Locale::setLanguage('ml', include __DIR__.'/config/locale/ml.php');
-Locale::setLanguage('ms', include __DIR__.'/config/locale/ms.php');
-Locale::setLanguage('nl', include __DIR__.'/config/locale/nl.php');
-Locale::setLanguage('no', include __DIR__.'/config/locale/no.php');
-Locale::setLanguage('pl', include __DIR__.'/config/locale/pl.php');
-Locale::setLanguage('pt-br', include __DIR__.'/config/locale/pt-br.php');
-Locale::setLanguage('pt-pt', include __DIR__.'/config/locale/pt-pt.php');
-Locale::setLanguage('ro', include __DIR__.'/config/locale/ro.php');
-Locale::setLanguage('ru', include __DIR__ . '/config/locale/ru.php');
-Locale::setLanguage('si', include __DIR__ . '/config/locale/si.php');
-Locale::setLanguage('sl', include __DIR__ . '/config/locale/sl.php');
-Locale::setLanguage('sq', include __DIR__ . '/config/locale/sq.php');
-Locale::setLanguage('sv', include __DIR__ . '/config/locale/sv.php');
-Locale::setLanguage('ta', include __DIR__ . '/config/locale/ta.php');
-Locale::setLanguage('th', include __DIR__.'/config/locale/th.php');
-Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
-Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
-Locale::setLanguage('vi', include __DIR__.'/config/locale/vi.php');
-Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/zh-cn.php');
-Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/zh-tw.php');
-
-Locale::setDefault('en');
-
-if (in_array($locale, APP_LOCALES)) {
-    Locale::setDefault($locale);
-}
-
-stream_context_set_default([ // Set global user agent and http settings
-    'http' => [
-        'method' => 'GET',
-        'user_agent' => sprintf(APP_USERAGENT, $version),
-        'timeout' => 2,
-    ],
-]);
-
-/*
- * Auth & Project Scope
- */
-$consoleDB = new Database();
-$consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-$consoleDB->setMocks($collections);
-
-Authorization::disable();
-
-$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', null)));
-
-Authorization::enable();
-
-$console = $consoleDB->getDocument('console');
-
-if (is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
-    $project = $console;
-}
-
-$mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
-
-Auth::setCookieName('a-session-'.$project->getUid());
-
-if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a-session-'.$console->getUid());
-}
-
-$session = Auth::decodeSession($request->getCookie(Auth::$cookieName, $request->getHeader('X-Appwrite-Key', '')));
-Auth::$unique = $session['id'];
-Auth::$secret = $session['secret'];
-
-$projectDB = new Database();
-$projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_'.$project->getUid());
-$projectDB->setMocks($collections);
-
-$user = $projectDB->getDocument(Auth::$unique);
-
-if (APP_MODE_ADMIN === $mode) {
-    $user = $consoleDB->getDocument(Auth::$unique);
-
-    $user
-        ->setAttribute('$uid', 'admin-'.$user->getAttribute('$uid'))
+    /*
+     * Security Headers
+     *
+     * As recommended at:
+     * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+     */
+    $response
+        ->addHeader('Server', 'Appwrite')
+        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.urlencode($request->getServer('REQUEST_URI')))
+        //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
+        ->addHeader('X-Content-Type-Options', 'nosniff')
+        ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Origin', $refDomain)
+        ->addHeader('Access-Control-Allow-Credentials', 'true')
     ;
-}
 
-if (empty($user->getUid()) // Check a document has been found in the DB
-    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-    || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-    $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-}
-
-if (APP_MODE_ADMIN === $mode) {
-    if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
-        Authorization::disable();
-    } else {
-        $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+    /*
+     * Validate Client Domain - Check to avoid CSRF attack
+     *  Adding Appwrite API domains to allow XDOMAIN communication
+     */
+    $hostValidator = new Host($clients);
+    $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
+    
+    if (!$hostValidator->isValid($origin)
+        && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
+        && empty($request->getHeader('X-Appwrite-Key', ''))) {
+        throw new Exception('Access from this client host is forbidden. '.$hostValidator->getDescription(), 403);
     }
+
+    /*
+     * ACL Check
+     */
+    $role = ($user->isEmpty()) ? Auth::USER_ROLE_GUEST : Auth::USER_ROLE_MEMBER;
+
+    // Add user roles
+    $membership = $user->search('teamId', $project->getAttribute('teamId', null), $user->getAttribute('memberships', []));
+
+    if ($membership) {
+        foreach ($membership->getAttribute('roles', []) as $memberRole) {
+            switch ($memberRole) {
+                case 'owner':
+                    $role = Auth::USER_ROLE_OWNER;
+                    break;
+                case 'admin':
+                    $role = Auth::USER_ROLE_ADMIN;
+                    break;
+                case 'developer':
+                    $role = Auth::USER_ROLE_DEVELOPER;
+                    break;
+            }
+        }
+    }
+
+    $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
+    $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
+
+    // Check if given key match project API keys
+    $key = $project->search('secret', $request->getHeader('X-Appwrite-Key', ''), $project->getAttribute('keys', []));
+
+    /*
+     * Try app auth when we have project key and no user
+     *  Mock user to app and grant API key scopes in addition to default app scopes
+     */
+    if (null !== $key && $user->isEmpty()) {
+        $user = new Document([
+            '$uid' => 0,
+            'status' => Auth::USER_STATUS_ACTIVATED,
+            'email' => 'app.'.$project->getUid().'@service.'.$domain,
+            'password' => '',
+            'name' => $project->getAttribute('name', 'Untitled'),
+        ]);
+
+        $role = Auth::USER_ROLE_APP;
+        $scopes = array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+
+        Authorization::disable();  // Cancel security segmentation for API keys.
+    }
+
+    Authorization::setRole('user:'.$user->getUid());
+    Authorization::setRole('role:'.$role);
+
+    array_map(function ($node) {
+        if (isset($node['teamId']) && isset($node['roles'])) {
+            Authorization::setRole('team:'.$node['teamId']);
+
+            foreach ($node['roles'] as $nodeRole) { // Set all team roles
+                Authorization::setRole('team:'.$node['teamId'].'/'.$nodeRole);
+            }
+        }
+    }, $user->getAttribute('memberships', []));
+
+    // TDOO Check if user is god
+
+    if (!in_array($scope, $scopes)) {
+        throw new Exception($user->getAttribute('email', 'Guest').' (role: '.strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
+    }
+
+    if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
+        throw new Exception('Invalid credentials. User is blocked', 401); // User is in status blocked
+    }
+
+    if ($user->getAttribute('reset')) {
+        throw new Exception('Password reset is required', 412);
+    }
+
+    /*
+     * Background Jobs
+     */
+    $webhook
+        ->setParam('projectId', $project->getUid())
+        ->setParam('event', $route->getLabel('webhook', ''))
+        ->setParam('payload', [])
+    ;
+
+    $audit
+        ->setParam('projectId', $project->getUid())
+        ->setParam('userId', $user->getUid())
+        ->setParam('event', '')
+        ->setParam('resource', '')
+        ->setParam('userAgent', $request->getServer('HTTP_USER_AGENT', ''))
+        ->setParam('ip', $request->getIP())
+        ->setParam('data', [])
+    ;
+
+    $usage
+        ->setParam('projectId', $project->getUid())
+        ->setParam('url', $request->getServer('HTTP_HOST', '').$request->getServer('REQUEST_URI', ''))
+        ->setParam('method', $request->getServer('REQUEST_METHOD', 'UNKNOWN'))
+        ->setParam('request', 0)
+        ->setParam('response', 0)
+        ->setParam('storage', 0)
+    ;
+
+    /*
+     * Abuse Check
+     */
+    $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
+        return $register->get('db');
+    });
+    $timeLimit->setNamespace('app_'.$project->getUid());
+    $timeLimit
+        ->setParam('{userId}', $user->getUid())
+        ->setParam('{userAgent}', $request->getServer('HTTP_USER_AGENT', ''))
+        ->setParam('{ip}', $request->getIP())
+        ->setParam('{url}', $request->getServer('HTTP_HOST', '').$route->getURL())
+    ;
+
+    //TODO make sure we get array here
+
+    foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+        $timeLimit->setParam('{param-'.$key.'}', (is_array($value)) ? json_encode($value) : $value);
+    }
+
+    $abuse = new Abuse($timeLimit);
+
+    if ($timeLimit->limit()) {
+        $response
+            ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
+            ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
+            ->addHeader('X-RateLimit-Reset', $timeLimit->time() + $route->getLabel('abuse-time', 3600))
+        ;
+    }
+
+    if ($abuse->check() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+        throw new Exception('Too many requests', 429);
+    }
+});
+
+$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage) {
+
+    /*
+     * Trigger Events for background jobs
+     */
+    if (!empty($webhook->getParam('event'))) {
+        $webhook->trigger();
+    }
+
+    if (!empty($audit->getParam('event'))) {
+        $audit->trigger();
+    }
+
+    $usage
+        ->setParam('request', $request->getSize())
+        ->setParam('response', $response->getSize())
+        ->trigger()
+    ;
+});
+
+$utopia->options(function () use ($request, $response, $domain, $project) {
+    $origin = $request->getServer('HTTP_ORIGIN');
+
+    $response
+        ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Origin', $origin)
+        ->addHeader('Access-Control-Allow-Credentials', 'true')
+        ->send();
+});
+
+$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project, $env, $version, $user) {
+    switch ($error->getCode()) {
+        case 400: // Error allowed publicly
+        case 401: // Error allowed publicly
+        case 402: // Error allowed publicly
+        case 403: // Error allowed publicly
+        case 404: // Error allowed publicly
+        case 412: // Error allowed publicly
+        case 429: // Error allowed publicly
+            $code = $error->getCode();
+            $message = $error->getMessage();
+            break;
+        default:
+            $code = 500; // All other errors get the generic 500 server error status code
+            $message = 'Server Error';
+    }
+
+    $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
+
+    $output = ((App::ENV_TYPE_DEVELOPMENT == $env)) ? [
+        'message' => $error->getMessage(),
+        'code' => $error->getCode(),
+        'file' => $error->getFile(),
+        'line' => $error->getLine(),
+        'trace' => $error->getTrace(),
+        'version' => $version,
+    ] : [
+        'message' => $message,
+        'code' => $code,
+        'version' => $version,
+    ];
+
+    $response
+        ->addHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+        ->addHeader('Expires', '0')
+        ->addHeader('Pragma', 'no-cache')
+        ->setStatusCode($code)
+    ;
+
+    $route = $utopia->match($request);
+    $template = ($route) ? $route->getLabel('error', null) : null;
+
+    if ($template) {
+        $layout = new View(__DIR__.'/views/layouts/default.phtml');
+        $comp = new View($template);
+
+        $comp
+            ->setParam('projectName', $project->getAttribute('name'))
+            ->setParam('projectURL', $project->getAttribute('url'))
+            ->setParam('message', $error->getMessage())
+            ->setParam('code', $code)
+        ;
+
+        $layout
+            ->setParam('title', $project->getAttribute('name').' - Error')
+            ->setParam('description', 'No Description')
+            ->setParam('body', $comp)
+            ->setParam('version', $version)
+            ->setParam('litespeed', false)
+        ;
+
+        $response->send($layout->render());
+    }
+
+    $response
+        ->json($output)
+    ;
+});
+
+$utopia->get('/manifest.json')
+    ->desc('Progressive app manifest file')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->json([
+                'name' => APP_NAME,
+                'short_name' => APP_NAME,
+                'start_url' => '.',
+                'url' => 'https://appwrite.io/',
+                'display' => 'standalone',
+                'background_color' => '#fff',
+                'theme_color' => '#f02e65',
+                'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
+                'icons' => [
+                    [
+                        'src' => 'images/favicon.png',
+                        'sizes' => '256x256',
+                        'type' => 'image/png',
+                    ],
+                ],
+            ]);
+        }
+    );
+
+$utopia->get('/robots.txt')
+    ->desc('Robots.txt File')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->text('# robotstxt.org/
+
+User-agent: *
+');
+        }
+    );
+
+$utopia->get('/humans.txt')
+    ->desc('Humans.txt File')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->text('# humanstxt.org/
+# The humans responsible & technology colophon
+
+# TEAM
+    <name> -- <role> -- <twitter>
+
+# THANKS
+    <name>');
+        }
+    );
+
+$utopia->get('/v1/info') // This is only visible to gods
+->label('scope', 'god')
+    ->label('docs', false)
+    ->action(
+        function () use ($response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
+            $response->json([
+                'name' => 'API',
+                'version' => $version,
+                'environment' => $env,
+                'time' => date('Y-m-d H:i:s', time()),
+                'user' => [
+                    'id' => $user->getUid(),
+                    'name' => $user->getAttribute('name', ''),
+                ],
+                'project' => [
+                    'id' => $project->getUid(),
+                    'name' => $project->getAttribute('name', ''),
+                ],
+            ]);
+        }
+    );
+
+$utopia->get('/v1/xss')
+    ->desc('Log XSS errors reported by browsers using X-XSS-Protection header')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () {
+            throw new Exception('XSS detected and reported by a browser client', 500);
+        }
+    );
+
+$utopia->get('/v1/proxy')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response, $console, $clients) {
+            $view = new View(__DIR__.'/views/proxy.phtml');
+            $view
+                ->setParam('routes', '')
+                ->setParam('clients', array_merge($clients, $console->getAttribute('clients', [])))
+            ;
+
+            $response
+                ->setContentType(Response::CONTENT_TYPE_HTML)
+                ->removeHeader('X-Frame-Options')
+                ->send($view->render());
+        }
+    );
+
+$utopia->get('/v1/open-api-2.json')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
+    ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
+    ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
+    ->action(
+        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services) {
+            function fromCamelCase($input)
+            {
+                preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
+                $ret = $matches[0];
+                foreach ($ret as &$match) {
+                    $match = $match == strtoupper($match) ? strtolower($match) : lcfirst($match);
+                }
+
+                return implode('_', $ret);
+            }
+
+            function fromCamelCaseToDash($input)
+            {
+                return str_replace([' ', '_'], '-', strtolower(preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
+            }
+
+            foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
+                if($tests && !$service['tests']) {
+                    continue;
+                }
+                
+                if (!$tests && !$service['sdk']) {
+                    continue;
+                }
+
+                /** @noinspection PhpIncludeInspection */
+                include_once $service['controller'];
+            }
+
+            $security = [
+                'client' => ['Project' => []],
+                'server' => ['Project' => [], 'Key' => []],
+            ];
+
+            /*
+             * Specifications (v3.0.0):
+             * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
+             */
+            $output = [
+                'swagger' => '2.0',
+                'info' => [
+                    'version' => APP_VERSION_STABLE,
+                    'title' => APP_NAME,
+                    'description' => 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)',
+                    'termsOfService' => 'https://appwrite.io/policy/terms',
+                    'contact' => [
+                        'name' => 'Appwrite Team',
+                        'url' => 'https://appwrite.io/support',
+                        'email' => APP_EMAIL_TEAM,
+                    ],
+                    'license' => [
+                        'name' => 'BSD-3-Clause',
+                        'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
+                    ],
+                ],
+                'host' => parse_url($request->getServer('_APP_HOME', $domain), PHP_URL_HOST),
+                'basePath' => '/v1',
+                'schemes' => ['https'],
+                'consumes' => ['application/json', 'multipart/form-data'],
+                'produces' => ['application/json'],
+                'securityDefinitions' => [
+                    'Project' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Project',
+                        'description' => 'Your Appwrite project ID',
+                        'in' => 'header',
+                    ],
+                    'Key' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Key',
+                        'description' => 'Your Appwrite project secret key',
+                        'in' => 'header',
+                    ],
+                    'Locale' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Locale',
+                        'description' => '',
+                        'in' => 'header',
+                    ],
+                    'Mode' => [
+                        'type' => 'apiKey',
+                        'name' => 'X-Appwrite-Mode',
+                        'description' => '',
+                        'in' => 'header',
+                    ],
+                ],
+                'paths' => [],
+                'definitions' => [
+                    'Pet' => [
+                        'required' => ['id', 'name'],
+                        'properties' => [
+                            'id' => [
+                                'type' => 'integer',
+                                'format' => 'int64',
+                            ],
+                            'name' => [
+                                'type' => 'string',
+                            ],
+                            'tag' => [
+                                'type' => 'string',
+                            ],
+                        ],
+                    ],
+                    'Pets' => array(
+                            'type' => 'array',
+                            'items' => array(
+                                    '$ref' => '#/definitions/Pet',
+                                ),
+                        ),
+                    'Error' => array(
+                            'required' => array(
+                                    0 => 'code',
+                                    1 => 'message',
+                                ),
+                            'properties' => array(
+                                    'code' => array(
+                                            'type' => 'integer',
+                                            'format' => 'int32',
+                                        ),
+                                    'message' => array(
+                                            'type' => 'string',
+                                        ),
+                                ),
+                        ),
+                ],
+                'externalDocs' => [
+                    'description' => 'Full API docs, specs and tutorials',
+                    'url' => $request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/docs',
+                ],
+            ];
+
+            foreach ($utopia->getRoutes() as $key => $method) {
+                foreach ($method as $route) { /* @var $route \Utopia\Route */
+                    if (!$route->getLabel('docs', true)) {
+                        continue;
+                    }
+
+                    if (empty($route->getLabel('sdk.namespace', null))) {
+                        continue;
+                    }
+
+                    $url = str_replace('/v1', '', $route->getURL());
+                    $scope = $route->getLabel('scope', '');
+                    $hide = $route->getLabel('sdk.hide', false);
+                    $consumes = ['application/json'];
+
+                    if ($hide) {
+                        continue;
+                    }
+
+                    $desc = realpath(__DIR__ . '/..' . $route->getLabel('sdk.description', ''));
+
+                    $temp = [
+                        'summary' => $route->getDesc(),
+                        'operationId' => $route->getLabel('sdk.method', uniqid()),
+                        'consumes' => [],
+                        'tags' => [$route->getLabel('sdk.namespace', 'default')],
+                        'description' => ($desc) ? file_get_contents($desc) : '',
+                        'responses' => [
+                            200 => [
+                                'description' => 'An paged array of pets',
+                                'schema' => [
+                                    '$ref' => '#/definitions/Pet',
+                                ],
+                            ],
+                        ],
+                    ];
+
+                    if ($extensions) {
+                        $temp['extensions'] = [
+                            'weight' => $route->getOrder(),
+                            'cookies' => $route->getLabel('sdk.cookies', false),
+                            'location' => $route->getLabel('sdk.location', false),
+                            'demo' => 'docs/examples/'.fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.fromCamelCaseToDash($temp['operationId']).'.md',
+                            'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
+                            'rate-limit' => $route->getLabel('abuse-limit', 0),
+                            'rate-time' => $route->getLabel('abuse-time', 3600),
+                            'scope' => $route->getLabel('scope', ''),
+                        ];
+                    }
+
+                    if ((!empty($scope) && 'public' != $scope)) {
+                        $temp['security'][] = $route->getLabel('sdk.security', $security[$platform]);
+                    }
+
+                    $requestBody = [
+                        'content' => [
+                            'application/x-www-form-urlencoded' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [],
+                                ],
+                                'required' => [],
+                            ],
+                        ],
+                    ];
+
+                    foreach ($route->getParams() as $name => $param) {
+                        $validator = (is_callable($param['validator'])) ? $param['validator']() : $param['validator']; /* @var $validator \Utopia\Validator */
+
+                        $node = [
+                            'name' => $name,
+                            'description' => $param['description'],
+                            'required' => !$param['optional'],
+                        ];
+
+                        switch ((!empty($validator)) ? get_class($validator) : '') {
+                            case 'Utopia\Validator\Text':
+                                $node['type'] = 'string';
+                                $node['x-example'] = '['.strtoupper(fromCamelCase($node['name'])).']';
+                                break;
+                            case 'Database\Validator\UID':
+                                $node['type'] = 'string';
+                                $node['x-example'] = '['.strtoupper(fromCamelCase($node['name'])).']';
+                                break;
+                            case 'Utopia\Validator\Email':
+                                $node['type'] = 'string';
+                                $node['format'] = 'email';
+                                $node['x-example'] = 'email@example.com';
+                                break;
+                            case 'Utopia\Validator\URL':
+                                $node['type'] = 'string';
+                                $node['format'] = 'url';
+                                $node['x-example'] = 'https://example.com';
+                                break;
+                            case 'Utopia\Validator\JSON':
+                            case 'Utopia\Validator\Mock':
+                                $node['type'] = 'object';
+                                $node['type'] = 'string';
+                                $node['x-example'] = '{}';
+                                //$node['format'] = 'json';
+                                break;
+                            case 'Storage\Validators\File':
+                                $consumes = ['multipart/form-data'];
+                                $node['type'] = 'file';
+                                break;
+                            case 'Utopia\Validator\ArrayList':
+                                $node['type'] = 'array';
+                                $node['collectionFormat'] = 'multi';
+                                $node['items'] = [
+                                    'type' => 'string',
+                                ];
+                                break;
+                            case 'Auth\Validator\Password':
+                                $node['type'] = 'string';
+                                $node['format'] = 'format';
+                                $node['x-example'] = 'password';
+                                break;
+                            case 'Utopia\Validator\Range': /* @var $validator \Utopia\Validator\Range */
+                                $node['type'] = 'integer';
+                                $node['format'] = 'int32';
+                                $node['x-example'] = $validator->getMin();
+                                break;
+                            case 'Utopia\Validator\Numeric':
+                                $node['type'] = 'integer';
+                                $node['format'] = 'int32';
+                                break;
+                            case 'Utopia\Validator\Length':
+                                $node['type'] = 'string';
+                                break;
+                            case 'Utopia\Validator\Host':
+                                $node['type'] = 'string';
+                                $node['format'] = 'url';
+                                $node['x-example'] = 'https://example.com';
+                                break;
+                            case 'Utopia\Validator\WhiteList': /* @var $validator \Utopia\Validator\WhiteList */
+                                $node['type'] = 'string';
+                                $node['x-example'] = $validator->getList()[0];
+                                break;
+                            default:
+                                $node['type'] = 'string';
+                                break;
+                        }
+
+                        if ($param['optional'] && !is_null($param['default'])) { // Param has default value
+                            $node['default'] = $param['default'];
+                        }
+
+                        if (false !== strpos($url, ':'.$name)) { // Param is in URL path
+                            $node['in'] = 'path';
+                            $temp['parameters'][] = $node;
+                        } elseif ($key == 'GET') { // Param is in query
+                            $node['in'] = 'query';
+                            $temp['parameters'][] = $node;
+                        } else { // Param is in payload
+                            $node['in'] = 'formData';
+                            $temp['parameters'][] = $node;
+                            $requestBody['content']['application/x-www-form-urlencoded']['schema']['properties'][] = $node;
+
+                            if (!$param['optional']) {
+                                $requestBody['content']['application/x-www-form-urlencoded']['required'][] = $name;
+                            }
+                        }
+
+                        $url = str_replace(':'.$name, '{'.$name.'}', $url);
+                    }
+
+                    $temp['consumes'] = $consumes;
+
+                    $output['paths'][$url][strtolower($route->getMethod())] = $temp;
+                }
+            }
+
+            /*foreach ($consoleDB->getMocks() as $mock) {
+                var_dump($mock['name']);
+            }*/
+
+            ksort($output['paths']);
+
+            $response->json($output);
+        }
+    );
+
+$name = APP_NAME;
+
+if (array_key_exists($service, $services)) { /** @noinspection PhpIncludeInspection */
+    include_once $services[$service]['controller'];
+    $name = APP_NAME.' '.ucfirst($services[$service]['name']);
+} else {
+    /** @noinspection PhpIncludeInspection */
+    include_once $services['/']['controller'];
 }
 
-// Set project mail
-$register->get('smtp')->setFrom(APP_EMAIL_TEAM, sprintf(Locale::getText('auth.emails.team'), $project->getAttribute('name')));
+$utopia->run($request, $response);
