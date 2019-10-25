@@ -8,12 +8,66 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 
 .ide {
 	background-color: #373738;
-	overflow: hidden;
+	overflow: inherit;
 	position: relative;
 	z-index: 1;
 	box-shadow: 0 2px 4px 0 rgba(50,50,93,.3);
 	border-radius: 10px;
 	margin-bottom: 30px;
+
+	&[data-lang]::after {
+		content: attr(data-lang);
+		display: inline-block;
+		background: #ffffff;
+		color: #000000;
+		position: absolute;
+		top: 0;
+		padding: 5px 10px;
+		border-radius: 0 0 10px 10px;
+		font-size: 12px;
+		font-weight: 600;
+		.func-end(60px);
+	}
+
+	&[data-lang="bash"]::after {
+		background: #2b2626;
+		color: #fff;
+	}
+
+	&[data-lang="js"]::after {
+		background: #edd90a;
+		color: #333232;
+	}
+
+	&[data-lang="php"]::after {
+		background: #6182bb;
+		color: #ffffff;
+	}
+
+	&[data-lang="node.js"]::after {
+		background: #8cc500;
+		color: #666861;
+	}
+
+	&[data-lang="ruby"]::after {
+		background: #e61521;
+		color: #ffffff;
+	}
+
+	&[data-lang="python"]::after {
+		background: #3873a2;
+		color: #ffffff;
+	}
+
+	&[data-lang="go"]::after {
+		background: #00add8;
+		color: #ffffff;
+	}
+
+	&[data-lang="dart"]::after {
+		background: #035698;
+		color: #2bb1f0;
+	}
 
 	.tag {
 		color: inherit!important;
@@ -32,6 +86,14 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		padding: 2px;
 		color: #6a6a6d;
 		border: solid 2px #414142;
+	}
+
+	.line-numbers {
+		overflow: inherit;
+		
+		.line-numbers-rows {
+			.func-border-radius-start(10px);
+		}
 	}
 
 	pre {
