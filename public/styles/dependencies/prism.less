@@ -82,16 +82,32 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 	}
 
 	.copy {
-		position: absolute;
-		bottom: 15px;
-		.func-end(15px);
 		cursor: pointer;
-		background: #39393c;
-		border-radius: 50%;
-		padding: 2px;
-		color: #6a6a6d;
-		border: solid 2px #414142;
-		font-size: 14px;
+		content: attr(data-lang);
+		display: inline-block;
+		background: #ffffff;
+		color: #000000;
+		position: absolute;
+		transform: translateX(-50%);
+		bottom: -20px;
+		padding: 5px 10px;
+		border-radius: 15px;
+		font-size: 10px;
+		font-style: normal;
+		.func-start(50%);
+		opacity: 0;
+
+		&::before {
+			.func-padding-end(5px);
+		}
+	}
+			
+	&:hover {
+		.copy {
+			transition: bottom .6s, opacity .6s;
+			opacity: 0.90;
+			bottom: 16px;
+		}
 	}
 
 	pre {
