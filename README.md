@@ -21,7 +21,7 @@ Appwrite API services aim to make developer's life a lot easier by hiding the co
 
 Using Appwrite you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
-[https://appwrite.io](https://appwrite.io)
+Have a look at the Appwrite website : [https://appwrite.io](https://appwrite.io)
 
 ![Appwrite](public/images/github.png)
 
