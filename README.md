@@ -19,7 +19,7 @@ Appwrite is a simple self-hosted backend server for web and mobile developers wi
 
 Appwrite API services aim to make developer's life a lot easier by hiding the complexity of common and repetitive software development tasks.
 
-Using Appwrite you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and teams data, storage and file management, image manipulation and cropping, scheduled cron tasks and many other features to help you get more results in faster times and with a lot less code.
+Using Appwrite, you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and team data, storage and file management, image manipulation and cropping, schedule cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
 [https://appwrite.io](https://appwrite.io)
 
@@ -42,7 +42,7 @@ docker-compose up -d --remove-orphans
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 
-For advanced, production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs.
+For advanced production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs.
 
 ### Changing Port Number
 
@@ -72,7 +72,7 @@ For the complete API documentation, visit [https://appwrite.io/docs](https://app
 
 ### SDKs
 
-Currently, we are supporting only a few SDK libraries and are constantly working on including new ones.
+Currently, we support only a few SDK libraries and are constantly working on including new ones.
 
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our contribution guide.
 
