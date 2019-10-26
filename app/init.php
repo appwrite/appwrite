@@ -137,6 +137,7 @@ Locale::setLanguage('de', include __DIR__.'/config/locales/de.php');
 Locale::setLanguage('en', include __DIR__.'/config/locales/en.php');
 Locale::setLanguage('es', include __DIR__.'/config/locales/es.php');
 Locale::setLanguage('fi', include __DIR__.'/config/locales/fi.php');
+Locale::setLanguage('fo', include __DIR__.'/config/locales/fo.php');
 Locale::setLanguage('fr', include __DIR__.'/config/locales/fr.php');
 Locale::setLanguage('gr', include __DIR__.'/config/locales/gr.php');
 Locale::setLanguage('he', include __DIR__.'/config/locales/he.php');
