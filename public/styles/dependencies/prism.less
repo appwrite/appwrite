@@ -96,6 +96,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		font-style: normal;
 		.func-start(50%);
 		opacity: 0;
+		transition: bottom .3s, opacity .3s;
 
 		&::before {
 			.func-padding-end(5px);
@@ -104,7 +105,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 			
 	&:hover {
 		.copy {
-			transition: bottom .6s, opacity .6s;
+			transition: bottom .3s, opacity .3s;
 			opacity: 0.90;
 			bottom: 16px;
 		}
