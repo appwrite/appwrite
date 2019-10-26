@@ -28,7 +28,7 @@ Appwrite stack is combined from a variety of open-source technologies and tools.
 
 Appwrite uses a package manager for managing code dependencies for both backend and frontend development. We try our best to avoid creating any unnecessary and any new dependency to the project is subjected to a lead developer review and approval.
 
-Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
+Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and to contribute them back to the community.
 
 Appwrite uses PHP's Composer for managing dependencies on the server-side and JS NPM for managing dependencies on the frontend side.
 
@@ -44,7 +44,7 @@ Appwrite is built to scale. Please keep in mind that the Appwrite stack can run 
 
 We wish Appwrite will be as easy to set up and in a single, localhost and easy to grow to a large environment with thousands and even hundreds of instances.
 
-When contributing code, please take into account the following considerations:
+When contributing code, please consider the following considerations:
 
 * Response Time
 * Throughput
@@ -69,7 +69,7 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all of the Appwrite microservices are intended to communicate using TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443 who by default are used to expose the Appwrite HTTP API.
+Currently, all the Appwrite microservices are intended to communicate using TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443 who by default are used to expose the Appwrite HTTP API.
 
 ## Security & Privacy
 
@@ -87,7 +87,7 @@ We would 💖 you to contribute to Appwrite, but we would also like to make sure
 
 For us to find the right balance, please open an issue explaining your ideas before introducing a new pull request.
 
-This will allow the Appwrite community to have sufficient discussion about the new feature value and how it fits in the product roadmap and vision.
+This will allow the Appwrite community to have enough discussion about the new feature value and how it fits in the product roadmap and vision.
 
 This is also important for the Appwrite lead developers to be able to give technical input and different emphasizes regarding the feature design and architecture.
 
