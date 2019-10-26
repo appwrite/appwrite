@@ -15,13 +15,19 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 	border-radius: 10px;
 	margin-bottom: 30px;
 
+	&:hover {
+		&[data-lang]::after {
+			display: none;
+		}
+	}
+
 	&[data-lang]::after {
 		content: attr(data-lang);
 		display: inline-block;
 		background: #ffffff;
 		color: #000000;
 		position: absolute;
-		top: 10px;
+		top: 15px;
 		padding: 6px 10px;
 		border-radius: 6px;
 		font-size: 11px;
@@ -91,6 +97,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		padding: 2px;
 		color: #6a6a6d;
 		border: solid 2px #414142;
+		font-size: 14px;
 	}
 
 	pre {
