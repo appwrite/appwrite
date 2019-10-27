@@ -155,6 +155,7 @@ Locale::setLanguage('ml', include __DIR__.'/config/locales/ml.php');
 Locale::setLanguage('ms', include __DIR__.'/config/locales/ms.php');
 Locale::setLanguage('nl', include __DIR__.'/config/locales/nl.php');
 Locale::setLanguage('no', include __DIR__.'/config/locales/no.php');
+Locale::setLanguage('ph', include __DIR__.'/config/locales/ph.php');
 Locale::setLanguage('pl', include __DIR__.'/config/locales/pl.php');
 Locale::setLanguage('pt-br', include __DIR__.'/config/locales/pt-br.php');
 Locale::setLanguage('pt-pt', include __DIR__.'/config/locales/pt-pt.php');

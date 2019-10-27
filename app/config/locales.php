@@ -28,6 +28,7 @@ return [
     'ms', // Malay
     'nl', // Dutch
     'no', // Norwegian
+    'ph', // Filipino
     'pl', // Polish
     'pt-br', // Portuguese - Brazil	
     'pt-pt', // Portuguese - Portugal

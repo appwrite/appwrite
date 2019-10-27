@@ -10,7 +10,7 @@ return [
     'auth.emails.confirm.title' => 'Pagkumpirma ng Account',
     'auth.emails.confirm.body' => 'ph.email.auth.confirm.tpl',
     'auth.emails.recovery.title' => 'Pagreset ng Password',
-    'auth.emails.recovery.body' => 'en.email.auth.recovery.tpl',
+    'auth.emails.recovery.body' => 'ph.email.auth.recovery.tpl',
     'auth.emails.invitation.title' => 'Paanyaya sa Pangkat ng %s sa %s',
     'auth.emails.invitation.body' => 'ph.email.auth.invitation.tpl',
 
