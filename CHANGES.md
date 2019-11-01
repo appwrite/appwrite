@@ -8,6 +8,7 @@
 * Update docs example with auth info
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
+* Updated new brexit date to 31-01-2020
 
 ## Bugs
 
