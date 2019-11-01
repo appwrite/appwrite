@@ -10,6 +10,10 @@
 * Allow electron apps to not pass origin header
 * Updated new brexit date to 31-01-2020
 
+## Security
+
+* Remove executable permission from avatars files [Minor]
+
 ## Bugs
 
 * New loading message when creating a new project
