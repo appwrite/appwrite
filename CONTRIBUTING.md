@@ -1,6 +1,37 @@
 # Contributing
 
-We would ❤️ for you to contribute to Appwrite and help make it better! As a contributor, here are the guidelines we would like you to follow:
+We would ❤️ for you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, new docs as well as updates and tweaks, blog posts, workshops, and more.
+
+## How to Start?
+
+If you are worried or don’t know where to start, check out our next section explaining what kind of help we could use and where can you get involved. You can reach out with questions to [Eldad Fux (@eldadfux)](https://twitter.com/eldadfux) or [@appwrite_io](https://twitter.com/appwrite_io) on Twitter, and anyone from the [Appwrite team on Discord](https://discord.gg/GSeTUeA). You can also submit an issue and a maintainer can give you guidance!
+
+## Where to Start?
+
+### Blogging & Speaking
+
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention @appwrite_io on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite]() repo on GitHub.
+
+### Presenting at Meetups
+
+Presenting at meetups and conferences about your Appwrite projects. Your unique challenges and successes in building things with Appwrite can provide great speaking material. We’d love to review your talk abstract/CFP, so get in touch with us if you’d like some help!
+
+### Sending Feedbacks & Reporting Bugs
+
+Sending feedback is a great way for us to better understand your different use cases of Appwrite. If you had any issues, bugs or just want to share about your expirience, feel free to do so on our GitHub issues page or at our [Discord channel](https://discord.gg/GSeTUeA).
+
+### Submitting New Ideas
+
+If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can about your new idea and it's implications. We would also use this issue to gather more information, get more feedback from the community and have a proper discussion about the new feature.
+
+### Improving Documentation
+
+Submitting documentation updates, enhancements, designs, or bug fixes
+Submitting spelling or grammar fixes will be very much appriciated.
+
+### Helping Someone
+
+Searching for Appwrite on Discord, GitHub or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
 
 ## Code of Conduct
 
