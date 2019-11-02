@@ -8,9 +8,11 @@ If you are worried or don’t know where to start, check out our next section ex
 
 ## Where to Start?
 
+Pull requests are great, but there are many other areas where you can help Appwrite. 
+
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention @appwrite_io on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite]() repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite_io](https://twitter.com/appwrite_io) on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite]() repo on GitHub.
 
 ### Presenting at Meetups
 
@@ -39,9 +41,9 @@ Help us keep Appwrite open and inclusive. Please read and follow our [Code of Co
 
 ## Technology Stack
 
-To start helping us to improve the Appwrite server, prior knowledge of Appwrite's technology stack can help you with getting started.
+To start helping us to improve the Appwrite server by submitting code, prior knowledge of Appwrite's technology stack can help you with getting started.
 
-Appwrite stack is combined from a variety of open-source technologies and tools. Appwrite backend API is written primarily with PHP version 7 and above on top of the Utopia PHP framework. Appwrite frontend is built with tools like gulp, less, and litespeed.js. We use Docker as the container technology to package the Appwrite server for easy integration on cloud, on-premise, or local hosts.
+Appwrite stack is combined from a variety of open-source technologies and tools. Appwrite backend API is written primarily with PHP version 7 and above on top of the [Utopia PHP framework](https://github.com/utopia-php/framework). The Appwrite frontend is built with tools like gulp, less, and [litespeed.js](https://github.com/litespeed-js). We use Docker as the container technology to package the Appwrite server for easy integration on-cloud, on-premise, or on-localhosts.
 
 ### Other Technologies
 
@@ -61,11 +63,11 @@ Appwrite uses a package manager for managing code dependencies for both backend 
 
 Many of Appwrite's internal modules are also used as dependencies to allow other Appwrite's projects to reuse them and as a way to contribute them back to the community.
 
-Appwrite uses PHP's Composer for managing dependencies on the server-side and JS NPM for managing dependencies on the frontend side.
+Appwrite uses [PHP's Composer](https://getcomposer.org/) for managing dependencies on the server-side and [JS NPM](https://www.npmjs.com/) for managing dependencies on the frontend side.
 
 ## Coding Standards
 
-Appwrite is following the PHP-FIG standards. Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
+Appwrite is following the [PHP-FIG standards](https://www.php-fig.org/). Currently, we are using both PSR-0 and PSR-4 for coding standards and autoloading standards. Soon we will also review the project for support with PSR-12 (Extended Coding Style).
 
 We use prettier for our JS coding standards and for auto-formatting our code.
 
@@ -88,7 +90,7 @@ When contributing code, please take into account the following considerations:
 
 ## Architecture
 
-Appwrite's current structure is a combination of both Monolithic and Microservice architectures, but our final goal, as we grow, is to be using only microservices.
+Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
 
 ### The Monolithic Part
 
@@ -100,11 +102,13 @@ Although the Appwrite API is a monolithic app, it has a very clear separation of
 
 Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
 
-Currently, all of the Appwrite microservices are intended to communicate using TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, is used to expose the Appwrite HTTP API.
+Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
 ## Security & Privacy
 
-Security and privacy are extremely important to Appwrite, developers, and users alike. Make sure to follow the best industry standards and practices. To help you make sure you are doing as best as possible, we have set up our security checklist for pull requests and contributors. Please make sure to follow the list before sending a pull request.
+Security and privacy are extremely important to Appwrite, developers, and users alike. Make sure to follow the best industry standards and practices.
+
+<!-- To help you make sure you are doing as best as possible, we have set up our security checklist for pull requests and contributors. Please make sure to follow the list before sending a pull request. -->
 
 ## Dependencies
 
@@ -155,3 +159,4 @@ Before running the command, make sure you have proper write permissions to the A
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
 * [Adding Support for a New OAuth Provider](./docs/tutorials/add-oauth-provider.md)
+* [Appwrite Environment Variables](./docs/tutorials/add-oauth-provider.md)
