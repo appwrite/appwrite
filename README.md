@@ -98,7 +98,8 @@ All code contributions - including those of people having commit access - must g
 We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
 
 ## License
-This repository is available under the [BSD 3-Clause License](https://github.com/appwrite/appwrite/blob/master/LICENSE).
+
+This repository is available under the [BSD 3-Clause License](./LICENSE).
 
 ## Credits
 
