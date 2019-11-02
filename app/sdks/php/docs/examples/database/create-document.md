@@ -12,4 +12,4 @@ $client
 
 $database = new Database($client);
 
-$result = $database->createDocument('[COLLECTION_ID]', '{}');
+$result = $database->createDocument('[COLLECTION_ID]', '{}', [], []);

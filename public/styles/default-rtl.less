@@ -43,6 +43,14 @@
   border-left: solid @value @config-color-fade-light;
 }
 
+.func-border-radius-start(@value) {
+  border-radius: 0 @value @value 0;
+}
+
+.func-border-radius-end(@value) {
+  border-radius: @value 0 0 @value;
+}
+
 .pull-start {
   float: right;
 }

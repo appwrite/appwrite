@@ -39,7 +39,7 @@ Create a new class that extends the basic OAuth provider abstract class in this 
 
 Note that the class name should start with a capital letter as PHP FIG standards suggest.
 
-Once a new class is created, you can start to implement your new provider's login flow. The best way to do this corrrectly is to have a look at another provider's implementation and try to follow the same standards.
+Once a new class is created, you can start to implement your new provider's login flow. The best way to do this correctly is to have a look at another provider's implementation and try to follow the same standards.
 
 Please mention in your documentation what resources or API docs you used to implement the provider's OAuth protocol.
 
@@ -48,5 +48,9 @@ Please mention in your documentation what resources or API docs you used to impl
 After you finished adding your new provider to Appwrite you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
 
 Add credentials and check both a successful and a failed login (where the user rejects integration on provider page).
+
+You can test your OAuth provider by trying to login using the [OAuth method](https://appwrite.io/docs/auth#oauth) when integrating the Appwrite JS SDK in a demo app.
+
+Pass your new adapter name as the provider parameter. If login is successful, you will be redirected to your success URL parameter. Otherwise, you will be redirected to your failure URL.
 
 If everything goes well, just submit a pull request and be ready to respond to any feedback which can arise during our code review.

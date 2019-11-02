@@ -135,6 +135,7 @@ window.ls.container
 
       copy.className = "icon-docs copy";
       copy.title = "Copy to Clipboard";
+      copy.textContent = "Click to Copy";
 
       copy.addEventListener("click", function() {
         window.getSelection().removeAllRanges();

@@ -70,7 +70,7 @@ $utopia->get('/v1/locale/countries')
     ->label('sdk.method', 'getCountries')
     ->label('sdk.description', '/docs/references/locale/get-countries.md')
     ->action(
-        function () use ($response, $request) {
+        function () use ($response) {
             $list = Locale::getText('countries'); /* @var $list array */
 
             asort($list);
@@ -126,6 +126,23 @@ $utopia->get('/v1/locale/countries/phones')
             $response->json($list);
         }
     );
+
+$utopia->get('/v1/locale/continents')
+    ->desc('List Countries')
+    ->label('scope', 'locale.read')
+    ->label('sdk.namespace', 'locale')
+    ->label('sdk.method', 'getContinents')
+    ->label('sdk.description', '/docs/references/locale/get-continents.md')
+    ->action(
+        function () use ($response) {
+            $list = Locale::getText('continents'); /* @var $list array */
+
+            asort($list);
+
+            $response->json($list);
+        }
+    );
+
 
 $utopia->get('/v1/locale/currencies')
     ->desc('List of currencies')

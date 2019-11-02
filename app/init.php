@@ -24,9 +24,8 @@ const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
 const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
-const APP_LOCALES = ['af', 'ar', 'bn', 'cat', 'cz', 'de', 'en', 'es', 'fi', 'fr', 'gr', 'he', 'hi', 'hu', 'hy', 'id', 'it', 'ja', 'jv', 'lt', 'nl', 'no', 'pl', 'pt-br', 'pt-pt', 'ro', 'ru', 'si', 'sl', 'sv', 'ta', 'tr', 'ua', 'vi', 'zh-cn', 'zh-tw'];
 const APP_PAGING_LIMIT = 15;
-const APP_VERSION_STABLE = '0.2.0';
+const APP_VERSION_STABLE = '0.3.0';
 
 $register = new Registry();
 $request = new Request();
@@ -39,6 +38,7 @@ $env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
 $domain = $request->getServer('HTTP_HOST', '');
 $version = include __DIR__.'/../app/config/version.php';
 $providers = include __DIR__.'/../app/config/providers.php'; // OAuth providers list
+$locales = include __DIR__.'/../app/config/locales.php'; // OAuth providers list
 $collections = include __DIR__.'/../app/config/collections.php'; // OAuth providers list
 $redisHost = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort = $request->getServer('_APP_REDIS_PORT', '');
@@ -128,46 +128,55 @@ $locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', 
 
 Locale::$exceptions = false;
 
-Locale::setLanguage('af', include __DIR__.'/config/locale/af.php');
-Locale::setLanguage('ar', include __DIR__.'/config/locale/ar.php');
-Locale::setLanguage('bn', include __DIR__.'/config/locale/bn.php');
-Locale::setLanguage('cat', include __DIR__.'/config/locale/cat.php');
-Locale::setLanguage('cz', include __DIR__.'/config/locale/cz.php');
-Locale::setLanguage('de', include __DIR__.'/config/locale/de.php');
-Locale::setLanguage('en', include __DIR__.'/config/locale/en.php');
-Locale::setLanguage('es', include __DIR__.'/config/locale/es.php');
-Locale::setLanguage('fi', include __DIR__.'/config/locale/fi.php');
-Locale::setLanguage('fr', include __DIR__.'/config/locale/fr.php');
-Locale::setLanguage('gr', include __DIR__.'/config/locale/gr.php');
-Locale::setLanguage('he', include __DIR__.'/config/locale/he.php');
-Locale::setLanguage('hi', include __DIR__.'/config/locale/hi.php');
-Locale::setLanguage('hu', include __DIR__.'/config/locale/hu.php');
-Locale::setLanguage('hy', include __DIR__.'/config/locale/hy.php');
-Locale::setLanguage('id', include __DIR__.'/config/locale/id.php');
-Locale::setLanguage('it', include __DIR__.'/config/locale/it.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locale/ja.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locale/jv.php');
-Locale::setLanguage('lt', include __DIR__.'/config/locale/lt.php');
-Locale::setLanguage('nl', include __DIR__.'/config/locale/nl.php');
-Locale::setLanguage('no', include __DIR__.'/config/locale/no.php');
-Locale::setLanguage('pl', include __DIR__.'/config/locale/pl.php');
-Locale::setLanguage('pt-br', include __DIR__.'/config/locale/pt-br.php');
-Locale::setLanguage('pt-pt', include __DIR__.'/config/locale/pt-pt.php');
-Locale::setLanguage('ro', include __DIR__.'/config/locale/ro.php');
-Locale::setLanguage('ru', include __DIR__ . '/config/locale/ru.php');
-Locale::setLanguage('si', include __DIR__ . '/config/locale/si.php');
-Locale::setLanguage('sl', include __DIR__ . '/config/locale/sl.php');
-Locale::setLanguage('sv', include __DIR__ . '/config/locale/sv.php');
-Locale::setLanguage('ta', include __DIR__ . '/config/locale/ta.php');
-Locale::setLanguage('tr', include __DIR__.'/config/locale/tr.php');
-Locale::setLanguage('ua', include __DIR__.'/config/locale/ua.php');
-Locale::setLanguage('vi', include __DIR__.'/config/locale/vi.php');
-Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/zh-cn.php');
-Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/zh-tw.php');
+Locale::setLanguage('af', include __DIR__.'/config/locales/af.php');
+Locale::setLanguage('ar', include __DIR__.'/config/locales/ar.php');
+Locale::setLanguage('bn', include __DIR__.'/config/locales/bn.php');
+Locale::setLanguage('cat', include __DIR__.'/config/locales/cat.php');
+Locale::setLanguage('cz', include __DIR__.'/config/locales/cz.php');
+Locale::setLanguage('de', include __DIR__.'/config/locales/de.php');
+Locale::setLanguage('en', include __DIR__.'/config/locales/en.php');
+Locale::setLanguage('es', include __DIR__.'/config/locales/es.php');
+Locale::setLanguage('fi', include __DIR__.'/config/locales/fi.php');
+Locale::setLanguage('fo', include __DIR__.'/config/locales/fo.php');
+Locale::setLanguage('fr', include __DIR__.'/config/locales/fr.php');
+Locale::setLanguage('gr', include __DIR__.'/config/locales/gr.php');
+Locale::setLanguage('he', include __DIR__.'/config/locales/he.php');
+Locale::setLanguage('hi', include __DIR__.'/config/locales/hi.php');
+Locale::setLanguage('hu', include __DIR__.'/config/locales/hu.php');
+Locale::setLanguage('hy', include __DIR__.'/config/locales/hy.php');
+Locale::setLanguage('id', include __DIR__.'/config/locales/id.php');
+Locale::setLanguage('is', include __DIR__.'/config/locales/is.php');
+Locale::setLanguage('it', include __DIR__.'/config/locales/it.php');
+Locale::setLanguage('jv', include __DIR__.'/config/locales/ja.php');
+Locale::setLanguage('jv', include __DIR__.'/config/locales/jv.php');
+Locale::setLanguage('ko', include __DIR__.'/config/locales/ko.php');
+Locale::setLanguage('lt', include __DIR__.'/config/locales/lt.php');
+Locale::setLanguage('ml', include __DIR__.'/config/locales/ml.php');
+Locale::setLanguage('ms', include __DIR__.'/config/locales/ms.php');
+Locale::setLanguage('nl', include __DIR__.'/config/locales/nl.php');
+Locale::setLanguage('no', include __DIR__.'/config/locales/no.php');
+Locale::setLanguage('ph', include __DIR__.'/config/locales/ph.php');
+Locale::setLanguage('pl', include __DIR__.'/config/locales/pl.php');
+Locale::setLanguage('pn', include __DIR__.'/config/locales/pn.php');
+Locale::setLanguage('pt-br', include __DIR__.'/config/locales/pt-br.php');
+Locale::setLanguage('pt-pt', include __DIR__.'/config/locales/pt-pt.php');
+Locale::setLanguage('ro', include __DIR__.'/config/locales/ro.php');
+Locale::setLanguage('ru', include __DIR__ . '/config/locales/ru.php');
+Locale::setLanguage('si', include __DIR__ . '/config/locales/si.php');
+Locale::setLanguage('sl', include __DIR__ . '/config/locales/sl.php');
+Locale::setLanguage('sq', include __DIR__ . '/config/locales/sq.php');
+Locale::setLanguage('sv', include __DIR__ . '/config/locales/sv.php');
+Locale::setLanguage('ta', include __DIR__ . '/config/locales/ta.php');
+Locale::setLanguage('th', include __DIR__.'/config/locales/th.php');
+Locale::setLanguage('tr', include __DIR__.'/config/locales/tr.php');
+Locale::setLanguage('ua', include __DIR__.'/config/locales/ua.php');
+Locale::setLanguage('vi', include __DIR__.'/config/locales/vi.php');
+Locale::setLanguage('zh-cn', include __DIR__.'/config/locales/zh-cn.php');
+Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
 
 Locale::setDefault('en');
 
-if (in_array($locale, APP_LOCALES)) {
+if (in_array($locale, $locales)) {
     Locale::setDefault($locale);
 }
 

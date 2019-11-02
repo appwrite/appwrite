@@ -16,9 +16,9 @@ class Auth extends Service
      * redirect URL\'s back to your app when login is completed. 
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      * 
      * When accessing this route using Javascript from the browser, success and
      * failure parameter URLs are required. Appwrite server will respond with a
@@ -26,14 +26,14 @@ class Auth extends Service
      * behavior is enforced because modern browsers are limiting 3rd party cookies
      * in XHR of fetch requests to protect user privacy.
      *
-     * @param string $email
-     * @param string $password
-     * @param string $success
-     * @param string $failure
+     * @param string  $email
+     * @param string  $password
+     * @param string  $success
+     * @param string  $failure
      * @throws Exception
      * @return array
      */
-    public function login($email, $password, $success, $failure)
+    public function login(string $email, string $password, string $success = '', string $failure = ''):array
     {
         $path   = str_replace([], [], '/auth/login');
         $params = [];
@@ -44,6 +44,7 @@ class Auth extends Service
         $params['failure'] = $failure;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -51,19 +52,20 @@ class Auth extends Service
      * Logout Current Session
      *
      * Use this endpoint to log out the currently logged in user from his account.
-     * When succeed this endpoint will delete the user session and remove the
+     * When successful this endpoint will delete the user session and remove the
      * session secret cookie from the user client.
      *
      * @throws Exception
      * @return array
      */
-    public function logout()
+    public function logout():array
     {
         $path   = str_replace([], [], '/auth/logout');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -74,30 +76,31 @@ class Auth extends Service
      * account sessions across all his different devices. When using the option id
      * argument, only the session unique ID provider will be deleted.
      *
-     * @param string $id
+     * @param string  $id
      * @throws Exception
      * @return array
      */
-    public function logoutBySession($id)
+    public function logoutBySession(string $id):array
     {
         $path   = str_replace(['{id}'], [$id], '/auth/logout/{id}');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
     /**
      * OAuth Login
      *
-     * @param string $provider
-     * @param string $success
-     * @param string $failure
+     * @param string  $provider
+     * @param string  $success
+     * @param string  $failure
      * @throws Exception
      * @return array
      */
-    public function oauth($provider, $success = '', $failure = '')
+    public function oauth(string $provider, string $success, string $failure):array
     {
         $path   = str_replace(['{provider}'], [$provider], '/auth/oauth/{provider}');
         $params = [];
@@ -106,6 +109,7 @@ class Auth extends Service
         $params['failure'] = $failure;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -119,12 +123,12 @@ class Auth extends Service
      * submit a request to the /auth/password/reset endpoint to complete the
      * process.
      *
-     * @param string $email
-     * @param string $reset
+     * @param string  $email
+     * @param string  $reset
      * @throws Exception
      * @return array
      */
-    public function recovery($email, $reset)
+    public function recovery(string $email, string $reset):array
     {
         $path   = str_replace([], [], '/auth/recovery');
         $params = [];
@@ -133,6 +137,7 @@ class Auth extends Service
         $params['reset'] = $reset;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -145,18 +150,18 @@ class Auth extends Service
      * /auth/recovery endpoint.
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      *
-     * @param string $userId
-     * @param string $token
-     * @param string $passwordA
-     * @param string $passwordB
+     * @param string  $userId
+     * @param string  $token
+     * @param string  $passwordA
+     * @param string  $passwordB
      * @throws Exception
      * @return array
      */
-    public function recoveryReset($userId, $token, $passwordA, $passwordB)
+    public function recoveryReset(string $userId, string $token, string $passwordA, string $passwordB):array
     {
         $path   = str_replace([], [], '/auth/recovery/reset');
         $params = [];
@@ -167,6 +172,7 @@ class Auth extends Service
         $params['password-b'] = $passwordB;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -174,7 +180,7 @@ class Auth extends Service
      * Register User
      *
      * Use this endpoint to allow a new user to register an account in your
-     * project. Use the success and failure URL's to redirect users back to your
+     * project. Use the success and failure URLs to redirect users back to your
      * application after signup completes.
      * 
      * If registration completes successfully user will be sent with a
@@ -184,9 +190,9 @@ class Auth extends Service
      * /auth/confirm endpoint to complete the account confirmation.
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      * 
      * When accessing this route using Javascript from the browser, success and
      * failure parameter URLs are required. Appwrite server will respond with a
@@ -194,16 +200,16 @@ class Auth extends Service
      * behavior is enforced because modern browsers are limiting 3rd party cookies
      * in XHR of fetch requests to protect user privacy.
      *
-     * @param string $email
-     * @param string $password
-     * @param string $confirm
-     * @param string $success
-     * @param string $failure
-     * @param string $name
+     * @param string  $email
+     * @param string  $password
+     * @param string  $confirm
+     * @param string  $success
+     * @param string  $failure
+     * @param string  $name
      * @throws Exception
      * @return array
      */
-    public function register($email, $password, $confirm, $success = '', $failure = '', $name = '')
+    public function register(string $email, string $password, string $confirm, string $success = '', string $failure = '', string $name = ''):array
     {
         $path   = str_replace([], [], '/auth/register');
         $params = [];
@@ -216,6 +222,7 @@ class Auth extends Service
         $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -227,12 +234,12 @@ class Auth extends Service
      * query parameters to the redirect URL you have provided when sending your
      * request to the /auth/register endpoint.
      *
-     * @param string $userId
-     * @param string $token
+     * @param string  $userId
+     * @param string  $token
      * @throws Exception
      * @return array
      */
-    public function confirm($userId, $token)
+    public function confirm(string $userId, string $token):array
     {
         $path   = str_replace([], [], '/auth/register/confirm');
         $params = [];
@@ -241,6 +248,7 @@ class Auth extends Service
         $params['token'] = $token;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -248,19 +256,19 @@ class Auth extends Service
      * Resend Confirmation
      *
      * This endpoint allows the user to request your app to resend him his email
-     * confirmation message. The redirect arguments acts the same way as in
+     * confirmation message. The redirect arguments act the same way as in
      * /auth/register endpoint.
      * 
      * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
+     * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     * the only valid redirect URLs are the ones from domains you have set when
+     * adding your platforms in the console interface.
      *
-     * @param string $confirm
+     * @param string  $confirm
      * @throws Exception
      * @return array
      */
-    public function confirmResend($confirm)
+    public function confirmResend(string $confirm):array
     {
         $path   = str_replace([], [], '/auth/register/confirm/resend');
         $params = [];
@@ -268,6 +276,7 @@ class Auth extends Service
         $params['confirm'] = $confirm;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

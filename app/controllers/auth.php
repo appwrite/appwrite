@@ -19,7 +19,7 @@ use Template\Template;
 use OpenSSL\OpenSSL;
 
 $utopia->post('/v1/auth/register')
-    ->desc('Register User')
+    ->desc('Register')
     ->label('webhook', 'auth.register')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'auth')
@@ -135,7 +135,7 @@ $utopia->post('/v1/auth/register')
             $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
             $confirm = Template::unParseURL($confirm);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -185,7 +185,7 @@ $utopia->post('/v1/auth/register')
     );
 
 $utopia->post('/v1/auth/register/confirm')
-    ->desc('Confirm User')
+    ->desc('Confirmation')
     ->label('webhook', 'auth.confirm')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'auth')
@@ -272,7 +272,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
             $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $secret]);
             $confirm = Template::unParseURL($confirm);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -299,7 +299,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
     );
 
 $utopia->post('/v1/auth/login')
-    ->desc('Login User')
+    ->desc('Login')
     ->label('webhook', 'auth.login')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'auth')
@@ -497,7 +497,7 @@ $utopia->post('/v1/auth/recovery')
             $reset['query'] = Template::mergeQuery(((isset($reset['query'])) ? $reset['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
             $reset = Template::unParseURL($reset);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.recovery.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -590,8 +590,8 @@ $utopia->put('/v1/auth/recovery/reset')
         }
     );
 
-$utopia->get('/v1/auth/oauth/:provider')
-    ->desc('OAuth Login')
+$utopia->get('/v1/auth/login/oauth/:provider')
+    ->desc('Login with OAuth')
     ->label('error', __DIR__.'/../views/general/error.phtml')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'auth')
@@ -601,11 +601,11 @@ $utopia->get('/v1/auth/oauth/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider')
-    ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.', true)
-    ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.', true)
+    ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
+    ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
         function ($provider, $success, $failure) use ($response, $request, $project) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/oauth/callback/'.$provider.'/'.$project->getUid();
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/login/oauth/callback/'.$provider.'/'.$project->getUid();
             $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
             $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
 
@@ -632,7 +632,7 @@ $utopia->get('/v1/auth/oauth/:provider')
         }
     );
 
-$utopia->get('/v1/auth/oauth/callback/:provider/:projectId')
+$utopia->get('/v1/auth/login/oauth/callback/:provider/:projectId')
     ->desc('OAuth Callback')
     ->label('error', __DIR__.'/../views/general/error.phtml')
     ->label('scope', 'auth')
@@ -645,12 +645,12 @@ $utopia->get('/v1/auth/oauth/callback/:provider/:projectId')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params', true)
     ->action(
         function ($projectId, $provider, $code, $state) use ($response, $request, $domain) {
-            $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/auth/oauth/'.$provider.'/redirect?'
+            $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/auth/login/oauth/'.$provider.'/redirect?'
                 .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
 
-$utopia->get('/v1/auth/oauth/:provider/redirect')
+$utopia->get('/v1/auth/login/oauth/:provider/redirect')
     ->desc('OAuth Redirect')
     ->label('error', __DIR__.'/../views/general/error.phtml')
     ->label('webhook', 'auth.oauth')
@@ -663,7 +663,7 @@ $utopia->get('/v1/auth/oauth/:provider/redirect')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth state params', true)
     ->action(
         function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/oauth/callback/'.$provider.'/'.$project->getUid();
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/login/oauth/callback/'.$provider.'/'.$project->getUid();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
 

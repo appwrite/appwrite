@@ -12,7 +12,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Locale\Locale;
 use Database\Database;
-use Database\Validator\Authorization;
 use Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
@@ -56,6 +55,7 @@ $utopia->get('/v1/users')
                 return $value->getArrayCopy(array_merge(
                     [
                         '$uid',
+                        'status',
                         'email',
                         'registration',
                         'confirm',
@@ -98,13 +98,14 @@ $utopia->get('/v1/users/:userId')
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
                     '$uid',
+                    'status',
                     'email',
                     'registration',
                     'confirm',
                     'name',
                 ],
                 $oauthKeys
-            )), ['roles' => Authorization::getRoles()]));
+            )), ['roles' => []]));
         }
     );
 
@@ -322,7 +323,7 @@ $utopia->post('/v1/users')
                     'registration',
                     'confirm',
                     'name',
-                ], $oauthKeys)), ['roles' => Authorization::getRoles()]));
+                ], $oauthKeys)), ['roles' => []]));
         }
     );
 
@@ -333,9 +334,9 @@ $utopia->patch('/v1/users/:userId/status')
     ->label('sdk.method', 'updateUserStatus')
     ->label('sdk.description', '/docs/references/users/update-user-status.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('status', '', function () { return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]); }, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to blocking the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
+    ->param('status', '', function () { return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]); }, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->action(
-        function ($userId, $status) use ($response, $projectDB) {
+        function ($userId, $status) use ($response, $projectDB, $providers) {
             $user = $projectDB->getDocument($userId);
 
             if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
@@ -349,9 +350,27 @@ $utopia->patch('/v1/users/:userId/status')
             if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
+            
+            $oauthKeys = [];
+
+            foreach ($providers as $key => $provider) {
+                if (!$provider['enabled']) {
+                    continue;
+                }
+
+                $oauthKeys[] = 'oauth'.ucfirst($key);
+                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+            }
 
             $response
-                ->json(array('result' => 'success'));
+                ->json(array_merge($user->getArrayCopy(array_merge([
+                    '$uid',
+                    'status',
+                    'email',
+                    'registration',
+                    'confirm',
+                    'name',
+                ], $oauthKeys)), ['roles' => []]));
         }
     );
 
@@ -364,7 +383,7 @@ $utopia->patch('/v1/users/:userId/prefs')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('prefs', '', function () { return new \Utopia\Validator\Mock(); }, 'Prefs key-value JSON object string.')
     ->action(
-        function ($userId, $prefs) use ($response, $projectDB) {
+        function ($userId, $prefs) use ($response, $projectDB, $providers) {
             $user = $projectDB->getDocument($userId);
 
             if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
@@ -374,11 +393,24 @@ $utopia->patch('/v1/users/:userId/prefs')
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'prefs' => json_encode(array_merge(json_decode($user->getAttribute('prefs', '{}'), true), $prefs)),
             ]));
+
             if (false === $user) {
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            $response->json(array('result' => 'success'));
+            $prefs = $user->getAttribute('prefs', '');
+
+            if (empty($prefs)) {
+                $prefs = '[]';
+            }
+
+            try {
+                $prefs = json_decode($prefs, true);
+            } catch (\Exception $error) {
+                throw new Exception('Failed to parse prefs', 500);
+            }
+
+            $response->json($prefs);
         }
     );
 

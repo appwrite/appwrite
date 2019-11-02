@@ -30,9 +30,9 @@ POST https://appwrite.io/v1/database
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | name | string | Collection name. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation |  |
 
 ## Get Collection
 
@@ -62,8 +62,8 @@ PUT https://appwrite.io/v1/database/{collectionId}
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. |  |
 | name | string | Collection name. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 | rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
 
 ## Delete Collection
@@ -117,8 +117,8 @@ POST https://appwrite.io/v1/database/{collectionId}/documents
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. |  |
 | data | string | Document data as JSON string. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 | parentDocument | string | Parent document unique ID. Use when you want your new document to be a child of a parent document. |  |
 | parentProperty | string | Parent document property name. Use when you want your new document to be a child of a parent document. |  |
 | parentPropertyType | string | Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document. | assign |
@@ -151,8 +151,8 @@ PATCH https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 | collectionId | string | **Required** Collection unique ID |  |
 | documentId | string | **Required** Document unique ID |  |
 | data | string | Document data as JSON string |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 
 ## Delete Document
 

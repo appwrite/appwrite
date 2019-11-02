@@ -139,7 +139,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.23');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.27');
             addGlobalHeader('content-type', '');
 
             /**
@@ -313,7 +313,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -330,7 +332,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -368,7 +372,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -394,7 +400,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -430,7 +438,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -447,7 +457,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -474,7 +486,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -492,7 +506,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -510,7 +526,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -524,9 +542,9 @@
              * redirect URL\'s back to your app when login is completed. 
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              * 
              * When accessing this route using Javascript from the browser, success and
              * failure parameter URLs are required. Appwrite server will respond with a
@@ -541,21 +559,13 @@
              * @throws {Error}
              * @return {null}             
              */
-            login: function(email, password, success, failure) {
+            login: function(email, password, success = '', failure = '') {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
                 
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
-                }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/auth/login';
@@ -587,7 +597,7 @@
              * Logout Current Session
              *
              * Use this endpoint to log out the currently logged in user from his account.
-             * When succeed this endpoint will delete the user session and remove the
+             * When successful this endpoint will delete the user session and remove the
              * session secret cookie from the user client.
              *
              * @throws {Error}
@@ -599,7 +609,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -623,7 +635,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -634,11 +648,19 @@
              * @param {string} success
              * @param {string} failure
              * @throws {Error}
-             * @return {Promise}             
+             * @return {null}             
              */
-            oauth: function(provider, success = '', failure = '') {
+            oauth: function(provider, success, failure) {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
+                }
+                
+                if(success === undefined) {
+                    throw new Error('Missing required parameter: "success"');
+                }
+                
+                if(failure === undefined) {
+                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
@@ -653,8 +675,9 @@
                     payload['failure'] = failure;
                 }
 
-                return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                payload['project'] = config.project;
+
+                return iframe('get', path, payload);
             },
 
             /**
@@ -694,7 +717,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -706,9 +731,9 @@
              * /auth/recovery endpoint.
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              *
              * @param {string} userId
              * @param {string} token
@@ -755,14 +780,16 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
              * Register User
              *
              * Use this endpoint to allow a new user to register an account in your
-             * project. Use the success and failure URL's to redirect users back to your
+             * project. Use the success and failure URLs to redirect users back to your
              * application after signup completes.
              * 
              * If registration completes successfully user will be sent with a
@@ -772,9 +799,9 @@
              * /auth/confirm endpoint to complete the account confirmation.
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              * 
              * When accessing this route using Javascript from the browser, success and
              * failure parameter URLs are required. Appwrite server will respond with a
@@ -872,20 +899,22 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
              * Resend Confirmation
              *
              * This endpoint allows the user to request your app to resend him his email
-             * confirmation message. The redirect arguments acts the same way as in
+             * confirmation message. The redirect arguments act the same way as in
              * /auth/register endpoint.
              * 
              * Please notice that in order to avoid a [Redirect
-             * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-             * the only valid redirect URL's are the once from domains you have set when
-             * added your platforms in the console interface.
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
              *
              * @param {string} confirm
              * @throws {Error}
@@ -905,7 +934,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -914,8 +945,8 @@
             /**
              * Get Browser Icon
              *
-             * You can use this endpoint to show different browser icons to your users,
-             * The code argument receives the browser code as appear in your user
+             * You can use this endpoint to show different browser icons to your users.
+             * The code argument receives the browser code as it appears in your user
              * /account/sessions endpoint. Use width, height and quality arguments to
              * change the output settings.
              *
@@ -948,13 +979,15 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
              * Get Credit Card Icon
              *
-             * Need to display your users with your billing method or there payment
+             * Need to display your users with your billing method or their payment
              * methods? The credit card endpoint will return you the icon of the credit
              * card provider you need. Use width, height and quality arguments to change
              * the output settings.
@@ -988,7 +1021,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1015,14 +1050,16 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
              * Get Country Flag
              *
              * You can use this endpoint to show different country flags icons to your
-             * users, The code argument receives the a 2 letter country code. Use width,
+             * users. The code argument receives the 2 letter country code. Use width,
              * height and quality arguments to change the output settings.
              *
              * @param {string} code
@@ -1054,7 +1091,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1062,7 +1101,7 @@
              *
              * Use this endpoint to fetch a remote image URL and crop it to any image size
              * you want. This endpoint is very useful if you need to crop and display
-             * remote images in your app or in cases, you want to make sure a 3rd party
+             * remote images in your app or in case you want to make sure a 3rd party
              * image is properly served using a TLS protocol.
              *
              * @param {string} url
@@ -1093,7 +1132,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1135,7 +1176,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -1178,7 +1221,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1193,9 +1238,21 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createCollection: function(name, read = [], write = [], rules = []) {
+            createCollection: function(name, read, write, rules) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
+                }
+                
+                if(rules === undefined) {
+                    throw new Error('Missing required parameter: "rules"');
                 }
                 
                 let path = '/database';
@@ -1219,7 +1276,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1242,7 +1301,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1258,13 +1319,21 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateCollection: function(collectionId, name, read = [], write = [], rules = []) {
+            updateCollection: function(collectionId, name, read, write, rules = []) {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
                 
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
@@ -1288,7 +1357,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1311,7 +1382,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1381,7 +1454,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1399,13 +1474,21 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createDocument: function(collectionId, data, read = [], write = [], parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
+            createDocument: function(collectionId, data, read, write, parentDocument = '', parentProperty = '', parentPropertyType = 'assign') {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
                 
                 if(data === undefined) {
                     throw new Error('Missing required parameter: "data"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
@@ -1437,7 +1520,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1465,7 +1550,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1480,7 +1567,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateDocument: function(collectionId, documentId, data, read = [], write = []) {
+            updateDocument: function(collectionId, documentId, data, read, write) {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
@@ -1491,6 +1578,14 @@
                 
                 if(data === undefined) {
                     throw new Error('Missing required parameter: "data"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
@@ -1510,7 +1605,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1539,7 +1636,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -1550,7 +1649,7 @@
              *
              * Get the current user location based on IP. Returns an object with user
              * country code, country name, continent name, continent code, ip address and
-             * suggested currency. You can use the locale header to get the data in
+             * suggested currency. You can use the locale header to get the data in a
              * supported language.
              *
              * @throws {Error}
@@ -1562,13 +1661,35 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
              * List Countries
              *
-             * List of all countries. You can use the locale header to get the data in
+             * List of all continents. You can use the locale header to get the data in a
+             * supported language.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getContinents: function() {
+                let path = '/locale/continents';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Countries
+             *
+             * List of all countries. You can use the locale header to get the data in a
              * supported language.
              *
              * @throws {Error}
@@ -1580,14 +1701,16 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
              * List EU Countries
              *
              * List of all countries that are currently members of the EU. You can use the
-             * locale header to get the data in supported language. UK brexit date is
+             * locale header to get the data in a supported language. UK brexit date is
              * currently set to 2019-10-31 and will be updated if and when needed.
              *
              * @throws {Error}
@@ -1599,14 +1722,16 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
              * List Countries Phone Codes
              *
              * List of all countries phone codes. You can use the locale header to get the
-             * data in supported language.
+             * data in a supported language.
              *
              * @throws {Error}
              * @return {Promise}             
@@ -1617,7 +1742,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1625,7 +1752,7 @@
              *
              * List of all currencies, including currency symol, name, plural, and decimal
              * digits for all major and minor currencies. You can use the locale header to
-             * get the data in supported language.
+             * get the data in a supported language.
              *
              * @throws {Error}
              * @return {Promise}             
@@ -1636,7 +1763,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -1655,7 +1784,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1734,7 +1865,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1755,7 +1888,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1830,7 +1965,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1851,7 +1988,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1872,7 +2011,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1911,7 +2052,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1937,7 +2080,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -1981,7 +2126,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2007,7 +2154,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2047,7 +2196,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2068,7 +2219,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2122,7 +2275,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2148,7 +2303,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2198,7 +2355,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2224,7 +2383,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2245,7 +2406,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2335,7 +2498,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2361,7 +2526,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2456,7 +2623,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2482,7 +2651,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2503,7 +2674,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2524,7 +2697,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2591,7 +2766,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2617,7 +2794,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2689,7 +2868,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2715,7 +2896,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -2757,7 +2940,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2774,9 +2959,17 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createFile: function(files, read = [], write = [], folderId = '') {
+            createFile: function(files, read, write, folderId = '') {
                 if(files === undefined) {
                     throw new Error('Missing required parameter: "files"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/storage/files';
@@ -2800,7 +2993,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'multipart/form-data'}, payload);
+                    .post(path, {
+                        'content-type': 'multipart/form-data',
+                    }, payload);
             },
 
             /**
@@ -2823,7 +3018,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2839,9 +3036,17 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateFile: function(fileId, read = [], write = [], folderId = '') {
+            updateFile: function(fileId, read, write, folderId = '') {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
+                }
+                
+                if(read === undefined) {
+                    throw new Error('Missing required parameter: "read"');
+                }
+                
+                if(write === undefined) {
+                    throw new Error('Missing required parameter: "write"');
                 }
                 
                 let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
@@ -2861,7 +3066,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2884,7 +3091,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2908,7 +3117,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2958,7 +3169,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -2986,7 +3199,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -3028,7 +3243,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3062,7 +3279,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3085,7 +3304,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3117,7 +3338,9 @@
                 }
 
                 return http
-                    .put(path, {'content-type': 'application/json'}, payload);
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3140,7 +3363,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3163,7 +3388,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3229,7 +3456,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3257,7 +3486,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3294,7 +3525,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3405,7 +3638,9 @@
                 }
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3445,7 +3680,9 @@
                 }
 
                 return http
-                    .post(path, {'content-type': 'application/json'}, payload);
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3467,7 +3704,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3489,7 +3728,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3511,11 +3752,13 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
-             * Update Account Prefs
+             * Update User Prefs
              *
              * Update user preferences by its unique ID. You can pass only the specific
              * settings you wish to update.
@@ -3543,7 +3786,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3565,7 +3810,9 @@
                 let payload = {};
 
                 return http
-                    .get(path, {'content-type': 'application/json'}, payload);
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3587,7 +3834,9 @@
                 let payload = {};
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3618,11 +3867,13 @@
                 }
 
                 return http
-                    .delete(path, {'content-type': 'application/json'}, payload);
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
-             * Update user status
+             * Update User Status
              *
              * Update user status by its unique ID.
              *
@@ -3649,7 +3900,9 @@
                 }
 
                 return http
-                    .patch(path, {'content-type': 'application/json'}, payload);
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 

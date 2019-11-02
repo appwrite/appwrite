@@ -1,22 +1,48 @@
-# Version 0.3.0 (PRE-RELEASE) - PLANNED
+# Version 0.4.0 (PRE-RELEASE) - PLANNED
 
 ## Features
 
-* Added 16 new locales for locale service and email templates (af, ar, bn, cz, hu, hy, jv, lt, no, ru, si, sv, ta, vi, zh-cn, zh-tw)
-* New users service routes to allow updates pref and name update
+* Added 3 new locales for locale service and email templates (is, ml, th, fo, ph, pn)
 * 2 stage Docker build
 * New database rule validation options
 * Update docs example with auth info
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
+* Updated new brexit date to 31-01-2020
+
+## Security
+
+* Remove executable permission from avatars files [Minor]
+* Updated SDK Generator Twig dependency with security issue: https://www.exploit-db.com/exploits/44102 [Minor]
+
+## Bugs
+
+* New loading message when creating a new project
+* Fixed broken redirect URL when creating a new project
+* Fixed broken modal when a user password is too short
+
+## Breaking Changes
+
+* OAuth path is now /auth/login/oauth instead of /auth/oauth and /auth/oauth/callback is now /auth/login/oauth/callback, this is for better consistency with new login methods we will introduce in the future
+
+# Version 0.3.0
+
+## Features
+
+* Added 19 new locales for locale service and email templates (af, ar, bn, cz, hu, hy, jv, ko, lt, ml, no, ru, si, sq, sv, ta, vi, zh-cn, zh-tw)
+* New users service routes to allow updates pref and name update
 * New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
 * Added support for ES6 require statements in JS SDK
+* New Locale API route for fetching list of continents
 
 ## Bugs
 * Fix for typos in PT-BR translations
 * Fix for UI crash when project user was missing a name
+* Fix for it locale including the en templates by mistake
+* Fix for UI not showing user's prefs properly
+* Fixed 401 unexpected error when no permission passed in creation of a new resource
 
-## Breaking Changs
+## Breaking Changes
 
 * users/deleteUsersSession method name changed to users/deleteUserSession in all SDKs for better consistency
 

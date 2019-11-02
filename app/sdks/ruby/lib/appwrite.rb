@@ -12,15 +12,3 @@ require_relative 'appwrite/services/projects'
 require_relative 'appwrite/services/storage'
 require_relative 'appwrite/services/teams'
 require_relative 'appwrite/services/users'
-
-module Appwrite
-
-end
-
-client = Appwrite::Client.new()  
-
-client
-    .set_endpoint('https://www.walla.co.il')
-    .add_header('x', 'y')
-    .add_header('z', 'i')
-    .call('get', '/info', {}, {'test': 'xxx'})
