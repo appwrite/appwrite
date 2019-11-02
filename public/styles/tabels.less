@@ -1,5 +1,4 @@
 table {
-  border-top: solid 1px @config-color-fade-super;
   width: ~"calc(100% + 60px)";
   border-collapse: collapse;
   margin: -30px;
@@ -10,6 +9,7 @@ table {
 
   thead {
     box-shadow: 0 0 2px rgba(0,0,0,.25);
+    border-bottom: solid 1px @config-color-fade-super;
     font-size: 14px;
 
     th {
@@ -101,10 +101,10 @@ table {
 
   &.vertical {
     @media @phones, @tablets {
+      border-top: solid 1px @config-color-fade-super;
       display: block;
       overflow: hidden;
       padding-top: 12px;
-      border-bottom: solid 1px @config-color-fade-super;
 
       .hide {
         display: none;
