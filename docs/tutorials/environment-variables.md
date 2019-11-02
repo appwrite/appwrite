@@ -10,7 +10,7 @@ Set your server running environment. By default, the var is set to 'development'
 
 ### _APP_OPTIONS_ABUSE
 
-Allows you to disable abuse checks and API rate limiting. By default, set to 'enabled'. To cancel the abuse checking, set to 'disabled'. It is not recommended to disable this check in a production environment.
+Allows you to disable abuse checks and API rate limiting. By default, set to 'enabled'. To cancel the abuse checking, set to 'disabled'. It is not recommended to disable this check-in a production environment.
 
 ### _APP_OPENSSL_KEY_V1
 
