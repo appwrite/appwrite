@@ -13,6 +13,7 @@
 ## Security
 
 * Remove executable permission from avatars files [Minor]
+* Updated SDK Generator Twig dependency with security issue: https://www.exploit-db.com/exploits/44102 [Minor]
 
 ## Bugs
 
