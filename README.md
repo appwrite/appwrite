@@ -25,17 +25,17 @@ Using Appwrite, you can easily manage user authentication with multiple sign-in 
 
 ![Appwrite](public/images/github.png)
 
-Table of Contents
-=================
-* [Installation](#installation)
-    * [Changing Port Number](#changing-port-number)
-* [Getting Started](#getting-started)
-    * [Services](#services)
-    * [SDKs](#sdks)
-* [Security](#security)
-* [Follow Us](#follow-us)
-* [Contributing](#contributing)
-* [Credits](#credits)
+Table of Contents:
+
+- [Installation](#installation)
+  - [Changing Port Number](#changing-port-number)
+- [Getting Started](#getting-started)
+  - [Services](#services)
+  - [SDKs](#sdks)
+- [Security](#security)
+- [Follow Us](#follow-us)
+- [Contributing](#contributing)
+- [Credits](#credits)
       
 ## Installation
 
