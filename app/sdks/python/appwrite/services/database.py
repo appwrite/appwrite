@@ -42,8 +42,7 @@ class Database(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_collection(self, collection_id, name, read, write, rulesstring(4) ""[]""
-=[]):
+    def update_collection(self, collection_id, name, read, write, rules=[]):
         """Update Collection"""
 
         params = {}
@@ -69,8 +68,7 @@ class Database(Service):
             'content-type': 'application/json',
         }, params)
 
-    def list_documents(self, collection_id, filtersstring(4) ""[]""
-=[], offset=0, limit=50, order_field='$uid', order_type='ASC', order_cast='string', search='', first=0, last=0):
+    def list_documents(self, collection_id, filters=[], offset=0, limit=50, order_field='$uid', order_type='ASC', order_cast='string', search='', first=0, last=0):
         """List Documents"""
 
         params = {}

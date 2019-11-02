@@ -36,6 +36,19 @@ func (srv *Auth) Login(Email string, Password string, Success string, Failure st
 	return srv.client.Call("POST", path, nil, params)
 }
 
+// Oauth
+func (srv *Auth) Oauth(Provider string, Success string, Failure string) (map[string]interface{}, error) {
+	r := strings.NewReplacer("{provider}", Provider)
+	path := r.Replace("/auth/login/oauth/{provider}")
+
+	params := map[string]interface{}{
+		"success": Success,
+		"failure": Failure,
+	}
+
+	return srv.client.Call("GET", path, nil, params)
+}
+
 // Logout use this endpoint to log out the currently logged in user from his
 // account. When successful this endpoint will delete the user session and
 // remove the session secret cookie from the user client.
@@ -60,19 +73,6 @@ func (srv *Auth) LogoutBySession(Id string) (map[string]interface{}, error) {
 	}
 
 	return srv.client.Call("DELETE", path, nil, params)
-}
-
-// Oauth
-func (srv *Auth) Oauth(Provider string, Success string, Failure string) (map[string]interface{}, error) {
-	r := strings.NewReplacer("{provider}", Provider)
-	path := r.Replace("/auth/oauth/{provider}")
-
-	params := map[string]interface{}{
-		"success": Success,
-		"failure": Failure,
-	}
-
-	return srv.client.Call("GET", path, nil, params)
 }
 
 // Recovery sends the user an email with a temporary secret token for password

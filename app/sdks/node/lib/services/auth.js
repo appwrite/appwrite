@@ -3,7 +3,7 @@ const Service = require('../service.js');
 class Auth extends Service {
 
     /**
-     * Login User
+     * Login
      *
      * Allow the user to login into his account by providing a valid email and
      * password combination. Use the success and failure arguments to provide a
@@ -36,6 +36,27 @@ class Auth extends Service {
                {
                 'email': email,
                 'password': password,
+                'success': success,
+                'failure': failure
+            });
+    }
+
+    /**
+     * Login with OAuth
+     *
+     * @param string provider
+     * @param string success
+     * @param string failure
+     * @throws Exception
+     * @return {}
+     */
+    async oauth(provider, success, failure) {
+        let path = '/auth/login/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
+        
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'success': success,
                 'failure': failure
             });
@@ -79,27 +100,6 @@ class Auth extends Service {
                     'content-type': 'application/json',
                },
                {
-            });
-    }
-
-    /**
-     * OAuth Login
-     *
-     * @param string provider
-     * @param string success
-     * @param string failure
-     * @throws Exception
-     * @return {}
-     */
-    async oauth(provider, success, failure) {
-        let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
-        
-        return await this.client.call('get', path, {
-                    'content-type': 'application/json',
-               },
-               {
-                'success': success,
-                'failure': failure
             });
     }
 
@@ -165,7 +165,7 @@ class Auth extends Service {
     }
 
     /**
-     * Register User
+     * Register
      *
      * Use this endpoint to allow a new user to register an account in your
      * project. Use the success and failure URLs to redirect users back to your
@@ -214,7 +214,7 @@ class Auth extends Service {
     }
 
     /**
-     * Confirm User
+     * Confirmation
      *
      * Use this endpoint to complete the confirmation of the user account email
      * address. Both the **userId** and **token** arguments will be passed as

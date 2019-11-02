@@ -32,6 +32,16 @@ class Auth extends Service {
 
        return await this.client.call('post', path: path, params: params);
     }
+    Future<Response> oauth({provider, success, failure}) async {
+       String path = '/auth/login/oauth/{provider}'.replaceAll(RegExp('{provider}'), provider);
+
+       Map<String, dynamic> params = {
+         'success': success,
+         'failure': failure,
+       };
+
+       return await this.client.call('get', path: path, params: params);
+    }
      /// Use this endpoint to log out the currently logged in user from his account.
      /// When successful this endpoint will delete the user session and remove the
      /// session secret cookie from the user client.
@@ -53,16 +63,6 @@ class Auth extends Service {
        };
 
        return await this.client.call('delete', path: path, params: params);
-    }
-    Future<Response> oauth({provider, success, failure}) async {
-       String path = '/auth/oauth/{provider}'.replaceAll(RegExp('{provider}'), provider);
-
-       Map<String, dynamic> params = {
-         'success': success,
-         'failure': failure,
-       };
-
-       return await this.client.call('get', path: path, params: params);
     }
      /// Sends the user an email with a temporary secret token for password reset.
      /// When the user clicks the confirmation link he is redirected back to your

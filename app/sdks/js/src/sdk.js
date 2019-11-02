@@ -535,7 +535,7 @@
         let auth = {
 
             /**
-             * Login User
+             * Login
              *
              * Allow the user to login into his account by providing a valid email and
              * password combination. Use the success and failure arguments to provide a
@@ -594,6 +594,46 @@
             },
 
             /**
+             * Login with OAuth
+             *
+             *
+             * @param {string} provider
+             * @param {string} success
+             * @param {string} failure
+             * @throws {Error}
+             * @return {null}             
+             */
+            oauth: function(provider, success, failure) {
+                if(provider === undefined) {
+                    throw new Error('Missing required parameter: "provider"');
+                }
+                
+                if(success === undefined) {
+                    throw new Error('Missing required parameter: "success"');
+                }
+                
+                if(failure === undefined) {
+                    throw new Error('Missing required parameter: "failure"');
+                }
+                
+                let path = '/auth/login/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
+
+                let payload = {};
+
+                if(success) {
+                    payload['success'] = success;
+                }
+
+                if(failure) {
+                    payload['failure'] = failure;
+                }
+
+                payload['project'] = config.project;
+
+                return iframe('get', path, payload);
+            },
+
+            /**
              * Logout Current Session
              *
              * Use this endpoint to log out the currently logged in user from his account.
@@ -638,46 +678,6 @@
                     .delete(path, {
                         'content-type': 'application/json',
                     }, payload);
-            },
-
-            /**
-             * OAuth Login
-             *
-             *
-             * @param {string} provider
-             * @param {string} success
-             * @param {string} failure
-             * @throws {Error}
-             * @return {null}             
-             */
-            oauth: function(provider, success, failure) {
-                if(provider === undefined) {
-                    throw new Error('Missing required parameter: "provider"');
-                }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
-                }
-                
-                let path = '/auth/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
-
-                let payload = {};
-
-                if(success) {
-                    payload['success'] = success;
-                }
-
-                if(failure) {
-                    payload['failure'] = failure;
-                }
-
-                payload['project'] = config.project;
-
-                return iframe('get', path, payload);
             },
 
             /**
@@ -786,7 +786,7 @@
             },
 
             /**
-             * Register User
+             * Register
              *
              * Use this endpoint to allow a new user to register an account in your
              * project. Use the success and failure URLs to redirect users back to your
@@ -865,7 +865,7 @@
             },
 
             /**
-             * Confirm User
+             * Confirmation
              *
              * Use this endpoint to complete the confirmation of the user account email
              * address. Both the **userId** and **token** arguments will be passed as

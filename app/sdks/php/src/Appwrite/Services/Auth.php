@@ -9,7 +9,7 @@ use Appwrite\Service;
 class Auth extends Service
 {
     /**
-     * Login User
+     * Login
      *
      * Allow the user to login into his account by providing a valid email and
      * password combination. Use the success and failure arguments to provide a
@@ -44,6 +44,28 @@ class Auth extends Service
         $params['failure'] = $failure;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
+        ], $params);
+    }
+
+    /**
+     * Login with OAuth
+     *
+     * @param string  $provider
+     * @param string  $success
+     * @param string  $failure
+     * @throws Exception
+     * @return array
+     */
+    public function oauth(string $provider, string $success, string $failure):array
+    {
+        $path   = str_replace(['{provider}'], [$provider], '/auth/login/oauth/{provider}');
+        $params = [];
+
+        $params['success'] = $success;
+        $params['failure'] = $failure;
+
+        return $this->client->call(Client::METHOD_GET, $path, [
             'content-type' => 'application/json',
         ], $params);
     }
@@ -87,28 +109,6 @@ class Auth extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
-            'content-type' => 'application/json',
-        ], $params);
-    }
-
-    /**
-     * OAuth Login
-     *
-     * @param string  $provider
-     * @param string  $success
-     * @param string  $failure
-     * @throws Exception
-     * @return array
-     */
-    public function oauth(string $provider, string $success, string $failure):array
-    {
-        $path   = str_replace(['{provider}'], [$provider], '/auth/oauth/{provider}');
-        $params = [];
-
-        $params['success'] = $success;
-        $params['failure'] = $failure;
-
-        return $this->client->call(Client::METHOD_GET, $path, [
             'content-type' => 'application/json',
         ], $params);
     }
@@ -177,7 +177,7 @@ class Auth extends Service
     }
 
     /**
-     * Register User
+     * Register
      *
      * Use this endpoint to allow a new user to register an account in your
      * project. Use the success and failure URLs to redirect users back to your
@@ -227,7 +227,7 @@ class Auth extends Service
     }
 
     /**
-     * Confirm User
+     * Confirmation
      *
      * Use this endpoint to complete the confirmation of the user account email
      * address. Both the **userId** and **token** arguments will be passed as

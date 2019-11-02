@@ -16,6 +16,20 @@ module Appwrite
             }, params);
         end
 
+        def oauth(provider:, success:, failure:)
+            path = '/auth/login/oauth/{provider}'
+                .gsub('{provider}', provider)
+
+            params = {
+                'success': success, 
+                'failure': failure
+            }
+
+            return @client.call('get', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
         def logout()
             path = '/auth/logout'
 
@@ -35,20 +49,6 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
-                'content-type' => 'application/json',
-            }, params);
-        end
-
-        def oauth(provider:, success:, failure:)
-            path = '/auth/oauth/{provider}'
-                .gsub('{provider}', provider)
-
-            params = {
-                'success': success, 
-                'failure': failure
-            }
-
-            return @client.call('get', path, {
                 'content-type' => 'application/json',
             }, params);
         end

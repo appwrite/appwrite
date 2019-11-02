@@ -4,7 +4,7 @@ from ..service import Service
 class Auth(Service):
 
     def login(self, email, password, success='', failure=''):
-        """Login User"""
+        """Login"""
 
         params = {}
         path = '/auth/login'
@@ -14,6 +14,19 @@ class Auth(Service):
         params['failure'] = failure
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
+        }, params)
+
+    def oauth(self, provider, success, failure):
+        """Login with OAuth"""
+
+        params = {}
+        path = '/auth/login/oauth/{provider}'
+        path.replace('{provider}', provider)                
+        params['success'] = success
+        params['failure'] = failure
+
+        return self.client.call('get', path, {
             'content-type': 'application/json',
         }, params)
 
@@ -35,19 +48,6 @@ class Auth(Service):
         path.replace('{id}', id)                
 
         return self.client.call('delete', path, {
-            'content-type': 'application/json',
-        }, params)
-
-    def oauth(self, provider, success, failure):
-        """OAuth Login"""
-
-        params = {}
-        path = '/auth/oauth/{provider}'
-        path.replace('{provider}', provider)                
-        params['success'] = success
-        params['failure'] = failure
-
-        return self.client.call('get', path, {
             'content-type': 'application/json',
         }, params)
 
@@ -78,7 +78,7 @@ class Auth(Service):
         }, params)
 
     def register(self, email, password, confirm, success='', failure='', name=''):
-        """Register User"""
+        """Register"""
 
         params = {}
         path = '/auth/register'
@@ -94,7 +94,7 @@ class Auth(Service):
         }, params)
 
     def confirm(self, user_id, token):
-        """Confirm User"""
+        """Confirmation"""
 
         params = {}
         path = '/auth/register/confirm'

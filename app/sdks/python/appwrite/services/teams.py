@@ -17,8 +17,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_team(self, name, rolesstring(13) ""[\"owner\"]""
-=[]):
+    def create_team(self, name, roles=[]):
         """Create Team"""
 
         params = {}

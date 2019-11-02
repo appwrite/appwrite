@@ -1,6 +1,6 @@
 # Auth Service
 
-## Login User
+## Login
 
 ```http request
 POST https://appwrite.io/v1/auth/login
@@ -20,6 +20,20 @@ When accessing this route using Javascript from the browser, success and failure
 | password | string | User account password |  |
 | success | string | URL to redirect back to your app after a successful login attempt. |  |
 | failure | string | URL to redirect back to your app after a failed login attempt. |  |
+
+## Login with OAuth
+
+```http request
+GET https://appwrite.io/v1/auth/login/oauth/{provider}
+```
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| provider | string | **Required** OAuth Provider |  |
+| success | string | **Required** URL to redirect back to your app after a successful login attempt. |  |
+| failure | string | **Required** URL to redirect back to your app after a failed login attempt. |  |
 
 ## Logout Current Session
 
@@ -42,20 +56,6 @@ DELETE https://appwrite.io/v1/auth/logout/{id}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | id | string | **Required** User specific session unique ID number. if 0 delete all sessions. |  |
-
-## OAuth Login
-
-```http request
-GET https://appwrite.io/v1/auth/oauth/{provider}
-```
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| provider | string | **Required** OAuth Provider |  |
-| success | string | **Required** URL to redirect back to your app after a successful login attempt. |  |
-| failure | string | **Required** URL to redirect back to your app after a failed login attempt. |  |
 
 ## Password Recovery
 
@@ -91,7 +91,7 @@ Please notice that in order to avoid a [Redirect Attack](https://github.com/OWAS
 | password-a | string | New password. |  |
 | password-b | string | New password again. |  |
 
-## Register User
+## Register
 
 ```http request
 POST https://appwrite.io/v1/auth/register
@@ -116,7 +116,7 @@ When accessing this route using Javascript from the browser, success and failure
 | failure | string | Redirect when registration failed |  |
 | name | string | User name |  |
 
-## Confirm User
+## Confirmation
 
 ```http request
 POST https://appwrite.io/v1/auth/register/confirm
