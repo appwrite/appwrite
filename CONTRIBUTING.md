@@ -128,7 +128,9 @@ This is also important for the Appwrite lead developers to be able to give techn
 
 ## Setup
 
-To set up a working development environment, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+To set up a working **development** environment, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+
+Please note that these instructions are for setting a functional dev environment. If you want to set up an Appwrite instance to integrate into your app, you should probably try and install Appwrite by using the instructions in the [getting started guide](https://appwrite.io/docs/getting-started-for-web) or in the main [README](README.md) file.
 
 ```bash
 git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
