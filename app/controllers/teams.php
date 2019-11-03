@@ -259,7 +259,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
     ->param('redirect', '', function () use ($clients) { return new Host($clients); }, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
-        function ($teamId, $email, $name, $roles, $redirect) use ($request, $response, $register, $project, $user, $audit, $projectDB) {
+        function ($teamId, $email, $name, $roles, $redirect) use ($response, $register, $project, $user, $audit, $projectDB) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
