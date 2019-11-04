@@ -54,9 +54,9 @@ class Client
      *
      * @param string $value
      *
-     * @return Client
+     * @return self $this
      */
-    public function setProject($value)
+    public function setProject(string $value): self
     {
         $this->addHeader('X-Appwrite-Project', $value);
 
@@ -70,9 +70,9 @@ class Client
      *
      * @param string $value
      *
-     * @return Client
+     * @return self $this
      */
-    public function setKey($value)
+    public function setKey(string $value): self
     {
         $this->addHeader('X-Appwrite-Key', $value);
 
@@ -84,9 +84,9 @@ class Client
      *
      * @param string $value
      *
-     * @return Client
+     * @return self $this
      */
-    public function setLocale($value)
+    public function setLocale(string $value): self
     {
         $this->addHeader('X-Appwrite-Locale', $value);
 
@@ -98,32 +98,31 @@ class Client
      *
      * @param string $value
      *
-     * @return Client
+     * @return self $this
      */
-    public function setMode($value)
+    public function setMode(string $value): self
     {
         $this->addHeader('X-Appwrite-Mode', $value);
 
         return $this;
     }
 
-
-    /***
-     * @param bool $status
-     * @return $this
+    /**
+     * @param bool $status true
+     * @return self $this
      */
-    public function setSelfSigned($status = true)
+    public function setSelfSigned(bool $status = true): self
     {
         $this->selfSigned = $status;
 
         return $this;
     }
 
-    /***
-     * @param $endpoint
-     * @return $this
+    /**
+     * @param mixed $endpoint
+     * @return self $this
      */
-    public function setEndpoint($endpoint)
+    public function setEndpoint($endpoint): self
     {
         $this->endpoint = $endpoint;
 
@@ -131,13 +130,15 @@ class Client
     }
 
     /**
-     * @param $key
-     * @param $value
+     * @param string $key
+     * @param string $value
+     *
+     * @return self $this
      */
-    public function addHeader($key, $value)
+    public function addHeader(string $key, string $value): self
     {
         $this->headers[strtolower($key)] = strtolower($value);
-        
+
         return $this;
     }
 
@@ -153,7 +154,7 @@ class Client
      * @return array|string
      * @throws Exception
      */
-    public function call($method, $path = '', $headers = array(), array $params = array())
+    public function call(string $method, string $path = '', array $headers = [], array $params = [])
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
@@ -238,7 +239,7 @@ class Client
      * @param string $cookie
      * @return array
      */
-    public function parseCookie($cookie)
+    public function parseCookie(string $cookie): array
     {
         $cookies = [];
 
@@ -254,7 +255,7 @@ class Client
      * @param string $prefix
      * @return array
      */
-    protected function flatten(array $data, $prefix = '')
+    protected function flatten(array $data, string $prefix = ''): array
     {
         $output = [];
 

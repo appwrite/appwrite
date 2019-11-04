@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 
 class ProjectAvatarsTest extends BaseProjects
 {
-    public function testRegisterSuccess()
+    public function testRegisterSuccess(): array
     {
         return $this->initProject([]);
     }
@@ -14,7 +14,7 @@ class ProjectAvatarsTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testAvatarsCCReadSuccess($data)
+    public function testAvatarsCCReadSuccess(array $data): array
     {
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
             'x-appwrite-project' => $data['projectUid'],
@@ -53,7 +53,7 @@ class ProjectAvatarsTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testAvatarsBrowserReadSuccess($data)
+    public function testAvatarsBrowserReadSuccess(array $data): array
     {
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
             'x-appwrite-project' => $data['projectUid'],
@@ -92,7 +92,7 @@ class ProjectAvatarsTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testAvatarsFlagReadSuccess($data)
+    public function testAvatarsFlagReadSuccess(array $data): array
     {
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
             'x-appwrite-project' => $data['projectUid'],
@@ -131,7 +131,7 @@ class ProjectAvatarsTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testAvatarsRemoteImageReadSuccess($data)
+    public function testAvatarsRemoteImageReadSuccess(array $data): array
     {
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $data['projectUid'],
@@ -174,7 +174,7 @@ class ProjectAvatarsTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testAvatarsFaviconReadSuccess($data)
+    public function testAvatarsFaviconReadSuccess(array $data): array
     {
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
             'x-appwrite-project' => $data['projectUid'],
@@ -192,7 +192,7 @@ class ProjectAvatarsTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testAvatarsQRReadSuccess($data)
+    public function testAvatarsQRReadSuccess(array $data): array
     {
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $data['projectUid'],

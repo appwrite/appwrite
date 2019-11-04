@@ -15,10 +15,10 @@ class BaseConsole extends TestCase
     protected $demoEmail = '';
     protected $demoPassword = '';
 
-    public function setUp()
+    protected function setUp(): void
     {
         $this->client = new Client();
-    
+
         $this->client
             ->setEndpoint($this->endpoint)
         ;
@@ -27,7 +27,7 @@ class BaseConsole extends TestCase
         $this->demoPassword = 'password.' . rand(0, 1000000);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         $this->client = null;
     }
@@ -49,12 +49,12 @@ class BaseConsole extends TestCase
         return $response;
     }
 
-    public function initProject(array $scopes) {
+    public function initProject(array $scopes): array {
         $response = $this->register();
 
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("", $response['body']);
-        
+
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
 
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
@@ -104,10 +104,10 @@ class BaseConsole extends TestCase
         $this->assertNotEmpty($key['body']['secret']);
 
         $user = $this->projectRegister($project['body']['$uid']);
-        
+
         $this->assertEquals('http://localhost/success', $user['headers']['location']);
         $this->assertEquals("", $user['body']);
-        
+
         return [
             'email' => $this->demoEmail,
             'password' => $this->demoPassword,

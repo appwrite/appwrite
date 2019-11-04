@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 
 class ProjectUsersTest extends BaseProjects
 {
-    public function testRegisterSuccess()
+    public function testRegisterSuccess(): array
     {
         return $this->initProject(['users.read', 'users.write']);
     }
@@ -14,7 +14,7 @@ class ProjectUsersTest extends BaseProjects
     /**
      * @depends testRegisterSuccess
      */
-    public function testUserCreateSuccess($data)
+    public function testUserCreateSuccess(array $data): array
     {
         $user = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
@@ -32,28 +32,28 @@ class ProjectUsersTest extends BaseProjects
         $this->assertEquals($user['body']['status'], 0);
         $this->assertGreaterThan(0, $user['body']['registration']);
         $this->assertIsArray($user['body']['roles']);
-        
+
         return array_merge($data, ['userId' => $user['body']['$uid']]);
     }
 
     /**
      * @depends testUserCreateSuccess
      */
-    public function testUserReadSuccess($data)
+    public function testUserReadSuccess(array $data): array
     {
         $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-key' => $data['projectAPIKeySecret'],
         ]);
-        
+
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['name'], 'Project User');
         $this->assertEquals($user['body']['email'], 'users.service@example.com');
         $this->assertEquals($user['body']['status'], 0);
         $this->assertGreaterThan(0, $user['body']['registration']);
         $this->assertIsArray($user['body']['roles']);
-        
+
         $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -62,7 +62,7 @@ class ProjectUsersTest extends BaseProjects
 
         $this->assertEquals($sessions['headers']['status-code'], 200);
         $this->assertIsArray($sessions['body']);
-        
+
         $logs = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/logs', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
@@ -106,7 +106,7 @@ class ProjectUsersTest extends BaseProjects
     /**
      * @depends testUserReadSuccess
      */
-    public function testUserUpdateStatusSuccess($data)
+    public function testUserUpdateStatusSuccess(array $data): array
     {
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', [
             'content-type' => 'application/json',
@@ -134,7 +134,7 @@ class ProjectUsersTest extends BaseProjects
     /**
      * @depends testUserReadSuccess
      */
-    public function testUserUpdatePrefsSuccess($data)
+    public function testUserUpdatePrefsSuccess(array $data): array
     {
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/prefs', [
             'content-type' => 'application/json',
