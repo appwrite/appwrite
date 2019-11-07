@@ -6,13 +6,13 @@ use Tests\E2E\Client;
 
 class ConsoleProjectsTest extends BaseConsole
 {
-    public function testRegisterSuccess()
+    public function testRegisterSuccess(): array
     {
         $response = $this->register();
 
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("", $response['body']);
-        
+
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
 
         return [
@@ -25,7 +25,7 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testRegisterSuccess
      */
-    public function testProjectsList($data)
+    public function testProjectsList($data): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/projects', [
             'origin' => 'http://localhost',
@@ -40,7 +40,7 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testRegisterSuccess
      */
-    public function testProjectsCreateSuccess($data)
+    public function testProjectsCreateSuccess(array $data): array
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
@@ -83,7 +83,7 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testProjectsCreateSuccess
      */
-    public function testProjectsUpdateSuccess($data)
+    public function testProjectsUpdateSuccess(array $data): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
