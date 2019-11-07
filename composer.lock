@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "d4a07ef5204fbc1d046dd8d852165e08a27293ad"
+                "reference": "01e6c677412f0e5645201efae1f6c72f375382f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/d4a07ef5204fbc1d046dd8d852165e08a27293ad",
-                "reference": "d4a07ef5204fbc1d046dd8d852165e08a27293ad",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/01e6c677412f0e5645201efae1f6c72f375382f4",
+                "reference": "01e6c677412f0e5645201efae1f6c72f375382f4",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-10-21T18:01:17+00:00"
+            "time": "2019-11-02T14:57:16+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "ea5bd009b92761af7ec3853c4a92d703e706d131"
+                "reference": "2abc3444c1a70fad6a5e9f1689e0c12a75d56d9d"
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-11-02 14:50:56"
+            "time": "2019-11-07 05:09:16"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -2458,12 +2458,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "fdc3245bc472bb1e23168b10aa0bd18716a58106"
+                "reference": "1bce3c96d418c8116bc9cd12e3a356a99c9cea50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/fdc3245bc472bb1e23168b10aa0bd18716a58106",
-                "reference": "fdc3245bc472bb1e23168b10aa0bd18716a58106",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/1bce3c96d418c8116bc9cd12e3a356a99c9cea50",
+                "reference": "1bce3c96d418c8116bc9cd12e3a356a99c9cea50",
                 "shasum": ""
             },
             "require": {
@@ -2534,7 +2534,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-11-01T16:39:44+00:00"
+            "time": "2019-11-06T13:14:04+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",

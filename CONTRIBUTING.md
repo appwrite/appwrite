@@ -28,8 +28,7 @@ If you think Appwrite could use a new feature, please open an issue on our GitHu
 
 ### Improving Documentation
 
-Submitting documentation updates, enhancements, designs, or bug fixes
-Submitting spelling or grammar fixes will be very much appreciated.
+Submitting documentation updates, enhancements, designs, or bug fixes. Spelling or grammar fixes will be very much appreciated.
 
 ### Helping Someone
 
