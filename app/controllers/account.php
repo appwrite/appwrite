@@ -3,15 +3,16 @@
 global $utopia, $register, $response, $user, $audit, $project, $projectDB, $providers;
 
 use Utopia\Exception;
+use Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
+use Utopia\Locale\Locale;
 use Auth\Auth;
 use Auth\Validator\Password;
 use Database\Database;
 use Database\Validator\Authorization;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
-use Utopia\Locale\Locale;
 
 $utopia->get('/v1/account')
     ->desc('Get Account')
@@ -352,7 +353,7 @@ $utopia->delete('/v1/account')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true)
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE)
                 ->json(array('result' => 'success'));
         }
     );

@@ -1440,12 +1440,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d073fed7f1979689a25d161423c90ecccaf87c4f"
+                "reference": "468f5cbe21e3fdcd5a351e615c28bf549dbe4dcc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d073fed7f1979689a25d161423c90ecccaf87c4f",
-                "reference": "d073fed7f1979689a25d161423c90ecccaf87c4f",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/468f5cbe21e3fdcd5a351e615c28bf549dbe4dcc",
+                "reference": "468f5cbe21e3fdcd5a351e615c28bf549dbe4dcc",
                 "shasum": ""
             },
             "require": {
@@ -1499,7 +1499,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-10-23T15:56:47+00:00"
+            "time": "2019-11-07T21:14:26+00:00"
         },
         {
             "name": "utopia-php/abuse",
@@ -1649,12 +1649,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "315b97b6558346348e2c3f56a826dcfb6c455791"
+                "reference": "9ca3337cdc5bbf3cc6458c51b06a91fc4f666567"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/315b97b6558346348e2c3f56a826dcfb6c455791",
-                "reference": "315b97b6558346348e2c3f56a826dcfb6c455791",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/9ca3337cdc5bbf3cc6458c51b06a91fc4f666567",
+                "reference": "9ca3337cdc5bbf3cc6458c51b06a91fc4f666567",
                 "shasum": ""
             },
             "require": {
@@ -1685,7 +1685,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2019-10-16T14:30:55+00:00"
+            "time": "2019-11-08T06:20:41+00:00"
         },
         {
             "name": "utopia-php/locale",

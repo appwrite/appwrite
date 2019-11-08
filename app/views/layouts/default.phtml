@@ -55,7 +55,8 @@ $canonical  = $this->getParam('canonical', '');
             PROTOCOL: '<?php echo $protocol; ?>',
             DOMAIN: '<?php echo $domain; ?>',
             HOME: '<?php echo $this->escape($this->getParam('home')); ?>',
-            API: '<?php echo $api; ?>/v1',
+            
+            API: 'https://localhost/v1',
             PROJECT: '<?php echo $project; ?>',
             LOCALE: '<?php echo $this->escape(Locale::getText('settings.locale')); ?>',
             PREFIX: '<?php echo $this->escape($this->getParam('prefix')); ?>',
