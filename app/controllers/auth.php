@@ -385,213 +385,6 @@ $utopia->post('/v1/auth/login')
         }
     );
 
-$utopia->delete('/v1/auth/logout')
-    ->desc('Logout Current Session')
-    ->label('webhook', 'auth.logout')
-    ->label('scope', 'account')
-    ->label('sdk.namespace', 'auth')
-    ->label('sdk.method', 'logout')
-    ->label('sdk.description', '/docs/references/auth/logout.md')
-    ->label('abuse-limit', 100)
-    ->action(
-        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
-            $token = Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-
-            if (!$projectDB->deleteDocument($token)) {
-                throw new Exception('Failed to remove token from DB', 500);
-            }
-
-            $webhook
-                ->setParam('payload', [
-                    'name' => $user->getAttribute('name', ''),
-                    'email' => $user->getAttribute('email', ''),
-                ])
-            ;
-
-            $audit->setParam('event', 'auth.logout');
-
-            $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE)
-                ->json(array('result' => 'success'))
-            ;
-        }
-    );
-
-$utopia->delete('/v1/auth/logout/:id')
-    ->desc('Logout Specific Session')
-    ->label('scope', 'account')
-    ->label('sdk.namespace', 'auth')
-    ->label('sdk.method', 'logoutBySession')
-    ->label('sdk.description', '/docs/references/auth/logout-by-session.md')
-    ->label('abuse-limit', 100)
-    ->param('id', null, function () { return new UID(); }, 'User specific session unique ID number. if 0 delete all sessions.')
-    ->action(
-        function ($id) use ($response, $request, $user, $projectDB, $audit) {
-            $tokens = $user->getAttribute('tokens', []);
-
-            foreach ($tokens as $token) { /* @var $token Document */
-                if (($id == $token->getUid() || ($id == 0)) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
-                    if (!$projectDB->deleteDocument($token->getUid())) {
-                        throw new Exception('Failed to remove token from DB', 500);
-                    }
-
-                    $audit
-                        ->setParam('event', 'auth.logout')
-                        ->setParam('resource', '/auth/token/'.$token->getUid())
-                    ;
-
-                    if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete cookies
-                        $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE);
-                    }
-                }
-            }
-
-            $response->json(array('result' => 'success'));
-        }
-    );
-
-$utopia->post('/v1/auth/recovery')
-    ->desc('Password Recovery')
-    ->label('scope', 'auth')
-    ->label('sdk.namespace', 'auth')
-    ->label('sdk.method', 'recovery')
-    ->label('sdk.description', '/docs/references/auth/recovery.md')
-    ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('email', '', function () { return new Email(); }, 'User account email address.')
-    ->param('reset', '', function () use ($clients) { return new Host($clients); }, 'Reset URL in your app to redirect the user after the reset token has been sent to the user email.')
-    ->action(
-        function ($email, $reset) use ($request, $response, $projectDB, $register, $audit, $project) {
-            $profile = $projectDB->getCollection([ // Get user by email address
-                'limit' => 1,
-                'first' => true,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    'email='.$email,
-                ],
-            ]);
-
-            if (empty($profile)) {
-                throw new Exception('User not found', 404); // TODO maybe hide this
-            }
-
-            $secret = Auth::tokenGenerator();
-
-            $profile->setAttribute('tokens', new Document([
-                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
-                'type' => Auth::TOKEN_TYPE_RECOVERY,
-                'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
-                'expire' => time() + Auth::TOKEN_EXPIRATION_RECOVERY,
-                'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
-                'ip' => $request->getIP(),
-            ]), Document::SET_TYPE_APPEND);
-
-            Authorization::setRole('user:'.$profile->getUid());
-
-            $profile = $projectDB->updateDocument($profile->getArrayCopy());
-
-            if (false === $profile) {
-                throw new Exception('Failed to save user to DB', 500);
-            }
-
-            $reset = Template::parseURL($reset);
-            $reset['query'] = Template::mergeQuery(((isset($reset['query'])) ? $reset['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
-            $reset = Template::unParseURL($reset);
-
-            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
-            $body
-                ->setParam('{{direction}}', Locale::getText('settings.direction'))
-                ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-                ->setParam('{{name}}', $profile->getAttribute('name'))
-                ->setParam('{{redirect}}', $reset)
-            ;
-
-            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-
-            $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
-
-            $mail->Subject = Locale::getText('auth.emails.recovery.title');
-            $mail->Body = $body->render();
-            $mail->AltBody = strip_tags($body->render());
-
-            try {
-                $mail->send();
-            } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
-            }
-
-            $audit
-                ->setParam('userId', $profile->getUid())
-                ->setParam('event', 'auth.recovery')
-            ;
-
-            $response->json(array('result' => 'success'));
-        }
-    );
-
-$utopia->put('/v1/auth/recovery/reset')
-    ->desc('Password Reset')
-    ->label('scope', 'auth')
-    ->label('sdk.namespace', 'auth')
-    ->label('sdk.method', 'recoveryReset')
-    ->label('sdk.description', '/docs/references/auth/recovery-reset.md')
-    ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', function () { return new UID(); }, 'User account email address.')
-    ->param('token', '', function () { return new Text(256); }, 'Valid reset token.')
-    ->param('password-a', '', function () { return new Password(); }, 'New password.')
-    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
-    ->action(
-        function ($userId, $token, $passwordA, $passwordB) use ($response, $projectDB, $audit) {
-            if ($passwordA !== $passwordB) {
-                throw new Exception('Passwords must match', 400);
-            }
-
-            $profile = $projectDB->getCollection([ // Get user by email address
-                'limit' => 1,
-                'first' => true,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    '$uid='.$userId,
-                ],
-            ]);
-
-            if (empty($profile)) {
-                throw new Exception('User not found', 404); // TODO maybe hide this
-            }
-
-            $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $token);
-
-            if (!$token) {
-                throw new Exception('Recovery token is not valid', 401);
-            }
-
-            Authorization::setRole('user:'.$profile->getUid());
-
-            $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
-                'password' => Auth::passwordHash($passwordA),
-                'password-update' => time(),
-                'confirm' => true,
-            ]));
-
-            if (false === $profile) {
-                throw new Exception('Failed saving user to DB', 500);
-            }
-
-            if (!$projectDB->deleteDocument($token)) {
-                throw new Exception('Failed to remove token from DB', 500);
-            }
-
-            $audit
-                ->setParam('userId', $profile->getUid())
-                ->setParam('event', 'auth.recovery.reset')
-            ;
-
-            $response->json(array('result' => 'success'));
-        }
-    );
-
 $utopia->get('/v1/auth/login/oauth/:provider')
     ->desc('Login with OAuth')
     ->label('error', __DIR__.'/../views/general/error.phtml')
@@ -820,5 +613,212 @@ $utopia->get('/v1/auth/login/oauth/:provider/redirect')
             ;
 
             $response->redirect($state['success']);
+        }
+    );
+
+$utopia->delete('/v1/auth/logout')
+    ->desc('Logout Current Session')
+    ->label('webhook', 'auth.logout')
+    ->label('scope', 'account')
+    ->label('sdk.namespace', 'auth')
+    ->label('sdk.method', 'logout')
+    ->label('sdk.description', '/docs/references/auth/logout.md')
+    ->label('abuse-limit', 100)
+    ->action(
+        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
+            $token = Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+
+            if (!$projectDB->deleteDocument($token)) {
+                throw new Exception('Failed to remove token from DB', 500);
+            }
+
+            $webhook
+                ->setParam('payload', [
+                    'name' => $user->getAttribute('name', ''),
+                    'email' => $user->getAttribute('email', ''),
+                ])
+            ;
+
+            $audit->setParam('event', 'auth.logout');
+
+            $response
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE)
+                ->json(array('result' => 'success'))
+            ;
+        }
+    );
+
+$utopia->delete('/v1/auth/logout/:id')
+    ->desc('Logout Specific Session')
+    ->label('scope', 'account')
+    ->label('sdk.namespace', 'auth')
+    ->label('sdk.method', 'logoutBySession')
+    ->label('sdk.description', '/docs/references/auth/logout-by-session.md')
+    ->label('abuse-limit', 100)
+    ->param('id', null, function () { return new UID(); }, 'User specific session unique ID number. if 0 delete all sessions.')
+    ->action(
+        function ($id) use ($response, $request, $user, $projectDB, $audit) {
+            $tokens = $user->getAttribute('tokens', []);
+
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (($id == $token->getUid() || ($id == 0)) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
+                    if (!$projectDB->deleteDocument($token->getUid())) {
+                        throw new Exception('Failed to remove token from DB', 500);
+                    }
+
+                    $audit
+                        ->setParam('event', 'auth.logout')
+                        ->setParam('resource', '/auth/token/'.$token->getUid())
+                    ;
+
+                    if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete cookies
+                        $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE);
+                    }
+                }
+            }
+
+            $response->json(array('result' => 'success'));
+        }
+    );
+
+$utopia->post('/v1/auth/recovery')
+    ->desc('Password Recovery')
+    ->label('scope', 'auth')
+    ->label('sdk.namespace', 'auth')
+    ->label('sdk.method', 'recovery')
+    ->label('sdk.description', '/docs/references/auth/recovery.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('email', '', function () { return new Email(); }, 'User account email address.')
+    ->param('reset', '', function () use ($clients) { return new Host($clients); }, 'Reset URL in your app to redirect the user after the reset token has been sent to the user email.')
+    ->action(
+        function ($email, $reset) use ($request, $response, $projectDB, $register, $audit, $project) {
+            $profile = $projectDB->getCollection([ // Get user by email address
+                'limit' => 1,
+                'first' => true,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
+            ]);
+
+            if (empty($profile)) {
+                throw new Exception('User not found', 404); // TODO maybe hide this
+            }
+
+            $secret = Auth::tokenGenerator();
+
+            $profile->setAttribute('tokens', new Document([
+                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
+                'type' => Auth::TOKEN_TYPE_RECOVERY,
+                'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+                'expire' => time() + Auth::TOKEN_EXPIRATION_RECOVERY,
+                'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+                'ip' => $request->getIP(),
+            ]), Document::SET_TYPE_APPEND);
+
+            Authorization::setRole('user:'.$profile->getUid());
+
+            $profile = $projectDB->updateDocument($profile->getArrayCopy());
+
+            if (false === $profile) {
+                throw new Exception('Failed to save user to DB', 500);
+            }
+
+            $reset = Template::parseURL($reset);
+            $reset['query'] = Template::mergeQuery(((isset($reset['query'])) ? $reset['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
+            $reset = Template::unParseURL($reset);
+
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
+            $body
+                ->setParam('{{direction}}', Locale::getText('settings.direction'))
+                ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
+                ->setParam('{{name}}', $profile->getAttribute('name'))
+                ->setParam('{{redirect}}', $reset)
+            ;
+
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
+
+            $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
+
+            $mail->Subject = Locale::getText('auth.emails.recovery.title');
+            $mail->Body = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            } catch (\Exception $error) {
+                //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
+            }
+
+            $audit
+                ->setParam('userId', $profile->getUid())
+                ->setParam('event', 'auth.recovery')
+            ;
+
+            $response->json(array('result' => 'success'));
+        }
+    );
+
+$utopia->put('/v1/auth/recovery/reset')
+    ->desc('Password Reset')
+    ->label('scope', 'auth')
+    ->label('sdk.namespace', 'auth')
+    ->label('sdk.method', 'recoveryReset')
+    ->label('sdk.description', '/docs/references/auth/recovery-reset.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', function () { return new UID(); }, 'User account email address.')
+    ->param('token', '', function () { return new Text(256); }, 'Valid reset token.')
+    ->param('password-a', '', function () { return new Password(); }, 'New password.')
+    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
+    ->action(
+        function ($userId, $token, $passwordA, $passwordB) use ($response, $projectDB, $audit) {
+            if ($passwordA !== $passwordB) {
+                throw new Exception('Passwords must match', 400);
+            }
+
+            $profile = $projectDB->getCollection([ // Get user by email address
+                'limit' => 1,
+                'first' => true,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    '$uid='.$userId,
+                ],
+            ]);
+
+            if (empty($profile)) {
+                throw new Exception('User not found', 404); // TODO maybe hide this
+            }
+
+            $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $token);
+
+            if (!$token) {
+                throw new Exception('Recovery token is not valid', 401);
+            }
+
+            Authorization::setRole('user:'.$profile->getUid());
+
+            $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
+                'password' => Auth::passwordHash($passwordA),
+                'password-update' => time(),
+                'confirm' => true,
+            ]));
+
+            if (false === $profile) {
+                throw new Exception('Failed saving user to DB', 500);
+            }
+
+            if (!$projectDB->deleteDocument($token)) {
+                throw new Exception('Failed to remove token from DB', 500);
+            }
+
+            $audit
+                ->setParam('userId', $profile->getUid())
+                ->setParam('event', 'auth.recovery.reset')
+            ;
+
+            $response->json(array('result' => 'success'));
         }
     );
