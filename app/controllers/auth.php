@@ -374,7 +374,6 @@ $utopia->post('/v1/auth/login')
             ;
 
             $response
-                ->addHeader('testx', 'valuex')
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE);
 
             if ($success) {
