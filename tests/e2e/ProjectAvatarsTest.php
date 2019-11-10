@@ -22,6 +22,9 @@ class ProjectAvatarsTest extends BaseProjects
 
         $this->assertEquals(200, $logo['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $logo['headers']['content-type']);
+
+        var_dump($logo['body']);
+
         //$this->assertEquals('ef7512678fc617a708298a535dac143b', md5($logo['body']));
 
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
