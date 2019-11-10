@@ -145,7 +145,7 @@ $utopia->get('/v1/locale/continents')
 
 
 $utopia->get('/v1/locale/currencies')
-    ->desc('List of currencies')
+    ->desc('List Currencies')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCurrencies')
