@@ -2,15 +2,23 @@
 
 include_once 'shared/web.php';
 
-global $utopia, $response, $request, $layout, $version, $providers, $sdks;
+global $utopia, $response, $request, $layout, $version, $providers, $sdks, $version;
 
 use Utopia\View;
+
+$header = new View(__DIR__.'/../views/home/comps/header.phtml');
+$footer = new View(__DIR__.'/../views/home/comps/footer.phtml');
+
+$footer
+    ->setParam('version', $version)
+;
 
 $layout
     ->setParam('title', APP_NAME)
     ->setParam('description', '')
     ->setParam('class', 'home')
-    ->setParam('header', [new View(__DIR__.'/../views/home/comps/header.phtml')])
+    ->setParam('header', [$header])
+    ->setParam('footer', [$footer])
 ;
 
 $utopia->shutdown(function () use ($utopia, $response, $request, $layout, $version, $env) {
