@@ -43,7 +43,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     $path = $types[$type][$code];
     $type = 'png';
 
-    if (!file_exists($path)) {
+    if (!is_readable($path)) {
         throw new Exception('File not found in '.$path, 404);
     }
 
