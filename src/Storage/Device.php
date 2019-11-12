@@ -71,7 +71,7 @@ abstract class Device
         }
 
         if (!file_exists(dirname($path))) { // Checks if directory path to file exists
-            if (!mkdir(dirname($path), 0755, true)) {
+            if (!@mkdir(dirname($path), 0755, true)) {
                 throw new Exception('Can\'t create directory '.dirname($path));
             }
         }
