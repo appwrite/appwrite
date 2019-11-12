@@ -2,13 +2,15 @@
 
 ## Features
 
-* Added 3 new locales for locale service and email templates (is, ml, th, fo, ph, pn)
+* Added 5 new locales for locale service and email templates (is, ml, th, fo, ph, pn)
 * 2 stage Docker build
 * New database rule validation options
 * Update docs example with auth info
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
 * Updated new brexit date to 31-01-2020
+* Added a version number to signin and signup pages for easier debugging of issues
+* Perperation for adding SameSite cookie option support
 
 ## Security
 
@@ -20,6 +22,8 @@
 * New loading message when creating a new project
 * Fixed broken redirect URL when creating a new project
 * Fixed broken modal when a user password is too short
+* Fixed issue denying the creation of seesion cookies on localhosts with port other than 80 or 443
+* 
 
 ## Breaking Changes
 
