@@ -34,7 +34,7 @@ class ConsoleTest extends BaseConsole
             'failure' => 'http://localhost/failure',
         ]);
 
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
+        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_console'];
 
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("", $response['body']);
@@ -54,7 +54,7 @@ class ConsoleTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], []);
 
         $this->assertEquals('Demo User', $response['body']['name']);
@@ -77,7 +77,7 @@ class ConsoleTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], []);
 
         $this->assertEquals(200, $response['headers']['status-code']);

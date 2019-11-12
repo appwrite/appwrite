@@ -3,7 +3,6 @@
 global $utopia, $register, $response, $user, $audit, $project, $projectDB, $providers;
 
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
 use Utopia\Locale\Locale;
@@ -353,7 +352,7 @@ $utopia->delete('/v1/account')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE)
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
                 ->json(array('result' => 'success'));
         }
     );

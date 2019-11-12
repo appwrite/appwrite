@@ -3,7 +3,6 @@
 global $utopia, $register, $request, $response, $user, $audit, $webhook, $project, $domain, $projectDB, $providers, $clients;
 
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
@@ -176,7 +175,7 @@ $utopia->post('/v1/auth/register')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $loginSecret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE);
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $loginSecret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
 
             if ($success) {
                 $response->redirect($success);
@@ -374,7 +373,7 @@ $utopia->post('/v1/auth/login')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE);
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
 
             if ($success) {
                 $response->redirect($success);
@@ -609,7 +608,7 @@ $utopia->get('/v1/auth/login/oauth/:provider/redirect')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
             ;
 
             $response->redirect($state['success']);
@@ -642,7 +641,7 @@ $utopia->delete('/v1/auth/logout')
             $audit->setParam('event', 'auth.logout');
 
             $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE)
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
                 ->json(array('result' => 'success'))
             ;
         }
@@ -672,7 +671,7 @@ $utopia->delete('/v1/auth/logout/:id')
                     ;
 
                     if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete cookies
-                        $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, Response::COOKIE_SAMESITE_NONE);
+                        $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
                     }
                 }
             }

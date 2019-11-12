@@ -47,7 +47,12 @@ $port = (string) (isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'
 
 Resque::setBackend($redisHost.':'.$redisPort);
 
-define('COOKIE_DOMAIN', ($request->getServer('HTTP_HOST', null) === 'localhost' || $request->getServer('HTTP_HOST', null) === 'localhost:'.$port) ? false : '.'.$request->getServer('HTTP_HOST', false));
+define('COOKIE_DOMAIN', (
+    $request->getServer('HTTP_HOST', null) === 'localhost' ||
+    $request->getServer('HTTP_HOST', null) === 'localhost:'.$port)
+        ? null
+        : '.'.parse_url($request->getServer('HTTP_HOST', false), PHP_URL_HOST));
+define('COOKIE_SAMESITE', null); // Response::COOKIE_SAMESITE_NONE
 
 /*
  * Registry
@@ -210,10 +215,10 @@ if (is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $pro
 
 $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 
-Auth::setCookieName('a-session-'.$project->getUid());
+Auth::setCookieName('a_session_'.$project->getUid());
 
 if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a-session-'.$console->getUid());
+    Auth::setCookieName('a_session_'.$console->getUid());
 }
 
 $session = Auth::decodeSession($request->getCookie(Auth::$cookieName, $request->getHeader('X-Appwrite-Key', '')));

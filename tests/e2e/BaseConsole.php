@@ -55,12 +55,12 @@ class BaseConsole extends TestCase
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("", $response['body']);
 
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
+        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_console'];
 
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $session,
+            'cookie' => 'a_session_console=' . $session,
         ], [
             'name' => 'Demo Project Team',
         ]);
@@ -72,7 +72,7 @@ class BaseConsole extends TestCase
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $session,
+            'cookie' => 'a_session_console=' . $session,
         ], [
             'name' => 'Demo Project',
             'teamId' => $team['body']['$uid'],
@@ -93,7 +93,7 @@ class BaseConsole extends TestCase
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$uid'] . '/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $session,
+            'cookie' => 'a_session_console=' . $session,
         ], [
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
@@ -114,7 +114,7 @@ class BaseConsole extends TestCase
             'session' => $session,
             'projectUid' => $project['body']['$uid'],
             'projectAPIKeySecret' => $key['body']['secret'],
-            'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a-session-' . $project['body']['$uid']],
+            'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a_session_' . $project['body']['$uid']],
         ];
     }
 }

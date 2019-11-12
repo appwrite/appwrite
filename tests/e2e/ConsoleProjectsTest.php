@@ -13,7 +13,7 @@ class ConsoleProjectsTest extends BaseConsole
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("", $response['body']);
 
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
+        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_console'];
 
         return [
             'email' => $this->demoEmail,
@@ -30,7 +30,7 @@ class ConsoleProjectsTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_GET, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -45,7 +45,7 @@ class ConsoleProjectsTest extends BaseConsole
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], [
             'name' => 'Demo Project Team',
         ]);
@@ -57,7 +57,7 @@ class ConsoleProjectsTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], [
             'name' => 'Demo Project',
             'teamId' => $team['body']['$uid'],
@@ -88,7 +88,7 @@ class ConsoleProjectsTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], array_merge($data['project'], [
             'name' => 'New Project Name',
             'description' => 'New Demo Project Description',

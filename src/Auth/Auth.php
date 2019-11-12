@@ -59,7 +59,7 @@ class Auth
     /**
      * @var string
      */
-    public static $cookieName = 'a-session';
+    public static $cookieName = 'a_session';
 
     /**
      * User Unique ID.
