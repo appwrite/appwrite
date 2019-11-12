@@ -44,7 +44,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     $type = 'png';
 
     if (!is_readable($path)) {
-        throw new Exception('File not found in '.$path, 404);
+        throw new Exception('File not readable in '.$path, 500);
     }
 
     $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
