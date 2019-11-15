@@ -11,19 +11,19 @@
 * Updated new brexit date to 31-01-2020
 * Added a version number to signin and signup pages for easier debugging of issues
 * Perperation for adding SameSite cookie option support
+* Using native Docker volumes for setup for better cross-platform support and easier management of read/write permissions
 
 ## Security
 
 * Remove executable permission from avatars files [Minor]
 * Updated SDK Generator Twig dependency with security issue: https://www.exploit-db.com/exploits/44102 [Minor]
 
-## Bugs
+## Bug Fixes
 
 * New loading message when creating a new project
 * Fixed broken redirect URL when creating a new project
 * Fixed broken modal when a user password is too short
 * Fixed issue denying the creation of seesion cookies on localhosts with port other than 80 or 443
-* 
 
 ## Breaking Changes
 
@@ -39,7 +39,7 @@
 * Added support for ES6 require statements in JS SDK
 * New Locale API route for fetching list of continents
 
-## Bugs
+## Bug Fixes
 * Fix for typos in PT-BR translations
 * Fix for UI crash when project user was missing a name
 * Fix for it locale including the en templates by mistake
@@ -71,5 +71,3 @@
 
 * Changed auth service 'redirect' param to 'confirm' for better clarity
 * Updated all SDKs to sync with API changes
-
-# Version 0.1.15 (NOT-RELEASED)
