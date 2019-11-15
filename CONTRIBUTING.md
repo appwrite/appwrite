@@ -136,7 +136,7 @@ git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
 
-composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts
+composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
 
 npm install
 
@@ -154,6 +154,14 @@ bash ./build.sh 1.0.0
 ```
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
+
+## Tests
+
+To run tests manually, run phpunit from your command line:
+
+```bash
+vendor/bin/phpunit --configuration phpunit.xml
+```
 
 ## Tutorials
 
