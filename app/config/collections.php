@@ -951,9 +951,9 @@ $collections = [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Folder ID',
                 'key' => 'folderId',
-                'type' => 'numeric',
+                'type' => 'key',
                 'default' => 0,
-                'required' => true,
+                'required' => false,
                 'array' => false,
             ],
             [

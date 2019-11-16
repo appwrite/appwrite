@@ -403,9 +403,9 @@ $utopia->post('/v1/storage/files')
     ->param('files', [], function () { return new File(); }, 'Binary Files.', false)
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
+    // ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
     ->action(
-        function ($files, $read, $write, $folderId) use ($request, $response, $user, $projectDB, $audit, $usage) {
+        function ($files, $read, $write, $folderId = '') use ($request, $response, $user, $projectDB, $audit, $usage) {
             $files = $request->getFiles('files');
             $read = (empty($read)) ? ['user:'.$user->getUid()] : $read;
             $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
