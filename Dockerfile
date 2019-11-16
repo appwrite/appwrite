@@ -64,8 +64,8 @@ RUN echo "upload_max_filesize = 4M" > /etc/php/7.3/fpm/conf.d/appwrite.ini
 
 # nginx conf (with ssl certificates)
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf
-COPY ./docker/ssl/nginx.crt /etc/nginx/ssl/nginx.crt
-COPY ./docker/ssl/nginx.key /etc/nginx/ssl/nginx.key
+COPY ./docker/ssl/cert.pem /etc/nginx/ssl/cert.pem
+COPY ./docker/ssl/key.pem /etc/nginx/ssl/key.pem
 
 # php conf
 RUN mkdir -p /var/run/php
