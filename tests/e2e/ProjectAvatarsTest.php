@@ -142,7 +142,7 @@ class ProjectAvatarsTest extends BaseProjects
 
         $this->assertEquals(200, $logo['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $logo['headers']['content-type']);
-        $this->assertEquals('2a985e6d64fc16dcdfae21543d606f9c', md5($logo['body']));
+        $this->assertEquals('8718564af44bf2672b184ef1e0baee81', md5($logo['body']));
 
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $data['projectUid'],
@@ -154,7 +154,7 @@ class ProjectAvatarsTest extends BaseProjects
 
         $this->assertEquals(200, $logo['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $logo['headers']['content-type']);
-        $this->assertEquals('64bbc9f8f2c459618e4dc4fa0f0fa51b', md5($logo['body']));
+        $this->assertEquals('53ed3af9150a94edbfed25cd65283bcc', md5($logo['body']));
 
         $logo = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $data['projectUid'],
@@ -167,7 +167,7 @@ class ProjectAvatarsTest extends BaseProjects
 
         $this->assertEquals(200, $logo['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $logo['headers']['content-type']);
-        $this->assertEquals('27b7c09701b6736c91f7a3b8d649fb3e', md5($logo['body']));
+        $this->assertEquals('2dac180f0b3f8dc9de7e65c978eac9db', md5($logo['body']));
 
         return $data;
     }
