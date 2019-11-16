@@ -76,7 +76,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
 
     $data = $resize->output($output, $quality);
 
-    $cache->save($key, $data);
+    //$cache->save($key, $data);
 
     echo $data;
 
