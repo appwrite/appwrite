@@ -21,7 +21,7 @@ class ProjectAvatarsTest extends BaseProjects
         ]);
 
         var_dump('------------');
-        echo $logo;
+        echo $logo['body'];
         var_dump('------------');
 
         $this->assertEquals(200, $logo['headers']['status-code']);
