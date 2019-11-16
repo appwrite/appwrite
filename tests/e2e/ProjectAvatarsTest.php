@@ -20,7 +20,9 @@ class ProjectAvatarsTest extends BaseProjects
             'x-appwrite-project' => $data['projectUid'],
         ]);
 
-        var_dump($logo);
+        var_dump('------------');
+        echo $logo;
+        var_dump('------------');
 
         $this->assertEquals(200, $logo['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $logo['headers']['content-type']);
