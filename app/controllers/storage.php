@@ -468,8 +468,12 @@ $utopia->post('/v1/storage/files')
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                 $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-                $sizeCompressed = (int) $device->write($path, $data);
+                if(!$device->write($path, $data)) {
+                    throw new Exception('Failed to save file', 500);
+                }
 
+                $sizeActual = $device->getFileSize($path);
+                
                 $file = $projectDB->createDocument([
                     '$collection' => Database::SYSTEM_COLLECTION_FILES,
                     '$permissions' => [
@@ -483,7 +487,7 @@ $utopia->post('/v1/storage/files')
                     'signature' => $device->getFileHash($path),
                     'mimeType' => $mimeType,
                     'sizeOriginal' => $size,
-                    'sizeCompressed' => $sizeCompressed,
+                    'sizeActual' => $sizeActual,
                     'algorithm' => $compressor->getName(),
                     'token' => bin2hex(random_bytes(64)),
                     'comment' => '',
@@ -503,7 +507,7 @@ $utopia->post('/v1/storage/files')
                 ;
 
                 $usage
-                    ->setParam('storage', $sizeCompressed)
+                    ->setParam('storage', $sizeActual)
                 ;
 
                 $list[] = $file->getArrayCopy();

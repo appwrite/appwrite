@@ -28,12 +28,19 @@ class ProjectStorafeTest extends BaseProjects
             'folderId' => 'xyz',
         ]);
 
+        $this->assertEquals($file['headers']['status-code'], 201);
         $this->assertNotEmpty($file['body'][0]['$uid']);
         $this->assertEquals('files', $file['body'][0]['$collection']);
         $this->assertIsInt($file['body'][0]['dateCreated']);
         $this->assertEquals('logo.png', $file['body'][0]['name']);
         $this->assertEquals('image/png', $file['body'][0]['mimeType']);
         $this->assertEquals(47218, $file['body'][0]['sizeOriginal']);
+        $this->assertEquals(54944, $file['body'][0]['sizeActual']);
+        $this->assertEquals('gzip', $file['body'][0]['algorithm']);
+        $this->assertEquals('1', $file['body'][0]['fileOpenSSLVersion']);
+        $this->assertEquals('aes-128-gcm', $file['body'][0]['fileOpenSSLCipher']);
+        $this->assertNotEmpty($file['body'][0]['fileOpenSSLTag']);
+        $this->assertNotEmpty($file['body'][0]['fileOpenSSLIV']);
 
         return $data;
     }
