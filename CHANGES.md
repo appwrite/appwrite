@@ -12,6 +12,7 @@
 * Added a version number to signin and signup pages for easier debugging of issues
 * Perperation for adding SameSite cookie option support
 * Using native Docker volumes for setup for better cross-platform support and easier management of read/write permissions
+* Added support for custom SSL certificates without needing to set a proxy
 
 ## Security
 
