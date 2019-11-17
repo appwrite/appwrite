@@ -529,9 +529,9 @@ $utopia->put('/v1/storage/files/:fileId')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
+    //->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
     ->action(
-        function ($fileId, $read, $write, $folderId) use ($response, $projectDB) {
+        function ($fileId, $read, $write, $folderId = '') use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
             if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
