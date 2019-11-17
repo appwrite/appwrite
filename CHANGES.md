@@ -25,10 +25,12 @@
 * Fixed broken redirect URL when creating a new project
 * Fixed broken modal when a user password is too short
 * Fixed issue denying the creation of seesion cookies on localhosts with port other than 80 or 443
+* Fixed bug that prevented actual file size calculation
 
 ## Breaking Changes
 
 * OAuth path is now /auth/login/oauth instead of /auth/oauth and /auth/oauth/callback is now /auth/login/oauth/callback, this is for better consistency with new login methods we will introduce in the future
+* Changed file attribute sizeCompressed to sizeActual to better reflect server logic
 
 # Version 0.3.0 (PRE-RELEASE)
 
