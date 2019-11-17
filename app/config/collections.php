@@ -994,7 +994,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Size Original',
+                'label' => 'Original Size',
                 'key' => 'sizeOriginal',
                 'type' => 'numeric',
                 'default' => 0,
@@ -1003,8 +1003,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Size Compressed',
-                'key' => 'sizeCompressed',
+                'label' => 'Actual Size',
+                'key' => 'sizeActual',
                 'type' => 'numeric',
                 'default' => 0,
                 'required' => true,
