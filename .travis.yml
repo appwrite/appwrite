@@ -20,13 +20,11 @@ cache:
 
 before_install:
 - docker load -i docker_images/images.tar || true
+- composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
+- sudo service mysql stop
 
 before_cache:
 - docker save -o docker_images/images.tar $(docker images -a -q)
-
-before_install:
-- composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
-- sudo service mysql stop
 
 install:
 - docker-compose -f tests/resources/docker-compose.yml up -d
