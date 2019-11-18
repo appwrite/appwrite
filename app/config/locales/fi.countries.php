@@ -130,7 +130,7 @@ return [
     'NG' => 'Nigeria',
     'NI' => 'Nicaragua',
     'NL' => 'Alankomaat',
-    'EI' => 'Norja',
+    'NO' => 'Norja',
     'NP' => 'Nepal',
     'NR' => 'Nauru',
     'NZ' => 'Uusi-Seelanti',

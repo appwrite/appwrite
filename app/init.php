@@ -152,7 +152,7 @@ Locale::setLanguage('hy', include __DIR__.'/config/locales/hy.php');
 Locale::setLanguage('id', include __DIR__.'/config/locales/id.php');
 Locale::setLanguage('is', include __DIR__.'/config/locales/is.php');
 Locale::setLanguage('it', include __DIR__.'/config/locales/it.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locales/ja.php');
+Locale::setLanguage('ja', include __DIR__.'/config/locales/ja.php');
 Locale::setLanguage('jv', include __DIR__.'/config/locales/jv.php');
 Locale::setLanguage('ko', include __DIR__.'/config/locales/ko.php');
 Locale::setLanguage('lt', include __DIR__.'/config/locales/lt.php');

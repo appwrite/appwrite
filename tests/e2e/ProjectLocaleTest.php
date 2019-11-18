@@ -140,4 +140,52 @@ class ProjectLocaleTest extends BaseProjects
 
         return $data;
     }
+
+    /**
+     * @depends testRegisterSuccess
+     */
+    public function testLocaleLangsSuccess(array $data): array
+    {
+        $languages           = require('app/config/locales.php');
+        $defaultCountries    = require('app/config/locales/en.countries.php');
+        $defaultContinents   = require('app/config/locales/en.continents.php');
+
+        foreach ($languages as $key => $lang) {
+            $countries = $this->client->call(Client::METHOD_GET, '/locale/countries', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $data['projectUid'],
+                'x-appwrite-locale' => $lang,
+            ]);
+            
+            foreach ($countries['body'] as $i => $code) {
+                $this->assertArrayHasKey($i, $defaultCountries, $i . ' country should be removed from ' . $lang);
+            }
+
+            foreach (array_keys($defaultCountries) as $i => $code) {
+                $this->assertArrayHasKey($code, $countries['body'], $code . ' country is missing from ' . $lang . ' (total: ' . count($countries['body']) . ')');
+            }
+
+            $this->assertEquals($countries['headers']['status-code'], 200);
+            $this->assertCount(194, $countries['body']);
+
+            $continents = $this->client->call(Client::METHOD_GET, '/locale/continents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $data['projectUid'],
+                'x-appwrite-locale' => $lang,
+            ]);
+            
+            foreach ($continents['body'] as $i => $code) {
+                $this->assertArrayHasKey($i, $defaultContinents, $i . ' continent should be removed from ' . $lang);
+            }
+
+            foreach (array_keys($defaultContinents) as $i => $code) {
+                $this->assertArrayHasKey($code, $continents['body'], $code . ' continent is missing from ' . $lang . ' (total: ' . count($continents['body']) . ')');
+            }
+
+            $this->assertEquals($continents['headers']['status-code'], 200);
+            $this->assertCount(7, $continents['body']);
+        }
+
+        return $data;
+    }
 }

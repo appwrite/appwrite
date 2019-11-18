@@ -173,7 +173,7 @@ return [
     'TH' => 'Tæland',
     'TJ' => 'Tadsjikistan',
     'TM' => 'Túrkmenistan',
-    'T' => 'Tímor-Leste',
+    'TL' => 'Tímor-Leste',
     'TO' => 'Tonga',
     'TT' => 'Trínidad og Tóbagó',
     'TN' => 'Túnis',
