@@ -114,33 +114,3 @@ We truly ❤️ pull requests! If you wish to help, you can learn more about how
 ## License
 
 This repository is available under the [BSD 3-Clause License](./LICENSE).
-
-## Credits
-
-Created by [Eldad Fux](https://twitter.com/eldadfux) with the amazing help of our **amazing contributors:**
-
-* 🇺🇸 Justin Dorfman ([GitHub](https://github.com/jdorfman), [Twitter](https://twitter.com/jdorfman))
-* 🇺🇳 0xflotus ([GitHub](https://github.com/0xflotus))
-* 🇳🇴 Petter Charles Redfern ([GitHub](https://github.com/Chaaarles))
-* 🇧🇷 Jessé Souza ([GitHub](https://github.com/jessescn))
-* 🇪🇸 Esther Álvarez Feijoo ([GitHub](https://github.com/EstherAF))
-* 🇮🇳 Christy Jacob ([GitHub](https://github.com/christyjacob4), [LinkedIn](https://www.linkedin.com/in/christyjacob4/))
-* 🇺🇦 Dmitriy Danilov ([GitHub](https://github.com/daniloff200), [Twitter](https://twitter.com/daniloff200))
-* 🇮🇩 Zeet ([GitHub](https://github.com/Kiy4h))
-* 🇫🇮 Pessi Päivärinne ([GitHub](https://github.com/pessip))
-* 🇺🇳 Sergi Vos ([GitHub](https://github.com/sergivb01), [Twitter](https://twitter.com/sergivb01), [LinkedIn](https://www.linkedin.com/in/sergivb01/))
-* 🇮🇱 Tomer Cohen ([GitHub](https://github.com/tomer), [Twitter](https://twitter.com/tomer))
-* 🇮🇹 Tatiana ([GitHub](https://github.com/tacoelho))
-* 🇬🇷 Panagiotis Skarlas ([GitHub](https://github.com/1qk1), [Twitter](https://twitter.com/qktweets))
-* 🇷🇺 Alexey Pyltsyn ([GitHub](https://github.com/lex111))
-* 🇩🇪 Robin C ([GitHub](https://github.com/Taminoful))
-* 🇮🇳 Parikshit Hooda ([GitHub](https://github.com/Parikshit-Hooda))
-* 🇫🇷 Corentin Le Fur ([GitHub](https://github.com/crtlf))
-* 🇬🇧 Callum Lowry ([GitHub](https://github.com/Girxffe))
-* 🇷🇴 Bogdan Covrig ([GitHub](https://github.com/BogDAAAMN), [Twitter](https://twitter.com/BogdanCovrig))
-* 🇳🇱 Kolkies ([GitHub](https://github.com/kolkies.dev))
-* 🇹🇷 Mustafa Dur ([GitHub](https://github.com/tosbaha))
-* 🇵🇹 Luís Pinto ([GitHub](https://github.com/LiTO773))
-* 🇮🇳 Saksham Saxena ([GitHub](https://github.com/sakkshm))
-* 🇮🇱 Dima Vishnevetsky ([GitHub](https://github.com/dimshik100), [Twitter](https://twitter.com/dimshik100))
-* 🇭🇺 lacexd ([GitHub](https://github.com/lacexd))
