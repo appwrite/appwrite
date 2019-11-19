@@ -1,5 +1,7 @@
 FROM composer/composer:php7 as vendor
 WORKDIR /builder
+COPY composer.json composer.json
+COPY composer.lock composer.lock
 RUN composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
 
 FROM ubuntu:18.04
