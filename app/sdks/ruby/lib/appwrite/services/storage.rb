@@ -12,10 +12,11 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
-        def create_file(files:, read: [], write: [], folder_id: '')
+        def create_file(files:, read:, write:, folder_id: '')
             path = '/storage/files'
 
             params = {
@@ -26,6 +27,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'multipart/form-data',
             }, params);
         end
 
@@ -37,10 +39,11 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
-        def update_file(file_id:, read: [], write: [], folder_id: '')
+        def update_file(file_id:, read:, write:, folder_id: '')
             path = '/storage/files/{fileId}'
                 .gsub('{file_id}', file_id)
 
@@ -51,6 +54,7 @@ module Appwrite
             }
 
             return @client.call('put', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -62,6 +66,7 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -73,6 +78,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -89,6 +95,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -101,6 +108,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 

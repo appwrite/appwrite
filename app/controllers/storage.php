@@ -118,19 +118,11 @@ $utopia->get('/v1/storage/files')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listFiles')
-    ->label('sdk.description', 'Get a list of all the user files. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project files. [Learn more about different API modes](/docs/modes).')
-    ->param('search', '', function () {
-        return new Text(256);
-    }, 'Search term to filter your list results.', true)
-    ->param('limit', 25, function () {
-        return new Range(0, 100);
-    }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () {
-        return new Range(0, 2000);
-    }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () {
-        return new WhiteList(['ASC', 'DESC']);
-    }, 'Order result by ASC or DESC order.', true)
+    ->label('sdk.description', '/docs/references/storage/list-files.md')
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
         function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
             $results = $projectDB->getCollection([
@@ -158,10 +150,8 @@ $utopia->get('/v1/storage/files/:fileId')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFile')
-    ->label('sdk.description', 'Get file by its unique ID. This endpoint response returns a JSON object with the file metadata.')
-    ->param('fileId', '', function () {
-        return new UID();
-    }, 'File unique ID.')
+    ->label('sdk.description', '/docs/references/storage/get-file.md')
+    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->action(
         function ($fileId) use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
@@ -179,25 +169,13 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFilePreview')
-    ->label('sdk.description', 'Get file preview image. Currently, this method supports preview for image files (jpg, png, and gif), other supported formats, like pdf, docs, slides, and spreadsheets will return file icon image. You can also pass query string arguments for cutting and resizing your preview image.')
-    ->param('fileId', '', function () {
-        return new UID();
-    }, 'File unique ID')
-    ->param('width', 0, function () {
-        return new Range(0, 4000);
-    }, 'Resize preview image width, Pass an integer between 0 to 4000', true)
-    ->param('height', 0, function () {
-        return new Range(0, 4000);
-    }, 'Resize preview image height, Pass an integer between 0 to 4000', true)
-    ->param('quality', 100, function () {
-        return new Range(0, 100);
-    }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100', true)
-    ->param('background', '', function () {
-        return new HexColor();
-    }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('output', null, function () use ($outputs) {
-        return new WhiteList(array_merge(array_keys($outputs), [null]));
-    }, 'Output format type (jpeg, jpg, png, gif and webp)', true)
+    ->label('sdk.description', '/docs/references/storage/get-file-preview.md')
+    ->param('fileId', '', function () { return new UID(); }, 'File unique ID')
+    ->param('width', 0, function () { return new Range(0, 4000); }, 'Resize preview image width, Pass an integer between 0 to 4000', true)
+    ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000', true)
+    ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100', true)
+    ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
+    ->param('output', null, function () use ($outputs) { return new WhiteList(array_merge(array_keys($outputs), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp)', true)
     //->param('storage', 'local', function () {return new WhiteList(array('local'));}, 'Selected storage device. defaults to local')
     //->param('token', '', function () {return new Text(128);}, 'Preview token', true)
     ->action(
@@ -303,10 +281,8 @@ $utopia->get('/v1/storage/files/:fileId/download')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileDownload')
-    ->label('sdk.description', 'Get file content by its unique ID. The endpoint response return with a \'Content-Disposition: attachment\' header that tells the browser to start downloading the file to user downloads directory.')
-    ->param('fileId', '', function () {
-        return new UID();
-    }, 'File unique ID.')
+    ->label('sdk.description', '/docs/references/storage/get-file-download.md')
+    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->action(
         function ($fileId) use ($response, $request, $projectDB) {
             $file = $projectDB->getDocument($fileId);
@@ -355,13 +331,9 @@ $utopia->get('/v1/storage/files/:fileId/view')
     ->label('scope', 'files.read')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileView')
-    ->label('sdk.description', 'Get file content by its unique ID. This endpoint is similar to the download method but returns with no  \'Content-Disposition: attachment\' header.')
-    ->param('fileId', '', function () {
-        return new UID();
-    }, 'File unique ID.')
-    ->param('as', '', function () {
-        return new WhiteList(['pdf', /*'html',*/ 'text']);
-    }, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
+    ->label('sdk.description', '/docs/references/storage/get-file-view.md')
+    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
+    ->param('as', '', function () { return new WhiteList(['pdf', /*'html',*/ 'text']); }, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(
         function ($fileId, $as) use ($response, $request, $projectDB, $mimes) {
             $file = $projectDB->getDocument($fileId);
@@ -426,22 +398,14 @@ $utopia->post('/v1/storage/files')
     ->label('scope', 'files.write')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createFile')
-    ->label('sdk.description', 'Create a new file. The user who creates the file will automatically be assigned to read and write access unless he has passed custom values for read and write arguments.')
+    ->label('sdk.description', '/docs/references/storage/create-file.md')
     ->label('sdk.consumes', 'multipart/form-data')
-    ->param('files', [], function () {
-        return new File();
-    }, 'Binary Files.', false)
-    ->param('read', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('folderId', '', function () {
-        return new UID();
-    }, 'Folder to associate files with.', true)
+    ->param('files', [], function () { return new File(); }, 'Binary Files.', false)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    // ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
     ->action(
-        function ($files, $read, $write, $folderId) use ($request, $response, $user, $projectDB, $audit, $usage) {
+        function ($files, $read, $write, $folderId = '') use ($request, $response, $user, $projectDB, $audit, $usage) {
             $files = $request->getFiles('files');
             $read = (empty($read)) ? ['user:'.$user->getUid()] : $read;
             $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
@@ -504,8 +468,12 @@ $utopia->post('/v1/storage/files')
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                 $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-                $sizeCompressed = (int) $device->write($path, $data);
+                if(!$device->write($path, $data)) {
+                    throw new Exception('Failed to save file', 500);
+                }
 
+                $sizeActual = $device->getFileSize($path);
+                
                 $file = $projectDB->createDocument([
                     '$collection' => Database::SYSTEM_COLLECTION_FILES,
                     '$permissions' => [
@@ -519,7 +487,7 @@ $utopia->post('/v1/storage/files')
                     'signature' => $device->getFileHash($path),
                     'mimeType' => $mimeType,
                     'sizeOriginal' => $size,
-                    'sizeCompressed' => $sizeCompressed,
+                    'sizeActual' => $sizeActual,
                     'algorithm' => $compressor->getName(),
                     'token' => bin2hex(random_bytes(64)),
                     'comment' => '',
@@ -539,7 +507,7 @@ $utopia->post('/v1/storage/files')
                 ;
 
                 $usage
-                    ->setParam('storage', $sizeCompressed)
+                    ->setParam('storage', $sizeActual)
                 ;
 
                 $list[] = $file->getArrayCopy();
@@ -557,21 +525,13 @@ $utopia->put('/v1/storage/files/:fileId')
     ->label('scope', 'files.write')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
-    ->label('sdk.description', 'Update file by its unique ID. Only users with write permissions have access to update this resource.')
-    ->param('fileId', '', function () {
-        return new UID();
-    }, 'File unique ID.')
-    ->param('read', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () {
-        return new ArrayList(new Text(64));
-    }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('folderId', '', function () {
-        return new UID();
-    }, 'Folder to associate files with.', true)
+    ->label('sdk.description', '/docs/references/storage/update-file.md')
+    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    //->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
     ->action(
-        function ($fileId, $read, $write, $folderId) use ($response, $projectDB) {
+        function ($fileId, $read, $write, $folderId = '') use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
             if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
@@ -599,10 +559,8 @@ $utopia->delete('/v1/storage/files/:fileId')
     ->label('scope', 'files.write')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
-    ->label('sdk.description', 'Delete a file by its unique ID. Only users with write permissions have access to delete this resource.')
-    ->param('fileId', '', function () {
-        return new UID();
-    }, 'File unique ID.')
+    ->label('sdk.description', '/docs/references/storage/delete-file.md')
+    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->action(
         function ($fileId) use ($response, $projectDB, $audit, $usage) {
             $file = $projectDB->getDocument($fileId);
@@ -638,11 +596,8 @@ $utopia->get('/v1/storage/files/:fileId/scan')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileScan')
     ->label('sdk.hide', true)
-    ->param('fileId', '', function () {
-        return new UID();
-    }, 'File unique ID.')
-    ->param('storage', 'local', function () {
-        return new WhiteList(['local']);
+    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
+    ->param('storage', 'local', function () { return new WhiteList(['local']);
     })
     ->action(
         function ($fileId, $storage) use ($response, $request, $projectDB) {

@@ -12,4 +12,4 @@ $client
 
 $auth = new Auth($client);
 
-$result = $auth->oauth('bitbucket');
+$result = $auth->oauth('bitbucket', 'https://example.com', 'https://example.com');

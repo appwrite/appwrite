@@ -1,9 +1,11 @@
 (function(window) {
   window.ls.container.get("view").add({
     selector: "data-setup",
-    controller: function(element, console, form) {
+    controller: function(element, console, form, alerts) {
       element.addEventListener("submit", function(event) {
         event.preventDefault();
+
+        let loaderId = alerts.add({ text: 'Creating new project...', class: "" }, 0);
 
         let formData = form.toJson(element);
 
@@ -24,7 +26,8 @@
             console.projects.createProject(formData["name"], team).then(
               function(project) {
                 //router.change();
-                window.location.href = "/console?project=" + project["$uid"];
+                alerts.remove(loaderId);
+                window.location.href = "/console/home?project=" + project["$uid"];
               },
               function() {
                 throw new Error("Failed to setup project");

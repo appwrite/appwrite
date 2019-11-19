@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Auth.Client();
+let client = new sdk.Client();
 
 let auth = new sdk.Auth(client);
 
@@ -10,7 +10,7 @@ client
     .setKey('')
 ;
 
-let promise = auth.oauth('bitbucket');
+let promise = auth.oauth('bitbucket', 'https://example.com', 'https://example.com');
 
 promise.then(function (response) {
     console.log(response);

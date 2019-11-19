@@ -12,6 +12,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -26,6 +27,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -37,6 +39,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -51,6 +54,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -64,6 +68,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -78,6 +83,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 

@@ -6,16 +6,14 @@ use Tests\E2E\Client;
 
 class ConsoleProjectsTest extends BaseConsole
 {
-    public function testRegisterSuccess()
+    public function testRegisterSuccess(): array
     {
         $response = $this->register();
 
-        var_dump($response);
-
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("", $response['body']);
-        
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
+
+        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_console'];
 
         return [
             'email' => $this->demoEmail,
@@ -27,12 +25,12 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testRegisterSuccess
      */
-    public function testProjectsList($data)
+    public function testProjectsList($data): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -42,12 +40,12 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testRegisterSuccess
      */
-    public function testProjectsCreateSuccess($data)
+    public function testProjectsCreateSuccess(array $data): array
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], [
             'name' => 'Demo Project Team',
         ]);
@@ -59,7 +57,7 @@ class ConsoleProjectsTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], [
             'name' => 'Demo Project',
             'teamId' => $team['body']['$uid'],
@@ -85,12 +83,12 @@ class ConsoleProjectsTest extends BaseConsole
     /**
      * @depends testProjectsCreateSuccess
      */
-    public function testProjectsUpdateSuccess($data)
+    public function testProjectsUpdateSuccess(array $data): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
         ], array_merge($data['project'], [
             'name' => 'New Project Name',
             'description' => 'New Demo Project Description',

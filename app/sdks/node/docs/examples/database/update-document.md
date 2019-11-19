@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Database.Client();
+let client = new sdk.Client();
 
 let database = new sdk.Database(client);
 
@@ -10,7 +10,7 @@ client
     .setKey('')
 ;
 
-let promise = database.updateDocument('[COLLECTION_ID]', '[DOCUMENT_ID]', '{}');
+let promise = database.updateDocument('[COLLECTION_ID]', '[DOCUMENT_ID]', '{}', [], []);
 
 promise.then(function (response) {
     console.log(response);

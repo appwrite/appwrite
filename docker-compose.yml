@@ -5,12 +5,13 @@ services:
     build: .
     restart: unless-stopped
     volumes:
+    - appwrite-uploads:/storage/uploads:rw
+    - appwrite-cache:/storage/cache:rw
     - ./app:/usr/share/nginx/html/app
+    - ./docs:/usr/share/nginx/html/docs
     - ./public:/usr/share/nginx/html/public
     - ./src:/usr/share/nginx/html/src
     - ./docker/nginx.conf:/etc/nginx/nginx.conf:rw
-    - ./storage/uploads:/storage/uploads:rw
-    - ./storage/cache:/storage/cache:rw
     ports:
     - "80:80"
     - "443:443"
@@ -45,9 +46,10 @@ services:
     - MYSQL_USER=user
     - MYSQL_PASSWORD=password
     volumes:
-    - ./storage/db:/var/lib/mysql:rw
+    - appwrite-db:/var/lib/mysql:rw
     ports:
     - 3306:3306/tcp
+    command: 'mysqld --innodb-flush-method=fsync'
 
   smtp:
     image: appwrite/smtp:1.0.0
@@ -61,7 +63,7 @@ services:
     image: appwrite/clamav:1.0.4
     restart: unless-stopped
     volumes:
-    - ./storage:/storage:rw
+    - appwrite-uploads:/storage/uploads
 
   redis:
     image: redis:5.0
@@ -70,7 +72,7 @@ services:
   influxdb:
     image: influxdb:1.6
     volumes:
-    - ./storage/influxdb:/var/lib/influxdb
+    - appwrite-influxdb:/var/lib/influxdb:rw
     ports:
     - "8086:8086"
 
@@ -78,3 +80,9 @@ services:
     image: appwrite/telegraf:1.0.0
     ports:
     - "8125:8125/udp"
+
+volumes:
+  appwrite-db:
+  appwrite-cache:
+  appwrite-uploads:
+  appwrite-influxdb:

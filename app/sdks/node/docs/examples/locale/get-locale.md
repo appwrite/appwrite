@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Locale.Client();
+let client = new sdk.Client();
 
 let locale = new sdk.Locale(client);
 

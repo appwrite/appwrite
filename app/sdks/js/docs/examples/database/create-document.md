@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.database.createDocument('[COLLECTION_ID]', '{}');
+let promise = sdk.database.createDocument('[COLLECTION_ID]', '{}', [], []);
 
 promise.then(function (response) {
     console.log(response);

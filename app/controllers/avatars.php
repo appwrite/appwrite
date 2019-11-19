@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response;
+global $utopia, $request, $response, $version;
 
 use Utopia\Exception;
 use Utopia\Validator\Text;
@@ -43,8 +43,8 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     $path = $types[$type][$code];
     $type = 'png';
 
-    if (!file_exists($path)) {
-        throw new Exception('File not found in '.$path, 404);
+    if (!is_readable($path)) {
+        throw new Exception('File not readable in '.$path, 500);
     }
 
     $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
@@ -87,87 +87,54 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
 
 $utopia->get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
-    ->param('code', '', function () use ($types) {
-        return new WhiteList(array_keys($types['credit-cards']));
-    }, 'Credit Card Code. Possible values: '.implode(', ', array_keys($types['credit-cards'])).'.')
-    ->param('width', 100, function () {
-        return new Range(0, 2000);
-    }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100', true)
-    ->param('height', 100, function () {
-        return new Range(0, 2000);
-    }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100', true)
-    ->param('quality', 100, function () {
-        return new Range(0, 100);
-    }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100', true)
+    ->param('code', '', function () use ($types) { return new WhiteList(array_keys($types['credit-cards'])); }, 'Credit Card Code. Possible values: '.implode(', ', array_keys($types['credit-cards'])).'.')
+    ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100', true)
+    ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100', true)
+    ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getCreditCard')
-    ->label('sdk.description', 'Need to display your users with your billing method or there payment methods? The credit card endpoint will return you the icon of the credit card provider you need. Use width, height and quality arguments to change the output settings.')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
-        return $avatarCallback('credit-cards', $code, $width, $height, $quality);
+    ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
-    ->param('code', '', function () use ($types) {
-        return new WhiteList(array_keys($types['browsers']));
-    }, 'Browser Code.')
-    ->param('width', 100, function () {
-        return new Range(0, 2000);
-    }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100', true)
-    ->param('height', 100, function () {
-        return new Range(0, 2000);
-    }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100', true)
-    ->param('quality', 100, function () {
-        return new Range(0, 100);
-    }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100', true)
+    ->param('code', '', function () use ($types) { return new WhiteList(array_keys($types['browsers'])); }, 'Browser Code.')
+    ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100', true)
+    ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100', true)
+    ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getBrowser')
-    ->label('sdk.description', 'You can use this endpoint to show different browser icons to your users, The code argument receives the browser code as appear in your user /account/sessions endpoint. Use width, height and quality arguments to change the output settings.')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
-        return $avatarCallback('browsers', $code, $width, $height, $quality);
+    ->label('sdk.description', '/docs/references/avatars/get-browser.md')
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('browsers', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
-    ->param('code', '', function () use ($types) {
-        return new WhiteList(array_keys($types['flags']));
-    }, 'Country Code. ISO Alpha-2 country code format.')
-    ->param('width', 100, function () {
-        return new Range(0, 2000);
-    }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100', true)
-    ->param('height', 100, function () {
-        return new Range(0, 2000);
-    }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100', true)
-    ->param('quality', 100, function () {
-        return new Range(0, 100);
-    }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100', true)
+    ->param('code', '', function () use ($types) { return new WhiteList(array_keys($types['flags'])); }, 'Country Code. ISO Alpha-2 country code format.')
+    ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100', true)
+    ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100', true)
+    ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFlag')
-    ->label('sdk.description', 'You can use this endpoint to show different country flags icons to your users, The code argument receives the a 2 letter country code. Use width, height and quality arguments to change the output settings.')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
-        return $avatarCallback('flags', $code, $width, $height, $quality);
+    ->label('sdk.description', '/docs/references/avatars/get-flag.md')
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('flags', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/image')
     ->desc('Get Image from URL')
-    ->param('url', '', function () {
-        return new URL();
-    }, 'Image URL which you want to crop.')
-    ->param('width', 400, function () {
-        return new Range(0, 2000);
-    }, 'Resize preview image width, Pass an integer between 0 to 4000', true)
-    ->param('height', 400, function () {
-        return new Range(0, 2000);
-    }, 'Resize preview image height, Pass an integer between 0 to 4000', true)
+    ->param('url', '', function () { return new URL(); }, 'Image URL which you want to crop.')
+    ->param('width', 400, function () { return new Range(0, 2000); }, 'Resize preview image width, Pass an integer between 0 to 4000', true)
+    ->param('height', 400, function () { return new Range(0, 2000); }, 'Resize preview image height, Pass an integer between 0 to 4000', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getImage')
-    ->label('sdk.description', 'Use this endpoint to fetch a remote image URL and crop it to any image size you want. This endpoint is very useful if you need to crop and display remote images in your app or in cases, you want to make sure a 3rd party image is properly served using a TLS protocol.')
+    ->label('sdk.description', '/docs/references/avatars/get-image.md')
     ->action(
-        function ($url, $width, $height) use ($response, $request, $version) {
+        function ($url, $width, $height) use ($response) {
             $quality = 80;
             $output = 'png';
             $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
@@ -226,15 +193,13 @@ $utopia->get('/v1/avatars/image')
 
 $utopia->get('/v1/avatars/favicon')
     ->desc('Get Favicon')
-    ->param('url', '', function () {
-        return new URL();
-    }, 'Website URL which you want to fetch the favicon from.')
+    ->param('url', '', function () { return new URL(); }, 'Website URL which you want to fetch the favicon from.')
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFavicon')
-    ->label('sdk.description', 'Use this endpoint to fetch the favorite icon (AKA favicon) of a  any remote website URL.')
+    ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
-        function ($url) use ($response, $request, $version) {
+        function ($url) use ($response, $version) {
             $width = 56;
             $height = 56;
             $quality = 80;
@@ -377,22 +342,14 @@ $utopia->get('/v1/avatars/favicon')
 
 $utopia->get('/v1/avatars/qr')
     ->desc('Text to QR Generator')
-    ->param('text', '', function () {
-        return new Text(512);
-    }, 'Plain text to be converted to QR code image')
-    ->param('size', 400, function () {
-        return new Range(0, 1000);
-    }, 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
-    ->param('margin', 1, function () {
-        return new Range(0, 10);
-    }, 'Margin From Edge. Pass an integer between 0 to 10. Defaults to 1.', true)
-    ->param('download', 0, function () {
-        return new Range(0, 1);
-    }, 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
+    ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image')
+    ->param('size', 400, function () { return new Range(0, 1000); }, 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
+    ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin From Edge. Pass an integer between 0 to 10. Defaults to 1.', true)
+    ->param('download', 0, function () { return new Range(0, 1); }, 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getQR')
-    ->label('sdk.description', 'Converts a given plain text to a QR code image. You can use the query parameters to change the size and style of the resulting image.')
+    ->label('sdk.description', '/docs/references/avatars/get-qr.md')
     ->action(
         function ($text, $size, $margin, $download) use ($response) {
             $renderer = new ImageRenderer(

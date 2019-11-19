@@ -26,29 +26,49 @@ return [
         'icon' => 'icon-google',
         'enabled' => true,
     ],
-    'instagram' => [
-        'developers' => 'https://www.instagram.com/developer/',
-        'icon' => 'icon-instagram',
-        'enabled' => false,
-    ],
+    // 'instagram' => [
+    //     'developers' => 'https://www.instagram.com/developer/',
+    //     'icon' => 'icon-instagram',
+    //     'enabled' => false,
+    // ],
     'microsoft' => [
         'developers' => 'https://developer.microsoft.com/en-us/',
         'icon' => 'icon-windows',
         'enabled' => true,
     ],
-    'twitter' => [
-        'developers' => 'https://developer.twitter.com/',
-        'icon' => 'icon-twitter',
-        'enabled' => false,
-    ],
+    // 'twitter' => [
+    //     'developers' => 'https://developer.twitter.com/',
+    //     'icon' => 'icon-twitter',
+    //     'enabled' => false,
+    // ],
     'linkedin' => [
         'developers' => 'https://developer.linkedin.com/',
         'icon' => 'icon-linkedin',
         'enabled' => true,
     ],
+    'slack' => [
+        'developers' => 'https://api.slack.com/',
+        'icon' => 'icon-slack',
+        'enabled' => true,
+    ],
     'dropbox' => [
         'developers' => 'https://www.dropbox.com/developers/documentation',
         'icon' => 'icon-dropbox',
+        'enabled' => true,
+    ],
+    // 'apple' => [
+    //     'developers' => 'https://developer.apple.com/',
+    //     'icon' => 'icon-apple',
+    //     'enabled' => false,
+    // ],
+    'amazon' => [
+        'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
+        'icon' => 'icon-amazon',
+        'enabled' => true,
+    ],
+    'vk' => [
+        'developers' => 'https://vk.com/dev',
+        'icon' => 'icon-vk',
         'enabled' => true,
     ],
 ];

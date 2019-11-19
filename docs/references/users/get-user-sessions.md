@@ -1,0 +1,1 @@
+Get user sessions list by its unique ID.

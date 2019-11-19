@@ -12,4 +12,4 @@ $client
 
 $database = new Database($client);
 
-$result = $database->createCollection('[NAME]');
+$result = $database->createCollection('[NAME]', [], [], []);

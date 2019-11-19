@@ -12,7 +12,7 @@ class BaseProjects extends BaseConsole
     protected $projectsDemoEmail = '';
     protected $projectsDemoPassword = '';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -20,7 +20,7 @@ class BaseProjects extends BaseConsole
         $this->projectsDemoPassword = 'password.' . rand(0, 1000000);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         parent::tearDown();
 

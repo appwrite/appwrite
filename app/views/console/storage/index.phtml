@@ -1,3 +1,6 @@
+<?php
+$home = $this->getParam('home', '');
+?>
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
         Storage
@@ -25,10 +28,10 @@
             <label for="file-read">Files</label>
             <input type="file" name="files" id="file-files" required>
 
-            <label for="file-read">Read Permissions</label>
+            <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
             
-            <label for="file-write">Write Permissions</label>
+            <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
 
             <hr />
@@ -116,10 +119,10 @@
                                         </div>
                                         <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
-                                        <label for="file-read">Read Permissions</label>
+                                        <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
                                         <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
                                         
-                                        <label for="file-write">Write Permissions</label>
+                                        <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
                                         <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
 
                                         <hr />

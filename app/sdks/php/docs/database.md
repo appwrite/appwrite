@@ -3,7 +3,7 @@
 ## List Collections
 
 ```http request
-GET https://appwrite.test/v1/database
+GET https://appwrite.io/v1/database
 ```
 
 ** Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/modes). **
@@ -20,7 +20,7 @@ GET https://appwrite.test/v1/database
 ## Create Collection
 
 ```http request
-POST https://appwrite.test/v1/database
+POST https://appwrite.io/v1/database
 ```
 
 ** Create a new Collection. **
@@ -30,14 +30,14 @@ POST https://appwrite.test/v1/database
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | name | string | Collection name. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation |  |
 
 ## Get Collection
 
 ```http request
-GET https://appwrite.test/v1/database/{collectionId}
+GET https://appwrite.io/v1/database/{collectionId}
 ```
 
 ** Get collection by its unique ID. This endpoint response returns a JSON object with the collection metadata. **
@@ -51,7 +51,7 @@ GET https://appwrite.test/v1/database/{collectionId}
 ## Update Collection
 
 ```http request
-PUT https://appwrite.test/v1/database/{collectionId}
+PUT https://appwrite.io/v1/database/{collectionId}
 ```
 
 ** Update collection by its unique ID. **
@@ -62,14 +62,14 @@ PUT https://appwrite.test/v1/database/{collectionId}
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. |  |
 | name | string | Collection name. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 | rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
 
 ## Delete Collection
 
 ```http request
-DELETE https://appwrite.test/v1/database/{collectionId}
+DELETE https://appwrite.io/v1/database/{collectionId}
 ```
 
 ** Delete a collection by its unique ID. Only users with write permissions have access to delete this resource. **
@@ -83,7 +83,7 @@ DELETE https://appwrite.test/v1/database/{collectionId}
 ## List Documents
 
 ```http request
-GET https://appwrite.test/v1/database/{collectionId}/documents
+GET https://appwrite.io/v1/database/{collectionId}/documents
 ```
 
 ** Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/modes). **
@@ -106,7 +106,7 @@ GET https://appwrite.test/v1/database/{collectionId}/documents
 ## Create Document
 
 ```http request
-POST https://appwrite.test/v1/database/{collectionId}/documents
+POST https://appwrite.io/v1/database/{collectionId}/documents
 ```
 
 ** Create a new Document. **
@@ -117,8 +117,8 @@ POST https://appwrite.test/v1/database/{collectionId}/documents
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. |  |
 | data | string | Document data as JSON string. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 | parentDocument | string | Parent document unique ID. Use when you want your new document to be a child of a parent document. |  |
 | parentProperty | string | Parent document property name. Use when you want your new document to be a child of a parent document. |  |
 | parentPropertyType | string | Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document. | assign |
@@ -126,7 +126,7 @@ POST https://appwrite.test/v1/database/{collectionId}/documents
 ## Get Document
 
 ```http request
-GET https://appwrite.test/v1/database/{collectionId}/documents/{documentId}
+GET https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
 
 ** Get document by its unique ID. This endpoint response returns a JSON object with the document data. **
@@ -141,7 +141,7 @@ GET https://appwrite.test/v1/database/{collectionId}/documents/{documentId}
 ## Update Document
 
 ```http request
-PATCH https://appwrite.test/v1/database/{collectionId}/documents/{documentId}
+PATCH https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
 
 ### Parameters
@@ -151,13 +151,13 @@ PATCH https://appwrite.test/v1/database/{collectionId}/documents/{documentId}
 | collectionId | string | **Required** Collection unique ID |  |
 | documentId | string | **Required** Document unique ID |  |
 | data | string | Document data as JSON string |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions and roles](/docs/permissions) and get a full list of available permissions. |  |
 
 ## Delete Document
 
 ```http request
-DELETE https://appwrite.test/v1/database/{collectionId}/documents/{documentId}
+DELETE https://appwrite.io/v1/database/{collectionId}/documents/{documentId}
 ```
 
 ** Delete document by its unique ID. This endpoint deletes only the parent documents, his attributes and relations to other documents. Child documents **will not** be deleted. **

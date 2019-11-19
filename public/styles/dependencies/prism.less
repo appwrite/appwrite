@@ -15,16 +15,100 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 	border-radius: 10px;
 	margin-bottom: 30px;
 
-	.copy {
+	&[data-lang]::after {
+		content: attr(data-lang);
+		display: inline-block;
+		background: #ffffff;
+		color: #000000;
 		position: absolute;
-		bottom: 15px;
-		.func-end(15px);
+		top: 15px;
+		padding: 5px 10px;
+		border-radius: 15px;
+		font-size: 10px;
+		.func-end(10px);
+		opacity: 0.95;
+	}
+
+	&[data-lang="bash"]::after {
+		background: #2b2626;
+		color: #fff;
+	}
+
+	&[data-lang="javascript"]::after {
+		background: #fff054;
+		color: #333232;
+	}
+
+	&[data-lang="html"]::after {
+		background: #ff895b;
+		color: #ffffff;
+	}
+
+	&[data-lang="php"]::after {
+		background: #6182bb;
+		color: #ffffff;
+	}
+
+	&[data-lang="node.js"]::after {
+		background: #8cc500;
+		color: #373738;
+	}
+
+	&[data-lang="ruby"]::after {
+		background: #fc3f48;
+		color: #ffffff;
+	}
+
+	&[data-lang="python"]::after {
+		background: #3873a2;
+		color: #ffffff;
+	}
+
+	&[data-lang="go"]::after {
+		background: #00add8;
+		color: #ffffff;
+	}
+
+	&[data-lang="dart"]::after {
+		background: #035698;
+		color: #2bb1f0;
+	}
+
+	.tag {
+		color: inherit!important;
+		background: transparent!important;
+		padding: inherit!important;
+		font-size: inherit!important;
+	}
+
+	.copy {
 		cursor: pointer;
-		background: #39393c;
-		border-radius: 50%;
-		padding: 2px;
-		color: #6a6a6d;
-		border: solid 2px #414142;
+		content: attr(data-lang);
+		display: inline-block;
+		background: #ffffff;
+		color: #000000;
+		position: absolute;
+		transform: translateX(-50%);
+		bottom: -20px;
+		padding: 5px 10px;
+		border-radius: 15px;
+		font-size: 10px;
+		font-style: normal;
+		.func-start(50%);
+		opacity: 0;
+		transition: bottom .3s, opacity .3s;
+
+		&::before {
+			.func-padding-end(5px);
+		}
+	}
+			
+	&:hover {
+		.copy {
+			transition: bottom .3s, opacity .3s;
+			opacity: 0.90;
+			bottom: 16px;
+		}
 	}
 
 	pre {

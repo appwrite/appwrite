@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Storage.Client();
+let client = new sdk.Client();
 
 let storage = new sdk.Storage(client);
 
@@ -10,7 +10,7 @@ client
     .setKey('')
 ;
 
-let promise = storage.createFile(document.getElementById('uploader').files[0]);
+let promise = storage.createFile(document.getElementById('uploader').files[0], [], []);
 
 promise.then(function (response) {
     console.log(response);

@@ -11,8 +11,10 @@ class Projects extends Service {
     async listProjects() {
         let path = '/projects';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -36,8 +38,10 @@ class Projects extends Service {
     async createProject(name, teamId, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
         let path = '/projects';
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'teamId': teamId,
                 'description': description,
@@ -62,8 +66,10 @@ class Projects extends Service {
     async getProject(projectId) {
         let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -87,8 +93,10 @@ class Projects extends Service {
     async updateProject(projectId, name, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
         let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('patch', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('patch', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'description': description,
                 'logo': logo,
@@ -112,8 +120,10 @@ class Projects extends Service {
     async deleteProject(projectId) {
         let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -127,8 +137,10 @@ class Projects extends Service {
     async listKeys(projectId) {
         let path = '/projects/{projectId}/keys'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -144,8 +156,10 @@ class Projects extends Service {
     async createKey(projectId, name, scopes) {
         let path = '/projects/{projectId}/keys'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'scopes': scopes
             });
@@ -162,8 +176,10 @@ class Projects extends Service {
     async getKey(projectId, keyId) {
         let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -180,8 +196,10 @@ class Projects extends Service {
     async updateKey(projectId, keyId, name, scopes) {
         let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
         
-        return await this.client.call('put', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('put', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'scopes': scopes
             });
@@ -198,8 +216,10 @@ class Projects extends Service {
     async deleteKey(projectId, keyId) {
         let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -216,8 +236,10 @@ class Projects extends Service {
     async updateProjectOAuth(projectId, provider, appId = '', secret = '') {
         let path = '/projects/{projectId}/oauth'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('patch', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('patch', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'provider': provider,
                 'appId': appId,
                 'secret': secret
@@ -234,8 +256,10 @@ class Projects extends Service {
     async listPlatforms(projectId) {
         let path = '/projects/{projectId}/platforms'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -254,8 +278,10 @@ class Projects extends Service {
     async createPlatform(projectId, type, name, key = '', store = '', url = '') {
         let path = '/projects/{projectId}/platforms'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'type': type,
                 'name': name,
                 'key': key,
@@ -275,8 +301,10 @@ class Projects extends Service {
     async getPlatform(projectId, platformId) {
         let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -295,8 +323,10 @@ class Projects extends Service {
     async updatePlatform(projectId, platformId, name, key = '', store = '', url = '') {
         let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
         
-        return await this.client.call('put', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('put', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'key': key,
                 'store': store,
@@ -315,8 +345,10 @@ class Projects extends Service {
     async deletePlatform(projectId, platformId) {
         let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -330,8 +362,10 @@ class Projects extends Service {
     async listTasks(projectId) {
         let path = '/projects/{projectId}/tasks'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -354,8 +388,10 @@ class Projects extends Service {
     async createTask(projectId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders = [], httpUser = '', httpPass = '') {
         let path = '/projects/{projectId}/tasks'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'status': status,
                 'schedule': schedule,
@@ -379,8 +415,10 @@ class Projects extends Service {
     async getTask(projectId, taskId) {
         let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -404,8 +442,10 @@ class Projects extends Service {
     async updateTask(projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders = [], httpUser = '', httpPass = '') {
         let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
         
-        return await this.client.call('put', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('put', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'status': status,
                 'schedule': schedule,
@@ -429,8 +469,10 @@ class Projects extends Service {
     async deleteTask(projectId, taskId) {
         let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -444,8 +486,10 @@ class Projects extends Service {
     async getProjectUsage(projectId) {
         let path = '/projects/{projectId}/usage'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -459,8 +503,10 @@ class Projects extends Service {
     async listWebhooks(projectId) {
         let path = '/projects/{projectId}/webhooks'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -480,8 +526,10 @@ class Projects extends Service {
     async createWebhook(projectId, name, events, url, security, httpUser = '', httpPass = '') {
         let path = '/projects/{projectId}/webhooks'.replace(new RegExp('{projectId}', 'g'), projectId);
         
-        return await this.client.call('post', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('post', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'events': events,
                 'url': url,
@@ -502,8 +550,10 @@ class Projects extends Service {
     async getWebhook(projectId, webhookId) {
         let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -524,8 +574,10 @@ class Projects extends Service {
     async updateWebhook(projectId, webhookId, name, events, url, security, httpUser = '', httpPass = '') {
         let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
         
-        return await this.client.call('put', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('put', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name,
                 'events': events,
                 'url': url,
@@ -546,8 +598,10 @@ class Projects extends Service {
     async deleteWebhook(projectId, webhookId) {
         let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 }

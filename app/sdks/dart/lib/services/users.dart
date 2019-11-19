@@ -59,6 +59,17 @@ class Users extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
+     /// Update user preferences by its unique ID. You can pass only the specific
+     /// settings you wish to update.
+    Future<Response> updateUserPrefs({userId, prefs}) async {
+       String path = '/users/{userId}/prefs'.replaceAll(RegExp('{userId}'), userId);
+
+       Map<String, dynamic> params = {
+         'prefs': prefs,
+       };
+
+       return await this.client.call('patch', path: path, params: params);
+    }
      /// Get user sessions list by its unique ID.
     Future<Response> getUserSessions({userId}) async {
        String path = '/users/{userId}/sessions'.replaceAll(RegExp('{userId}'), userId);
@@ -78,7 +89,7 @@ class Users extends Service {
        return await this.client.call('delete', path: path, params: params);
     }
      /// Delete user sessions by its unique ID.
-    Future<Response> deleteUsersSession({userId, sessionId}) async {
+    Future<Response> deleteUserSession({userId, sessionId}) async {
        String path = '/users/{userId}/sessions/:session'.replaceAll(RegExp('{userId}'), userId);
 
        Map<String, dynamic> params = {

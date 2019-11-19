@@ -12,4 +12,4 @@ $client
 
 $auth = new Auth($client);
 
-$result = $auth->login('email@example.com', 'password', 'https://example.com', 'https://example.com');
+$result = $auth->login('email@example.com', 'password');

@@ -36,7 +36,7 @@ $providers = $this->getParam('providers', []);
                     <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
 
                     <label for="user-password">Password</label>
-                    <input type="password" class="full-width" id="user-password" name="password" required autocomplete="off" />
+                    <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
 
                     <hr />
 
@@ -101,7 +101,10 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="45" alt="User Avatar" class="avatar pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}" data-ls-bind="{{user.name}}"></a>
+                                        <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}">
+                                            <span data-ls-bind="{{user.name}}"></span>
+                                            <span data-ls-if="{{user.name}} === ''">-----</span>
+                                        </a>
                                     </td>
                                     <td data-title="Email: ">
                                         <small data-ls-bind="{{user.email}}"></span>
@@ -349,7 +352,7 @@ $providers = $this->getParam('providers', []);
                                             <p>To complete set up, add this OAuth redirect URI to your <?php echo ucfirst($provider); ?> app configuration.</p>
 
                                             <div class="input-copy">
-                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/auth/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
+                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/auth/login/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
                                             </div>
                                         </div>
                                     </div>
@@ -364,7 +367,7 @@ $providers = $this->getParam('providers', []);
                                 <?php echo ucfirst($provider); ?>
                                 <span data-ls-if="
                                     !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} ||
-                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}" data-debug="1">
+                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}">
                                     &nbsp;<span class="tag red">Disabled</span>
                                 </span>
                             </span>

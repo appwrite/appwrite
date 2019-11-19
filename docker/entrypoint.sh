@@ -22,7 +22,7 @@ function setEnvironmentVariable() {
 }
 
 # Grep for variables that look like MySQL (APP_)
-for _curVar in `env | grep _APP_ | awk -F = '{print $1}'`;do
+for _curVar in $(env | grep _APP_ | awk -F = '{print $1}');do
     # awk has split them by the equals sign
     # Pass the name and value to our function
     setEnvironmentVariable ${_curVar} ${!_curVar}

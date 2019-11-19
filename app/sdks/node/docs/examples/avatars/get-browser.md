@@ -1,7 +1,7 @@
 const sdk = require('node-appwrite');
 
 // Init SDK
-let client = new Avatars.Client();
+let client = new sdk.Client();
 
 let avatars = new sdk.Avatars(client);
 

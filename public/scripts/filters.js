@@ -215,6 +215,9 @@ window.ls.filter
     let size = element.dataset["size"] || 80;
     let email = $value.email || $value || "";
     let name = $value.name || $value || "";
+    
+    name = (typeof stringValue !== 'string') ? '' : name;
+
     let theme = name
       .split("")
       .map(char => char.charCodeAt(0))
@@ -351,6 +354,9 @@ window.ls.filter
     $value = abbreviate($value, 1, false, false);
 
     return $value === "0" ? "N/A" : $value;
+  })
+  .add("isEmptyObject", function($value) {
+    return ((Object.keys($value).length === 0 && $value.constructor === Object) || $value.length === 0)
   });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

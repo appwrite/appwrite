@@ -24,7 +24,7 @@ class Storage extends Service {
      /// Create a new file. The user who creates the file will automatically be
      /// assigned to read and write access unless he has passed custom values for
      /// read and write arguments.
-    Future<Response> createFile({files, read = const [], write = const [], folderId = null}) async {
+    Future<Response> createFile({files, read, write, folderId = null}) async {
        String path = '/storage/files';
 
        Map<String, dynamic> params = {
@@ -48,7 +48,7 @@ class Storage extends Service {
     }
      /// Update file by its unique ID. Only users with write permissions have access
      /// to update this resource.
-    Future<Response> updateFile({fileId, read = const [], write = const [], folderId = null}) async {
+    Future<Response> updateFile({fileId, read, write, folderId = null}) async {
        String path = '/storage/files/{fileId}'.replaceAll(RegExp('{fileId}'), fileId);
 
        Map<String, dynamic> params = {

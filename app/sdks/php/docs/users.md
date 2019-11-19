@@ -3,7 +3,7 @@
 ## List Users
 
 ```http request
-GET https://appwrite.test/v1/users
+GET https://appwrite.io/v1/users
 ```
 
 ** Get a list of all the project users. You can use the query params to filter your results. **
@@ -20,7 +20,7 @@ GET https://appwrite.test/v1/users
 ## Create User
 
 ```http request
-POST https://appwrite.test/v1/users
+POST https://appwrite.io/v1/users
 ```
 
 ** Create a new user. **
@@ -36,7 +36,7 @@ POST https://appwrite.test/v1/users
 ## Get User
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}
+GET https://appwrite.io/v1/users/{userId}
 ```
 
 ** Get user by its unique ID. **
@@ -50,7 +50,7 @@ GET https://appwrite.test/v1/users/{userId}
 ## Get User Logs
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}/logs
+GET https://appwrite.io/v1/users/{userId}/logs
 ```
 
 ** Get user activity logs list by its unique ID. **
@@ -64,7 +64,7 @@ GET https://appwrite.test/v1/users/{userId}/logs
 ## Get User Prefs
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}/prefs
+GET https://appwrite.io/v1/users/{userId}/prefs
 ```
 
 ** Get user preferences by its unique ID. **
@@ -75,10 +75,25 @@ GET https://appwrite.test/v1/users/{userId}/prefs
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
 
+## Update User Prefs
+
+```http request
+PATCH https://appwrite.io/v1/users/{userId}/prefs
+```
+
+** Update user preferences by its unique ID. You can pass only the specific settings you wish to update. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| userId | string | **Required** User unique ID. |  |
+| prefs | string | Prefs key-value JSON object string. |  |
+
 ## Get User Sessions
 
 ```http request
-GET https://appwrite.test/v1/users/{userId}/sessions
+GET https://appwrite.io/v1/users/{userId}/sessions
 ```
 
 ** Get user sessions list by its unique ID. **
@@ -92,7 +107,7 @@ GET https://appwrite.test/v1/users/{userId}/sessions
 ## Delete User Sessions
 
 ```http request
-DELETE https://appwrite.test/v1/users/{userId}/sessions
+DELETE https://appwrite.io/v1/users/{userId}/sessions
 ```
 
 ** Delete all user sessions by its unique ID. **
@@ -106,7 +121,7 @@ DELETE https://appwrite.test/v1/users/{userId}/sessions
 ## Delete User Session
 
 ```http request
-DELETE https://appwrite.test/v1/users/{userId}/sessions/:session
+DELETE https://appwrite.io/v1/users/{userId}/sessions/:session
 ```
 
 ** Delete user sessions by its unique ID. **
@@ -118,10 +133,10 @@ DELETE https://appwrite.test/v1/users/{userId}/sessions/:session
 | userId | string | **Required** User unique ID. |  |
 | sessionId | string | User unique session ID. |  |
 
-## Update user status
+## Update User Status
 
 ```http request
-PATCH https://appwrite.test/v1/users/{userId}/status
+PATCH https://appwrite.io/v1/users/{userId}/status
 ```
 
 ** Update user status by its unique ID. **
@@ -131,5 +146,5 @@ PATCH https://appwrite.test/v1/users/{userId}/status
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
-| status | string | User Status code. To activate the user pass 1, to blocking the user pass 2 and for disabling the user pass 0 |  |
+| status | string | User Status code. To activate the user pass 1, to block the user pass 2 and for disabling the user pass 0 |  |
 

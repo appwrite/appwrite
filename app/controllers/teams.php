@@ -23,19 +23,11 @@ $utopia->get('/v1/teams')
     ->label('scope', 'teams.read')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'listTeams')
-    ->label('sdk.description', 'Get a list of all the current user teams. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project teams. [Learn more about different API modes](/docs/modes).')
-    ->param('search', '', function () {
-        return new Text(256);
-    }, 'Search term to filter your list results.', true)
-    ->param('limit', 25, function () {
-        return new Range(0, 100);
-    }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () {
-        return new Range(0, 2000);
-    }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () {
-        return new WhiteList(['ASC', 'DESC']);
-    }, 'Order result by ASC or DESC order.', true)
+    ->label('sdk.description', '/docs/references/teams/list-teams.md')
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
         function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
             $results = $projectDB->getCollection([
@@ -59,10 +51,8 @@ $utopia->get('/v1/teams/:teamId')
     ->label('scope', 'teams.read')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'getTeam')
-    ->label('sdk.description', 'Get team by its unique ID. All team members have read access for this resource.')
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
+    ->label('sdk.description', '/docs/references/teams/get-team.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
     ->action(
         function ($teamId) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
@@ -80,10 +70,8 @@ $utopia->get('/v1/teams/:teamId/members')
     ->label('scope', 'teams.read')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'getTeamMembers')
-    ->label('sdk.description', 'Get team members by the team unique ID. All team members have read access for this list of resources.')
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
+    ->label('sdk.description', '/docs/references/teams/get-team-members.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
     ->action(
         function ($teamId) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
@@ -134,13 +122,9 @@ $utopia->post('/v1/teams')
     ->label('scope', 'teams.write')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createTeam')
-    ->label('sdk.description', 'Create a new team. The user who creates the team will automatically be assigned as the owner of the team. The team owner can invite new members, who will be able add new owners and update or delete the team from your project.')
-    ->param('name', null, function () {
-        return new Text(100);
-    }, 'Team name.')
-    ->param('roles', ['owner'], function () {
-        return new ArrayList(new Text(128));
-    }, 'User roles array. Use this param to set the roles in the team for the user who created the team. The default role is **owner**, a role can be any string.', true)
+    ->label('sdk.description', '/docs/references/teams/create-team.md')
+    ->param('name', null, function () { return new Text(100); }, 'Team name.')
+    ->param('roles', ['owner'], function () { return new ArrayList(new Text(128)); }, 'User roles array. Use this param to set the roles in the team for the user who created the team. The default role is **owner**, a role can be any string.', true)
     ->action(
         function ($name, $roles) use ($response, $projectDB, $user, $mode) {
             Authorization::disable();
@@ -200,13 +184,9 @@ $utopia->put('/v1/teams/:teamId')
     ->label('scope', 'teams.write')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateTeam')
-    ->label('sdk.description', 'Update team by its unique ID. Only team owners have write access for this resource.')
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
-    ->param('name', null, function () {
-        return new Text(100);
-    }, 'Team name.')
+    ->label('sdk.description', '/docs/references/teams/update-team.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('name', null, function () { return new Text(100); }, 'Team name.')
     ->action(
         function ($teamId, $name) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
@@ -232,10 +212,8 @@ $utopia->delete('/v1/teams/:teamId')
     ->label('scope', 'teams.write')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteTeam')
-    ->label('sdk.description', 'Delete team by its unique ID. Only team owners have write access for this resource.')
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
+    ->label('sdk.description', '/docs/references/teams/delete-team.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
     ->action(
         function ($teamId) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
@@ -274,24 +252,14 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createTeamMembership')
-    ->label('sdk.description', "Use this endpoint to invite a new member to your team. An email with a link to join the team will be sent to the new member email address. If member doesn't exists in the project it will be automatically created.\n\nUse the redirect parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the /teams/{teamId}/memberships/{inviteId}/status endpoint to finally join the user to the team.\n\nPlease notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL's are the once from domains you have set when added your platforms in the console interface.")
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
-    ->param('email', '', function () {
-        return new Email();
-    }, 'New team member email address.')
-    ->param('name', '', function () {
-        return new Text(100);
-    }, 'New team member name.', true)
-    ->param('roles', [], function () {
-        return new ArrayList(new Text(128));
-    }, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
-    ->param('redirect', '', function () use ($clients) {
-        return new Host($clients);
-    }, 'Reset page to redirect user back to your app from the invitation email.')
+    ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('email', '', function () { return new Email(); }, 'New team member email address.')
+    ->param('name', '', function () { return new Text(100); }, 'New team member name.', true)
+    ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
+    ->param('redirect', '', function () use ($clients) { return new Host($clients); }, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
-        function ($teamId, $email, $name, $roles, $redirect) use ($request, $response, $register, $project, $user, $audit, $projectDB) {
+        function ($teamId, $email, $name, $roles, $redirect) use ($response, $register, $project, $user, $audit, $projectDB) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
@@ -388,7 +356,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -427,16 +395,10 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createTeamMembershipResend')
-    ->label('sdk.description', 'Use this endpoint to resend your invitation email for a user to join a team.')
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
-    ->param('inviteId', '', function () {
-        return new UID();
-    }, 'Invite unique ID.')
-    ->param('redirect', '', function () use ($clients) {
-        return new Host($clients);
-    }, 'Reset page to redirect user back to your app from the invitation email.')
+    ->label('sdk.description', '/docs/references/teams/create-team-membership-resend.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
+    ->param('redirect', '', function () use ($clients) { return new Host($clients); }, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
         function ($teamId, $inviteId, $redirect) use ($response, $register, $project, $user, $audit, $projectDB) {
             $membership = $projectDB->getDocument($inviteId);
@@ -473,7 +435,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'userId' => $membership->getAttribute('userId'), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -513,26 +475,14 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateTeamMembershipStatus')
-    ->label('sdk.description', "Use this endpoint to let user accept an invitation to join a team after he is being redirect back to your app from the invitation email. Use the success and failure URL's to redirect users back to your application after the request completes.\n\nPlease notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL's are the once from domains you have set when added your platforms in the console interface.\n\nWhen not using the success or failure redirect arguments this endpoint will result with a 200 status code on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don't allow to set 3rd party HTTP cookies needed for saving the account session token.")
+    ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
     ->label('sdk.cookies', true)
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
-    ->param('inviteId', '', function () {
-        return new UID();
-    }, 'Invite unique ID')
-    ->param('userId', '', function () {
-        return new UID();
-    }, 'User unique ID')
-    ->param('secret', '', function () {
-        return new Text(256);
-    }, 'Secret Key')
-    ->param('success', null, function () use ($clients) {
-        return new Host($clients);
-    }, 'Redirect when registration succeed', true)
-    ->param('failure', null, function () use ($clients) {
-        return new Host($clients);
-    }, 'Redirect when registration failed', true)
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID')
+    ->param('userId', '', function () { return new UID(); }, 'User unique ID')
+    ->param('secret', '', function () { return new Text(256); }, 'Secret Key')
+    ->param('success', null, function () use ($clients) { return new Host($clients); }, 'Redirect when registration succeed', true)
+    ->param('failure', null, function () use ($clients) { return new Host($clients); }, 'Redirect when registration failed', true)
     ->action(
         function ($teamId, $inviteId, $userId, $secret, $success, $failure) use ($response, $request, $user, $audit, $projectDB) {
             $invite = $projectDB->getDocument($inviteId);
@@ -642,7 +592,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ->setParam('event', 'auth.join')
             ;
 
-            $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
+            $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
 
             if ($success) {
                 $response->redirect($success);
@@ -657,13 +607,9 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteTeamMembership')
-    ->label('sdk.description', 'This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member.')
-    ->param('teamId', '', function () {
-        return new UID();
-    }, 'Team unique ID.')
-    ->param('inviteId', '', function () {
-        return new UID();
-    }, 'Invite unique ID')
+    ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID')
     ->action(
         function ($teamId, $inviteId) use ($response, $projectDB, $audit) {
             $invite = $projectDB->getDocument($inviteId);

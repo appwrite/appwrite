@@ -53,7 +53,7 @@
                             data-success="trigger"
                             data-success-param-trigger-events="user-prefs-load">
 
-                            <div data-ls-if="{{user-prefs.length}}" style="display: none;">
+                            <div data-ls-if="!{{user-prefs|isEmptyObject}}" style="display: none;">
                                 <table class="vertical">
                                     <thead>
                                         <tr>
@@ -74,7 +74,7 @@
                                 </table>
                             </div>
 
-                            <div data-ls-if="!{{user-prefs.length}}" style="display: none;">
+                            <div data-ls-if="{{user-prefs|isEmptyObject}}" style="display: none;">
                                 No user preferences found
                             </div>
                         </div>

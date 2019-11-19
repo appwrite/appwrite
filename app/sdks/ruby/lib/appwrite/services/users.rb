@@ -12,6 +12,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -25,6 +26,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -36,6 +38,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -47,6 +50,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -58,6 +62,20 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
+        def update_user_prefs(user_id:, prefs:)
+            path = '/users/{userId}/prefs'
+                .gsub('{user_id}', user_id)
+
+            params = {
+                'prefs': prefs
+            }
+
+            return @client.call('patch', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -69,6 +87,7 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -80,10 +99,11 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
-        def delete_users_session(user_id:, session_id:)
+        def delete_user_session(user_id:, session_id:)
             path = '/users/{userId}/sessions/:session'
                 .gsub('{user_id}', user_id)
 
@@ -92,6 +112,7 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -104,6 +125,7 @@ module Appwrite
             }
 
             return @client.call('patch', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 

@@ -14,14 +14,14 @@ class Users extends Service
      * Get a list of all the project users. You can use the query params to filter
      * your results.
      *
-     * @param string $search
-     * @param integer $limit
-     * @param integer $offset
-     * @param string $orderType
+     * @param string  $search
+     * @param int  $limit
+     * @param int  $offset
+     * @param string  $orderType
      * @throws Exception
      * @return array
      */
-    public function listUsers($search = '', $limit = 25, $offset = 0, $orderType = 'ASC')
+    public function listUsers(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
         $path   = str_replace([], [], '/users');
         $params = [];
@@ -32,6 +32,7 @@ class Users extends Service
         $params['orderType'] = $orderType;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -40,13 +41,13 @@ class Users extends Service
      *
      * Create a new user.
      *
-     * @param string $email
-     * @param string $password
-     * @param string $name
+     * @param string  $email
+     * @param string  $password
+     * @param string  $name
      * @throws Exception
      * @return array
      */
-    public function createUser($email, $password, $name = '')
+    public function createUser(string $email, string $password, string $name = ''):array
     {
         $path   = str_replace([], [], '/users');
         $params = [];
@@ -56,6 +57,7 @@ class Users extends Service
         $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -64,17 +66,18 @@ class Users extends Service
      *
      * Get user by its unique ID.
      *
-     * @param string $userId
+     * @param string  $userId
      * @throws Exception
      * @return array
      */
-    public function getUser($userId)
+    public function getUser(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -83,17 +86,18 @@ class Users extends Service
      *
      * Get user activity logs list by its unique ID.
      *
-     * @param string $userId
+     * @param string  $userId
      * @throws Exception
      * @return array
      */
-    public function getUserLogs($userId)
+    public function getUserLogs(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/logs');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -102,17 +106,41 @@ class Users extends Service
      *
      * Get user preferences by its unique ID.
      *
-     * @param string $userId
+     * @param string  $userId
      * @throws Exception
      * @return array
      */
-    public function getUserPrefs($userId)
+    public function getUserPrefs(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/prefs');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
+        ], $params);
+    }
+
+    /**
+     * Update User Prefs
+     *
+     * Update user preferences by its unique ID. You can pass only the specific
+     * settings you wish to update.
+     *
+     * @param string  $userId
+     * @param string  $prefs
+     * @throws Exception
+     * @return array
+     */
+    public function updateUserPrefs(string $userId, string $prefs):array
+    {
+        $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/prefs');
+        $params = [];
+
+        $params['prefs'] = $prefs;
+
+        return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -121,17 +149,18 @@ class Users extends Service
      *
      * Get user sessions list by its unique ID.
      *
-     * @param string $userId
+     * @param string  $userId
      * @throws Exception
      * @return array
      */
-    public function getUserSessions($userId)
+    public function getUserSessions(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -140,17 +169,18 @@ class Users extends Service
      *
      * Delete all user sessions by its unique ID.
      *
-     * @param string $userId
+     * @param string  $userId
      * @throws Exception
      * @return array
      */
-    public function deleteUserSessions($userId)
+    public function deleteUserSessions(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -159,12 +189,12 @@ class Users extends Service
      *
      * Delete user sessions by its unique ID.
      *
-     * @param string $userId
-     * @param string $sessionId
+     * @param string  $userId
+     * @param string  $sessionId
      * @throws Exception
      * @return array
      */
-    public function deleteUsersSession($userId, $sessionId)
+    public function deleteUserSession(string $userId, string $sessionId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions/:session');
         $params = [];
@@ -172,20 +202,21 @@ class Users extends Service
         $params['sessionId'] = $sessionId;
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
     /**
-     * Update user status
+     * Update User Status
      *
      * Update user status by its unique ID.
      *
-     * @param string $userId
-     * @param string $status
+     * @param string  $userId
+     * @param string  $status
      * @throws Exception
      * @return array
      */
-    public function updateUserStatus($userId, $status)
+    public function updateUserStatus(string $userId, string $status):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/status');
         $params = [];
@@ -193,6 +224,7 @@ class Users extends Service
         $params['status'] = $status;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

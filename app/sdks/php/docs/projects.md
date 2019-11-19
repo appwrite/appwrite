@@ -3,13 +3,13 @@
 ## List Projects
 
 ```http request
-GET https://appwrite.test/v1/projects
+GET https://appwrite.io/v1/projects
 ```
 
 ## Create Project
 
 ```http request
-POST https://appwrite.test/v1/projects
+POST https://appwrite.io/v1/projects
 ```
 
 ### Parameters
@@ -31,7 +31,7 @@ POST https://appwrite.test/v1/projects
 ## Get Project
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}
+GET https://appwrite.io/v1/projects/{projectId}
 ```
 
 ### Parameters
@@ -43,7 +43,7 @@ GET https://appwrite.test/v1/projects/{projectId}
 ## Update Project
 
 ```http request
-PATCH https://appwrite.test/v1/projects/{projectId}
+PATCH https://appwrite.io/v1/projects/{projectId}
 ```
 
 ### Parameters
@@ -65,7 +65,7 @@ PATCH https://appwrite.test/v1/projects/{projectId}
 ## Delete Project
 
 ```http request
-DELETE https://appwrite.test/v1/projects/{projectId}
+DELETE https://appwrite.io/v1/projects/{projectId}
 ```
 
 ### Parameters
@@ -77,7 +77,7 @@ DELETE https://appwrite.test/v1/projects/{projectId}
 ## List Keys
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/keys
+GET https://appwrite.io/v1/projects/{projectId}/keys
 ```
 
 ### Parameters
@@ -89,7 +89,7 @@ GET https://appwrite.test/v1/projects/{projectId}/keys
 ## Create Key
 
 ```http request
-POST https://appwrite.test/v1/projects/{projectId}/keys
+POST https://appwrite.io/v1/projects/{projectId}/keys
 ```
 
 ### Parameters
@@ -103,7 +103,7 @@ POST https://appwrite.test/v1/projects/{projectId}/keys
 ## Get Key
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/keys/{keyId}
+GET https://appwrite.io/v1/projects/{projectId}/keys/{keyId}
 ```
 
 ### Parameters
@@ -116,7 +116,7 @@ GET https://appwrite.test/v1/projects/{projectId}/keys/{keyId}
 ## Update Key
 
 ```http request
-PUT https://appwrite.test/v1/projects/{projectId}/keys/{keyId}
+PUT https://appwrite.io/v1/projects/{projectId}/keys/{keyId}
 ```
 
 ### Parameters
@@ -131,7 +131,7 @@ PUT https://appwrite.test/v1/projects/{projectId}/keys/{keyId}
 ## Delete Key
 
 ```http request
-DELETE https://appwrite.test/v1/projects/{projectId}/keys/{keyId}
+DELETE https://appwrite.io/v1/projects/{projectId}/keys/{keyId}
 ```
 
 ### Parameters
@@ -144,7 +144,7 @@ DELETE https://appwrite.test/v1/projects/{projectId}/keys/{keyId}
 ## Update Project OAuth
 
 ```http request
-PATCH https://appwrite.test/v1/projects/{projectId}/oauth
+PATCH https://appwrite.io/v1/projects/{projectId}/oauth
 ```
 
 ### Parameters
@@ -159,7 +159,7 @@ PATCH https://appwrite.test/v1/projects/{projectId}/oauth
 ## List Platforms
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/platforms
+GET https://appwrite.io/v1/projects/{projectId}/platforms
 ```
 
 ### Parameters
@@ -171,7 +171,7 @@ GET https://appwrite.test/v1/projects/{projectId}/platforms
 ## Create Platform
 
 ```http request
-POST https://appwrite.test/v1/projects/{projectId}/platforms
+POST https://appwrite.io/v1/projects/{projectId}/platforms
 ```
 
 ### Parameters
@@ -188,7 +188,7 @@ POST https://appwrite.test/v1/projects/{projectId}/platforms
 ## Get Platform
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
+GET https://appwrite.io/v1/projects/{projectId}/platforms/{platformId}
 ```
 
 ### Parameters
@@ -201,7 +201,7 @@ GET https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
 ## Update Platform
 
 ```http request
-PUT https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
+PUT https://appwrite.io/v1/projects/{projectId}/platforms/{platformId}
 ```
 
 ### Parameters
@@ -218,7 +218,7 @@ PUT https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
 ## Delete Platform
 
 ```http request
-DELETE https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
+DELETE https://appwrite.io/v1/projects/{projectId}/platforms/{platformId}
 ```
 
 ### Parameters
@@ -231,7 +231,7 @@ DELETE https://appwrite.test/v1/projects/{projectId}/platforms/{platformId}
 ## List Tasks
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/tasks
+GET https://appwrite.io/v1/projects/{projectId}/tasks
 ```
 
 ### Parameters
@@ -243,7 +243,7 @@ GET https://appwrite.test/v1/projects/{projectId}/tasks
 ## Create Task
 
 ```http request
-POST https://appwrite.test/v1/projects/{projectId}/tasks
+POST https://appwrite.io/v1/projects/{projectId}/tasks
 ```
 
 ### Parameters
@@ -264,7 +264,7 @@ POST https://appwrite.test/v1/projects/{projectId}/tasks
 ## Get Task
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/tasks/{taskId}
+GET https://appwrite.io/v1/projects/{projectId}/tasks/{taskId}
 ```
 
 ### Parameters
@@ -277,7 +277,7 @@ GET https://appwrite.test/v1/projects/{projectId}/tasks/{taskId}
 ## Update Task
 
 ```http request
-PUT https://appwrite.test/v1/projects/{projectId}/tasks/{taskId}
+PUT https://appwrite.io/v1/projects/{projectId}/tasks/{taskId}
 ```
 
 ### Parameters
@@ -299,7 +299,7 @@ PUT https://appwrite.test/v1/projects/{projectId}/tasks/{taskId}
 ## Delete Task
 
 ```http request
-DELETE https://appwrite.test/v1/projects/{projectId}/tasks/{taskId}
+DELETE https://appwrite.io/v1/projects/{projectId}/tasks/{taskId}
 ```
 
 ### Parameters
@@ -312,7 +312,7 @@ DELETE https://appwrite.test/v1/projects/{projectId}/tasks/{taskId}
 ## Get Project
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/usage
+GET https://appwrite.io/v1/projects/{projectId}/usage
 ```
 
 ### Parameters
@@ -324,7 +324,7 @@ GET https://appwrite.test/v1/projects/{projectId}/usage
 ## List Webhooks
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/webhooks
+GET https://appwrite.io/v1/projects/{projectId}/webhooks
 ```
 
 ### Parameters
@@ -336,7 +336,7 @@ GET https://appwrite.test/v1/projects/{projectId}/webhooks
 ## Create Webhook
 
 ```http request
-POST https://appwrite.test/v1/projects/{projectId}/webhooks
+POST https://appwrite.io/v1/projects/{projectId}/webhooks
 ```
 
 ### Parameters
@@ -354,7 +354,7 @@ POST https://appwrite.test/v1/projects/{projectId}/webhooks
 ## Get Webhook
 
 ```http request
-GET https://appwrite.test/v1/projects/{projectId}/webhooks/{webhookId}
+GET https://appwrite.io/v1/projects/{projectId}/webhooks/{webhookId}
 ```
 
 ### Parameters
@@ -367,7 +367,7 @@ GET https://appwrite.test/v1/projects/{projectId}/webhooks/{webhookId}
 ## Update Webhook
 
 ```http request
-PUT https://appwrite.test/v1/projects/{projectId}/webhooks/{webhookId}
+PUT https://appwrite.io/v1/projects/{projectId}/webhooks/{webhookId}
 ```
 
 ### Parameters
@@ -386,7 +386,7 @@ PUT https://appwrite.test/v1/projects/{projectId}/webhooks/{webhookId}
 ## Delete Webhook
 
 ```http request
-DELETE https://appwrite.test/v1/projects/{projectId}/webhooks/{webhookId}
+DELETE https://appwrite.io/v1/projects/{projectId}/webhooks/{webhookId}
 ```
 
 ### Parameters
