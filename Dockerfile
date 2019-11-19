@@ -1,4 +1,4 @@
-FROM php as builder
+FROM composer/composer:php7 as vendor
 WORKDIR /builder
 RUN composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
 
@@ -84,7 +84,7 @@ COPY ./app /usr/share/nginx/html/app
 COPY ./docs /usr/share/nginx/html/docs
 COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
-COPY --from=builder /builder/vendor /usr/share/nginx/html/vendor
+COPY --from=vendor /builder/vendor /usr/share/nginx/html/vendor
 
 WORKDIR /storage/uploads
 RUN chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads
