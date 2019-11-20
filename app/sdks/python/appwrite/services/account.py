@@ -3,6 +3,9 @@ from ..service import Service
 
 class Account(Service):
 
+    def __init__(self, client):
+        super(Account, self).__init__(client)
+
     def get(self):
         """Get Account"""
 

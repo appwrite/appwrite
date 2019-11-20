@@ -3,6 +3,9 @@ from ..service import Service
 
 class Database(Service):
 
+    def __init__(self, client):
+        super(Database, self).__init__(client)
+
     def list_collections(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Collections"""
 

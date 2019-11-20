@@ -3,6 +3,9 @@ from ..service import Service
 
 class Storage(Service):
 
+    def __init__(self, client):
+        super(Storage, self).__init__(client)
+
     def list_files(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Files"""
 

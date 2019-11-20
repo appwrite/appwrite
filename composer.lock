@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "01e6c677412f0e5645201efae1f6c72f375382f4"
+                "reference": "456248eec6af3541760468fea3e1708bf21a80ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/01e6c677412f0e5645201efae1f6c72f375382f4",
-                "reference": "01e6c677412f0e5645201efae1f6c72f375382f4",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/456248eec6af3541760468fea3e1708bf21a80ed",
+                "reference": "456248eec6af3541760468fea3e1708bf21a80ed",
                 "shasum": ""
             },
             "require": {
@@ -39,7 +39,7 @@
                 "BSD-3-Clause"
             ],
             "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-11-02T14:57:16+00:00"
+            "time": "2019-11-20T18:50:32+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -92,7 +92,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "2abc3444c1a70fad6a5e9f1689e0c12a75d56d9d"
+                "reference": "6b2e1dc10c5c7b0d31521ac0b1ae1f70b8eac89d"
             },
             "require": {
                 "ext-curl": "*",
@@ -122,7 +122,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-11-07T05:09:16+00:00"
+            "time": "2019-11-20T18:58:05+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -1440,12 +1440,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "34a2a74596cfa6fb8f32415bc97f505d9f29bb8f"
+                "reference": "aecce3d92ec0f860935f940f640223fa0e90cce8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/34a2a74596cfa6fb8f32415bc97f505d9f29bb8f",
-                "reference": "34a2a74596cfa6fb8f32415bc97f505d9f29bb8f",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/aecce3d92ec0f860935f940f640223fa0e90cce8",
+                "reference": "aecce3d92ec0f860935f940f640223fa0e90cce8",
                 "shasum": ""
             },
             "require": {
@@ -1499,7 +1499,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-11-15T20:27:23+00:00"
+            "time": "2019-11-18T17:29:44+00:00"
         },
         {
             "name": "utopia-php/abuse",
@@ -2458,12 +2458,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "909e50ab13df443fa7ba2d1e4c990edf38ed02f8"
+                "reference": "d2666181bc3c8ea5ad096f3eb7e4f1ad742c199f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/909e50ab13df443fa7ba2d1e4c990edf38ed02f8",
-                "reference": "909e50ab13df443fa7ba2d1e4c990edf38ed02f8",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/d2666181bc3c8ea5ad096f3eb7e4f1ad742c199f",
+                "reference": "d2666181bc3c8ea5ad096f3eb7e4f1ad742c199f",
                 "shasum": ""
             },
             "require": {
@@ -2534,7 +2534,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-11-15T08:22:24+00:00"
+            "time": "2019-11-17T15:10:13+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -2651,12 +2651,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/diff.git",
-                "reference": "2ce6675fe77612cce2a49d0cecb4e7afead64323"
+                "reference": "16e54fbc971c14d98779b9c3b22572178ff9411f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/diff/zipball/2ce6675fe77612cce2a49d0cecb4e7afead64323",
-                "reference": "2ce6675fe77612cce2a49d0cecb4e7afead64323",
+                "url": "https://api.github.com/repos/sebastianbergmann/diff/zipball/16e54fbc971c14d98779b9c3b22572178ff9411f",
+                "reference": "16e54fbc971c14d98779b9c3b22572178ff9411f",
                 "shasum": ""
             },
             "require": {
@@ -2664,7 +2664,7 @@
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.5 || ^8.0",
-                "symfony/process": "^2 || ^3.3 || ^4"
+                "symfony/process": "^2 || ^3.3 || ^4 || ^5"
             },
             "type": "library",
             "extra": {
@@ -2699,7 +2699,7 @@
                 "unidiff",
                 "unified diff"
             ],
-            "time": "2019-10-23T09:06:00+00:00"
+            "time": "2019-11-18T19:26:59+00:00"
         },
         {
             "name": "sebastian/environment",
@@ -2707,12 +2707,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/environment.git",
-                "reference": "0f73ef4aa2d8a5e00393c06729012a50845e9e4c"
+                "reference": "464c90d7bdf5ad4e8a6aea15c091fec0603d4368"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/0f73ef4aa2d8a5e00393c06729012a50845e9e4c",
-                "reference": "0f73ef4aa2d8a5e00393c06729012a50845e9e4c",
+                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/464c90d7bdf5ad4e8a6aea15c091fec0603d4368",
+                "reference": "464c90d7bdf5ad4e8a6aea15c091fec0603d4368",
                 "shasum": ""
             },
             "require": {
@@ -2752,7 +2752,7 @@
                 "environment",
                 "hhvm"
             ],
-            "time": "2019-10-23T09:05:42+00:00"
+            "time": "2019-11-20T08:46:58+00:00"
         },
         {
             "name": "sebastian/exporter",

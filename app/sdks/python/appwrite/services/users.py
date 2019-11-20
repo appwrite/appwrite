@@ -3,6 +3,9 @@ from ..service import Service
 
 class Users(Service):
 
+    def __init__(self, client):
+        super(Users, self).__init__(client)
+
     def list_users(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Users"""
 
