@@ -31,4 +31,4 @@ install:
 
 script:
 - docker ps
-- vendor/bin/phpunit --configuration phpunit.xml
+- phpunit
