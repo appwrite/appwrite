@@ -17,6 +17,10 @@ echo "Setting Version #"
 
 echo -e "<?php\n\nconst VERSION = '$1';\n\nreturn VERSION;" > app/config/version.php
 
+echo 'Updating PHP dependencies and auto-loading...'
+
+composer update --ignore-platform-reqs --optimize-autoloader --no-dev --no-plugins --no-scripts --prefer-dist
+
 echo 'Starting build...'
 
 docker build -t appwrite/appwrite:"$1" .
