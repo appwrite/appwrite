@@ -20,7 +20,6 @@ cache:
 
 before_install:
 - docker load -i docker_images/images.tar || true
-- composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
 - sudo service mysql stop
 
 before_cache:
