@@ -40,7 +40,7 @@ GET https://appwrite.io/v1/locale/countries/phones
 
 ** List of all countries phone codes. You can use the locale header to get the data in a supported language. **
 
-## List of currencies
+## List Currencies
 
 ```http request
 GET https://appwrite.io/v1/locale/currencies

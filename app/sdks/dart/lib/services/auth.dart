@@ -32,6 +32,10 @@ class Auth extends Service {
 
        return await this.client.call('post', path: path, params: params);
     }
+     /// Allow the user to login to his account using the OAuth provider of his
+     /// choice. Each OAuth provider should be enabled from the Appwrite console
+     /// first. Use the success and failure arguments to provide a redirect URL's
+     /// back to your app when login is completed.
     Future<Response> oauth({provider, success, failure}) async {
        String path = '/auth/login/oauth/{provider}'.replaceAll(RegExp('{provider}'), provider);
 

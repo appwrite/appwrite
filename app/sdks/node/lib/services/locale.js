@@ -101,7 +101,7 @@ class Locale extends Service {
     }
 
     /**
-     * List of currencies
+     * List Currencies
      *
      * List of all currencies, including currency symol, name, plural, and decimal
      * digits for all major and minor currencies. You can use the locale header to

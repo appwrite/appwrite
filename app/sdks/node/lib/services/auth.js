@@ -44,6 +44,11 @@ class Auth extends Service {
     /**
      * Login with OAuth
      *
+     * Allow the user to login to his account using the OAuth provider of his
+     * choice. Each OAuth provider should be enabled from the Appwrite console
+     * first. Use the success and failure arguments to provide a redirect URL's
+     * back to your app when login is completed.
+     *
      * @param string provider
      * @param string success
      * @param string failure

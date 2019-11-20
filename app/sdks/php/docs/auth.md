@@ -27,11 +27,13 @@ When accessing this route using Javascript from the browser, success and failure
 GET https://appwrite.io/v1/auth/login/oauth/{provider}
 ```
 
+** Allow the user to login to his account using the OAuth provider of his choice. Each OAuth provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL&#039;s back to your app when login is completed. **
+
 ### Parameters
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| provider | string | **Required** OAuth Provider |  |
+| provider | string | **Required** OAuth Provider. Currently, supported providers are: bitbucket, facebook, github, gitlab, google, microsoft, linkedin, slack, dropbox, amazon, vk |  |
 | success | string | **Required** URL to redirect back to your app after a successful login attempt. |  |
 | failure | string | **Required** URL to redirect back to your app after a failed login attempt. |  |
 

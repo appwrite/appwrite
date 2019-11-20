@@ -54,7 +54,7 @@ class Locale(Service):
         }, params)
 
     def get_currencies(self):
-        """List of currencies"""
+        """List Currencies"""
 
         params = {}
         path = '/locale/currencies'

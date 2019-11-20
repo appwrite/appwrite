@@ -72,7 +72,7 @@ $cli
                 'platform' => 'server',
             ],
             'python' => [
-                'version' => '1.0.3',
+                'version' => '1.0.4',
                 'result' => __DIR__.'/../sdks/python/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-python.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-python.git',

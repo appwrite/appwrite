@@ -596,6 +596,10 @@
             /**
              * Login with OAuth
              *
+             * Allow the user to login to his account using the OAuth provider of his
+             * choice. Each OAuth provider should be enabled from the Appwrite console
+             * first. Use the success and failure arguments to provide a redirect URL's
+             * back to your app when login is completed.
              *
              * @param {string} provider
              * @param {string} success
@@ -1748,7 +1752,7 @@
             },
 
             /**
-             * List of currencies
+             * List Currencies
              *
              * List of all currencies, including currency symol, name, plural, and decimal
              * digits for all major and minor currencies. You can use the locale header to
