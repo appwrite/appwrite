@@ -117,42 +117,13 @@ $cli
             ],
         ];
 
-        # moved sdk before switch of langs in order to modify license
-
-        $sdk = new SDK($language, new Swagger2($spec));
-
-            $sdk
-                ->setLicense('BSD-3-Clause')
-                ->setLicenseContent('Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-
-    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-    3. Neither the name Appwrite nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.')
-                ->setVersion($client['version'])
-                ->setGitRepo($client['gitRepo'])
-                ->setGitURL($client['gitURL'])
-                ->setGitRepoName($client['gitRepoName'])
-                ->setGitUserName($client['gitUserName'])
-                ->setLogo('https://appwrite.io/images/github.png')
-                ->setURL('https://appwrite.io')
-                ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
-                ->setShareURL('http://appwrite.io')
-                ->setShareTags('JS,javascript,reactjs,angular,ios,android')
-                ->setShareVia('appwrite_io')
-                ->setWarning($client['warning'])
-                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '');
-
         foreach ($clients as $name => $client) {
             Console::info('Fetching API Spec for '.$name.' ('.$client['platform'].')');
+            
             $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
             $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
+
+            $license = 'BSD-3-Clause';
 
             switch ($name) {
                 case 'php':
@@ -180,11 +151,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $language = new Python();
                     $language
                         ->setPipPackage('appwrite')
-                    # license edited due to classifiers in pypi
-                    $sdk
-                    	->setLicense('BSD License');
                     ;
-                    break;
+                    $license = 'BSD License'; // license edited due to classifiers in pypi
+                break;
                 case 'ruby':
                     $language = new Ruby();
                     $language
@@ -210,12 +179,42 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
             Console::success("Generating {$name} SDK");
 
+            $sdk = new SDK($language, new Swagger2($spec));
+
+            $sdk
+                ->setLicense($license)
+                ->setLicenseContent('Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+    3. Neither the name Appwrite nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.')
+                ->setVersion($client['version'])
+                ->setGitRepo($client['gitRepo'])
+                ->setGitURL($client['gitURL'])
+                ->setGitRepoName($client['gitRepoName'])
+                ->setGitUserName($client['gitUserName'])
+                ->setLogo('https://appwrite.io/images/github.png')
+                ->setURL('https://appwrite.io')
+                ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
+                ->setShareURL('http://appwrite.io')
+                ->setShareTags('JS,javascript,reactjs,angular,ios,android')
+                ->setShareVia('appwrite_io')
+                ->setWarning($client['warning'])
+                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '');
+
             try {
                 $sdk->generate($client['result']);
             } catch (Exception $exception) {
-                echo $exception->getMessage()."\n";
+                Console::error($exception->getMessage());
             } catch (Throwable $exception) {
-                echo $exception->getMessage()."\n";
+                Console::error($exception->getMessage());
             }
 
             exec('rm -rf '.$target.' && \
