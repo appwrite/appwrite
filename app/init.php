@@ -43,15 +43,17 @@ $collections = include __DIR__.'/../app/config/collections.php'; // OAuth provid
 $redisHost = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort = $request->getServer('_APP_REDIS_PORT', '');
 $utopia = new App('Asia/Tel_Aviv', $env);
-$port = (string) (isset($_SERVER['HTTP_HOST'])) ? parse_url($_SERVER['HTTP_HOST'], PHP_URL_PORT) : '';
+$port = (string) parse_url($request->getServer('HTTP_HOST', ''), PHP_URL_PORT);
 
 Resque::setBackend($redisHost.':'.$redisPort);
 
-define('COOKIE_DOMAIN', (
-    $request->getServer('HTTP_HOST', null) === 'localhost' ||
-    $request->getServer('HTTP_HOST', null) === 'localhost:'.$port)
+define('COOKIE_DOMAIN', 
+    (
+        $request->getServer('HTTP_HOST', null) === 'localhost' ||
+        $request->getServer('HTTP_HOST', null) === 'localhost:'.$port
+    )
         ? null
-        : '.'.parse_url($request->getServer('HTTP_HOST', false), PHP_URL_HOST));
+        : '.'.parse_url($request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
 define('COOKIE_SAMESITE', null); // Response::COOKIE_SAMESITE_NONE
 
 /*
