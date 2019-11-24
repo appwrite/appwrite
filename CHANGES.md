@@ -16,6 +16,7 @@
 
 ## Security
 
+* [PHP-FPM security patch fix](https://bugs.php.net/patch-display.php?bug_id=78599&patch=0001-Fix-bug-78599-env_path_info-underflow-can-lead-to-RC.patch&revision=latest) - Upgraded PHP version to 7.3.12 [Major]
 * Remove executable permission from avatars files [Minor]
 * Updated SDK Generator Twig dependency with security issue: https://www.exploit-db.com/exploits/44102 [Minor]
 
