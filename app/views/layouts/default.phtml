@@ -39,6 +39,9 @@ $canonical  = $this->getParam('canonical', '');
     <meta property="og:type" content="website" />
     <meta property="og:title" content="<?php echo $this->getParam('title', ''); ?>" />
     <meta property="og:description" content="<?php echo $this->getParam('description', ''); ?>" />
+    <?php if (!empty($canonical)): ?>
+        <meta property="og:url" content="<?php echo $canonical; ?>" />
+    <?php endif; ?>
     <meta property="og:image"  content="<?php echo $protocol; ?>://<?php echo $domain; ?>/images/logo.png?v=1" />
     <script>
 
