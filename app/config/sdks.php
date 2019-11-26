@@ -8,16 +8,16 @@ return [
         'link' => 'https://github.com/appwrite/sdk-for-js',
     ],
     [
-        'label' => 'PHP',
-        'versions' => ['v1.0.0'],
-        'logo' => 'php.svg',
-        'link' => 'https://github.com/appwrite/sdk-for-php',
-    ],
-    [
         'label' => 'Node.js',
         'versions' => ['v1.0.0'],
         'logo' => 'nodejs.svg',
         'link' => 'https://github.com/appwrite/sdk-for-node',
+    ],
+    [
+        'label' => 'PHP',
+        'versions' => ['v1.0.0'],
+        'logo' => 'php.svg',
+        'link' => 'https://github.com/appwrite/sdk-for-php',
     ],
     [
         'label' => 'Ruby',
