@@ -14,20 +14,20 @@ notifications:
 services:
 - docker
 
-cache:
-  directories:
-  - docker_images
+# cache:
+#   directories:
+#   - docker_images
 
 before_install:
 - docker load -i docker_images/images.tar || true
 - sudo service mysql stop
 
-before_cache:
-- docker save -o docker_images/images.tar $(docker images -a -q)
+# before_cache:
+# - docker save -o docker_images/images.tar $(docker images -a -q)
 
 install:
 - docker-compose -f tests/resources/docker-compose.yml up -d
-- sleep 180
+- sleep 90
 
 script:
 - docker ps

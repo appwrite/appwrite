@@ -3,6 +3,9 @@ from ..service import Service
 
 class Teams(Service):
 
+    def __init__(self, client):
+        super(Teams, self).__init__(client)
+
     def list_teams(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Teams"""
 

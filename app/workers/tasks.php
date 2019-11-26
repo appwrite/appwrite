@@ -23,7 +23,7 @@ class TasksV1
 
     public function perform()
     {
-        global $consoleDB, $register, $version;
+        global $consoleDB, $version;
 
         /*
          * 1. Get Original Task
@@ -44,6 +44,9 @@ class TasksV1
         $delay = time() - $next;
         $errors = [];
         $timeout = 60 * 5; // 5 minutes
+        $errorLimit = 5;
+        $logLimit = 5;
+        $alert = '';
 
         if (empty($taskId)) {
             throw new Exception('Missing task $id');
@@ -78,7 +81,7 @@ class TasksV1
             ->setAttribute('previous', time())
         ;
 
-        ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
+        ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());  // Async task rescheduale
 
         $startTime = microtime(true);
 
@@ -147,15 +150,15 @@ class TasksV1
         } else {
             $task
                 ->setAttribute('failures', $task->getAttribute('failures', 0) + 1)
-                ->setAttribute('status', ($task->getAttribute('failures') >= 5) ? 'pause' : 'play')
+                ->setAttribute('status', ($task->getAttribute('failures') >= $errorLimit) ? 'pause' : 'play')
             ;
 
-            $alert = 'Task "'.$task->getAttribute('name').'" failed to execute with the following errors: '.implode($errors, "\n");
+            $alert = 'Task "'.$task->getAttribute('name').'" failed to execute with the following errors: '.implode("\n", $errors);
         }
 
         $log = json_decode($task->getAttribute('log', '{}'), true);
 
-        if (count($log) >= 5) {
+        if (count($log) >= $logLimit) {
             array_pop($log);
         }
 
@@ -181,6 +184,10 @@ class TasksV1
         }
 
         Authorization::enable();
+
+        // ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());  // Sync task rescheduale
+
+        // Send alert if needed (use SMTP as default for now)
 
         return true;
     }

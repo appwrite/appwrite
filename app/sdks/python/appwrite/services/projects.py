@@ -3,6 +3,9 @@ from ..service import Service
 
 class Projects(Service):
 
+    def __init__(self, client):
+        super(Projects, self).__init__(client)
+
     def list_projects(self):
         """List Projects"""
 

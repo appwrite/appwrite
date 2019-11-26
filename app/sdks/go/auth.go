@@ -36,7 +36,10 @@ func (srv *Auth) Login(Email string, Password string, Success string, Failure st
 	return srv.client.Call("POST", path, nil, params)
 }
 
-// Oauth
+// Oauth allow the user to login to his account using the OAuth provider of
+// his choice. Each OAuth provider should be enabled from the Appwrite console
+// first. Use the success and failure arguments to provide a redirect URL's
+// back to your app when login is completed.
 func (srv *Auth) Oauth(Provider string, Success string, Failure string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{provider}", Provider)
 	path := r.Replace("/auth/login/oauth/{provider}")

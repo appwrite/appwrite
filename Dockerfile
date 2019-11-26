@@ -34,7 +34,6 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
 FROM ubuntu:18.04
-
 LABEL maintainer="team@appwrite.io"
 
 ENV TZ=Asia/Tel_Aviv \

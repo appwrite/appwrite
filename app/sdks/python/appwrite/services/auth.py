@@ -3,6 +3,9 @@ from ..service import Service
 
 class Auth(Service):
 
+    def __init__(self, client):
+        super(Auth, self).__init__(client)
+
     def login(self, email, password, success='', failure=''):
         """Login"""
 

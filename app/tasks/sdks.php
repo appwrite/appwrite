@@ -72,7 +72,7 @@ $cli
                 'platform' => 'server',
             ],
             'python' => [
-                'version' => '1.0.3',
+                'version' => '0.0.1',
                 'result' => __DIR__.'/../sdks/python/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-python.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-python.git',
@@ -117,10 +117,15 @@ $cli
             ],
         ];
 
+        
         foreach ($clients as $name => $client) {
+
             Console::info('Fetching API Spec for '.$name.' ('.$client['platform'].')');
+            
             $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
             $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
+            
+            $license = 'BSD-3-Clause';
 
             switch ($name) {
                 case 'php':
@@ -149,7 +154,8 @@ $cli
                     $language
                         ->setPipPackage('appwrite')
                     ;
-                    break;
+                    $license = 'BSD License'; // license edited due to classifiers in pypi
+                break;
                 case 'ruby':
                     $language = new Ruby();
                     $language
@@ -171,10 +177,14 @@ $cli
                     break;
             }
 
+            $target = __DIR__.'/../sdks/git/'.$name;
+
+            Console::success("Generating {$name} SDK");
+
             $sdk = new SDK($language, new Swagger2($spec));
 
             $sdk
-                ->setLicense('BSD-3-Clause')
+                ->setLicense($license)
                 ->setLicenseContent('Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
 
@@ -199,19 +209,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 ->setShareTags('JS,javascript,reactjs,angular,ios,android')
                 ->setShareVia('appwrite_io')
                 ->setWarning($client['warning'])
-                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '')
-            ;
-
-            $target = __DIR__.'/../sdks/git/'.$name;
-
-            Console::success("Generating {$name} SDK");
+                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '');
 
             try {
                 $sdk->generate($client['result']);
             } catch (Exception $exception) {
-                echo $exception->getMessage()."\n";
+                Console::error($exception->getMessage());
             } catch (Throwable $exception) {
-                echo $exception->getMessage()."\n";
+                Console::error($exception->getMessage());
             }
 
             exec('rm -rf '.$target.' && \

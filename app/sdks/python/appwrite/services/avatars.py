@@ -3,6 +3,9 @@ from ..service import Service
 
 class Avatars(Service):
 
+    def __init__(self, client):
+        super(Avatars, self).__init__(client)
+
     def get_browser(self, code, width=100, height=100, quality=100):
         """Get Browser Icon"""
 
