@@ -43,7 +43,7 @@ Table of Contents:
 
 Appwrite backend server is designed to run in a container environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool like Kubernetes, Docker Swarm or Rancher.
 
-The easiest way to start running your Appwrite server is by running our docker-compose file:
+The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
 ```bash
 mkdir appwrite-ce && \
