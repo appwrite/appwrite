@@ -2,6 +2,7 @@ version: '3'
 
 services:
   appwrite:
+    container_name: appwrite
     build:
       context: ../../
       args:

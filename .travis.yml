@@ -20,7 +20,6 @@ services:
 
 before_install:
 - docker load -i docker_images/images.tar || true
-- sudo service mysql stop
 
 # before_cache:
 # - docker save -o docker_images/images.tar $(docker images -a -q)
@@ -31,5 +30,4 @@ install:
 
 script:
 - docker ps
-- docker-compose exec -T appwrite 'ls -l'
-- docker-compose exec -T appwrite 'vendor/bin/phpunit --configuration phpunit.xml'
+- docker exec appwrite /bin/bash -c '/usr/share/nginx/html/vendor/bin/phpunit --configuration /usr/share/nginx/html/phpunit.xml'
