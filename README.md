@@ -15,6 +15,7 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 
+
 ---
 
 Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy-to-use REST API.
@@ -37,7 +38,7 @@ Table of Contents:
 - [Security](#security)
 - [Follow Us](#follow-us)
 - [Contributing](#contributing)
-- [Credits](#credits)
+- [License](#license)
       
 ## Installation
 
