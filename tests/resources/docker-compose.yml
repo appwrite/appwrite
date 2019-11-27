@@ -39,7 +39,7 @@ services:
     - _APP_STATSD_PORT=8125
 
   mariadb:
-    image: appwrite/mariadb:1.0.0
+    image: appwrite/mariadb:1.0.1
     restart: unless-stopped
     environment:
     - MYSQL_ROOT_PASSWORD=rootsecretpassword
