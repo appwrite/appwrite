@@ -27,6 +27,7 @@
 * Fixed broken modal when a user password is too short
 * Fixed issue denying the creation of seesion cookies on localhosts with port other than 80 or 443
 * Fixed bug that prevented actual file size calculation
+* Fixed MariaDB SQL abuse table time field-type
 
 ## Breaking Changes
 
