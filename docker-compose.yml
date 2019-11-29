@@ -2,11 +2,17 @@ version: '3'
 
 services:
   appwrite:
-    build: .
+    container_name: appwrite
+    build:
+      context: .
+      args:
+        - TESTING=true
     restart: unless-stopped
     volumes:
     - appwrite-uploads:/storage/uploads:rw
     - appwrite-cache:/storage/cache:rw
+    - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
+    - ./tests:/usr/share/nginx/html/tests
     - ./app:/usr/share/nginx/html/app
     - ./docs:/usr/share/nginx/html/docs
     - ./public:/usr/share/nginx/html/public
