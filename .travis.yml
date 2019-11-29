@@ -22,7 +22,7 @@ before_install:
 - docker load -i docker_images/images.tar || true
 
 before_cache:
-- docker save -o docker_images/images.tar $(docker images -a -q)
+- docker save -o docker_images/images.tar appwrite_appwrite
 
 install:
 - docker-compose up -d
