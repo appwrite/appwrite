@@ -113,8 +113,6 @@ COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
 COPY --from=builder /usr/local/src/vendor /usr/share/nginx/html/vendor
 
-# Set Version
-
 RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/cache && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
