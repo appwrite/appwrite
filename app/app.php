@@ -264,7 +264,7 @@ $utopia->options(function () use ($request, $response, $domain, $project) {
         ->send();
 });
 
-$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project, $env, $version, $user) {
+$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project, $env, $version) {
     switch ($error->getCode()) {
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly

@@ -2,7 +2,7 @@
 
 include_once 'shared/web.php';
 
-global $utopia, $response, $request, $layout, $version, $providers, $sdks, $version;
+global $utopia, $response, $request, $layout, $version, $providers, $sdks;
 
 use Utopia\View;
 
@@ -21,7 +21,7 @@ $layout
     ->setParam('footer', [$footer])
 ;
 
-$utopia->shutdown(function () use ($utopia, $response, $request, $layout, $version, $env) {
+$utopia->shutdown(function () use ($response, $layout) {
     $response->send($layout->render());
 });
 
