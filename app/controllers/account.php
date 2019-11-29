@@ -341,11 +341,6 @@ $utopia->delete('/v1/account')
              * Data to delete
              * * Tokens
              * * Memberships
-             * * Vaults
-             * * Subscriptions
-             *
-             * Not to Delete!!
-             * * Invoices (belong to project/business not user(!) and also needed for IRS records!)
              */
 
             $audit
