@@ -13,10 +13,6 @@ then
     printf "${RED}GEO country DB has not been updated for more than 6 months. Go to https://dev.maxmind.com/geoip/geoip2/geolite2/ for more info${NC}\n"
 fi
 
-echo "Setting Version #"
-
-echo -e "<?php\n\nconst VERSION = '$1';\n\nreturn VERSION;" > app/config/version.php
-
 echo 'Starting build...'
 
 docker build -t appwrite/appwrite:"$1" .
