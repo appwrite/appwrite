@@ -6,6 +6,8 @@ use Utopia\App;
 use Utopia\Locale\Locale;
 use GeoIp2\Database\Reader;
 
+include_once 'shared/api.php';
+
 $utopia->get('/v1/locale')
     ->desc('Get User Locale')
     ->label('scope', 'locale.read')

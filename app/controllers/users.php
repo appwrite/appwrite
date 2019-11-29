@@ -16,6 +16,8 @@ use Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
+include_once 'shared/api.php';
+
 $utopia->get('/v1/users')
     ->desc('List Users')
     ->label('scope', 'users.read')

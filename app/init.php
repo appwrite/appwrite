@@ -212,10 +212,6 @@ Authorization::enable();
 
 $console = $consoleDB->getDocument('console');
 
-if (is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
-    $project = $console;
-}
-
 $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 
 Auth::setCookieName('a_session_'.$project->getUid());

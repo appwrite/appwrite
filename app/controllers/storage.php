@@ -22,6 +22,8 @@ use Storage\Compression\Algorithms\GZIP;
 use Resize\Resize;
 use OpenSSL\OpenSSL;
 
+include_once 'shared/api.php';
+
 Storage::addDevice('local', new Local('app-'.$project->getUid()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554

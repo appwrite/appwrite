@@ -31,6 +31,7 @@ class ConsoleProjectsTest extends BaseConsole
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -46,6 +47,7 @@ class ConsoleProjectsTest extends BaseConsole
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Team',
         ]);
@@ -58,6 +60,7 @@ class ConsoleProjectsTest extends BaseConsole
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project',
             'teamId' => $team['body']['$uid'],
@@ -89,6 +92,7 @@ class ConsoleProjectsTest extends BaseConsole
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], array_merge($data['project'], [
             'name' => 'New Project Name',
             'description' => 'New Demo Project Description',

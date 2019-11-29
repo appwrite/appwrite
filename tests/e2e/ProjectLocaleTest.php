@@ -19,7 +19,6 @@ class ProjectLocaleTest extends BaseProjects
         $locale = $this->client->call(Client::METHOD_GET, '/locale', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectUid'],
-            //'x-appwrite-key' => $data['projectAPIKeySecret'],
         ]);
 
         $this->assertArrayHasKey('ip', $locale['body']);
@@ -52,6 +51,7 @@ class ProjectLocaleTest extends BaseProjects
 
         $countries = $this->client->call(Client::METHOD_GET, '/locale/countries', [
             'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-locale' => 'es',
         ]);
 
@@ -82,6 +82,7 @@ class ProjectLocaleTest extends BaseProjects
 
         $countries = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', [
             'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-locale' => 'es',
         ]);
 
@@ -111,6 +112,7 @@ class ProjectLocaleTest extends BaseProjects
         // Test locale code change to ES
         $continents = $this->client->call(Client::METHOD_GET, '/locale/continents', [
             'content-type' => 'application/json',
+            'x-appwrite-project' => $data['projectUid'],
             'x-appwrite-locale' => 'es',
         ]);
 

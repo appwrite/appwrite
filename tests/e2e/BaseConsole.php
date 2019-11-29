@@ -37,6 +37,7 @@ class BaseConsole extends TestCase
         $response = $this->client->call(Client::METHOD_POST, '/auth/register', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
         ], [
             'email' => $this->demoEmail,
             'password' => $this->demoPassword,
@@ -45,7 +46,7 @@ class BaseConsole extends TestCase
             'failure' => 'http://localhost/failure',
             'name' => 'Demo User',
         ]);
-
+        
         return $response;
     }
 
@@ -61,6 +62,7 @@ class BaseConsole extends TestCase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $session,
+            'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Team',
         ]);
@@ -73,6 +75,7 @@ class BaseConsole extends TestCase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $session,
+            'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project',
             'teamId' => $team['body']['$uid'],
@@ -94,6 +97,7 @@ class BaseConsole extends TestCase
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $session,
+            'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Key',
             'scopes' => $scopes,

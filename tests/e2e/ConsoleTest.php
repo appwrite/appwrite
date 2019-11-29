@@ -27,6 +27,7 @@ class ConsoleTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_POST, '/auth/login', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
         ], [
             'email' => $data['email'],
             'password' => $data['password'],
@@ -55,6 +56,7 @@ class ConsoleTest extends BaseConsole
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], []);
 
         $this->assertEquals('Demo User', $response['body']['name']);
@@ -78,6 +80,7 @@ class ConsoleTest extends BaseConsole
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -89,6 +92,7 @@ class ConsoleTest extends BaseConsole
         $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
         ], []);
 
         $this->assertEquals('401', $response['body']['code']);

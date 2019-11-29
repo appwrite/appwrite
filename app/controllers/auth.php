@@ -18,6 +18,8 @@ use Database\Validator\UID;
 use Template\Template;
 use OpenSSL\OpenSSL;
 
+include_once 'shared/api.php';
+
 $utopia->post('/v1/auth/register')
     ->desc('Register')
     ->label('webhook', 'auth.register')

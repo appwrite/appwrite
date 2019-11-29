@@ -13,6 +13,8 @@ use Database\Validator\Authorization;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
+include_once 'shared/api.php';
+
 $utopia->get('/v1/account')
     ->desc('Get Account')
     ->label('scope', 'account')
