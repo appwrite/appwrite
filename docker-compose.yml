@@ -11,7 +11,7 @@ services:
     - ./docs:/usr/share/nginx/html/docs
     - ./public:/usr/share/nginx/html/public
     - ./src:/usr/share/nginx/html/src
-    - ./docker/nginx.conf:/etc/nginx/nginx.conf:rw
+    - ./docker/nginx.conf:/etc/nginx/nginx.conf
     ports:
     - "80:80"
     - "443:443"
