@@ -36,7 +36,7 @@ $response = new Response();
  */
 $env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
 $domain = $request->getServer('HTTP_HOST', '');
-$version = include __DIR__.'/../app/config/version.php';
+$version = $request->getServer('_APP_VERSION', 'UNKNOWN');
 $providers = include __DIR__.'/../app/config/providers.php'; // OAuth providers list
 $locales = include __DIR__.'/../app/config/locales.php'; // OAuth providers list
 $collections = include __DIR__.'/../app/config/collections.php'; // OAuth providers list
