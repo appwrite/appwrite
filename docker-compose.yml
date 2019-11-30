@@ -67,14 +67,18 @@ services:
     - "25:25"
 
   clamav:
-    image: appwrite/clamav:1.0.5
+    image: appwrite/clamav:1.0.7
     restart: unless-stopped
     volumes:
     - appwrite-uploads:/storage/uploads
+    ports:
+    - "3310:3310"
 
   redis:
     image: redis:5.0
     restart: unless-stopped
+    ports:
+    - "6379:6379"
 
   influxdb:
     image: influxdb:1.6
