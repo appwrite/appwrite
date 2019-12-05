@@ -14,12 +14,6 @@ return [
         'link' => 'https://github.com/appwrite/sdk-for-node',
     ],
     [
-        'label' => 'PHP',
-        'versions' => ['v1.0.0'],
-        'logo' => 'php.svg',
-        'link' => 'https://github.com/appwrite/sdk-for-php',
-    ],
-    [
         'label' => 'Ruby',
         'versions' => ['v1.0.0'],
         'logo' => 'ruby.svg',
@@ -37,6 +31,12 @@ return [
         'logo' => 'go.svg',
         'link' => 'https://...',
         'tag' => 'Soon',
+    ],
+    [
+        'label' => 'PHP',
+        'versions' => ['v1.0.0'],
+        'logo' => 'php.svg',
+        'link' => 'https://github.com/appwrite/sdk-for-php',
     ],
     [
         'label' => 'Scala',
