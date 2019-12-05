@@ -21,6 +21,7 @@
 * Added project UID validation check when making an API call. This should developers to better understand our authentication errors.
 * Updated ClamAV docker image to version 1.0.7
 * Updated MariaDB docker image to version 1.0.1
+* Core Docker image size reduced to 127MB
 
 ## Security
 
