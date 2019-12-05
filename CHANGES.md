@@ -37,6 +37,8 @@
 * Fixed issue denying the creation of seesion cookies on localhosts with port other than 80 or 443
 * Fixed bug that prevented actual file size calculation
 * Fixed MariaDB SQL abuse table time field-type
+* Fixed error message not showing up in console failed signup
+* Fixed cookie session not being set properly when accessing the console from IP hostname
 
 ## Breaking Changes
 
