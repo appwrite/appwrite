@@ -15,7 +15,7 @@ fi
 
 echo 'Starting build...'
 
-docker build -t appwrite/appwrite:"$1" .
+docker build --build-arg VERSION="$1" --tag appwrite/appwrite:"$1" .
 
 echo 'Pushing build to registry...'
 
