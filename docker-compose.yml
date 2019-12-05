@@ -8,6 +8,8 @@ services:
       args:
         - TESTING=true
     restart: unless-stopped
+    networks:
+    - appwrite
     volumes:
     - appwrite-uploads:/storage/uploads:rw
     - appwrite-cache:/storage/cache:rw
@@ -47,50 +49,56 @@ services:
   mariadb:
     image: appwrite/mariadb:1.0.1 # fix issues when upgrading using: mysql_upgrade -u root -p
     restart: unless-stopped
+    networks:
+    - appwrite
+    volumes:
+    - appwrite-db:/var/lib/mysql:rw
     environment:
     - MYSQL_ROOT_PASSWORD=rootsecretpassword
     - MYSQL_DATABASE=appwrite
     - MYSQL_USER=user
     - MYSQL_PASSWORD=password
-    volumes:
-    - appwrite-db:/var/lib/mysql:rw
-    ports:
-    - 3306:3306/tcp
     command: 'mysqld --innodb-flush-method=fsync'
 
   smtp:
     image: appwrite/smtp:1.0.0
+    restart: unless-stopped
+    networks:
+    - appwrite
     environment:
     - MAILNAME=appwrite
     - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
-    ports:
-    - "25:25"
 
   clamav:
     image: appwrite/clamav:1.0.7
     restart: unless-stopped
+    networks:
+    - appwrite
     volumes:
     - appwrite-uploads:/storage/uploads
-    ports:
-    - "3310:3310"
 
   redis:
     image: redis:5.0
     restart: unless-stopped
-    ports:
-    - "6379:6379"
+    networks:
+    - appwrite
 
   influxdb:
     image: influxdb:1.6
+    restart: unless-stopped
+    networks:
+    - appwrite
     volumes:
     - appwrite-influxdb:/var/lib/influxdb:rw
-    ports:
-    - "8086:8086"
 
   telegraf:
     image: appwrite/telegraf:1.0.0
-    ports:
-    - "8125:8125/udp"
+    restart: unless-stopped
+    networks:
+    - appwrite
+
+networks:
+  appwrite:
 
 volumes:
   appwrite-db:
