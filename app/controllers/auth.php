@@ -66,7 +66,7 @@ $utopia->post('/v1/auth/register')
 
             if (!empty($profile)) {
                 if ($failure) {
-                    $response->redirect($failure.'?message=User already registered');
+                    $response->redirect($failure); // .'?message=User already registered'
 
                     return;
                 }
