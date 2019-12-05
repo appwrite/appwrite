@@ -1,11 +1,16 @@
+# Version 0.5.0 (PRE-RELEASE) - PLANNED
+
+## Features
+
+* New database rule validation options
+* Update docs example with auth info
+
 # Version 0.4.0 (PRE-RELEASE) - PLANNED
 
 ## Features
 
 * Added 5 new locales for locale service and email templates (is, ml, th, fo, ph, pn)
 * 2 stage Docker build
-* New database rule validation options
-* Update docs example with auth info
 * Limit HTTP origin check only to browser integrations
 * Allow electron apps to not pass origin header
 * Updated new brexit date to 31-01-2020
@@ -14,6 +19,8 @@
 * Using native Docker volumes for setup for better cross-platform support and easier management of read/write permissions
 * Added support for custom SSL certificates without needing to set a proxy
 * Added project UID validation check when making an API call. This should developers to better understand our authentication errors.
+* Updated ClamAV docker image to version 1.0.7
+* Updated MariaDB docker image to version 1.0.1
 
 ## Security
 
