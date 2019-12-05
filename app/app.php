@@ -499,27 +499,27 @@ $utopia->get('/v1/open-api-2.json')
                 ],
                 'paths' => [],
                 'definitions' => [
-                    'Pet' => [
-                        'required' => ['id', 'name'],
-                        'properties' => [
-                            'id' => [
-                                'type' => 'integer',
-                                'format' => 'int64',
-                            ],
-                            'name' => [
-                                'type' => 'string',
-                            ],
-                            'tag' => [
-                                'type' => 'string',
-                            ],
-                        ],
-                    ],
-                    'Pets' => array(
-                            'type' => 'array',
-                            'items' => array(
-                                    '$ref' => '#/definitions/Pet',
-                                ),
-                        ),
+                    // 'Pet' => [
+                    //     'required' => ['id', 'name'],
+                    //     'properties' => [
+                    //         'id' => [
+                    //             'type' => 'integer',
+                    //             'format' => 'int64',
+                    //         ],
+                    //         'name' => [
+                    //             'type' => 'string',
+                    //         ],
+                    //         'tag' => [
+                    //             'type' => 'string',
+                    //         ],
+                    //     ],
+                    // ],
+                    // 'Pets' => array(
+                    //         'type' => 'array',
+                    //         'items' => array(
+                    //                 '$ref' => '#/definitions/Pet',
+                    //             ),
+                    //     ),
                     'Error' => array(
                             'required' => array(
                                     0 => 'code',
