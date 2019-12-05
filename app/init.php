@@ -51,7 +51,8 @@ Resque::setBackend($redisHost.':'.$redisPort);
 define('COOKIE_DOMAIN', 
     (
         $request->getServer('HTTP_HOST', null) === 'localhost' ||
-        $request->getServer('HTTP_HOST', null) === 'localhost:'.$port
+        $request->getServer('HTTP_HOST', null) === 'localhost:'.$port ||
+        (filter_var($request->getServer('HTTP_HOST', null), FILTER_VALIDATE_IP) !== false)
     )
         ? null
         : '.'.parse_url($scheme.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
