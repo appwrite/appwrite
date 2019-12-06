@@ -26,17 +26,17 @@ return [
         'link' => 'https://github.com/appwrite/sdk-for-python',
     ],
     [
+        'label' => 'PHP',
+        'versions' => ['v1.0.0'],
+        'logo' => 'php.svg',
+        'link' => 'https://github.com/appwrite/sdk-for-php',
+    ],
+    [
         'label' => 'Go',
         'versions' => [],
         'logo' => 'go.svg',
         'link' => 'https://...',
         'tag' => 'Soon',
-    ],
-    [
-        'label' => 'PHP',
-        'versions' => ['v1.0.0'],
-        'logo' => 'php.svg',
-        'link' => 'https://github.com/appwrite/sdk-for-php',
     ],
     [
         'label' => 'Scala',
