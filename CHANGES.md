@@ -4,21 +4,21 @@
 
 * New database rule validation options
 * Update docs example with auth info
+* Allow non-web platform skip origin header
 
-# Version 0.4.0 (PRE-RELEASE) - PLANNED
+# Version 0.4.0 (PRE-RELEASE)
 
 ## Features
 
 * Added 5 new locales for locale service and email templates (is, ml, th, fo, ph, pn)
 * 2 stage Docker build
 * Limit HTTP origin check only to browser integrations
-* Allow electron apps to not pass origin header
-* Updated new brexit date to 31-01-2020
-* Added a version number to signin and signup pages for easier debugging of issues
-* Perperation for adding SameSite cookie option support
+* Updated new Brexit date to 31-01-2020
+* Added a version number to sign in and signup pages for easier debugging of issues
+* Preparation for adding SameSite cookie option support
 * Using native Docker volumes for setup for better cross-platform support and easier management of read/write permissions
 * Added support for custom SSL certificates without needing to set a proxy
-* Added project UID validation check when making an API call. This should developers to better understand our authentication errors.
+* Added project UID validation check when making an API call. This should help developers to understand our authentication errors better.
 * Updated ClamAV docker image to version 1.0.7
 * Updated MariaDB docker image to version 1.0.1
 * Core Docker image size reduced to 127MB
@@ -34,11 +34,11 @@
 * New loading message when creating a new project
 * Fixed broken redirect URL when creating a new project
 * Fixed broken modal when a user password is too short
-* Fixed issue denying the creation of seesion cookies on localhosts with port other than 80 or 443
+* Fixed issue denying the creation of session cookies on localhosts with port other than 80 or 443
 * Fixed bug that prevented actual file size calculation
 * Fixed MariaDB SQL abuse table time field-type
 * Fixed error message not showing up in console failed signup
-* Fixed cookie session not being set properly when accessing the console from IP hostname
+* Fixed cookie session not being appropriately set when accessing the console from IP hostname
 
 ## Breaking Changes
 
@@ -53,7 +53,7 @@
 * New users service routes to allow updates pref and name update
 * New OAuth adapters (Amazon, Dropbox, Microsoft, Slack, VK)
 * Added support for ES6 require statements in JS SDK
-* New Locale API route for fetching list of continents
+* New Locale API route for fetching a list of continents
 
 ## Bug Fixes
 * Fix for typos in PT-BR translations
@@ -73,7 +73,7 @@
 * Added option to limit access to the Appwrite console
 * Added option to disable abuse check and rate limits
 * Added input field with the server API endpoint for easy access
-* Added new OAuth providers for Google, Bitbucket and GitLab
+* Added new OAuth providers for Google, Bitbucket, and GitLab
 * Added 15 new locales for locale service and email templates (cat, de, es, fi, fr, gr, hi, id, it, nl, pt-br, pt-pt, ro, tr, ua)
 * Improved test coverage for the project and synced DEV & CI environments settings
 
