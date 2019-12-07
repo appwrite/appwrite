@@ -25,7 +25,7 @@ class Auth(Service):
 
         params = {}
         path = '/auth/login/oauth/{provider}'
-        path.replace('{provider}', provider)                
+        path = path.replace('{provider}', provider)                
         params['success'] = success
         params['failure'] = failure
 
@@ -48,7 +48,7 @@ class Auth(Service):
 
         params = {}
         path = '/auth/logout/{id}'
-        path.replace('{id}', id)                
+        path = path.replace('{id}', id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',

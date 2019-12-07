@@ -16,14 +16,13 @@ module Appwrite
             }, params);
         end
 
-        def create_file(files:, read:, write:, folder_id: '')
+        def create_file(files:, read:, write:)
             path = '/storage/files'
 
             params = {
                 'files': files, 
                 'read': read, 
-                'write': write, 
-                'folderId': folder_id
+                'write': write
             }
 
             return @client.call('post', path, {
@@ -43,14 +42,13 @@ module Appwrite
             }, params);
         end
 
-        def update_file(file_id:, read:, write:, folder_id: '')
+        def update_file(file_id:, read:, write:)
             path = '/storage/files/{fileId}'
                 .gsub('{file_id}', file_id)
 
             params = {
                 'read': read, 
-                'write': write, 
-                'folderId': folder_id
+                'write': write
             }
 
             return @client.call('put', path, {

@@ -8,7 +8,7 @@ class Storage extends Service {
 
      /// Get a list of all the user files. You can use the query params to filter
      /// your results. On admin mode, this endpoint will return a list of all of the
-     /// project files. [Learn more about different API modes](/docs/modes).
+     /// project files. [Learn more about different API modes](/docs/admin).
     Future<Response> listFiles({search = null, limit = 25, offset = null, orderType = 'ASC'}) async {
        String path = '/storage/files';
 
@@ -24,14 +24,13 @@ class Storage extends Service {
      /// Create a new file. The user who creates the file will automatically be
      /// assigned to read and write access unless he has passed custom values for
      /// read and write arguments.
-    Future<Response> createFile({files, read, write, folderId = null}) async {
+    Future<Response> createFile({files, read, write}) async {
        String path = '/storage/files';
 
        Map<String, dynamic> params = {
          'files': files,
          'read': read,
          'write': write,
-         'folderId': folderId,
        };
 
        return await this.client.call('post', path: path, params: params);
@@ -48,13 +47,12 @@ class Storage extends Service {
     }
      /// Update file by its unique ID. Only users with write permissions have access
      /// to update this resource.
-    Future<Response> updateFile({fileId, read, write, folderId = null}) async {
+    Future<Response> updateFile({fileId, read, write}) async {
        String path = '/storage/files/{fileId}'.replaceAll(RegExp('{fileId}'), fileId);
 
        Map<String, dynamic> params = {
          'read': read,
          'write': write,
-         'folderId': folderId,
        };
 
        return await this.client.call('put', path: path, params: params);

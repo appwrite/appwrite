@@ -39,7 +39,7 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}'
-        path.replace('{collectionId}', collection_id)                
+        path = path.replace('{collectionId}', collection_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -50,7 +50,7 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}'
-        path.replace('{collectionId}', collection_id)                
+        path = path.replace('{collectionId}', collection_id)                
         params['name'] = name
         params['read'] = read
         params['write'] = write
@@ -65,7 +65,7 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}'
-        path.replace('{collectionId}', collection_id)                
+        path = path.replace('{collectionId}', collection_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',
@@ -76,7 +76,7 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}/documents'
-        path.replace('{collectionId}', collection_id)                
+        path = path.replace('{collectionId}', collection_id)                
         params['filters'] = filters
         params['offset'] = offset
         params['limit'] = limit
@@ -96,7 +96,7 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}/documents'
-        path.replace('{collectionId}', collection_id)                
+        path = path.replace('{collectionId}', collection_id)                
         params['data'] = data
         params['read'] = read
         params['write'] = write
@@ -113,8 +113,8 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}/documents/{documentId}'
-        path.replace('{collectionId}', collection_id)                
-        path.replace('{documentId}', document_id)                
+        path = path.replace('{collectionId}', collection_id)                
+        path = path.replace('{documentId}', document_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -125,8 +125,8 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}/documents/{documentId}'
-        path.replace('{collectionId}', collection_id)                
-        path.replace('{documentId}', document_id)                
+        path = path.replace('{collectionId}', collection_id)                
+        path = path.replace('{documentId}', document_id)                
         params['data'] = data
         params['read'] = read
         params['write'] = write
@@ -140,8 +140,8 @@ class Database(Service):
 
         params = {}
         path = '/database/{collectionId}/documents/{documentId}'
-        path.replace('{collectionId}', collection_id)                
-        path.replace('{documentId}', document_id)                
+        path = path.replace('{collectionId}', collection_id)                
+        path = path.replace('{documentId}', document_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',

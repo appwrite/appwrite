@@ -37,7 +37,7 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}'
-        path.replace('{teamId}', team_id)                
+        path = path.replace('{teamId}', team_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -48,7 +48,7 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}'
-        path.replace('{teamId}', team_id)                
+        path = path.replace('{teamId}', team_id)                
         params['name'] = name
 
         return self.client.call('put', path, {
@@ -60,7 +60,7 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}'
-        path.replace('{teamId}', team_id)                
+        path = path.replace('{teamId}', team_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',
@@ -71,7 +71,7 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}/members'
-        path.replace('{teamId}', team_id)                
+        path = path.replace('{teamId}', team_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -82,7 +82,7 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}/memberships'
-        path.replace('{teamId}', team_id)                
+        path = path.replace('{teamId}', team_id)                
         params['email'] = email
         params['name'] = name
         params['roles'] = roles
@@ -97,8 +97,8 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}/memberships/{inviteId}'
-        path.replace('{teamId}', team_id)                
-        path.replace('{inviteId}', invite_id)                
+        path = path.replace('{teamId}', team_id)                
+        path = path.replace('{inviteId}', invite_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',
@@ -109,8 +109,8 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}/memberships/{inviteId}/resend'
-        path.replace('{teamId}', team_id)                
-        path.replace('{inviteId}', invite_id)                
+        path = path.replace('{teamId}', team_id)                
+        path = path.replace('{inviteId}', invite_id)                
         params['redirect'] = redirect
 
         return self.client.call('post', path, {
@@ -122,8 +122,8 @@ class Teams(Service):
 
         params = {}
         path = '/teams/{teamId}/memberships/{inviteId}/status'
-        path.replace('{teamId}', team_id)                
-        path.replace('{inviteId}', invite_id)                
+        path = path.replace('{teamId}', team_id)                
+        path = path.replace('{inviteId}', invite_id)                
         params['userId'] = user_id
         params['secret'] = secret
         params['success'] = success

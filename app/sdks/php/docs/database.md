@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/database
 ```
 
-** Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/modes). **
+** Get a list of all the user collections. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project collections. [Learn more about different API modes](/docs/admin). **
 
 ### Parameters
 
@@ -86,7 +86,7 @@ DELETE https://appwrite.io/v1/database/{collectionId}
 GET https://appwrite.io/v1/database/{collectionId}/documents
 ```
 
-** Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/modes). **
+** Get a list of all the user documents. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project documents. [Learn more about different API modes](/docs/admin). **
 
 ### Parameters
 

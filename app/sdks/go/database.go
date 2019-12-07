@@ -12,7 +12,7 @@ type Database struct {
 // ListCollections get a list of all the user collections. You can use the
 // query params to filter your results. On admin mode, this endpoint will
 // return a list of all of the project collections. [Learn more about
-// different API modes](/docs/modes).
+// different API modes](/docs/admin).
 func (srv *Database) ListCollections(Search string, Limit int, Offset int, OrderType string) (map[string]interface{}, error) {
 	path := "/database"
 
@@ -82,7 +82,7 @@ func (srv *Database) DeleteCollection(CollectionId string) (map[string]interface
 // ListDocuments get a list of all the user documents. You can use the query
 // params to filter your results. On admin mode, this endpoint will return a
 // list of all of the project documents. [Learn more about different API
-// modes](/docs/modes).
+// modes](/docs/admin).
 func (srv *Database) ListDocuments(CollectionId string, Filters []interface{}, Offset int, Limit int, OrderField string, OrderType string, OrderCast string, Search string, First int, Last int) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{collectionId}", CollectionId)
 	path := r.Replace("/database/{collectionId}/documents")

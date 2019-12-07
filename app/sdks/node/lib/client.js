@@ -7,7 +7,7 @@ class Client {
         this.endpoint = 'https://appwrite.io/v1';
         this.headers = {
             'content-type': '',
-            'x-sdk-version': 'appwrite:nodejs:1.0.30',
+            'x-sdk-version': 'appwrite:nodejs:1.0.31',
         };
         this.selfSigned = false;
     }

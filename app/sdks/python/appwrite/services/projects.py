@@ -42,7 +42,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -53,7 +53,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
         params['name'] = name
         params['description'] = description
         params['logo'] = logo
@@ -74,7 +74,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',
@@ -85,7 +85,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/keys'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -96,7 +96,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/keys'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
         params['name'] = name
         params['scopes'] = scopes
 
@@ -109,8 +109,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/keys/{keyId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{keyId}', key_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{keyId}', key_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -121,8 +121,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/keys/{keyId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{keyId}', key_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{keyId}', key_id)                
         params['name'] = name
         params['scopes'] = scopes
 
@@ -135,8 +135,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/keys/{keyId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{keyId}', key_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{keyId}', key_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',
@@ -147,7 +147,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/oauth'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
         params['provider'] = provider
         params['appId'] = app_id
         params['secret'] = secret
@@ -161,7 +161,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/platforms'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -172,7 +172,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/platforms'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
         params['type'] = type
         params['name'] = name
         params['key'] = key
@@ -188,8 +188,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/platforms/{platformId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{platformId}', platform_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{platformId}', platform_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -200,8 +200,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/platforms/{platformId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{platformId}', platform_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{platformId}', platform_id)                
         params['name'] = name
         params['key'] = key
         params['store'] = store
@@ -216,8 +216,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/platforms/{platformId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{platformId}', platform_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{platformId}', platform_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',
@@ -228,7 +228,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/tasks'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -239,7 +239,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/tasks'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
         params['name'] = name
         params['status'] = status
         params['schedule'] = schedule
@@ -259,8 +259,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/tasks/{taskId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{taskId}', task_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{taskId}', task_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -271,8 +271,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/tasks/{taskId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{taskId}', task_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{taskId}', task_id)                
         params['name'] = name
         params['status'] = status
         params['schedule'] = schedule
@@ -292,8 +292,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/tasks/{taskId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{taskId}', task_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{taskId}', task_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',
@@ -304,7 +304,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/usage'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -315,7 +315,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/webhooks'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -326,7 +326,7 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/webhooks'
-        path.replace('{projectId}', project_id)                
+        path = path.replace('{projectId}', project_id)                
         params['name'] = name
         params['events'] = events
         params['url'] = url
@@ -343,8 +343,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/webhooks/{webhookId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{webhookId}', webhook_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{webhookId}', webhook_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
@@ -355,8 +355,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/webhooks/{webhookId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{webhookId}', webhook_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{webhookId}', webhook_id)                
         params['name'] = name
         params['events'] = events
         params['url'] = url
@@ -373,8 +373,8 @@ class Projects(Service):
 
         params = {}
         path = '/projects/{projectId}/webhooks/{webhookId}'
-        path.replace('{projectId}', project_id)                
-        path.replace('{webhookId}', webhook_id)                
+        path = path.replace('{projectId}', project_id)                
+        path = path.replace('{webhookId}', webhook_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',

@@ -81,7 +81,7 @@ GET https://appwrite.io/v1/avatars/image
 | width | integer | Resize preview image width, Pass an integer between 0 to 4000 | 400 |
 | height | integer | Resize preview image height, Pass an integer between 0 to 4000 | 400 |
 
-## Text to QR Generator
+## Get QR Code
 
 ```http request
 GET https://appwrite.io/v1/avatars/qr

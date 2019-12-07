@@ -14,7 +14,7 @@ class Database extends Service
      * Get a list of all the user collections. You can use the query params to
      * filter your results. On admin mode, this endpoint will return a list of all
      * of the project collections. [Learn more about different API
-     * modes](/docs/modes).
+     * modes](/docs/admin).
      *
      * @param string  $search
      * @param int  $limit
@@ -141,7 +141,7 @@ class Database extends Service
      * Get a list of all the user documents. You can use the query params to
      * filter your results. On admin mode, this endpoint will return a list of all
      * of the project documents. [Learn more about different API
-     * modes](/docs/modes).
+     * modes](/docs/admin).
      *
      * @param string  $collectionId
      * @param array  $filters

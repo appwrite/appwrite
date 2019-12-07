@@ -12,7 +12,7 @@ type Teams struct {
 // ListTeams get a list of all the current user teams. You can use the query
 // params to filter your results. On admin mode, this endpoint will return a
 // list of all of the project teams. [Learn more about different API
-// modes](/docs/modes).
+// modes](/docs/admin).
 func (srv *Teams) ListTeams(Search string, Limit int, Offset int, OrderType string) (map[string]interface{}, error) {
 	path := "/teams"
 

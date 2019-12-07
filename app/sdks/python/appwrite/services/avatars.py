@@ -11,7 +11,7 @@ class Avatars(Service):
 
         params = {}
         path = '/avatars/browsers/{code}'
-        path.replace('{code}', code)                
+        path = path.replace('{code}', code)                
         params['width'] = width
         params['height'] = height
         params['quality'] = quality
@@ -25,7 +25,7 @@ class Avatars(Service):
 
         params = {}
         path = '/avatars/credit-cards/{code}'
-        path.replace('{code}', code)                
+        path = path.replace('{code}', code)                
         params['width'] = width
         params['height'] = height
         params['quality'] = quality
@@ -50,7 +50,7 @@ class Avatars(Service):
 
         params = {}
         path = '/avatars/flags/{code}'
-        path.replace('{code}', code)                
+        path = path.replace('{code}', code)                
         params['width'] = width
         params['height'] = height
         params['quality'] = quality
@@ -73,7 +73,7 @@ class Avatars(Service):
         }, params)
 
     def get_q_r(self, text, size=400, margin=1, download=0):
-        """Text to QR Generator"""
+        """Get QR Code"""
 
         params = {}
         path = '/avatars/qr'

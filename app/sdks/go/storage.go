@@ -11,7 +11,7 @@ type Storage struct {
 
 // ListFiles get a list of all the user files. You can use the query params to
 // filter your results. On admin mode, this endpoint will return a list of all
-// of the project files. [Learn more about different API modes](/docs/modes).
+// of the project files. [Learn more about different API modes](/docs/admin).
 func (srv *Storage) ListFiles(Search string, Limit int, Offset int, OrderType string) (map[string]interface{}, error) {
 	path := "/storage/files"
 
@@ -28,14 +28,13 @@ func (srv *Storage) ListFiles(Search string, Limit int, Offset int, OrderType st
 // CreateFile create a new file. The user who creates the file will
 // automatically be assigned to read and write access unless he has passed
 // custom values for read and write arguments.
-func (srv *Storage) CreateFile(Files string, Read []interface{}, Write []interface{}, FolderId string) (map[string]interface{}, error) {
+func (srv *Storage) CreateFile(Files string, Read []interface{}, Write []interface{}) (map[string]interface{}, error) {
 	path := "/storage/files"
 
 	params := map[string]interface{}{
 		"files": Files,
 		"read": Read,
 		"write": Write,
-		"folderId": FolderId,
 	}
 
 	return srv.client.Call("POST", path, nil, params)
@@ -55,14 +54,13 @@ func (srv *Storage) GetFile(FileId string) (map[string]interface{}, error) {
 
 // UpdateFile update file by its unique ID. Only users with write permissions
 // have access to update this resource.
-func (srv *Storage) UpdateFile(FileId string, Read []interface{}, Write []interface{}, FolderId string) (map[string]interface{}, error) {
+func (srv *Storage) UpdateFile(FileId string, Read []interface{}, Write []interface{}) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{fileId}", FileId)
 	path := r.Replace("/storage/files/{fileId}")
 
 	params := map[string]interface{}{
 		"read": Read,
 		"write": Write,
-		"folderId": FolderId,
 	}
 
 	return srv.client.Call("PUT", path, nil, params)

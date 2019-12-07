@@ -139,7 +139,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.27');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.28');
             addGlobalHeader('content-type', '');
 
             /**
@@ -321,7 +321,11 @@
             /**
              * Delete Account
              *
-             * Delete currently logged in user account.
+             * Delete a currently logged in user account. Behind the scene, the user
+             * record is not deleted but permanently blocked from any access. This is done
+             * to avoid deleted accounts being overtaken by new users with the same email
+             * address. Any user-related resources like documents or storage files should
+             * be deleted separately.
              *
              * @throws {Error}
              * @return {Promise}             
@@ -1142,7 +1146,7 @@
             },
 
             /**
-             * Text to QR Generator
+             * Get QR Code
              *
              * Converts a given plain text to a QR code image. You can use the query
              * parameters to change the size and style of the resulting image.
@@ -1194,7 +1198,7 @@
              * Get a list of all the user collections. You can use the query params to
              * filter your results. On admin mode, this endpoint will return a list of all
              * of the project collections. [Learn more about different API
-             * modes](/docs/modes).
+             * modes](/docs/admin).
              *
              * @param {string} search
              * @param {number} limit
@@ -1397,7 +1401,7 @@
              * Get a list of all the user documents. You can use the query params to
              * filter your results. On admin mode, this endpoint will return a list of all
              * of the project documents. [Learn more about different API
-             * modes](/docs/modes).
+             * modes](/docs/admin).
              *
              * @param {string} collectionId
              * @param {array} filters
@@ -2913,7 +2917,7 @@
              *
              * Get a list of all the user files. You can use the query params to filter
              * your results. On admin mode, this endpoint will return a list of all of the
-             * project files. [Learn more about different API modes](/docs/modes).
+             * project files. [Learn more about different API modes](/docs/admin).
              *
              * @param {string} search
              * @param {number} limit
@@ -2959,11 +2963,10 @@
              * @param {File} files
              * @param {array} read
              * @param {array} write
-             * @param {string} folderId
              * @throws {Error}
              * @return {Promise}             
              */
-            createFile: function(files, read, write, folderId = '') {
+            createFile: function(files, read, write) {
                 if(files === undefined) {
                     throw new Error('Missing required parameter: "files"');
                 }
@@ -2990,10 +2993,6 @@
 
                 if(write) {
                     payload['write'] = write;
-                }
-
-                if(folderId) {
-                    payload['folderId'] = folderId;
                 }
 
                 return http
@@ -3036,11 +3035,10 @@
              * @param {string} fileId
              * @param {array} read
              * @param {array} write
-             * @param {string} folderId
              * @throws {Error}
              * @return {Promise}             
              */
-            updateFile: function(fileId, read, write, folderId = '') {
+            updateFile: function(fileId, read, write) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -3063,10 +3061,6 @@
 
                 if(write) {
                     payload['write'] = write;
-                }
-
-                if(folderId) {
-                    payload['folderId'] = folderId;
                 }
 
                 return http
@@ -3216,7 +3210,7 @@
              *
              * Get a list of all the current user teams. You can use the query params to
              * filter your results. On admin mode, this endpoint will return a list of all
-             * of the project teams. [Learn more about different API modes](/docs/modes).
+             * of the project teams. [Learn more about different API modes](/docs/admin).
              *
              * @param {string} search
              * @param {number} limit
