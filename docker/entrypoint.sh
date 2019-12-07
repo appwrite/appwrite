@@ -28,8 +28,5 @@ for _curVar in $(env | grep _APP_ | awk -F = '{print $1}');do
     setEnvironmentVariable ${_curVar} ${!_curVar}
 done
 
-echo newrelic.license = \"$_APP_NEWRELIC_KEY\" > /etc/php/$PHP_VERSION/fpm/conf.d/newrelic.ini
-echo newrelic.license = \"$_APP_NEWRELIC_KEY\" > /etc/php/$PHP_VERSION/cli/conf.d/newrelic.ini
-
 # Start supervisord and services
 /usr/bin/supervisord -n -c /etc/supervisord.conf
