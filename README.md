@@ -47,7 +47,7 @@ The easiest way to start running your Appwrite server is by running our docker-c
 ```bash
 mkdir appwrite-ce && \
 cd appwrite-ce && \
-curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?version=0.3.0&port=80 && \
+curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?version=0.4.0&port=80 && \
 docker-compose up -d --remove-orphans
 ```
 
