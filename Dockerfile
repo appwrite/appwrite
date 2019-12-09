@@ -6,7 +6,7 @@ ARG TESTING=false
 
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
-    PHP_VERSION=7.3 \
+    PHP_VERSION=7.4 \
     PHP_REDIS_VERSION=3.1.2
 
 RUN \
@@ -44,7 +44,7 @@ ARG VERSION=dev
 
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
-    PHP_VERSION=7.3 \
+    PHP_VERSION=7.4 \
     _APP_ENV=production \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
@@ -104,7 +104,7 @@ COPY ./docker/ssl/key.pem /etc/nginx/ssl/key.pem
 
 # PHP Configuration
 RUN mkdir -p /var/run/php
-COPY ./docker/www.conf /etc/php/7.3/fpm/pool.d/www.conf
+COPY ./docker/www.conf /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
 
 # Add PHP Source Code
 COPY ./app /usr/share/nginx/html/app
