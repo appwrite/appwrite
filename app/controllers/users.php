@@ -346,7 +346,7 @@ $utopia->patch('/v1/users/:userId/status')
             }
 
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
-                'status' => $status,
+                'status' => (int)$status,
             ]));
 
             if (false === $user) {
