@@ -561,8 +561,8 @@ $utopia->get('/v1/open-api-2.json')
                         continue;
                     }
 
-                    $desc = realpath(__DIR__ . '/..' . $route->getLabel('sdk.description', ''));
-
+                    $desc = (!empty($route->getLabel('sdk.description', ''))) ? realpath(__DIR__ . '/..' . $route->getLabel('sdk.description', '')) : null;
+         
                     $temp = [
                         'summary' => $route->getDesc(),
                         'operationId' => $route->getLabel('sdk.method', uniqid()),
@@ -582,7 +582,7 @@ $utopia->get('/v1/open-api-2.json')
                     if ($extensions) {
                         $temp['extensions'] = [
                             'weight' => $route->getOrder(),
-                            'cookies' => $route->getLabel('sdk.cookies', false),
+                            'cookies' => false,//$route->getLabel('sdk.cookies', false),
                             'location' => $route->getLabel('sdk.location', false),
                             'demo' => 'docs/examples/'.fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.fromCamelCaseToDash($temp['operationId']).'.md',
                             'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
