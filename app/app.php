@@ -569,20 +569,21 @@ $utopia->get('/v1/open-api-2.json')
                         'consumes' => [],
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
                         'description' => ($desc) ? file_get_contents($desc) : '',
-                        'responses' => [
-                            200 => [
-                                'description' => 'An paged array of pets',
-                                'schema' => [
-                                    '$ref' => '#/definitions/Pet',
-                                ],
-                            ],
-                        ],
+                        
+                        // 'responses' => [
+                        //     200 => [
+                        //         'description' => 'An paged array of pets',
+                        //         'schema' => [
+                        //             '$ref' => '#/definitions/Pet',
+                        //         ],
+                        //     ],
+                        // ],
                     ];
 
                     if ($extensions) {
                         $temp['extensions'] = [
                             'weight' => $route->getOrder(),
-                            'cookies' => false,//$route->getLabel('sdk.cookies', false),
+                            'cookies' => $route->getLabel('sdk.cookies', false),
                             'location' => $route->getLabel('sdk.location', false),
                             'demo' => 'docs/examples/'.fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.fromCamelCaseToDash($temp['operationId']).'.md',
                             'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
