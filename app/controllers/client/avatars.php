@@ -15,7 +15,7 @@ use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 
-include_once 'shared/api.php';
+include_once '../shared/api.php';
 
 $types = [
     'browsers' => include __DIR__.'/../config/avatars/browsers.php',

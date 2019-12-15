@@ -18,7 +18,7 @@ use Database\Validator\Authorization;
 use Template\Template;
 use Auth\Auth;
 
-include_once 'shared/api.php';
+include_once '../shared/api.php';
 
 $utopia->get('/v1/teams')
     ->desc('List Teams')
