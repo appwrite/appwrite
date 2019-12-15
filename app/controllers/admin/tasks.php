@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $consoleDB;
+global $utopia, $request, $response, $consoleDB, $project;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -18,20 +18,13 @@ use Cron\CronExpression;
 
 include_once '../shared/api.php';
 
-$utopia->get('/v1/projects/:projectId/tasks')
+$utopia->get('/v1/tasks')
     ->desc('List Tasks')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listTasks')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function () use ($request, $response, $consoleDB, $project) {
             $tasks = $project->getAttribute('tasks', []);
 
             foreach ($tasks as $task) { /* @var $task Document */
@@ -50,21 +43,14 @@ $utopia->get('/v1/projects/:projectId/tasks')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/tasks/:taskId')
+$utopia->get('/v1/tasks/:taskId')
     ->desc('Get Task')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->action(
-        function ($projectId, $taskId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($taskId) use ($request, $response, $consoleDB, $project) {
             $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
 
             if (empty($task) && $task instanceof Document) {
@@ -82,12 +68,11 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
         }
     );
 
-$utopia->post('/v1/projects/:projectId/tasks')
+$utopia->post('/v1/tasks')
     ->desc('Create Task')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Task name')
     ->param('status', null, function () { return new WhiteList(['play', 'pause']); }, 'Task status')
     ->param('schedule', null, function () { return new Cron(); }, 'Task schedule syntax')
@@ -98,13 +83,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password', true)
     ->action(
-        function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB, $project) {
             $cron = CronExpression::factory($schedule);
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
@@ -164,12 +143,11 @@ $utopia->post('/v1/projects/:projectId/tasks')
         }
     );
 
-$utopia->put('/v1/projects/:projectId/tasks/:taskId')
+$utopia->put('/v1/tasks/:taskId')
     ->desc('Update Task')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Task name')
     ->param('status', null, function () { return new WhiteList(['play', 'pause']); }, 'Task status')
@@ -181,13 +159,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password', true)
     ->action(
-        function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB, $project) {
             $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
 
             if (empty($task) && $task instanceof Document) {
@@ -234,21 +206,14 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/tasks/:taskId')
+$utopia->delete('/v1/tasks/:taskId')
     ->desc('Delete Task')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->action(
-        function ($projectId, $taskId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($taskId) use ($response, $consoleDB, $project) {
             $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
 
             if (empty($task) && $task instanceof Document) {

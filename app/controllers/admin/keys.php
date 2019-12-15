@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $response, $consoleDB;
+global $utopia, $response, $consoleDB, $project;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -26,39 +26,25 @@ $scopes = [ // TODO sync with console UI list
     'files.write',
 ];
 
-$utopia->get('/v1/projects/:projectId/keys')
+$utopia->get('/v1/keys')
     ->desc('List Keys')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function () use ($response, $consoleDB, $project) {
             $response->json($project->getAttribute('keys', [])); //FIXME make sure array objects return correctly
         }
     );
 
-$utopia->get('/v1/projects/:projectId/keys/:keyId')
+$utopia->get('/v1/keys/:keyId')
     ->desc('Get Key')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
     ->action(
-        function ($projectId, $keyId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($keyId) use ($response, $consoleDB, $project) {
             $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
 
             if (empty($key) && $key instanceof Document) {
@@ -69,22 +55,15 @@ $utopia->get('/v1/projects/:projectId/keys/:keyId')
         }
     );
 
-$utopia->post('/v1/projects/:projectId/keys')
+$utopia->post('/v1/keys')
     ->desc('Create Key')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Key name')
     ->param('scopes', null, function () use ($scopes) { return new ArrayList(new WhiteList($scopes)); }, 'Key scopes list')
     ->action(
-        function ($projectId, $name, $scopes) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($name, $scopes) use ($response, $consoleDB, $project) {
             $key = $consoleDB->createDocument([
                 '$collection' => Database::SYSTEM_COLLECTION_KEYS,
                 '$permissions' => [
@@ -115,23 +94,16 @@ $utopia->post('/v1/projects/:projectId/keys')
         }
     );
 
-$utopia->put('/v1/projects/:projectId/keys/:keyId')
+$utopia->put('/v1/keys/:keyId')
     ->desc('Update Key')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Key name')
     ->param('scopes', null, function () use ($scopes) { return new ArrayList(new WhiteList($scopes)); }, 'Key scopes list')
     ->action(
-        function ($projectId, $keyId, $name, $scopes) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($keyId, $name, $scopes) use ($response, $consoleDB, $project) {
             $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
 
             if (empty($key) && $key instanceof Document) {
@@ -151,21 +123,14 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/keys/:keyId')
+$utopia->delete('/v1/keys/:keyId')
     ->desc('Delete Key')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
     ->action(
-        function ($projectId, $keyId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($keyId) use ($response, $consoleDB, $project) {
             $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
 
             if (empty($key) && $key instanceof Document) {

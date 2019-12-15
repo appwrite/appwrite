@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $consoleDB;
+global $utopia, $request, $response, $consoleDB, $project;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -13,41 +13,25 @@ use Database\Validator\UID;
 
 include_once '../shared/api.php';
 
-$utopia->get('/v1/projects/:projectId/platforms')
+$utopia->get('/v1/platforms')
     ->desc('List Platforms')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $platforms = $project->getAttribute('platforms', []);
-
-            $response->json($platforms);
+        function () use ($request, $response, $consoleDB, $project) {
+            $response->json($project->getAttribute('platforms', []));
         }
     );
 
-$utopia->get('/v1/projects/:projectId/platforms/:platformId')
+$utopia->get('/v1/platforms/:platformId')
     ->desc('Get Platform')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->action(
-        function ($projectId, $platformId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($platformId) use ($request, $response, $consoleDB, $project) {
             $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
 
             if (empty($platform) && $platform instanceof Document) {
@@ -58,25 +42,18 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
         }
     );
 
-$utopia->post('/v1/projects/:projectId/platforms')
+$utopia->post('/v1/platforms')
     ->desc('Create Platform')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('type', null, function () { return new WhiteList(['web', 'ios', 'android', 'unity']); }, 'Platform name')
     ->param('name', null, function () { return new Text(256); }, 'Platform name')
     ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS', true)
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID', true)
     ->param('url', '', function () { return new URL(); }, 'Platform client URL', true)
     ->action(
-        function ($projectId, $type, $name, $key, $store, $url) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($type, $name, $key, $store, $url) use ($response, $consoleDB, $project) {
             $platform = $consoleDB->createDocument([
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 '$permissions' => [
@@ -111,25 +88,18 @@ $utopia->post('/v1/projects/:projectId/platforms')
         }
     );
 
-$utopia->put('/v1/projects/:projectId/platforms/:platformId')
+$utopia->put('/v1/platforms/:platformId')
     ->desc('Update Platform')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Platform name')
     ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS', true)
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID', true)
     ->param('url', '', function () { return new URL(); }, 'Platform client URL', true)
     ->action(
-        function ($projectId, $platformId, $name, $key, $store, $url) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($platformId, $name, $key, $store, $url) use ($response, $consoleDB, $project) {
             $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
 
             if (empty($platform) && $platform instanceof Document) {
@@ -152,21 +122,14 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/platforms/:platformId')
+$utopia->delete('/v1/platforms/:platformId')
     ->desc('Delete Platform')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->action(
-        function ($projectId, $platformId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($platformId) use ($response, $consoleDB, $project) {
             $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
 
             if (empty($platform) && $platform instanceof Document) {

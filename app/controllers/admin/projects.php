@@ -15,19 +15,6 @@ use OpenSSL\OpenSSL;
 
 include_once '../shared/api.php';
 
-$scopes = [ // TODO sync with console UI list
-    'users.read',
-    'users.write',
-    'teams.read',
-    'teams.write',
-    'collections.read',
-    'collections.write',
-    'documents.read',
-    'documents.write',
-    'files.read',
-    'files.write',
-];
-
 $utopia->get('/v1/projects')
     ->desc('List Projects')
     ->label('scope', 'projects.read')

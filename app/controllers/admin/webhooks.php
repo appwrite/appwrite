@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $consoleDB;
+global $utopia, $request, $response, $consoleDB, $project;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -15,20 +15,13 @@ use OpenSSL\OpenSSL;
 
 include_once '../shared/api.php';
 
-$utopia->get('/v1/projects/:projectId/webhooks')
+$utopia->get('/v1/webhooks')
     ->desc('List Webhooks')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listWebhooks')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function () use ($request, $response, $consoleDB, $project) {
             $webhooks = $project->getAttribute('webhooks', []);
 
             foreach ($webhooks as $webhook) { /* @var $webhook Document */
@@ -47,21 +40,14 @@ $utopia->get('/v1/projects/:projectId/webhooks')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
+$utopia->get('/v1/webhooks/:webhookId')
     ->desc('Get Webhook')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->action(
-        function ($projectId, $webhookId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($webhookId) use ($request, $response, $consoleDB, $project) {
             $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
 
             if (empty($webhook) && $webhook instanceof Document) {
@@ -79,12 +65,11 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
         }
     );
 
-$utopia->post('/v1/projects/:projectId/webhooks')
+$utopia->post('/v1/webhooks')
     ->desc('Create Webhook')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name')
     ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list')
     ->param('url', null, function () { return new Text(2000); }, 'Webhook URL')
@@ -92,13 +77,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password', true)
     ->action(
-        function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB, $project) {
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
@@ -143,12 +122,11 @@ $utopia->post('/v1/projects/:projectId/webhooks')
         }
     );
 
-$utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
+$utopia->put('/v1/webhooks/:webhookId')
     ->desc('Update Webhook')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name')
     ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list')
@@ -157,13 +135,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password', true)
     ->action(
-        function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB, $project) {
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
@@ -198,21 +170,14 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
+$utopia->delete('/v1/webhooks/:webhookId')
     ->desc('Delete Webhook')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->action(
-        function ($projectId, $webhookId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
+        function ($webhookId) use ($response, $consoleDB, $project) {
             $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
 
             if (empty($webhook) && $webhook instanceof Document) {
