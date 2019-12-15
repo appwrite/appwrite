@@ -55,11 +55,6 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
 }))));
 
 $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
-    
-    if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-        throw new Exception('Project not found', 404);
-    }
-    
     $route = $utopia->match($request);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
