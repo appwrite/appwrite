@@ -1,6 +1,6 @@
 <?php
 
-include_once 'shared/web.php';
+include_once '../shared/web.php';
 
 global $utopia, $response, $request, $layout, $version, $providers, $sdks;
 
