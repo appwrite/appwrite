@@ -22,7 +22,7 @@ use Storage\Compression\Algorithms\GZIP;
 use Resize\Resize;
 use OpenSSL\OpenSSL;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 Storage::addDevice('local', new Local('app-'.$project->getUid()));
 

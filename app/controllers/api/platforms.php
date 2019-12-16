@@ -11,7 +11,7 @@ use Database\Database;
 use Database\Document;
 use Database\Validator\UID;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 $utopia->get('/v1/platforms')
     ->desc('List Platforms')

@@ -15,12 +15,12 @@ use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 $types = [
-    'browsers' => include __DIR__.'/../config/avatars/browsers.php',
-    'credit-cards' => include __DIR__.'/../config/avatars/credit-cards.php',
-    'flags' => include __DIR__.'/../config/avatars/flags.php',
+    'browsers' => include __DIR__.'/../../config/avatars/browsers.php',
+    'credit-cards' => include __DIR__.'/../../config/avatars/credit-cards.php',
+    'flags' => include __DIR__.'/../../config/avatars/flags.php',
 ];
 
 $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response, $request) {

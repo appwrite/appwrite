@@ -1,13 +1,13 @@
 <?php
 
-include_once '../shared/web.php';
+include_once __DIR__ . '/../shared/web.php';
 
 global $utopia, $response, $request, $layout, $version, $providers, $sdks;
 
 use Utopia\View;
 
-$header = new View(__DIR__.'/../views/home/comps/header.phtml');
-$footer = new View(__DIR__.'/../views/home/comps/footer.phtml');
+$header = new View(__DIR__.'/../../views/home/comps/header.phtml');
+$footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
 $footer
     ->setParam('version', $version)
@@ -39,7 +39,7 @@ $utopia->get('/auth/signin')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/home/auth/signin.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/signin.phtml');
 
         $layout
             ->setParam('title', 'Sign In - '.APP_NAME)
@@ -51,7 +51,7 @@ $utopia->get('/auth/signup')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/home/auth/signup.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/signup.phtml');
 
         $layout
             ->setParam('title', 'Sign Up - '.APP_NAME)
@@ -63,7 +63,7 @@ $utopia->get('/auth/recovery')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($request, $layout) {
-        $page = new View(__DIR__.'/../views/home/auth/recovery.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/recovery.phtml');
 
         $layout
             ->setParam('title', 'Password Recovery - '.APP_NAME)
@@ -75,7 +75,7 @@ $utopia->get('/auth/confirm')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/home/auth/confirm.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/confirm.phtml');
 
         $layout
             ->setParam('title', 'Account Confirmation - '.APP_NAME)
@@ -87,7 +87,7 @@ $utopia->get('/auth/join')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/home/auth/join.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/join.phtml');
 
         $layout
             ->setParam('title', 'Invitation - '.APP_NAME)
@@ -99,7 +99,7 @@ $utopia->get('/auth/recovery/reset')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/home/auth/recovery/reset.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/recovery/reset.phtml');
 
         $layout
             ->setParam('title', 'Password Reset - '.APP_NAME)
@@ -112,7 +112,7 @@ $utopia->get('/error/:code')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->action(function ($code) use ($layout) {
-        $page = new View(__DIR__.'/../views/error.phtml');
+        $page = new View(__DIR__.'/../../views/error.phtml');
 
         $page
             ->setParam('code', $code)

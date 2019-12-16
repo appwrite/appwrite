@@ -16,7 +16,7 @@ use Database\Validator\UID;
 use OpenSSL\OpenSSL;
 use Cron\CronExpression;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 $utopia->get('/v1/tasks')
     ->desc('List Tasks')

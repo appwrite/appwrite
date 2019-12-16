@@ -13,7 +13,7 @@ use Database\Document;
 use Database\Validator\UID;
 use OpenSSL\OpenSSL;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 $utopia->get('/v1/webhooks')
     ->desc('List Webhooks')

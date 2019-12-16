@@ -18,7 +18,7 @@ use Database\Validator\Authorization;
 use Template\Template;
 use Auth\Auth;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 $utopia->get('/v1/teams')
     ->desc('List Teams')
@@ -358,7 +358,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -437,7 +437,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'userId' => $membership->getAttribute('userId'), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))

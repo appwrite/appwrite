@@ -436,7 +436,7 @@ $utopia->get('/v1/open-api-2.json')
                 if (!$tests && !$service['sdk']) {
                     continue;
                 }
-
+                
                 /** @noinspection PhpIncludeInspection */
                 include_once $service['controller'];
             }
@@ -722,7 +722,8 @@ $utopia->get('/v1/open-api-2.json')
 
             ksort($output['paths']);
 
-            $response->json($output);
+            $response
+                ->json($output);
         }
     );
 

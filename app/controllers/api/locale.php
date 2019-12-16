@@ -6,7 +6,7 @@ use Utopia\App;
 use Utopia\Locale\Locale;
 use GeoIp2\Database\Reader;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 $utopia->get('/v1/locale')
     ->desc('Get User Locale')
@@ -16,9 +16,9 @@ $utopia->get('/v1/locale')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
     ->action(
         function () use ($response, $request, $utopia) {
-            $eu = include __DIR__.'/../config/eu.php';
-            $currencies = include __DIR__.'/../config/currencies.php';
-            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $eu = include __DIR__.'/../../config/eu.php';
+            $currencies = include __DIR__.'/../../config/currencies.php';
+            $reader = new Reader(__DIR__.'/../../db/GeoLite2/GeoLite2-Country.mmdb');
             $output = [];
             $ip = $request->getIP();
             $time = (60 * 60 * 24 * 45); // 45 days cache
@@ -90,7 +90,7 @@ $utopia->get('/v1/locale/countries/eu')
     ->action(
         function () use ($response) {
             $countries = Locale::getText('countries'); /* @var $countries array */
-            $eu = include __DIR__.'/../config/eu.php';
+            $eu = include __DIR__.'/../../config/eu.php';
             $list = [];
 
             foreach ($eu as $code) {
@@ -113,7 +113,7 @@ $utopia->get('/v1/locale/countries/phones')
     ->label('sdk.description', '/docs/references/locale/get-countries-phones.md')
     ->action(
         function () use ($response) {
-            $list = include __DIR__.'/../config/phones.php'; /* @var $list array */
+            $list = include __DIR__.'/../../config/phones.php'; /* @var $list array */
 
             $countries = Locale::getText('countries'); /* @var $countries array */
 
@@ -154,7 +154,7 @@ $utopia->get('/v1/locale/currencies')
     ->label('sdk.description', '/docs/references/locale/get-currencies.md')
     ->action(
         function () use ($response) {
-            $currencies = include __DIR__.'/../config/currencies.php';
+            $currencies = include __DIR__.'/../../config/currencies.php';
 
             $response->json($currencies);
         }

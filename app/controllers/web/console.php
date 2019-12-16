@@ -1,6 +1,6 @@
 <?php
 
-include_once '../shared/web.php';
+include_once __DIR__ . '/../shared/web.php';
 
 global $utopia, $response, $request, $layout, $version, $providers;
 
@@ -15,8 +15,8 @@ $utopia->init(function () use ($layout, $utopia) {
 });
 
 $utopia->shutdown(function () use ($utopia, $response, $request, $layout, $version) {
-    $header = new View(__DIR__.'/../views/console/comps/header.phtml');
-    $footer = new View(__DIR__.'/../views/console/comps/footer.phtml');
+    $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
+    $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
 
     $footer
         ->setParam('home', $request->getServer('_APP_HOME', ''))
@@ -44,7 +44,7 @@ $utopia->get('/error/:code')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
     ->action(function ($code) use ($layout) {
-        $page = new View(__DIR__.'/../views/error.phtml');
+        $page = new View(__DIR__.'/../../views/error.phtml');
 
         $page
             ->setParam('code', $code)
@@ -59,7 +59,7 @@ $utopia->get('/console')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout, $request) {
-        $page = new View(__DIR__.'/../views/console/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/index.phtml');
 
         $page
             ->setParam('home', $request->getServer('_APP_HOME', ''))
@@ -74,9 +74,9 @@ $utopia->get('/console/account')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/console/account/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/account/index.phtml');
 
-        $cc = new View(__DIR__.'/../views/console/forms/credit-card.phtml');
+        $cc = new View(__DIR__.'/../../views/console/forms/credit-card.phtml');
 
         $page
             ->setParam('cc', $cc)
@@ -92,7 +92,7 @@ $utopia->get('/console/notifications')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/v1/console/notifications/index.phtml');
+        $page = new View(__DIR__.'/../../views/v1/console/notifications/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME.' - Notifications')
@@ -104,7 +104,7 @@ $utopia->get('/console/home')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/console/home/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/home/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME.' - Console')
@@ -116,7 +116,7 @@ $utopia->get('/console/settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/console/settings/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME.' - Settings')
@@ -128,7 +128,7 @@ $utopia->get('/console/webhooks')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/console/webhooks/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME.' - Webhooks')
@@ -141,7 +141,7 @@ $utopia->get('/console/keys')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
         $scopes = include __DIR__.'/../../../app/config/scopes.php';
-        $page = new View(__DIR__.'/../views/console/keys/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/keys/index.phtml');
 
         $page->setParam('scopes', $scopes);
 
@@ -155,7 +155,7 @@ $utopia->get('/console/tasks')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/console/tasks/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/tasks/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME.' - Tasks')
@@ -167,7 +167,7 @@ $utopia->get('/console/database')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../views/console/database/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/database/index.phtml');
 
         $layout
             ->setParam('title', APP_NAME.' - Database')
@@ -186,7 +186,7 @@ $utopia->get('/console/database/collection')
             throw new Exception('Collection not found', 404);
         }
 
-        $page = new View(__DIR__.'/../views/console/database/collection.phtml');
+        $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
 
         $page
             ->setParam('collection', $collection->getArrayCopy())
@@ -202,7 +202,7 @@ $utopia->get('/console/storage')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($request, $layout) {
-        $page = new View(__DIR__.'/../views/console/storage/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
 
         $page
             ->setParam('home', $request->getServer('_APP_HOME', ''))
@@ -218,7 +218,7 @@ $utopia->get('/console/users')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout, $providers) {
-        $page = new View(__DIR__.'/../views/console/users/index.phtml');
+        $page = new View(__DIR__.'/../../views/console/users/index.phtml');
 
         $page->setParam('providers', $providers);
 
@@ -232,7 +232,7 @@ $utopia->get('/console/users/view')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout, $providers) {
-        $page = new View(__DIR__.'/../views/console/users/view.phtml');
+        $page = new View(__DIR__.'/../../views/console/users/view.phtml');
 
         $layout
             ->setParam('title', APP_NAME.' - View User')

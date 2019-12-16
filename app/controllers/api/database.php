@@ -19,7 +19,7 @@ use Database\Validator\Authorization;
 use Database\Exception\Authorization as AuthorizationException;
 use Database\Exception\Structure as StructureException;
 
-include_once '../shared/api.php';
+include_once __DIR__ . '/../shared/api.php';
 
 $isDev = (App::ENV_TYPE_PRODUCTION !== $utopia->getEnv());
 
