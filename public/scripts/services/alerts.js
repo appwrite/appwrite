@@ -4,13 +4,22 @@
     window.ls.container.set('alerts', function (window) {
         return {
             list: [],
+            ids: 0,
             counter: 0,
+            max: 5,
             add: function (message, time) {
                 var scope = this;
 
-                message.id = this.counter++;
+                message.id = scope.ids++;
 
+                scope.counter++;
+                
                 scope.list.unshift(message);
+                
+                if(scope.counter > scope.max) {
+                    scope.list.pop();
+                    scope.counter--;
+                }
 
                 if (time > 0) { // When 0 alert is unlimited in time
                     window.setTimeout(function (message) {
@@ -19,6 +28,7 @@
                         }
                     }(message), time);
                 }
+
 
                 return message.id;
             },
@@ -29,11 +39,14 @@
                     let obj = scope.list[index];
 
                     if (obj.id === parseInt(id)) {
+                        scope.counter--;
+
                         if (typeof obj.callback === "function") {
                             obj.callback();
                         }
 
                         scope.list.splice(index, 1);
+
                     };
                 }
             }
