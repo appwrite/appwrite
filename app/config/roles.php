@@ -33,6 +33,14 @@ $admins = [
     'users.write',
     'collections.read',
     'collections.write',
+    'platforms.read',
+    'platforms.write',
+    'keys.read',
+    'keys.write',
+    'tasks.read',
+    'tasks.write',
+    'webhooks.read',
+    'webhooks.write',
 ];
 
 return [

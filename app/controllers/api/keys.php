@@ -13,18 +13,7 @@ use Database\Validator\UID;
 
 include_once '../shared/api.php';
 
-$scopes = [ // TODO sync with console UI list
-    'users.read',
-    'users.write',
-    'teams.read',
-    'teams.write',
-    'collections.read',
-    'collections.write',
-    'documents.read',
-    'documents.write',
-    'files.read',
-    'files.write',
-];
+$scopes = include __DIR__.'/../../../app/config/scopes.php';
 
 $utopia->get('/v1/keys')
     ->desc('List Keys')

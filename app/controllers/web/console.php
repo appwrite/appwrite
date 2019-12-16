@@ -140,7 +140,10 @@ $utopia->get('/console/keys')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
+        $scopes = include __DIR__.'/../../../app/config/scopes.php';
         $page = new View(__DIR__.'/../views/console/keys/index.phtml');
+
+        $page->setParam('scopes', $scopes);
 
         $layout
             ->setParam('title', APP_NAME.' - API Keys')
