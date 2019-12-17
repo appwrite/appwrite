@@ -55,6 +55,7 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
 }))));
 
 $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
+    
     $route = $utopia->match($request);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
@@ -158,6 +159,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     // TDOO Check if user is god
 
     if (!in_array($scope, $scopes)) {
+        if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
+            throw new Exception('Project not found', 404);
+        }
+        
         throw new Exception($user->getAttribute('email', 'Guest').' (role: '.strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
