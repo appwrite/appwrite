@@ -6,10 +6,12 @@
 * New database rule validation options
 * Update docs example with auth info
 * Allow non-web platform skip origin header
+* Limited to console UI to show max 5 alerts at the same time
 
 ## Bug Fixes
 
 * Fixed bug where user status was saved as a string instead of an integer
+* Fixed gravatar icons not showing up correctly on the console
 
 # Version 0.4.0 (PRE-RELEASE)
 
