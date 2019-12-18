@@ -54,6 +54,8 @@ services:
     - appwrite
     volumes:
     - appwrite-db:/var/lib/mysql:rw
+    ports:
+    - "3306:3306"
     environment:
     - MYSQL_ROOT_PASSWORD=rootsecretpassword
     - MYSQL_DATABASE=appwrite

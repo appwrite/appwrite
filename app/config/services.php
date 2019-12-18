@@ -88,4 +88,33 @@ return [
         'sdk' => false,
         'tests' => true,
     ],
+
+    'v1/keys' => [
+        'name' => 'Keys',
+        'description' => '',
+        'controller' => 'controllers/api/keys.php',
+        'sdk' => true,
+        'tests' => false,
+    ],
+    'v1/platforms' => [
+        'name' => 'Platforms',
+        'description' => '',
+        'controller' => 'controllers/api/platforms.php',
+        'sdk' => true,
+        'tests' => false,
+    ],
+    'v1/tasks' => [
+        'name' => 'Tasks',
+        'description' => '',
+        'controller' => 'controllers/api/tasks.php',
+        'sdk' => true,
+        'tests' => false,
+    ],
+    'v1/webhooks' => [
+        'name' => 'Webhooks',
+        'description' => '',
+        'controller' => 'controllers/api/webhooks.php',
+        'sdk' => true,
+        'tests' => false,
+    ],
 ];

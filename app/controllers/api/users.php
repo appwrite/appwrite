@@ -158,7 +158,7 @@ $utopia->get('/v1/users/:userId/sessions')
             }
 
             $tokens = $user->getAttribute('tokens', []);
-            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $reader = new Reader(__DIR__.'/../../db/GeoLite2/GeoLite2-Country.mmdb');
             $sessions = [];
             $index = 0;
             $countries = Locale::getText('countries');
@@ -226,7 +226,7 @@ $utopia->get('/v1/users/:userId/logs')
 
             $logs = $au->getLogsByUser($user->getUid(), $user->getAttribute('type', 0));
 
-            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $reader = new Reader(__DIR__.'/../../db/GeoLite2/GeoLite2-Country.mmdb');
             $output = [];
 
             foreach ($logs as $i => &$log) {
