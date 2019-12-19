@@ -38,9 +38,7 @@
         "ext-zlib": "*",
         "ext-sockets": "*",
 
-        "appwrite/sdk-generator": "master",
         "appwrite/php-clamav": "master",
-        "appwrite/appwrite": "master",
 
         "utopia-php/framework": "master",
         "utopia-php/abuse": "master",
@@ -60,6 +58,7 @@
         "phpmailer/phpmailer": "6.0.7"
     },
     "require-dev": {
+        "appwrite/sdk-generator": "master",
         "phpunit/phpunit": "^7.0"
     },
     "repositories": [
