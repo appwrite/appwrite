@@ -7,7 +7,7 @@ class Client:
         self._endpoint = 'https://appwrite.io/v1'
         self._global_headers = {
             'content-type': '',
-            'x-sdk-version': 'appwrite:python:0.0.2',
+            'x-sdk-version': 'appwrite:python:0.0.3',
         }
 
     def set_self_signed(self, status=True):
@@ -51,7 +51,8 @@ class Client:
 
         data = {}
         json = {}
-        headers = {**self._global_headers, **headers}
+        
+        self._global_headers.update(headers)
 
         if method != 'get':
             data = params
@@ -61,13 +62,16 @@ class Client:
             json = data
             data = {}
 
-        response = getattr(requests, method)(  # call method dynamically https://stackoverflow.com/a/4246075/2299554
+        response = requests.request(  # call method dynamically https://stackoverflow.com/a/4246075/2299554
+            method=method,
             url=self._endpoint + path,
             params=params,
             data=data,
             json=json,
-            headers=headers,
+            headers=self._global_headers,
             verify=self._self_signed,
         )
 
-        return response
+        response.raise_for_status()
+        
+        return response.json()

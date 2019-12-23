@@ -1,7 +1,7 @@
 # Appwrite SDK for Dart
 
 ![License](https://img.shields.io/github/license/appwrite/sdk-for-dart.svg?v=1)
-![Version](https://img.shields.io/badge/api%20version-0.3.0-blue.svg?v=1)
+![Version](https://img.shields.io/badge/api%20version-0.4.0-blue.svg?v=1)
 
 **WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**
 

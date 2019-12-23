@@ -72,7 +72,7 @@ $cli
                 'platform' => 'server',
             ],
             'python' => [
-                'version' => '0.0.2',
+                'version' => '0.0.3',
                 'result' => __DIR__.'/../sdks/python/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-python.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-python.git',
@@ -122,8 +122,8 @@ $cli
 
             Console::info('Fetching API Spec for '.$name.' ('.$client['platform'].')');
             
-            $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
             $spec = getSSLPage('https://localhost/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
+            $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
             
             $license = 'BSD-3-Clause';
 

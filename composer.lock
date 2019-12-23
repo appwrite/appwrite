@@ -4,43 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7cdc1d45e7c23d6969111ad6dc753d5f",
+    "content-hash": "8833df827a00af56d2e0da5a5cbfa5d8",
     "packages": [
-        {
-            "name": "appwrite/appwrite",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "52e940f598d6e06d7ebca902e0c26c2fc0dce2a3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/52e940f598d6e06d7ebca902e0c26c2fc0dce2a3",
-                "reference": "52e940f598d6e06d7ebca902e0c26c2fc0dce2a3",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "php": ">=7.1.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "3.7.35"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Appwrite\\": "src/Appwrite"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
-            "time": "2019-12-07T20:30:19+00:00"
-        },
         {
             "name": "appwrite/php-clamav",
             "version": "dev-master",
@@ -274,12 +239,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/ca-bundle.git",
-                "reference": "62e8fc2dc550e5d6d8c9360c7721662670f58149"
+                "reference": "7a3805d21f689a972f02e8f7f3b9e28475c35d28"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/62e8fc2dc550e5d6d8c9360c7721662670f58149",
-                "reference": "62e8fc2dc550e5d6d8c9360c7721662670f58149",
+                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/7a3805d21f689a972f02e8f7f3b9e28475c35d28",
+                "reference": "7a3805d21f689a972f02e8f7f3b9e28475c35d28",
                 "shasum": ""
             },
             "require": {
@@ -322,7 +287,7 @@
                 "ssl",
                 "tls"
             ],
-            "time": "2019-12-11T14:44:42+00:00"
+            "time": "2019-12-20T14:03:23+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -639,12 +604,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "2595b33c1c924889b474d324f3d719fa40b6954e"
+                "reference": "c291e45d40e638815990004e5f7ee367c2b752e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/2595b33c1c924889b474d324f3d719fa40b6954e",
-                "reference": "2595b33c1c924889b474d324f3d719fa40b6954e",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/c291e45d40e638815990004e5f7ee367c2b752e9",
+                "reference": "c291e45d40e638815990004e5f7ee367c2b752e9",
                 "shasum": ""
             },
             "require": {
@@ -702,7 +667,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2019-08-13T16:05:52+00:00"
+            "time": "2019-12-21T15:35:40+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -767,20 +732,23 @@
         },
         {
             "name": "maxmind-db/reader",
-            "version": "v1.5.1",
+            "version": "v1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/maxmind/MaxMind-DB-Reader-php.git",
-                "reference": "f096bbe4d37e3d93e62626297bfc2179472a972d"
+                "reference": "febd4920bf17c1da84cef58e56a8227dfb37fbe4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/maxmind/MaxMind-DB-Reader-php/zipball/f096bbe4d37e3d93e62626297bfc2179472a972d",
-                "reference": "f096bbe4d37e3d93e62626297bfc2179472a972d",
+                "url": "https://api.github.com/repos/maxmind/MaxMind-DB-Reader-php/zipball/febd4920bf17c1da84cef58e56a8227dfb37fbe4",
+                "reference": "febd4920bf17c1da84cef58e56a8227dfb37fbe4",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.6"
+            },
+            "conflict": {
+                "ext-maxminddb": "<1.6.0,>=2.0.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "2.*",
@@ -820,7 +788,7 @@
                 "geolocation",
                 "maxmind"
             ],
-            "time": "2019-12-12T18:32:55+00:00"
+            "time": "2019-12-19T22:59:03+00:00"
         },
         {
             "name": "maxmind/web-service-common",
@@ -1508,7 +1476,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "8fd042033badfd45736d67b55e0a86aa8ce67123"
+                "reference": "0c2be69bbe4e2816a48752be26d34040180c46c0"
             },
             "require": {
                 "ext-curl": "*",
@@ -1538,7 +1506,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2019-12-19T04:54:06+00:00"
+            "time": "2019-12-21T18:12:40+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -1598,16 +1566,16 @@
         },
         {
             "name": "matthiasmullie/minify",
-            "version": "1.3.61",
+            "version": "1.3.62",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matthiasmullie/minify.git",
-                "reference": "d5acb8ce5b6acb7d11bafe97cecc533f6e4fd751"
+                "reference": "47a53716f94139aff22922ffd73283ff04f23cdf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/d5acb8ce5b6acb7d11bafe97cecc533f6e4fd751",
-                "reference": "d5acb8ce5b6acb7d11bafe97cecc533f6e4fd751",
+                "url": "https://api.github.com/repos/matthiasmullie/minify/zipball/47a53716f94139aff22922ffd73283ff04f23cdf",
+                "reference": "47a53716f94139aff22922ffd73283ff04f23cdf",
                 "shasum": ""
             },
             "require": {
@@ -1654,7 +1622,7 @@
                 "minifier",
                 "minify"
             ],
-            "time": "2018-11-26T23:10:39+00:00"
+            "time": "2019-12-19T07:54:47+00:00"
         },
         {
             "name": "matthiasmullie/path-converter",
@@ -1865,12 +1833,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionCommon.git",
-                "reference": "63a995caa1ca9e5590304cd845c15ad6d482a62a"
+                "reference": "b0843c8cbcc2dc5eda5158e583c7199a5e44c86d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/63a995caa1ca9e5590304cd845c15ad6d482a62a",
-                "reference": "63a995caa1ca9e5590304cd845c15ad6d482a62a",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/b0843c8cbcc2dc5eda5158e583c7199a5e44c86d",
+                "reference": "b0843c8cbcc2dc5eda5158e583c7199a5e44c86d",
                 "shasum": ""
             },
             "require": {
@@ -1909,7 +1877,7 @@
                 "reflection",
                 "static analysis"
             ],
-            "time": "2018-08-07T13:53:10+00:00"
+            "time": "2019-12-20T12:45:35+00:00"
         },
         {
             "name": "phpdocumentor/reflection-docblock",
@@ -1917,12 +1885,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "549d235cf426209ecb6d4dac3181c4da479050b5"
+                "reference": "c19ab7ef57e75b5790aa912fd1cd14708e811970"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/549d235cf426209ecb6d4dac3181c4da479050b5",
-                "reference": "549d235cf426209ecb6d4dac3181c4da479050b5",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/c19ab7ef57e75b5790aa912fd1cd14708e811970",
+                "reference": "c19ab7ef57e75b5790aa912fd1cd14708e811970",
                 "shasum": ""
             },
             "require": {
@@ -1962,7 +1930,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2019-12-17T20:36:15+00:00"
+            "time": "2019-12-20T13:36:14+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -2016,12 +1984,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/prophecy.git",
-                "reference": "d638ebbb58daba25a6a0dc7969e1358a0e3c6682"
+                "reference": "cbe1df668b3fe136bcc909126a0f529a78d4cbbc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/d638ebbb58daba25a6a0dc7969e1358a0e3c6682",
-                "reference": "d638ebbb58daba25a6a0dc7969e1358a0e3c6682",
+                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/cbe1df668b3fe136bcc909126a0f529a78d4cbbc",
+                "reference": "cbe1df668b3fe136bcc909126a0f529a78d4cbbc",
                 "shasum": ""
             },
             "require": {
@@ -2071,7 +2039,7 @@
                 "spy",
                 "stub"
             ],
-            "time": "2019-12-17T16:54:23+00:00"
+            "time": "2019-12-22T21:05:45+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
