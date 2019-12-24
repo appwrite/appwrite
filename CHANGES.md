@@ -10,6 +10,7 @@
 ## Bug Fixes
 
 * Fixed bug where user status was saved as a string instead of an integer
+* Fixed bug where tags element would ignore tab key for parsing new tags
 
 # Version 0.4.0 (PRE-RELEASE)
 
