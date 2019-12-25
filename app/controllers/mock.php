@@ -159,7 +159,7 @@ $utopia->delete('/v1/mock/tests/bar')
         }
     );
 
-$utopia->post('/v1/mock/tests/files')
+$utopia->post('/v1/mock/tests/general/upload')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -183,7 +183,7 @@ $utopia->post('/v1/mock/tests/files')
         }
     );
 
-$utopia->get('/v1/mock/tests/redirect')
+$utopia->get('/v1/mock/tests/general/redirect')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -191,18 +191,30 @@ $utopia->get('/v1/mock/tests/redirect')
     ->label('sdk.description', 'Mock a redirect request for SDK tests')
     ->action(
         function () use ($request) {
-            $response->redirect('/v1/mock/tests/redirected');
+            $response->redirect('/v1/mock/tests/general/redirected');
         }
     );
 
-$utopia->get('/v1/mock/tests/redirected')
+$utopia->get('/v1/mock/tests/general/redirected')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
-    ->label('sdk.method', 'redirect')
+    ->label('sdk.method', 'redirected')
     ->label('sdk.description', 'Mock a redirected request for SDK tests')
     ->action(
         function () use ($request) {
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/empty')
+    ->desc('Mock a post request for SDK tests')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'empty')
+    ->label('sdk.description', 'Mock a redirected request for SDK tests')
+    ->action(
+        function () use ($response) {
+            $response->noContent();
         }
     );
 
