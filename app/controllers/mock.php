@@ -190,7 +190,7 @@ $utopia->get('/v1/mock/tests/general/redirect')
     ->label('sdk.method', 'redirect')
     ->label('sdk.description', 'Mock a redirect request for SDK tests')
     ->action(
-        function () use ($request) {
+        function () use ($response) {
             $response->redirect('/v1/mock/tests/general/redirected');
         }
     );
@@ -202,7 +202,7 @@ $utopia->get('/v1/mock/tests/general/redirected')
     ->label('sdk.method', 'redirected')
     ->label('sdk.description', 'Mock a redirected request for SDK tests')
     ->action(
-        function () use ($request) {
+        function () {
         }
     );
 
