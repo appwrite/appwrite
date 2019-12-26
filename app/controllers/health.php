@@ -101,7 +101,7 @@ $utopia->get('/v1/health/webhooks')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $response->json(['size' => Resque::size('webhooks')]);
+            $response->json(['size' => Resque::size('v1-webhooks')]);
         }
     );
 
