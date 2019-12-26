@@ -33,5 +33,8 @@ class CronTest extends TestCase
         // $this->assertEquals($this->object->isValid('0 2 * * sun'), true); // execute on first sunday of every month
         $this->assertEquals($this->object->isValid('0 */4 * * *'), true); //  execute on every four hours
         // $this->assertEquals($this->object->isValid('0 4,17 * * sun,mon'), true); // execute twice on every Sunday and Monday
+        $this->assertEquals($this->object->isValid('bad expression'), false);
+        $this->assertEquals(null, false);
+        $this->assertEquals('', false);
     }
 }
