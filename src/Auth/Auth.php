@@ -51,8 +51,8 @@ class Auth
     /**
      * Token Expiration times.
      */
-    const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;         /* 1 year */
-    const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;             /* 1 hour */
+    const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+    const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
     const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     const TOKEN_EXPIRATION_CONFIRM = 3600 * 24 * 7;    /* 7 days */
 
