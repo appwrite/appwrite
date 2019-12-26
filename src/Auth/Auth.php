@@ -7,26 +7,11 @@ use Database\Document;
 class Auth
 {
     /**
-     * User Gender.
-     */
-    const USER_GENDER_TYPE_NOT_SET = 0;
-    const USER_GENDER_TYPE_MALE = 1;
-    const USER_GENDER_TYPE_FEMALE = 2;
-    const USER_GENDER_TYPE_OTHER = 3;
-
-    /**
      * User Status.
      */
     const USER_STATUS_UNACTIVATED = 0;
     const USER_STATUS_ACTIVATED = 1;
     const USER_STATUS_BLOCKED = 2;
-
-    /**
-     * User Types.
-     */
-    const USER_TYPE_USER = 0;
-    const USER_TYPE_PARENT = 1;
-    const USER_TYPE_APP = 2;
 
     /**
      * User Roles.
