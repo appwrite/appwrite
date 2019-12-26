@@ -144,7 +144,7 @@ $utopia->put('/v1/mock/tests/bar')
         }
     );
 
-    $utopia->delete('/v1/mock/tests/bar')
+$utopia->delete('/v1/mock/tests/bar')
     ->desc('Mock a delete request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'bar')
@@ -159,10 +159,10 @@ $utopia->put('/v1/mock/tests/bar')
         }
     );
 
-$utopia->post('/v1/mock/tests/files')
+$utopia->post('/v1/mock/tests/general/upload')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
-    ->label('sdk.namespace', 'files')
+    ->label('sdk.namespace', 'general')
     ->label('sdk.method', 'upload')
     ->label('sdk.description', 'Mock a delete request for SDK tests')
     ->label('sdk.consumes', 'multipart/form-data')
@@ -180,6 +180,41 @@ $utopia->post('/v1/mock/tests/files')
                     throw new Exception('Wrong file uploaded', 400);
                 }
             }
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/redirect')
+    ->desc('Mock a post request for SDK tests')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'redirect')
+    ->label('sdk.description', 'Mock a redirect request for SDK tests')
+    ->action(
+        function () use ($response) {
+            $response->redirect('/v1/mock/tests/general/redirected');
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/redirected')
+    ->desc('Mock a post request for SDK tests')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'redirected')
+    ->label('sdk.description', 'Mock a redirected request for SDK tests')
+    ->action(
+        function () {
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/empty')
+    ->desc('Mock a post request for SDK tests')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'empty')
+    ->label('sdk.description', 'Mock a redirected request for SDK tests')
+    ->action(
+        function () use ($response) {
+            $response->noContent();
         }
     );
 

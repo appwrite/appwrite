@@ -13,6 +13,7 @@
 * Fixed bug where user status was saved as a string instead of an integer
 * Fixed gravatar icons not showing up correctly on the console
 * Fixed code location of project not found error
+* Fixed bug where tags element would ignore tab key for parsing new tags
 
 # Version 0.4.0 (PRE-RELEASE)
 
