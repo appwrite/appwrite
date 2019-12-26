@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 class TemplateTest extends TestCase
 {
     /**
-     * @var Cron
+     * @var Template
      */
     protected $object = null;
 
