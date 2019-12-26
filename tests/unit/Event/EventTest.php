@@ -2,12 +2,11 @@
 
 namespace Appwrite\Tests;
 
-use Exception;
 use Utopia\Request;
 use Event\Event;
 use PHPUnit\Framework\TestCase;
 
-class LocaleTest extends TestCase
+class EventTest extends TestCase
 {
     /**
      * @var Event
