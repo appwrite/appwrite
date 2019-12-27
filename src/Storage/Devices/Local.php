@@ -150,7 +150,7 @@ class Local extends Device
             return true;
         }
 
-        throw new Exception('Upload failed');
+        return false;
     }
 
     /**
