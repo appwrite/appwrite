@@ -4,7 +4,6 @@ namespace Appwrite\Tests;
 
 use Exception;
 use Storage\Compression\Algorithms\GZIP;
-use Storage\Devices\Local;
 use PHPUnit\Framework\TestCase;
 
 class GZIPTest extends TestCase

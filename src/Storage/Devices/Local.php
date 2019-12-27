@@ -34,7 +34,7 @@ class Local extends Device
      */
     public function getDescription()
     {
-        return 'Just the local storage that is in the physical or virtual machine';
+        return 'Adapter for Local storage that is in the physical or virtual machine or mounted to it.';
     }
 
     /**
