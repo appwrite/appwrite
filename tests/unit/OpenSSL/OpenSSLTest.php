@@ -7,11 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 class OpenSSLTest extends TestCase
 {
-    /**
-     * @var Cron
-     */
-    protected $object = null;
-
     public function setUp()
     {
     }
