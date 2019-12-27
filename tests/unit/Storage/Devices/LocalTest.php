@@ -43,6 +43,46 @@ class LocalTest extends TestCase
         $this->assertEquals($this->object->getPath('x.png'), '/usr/share/nginx/html/tests/resources/disk-a/x/./p/n/x.png');
         $this->assertEquals($this->object->getPath('y'), '/usr/share/nginx/html/tests/resources/disk-a/y/x/x/x/y');
     }
+
+    public function testWrite()
+    {
+        $this->assertEquals($this->object->write($this->object->getPath('text.txt'), 'Hello World'), true);
+        $this->assertEquals(file_exists($this->object->getPath('text.txt')), true);
+        $this->assertEquals(is_readable($this->object->getPath('text.txt')), true);
+
+        $this->object->delete($this->object->getPath('text.txt'));
+    }
+
+    public function testRead()
+    {
+        $this->assertEquals($this->object->write($this->object->getPath('text-for-read.txt'), 'Hello World'), true);
+        $this->assertEquals($this->object->read($this->object->getPath('text-for-read.txt')), 'Hello World');
+        
+        $this->object->delete($this->object->getPath('text-for-read.txt'));
+    }
+
+    public function testMove()
+    {
+        $this->assertEquals($this->object->write($this->object->getPath('text-for-move.txt'), 'Hello World'), true);
+        $this->assertEquals($this->object->read($this->object->getPath('text-for-move.txt')), 'Hello World');
+        $this->assertEquals($this->object->move($this->object->getPath('text-for-move.txt'), $this->object->getPath('text-for-move-new.txt')), true);
+        $this->assertEquals($this->object->read($this->object->getPath('text-for-move-new.txt')), 'Hello World');
+        $this->assertEquals(file_exists($this->object->getPath('text-for-move.txt')), false);
+        $this->assertEquals(is_readable($this->object->getPath('text-for-move.txt')), false);
+        $this->assertEquals(file_exists($this->object->getPath('text-for-move-new.txt')), true);
+        $this->assertEquals(is_readable($this->object->getPath('text-for-move-new.txt')), true);
+
+        $this->object->delete($this->object->getPath('text-for-move-new.txt'));
+    }
+
+    public function testDelete()
+    {
+        $this->assertEquals($this->object->write($this->object->getPath('text-for-delete.txt'), 'Hello World'), true);
+        $this->assertEquals($this->object->read($this->object->getPath('text-for-delete.txt')), 'Hello World');
+        $this->assertEquals($this->object->delete($this->object->getPath('text-for-delete.txt')), true);
+        $this->assertEquals(file_exists($this->object->getPath('text-for-delete.txt')), false);
+        $this->assertEquals(is_readable($this->object->getPath('text-for-delete.txt')), false);
+    }
     
     public function testFileSize()
     {
@@ -68,8 +108,8 @@ class LocalTest extends TestCase
     
     public function testDirectorySize()
     {
-        $this->assertEquals($this->object->getDirectorySize(__DIR__ . '/../../../resources/disk-a/'), 731597);
-        $this->assertEquals($this->object->getDirectorySize(__DIR__ . '/../../../resources/disk-b/'), 3728550);
+        $this->assertGreaterThan(0, $this->object->getDirectorySize(__DIR__ . '/../../../resources/disk-a/'));
+        $this->assertGreaterThan(0, $this->object->getDirectorySize(__DIR__ . '/../../../resources/disk-b/'));
     }
     
     public function testPartitionFreeSpace()

@@ -115,11 +115,42 @@ class Local extends Device
      * @param string $path
      * @param string $data
      *
-     * @return string
+     * @return bool
      */
     public function write(string $path, string $data):bool
     {
+        if (!file_exists(dirname($path))) { // Checks if directory path to file exists
+            if (!@mkdir(dirname($path), 0755, true)) {
+                throw new Exception('Can\'t create directory '.dirname($path));
+            }
+        }
+
         return file_put_contents($path, $data);
+    }
+
+    /**
+     * Move file from given source to given path, Return true on success and false on failure.
+     *
+     * @see http://php.net/manual/en/function.filesize.php
+     *
+     * @param string $source
+     * @param string $target
+     *
+     * @return bool
+     */
+    public function move(string $source, string $target):bool
+    {
+        if (!file_exists(dirname($target))) { // Checks if directory path to file exists
+            if (!@mkdir(dirname($target), 0755, true)) {
+                throw new Exception('Can\'t create directory '.dirname($target));
+            }
+        }
+
+        if (rename($source, $target)) {
+            return true;
+        }
+
+        throw new Exception('Upload failed');
     }
 
     /**

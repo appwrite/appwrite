@@ -78,6 +78,18 @@ abstract class Device
     abstract public function write(string $path, string $data):bool;
 
     /**
+     * Move file from given source to given path, Return true on success and false on failure.
+     *
+     * @see http://php.net/manual/en/function.filesize.php
+     *
+     * @param string $source
+     * @param string $target
+     *
+     * @return bool
+     */
+    abstract public function move(string $source, string $target):bool;
+
+    /**
      * Delete file in given path, Return true on success and false on failure.
      *
      * @see http://php.net/manual/en/function.filesize.php
