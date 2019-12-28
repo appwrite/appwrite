@@ -23,6 +23,9 @@ class PasswordTestTest extends TestCase
 
     public function testValues()
     {
+        $this->assertEquals($this->object->isValid(false), false);
+        $this->assertEquals($this->object->isValid(null), false);
+        $this->assertEquals($this->object->isValid(''), false);
         $this->assertEquals($this->object->isValid('1'), false);
         $this->assertEquals($this->object->isValid('12'), false);
         $this->assertEquals($this->object->isValid('123'), false);
