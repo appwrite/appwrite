@@ -129,4 +129,17 @@ class ResizeTest extends TestCase
 
         \unlink($target);
     }
+
+    public function testCrop100x100Output()
+    {
+        $resize = new Resize(\file_get_contents(__DIR__ . '/../../resources/disk-a/kitten-1.jpg'));
+        $original = __DIR__.'/../../resources/resize/100x100.jpg';
+
+        $resize->crop(100, 100);
+
+        $result = $resize->output('jpg', 100);
+
+        $this->assertEquals(!empty($result), true);
+        $this->assertEquals(\md5($result), \md5(\file_get_contents($original)));
+    }
 }
