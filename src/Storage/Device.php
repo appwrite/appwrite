@@ -47,16 +47,16 @@ abstract class Device
     /**
      * Upload.
      *
-     * Upload a file to desired destination in the selected disk.
+     * Upload a file to desired destination in the selected disk, return true on success and false on failure.
      *
-     * @param string $target
-     * @param string $filename
+     * @param string $source
+     * @param string $path
      *
      * @throws \Exception
      *
-     * @return string|bool saved destination on success or false on failures
+     * @return bool
      */
-    abstract public function upload($target, $filename = '');
+    abstract public function upload($source, $path):bool;
     
     /**
      * Read file by given path.
@@ -78,7 +78,7 @@ abstract class Device
     abstract public function write(string $path, string $data):bool;
 
     /**
-     * Move file from given source to given path, Return true on success and false on failure.
+     * Move file from given source to given path, return true on success and false on failure.
      *
      * @see http://php.net/manual/en/function.filesize.php
      *
@@ -90,7 +90,7 @@ abstract class Device
     abstract public function move(string $source, string $target):bool;
 
     /**
-     * Delete file in given path, Return true on success and false on failure.
+     * Delete file in given path return true on success and false on failure.
      *
      * @see http://php.net/manual/en/function.filesize.php
      *

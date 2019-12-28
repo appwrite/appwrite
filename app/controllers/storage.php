@@ -18,6 +18,7 @@ use Storage\Storage;
 use Storage\Devices\Local;
 use Storage\Validators\File;
 use Storage\Validators\FileSize;
+use Storage\Validators\Upload;
 use Storage\Compression\Algorithms\GZIP;
 use Resize\Resize;
 use OpenSSL\OpenSSL;
@@ -189,7 +190,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             if (!Storage::exists($storage)) {
-                throw new Exception('No such storage device');
+                throw new Exception('No such storage device', 400);
             }
 
             if ((strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
@@ -209,7 +210,6 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             $algorithm = $file->getAttribute('algorithm');
             $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
             $cipher = $file->getAttribute('fileOpenSSLCipher');
-            //$mimeType       = $file->getAttribute('mimeType', 'unknown');
 
             $compressor = new GZIP();
             $device = Storage::getDevice('local');
@@ -413,10 +413,11 @@ $utopia->post('/v1/storage/files')
             $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
 
             /*
-             * Validation
+             * Validators
              */
-            //$fileType 	= new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
+            //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
             $fileSize = new FileSize(2097152 * 2); // 4MB
+            $upload = new Upload();
 
             if (empty($files)) {
                 throw new Exception('No files sent', 400);
@@ -450,11 +451,20 @@ $utopia->post('/v1/storage/files')
             $device = Storage::getDevice('local');
 
             foreach ($files['tmp_name'] as $i => $tmpName) {
+                if (!$upload->isValid($tmpName)) {
+                    throw new Exception('Invalid file', 403);
+                }
+
                 // Save to storage
                 $name = $files['name'][$i];
                 $size = $device->getFileSize($tmpName);
-                $path = $device->upload($tmpName, $files['name'][$i]);
-                $mimeType = $device->getFileMimeType($path);
+                $path = $device->getPath(uniqid().'.'.pathinfo($name, PATHINFO_EXTENSION));
+                
+                if (!$device->upload($tmpName, $path)) { // TODO deprecate 'upload' and replace with 'move'
+                    throw new Exception('Failed moving file', 500);
+                }
+
+                $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
                 // Check if file size is exceeding allowed limit
                 if (!$antiVirus->fileScan($path)) {

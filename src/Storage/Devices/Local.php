@@ -73,28 +73,19 @@ class Local extends Device
      *
      * @return string|bool saved destination on success or false on failures
      */
-    public function upload($target, $filename = '')
+    public function upload($source, $path):bool
     {
-        $filename = (empty($filename)) ? $target : $filename;
-        $filename = uniqid().'.'.pathinfo($filename, PATHINFO_EXTENSION);
-
-        $path = $this->getPath($filename);
-
-        if (!is_uploaded_file($target)) {
-            throw new Exception('File is not a valid uploaded file');
-        }
-
         if (!file_exists(dirname($path))) { // Checks if directory path to file exists
             if (!@mkdir(dirname($path), 0755, true)) {
-                throw new Exception('Can\'t create directory '.dirname($path));
+                throw new Exception('Can\'t create directory: '.dirname($path));
             }
         }
 
-        if (move_uploaded_file($target, $path)) {
-            return $path;
+        if (move_uploaded_file($source, $path)) {
+            return true;
         }
 
-        throw new Exception('Upload failed');
+        return false;
     }
 
     /**
