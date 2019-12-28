@@ -189,7 +189,7 @@ class Auth
      * @param int    $type
      * @param string $secret
      *
-     * @return bool|int
+     * @return bool|string
      */
     public static function tokenVerify(array $tokens, int $type, string $secret)
     {
