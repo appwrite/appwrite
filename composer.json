@@ -42,6 +42,7 @@
 
         "utopia-php/framework": "master",
         "utopia-php/abuse": "master",
+        "utopia-php/audit": "master",
         "utopia-php/cache": "master",
         "utopia-php/cli": "master",
         "utopia-php/locale": "master",
