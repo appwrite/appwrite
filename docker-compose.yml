@@ -100,18 +100,18 @@ services:
     networks:
     - appwrite
 
-  resque:
-    image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
-    restart: unless-stopped
-    networks:
-    - appwrite
-    ports:
-    - "5678:5678"
-    environment:
-    - RESQUE_WEB_HOST=redis
-    - RESQUE_WEB_PORT=6379
-    - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-    - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
+  # resque:
+  #   image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
+  #   restart: unless-stopped
+  #   networks:
+  #   - appwrite
+  #   ports:
+  #   - "5678:5678"
+  #   environment:
+  #   - RESQUE_WEB_HOST=redis
+  #   - RESQUE_WEB_PORT=6379
+  #   - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
+  #   - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
 networks:
   appwrite:
