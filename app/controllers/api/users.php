@@ -10,6 +10,8 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Locale\Locale;
 use Database\Database;
 use Database\Validator\UID;
@@ -219,12 +221,14 @@ $utopia->get('/v1/users/:userId/logs')
                 throw new Exception('User not found', 404);
             }
 
-            $ad = new \Audit\Adapter\MySQL($register->get('db'));
-            $ad->setNamespace('app_'.$project->getUid());
-            $au = new \Audit\Audit($ad, $user->getUid(), $user->getAttribute('type'), '', '', '');
+            $adapter = new AuditAdapter($register->get('db'));
+            $adapter->setNamespace('app_'.$project->getUid());
+
+            $audit = new Audit($adapter);
+            
             $countries = Locale::getText('countries');
 
-            $logs = $au->getLogsByUser($user->getUid(), $user->getAttribute('type', 0));
+            $logs = $audit->getLogsByUser($user->getUid());
 
             $reader = new Reader(__DIR__.'/../../db/GeoLite2/GeoLite2-Country.mmdb');
             $output = [];

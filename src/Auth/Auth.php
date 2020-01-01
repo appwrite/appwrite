@@ -7,26 +7,11 @@ use Database\Document;
 class Auth
 {
     /**
-     * User Gender.
-     */
-    const USER_GENDER_TYPE_NOT_SET = 0;
-    const USER_GENDER_TYPE_MALE = 1;
-    const USER_GENDER_TYPE_FEMALE = 2;
-    const USER_GENDER_TYPE_OTHER = 3;
-
-    /**
      * User Status.
      */
     const USER_STATUS_UNACTIVATED = 0;
     const USER_STATUS_ACTIVATED = 1;
     const USER_STATUS_BLOCKED = 2;
-
-    /**
-     * User Types.
-     */
-    const USER_TYPE_USER = 0;
-    const USER_TYPE_PARENT = 1;
-    const USER_TYPE_APP = 2;
 
     /**
      * User Roles.
@@ -51,8 +36,8 @@ class Auth
     /**
      * Token Expiration times.
      */
-    const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;         /* 1 year */
-    const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;             /* 1 hour */
+    const TOKEN_EXPIRATION_LOGIN_LONG = 31536000;      /* 1 year */
+    const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
     const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     const TOKEN_EXPIRATION_CONFIRM = 3600 * 24 * 7;    /* 7 days */
 
@@ -204,7 +189,7 @@ class Auth
      * @param int    $type
      * @param string $secret
      *
-     * @return bool|int
+     * @return bool|string
      */
     public static function tokenVerify(array $tokens, int $type, string $secret)
     {

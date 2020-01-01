@@ -26,7 +26,7 @@
         "psr-4": {"Tests\\E2E\\": "tests/e2e"}
     },
     "require": {
-        "php": ">=7.3.0",
+        "php": ">=7.4.0",
         "ext-curl": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
@@ -42,6 +42,7 @@
 
         "utopia-php/framework": "master",
         "utopia-php/abuse": "master",
+        "utopia-php/audit": "master",
         "utopia-php/cache": "master",
         "utopia-php/cli": "master",
         "utopia-php/locale": "master",
@@ -73,7 +74,7 @@
     "minimum-stability": "dev",
     "config": {
         "platform": {
-            "php": "7.3"
+            "php": "7.4"
         }
     }
 }

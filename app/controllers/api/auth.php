@@ -161,7 +161,7 @@ $utopia->post('/v1/auth/register')
                 //     return;
                 // }
 
-                // throw new Exception('Problem sending mail: ' . $error->getError(), 500);
+                // throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
             }
 
             $webhook
@@ -294,7 +294,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
             try {
                 $mail->send();
             } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
+                //throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
             }
 
             $response->json(array('result' => 'success'));
@@ -750,7 +750,7 @@ $utopia->post('/v1/auth/recovery')
             try {
                 $mail->send();
             } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
+                //throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
             }
 
             $audit

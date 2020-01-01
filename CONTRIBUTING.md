@@ -162,7 +162,7 @@ Before running the command, make sure you have proper write permissions to the A
 To run tests manually, run phpunit from your command line:
 
 ```bash
-vendor/bin/phpunit --configuration phpunit.xml
+docker exec appwrite /bin/bash -c '/usr/share/nginx/html/vendor/bin/phpunit'
 ```
 
 ## Tutorials
