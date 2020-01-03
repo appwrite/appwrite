@@ -117,4 +117,11 @@ return [
         'sdk' => true,
         'tests' => false,
     ],
+    'v1/graphql' => [
+        'name' => 'GraphQL',
+        'description' => 'GraphQL Endpoint',
+        'controller' => 'controllers/api/graphql.php',
+        'sdk' => false,
+        'tests' => false,
+    ],
 ];
