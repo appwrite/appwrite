@@ -3,7 +3,6 @@
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Database\Database;
 
 global $utopia, $request, $response, $register, $user, $project;
 
