@@ -1,19 +1,26 @@
 <?php
 
-global $utopia, $register, $response, $user, $audit, $project, $projectDB, $providers;
+global $utopia, $register, $request, $response, $user, $audit, $webhook, $project, $domain, $projectDB, $providers, $clients;
 
 use Utopia\Exception;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
+use Utopia\Validator\WhiteList;
+use Utopia\Validator\Host;
+use Utopia\Validator\URL;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Locale\Locale;
 use Auth\Auth;
 use Auth\Validator\Password;
 use Database\Database;
+use Database\Document;
+use Database\Validator\UID;
 use Database\Validator\Authorization;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
+use Template\Template;
+use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -21,7 +28,7 @@ $utopia->get('/v1/account')
     ->desc('Get Account')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'get')
+    ->label('sdk.method', 'getAccount')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->action(
         function () use ($response, &$user, $providers) {
@@ -53,7 +60,7 @@ $utopia->get('/v1/account/prefs')
     ->desc('Get Account Preferences')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getPrefs')
+    ->label('sdk.method', 'getAccountPrefs')
     ->label('sdk.description', '/docs/references/account/get-prefs.md')
     ->action(
         function () use ($response, $user) {
@@ -77,7 +84,7 @@ $utopia->get('/v1/account/sessions')
     ->desc('Get Account Active Sessions')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getSessions')
+    ->label('sdk.method', 'getAccountSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
     ->action(
         function () use ($response, $user) {
@@ -134,7 +141,7 @@ $utopia->get('/v1/account/security')
     ->desc('Get Account Security Log')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getSecurity')
+    ->label('sdk.method', 'getAccountSecurity')
     ->label('sdk.description', '/docs/references/account/get-security.md')
     ->action(
         function () use ($response, $register, $project, $user) {
@@ -196,6 +203,160 @@ $utopia->get('/v1/account/security')
             }
 
             $response->json($output);
+        }
+    );
+
+$utopia->post('/v1/account')
+    ->desc('Create a new account')
+    ->label('webhook', 'account.create')
+    ->label('scope', 'auth')
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createAccount')
+    ->label('sdk.description', '/docs/references/auth/register.md')
+    ->label('abuse-limit', 10)
+    ->param('email', '', function () { return new Email(); }, 'Account email')
+    ->param('password', '', function () { return new Password(); }, 'User password')
+    ->param('confirm', '', function () use ($clients) { return new Host($clients); }, 'Confirmation URL to redirect user after confirm token has been sent to user email') // TODO add our own built-in confirm page
+    ->param('name', '', function () { return new Text(100); }, 'User name', true)
+    ->action(
+        function ($email, $password, $confirm, $name) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
+            if ('console' === $project->getUid()) {
+                $whitlistEmails = $project->getAttribute('authWhitelistEmails');
+                $whitlistIPs = $project->getAttribute('authWhitelistIPs');
+                $whitlistDomains = $project->getAttribute('authWhitelistDomains');
+
+                if (!empty($whitlistEmails) && !in_array($email, $whitlistEmails)) {
+                    throw new Exception('Console registration is restricted to specific emails. Contact your administrator for more information.', 401);
+                }
+
+                if (!empty($whitlistIPs) && !in_array($request->getIP(), $whitlistIPs)) {
+                    throw new Exception('Console registration is restricted to specific IPs. Contact your administrator for more information.', 401);
+                }
+
+                if (!empty($whitlistDomains) && !in_array(substr(strrchr($email, '@'), 1), $whitlistDomains)) {
+                    throw new Exception('Console registration is restricted to specific domains. Contact your administrator for more information.', 401);
+                }
+            }
+
+            $profile = $projectDB->getCollection([ // Get user by email address
+                'limit' => 1,
+                'first' => true,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
+            ]);
+
+            if (!empty($profile)) {
+                throw new Exception('Account already exists', 409);
+            }
+
+            $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $confirmSecret = Auth::tokenGenerator();
+            $loginSecret = Auth::tokenGenerator();
+
+            Authorization::disable();
+
+            $user = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['user:{self}'],
+                ],
+                'email' => $email,
+                'status' => Auth::USER_STATUS_UNACTIVATED,
+                'password' => Auth::passwordHash($password),
+                'password-update' => time(),
+                'registration' => time(),
+                'confirm' => false,
+                'reset' => false,
+                'name' => $name,
+            ]);
+
+            Authorization::enable();
+
+            if (false === $user) {
+                throw new Exception('Failed saving user to DB', 500);
+            }
+
+            Authorization::setRole('user:'.$user->getUid());
+
+            $user
+                ->setAttribute('tokens', new Document([
+                    '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                    '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
+                    'type' => Auth::TOKEN_TYPE_CONFIRM,
+                    'secret' => Auth::hash($confirmSecret), // On way hash encryption to protect DB leak
+                    'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
+                    'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+                    'ip' => $request->getIP(),
+                ]), Document::SET_TYPE_APPEND)
+                ->setAttribute('tokens', new Document([
+                    '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                    '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
+                    'type' => Auth::TOKEN_TYPE_LOGIN,
+                    'secret' => Auth::hash($loginSecret), // On way hash encryption to protect DB leak
+                    'expire' => $expiry,
+                    'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+                    'ip' => $request->getIP(),
+                ]), Document::SET_TYPE_APPEND)
+            ;
+
+            $user = $projectDB->createDocument($user->getArrayCopy());
+
+            if (false === $user) {
+                throw new Exception('Failed saving tokens to DB', 500);
+            }
+
+            // Send email address confirmation email
+
+            $confirm = Template::parseURL($confirm);
+            $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
+            $confirm = Template::unParseURL($confirm);
+
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
+            $body
+                ->setParam('{{direction}}', Locale::getText('settings.direction'))
+                ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
+                ->setParam('{{name}}', $name)
+                ->setParam('{{redirect}}', $confirm)
+            ;
+
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
+
+            $mail->addAddress($email, $name);
+
+            $mail->Subject = Locale::getText('auth.emails.confirm.title');
+            $mail->Body = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            } catch (\Exception $error) {
+                // if($failure) {
+                //     $response->redirect($failure);
+                //     return;
+                // }
+
+                // throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
+            }
+
+            $webhook
+                ->setParam('payload', [
+                    'name' => $name,
+                    'email' => $email,
+                ])
+            ;
+
+            $audit
+                ->setParam('userId', $user->getUid())
+                ->setParam('event', 'account.create')
+            ;
+
+            $response
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $loginSecret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
+
+            $response->json(array('result' => 'success'));
         }
     );
 
