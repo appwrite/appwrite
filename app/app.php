@@ -241,6 +241,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
         case 402: // Error allowed publicly
         case 403: // Error allowed publicly
         case 404: // Error allowed publicly
+        case 409: // Error allowed publicly
         case 412: // Error allowed publicly
         case 429: // Error allowed publicly
             $code = $error->getCode();
