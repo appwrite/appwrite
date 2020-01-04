@@ -29,7 +29,7 @@ $utopia->get('/v1/account')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getAccount')
-    ->label('sdk.description', '/docs/references/account/get.md')
+    ->label('sdk.description', '/docs/references/account/get-account.md')
     ->action(
         function () use ($response, &$user, $providers) {
             $oauthKeys = [];
@@ -61,7 +61,7 @@ $utopia->get('/v1/account/prefs')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getAccountPrefs')
-    ->label('sdk.description', '/docs/references/account/get-prefs.md')
+    ->label('sdk.description', '/docs/references/account/get-account-prefs.md')
     ->action(
         function () use ($response, $user) {
             $prefs = $user->getAttribute('prefs', '{}');
@@ -85,7 +85,7 @@ $utopia->get('/v1/account/sessions')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getAccountSessions')
-    ->label('sdk.description', '/docs/references/account/get-sessions.md')
+    ->label('sdk.description', '/docs/references/account/get-account-sessions.md')
     ->action(
         function () use ($response, $user) {
             $tokens = $user->getAttribute('tokens', []);
@@ -137,12 +137,12 @@ $utopia->get('/v1/account/sessions')
         }
     );
 
-$utopia->get('/v1/account/security')
+$utopia->get('/v1/account/logs')
     ->desc('Get Account Security Log')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getAccountSecurity')
-    ->label('sdk.description', '/docs/references/account/get-security.md')
+    ->label('sdk.method', 'getAccountLogs')
+    ->label('sdk.description', '/docs/references/account/get-account-logs.md')
     ->action(
         function () use ($response, $register, $project, $user) {
             $adapter = new AuditAdapter($register->get('db'));
@@ -212,7 +212,7 @@ $utopia->post('/v1/account')
     ->label('scope', 'auth')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createAccount')
-    ->label('sdk.description', '/docs/references/auth/register.md')
+    ->label('sdk.description', '/docs/references/account/create-account.md')
     ->label('abuse-limit', 10)
     ->param('email', '', function () { return new Email(); }, 'Account email')
     ->param('password', '', function () { return new Password(); }, 'User password')
@@ -362,11 +362,11 @@ $utopia->post('/v1/account')
 
 $utopia->patch('/v1/account/name')
     ->desc('Update Account Name')
-    ->label('webhook', 'account.update-name')
+    ->label('webhook', 'account.update-account-name')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateName')
-    ->label('sdk.description', '/docs/references/account/update-name.md')
+    ->label('sdk.method', 'updateAccountName')
+    ->label('sdk.description', '/docs/references/account/update-account-name.md')
     ->param('name', '', function () { return new Text(100); }, 'User name')
     ->action(
         function ($name) use ($response, $user, $projectDB, $audit) {
@@ -386,11 +386,11 @@ $utopia->patch('/v1/account/name')
 
 $utopia->patch('/v1/account/password')
     ->desc('Update Account Password')
-    ->label('webhook', 'account.update-password')
+    ->label('webhook', 'account.update-account-password')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updatePassword')
-    ->label('sdk.description', '/docs/references/account/update-password.md')
+    ->label('sdk.method', 'updateAccountPassword')
+    ->label('sdk.description', '/docs/references/account/update-account-password.md')
     ->param('password', '', function () { return new Password(); }, 'New password')
     ->param('old-password', '', function () { return new Password(); }, 'Old password')
     ->action(

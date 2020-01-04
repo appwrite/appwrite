@@ -1,5 +1,5 @@
-The account service allows you to fetch and update information related to the currently logged-in user. You can use the service to retrieve a list of all the user sessions across different devices and a security log with the recent account activity.
+The account service allows you to authenticate and manage a user account. You can use the account service to update user information, retrieve the user sessions across different devices, and fetch the user security logs with his or her recent activity.
 
-Using the account service, you can also allow the logged-in user to update his account name, email, or passwords.
+You can authenticate the user account by using multiple sign-in methods available. Once the user is authenticated, a new session object will be created to allow the user to access his or her private data and settings.
 
-This service also exposes an endpoint to save and read [user preferences](/docs/account#updatePrefs) as a key-value object. This feature is handy if you want to allow extra customization in your app. Common usage for this feature may include saving the user preferred locale, timezone, or custom app theme. The usage of this feature is only limited only by your imagination.
+This service also exposes an endpoint to save and read the [user preferences](/docs/account#updatePrefs) as a key-value object. This feature is handy if you want to allow extra customization in your app. Common usage for this feature may include saving the user preferred locale, timezone, or custom app theme. The usage of this feature is only limited only by your imagination.

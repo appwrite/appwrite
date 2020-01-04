@@ -17,6 +17,6 @@ $utopia->post('/v1/graphql')
     ->label('scope', 'public')
     ->action(
         function () {
-            throw new Exception('Method not supported yet', 500);
+            throw new Exception('GraphQL support is coming soon!', 502);
         }
     );
