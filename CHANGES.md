@@ -7,6 +7,8 @@
 * Update docs example with auth info
 * Allow non-web platform skip origin header
 * Limited to console UI to show max 5 alerts at the same time
+* Added new webhooks events
+* Normnailized all webhooks event names
 
 ## Bug Fixes
 

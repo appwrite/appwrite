@@ -1,16 +1,25 @@
 <?php
 
 $events = [
+    'database.collections.create',
+    'database.collections.update',
+    'database.collections.delete',
     'database.documents.create',
-    'database.documents.patch',
+    'database.documents.update',
     'database.documents.delete',
-    'auth.register',
-    'auth.confirm',
-    'auth.login',
-    'auth.logout',
-    'account.update-name',
-    'account.update-email',
-    'account.update-password',
+    'storage.files.create',
+    'storage.files.update',
+    'storage.files.delete',
+    // 'auth.register',
+    // 'auth.confirm',
+    // 'auth.login',
+    // 'auth.logout',
+    'account.create',
+    'account.update.email',
+    'account.update.name',
+    'account.update.password',
+    'account.update.prefs',
+    'account.delete',
 ];
 
 ?>

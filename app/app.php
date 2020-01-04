@@ -410,7 +410,7 @@ $utopia->get('/v1/proxy')
         }
     );
 
-$utopia->get('/v1/open-api-2.json')
+    $utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
@@ -727,6 +727,71 @@ $utopia->get('/v1/open-api-2.json')
             }*/
 
             ksort($output['paths']);
+
+            $response
+                ->json($output);
+        }
+    );
+
+
+$utopia->get('/v1/debug')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response, $request, $utopia, $domain, $services) {
+            $output = [
+                'webhooks' => [],
+                'methods' => [],
+                'routes' => [],
+            ];
+
+            foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
+                /** @noinspection PhpIncludeInspection */
+                if($service['tests']) {
+                    continue;
+                }
+
+                include_once $service['controller'];
+            }
+            
+            $i = 0;
+
+            foreach ($utopia->getRoutes() as $key => $method) {
+                foreach ($method as $route) { /* @var $route \Utopia\Route */
+                    if (!$route->getLabel('docs', true)) {
+                        continue;
+                    }
+
+                    if (empty($route->getLabel('sdk.namespace', null))) {
+                        continue;
+                    }
+
+                    if ($route->getLabel('webhook', false)) {
+                        if(array_key_exists($route->getLabel('webhook', false), $output['webhooks'])) {
+                            throw new Exception('Webhook ('.$route->getLabel('webhook', false).') is already in use by another route', 500);
+                        }
+
+                        $output['webhooks'][$route->getLabel('webhook', false)] = $route->getMethod().' '.$route->getURL();
+                    }
+
+                    if ($route->getLabel('sdk.namespace', false)) {
+                        $method = $route->getLabel('sdk.namespace', false).'->'.$route->getLabel('sdk.method', false).'()';
+                        if(array_key_exists($method, $output['methods'])) {
+                            throw new Exception('Method ('.$method.') is already in use by another route', 500);
+                        }
+
+                        $output['methods'][$method] = $route->getMethod().' '.$route->getURL();
+                    }
+
+                    $output['routes'][$route->getURL().' ('.$route->getMethod().')'] = [];
+
+                    $i++;
+                }
+            }
+
+            ksort($output['webhooks']);
+            ksort($output['methods']);
+            ksort($output['routes']);
 
             $response
                 ->json($output);
