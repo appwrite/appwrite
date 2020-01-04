@@ -2,7 +2,7 @@
 
 include_once __DIR__ . '/../shared/web.php';
 
-global $utopia, $response, $request, $layout, $version, $providers;
+global $utopia, $response, $request, $layout, $version, $providers, $projectDB;
 
 use Utopia\View;
 use Database\Database;
