@@ -160,6 +160,7 @@ $utopia->post('/v1/database')
 $utopia->put('/v1/database/:collectionId')
     ->desc('Update Collection')
     ->label('scope', 'collections.write')
+    ->label('webhook', 'database.collections.update')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateCollection')
     ->label('sdk.description', '/docs/references/database/update-collection.md')
@@ -169,7 +170,7 @@ $utopia->put('/v1/database/:collectionId')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
-        function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB) {
+        function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
             $collection = $projectDB->getDocument($collectionId, false);
 
             if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
@@ -203,6 +204,18 @@ $utopia->put('/v1/database/:collectionId')
                 throw new Exception('Failed saving collection to DB', 500);
             }
 
+            $data = $collection->getArrayCopy();
+
+            $webhook
+                ->setParam('payload', $data)
+            ;
+
+            $audit
+                ->setParam('event', 'database.collections.update')
+                ->setParam('resource', 'database/collections/'.$data['$uid'])
+                ->setParam('data', $data)
+            ;
+
             $response->json($collection->getArrayCopy());
         }
     );
@@ -210,12 +223,13 @@ $utopia->put('/v1/database/:collectionId')
 $utopia->delete('/v1/database/:collectionId')
     ->desc('Delete Collection')
     ->label('scope', 'collections.write')
+    ->label('webhook', 'database.collections.delete')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
     ->action(
-        function ($collectionId) use ($response, $projectDB, $audit) {
+        function ($collectionId) use ($response, $projectDB, $webhook, $audit) {
             $collection = $projectDB->getDocument($collectionId, false);
 
             if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
@@ -225,11 +239,17 @@ $utopia->delete('/v1/database/:collectionId')
             if (!$projectDB->deleteDocument($collectionId)) {
                 throw new Exception('Failed to remove collection from DB', 500);
             }
+            
+            $data = $collection->getArrayCopy();
+
+            $webhook
+                ->setParam('payload', $data)
+            ;
 
             $audit
-                ->setParam('event', 'database.collections.create')
-                ->setParam('resource', 'database/collection/'.$collection->getUid())
-                ->setParam('data', $collection->getArrayCopy()) // Audit document in case of malicious or disastrous action
+                ->setParam('event', 'database.collections.delete')
+                ->setParam('resource', 'database/collections/'.$data['$uid'])
+                ->setParam('data', $data)
             ;
 
             $response->noContent();
@@ -454,7 +474,7 @@ $utopia->post('/v1/database/:collectionId/documents')
 
 $utopia->patch('/v1/database/:collectionId/documents/:documentId')
     ->desc('Update Document')
-    ->label('webhook', 'database.documents.patch')
+    ->label('webhook', 'database.documents.update')
     ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'updateDocument')
@@ -518,7 +538,7 @@ $utopia->patch('/v1/database/:collectionId/documents/:documentId')
             ;
 
             $audit
-                ->setParam('event', 'database.documents.patch')
+                ->setParam('event', 'database.documents.update')
                 ->setParam('resource', 'database/document/'.$data['$uid'])
                 ->setParam('data', $data)
             ;
@@ -533,13 +553,14 @@ $utopia->patch('/v1/database/:collectionId/documents/:documentId')
 $utopia->delete('/v1/database/:collectionId/documents/:documentId')
     ->desc('Delete Document')
     ->label('scope', 'documents.write')
+    ->label('webhook', 'database.documents.delete')
     ->label('sdk.namespace', 'database')
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
     ->action(
-        function ($collectionId, $documentId) use ($response, $projectDB, $audit, $isDev) {
+        function ($collectionId, $documentId) use ($response, $projectDB, $audit, $webhook, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);
             $document = $projectDB->getDocument($documentId, $isDev);
 
@@ -561,10 +582,16 @@ $utopia->delete('/v1/database/:collectionId/documents/:documentId')
                 throw new Exception('Failed to remove document from DB', 500);
             }
 
+            $data = $document->getArrayCopy();
+
+            $webhook
+                ->setParam('payload', $data)
+            ;
+
             $audit
                 ->setParam('event', 'database.documents.delete')
-                ->setParam('resource', 'database/document/'.$documentId)
-                ->setParam('data', $document->getArrayCopy()) // Audit document in case of malicious or disastrous action
+                ->setParam('resource', 'database/document/'.$data['$uid'])
+                ->setParam('data', $data) // Audit document in case of malicious or disastrous action
             ;
 
             $response->noContent();

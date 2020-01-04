@@ -48,7 +48,6 @@ $utopia->get('/v1/account')
                     '$uid',
                     'email',
                     'registration',
-                    'confirm',
                     'name',
                 ],
                 $oauthKeys
@@ -216,10 +215,9 @@ $utopia->post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('email', '', function () { return new Email(); }, 'Account email')
     ->param('password', '', function () { return new Password(); }, 'User password')
-    ->param('confirm', '', function () use ($clients) { return new Host($clients); }, 'Confirmation URL to redirect user after confirm token has been sent to user email') // TODO add our own built-in confirm page
     ->param('name', '', function () { return new Text(100); }, 'User name', true)
     ->action(
-        function ($email, $password, $confirm, $name) use ($request, $response, $register, $audit, $projectDB, $project, $webhook) {
+        function ($email, $password, $name) use ($request, $response, $audit, $projectDB, $project, $webhook) {
             if ('console' === $project->getUid()) {
                 $whitlistEmails = $project->getAttribute('authWhitelistEmails');
                 $whitlistIPs = $project->getAttribute('authWhitelistIPs');
@@ -252,7 +250,6 @@ $utopia->post('/v1/account')
             }
 
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-            $confirmSecret = Auth::tokenGenerator();
             $loginSecret = Auth::tokenGenerator();
 
             Authorization::disable();
@@ -285,15 +282,6 @@ $utopia->post('/v1/account')
                 ->setAttribute('tokens', new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
                     '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
-                    'type' => Auth::TOKEN_TYPE_CONFIRM,
-                    'secret' => Auth::hash($confirmSecret), // On way hash encryption to protect DB leak
-                    'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
-                    'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
-                    'ip' => $request->getIP(),
-                ]), Document::SET_TYPE_APPEND)
-                ->setAttribute('tokens', new Document([
-                    '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                    '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
                     'type' => Auth::TOKEN_TYPE_LOGIN,
                     'secret' => Auth::hash($loginSecret), // On way hash encryption to protect DB leak
                     'expire' => $expiry,
@@ -306,39 +294,6 @@ $utopia->post('/v1/account')
 
             if (false === $user) {
                 throw new Exception('Failed saving tokens to DB', 500);
-            }
-
-            // Send email address confirmation email
-
-            $confirm = Template::parseURL($confirm);
-            $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
-            $confirm = Template::unParseURL($confirm);
-
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
-            $body
-                ->setParam('{{direction}}', Locale::getText('settings.direction'))
-                ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-                ->setParam('{{name}}', $name)
-                ->setParam('{{redirect}}', $confirm)
-            ;
-
-            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-
-            $mail->addAddress($email, $name);
-
-            $mail->Subject = Locale::getText('auth.emails.confirm.title');
-            $mail->Body = $body->render();
-            $mail->AltBody = strip_tags($body->render());
-
-            try {
-                $mail->send();
-            } catch (\Exception $error) {
-                // if($failure) {
-                //     $response->redirect($failure);
-                //     return;
-                // }
-
-                // throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
             }
 
             $webhook
@@ -360,9 +315,81 @@ $utopia->post('/v1/account')
         }
     );
 
+$utopia->post('/v1/account/sessions')
+    ->desc('Login')
+    ->label('webhook', 'account.sessions.create')
+    ->label('scope', 'account')
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createAccountSession')
+    ->label('sdk.description', '/docs/references/account/create-account-session.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('email', '', function () { return new Email(); }, 'User account email address')
+    ->param('password', '', function () { return new Password(); }, 'User account password')
+    ->action(
+        function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook) {
+            $profile = $projectDB->getCollection([ // Get user by email address
+                'limit' => 1,
+                'first' => true,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
+            ]);
+
+            if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
+                $audit
+                    //->setParam('userId', $profile->getUid())
+                    ->setParam('event', 'auth.failure')
+                ;
+
+                throw new Exception('Invalid credentials', 401); // Wrong password or username
+            }
+
+            $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $secret = Auth::tokenGenerator();
+
+            $profile->setAttribute('tokens', new Document([
+                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
+                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+                'ip' => $request->getIP(),
+            ]), Document::SET_TYPE_APPEND);
+
+            Authorization::setRole('user:'.$profile->getUid());
+
+            $profile = $projectDB->updateDocument($profile->getArrayCopy());
+
+            if (false === $profile) {
+                throw new Exception('Failed saving user to DB', 500);
+            }
+
+            $webhook
+                ->setParam('payload', [
+                    'name' => $profile->getAttribute('name', ''),
+                    'email' => $profile->getAttribute('email', ''),
+                ])
+            ;
+
+            $audit
+                ->setParam('userId', $profile->getUid())
+                ->setParam('event', 'auth.login')
+            ;
+
+            $response
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
+
+            $response
+                ->json(array('result' => 'success'));
+        }
+    );
+
 $utopia->patch('/v1/account/name')
     ->desc('Update Account Name')
-    ->label('webhook', 'account.update-account-name')
+    ->label('webhook', 'account.update.name')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateAccountName')
@@ -386,7 +413,7 @@ $utopia->patch('/v1/account/name')
 
 $utopia->patch('/v1/account/password')
     ->desc('Update Account Password')
-    ->label('webhook', 'account.update-account-password')
+    ->label('webhook', 'account.update.password')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateAccountPassword')
@@ -415,7 +442,7 @@ $utopia->patch('/v1/account/password')
 
 $utopia->patch('/v1/account/email')
     ->desc('Update Account Email')
-    ->label('webhook', 'account.update-email')
+    ->label('webhook', 'account.update.email')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
@@ -459,7 +486,7 @@ $utopia->patch('/v1/account/email')
 
 $utopia->patch('/v1/account/prefs')
     ->desc('Update Account Prefs')
-    ->label('webhook', 'account')
+    ->label('webhook', 'account.update.prefs')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
