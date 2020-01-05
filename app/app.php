@@ -768,6 +768,10 @@ $utopia->get('/v1/debug')
                     }
 
                     if ($route->getLabel('sdk.description', false)) {
+                        if(!realpath(__DIR__.'/../'.$route->getLabel('sdk.description', false))) {
+                            throw new Exception('Docs file ('.$route->getLabel('sdk.description', false).') is missing', 500);
+                        }
+
                         if(array_key_exists($route->getLabel('sdk.description', false), $output['docs'])) {
                             throw new Exception('Docs file ('.$route->getLabel('sdk.description', false).') is already in use by another route', 500);
                         }
