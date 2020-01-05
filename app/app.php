@@ -743,6 +743,7 @@ $utopia->get('/v1/debug')
                 'webhooks' => [],
                 'methods' => [],
                 'routes' => [],
+                'docs' => [],
             ];
 
             foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
@@ -766,9 +767,17 @@ $utopia->get('/v1/debug')
                         continue;
                     }
 
+                    if ($route->getLabel('sdk.description', false)) {
+                        if(array_key_exists($route->getLabel('sdk.description', false), $output['docs'])) {
+                            throw new Exception('Docs file ('.$route->getLabel('sdk.description', false).') is already in use by another route', 500);
+                        }
+
+                        $output['docs'][$route->getLabel('sdk.description', false)] = $route->getMethod().' '.$route->getURL();
+                    }
+
                     if ($route->getLabel('webhook', false)) {
                         if(array_key_exists($route->getLabel('webhook', false), $output['webhooks'])) {
-                            throw new Exception('Webhook ('.$route->getLabel('webhook', false).') is already in use by another route', 500);
+                            //throw new Exception('Webhook ('.$route->getLabel('webhook', false).') is already in use by another route', 500);
                         }
 
                         $output['webhooks'][$route->getLabel('webhook', false)] = $route->getMethod().' '.$route->getURL();
@@ -792,6 +801,7 @@ $utopia->get('/v1/debug')
             ksort($output['webhooks']);
             ksort($output['methods']);
             ksort($output['routes']);
+            ksort($output['docs']);
 
             $response
                 ->json($output);
