@@ -20,13 +20,6 @@ return [
         'sdk' => true,
         'tests' => false,
     ],
-    // 'v1/auth' => [ // Add to docs later: You can also learn how to [configure support for our supported OAuth providers](/docs/oauth)
-    //     'name' => 'Auth',
-    //     'description' => '/docs/services/auth.md',
-    //     'controller' => 'controllers/api/auth.php',
-    //     'sdk' => true,
-    //     'tests' => false,
-    // ],
     'v1/avatars' => [
         'name' => 'Avatars',
         'description' => '/docs/services/avatars.md',
