@@ -111,8 +111,8 @@ $register->set('smtp', function () use ($request) {
 
     $mail->isSMTP();
 
-    $username = $request->getServer('_APP_SMTP_USERNAME', '');
-    $password = $request->getServer('_APP_SMTP_PASSWORD', '');
+    $username = $request->getServer('_APP_SMTP_USERNAME', null);
+    $password = $request->getServer('_APP_SMTP_PASSWORD', null);
 
     $mail->XMailer = 'Appwrite Mailer';
     $mail->Host = $request->getServer('_APP_SMTP_HOST', 'smtp');
@@ -120,7 +120,8 @@ $register->set('smtp', function () use ($request) {
     $mail->SMTPAuth = (!empty($username) && !empty($password));
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', '');
+    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
+    $mail->SMTPAutoTLS = false;
 
     $mail->setFrom('team@appwrite.io', APP_NAME.' Team');
     $mail->addReplyTo('team@appwrite.io', APP_NAME.' Team');

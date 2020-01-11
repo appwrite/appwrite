@@ -211,7 +211,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     if (!empty($webhook->getParam('event'))) {
         $webhook->trigger();
     }
-
+    
     if (!empty($audit->getParam('event'))) {
         $audit->trigger();
     }
@@ -361,7 +361,7 @@ $utopia->get('/humans.txt')
     );
 
 $utopia->get('/v1/info') // This is only visible to gods
-->label('scope', 'god')
+    ->label('scope', 'god')
     ->label('docs', false)
     ->action(
         function () use ($response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
@@ -410,7 +410,7 @@ $utopia->get('/v1/proxy')
         }
     );
 
-    $utopia->get('/v1/open-api-2.json')
+$utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
@@ -740,6 +740,7 @@ $utopia->get('/v1/debug')
     ->action(
         function () use ($response, $request, $utopia, $domain, $services) {
             $output = [
+                'scopes' => [],
                 'webhooks' => [],
                 'methods' => [],
                 'routes' => [],
@@ -765,6 +766,10 @@ $utopia->get('/v1/debug')
 
                     if (empty($route->getLabel('sdk.namespace', null))) {
                         continue;
+                    }
+
+                    if ($route->getLabel('scope', false)) {
+                        $output['scopes'][$route->getLabel('scope', false)] = $route->getMethod().' '.$route->getURL();
                     }
 
                     if ($route->getLabel('sdk.description', false)) {
@@ -802,6 +807,7 @@ $utopia->get('/v1/debug')
                 }
             }
 
+            ksort($output['scopes']);
             ksort($output['webhooks']);
             ksort($output['methods']);
             ksort($output['routes']);

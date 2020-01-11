@@ -1,8 +1,10 @@
 <?php
 
-global $utopia, $register, $request, $response, $user, $audit, $webhook, $project, $domain, $projectDB, $providers, $clients;
+global $utopia, $register, $request, $response, $user, $audit,
+    $webhook, $project, $domain, $projectDB, $providers, $clients;
 
 use Utopia\Exception;
+use Utopia\Response;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
 use Utopia\Validator\WhiteList;
@@ -24,6 +26,20 @@ use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
+$oauthKeys = [];
+
+$utopia->init(function() use ($providers, &$oauthKeys) {
+    foreach ($providers as $key => $provider) {
+        if (!$provider['enabled']) {
+            continue;
+        }
+
+        $oauthKeys[] = 'oauth'.ucfirst($key);
+        $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+    }
+
+});
+
 $utopia->get('/v1/account')
     ->desc('Get Account')
     ->label('scope', 'account')
@@ -31,18 +47,7 @@ $utopia->get('/v1/account')
     ->label('sdk.method', 'getAccount')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->action(
-        function () use ($response, &$user, $providers) {
-            $oauthKeys = [];
-
-            foreach ($providers as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
-
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
-            }
-
+        function () use ($response, &$user, $oauthKeys) {            
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
                     '$uid',
@@ -109,7 +114,7 @@ $utopia->get('/v1/account/sessions')
                 $dd->parse();
 
                 $sessions[$index] = [
-                    'id' => $token->getUid(),
+                    '$uid' => $token->getUid(),
                     'OS' => $dd->getOs(),
                     'client' => $dd->getClient(),
                     'device' => $dd->getDevice(),
@@ -146,6 +151,7 @@ $utopia->get('/v1/account/logs')
         function () use ($response, $register, $project, $user) {
             $adapter = new AuditAdapter($register->get('db'));
             $adapter->setNamespace('app_'.$project->getUid());
+
             $audit = new Audit($adapter);
             $countries = Locale::getText('countries');
 
@@ -220,7 +226,7 @@ $utopia->post('/v1/account')
     ->param('password', '', function () { return new Password(); }, 'User password')
     ->param('name', '', function () { return new Text(100); }, 'User name', true)
     ->action(
-        function ($email, $password, $name) use ($request, $response, $providers, $audit, $projectDB, $project, $webhook) {
+        function ($email, $password, $name) use ($register, $request, $response, $audit, $projectDB, $project, $webhook, $oauthKeys) {
             if ('console' === $project->getUid()) {
                 $whitlistEmails = $project->getAttribute('authWhitelistEmails');
                 $whitlistIPs = $project->getAttribute('authWhitelistIPs');
@@ -276,14 +282,6 @@ $utopia->post('/v1/account')
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            Authorization::setRole('user:'.$user->getUid());
-
-            $user = $projectDB->createDocument($user->getArrayCopy());
-
-            if (false === $user) {
-                throw new Exception('Failed saving tokens to DB', 500);
-            }
-
             $webhook
                 ->setParam('payload', [
                     'name' => $name,
@@ -297,26 +295,17 @@ $utopia->post('/v1/account')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
 
-            $oauthKeys = [];
-
-            foreach ($providers as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
-
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
-            }
-
-            $response->json(array_merge($user->getArrayCopy(array_merge(
-                [
-                    '$uid',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauthKeys
-            )), ['roles' => Authorization::getRoles()]));
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json(array_merge($user->getArrayCopy(array_merge(
+                    [
+                        '$uid',
+                        'email',
+                        'registration',
+                        'name',
+                    ],
+                    $oauthKeys
+                )), ['roles' => Authorization::getRoles()]));
         }
     );
 
@@ -342,11 +331,11 @@ $utopia->post('/v1/account/sessions')
                 ],
             ]);
 
-            if (!$profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
+            if (false == $profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
                 $audit
                     //->setParam('userId', $profile->getUid())
                     ->setParam('event', 'account.sesssions.failed')
-                    ->setParam('resource', 'users/'.$profile->getUid())
+                    ->setParam('resource', 'users/'.($profile ? $profile->getUid() : ''))
                 ;
 
                 throw new Exception('Invalid credentials', 401); // Wrong password or username
@@ -354,8 +343,7 @@ $utopia->post('/v1/account/sessions')
 
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
             $secret = Auth::tokenGenerator();
-
-            $profile->setAttribute('tokens', new Document([
+            $session = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
                 '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
                 'type' => Auth::TOKEN_TYPE_LOGIN,
@@ -363,9 +351,17 @@ $utopia->post('/v1/account/sessions')
                 'expire' => $expiry,
                 'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
                 'ip' => $request->getIP(),
-            ]), Document::SET_TYPE_APPEND);
+            ]);
 
             Authorization::setRole('user:'.$profile->getUid());
+
+            $session = $projectDB->createDocument($session->getArrayCopy());
+
+            if (false === $session) {
+                throw new Exception('Failed saving session to DB', 500);
+            }
+
+            $profile->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
 
             $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
@@ -382,15 +378,15 @@ $utopia->post('/v1/account/sessions')
 
             $audit
                 ->setParam('userId', $profile->getUid())
-                ->setParam('event', 'account.sesssions.create')
+                ->setParam('event', 'account.sessions.create')
                 ->setParam('resource', 'users/'.$profile->getUid())
             ;
-
+            
             $response
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
-
-            $response
-                ->json(array('result' => 'success'));
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($session->getArrayCopy(['$uid', 'type', 'expire']))
+            ;
         }
     );
 
@@ -583,20 +579,21 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
 
             $secret = Auth::tokenGenerator();
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $session = new Document([
+                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$permissions' => ['read' => ['user:'.$user['$uid']], 'write' => ['user:'.$user['$uid']]],
+                'type' => Auth::TOKEN_TYPE_LOGIN,
+                'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
+                'expire' => $expiry,
+                'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+                'ip' => $request->getIP(),
+            ]);
 
             $user
                 ->setAttribute('oauth'.ucfirst($provider), $oauthID)
                 ->setAttribute('oauth'.ucfirst($provider).'AccessToken', $accessToken)
                 ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
-                ->setAttribute('tokens', new Document([
-                    '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                    '$permissions' => ['read' => ['user:'.$user['$uid']], 'write' => ['user:'.$user['$uid']]],
-                    'type' => Auth::TOKEN_TYPE_LOGIN,
-                    'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
-                    'expire' => $expiry,
-                    'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
-                    'ip' => $request->getIP(),
-                ]), Document::SET_TYPE_APPEND)
+                ->setAttribute('tokens', $session, Document::SET_TYPE_APPEND)
             ;
 
             Authorization::setRole('user:'.$user->getUid());
@@ -631,7 +628,7 @@ $utopia->patch('/v1/account/name')
     ->label('sdk.description', '/docs/references/account/update-name.md')
     ->param('name', '', function () { return new Text(100); }, 'User name')
     ->action(
-        function ($name) use ($response, $user, $projectDB, $audit) {
+        function ($name) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'name' => $name,
             ]));
@@ -645,7 +642,15 @@ $utopia->patch('/v1/account/name')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
 
-            $response->json(array('result' => 'success'));
+            $response->json(array_merge($user->getArrayCopy(array_merge(
+                [
+                    '$uid',
+                    'email',
+                    'registration',
+                    'name',
+                ],
+                $oauthKeys
+            )), ['roles' => Authorization::getRoles()]));
         }
     );
 
@@ -659,7 +664,7 @@ $utopia->patch('/v1/account/password')
     ->param('password', '', function () { return new Password(); }, 'New password')
     ->param('old-password', '', function () { return new Password(); }, 'Old password')
     ->action(
-        function ($password, $oldPassword) use ($response, $user, $projectDB, $audit) {
+        function ($password, $oldPassword) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
@@ -677,7 +682,15 @@ $utopia->patch('/v1/account/password')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
 
-            $response->json(array('result' => 'success'));
+            $response->json(array_merge($user->getArrayCopy(array_merge(
+                [
+                    '$uid',
+                    'email',
+                    'registration',
+                    'name',
+                ],
+                $oauthKeys
+            )), ['roles' => Authorization::getRoles()]));
         }
     );
 
@@ -691,7 +704,7 @@ $utopia->patch('/v1/account/email')
     ->param('email', '', function () { return new Email(); }, 'Email Address')
     ->param('password', '', function () { return new Password(); }, 'User Password')
     ->action(
-        function ($email, $password) use ($response, $user, $projectDB, $audit) {
+        function ($email, $password) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
@@ -724,7 +737,15 @@ $utopia->patch('/v1/account/email')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
 
-            $response->json(array('result' => 'success'));
+            $response->json(array_merge($user->getArrayCopy(array_merge(
+                [
+                    '$uid',
+                    'email',
+                    'registration',
+                    'name',
+                ],
+                $oauthKeys
+            )), ['roles' => Authorization::getRoles()]));
         }
     );
 
@@ -751,7 +772,19 @@ $utopia->patch('/v1/account/prefs')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
 
-            $response->json(array('result' => 'success'));
+            $prefs = $user->getAttribute('prefs', '{}');
+
+            if (empty($prefs)) {
+                $prefs = '[]';
+            }
+
+            try {
+                $prefs = json_decode($prefs, true);
+            } catch (\Exception $error) {
+                throw new Exception('Failed to parse preferences', 500);
+            }
+
+            $response->json($prefs);
         }
     );
 
@@ -795,39 +828,46 @@ $utopia->delete('/v1/account')
 
             $response
                 ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
-                ->json(array('result' => 'success'));
+                ->noContent()
+            ;
         }
     );
 
-$utopia->delete('/v1/account/sessions/current')
-    ->desc('Delete Current Account Session')
-    ->label('webhook', 'account.sessions.delete')
+$utopia->delete('/v1/account/sessions')
+    ->desc('Delete All Account Sessions')
     ->label('scope', 'account')
+    ->label('webhook', 'account.sessions.delete')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteAccountCurrentSession')
-    ->label('sdk.description', '/docs/references/account/delete-session-current.md')
+    ->label('sdk.method', 'deleteAccountSessions')
+    ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
     ->action(
         function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
-            $token = Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+            $tokens = $user->getAttribute('tokens', []);
 
-            if (!$projectDB->deleteDocument($token)) {
-                throw new Exception('Failed to remove token from DB', 500);
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (!$projectDB->deleteDocument($token->getUid())) {
+                    throw new Exception('Failed to remove token from DB', 500);
+                }
+
+                $audit
+                    ->setParam('event', 'account.sessions.delete')
+                    ->setParam('resource', '/user/'.$user->getUid())
+                ;
+
+                $webhook
+                    ->setParam('payload', [
+                        'name' => $user->getAttribute('name', ''),
+                        'email' => $user->getAttribute('email', ''),
+                    ])
+                ;
+
+                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
+                }
             }
 
-            $webhook
-                ->setParam('payload', [
-                    'name' => $user->getAttribute('name', ''),
-                    'email' => $user->getAttribute('email', ''),
-                ])
-            ;
-
-            $audit->setParam('event', 'account.sessions.delete');
-
-            $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
-                ->json(array('result' => 'success'))
-            ;
+            $response->noContent();
         }
     );
 
@@ -868,45 +908,39 @@ $utopia->delete('/v1/account/sessions/:id')
                 }
             }
 
-            $response->json(array('result' => 'success'));
+            $response->noContent();
         }
     );
 
-$utopia->delete('/v1/account/sessions')
-    ->desc('Delete All Account Sessions')
-    ->label('scope', 'account')
+$utopia->delete('/v1/account/sessions/current')
+    ->desc('Delete Current Account Session')
     ->label('webhook', 'account.sessions.delete')
+    ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteAccountSessions')
-    ->label('sdk.description', '/docs/references/account/delete-sessions.md')
+    ->label('sdk.method', 'deleteAccountCurrentSession')
+    ->label('sdk.description', '/docs/references/account/delete-session-current.md')
     ->label('abuse-limit', 100)
     ->action(
         function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
-            $tokens = $user->getAttribute('tokens', []);
+            $token = Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
-            foreach ($tokens as $token) { /* @var $token Document */
-                if (!$projectDB->deleteDocument($token->getUid())) {
-                    throw new Exception('Failed to remove token from DB', 500);
-                }
-
-                $audit
-                    ->setParam('event', 'account.sessions.delete')
-                    ->setParam('resource', '/user/'.$user->getUid())
-                ;
-
-                $webhook
-                    ->setParam('payload', [
-                        'name' => $user->getAttribute('name', ''),
-                        'email' => $user->getAttribute('email', ''),
-                    ])
-                ;
-
-                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
-                }
+            if (!$projectDB->deleteDocument($token)) {
+                throw new Exception('Failed to remove token from DB', 500);
             }
 
-            $response->json(array('result' => 'success'));
+            $webhook
+                ->setParam('payload', [
+                    'name' => $user->getAttribute('name', ''),
+                    'email' => $user->getAttribute('email', ''),
+                ])
+            ;
+
+            $audit->setParam('event', 'account.sessions.delete');
+
+            $response
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->noContent()
+            ;
         }
     );
 
@@ -936,8 +970,7 @@ $utopia->post('/v1/account/recovery')
             }
 
             $secret = Auth::tokenGenerator();
-
-            $profile->setAttribute('tokens', new Document([
+            $recovery = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
                 '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
@@ -945,9 +978,17 @@ $utopia->post('/v1/account/recovery')
                 'expire' => time() + Auth::TOKEN_EXPIRATION_RECOVERY,
                 'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
                 'ip' => $request->getIP(),
-            ]), Document::SET_TYPE_APPEND);
-
+            ]);
+                
             Authorization::setRole('user:'.$profile->getUid());
+
+            $recovery = $projectDB->createDocument($recovery->getArrayCopy());
+
+            if (false === $recovery) {
+                throw new Exception('Failed saving recovery to DB', 500);
+            }
+
+            $profile->setAttribute('tokens', $recovery, Document::SET_TYPE_APPEND);
 
             $profile = $projectDB->updateDocument($profile->getArrayCopy());
 
@@ -978,7 +1019,7 @@ $utopia->post('/v1/account/recovery')
             try {
                 $mail->send();
             } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
             }
 
             $audit
@@ -986,7 +1027,10 @@ $utopia->post('/v1/account/recovery')
                 ->setParam('event', 'account.recovery.create')
             ;
 
-            $response->json(array('result' => 'success'));
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($recovery->getArrayCopy(['$uid', 'type', 'expire']))
+            ;
         }
     );
 
@@ -998,7 +1042,7 @@ $utopia->put('/v1/account/recovery')
     ->label('sdk.description', '/docs/references/account/update-recovery.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', function () { return new UID(); }, 'User account email address.')
+    ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
     ->param('token', '', function () { return new Text(256); }, 'Valid reset token.')
     ->param('password-a', '', function () { return new Password(); }, 'New password.')
     ->param('password-b', '', function () {return new Password(); }, 'New password again.')
@@ -1021,10 +1065,10 @@ $utopia->put('/v1/account/recovery')
                 throw new Exception('User not found', 404); // TODO maybe hide this
             }
 
-            $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $token);
+            $recovery = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $token);
 
-            if (!$token) {
-                throw new Exception('Recovery token is not valid', 401);
+            if (!$recovery) {
+                throw new Exception('Invalid recovery token', 401);
             }
 
             Authorization::setRole('user:'.$profile->getUid());
@@ -1039,8 +1083,12 @@ $utopia->put('/v1/account/recovery')
                 throw new Exception('Failed saving user to DB', 500);
             }
 
-            if (!$projectDB->deleteDocument($token)) {
-                throw new Exception('Failed to remove token from DB', 500);
+            /**
+             * We act like we're updating and validating
+             *  the recovery token but actually we don't need it anymore.
+             */
+            if (!$projectDB->deleteDocument($recovery)) {
+                throw new Exception('Failed to remove recovery from DB', 500);
             }
 
             $audit
@@ -1048,6 +1096,8 @@ $utopia->put('/v1/account/recovery')
                 ->setParam('event', 'account.recovery.update')
             ;
 
-            $response->json(array('result' => 'success'));
+            $recovery = $profile->search('$uid', $recovery, $profile->getAttribute('tokens', []));
+
+            $response->json($recovery->getArrayCopy(['$uid', 'type', 'expire']));
         }
     );

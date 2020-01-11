@@ -184,7 +184,7 @@ class Client
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_USERAGENT, php_uname('s') . '-' . php_uname('r') . ':php-' . phpversion());
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
@@ -215,7 +215,14 @@ class Client
 
         switch (substr($responseType, 0, strpos($responseType, ';'))) {
             case 'application/json':
-                $responseBody = json_decode($responseBody, true);
+                $json = json_decode($responseBody, true);
+
+                if($json === null) {
+                    throw new Exception('Failed to parse response: '.$responseBody);
+                }
+
+                $responseBody = $json;
+                $json = null;
             break;
         }
 

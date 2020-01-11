@@ -378,7 +378,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             try {
                 $mail->send();
             } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
             }
 
             $audit
@@ -457,7 +457,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
             try {
                 $mail->send();
             } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
             }
 
             $audit

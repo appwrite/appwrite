@@ -4,11 +4,11 @@
 
 * Upgraded core API PHP version to 7.4
 * New database rule validation options
-* Update docs example with auth info
 * Allow non-web platform skip origin header
-* Limited to console UI to show max 5 alerts at the same time
+* Limited console dashboard to show max 5 alerts at the same time
 * Added new webhooks events
-* Normnailized all webhooks event names
+* Normailized all webhooks event names
+* Merged Auth and Account service for making the API more REST compatible
 
 ## Bug Fixes
 

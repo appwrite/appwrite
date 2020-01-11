@@ -17,6 +17,7 @@ services:
     - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
     - ./tests:/usr/share/nginx/html/tests
     - ./app:/usr/share/nginx/html/app
+    - ./vendor:/usr/share/nginx/html/vendor
     - ./docs:/usr/share/nginx/html/docs
     - ./public:/usr/share/nginx/html/public
     - ./src:/usr/share/nginx/html/src
@@ -31,6 +32,7 @@ services:
     - clamav
     - influxdb
     - telegraf
+    - maildev
     environment:
     - _APP_ENV=development
     - _APP_OPTIONS_ABUSE=disabled
@@ -46,6 +48,8 @@ services:
     - _APP_INFLUXDB_PORT=8086
     - _APP_STATSD_HOST=telegraf
     - _APP_STATSD_PORT=8125
+    - _APP_SMTP_HOST=maildev
+    - _APP_SMTP_PORT=25
 
   mariadb:
     image: appwrite/mariadb:1.0.2 # fix issues when upgrading using: mysql_upgrade -u root -p
@@ -100,18 +104,25 @@ services:
     networks:
     - appwrite
 
-  # resque:
-  #   image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
-  #   restart: unless-stopped
-  #   networks:
-  #   - appwrite
-  #   ports:
-  #   - "5678:5678"
-  #   environment:
-  #   - RESQUE_WEB_HOST=redis
-  #   - RESQUE_WEB_PORT=6379
-  #   - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-  #   - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
+  resque:
+    image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
+    restart: unless-stopped
+    networks:
+    - appwrite
+    ports:
+    - "5678:5678"
+    environment:
+    - RESQUE_WEB_HOST=redis
+    - RESQUE_WEB_PORT=6379
+    - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
+    - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
+
+  maildev:
+    ports:
+    - '1080:80'
+    networks:
+    - appwrite
+    image: djfarrelly/maildev
 
 networks:
   appwrite:
