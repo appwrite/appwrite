@@ -75,7 +75,7 @@ return [
     ],
     ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => array_merge($admins, []),
+        'scopes' => array_merge($logged, $admins, []),
     ],
     ROLE_APP => [
         'label' => 'Application',
