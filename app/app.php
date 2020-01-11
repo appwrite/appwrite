@@ -120,10 +120,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
 
     $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
-
+    
     // Check if given key match project API keys
     $key = $project->search('secret', $request->getHeader('X-Appwrite-Key', ''), $project->getAttribute('keys', []));
-
+    
     /*
      * Try app auth when we have project key and no user
      *  Mock user to app and grant API key scopes in addition to default app scopes
@@ -138,7 +138,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         ]);
 
         $role = Auth::USER_ROLE_APP;
-        $scopes = array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+        $scopes = $key->getAttribute('scopes', []);
 
         Authorization::disable();  // Cancel security segmentation for API keys.
     }

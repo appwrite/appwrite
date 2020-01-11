@@ -19,7 +19,7 @@ class AccountTest extends Base
     public function testCreateAccount():array
     {
         $email = uniqid().'user@localhost.test';
-        $password = 'passwrod';
+        $password = 'password';
         $name = 'User Name';
 
         /**

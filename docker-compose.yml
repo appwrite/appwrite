@@ -118,11 +118,12 @@ services:
     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
   maildev:
+    image: djfarrelly/maildev
+    restart: unless-stopped
     ports:
     - '1080:80'
     networks:
     - appwrite
-    image: djfarrelly/maildev
 
 networks:
   appwrite:

@@ -7,42 +7,45 @@ use Tests\E2E\Client;
 trait ProjectCustom
 {
     /**
-     * @var string
-     */
-    protected $rootEmail = '';
-    
-    /**
-     * @var string
-     */
-    protected $rootPassword = '';
-
-    /**
      * @var array
      */
-    protected $project = [];
+    protected static $project = [];
 
     /**
      * @return array
      */
     public function getProject(): array
     {
-        if(!empty($this->project)) {
-            return $this->project;
+        if(!empty(self::$project)) {
+            return self::$project;
         }
+
+        $email = uniqid().'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
 
         $root = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'email' => $this->rootEmail,
-            'password' => $this->rootEmail,
-            'name' => 'Demo User',
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
         ]);
 
         $this->assertEquals(201, $root['headers']['status-code']);
 
-        $session = $this->client->parseCookie($root['headers']['set-cookie'])['a_session_console'];
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $session = $this->client->parseCookie($session['headers']['set-cookie'])['a_session_console'];
 
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
@@ -87,9 +90,7 @@ trait ProjectCustom
         ], [
             'name' => 'Demo Project Key',
             'scopes' => [
-                'account',
-                '',
-                '',
+                'files.read',
             ],
         ]);
 
@@ -106,14 +107,12 @@ trait ProjectCustom
         //     'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a_session_' . $project['body']['$uid']],
         // ];
 
-        $this->project = [
+        self::$project = [
             '$uid' => $project['body']['$uid'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
         ];
 
-        var_dump('init project');
-
-        return $this->project;
+        return self::$project;
     }
 }

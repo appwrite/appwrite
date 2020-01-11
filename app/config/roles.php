@@ -28,6 +28,12 @@ $logged = [
 ];
 
 $admins = [
+    'teams.read',
+    'teams.write',
+    'documents.read',
+    'documents.write',
+    'files.read',
+    'files.write',
     'users.read',
     'users.write',
     'collections.read',
@@ -61,15 +67,15 @@ return [
     ],
     ROLE_ADMIN => [
         'label' => 'Admin',
-        'scopes' => array_merge($logged, $admins, []),
+        'scopes' => array_merge($admins, []),
     ],
     ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => array_merge($logged, $admins, []),
+        'scopes' => array_merge($admins, []),
     ],
     ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => array_merge($logged, $admins, []),
+        'scopes' => array_merge($admins, []),
     ],
     ROLE_APP => [
         'label' => 'Application',

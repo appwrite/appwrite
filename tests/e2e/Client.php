@@ -234,6 +234,10 @@ class Client
 
         $responseHeaders['status-code'] = $responseStatus;
 
+        if($responseStatus === 500) {
+            echo 'Server error(!): '.json_encode($responseBody)."\n";
+        }
+
         return [
             'headers' => $responseHeaders,
             'body' => $responseBody
