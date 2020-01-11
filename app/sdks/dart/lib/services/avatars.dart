@@ -6,8 +6,8 @@ class Avatars extends Service {
      
      Avatars(Client client): super(client);
 
-     /// You can use this endpoint to show different browser icons to your users,
-     /// The code argument receives the browser code as appear in your user
+     /// You can use this endpoint to show different browser icons to your users.
+     /// The code argument receives the browser code as it appears in your user
      /// /account/sessions endpoint. Use width, height and quality arguments to
      /// change the output settings.
     Future<Response> getBrowser({code, width = 100, height = 100, quality = 100}) async {
@@ -21,7 +21,7 @@ class Avatars extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Need to display your users with your billing method or there payment
+     /// Need to display your users with your billing method or their payment
      /// methods? The credit card endpoint will return you the icon of the credit
      /// card provider you need. Use width, height and quality arguments to change
      /// the output settings.
@@ -48,7 +48,7 @@ class Avatars extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// You can use this endpoint to show different country flags icons to your
-     /// users, The code argument receives the a 2 letter country code. Use width,
+     /// users. The code argument receives the 2 letter country code. Use width,
      /// height and quality arguments to change the output settings.
     Future<Response> getFlag({code, width = 100, height = 100, quality = 100}) async {
        String path = '/avatars/flags/{code}'.replaceAll(RegExp('{code}'), code);
@@ -63,7 +63,7 @@ class Avatars extends Service {
     }
      /// Use this endpoint to fetch a remote image URL and crop it to any image size
      /// you want. This endpoint is very useful if you need to crop and display
-     /// remote images in your app or in cases, you want to make sure a 3rd party
+     /// remote images in your app or in case you want to make sure a 3rd party
      /// image is properly served using a TLS protocol.
     Future<Response> getImage({url, width = 400, height = 400}) async {
        String path = '/avatars/image';

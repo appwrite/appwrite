@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.auth.login('email@example.com', 'password', 'https://example.com', 'https://example.com');
+let promise = sdk.auth.login('email@example.com', 'password');
 
 promise.then(function (response) {
     console.log(response);

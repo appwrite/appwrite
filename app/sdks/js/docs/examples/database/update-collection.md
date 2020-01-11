@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.database.updateCollection('[COLLECTION_ID]', '[NAME]');
+let promise = sdk.database.updateCollection('[COLLECTION_ID]', '[NAME]', [], []);
 
 promise.then(function (response) {
     console.log(response);

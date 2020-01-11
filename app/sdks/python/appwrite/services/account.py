@@ -3,6 +3,9 @@ from ..service import Service
 
 class Account(Service):
 
+    def __init__(self, client):
+        super(Account, self).__init__(client)
+
     def get(self):
         """Get Account"""
 
@@ -10,6 +13,7 @@ class Account(Service):
         path = '/account'
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def delete(self):
@@ -19,6 +23,7 @@ class Account(Service):
         path = '/account'
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_email(self, email, password):
@@ -30,6 +35,7 @@ class Account(Service):
         params['password'] = password
 
         return self.client.call('patch', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_name(self, name):
@@ -40,6 +46,7 @@ class Account(Service):
         params['name'] = name
 
         return self.client.call('patch', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_password(self, password, old_password):
@@ -51,6 +58,7 @@ class Account(Service):
         params['old-password'] = old_password
 
         return self.client.call('patch', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_prefs(self):
@@ -60,6 +68,7 @@ class Account(Service):
         path = '/account/prefs'
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def update_prefs(self, prefs):
@@ -70,6 +79,7 @@ class Account(Service):
         params['prefs'] = prefs
 
         return self.client.call('patch', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_security(self):
@@ -79,6 +89,7 @@ class Account(Service):
         path = '/account/security'
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_sessions(self):
@@ -88,4 +99,5 @@ class Account(Service):
         path = '/account/sessions'
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)

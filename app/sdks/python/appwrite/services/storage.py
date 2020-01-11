@@ -3,6 +3,9 @@ from ..service import Service
 
 class Storage(Service):
 
+    def __init__(self, client):
+        super(Storage, self).__init__(client)
+
     def list_files(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Files"""
 
@@ -14,11 +17,10 @@ class Storage(Service):
         params['orderType'] = order_type
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
-    def create_file(self, files, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], folder_id=''):
+    def create_file(self, files, read, write):
         """Create File"""
 
         params = {}
@@ -26,7 +28,6 @@ class Storage(Service):
         params['files'] = files
         params['read'] = read
         params['write'] = write
-        params['folderId'] = folder_id
 
         return self.client.call('post', path, {
             'content-type': 'multipart/form-data',
@@ -37,24 +38,23 @@ class Storage(Service):
 
         params = {}
         path = '/storage/files/{fileId}'
-        path.replace('{fileId}', file_id)                
+        path = path.replace('{fileId}', file_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
-    def update_file(self, file_id, readstring(4) ""[]""
-=[], writestring(4) ""[]""
-=[], folder_id=''):
+    def update_file(self, file_id, read, write):
         """Update File"""
 
         params = {}
         path = '/storage/files/{fileId}'
-        path.replace('{fileId}', file_id)                
+        path = path.replace('{fileId}', file_id)                
         params['read'] = read
         params['write'] = write
-        params['folderId'] = folder_id
 
         return self.client.call('put', path, {
+            'content-type': 'application/json',
         }, params)
 
     def delete_file(self, file_id):
@@ -62,9 +62,10 @@ class Storage(Service):
 
         params = {}
         path = '/storage/files/{fileId}'
-        path.replace('{fileId}', file_id)                
+        path = path.replace('{fileId}', file_id)                
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_file_download(self, file_id):
@@ -72,9 +73,10 @@ class Storage(Service):
 
         params = {}
         path = '/storage/files/{fileId}/download'
-        path.replace('{fileId}', file_id)                
+        path = path.replace('{fileId}', file_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def get_file_preview(self, file_id, width=0, height=0, quality=100, background='', output=''):
@@ -82,7 +84,7 @@ class Storage(Service):
 
         params = {}
         path = '/storage/files/{fileId}/preview'
-        path.replace('{fileId}', file_id)                
+        path = path.replace('{fileId}', file_id)                
         params['width'] = width
         params['height'] = height
         params['quality'] = quality
@@ -90,15 +92,17 @@ class Storage(Service):
         params['output'] = output
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
-    def get_file_view(self, file_id, as=''):
+    def get_file_view(self, file_id, xas=''):
         """Get File for View"""
 
         params = {}
         path = '/storage/files/{fileId}/view'
-        path.replace('{fileId}', file_id)                
-        params['as'] = as
+        path = path.replace('{fileId}', file_id)                
+        params['as'] = xas
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)

@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/storage/files
 ```
 
-** Get a list of all the user files. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project files. [Learn more about different API modes](/docs/modes). **
+** Get a list of all the user files. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project files. [Learn more about different API modes](/docs/admin). **
 
 ### Parameters
 
@@ -30,9 +30,8 @@ POST https://appwrite.io/v1/storage/files
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | files | file | Binary Files. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| folderId | string | Folder to associate files with. |  |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 
 ## Get File
 
@@ -61,9 +60,8 @@ PUT https://appwrite.io/v1/storage/files/{fileId}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | fileId | string | **Required** File unique ID. |  |
-| read | array | An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| write | array | An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions). | [] |
-| folderId | string | Folder to associate files with. |  |
+| read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
+| write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 
 ## Delete File
 

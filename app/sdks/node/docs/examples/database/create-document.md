@@ -10,7 +10,7 @@ client
     .setKey('')
 ;
 
-let promise = database.createDocument('[COLLECTION_ID]', '{}');
+let promise = database.createDocument('[COLLECTION_ID]', '{}', [], []);
 
 promise.then(function (response) {
     console.log(response);

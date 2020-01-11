@@ -12,4 +12,4 @@ $client
 
 $storage = new Storage($client);
 
-$result = $storage->createFile(new \CURLFile('/path/to/file.png', 'image/png', 'file.png'));
+$result = $storage->createFile(new \CURLFile('/path/to/file.png', 'image/png', 'file.png'), [], []);

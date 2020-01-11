@@ -10,20 +10,24 @@ addons:
 notifications:
   email:
   - team@appwrite.io
-
+  
 services:
 - docker
 
-before_install:
-- composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
-- sudo service mysql stop
-#- mkdir -p tests/resources/storage/db
-#- cp -r tests/resources/mock/db tests/resources/storage/db
+# cache:
+#   directories:
+#   - docker_images
+
+# before_install:
+# - docker load -i docker_images/images.tar || true
+
+# before_cache:
+# - docker save -o docker_images/images.tar appwrite_appwrite
 
 install:
-- docker-compose -f tests/resources/docker-compose.yml up -d
-- sleep 180
+- docker-compose up -d
+- sleep 90
 
 script:
 - docker ps
-- vendor/bin/phpunit --configuration phpunit.xml
+- docker exec appwrite /bin/bash -c '/usr/share/nginx/html/vendor/bin/phpunit'

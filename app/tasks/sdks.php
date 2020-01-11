@@ -13,10 +13,11 @@ use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
+use Appwrite\SDK\Language\Go;
 
 $cli = new CLI();
 
-$version = '0.2.0'; // Server version
+$version = '0.4.0'; // Server version
 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
 $cli
@@ -38,7 +39,7 @@ $cli
 
         $clients = [
             'php' => [
-                'version' => '1.0.9',
+                'version' => '1.0.16',
                 'result' => __DIR__.'/../sdks/php/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-php.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-php.git',
@@ -49,7 +50,7 @@ $cli
                 'platform' => 'server',
             ],
             'js' => [
-                'version' => '1.0.23',
+                'version' => '1.0.28',
                 'result' => __DIR__.'/../sdks/js/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-js.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-js.git',
@@ -60,7 +61,7 @@ $cli
                 'platform' => 'client',
             ],
             'node' => [
-                'version' => '1.0.26',
+                'version' => '1.0.31',
                 'result' => __DIR__.'/../sdks/node/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-node.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-node.git',
@@ -71,7 +72,7 @@ $cli
                 'platform' => 'server',
             ],
             'python' => [
-                'version' => '1.0.0',
+                'version' => '0.0.3',
                 'result' => __DIR__.'/../sdks/python/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-python.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-python.git',
@@ -82,7 +83,7 @@ $cli
                 'platform' => 'server',
             ],
             'ruby' => [
-                'version' => '1.0.1',
+                'version' => '1.0.8',
                 'result' => __DIR__.'/../sdks/ruby/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-ruby.git',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-ruby.git',
@@ -93,7 +94,7 @@ $cli
                 'platform' => 'server',
             ],
             'dart' => [
-                'version' => '0.0.2',
+                'version' => '0.0.6',
                 'result' => __DIR__.'/../sdks/dart/',
                 'gitURL' => 'https://github.com/appwrite/sdk-for-dart',
                 'gitRepo' => 'git@github.com:appwrite/sdk-for-dart.git',
@@ -103,12 +104,28 @@ $cli
                 'readme' => false,
                 'platform' => 'client',
             ],
+            'go' => [
+                'version' => '0.0.5',
+                'result' => __DIR__.'/../sdks/go/',
+                'gitURL' => 'https://github.com/appwrite/sdk-for-go',
+                'gitRepo' => 'git@github.com:appwrite/sdk-for-go.git',
+                'gitRepoName' => 'sdk-for-go',
+                'gitUserName' => 'appwrite',
+                'warning' => '**WORK IN PROGRESS - NOT READY FOR USAGE - Want to help us improve this client SDK? Send a pull request to Appwrite [SDK generator repository](https://github.com/appwrite/sdk-generator).**',
+                'readme' => false,
+                'platform' => 'server',
+            ],
         ];
 
+        
         foreach ($clients as $name => $client) {
+
             Console::info('Fetching API Spec for '.$name.' ('.$client['platform'].')');
+            
+            $spec = getSSLPage('https://localhost/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
             $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
-            $spec = getSSLPage('https://appwrite.test/v1/open-api-2.json?extensions=1&platform='.$client['platform']);
+            
+            $license = 'BSD-3-Clause';
 
             switch ($name) {
                 case 'php':
@@ -137,7 +154,8 @@ $cli
                     $language
                         ->setPipPackage('appwrite')
                     ;
-                    break;
+                    $license = 'BSD License'; // license edited due to classifiers in pypi
+                break;
                 case 'ruby':
                     $language = new Ruby();
                     $language
@@ -150,15 +168,23 @@ $cli
                         ->setPackageName('appwrite')
                     ;
                     break;
+                    break;
+                case 'go':
+                    $language = new Go();
+                    break;
                 default:
                     throw new Exception('Language not supported');
                     break;
             }
 
+            $target = __DIR__.'/../sdks/git/'.$name;
+
+            Console::success("Generating {$name} SDK");
+
             $sdk = new SDK($language, new Swagger2($spec));
 
             $sdk
-                ->setLicense('BSD-3-Clause')
+                ->setLicense($license)
                 ->setLicenseContent('Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
 
@@ -183,19 +209,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 ->setShareTags('JS,javascript,reactjs,angular,ios,android')
                 ->setShareVia('appwrite_io')
                 ->setWarning($client['warning'])
-                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '')
-            ;
-
-            $target = __DIR__.'/../sdks/git/'.$name;
-
-            Console::success("Generating {$name} SDK");
+                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '');
 
             try {
                 $sdk->generate($client['result']);
             } catch (Exception $exception) {
-                echo $exception->getMessage()."\n";
+                Console::error($exception->getMessage());
             } catch (Throwable $exception) {
-                echo $exception->getMessage()."\n";
+                Console::error($exception->getMessage());
             }
 
             exec('rm -rf '.$target.' && \

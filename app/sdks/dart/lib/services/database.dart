@@ -9,7 +9,7 @@ class Database extends Service {
      /// Get a list of all the user collections. You can use the query params to
      /// filter your results. On admin mode, this endpoint will return a list of all
      /// of the project collections. [Learn more about different API
-     /// modes](/docs/modes).
+     /// modes](/docs/admin).
     Future<Response> listCollections({search = null, limit = 25, offset = null, orderType = 'ASC'}) async {
        String path = '/database';
 
@@ -23,7 +23,7 @@ class Database extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Create a new Collection.
-    Future<Response> createCollection({name, read = const [], write = const [], rules = const []}) async {
+    Future<Response> createCollection({name, read, write, rules}) async {
        String path = '/database';
 
        Map<String, dynamic> params = {
@@ -46,7 +46,7 @@ class Database extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Update collection by its unique ID.
-    Future<Response> updateCollection({collectionId, name, read = const [], write = const [], rules = const []}) async {
+    Future<Response> updateCollection({collectionId, name, read, write, rules = const []}) async {
        String path = '/database/{collectionId}'.replaceAll(RegExp('{collectionId}'), collectionId);
 
        Map<String, dynamic> params = {
@@ -71,7 +71,7 @@ class Database extends Service {
      /// Get a list of all the user documents. You can use the query params to
      /// filter your results. On admin mode, this endpoint will return a list of all
      /// of the project documents. [Learn more about different API
-     /// modes](/docs/modes).
+     /// modes](/docs/admin).
     Future<Response> listDocuments({collectionId, filters = const [], offset = null, limit = 50, orderField = '\$uid', orderType = 'ASC', orderCast = 'string', search = null, first = null, last = null}) async {
        String path = '/database/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
@@ -90,7 +90,7 @@ class Database extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Create a new Document.
-    Future<Response> createDocument({collectionId, data, read = const [], write = const [], parentDocument = null, parentProperty = null, parentPropertyType = 'assign'}) async {
+    Future<Response> createDocument({collectionId, data, read, write, parentDocument = null, parentProperty = null, parentPropertyType = 'assign'}) async {
        String path = '/database/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
        Map<String, dynamic> params = {
@@ -114,7 +114,7 @@ class Database extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-    Future<Response> updateDocument({collectionId, documentId, data, read = const [], write = const []}) async {
+    Future<Response> updateDocument({collectionId, documentId, data, read, write}) async {
        String path = '/database/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 
        Map<String, dynamic> params = {

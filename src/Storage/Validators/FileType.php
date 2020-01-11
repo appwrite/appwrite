@@ -64,6 +64,10 @@ class FileType extends Validator
      */
     public function isValid($path)
     {
+        if(!\is_readable($path)) {
+            return false;
+        }
+
         $handle = fopen($path, 'r');
 
         if (!$handle) {

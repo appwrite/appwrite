@@ -101,7 +101,7 @@ $utopia->get('/v1/health/webhooks')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $response->json(['size' => Resque::size('webhooks')]);
+            $response->json(['size' => Resque::size('v1-webhooks')]);
         }
     );
 
@@ -113,7 +113,7 @@ $utopia->get('/v1/health/storage/local')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $device = new Local();
+            $device = new Local('/storage/uploads/');
 
             if (!is_readable($device->getRoot().'/..')) {
                 throw new Exception('Device is not readable');

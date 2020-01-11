@@ -6,7 +6,7 @@
 GET https://appwrite.io/v1/teams
 ```
 
-** Get a list of all the current user teams. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project teams. [Learn more about different API modes](/docs/modes). **
+** Get a list of all the current user teams. You can use the query params to filter your results. On admin mode, this endpoint will return a list of all of the project teams. [Learn more about different API modes](/docs/admin). **
 
 ### Parameters
 

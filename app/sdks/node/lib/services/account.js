@@ -13,15 +13,21 @@ class Account extends Service {
     async get() {
         let path = '/account';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
     /**
      * Delete Account
      *
-     * Delete currently logged in user account.
+     * Delete a currently logged in user account. Behind the scene, the user
+     * record is not deleted but permanently blocked from any access. This is done
+     * to avoid deleted accounts being overtaken by new users with the same email
+     * address. Any user-related resources like documents or storage files should
+     * be deleted separately.
      *
      * @throws Exception
      * @return {}
@@ -29,8 +35,10 @@ class Account extends Service {
     async delete() {
         let path = '/account';
         
-        return await this.client.call('delete', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -50,8 +58,10 @@ class Account extends Service {
     async updateEmail(email, password) {
         let path = '/account/email';
         
-        return await this.client.call('patch', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('patch', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'email': email,
                 'password': password
             });
@@ -69,8 +79,10 @@ class Account extends Service {
     async updateName(name) {
         let path = '/account/name';
         
-        return await this.client.call('patch', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('patch', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'name': name
             });
     }
@@ -89,8 +101,10 @@ class Account extends Service {
     async updatePassword(password, oldPassword) {
         let path = '/account/password';
         
-        return await this.client.call('patch', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('patch', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'password': password,
                 'old-password': oldPassword
             });
@@ -107,8 +121,10 @@ class Account extends Service {
     async getPrefs() {
         let path = '/account/prefs';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -125,8 +141,10 @@ class Account extends Service {
     async updatePrefs(prefs) {
         let path = '/account/prefs';
         
-        return await this.client.call('patch', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('patch', path, {
+                    'content-type': 'application/json',
+               },
+               {
                 'prefs': prefs
             });
     }
@@ -143,8 +161,10 @@ class Account extends Service {
     async getSecurity() {
         let path = '/account/security';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 
@@ -160,8 +180,10 @@ class Account extends Service {
     async getSessions() {
         let path = '/account/sessions';
         
-        return await this.client.call('get', path, {'content-type': 'application/json'},
-            {
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
             });
     }
 }

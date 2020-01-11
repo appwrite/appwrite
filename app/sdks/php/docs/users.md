@@ -75,7 +75,7 @@ GET https://appwrite.io/v1/users/{userId}/prefs
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
 
-## Update Account Prefs
+## Update User Prefs
 
 ```http request
 PATCH https://appwrite.io/v1/users/{userId}/prefs
@@ -133,7 +133,7 @@ DELETE https://appwrite.io/v1/users/{userId}/sessions/:session
 | userId | string | **Required** User unique ID. |  |
 | sessionId | string | User unique session ID. |  |
 
-## Update user status
+## Update User Status
 
 ```http request
 PATCH https://appwrite.io/v1/users/{userId}/status
@@ -146,5 +146,5 @@ PATCH https://appwrite.io/v1/users/{userId}/status
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
-| status | string | User Status code. To activate the user pass 1, to blocking the user pass 2 and for disabling the user pass 0 |  |
+| status | string | User Status code. To activate the user pass 1, to block the user pass 2 and for disabling the user pass 0 |  |
 

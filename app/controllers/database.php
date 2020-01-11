@@ -19,6 +19,8 @@ use Database\Validator\Authorization;
 use Database\Exception\Authorization as AuthorizationException;
 use Database\Exception\Structure as StructureException;
 
+include_once 'shared/api.php';
+
 $isDev = (App::ENV_TYPE_PRODUCTION !== $utopia->getEnv());
 
 $utopia->get('/v1/database')
@@ -95,9 +97,9 @@ $utopia->post('/v1/database')
     ->label('sdk.method', 'createCollection')
     ->label('sdk.description', '/docs/references/database/create-collection.md')
     ->param('name', '', function () { return new Text(256); }, 'Collection name.')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation')
     ->action(
         function ($name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
             $parsedRules = [];
@@ -163,8 +165,8 @@ $utopia->put('/v1/database/:collectionId')
     ->label('sdk.description', '/docs/references/database/update-collection.md')
     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Collection name.')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions(/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation', true)
     ->action(
         function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB) {
@@ -353,8 +355,8 @@ $utopia->post('/v1/database/:collectionId/documents')
     ->label('sdk.description', '/docs/references/database/create-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID.')
     ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string.')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
@@ -460,8 +462,8 @@ $utopia->patch('/v1/database/:collectionId/documents/:documentId')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
     ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(
         function ($collectionId, $documentId, $data, $read, $write) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);

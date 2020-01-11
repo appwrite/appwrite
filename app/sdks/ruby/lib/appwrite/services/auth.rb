@@ -1,7 +1,7 @@
 module Appwrite
     class Auth < Service
 
-        def login(email:, password:, success:, failure:)
+        def login(email:, password:, success: '', failure: '')
             path = '/auth/login'
 
             params = {
@@ -12,6 +12,21 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
+        def oauth(provider:, success:, failure:)
+            path = '/auth/login/oauth/{provider}'
+                .gsub('{provider}', provider)
+
+            params = {
+                'success': success, 
+                'failure': failure
+            }
+
+            return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -22,6 +37,7 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -33,19 +49,7 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
-            }, params);
-        end
-
-        def oauth(provider:, success: '', failure: '')
-            path = '/auth/oauth/{provider}'
-                .gsub('{provider}', provider)
-
-            params = {
-                'success': success, 
-                'failure': failure
-            }
-
-            return @client.call('get', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -58,6 +62,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -72,6 +77,7 @@ module Appwrite
             }
 
             return @client.call('put', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -88,6 +94,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -100,6 +107,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 
@@ -111,6 +119,7 @@ module Appwrite
             }
 
             return @client.call('post', path, {
+                'content-type' => 'application/json',
             }, params);
         end
 

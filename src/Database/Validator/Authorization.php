@@ -72,6 +72,10 @@ class Authorization extends Validator
             return false;
         }
 
+        if(is_array($permissions[$this->action]) && empty($permissions[$this->action])) {
+            return true;
+        }
+
         $permission = null;
 
         foreach ($permissions[$this->action] as $permission) {
@@ -82,7 +86,7 @@ class Authorization extends Validator
             }
         }
 
-        $this->message = 'User is missing '.$this->action.' for '.$permission.' permission. only this scope "'.json_encode(self::getRoles()).'" is given.';
+        $this->message = 'User is missing '.$this->action.' for "'.$permission.'" permission. Only this scopes "'.json_encode(self::getRoles()).'" is given and only this are allowed "'.json_encode($permissions[$this->action]).'".';
 
         return false;
     }

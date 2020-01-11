@@ -12,4 +12,4 @@ $client
 
 $projects = new Projects($client);
 
-$result = $projects->updateWebhook('[PROJECT_ID]', '[WEBHOOK_ID]', '[NAME]', [], '[URL]', 1);
+$result = $projects->updateWebhook('[PROJECT_ID]', '[WEBHOOK_ID]', '[NAME]', [], '[URL]', 0);

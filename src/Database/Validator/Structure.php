@@ -159,14 +159,14 @@ class Structure extends Validator
                 case 'boolean':
                     $validator = new Validator\Boolean();
                     break;
-                case 'ip':
-                    $validator = new Validator\IP();
-                    break;
                 case 'email':
                     $validator = new Validator\Email();
                     break;
                 case 'url':
                     $validator = new Validator\URL();
+                    break;
+                case 'ip':
+                    $validator = new Validator\IP();
                     break;
                 case 'wildcard':
                     $validator = new Validator\Mock();

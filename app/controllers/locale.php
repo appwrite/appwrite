@@ -6,6 +6,8 @@ use Utopia\App;
 use Utopia\Locale\Locale;
 use GeoIp2\Database\Reader;
 
+include_once 'shared/api.php';
+
 $utopia->get('/v1/locale')
     ->desc('Get User Locale')
     ->label('scope', 'locale.read')
@@ -70,7 +72,7 @@ $utopia->get('/v1/locale/countries')
     ->label('sdk.method', 'getCountries')
     ->label('sdk.description', '/docs/references/locale/get-countries.md')
     ->action(
-        function () use ($response, $request) {
+        function () use ($response) {
             $list = Locale::getText('countries'); /* @var $list array */
 
             asort($list);
@@ -127,8 +129,25 @@ $utopia->get('/v1/locale/countries/phones')
         }
     );
 
+$utopia->get('/v1/locale/continents')
+    ->desc('List Countries')
+    ->label('scope', 'locale.read')
+    ->label('sdk.namespace', 'locale')
+    ->label('sdk.method', 'getContinents')
+    ->label('sdk.description', '/docs/references/locale/get-continents.md')
+    ->action(
+        function () use ($response) {
+            $list = Locale::getText('continents'); /* @var $list array */
+
+            asort($list);
+
+            $response->json($list);
+        }
+    );
+
+
 $utopia->get('/v1/locale/currencies')
-    ->desc('List of currencies')
+    ->desc('List Currencies')
     ->label('scope', 'locale.read')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'getCurrencies')

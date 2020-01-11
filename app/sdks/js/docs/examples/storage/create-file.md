@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.storage.createFile(document.getElementById('uploader').files[0]);
+let promise = sdk.storage.createFile(document.getElementById('uploader').files[0], [], []);
 
 promise.then(function (response) {
     console.log(response);

@@ -18,6 +18,8 @@ use Database\Validator\Authorization;
 use Template\Template;
 use Auth\Auth;
 
+include_once 'shared/api.php';
+
 $utopia->get('/v1/teams')
     ->desc('List Teams')
     ->label('scope', 'teams.read')
@@ -259,7 +261,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
     ->param('redirect', '', function () use ($clients) { return new Host($clients); }, 'Reset page to redirect user back to your app from the invitation email.')
     ->action(
-        function ($teamId, $email, $name, $roles, $redirect) use ($request, $response, $register, $project, $user, $audit, $projectDB) {
+        function ($teamId, $email, $name, $roles, $redirect) use ($response, $register, $project, $user, $audit, $projectDB) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
@@ -356,7 +358,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -376,7 +378,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             try {
                 $mail->send();
             } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
+                //throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
             }
 
             $audit
@@ -435,7 +437,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
             $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'userId' => $membership->getAttribute('userId'), 'secret' => $secret]);
             $redirect = Template::unParseURL($redirect);
 
-            $body = new Template(__DIR__.'/../config/locale/templates/'.Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -455,7 +457,7 @@ $utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
             try {
                 $mail->send();
             } catch (\Exception $error) {
-                //throw new Exception('Problem sending mail: ' . $error->getError(), 500);
+                //throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
             }
 
             $audit
@@ -592,7 +594,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ->setParam('event', 'auth.join')
             ;
 
-            $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true);
+            $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
 
             if ($success) {
                 $response->redirect($success);

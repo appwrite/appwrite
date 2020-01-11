@@ -6,6 +6,9 @@ cli_set_process_title('Audits V1 Worker');
 
 echo APP_NAME.' audits worker v1 has started';
 
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+
 class AuditsV1
 {
     public $args = [];
@@ -26,13 +29,13 @@ class AuditsV1
         $ip = $this->args['ip'];
         $data = $this->args['data'];
         $pdo = $register->get('db', true);
-        $adapter = new Audit\Adapter\MySQL($pdo);
-
+        
+        $adapter = new AuditAdapter($pdo);
         $adapter->setNamespace('app_'.$projectId);
 
-        $audit = new \Audit\Audit($adapter, $userId, 0, $userAgent, $ip, '');
+        $audit = new Audit($adapter);
 
-        $audit->log($event, $resource, $data);
+        $audit->log($userId, $event, $resource, $userAgent, $ip, '', $data);
     }
 
     public function tearDown()

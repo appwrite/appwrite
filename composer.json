@@ -26,7 +26,7 @@
         "psr-4": {"Tests\\E2E\\": "tests/e2e"}
     },
     "require": {
-        "php": ">=7.3.0",
+        "php": ">=7.4.0",
         "ext-curl": "*",
         "ext-imagick": "*",
         "ext-mbstring": "*",
@@ -38,12 +38,11 @@
         "ext-zlib": "*",
         "ext-sockets": "*",
 
-        "appwrite/sdk-generator": "master",
         "appwrite/php-clamav": "master",
-        "appwrite/appwrite": "master",
 
         "utopia-php/framework": "master",
         "utopia-php/abuse": "master",
+        "utopia-php/audit": "master",
         "utopia-php/cache": "master",
         "utopia-php/cli": "master",
         "utopia-php/locale": "master",
@@ -60,6 +59,7 @@
         "phpmailer/phpmailer": "6.0.7"
     },
     "require-dev": {
+        "appwrite/sdk-generator": "master",
         "phpunit/phpunit": "^7.0"
     },
     "repositories": [
@@ -74,7 +74,7 @@
     "minimum-stability": "dev",
     "config": {
         "platform": {
-            "php": "7.3"
+            "php": "7.4"
         }
     }
 }
