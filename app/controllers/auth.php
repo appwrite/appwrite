@@ -425,7 +425,7 @@ $utopia->get('/v1/auth/login/oauth/:provider')
                 throw new Exception('Provider is not supported', 501);
             }
 
-            $oauth = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
+            $oauth = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
 
             $response->redirect($oauth->getLoginURL());
         }

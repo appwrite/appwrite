@@ -25,19 +25,28 @@ abstract class OAuth
     protected $state;
 
     /**
+     * @var array
+     */
+    protected $scopes;
+
+    /**
      * OAuth constructor.
      *
      * @param string $appId
      * @param string $appSecret
      * @param string $callback
      * @param array  $state
+     * @param array $scope
      */
-    public function __construct(string $appId, string $appSecret, string $callback, $state = [])
+    public function __construct(string $appId, string $appSecret, string $callback, $state = [], $scopes)
     {
         $this->appID = $appId;
         $this->appSecret = $appSecret;
         $this->callback = $callback;
         $this->state = $state;
+        $this->scopes = $scopes;
+        var_dump($scopes);
+        exit();
     }
 
     /**
