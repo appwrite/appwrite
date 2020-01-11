@@ -4,6 +4,7 @@ global $utopia, $register, $request, $response, $user, $audit, $webhook, $projec
 
 use Utopia\Exception;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
 use Utopia\Validator\Host;
@@ -400,8 +401,9 @@ $utopia->get('/v1/auth/login/oauth/:provider')
     ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider. Currently, supported providers are: ' . implode(', ', array_keys($providers)))
     ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
     ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
+    ->param('scopes', [], function () { return new ArrayList(new Text(128)); }, 'An array of string where each can be max 128 chars', true)
     ->action(
-        function ($provider, $success, $failure) use ($response, $request, $project) {
+        function ($provider, $success, $failure, $scopes) use ($response, $request, $project) {
             $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/login/oauth/callback/'.$provider.'/'.$project->getUid();
             $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
             $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
