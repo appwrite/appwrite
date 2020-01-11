@@ -16,6 +16,7 @@
 * Fixed gravatar icons not showing up correctly on the console
 * Fixed code location of project not found error
 * Fixed bug where tags element would ignore tab key for parsing new tags
+* Fixed OAuth login error saying project UID is missing when its not
 
 # Version 0.4.0 (PRE-RELEASE)
 
