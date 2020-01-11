@@ -24,7 +24,7 @@
 
       add.addEventListener("keydown", function(event) {
         if (
-          (event.key === "Enter" || event.key === " ") &&
+          (event.key === "Enter" || event.key === " " || event.key === "Tab") &&
           add.value.length > 0
         ) {
           array.push(add.value);
@@ -35,7 +35,9 @@
 
           check();
 
-          event.preventDefault();
+          if(event.key !== "Tab") { // Don't lock accessibility
+            event.preventDefault();
+          }
         }
         if (
           (event.key === "Backspace" || event.key === "Delete") &&

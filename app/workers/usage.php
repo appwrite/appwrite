@@ -19,7 +19,7 @@ class UsageV1
 
     public function perform()
     {
-        global $register;
+        global $register, $version;
 
         $projectId = $this->args['projectId'];
         $method = $this->args['method'];
@@ -29,7 +29,7 @@ class UsageV1
 
         $statsd = $register->get('statsd', true);
 
-        $tags = ",project={$projectId},version=".VERSION.'';
+        $tags = ",project={$projectId},version=".$version.'';
 
         // the global namespace is prepended to every key (optional)
         $statsd->setNamespace('appwrite.usage');

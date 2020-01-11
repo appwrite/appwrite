@@ -5,13 +5,17 @@ global $utopia, $register, $response, $user, $audit, $project, $projectDB, $prov
 use Utopia\Exception;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+use Utopia\Locale\Locale;
 use Auth\Auth;
 use Auth\Validator\Password;
 use Database\Database;
 use Database\Validator\Authorization;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
-use Utopia\Locale\Locale;
+
+include_once 'shared/api.php';
 
 $utopia->get('/v1/account')
     ->desc('Get Account')
@@ -134,12 +138,12 @@ $utopia->get('/v1/account/security')
     ->label('sdk.description', '/docs/references/account/get-security.md')
     ->action(
         function () use ($response, $register, $project, $user) {
-            $ad = new \Audit\Adapter\MySQL($register->get('db'));
-            $ad->setNamespace('app_'.$project->getUid());
-            $au = new \Audit\Audit($ad, $user->getUid(), $user->getAttribute('type'), '', '', '');
+            $adapter = new AuditAdapter($register->get('db'));
+            $adapter->setNamespace('app_'.$project->getUid());
+            $audit = new Audit($adapter);
             $countries = Locale::getText('countries');
 
-            $logs = $au->getLogsByUserAndActions($user->getUid(), $user->getAttribute('type', 0), [
+            $logs = $audit->getLogsByUserAndActions($user->getUid(), [
                 'auth.register',
                 'auth.confirm',
                 'auth.login',
@@ -339,11 +343,6 @@ $utopia->delete('/v1/account')
              * Data to delete
              * * Tokens
              * * Memberships
-             * * Vaults
-             * * Subscriptions
-             *
-             * Not to Delete!!
-             * * Invoices (belong to project/business not user(!) and also needed for IRS records!)
              */
 
             $audit
@@ -352,7 +351,7 @@ $utopia->delete('/v1/account')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true)
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
                 ->json(array('result' => 'success'));
         }
     );

@@ -20,6 +20,7 @@ $utopia->shutdown(function () use ($utopia, $response, $request, $layout, $versi
 
     $footer
         ->setParam('home', $request->getServer('_APP_HOME', ''))
+        ->setParam('version', $version)
     ;
 
     $layout

@@ -3,8 +3,11 @@ from ..service import Service
 
 class Auth(Service):
 
-    def login(self, email, password, success, failure):
-        """Login User"""
+    def __init__(self, client):
+        super(Auth, self).__init__(client)
+
+    def login(self, email, password, success='', failure=''):
+        """Login"""
 
         params = {}
         path = '/auth/login'
@@ -14,6 +17,20 @@ class Auth(Service):
         params['failure'] = failure
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
+        }, params)
+
+    def oauth(self, provider, success, failure):
+        """Login with OAuth"""
+
+        params = {}
+        path = '/auth/login/oauth/{provider}'
+        path = path.replace('{provider}', provider)                
+        params['success'] = success
+        params['failure'] = failure
+
+        return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def logout(self):
@@ -23,6 +40,7 @@ class Auth(Service):
         path = '/auth/logout'
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
         }, params)
 
     def logout_by_session(self, id):
@@ -30,21 +48,10 @@ class Auth(Service):
 
         params = {}
         path = '/auth/logout/{id}'
-        path.replace('{id}', id)                
+        path = path.replace('{id}', id)                
 
         return self.client.call('delete', path, {
-        }, params)
-
-    def oauth(self, provider, success='', failure=''):
-        """OAuth Login"""
-
-        params = {}
-        path = '/auth/oauth/{provider}'
-        path.replace('{provider}', provider)                
-        params['success'] = success
-        params['failure'] = failure
-
-        return self.client.call('get', path, {
+            'content-type': 'application/json',
         }, params)
 
     def recovery(self, email, reset):
@@ -56,6 +63,7 @@ class Auth(Service):
         params['reset'] = reset
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
         }, params)
 
     def recovery_reset(self, user_id, token, password_a, password_b):
@@ -69,10 +77,11 @@ class Auth(Service):
         params['password-b'] = password_b
 
         return self.client.call('put', path, {
+            'content-type': 'application/json',
         }, params)
 
     def register(self, email, password, confirm, success='', failure='', name=''):
-        """Register User"""
+        """Register"""
 
         params = {}
         path = '/auth/register'
@@ -84,10 +93,11 @@ class Auth(Service):
         params['name'] = name
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
         }, params)
 
     def confirm(self, user_id, token):
-        """Confirm User"""
+        """Confirmation"""
 
         params = {}
         path = '/auth/register/confirm'
@@ -95,6 +105,7 @@ class Auth(Service):
         params['token'] = token
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
         }, params)
 
     def confirm_resend(self, confirm):
@@ -105,4 +116,5 @@ class Auth(Service):
         params['confirm'] = confirm
 
         return self.client.call('post', path, {
+            'content-type': 'application/json',
         }, params)

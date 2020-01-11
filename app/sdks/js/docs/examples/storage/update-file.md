@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.storage.updateFile('[FILE_ID]');
+let promise = sdk.storage.updateFile('[FILE_ID]', [], []);
 
 promise.then(function (response) {
     console.log(response);

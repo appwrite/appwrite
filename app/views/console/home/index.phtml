@@ -22,7 +22,7 @@ $graph = $this->getParam('graph', false);
     </div>
 </div>
 
-<div class="zone xxl margin-top-negative-large">
+<div class="zone xl margin-top-negative-large">
     <div class="box margin-bottom dashboard">
         <div
             data-service="projects.getProjectUsage"
@@ -153,7 +153,7 @@ $graph = $this->getParam('graph', false);
 <div data-ui-modal class="modal box close" data-button-alias=".web-new">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-    <h1>New Website</h1>
+    <h1>New Web App</h1>
 
     <form
         data-service="projects.createPlatform"
@@ -175,12 +175,12 @@ $graph = $this->getParam('graph', false);
         <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
         <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="https://localhost:3000" required>
         
-        <div class="info margin-top-small margin-bottom-small">
+        <div class="info margin-top margin-bottom">
             <div class="text-bold margin-bottom-small">Next Steps</div>
 
             <p>After adding your new website, install our JS SDK to integrate with your code and read our <a href="/docs/getting-started-for-web" target="_blank">getting started</a> tutorial.</p>
 
-            <div class="margin-bottom-no ide">
+            <div class="margin-bottom-no ide" data-lang="bash">
                 <pre class="line-numbers"><code class="prism language-bash" data-prism>npm install appwrite</code></pre>
             </div>
         </div>

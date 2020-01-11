@@ -1,6 +1,6 @@
 # Auth Service
 
-## Login User
+## Login
 
 ```http request
 POST https://appwrite.io/v1/auth/login
@@ -8,7 +8,7 @@ POST https://appwrite.io/v1/auth/login
 
 ** Allow the user to login into his account by providing a valid email and password combination. Use the success and failure arguments to provide a redirect URL\&#039;s back to your app when login is completed. 
 
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
+Please notice that in order to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.
 
 When accessing this route using Javascript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
 
@@ -21,13 +21,29 @@ When accessing this route using Javascript from the browser, success and failure
 | success | string | URL to redirect back to your app after a successful login attempt. |  |
 | failure | string | URL to redirect back to your app after a failed login attempt. |  |
 
+## Login with OAuth
+
+```http request
+GET https://appwrite.io/v1/auth/login/oauth/{provider}
+```
+
+** Allow the user to login to his account using the OAuth provider of his choice. Each OAuth provider should be enabled from the Appwrite console first. Use the success and failure arguments to provide a redirect URL&#039;s back to your app when login is completed. **
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| provider | string | **Required** OAuth Provider. Currently, supported providers are: bitbucket, facebook, github, gitlab, google, microsoft, linkedin, slack, dropbox, amazon, vk |  |
+| success | string | **Required** URL to redirect back to your app after a successful login attempt. |  |
+| failure | string | **Required** URL to redirect back to your app after a failed login attempt. |  |
+
 ## Logout Current Session
 
 ```http request
 DELETE https://appwrite.io/v1/auth/logout
 ```
 
-** Use this endpoint to log out the currently logged in user from his account. When succeed this endpoint will delete the user session and remove the session secret cookie from the user client. **
+** Use this endpoint to log out the currently logged in user from his account. When successful this endpoint will delete the user session and remove the session secret cookie from the user client. **
 
 ## Logout Specific Session
 
@@ -42,20 +58,6 @@ DELETE https://appwrite.io/v1/auth/logout/{id}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | id | string | **Required** User specific session unique ID number. if 0 delete all sessions. |  |
-
-## OAuth Login
-
-```http request
-GET https://appwrite.io/v1/auth/oauth/{provider}
-```
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| provider | string | **Required** OAuth Provider |  |
-| success | string | URL to redirect back to your app after a successful login attempt. |  |
-| failure | string | URL to redirect back to your app after a failed login attempt. |  |
 
 ## Password Recovery
 
@@ -80,7 +82,7 @@ PUT https://appwrite.io/v1/auth/recovery/reset
 
 ** Use this endpoint to complete the user account password reset. Both the **userId** and **token** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the /auth/recovery endpoint.
 
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface. **
+Please notice that in order to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface. **
 
 ### Parameters
 
@@ -91,17 +93,17 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 | password-a | string | New password. |  |
 | password-b | string | New password again. |  |
 
-## Register User
+## Register
 
 ```http request
 POST https://appwrite.io/v1/auth/register
 ```
 
-** Use this endpoint to allow a new user to register an account in your project. Use the success and failure URL&#039;s to redirect users back to your application after signup completes.
+** Use this endpoint to allow a new user to register an account in your project. Use the success and failure URLs to redirect users back to your application after signup completes.
 
 If registration completes successfully user will be sent with a confirmation email in order to confirm he is the owner of the account email address. Use the confirmation parameter to redirect the user from the confirmation email back to your app. When the user is redirected, use the /auth/confirm endpoint to complete the account confirmation.
 
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
+Please notice that in order to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.
 
 When accessing this route using Javascript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy. **
 
@@ -116,7 +118,7 @@ When accessing this route using Javascript from the browser, success and failure
 | failure | string | Redirect when registration failed |  |
 | name | string | User name |  |
 
-## Confirm User
+## Confirmation
 
 ```http request
 POST https://appwrite.io/v1/auth/register/confirm
@@ -137,9 +139,9 @@ POST https://appwrite.io/v1/auth/register/confirm
 POST https://appwrite.io/v1/auth/register/confirm/resend
 ```
 
-** This endpoint allows the user to request your app to resend him his email confirmation message. The redirect arguments acts the same way as in /auth/register endpoint.
+** This endpoint allows the user to request your app to resend him his email confirmation message. The redirect arguments act the same way as in /auth/register endpoint.
 
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface. **
+Please notice that in order to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface. **
 
 ### Parameters
 

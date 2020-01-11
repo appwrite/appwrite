@@ -5,8 +5,8 @@ use Utopia\Locale\Locale;
 $protocol   = $this->getParam('protocol', '');
 $domain     = $this->getParam('domain', '');
 $api        = $this->getParam('api', '');
-$project    = $this->getParam('project', '');
-$version    = $this->getParam('version', 'v0.0.0');
+$project    = $this->getParam('project', 'console');
+$version    = $this->getParam('version', '0.0.0');
 $isDev      = $this->getParam('isDev', false);
 $litespeed  = $this->getParam('litespeed', true);
 $analytics  = $this->getParam('analytics', 'UA-26264668-9');
@@ -39,6 +39,9 @@ $canonical  = $this->getParam('canonical', '');
     <meta property="og:type" content="website" />
     <meta property="og:title" content="<?php echo $this->getParam('title', ''); ?>" />
     <meta property="og:description" content="<?php echo $this->getParam('description', ''); ?>" />
+    <?php if (!empty($canonical)): ?>
+        <meta property="og:url" content="<?php echo $canonical; ?>" />
+    <?php endif; ?>
     <meta property="og:image"  content="<?php echo $protocol; ?>://<?php echo $domain; ?>/images/logo.png?v=1" />
     <script>
 
@@ -110,6 +113,6 @@ $canonical  = $this->getParam('canonical', '');
 
     <?php echo $this->exec($this->getParam('footer', [])); ?>
 
-    <!-- Version <?php echo VERSION; ?> -->
+    <!-- Version <?php echo $version; ?> -->
 </body>
 </html>

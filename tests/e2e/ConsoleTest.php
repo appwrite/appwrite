@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 
 class ConsoleTest extends BaseConsole
 {
-    public function testRegisterSuccess()
+    public function testRegisterSuccess(): array
     {
         $response = $this->register();
 
@@ -22,11 +22,12 @@ class ConsoleTest extends BaseConsole
     /**
      * @depends testRegisterSuccess
      */
-    public function testLoginSuccess($data)
+    public function testLoginSuccess(array $data): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/auth/login', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
         ], [
             'email' => $data['email'],
             'password' => $data['password'],
@@ -34,7 +35,7 @@ class ConsoleTest extends BaseConsole
             'failure' => 'http://localhost/failure',
         ]);
 
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a-session-console'];
+        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_console'];
 
         $this->assertEquals('http://localhost/success', $response['headers']['location']);
         $this->assertEquals("", $response['body']);
@@ -49,12 +50,13 @@ class ConsoleTest extends BaseConsole
     /**
      * @depends testLoginSuccess
      */
-    public function testAccountSuccess($data)
+    public function testAccountSuccess(array $data): array
     {
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], []);
 
         $this->assertEquals('Demo User', $response['body']['name']);
@@ -72,23 +74,25 @@ class ConsoleTest extends BaseConsole
     /**
      * @depends testAccountSuccess
      */
-    public function testLogoutSuccess($data)
+    public function testLogoutSuccess(array $data): void
     {
         $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a-session-console=' . $data['session'],
+            'cookie' => 'a_session_console=' . $data['session'],
+            'x-appwrite-project' => 'console',
         ], []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
     }
 
-    public function testLogoutFailure()
+    public function testLogoutFailure(): void
     {
         $response = $this->client->call(Client::METHOD_DELETE, '/auth/logout', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
         ], []);
 
         $this->assertEquals('401', $response['body']['code']);

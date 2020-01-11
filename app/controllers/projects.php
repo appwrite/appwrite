@@ -16,6 +16,8 @@ use Database\Validator\UID;
 use OpenSSL\OpenSSL;
 use Cron\CronExpression;
 
+include_once 'shared/api.php';
+
 $scopes = [ // TODO sync with console UI list
     'users.read',
     'users.write',

@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 
 class ConsoleHealthTest extends BaseConsole
 {
-    public function testHTTPSuccess()
+    public function testHTTPSuccess(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health', [
             'origin' => 'http://localhost',
@@ -17,7 +17,7 @@ class ConsoleHealthTest extends BaseConsole
         $this->assertEquals('OK', $response['body']['status']);
     }
 
-    public function testDBSuccess()
+    public function testDBSuccess(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health/db', [
             'origin' => 'http://localhost',
@@ -28,7 +28,7 @@ class ConsoleHealthTest extends BaseConsole
         $this->assertEquals('OK', $response['body']['status']);
     }
 
-    public function testCacheSuccess()
+    public function testCacheSuccess(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health/db', [
             'origin' => 'http://localhost',
@@ -39,7 +39,7 @@ class ConsoleHealthTest extends BaseConsole
         $this->assertEquals('OK', $response['body']['status']);
     }
 
-    public function testTimeSuccess()
+    public function testTimeSuccess(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health/time', [
             'origin' => 'http://localhost',
@@ -54,7 +54,7 @@ class ConsoleHealthTest extends BaseConsole
         $this->assertLessThan(10, $response['body']['diff']);
     }
 
-    public function testWebhooksSuccess()
+    public function testWebhooksSuccess(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health/webhooks', [
             'origin' => 'http://localhost',
@@ -66,7 +66,7 @@ class ConsoleHealthTest extends BaseConsole
         $this->assertLessThan(10, $response['body']['size']);
     }
 
-    public function xtestStorageLocalSuccess()
+    public function xtestStorageLocalSuccess(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health/storage/local', [
             'origin' => 'http://localhost',
@@ -77,7 +77,7 @@ class ConsoleHealthTest extends BaseConsole
         $this->assertEquals('OK', $response['body']['status']);
     }
 
-    public function testStorageAntiVirusSuccess()
+    public function testStorageAntiVirusSuccess(): void
     {
         $response = $this->client->call(Client::METHOD_GET, '/health/storage/anti-virus', [
             'origin' => 'http://localhost',

@@ -13,16 +13,16 @@ class Teams extends Service
      *
      * Get a list of all the current user teams. You can use the query params to
      * filter your results. On admin mode, this endpoint will return a list of all
-     * of the project teams. [Learn more about different API modes](/docs/modes).
+     * of the project teams. [Learn more about different API modes](/docs/admin).
      *
-     * @param string $search
-     * @param integer $limit
-     * @param integer $offset
-     * @param string $orderType
+     * @param string  $search
+     * @param int  $limit
+     * @param int  $offset
+     * @param string  $orderType
      * @throws Exception
      * @return array
      */
-    public function listTeams($search = '', $limit = 25, $offset = 0, $orderType = 'ASC')
+    public function listTeams(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
         $path   = str_replace([], [], '/teams');
         $params = [];
@@ -33,6 +33,7 @@ class Teams extends Service
         $params['orderType'] = $orderType;
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -44,12 +45,12 @@ class Teams extends Service
      * who will be able add new owners and update or delete the team from your
      * project.
      *
-     * @param string $name
-     * @param array $roles
+     * @param string  $name
+     * @param array  $roles
      * @throws Exception
      * @return array
      */
-    public function createTeam($name, $roles = ["owner"])
+    public function createTeam(string $name, array $roles = ["owner"]):array
     {
         $path   = str_replace([], [], '/teams');
         $params = [];
@@ -58,6 +59,7 @@ class Teams extends Service
         $params['roles'] = $roles;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -67,17 +69,18 @@ class Teams extends Service
      * Get team by its unique ID. All team members have read access for this
      * resource.
      *
-     * @param string $teamId
+     * @param string  $teamId
      * @throws Exception
      * @return array
      */
-    public function getTeam($teamId)
+    public function getTeam(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -87,12 +90,12 @@ class Teams extends Service
      * Update team by its unique ID. Only team owners have write access for this
      * resource.
      *
-     * @param string $teamId
-     * @param string $name
+     * @param string  $teamId
+     * @param string  $name
      * @throws Exception
      * @return array
      */
-    public function updateTeam($teamId, $name)
+    public function updateTeam(string $teamId, string $name):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
@@ -100,6 +103,7 @@ class Teams extends Service
         $params['name'] = $name;
 
         return $this->client->call(Client::METHOD_PUT, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -109,17 +113,18 @@ class Teams extends Service
      * Delete team by its unique ID. Only team owners have write access for this
      * resource.
      *
-     * @param string $teamId
+     * @param string  $teamId
      * @throws Exception
      * @return array
      */
-    public function deleteTeam($teamId)
+    public function deleteTeam(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -129,17 +134,18 @@ class Teams extends Service
      * Get team members by the team unique ID. All team members have read access
      * for this list of resources.
      *
-     * @param string $teamId
+     * @param string  $teamId
      * @throws Exception
      * @return array
      */
-    public function getTeamMembers($teamId)
+    public function getTeamMembers(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}/members');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -160,15 +166,15 @@ class Teams extends Service
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
      *
-     * @param string $teamId
-     * @param string $email
-     * @param array $roles
-     * @param string $redirect
-     * @param string $name
+     * @param string  $teamId
+     * @param string  $email
+     * @param array  $roles
+     * @param string  $redirect
+     * @param string  $name
      * @throws Exception
      * @return array
      */
-    public function createTeamMembership($teamId, $email, $roles, $redirect, $name = '')
+    public function createTeamMembership(string $teamId, string $email, array $roles, string $redirect, string $name = ''):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}/memberships');
         $params = [];
@@ -179,6 +185,7 @@ class Teams extends Service
         $params['redirect'] = $redirect;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -188,18 +195,19 @@ class Teams extends Service
      * This endpoint allows a user to leave a team or for a team owner to delete
      * the membership of any other team member.
      *
-     * @param string $teamId
-     * @param string $inviteId
+     * @param string  $teamId
+     * @param string  $inviteId
      * @throws Exception
      * @return array
      */
-    public function deleteTeamMembership($teamId, $inviteId)
+    public function deleteTeamMembership(string $teamId, string $inviteId):array
     {
         $path   = str_replace(['{teamId}', '{inviteId}'], [$teamId, $inviteId], '/teams/{teamId}/memberships/{inviteId}');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -209,13 +217,13 @@ class Teams extends Service
      * Use this endpoint to resend your invitation email for a user to join a
      * team.
      *
-     * @param string $teamId
-     * @param string $inviteId
-     * @param string $redirect
+     * @param string  $teamId
+     * @param string  $inviteId
+     * @param string  $redirect
      * @throws Exception
      * @return array
      */
-    public function createTeamMembershipResend($teamId, $inviteId, $redirect)
+    public function createTeamMembershipResend(string $teamId, string $inviteId, string $redirect):array
     {
         $path   = str_replace(['{teamId}', '{inviteId}'], [$teamId, $inviteId], '/teams/{teamId}/memberships/{inviteId}/resend');
         $params = [];
@@ -223,6 +231,7 @@ class Teams extends Service
         $params['redirect'] = $redirect;
 
         return $this->client->call(Client::METHOD_POST, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 
@@ -245,16 +254,16 @@ class Teams extends Service
      * browsers who don't allow to set 3rd party HTTP cookies needed for saving
      * the account session token.
      *
-     * @param string $teamId
-     * @param string $inviteId
-     * @param string $userId
-     * @param string $secret
-     * @param string $success
-     * @param string $failure
+     * @param string  $teamId
+     * @param string  $inviteId
+     * @param string  $userId
+     * @param string  $secret
+     * @param string  $success
+     * @param string  $failure
      * @throws Exception
      * @return array
      */
-    public function updateTeamMembershipStatus($teamId, $inviteId, $userId, $secret, $success = '', $failure = '')
+    public function updateTeamMembershipStatus(string $teamId, string $inviteId, string $userId, string $secret, string $success = '', string $failure = ''):array
     {
         $path   = str_replace(['{teamId}', '{inviteId}'], [$teamId, $inviteId], '/teams/{teamId}/memberships/{inviteId}/status');
         $params = [];
@@ -265,6 +274,7 @@ class Teams extends Service
         $params['failure'] = $failure;
 
         return $this->client->call(Client::METHOD_PATCH, $path, [
+            'content-type' => 'application/json',
         ], $params);
     }
 

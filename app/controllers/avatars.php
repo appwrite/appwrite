@@ -15,6 +15,8 @@ use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 
+include_once 'shared/api.php';
+
 $types = [
     'browsers' => include __DIR__.'/../config/avatars/browsers.php',
     'credit-cards' => include __DIR__.'/../config/avatars/credit-cards.php',
@@ -43,8 +45,8 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     $path = $types[$type][$code];
     $type = 'png';
 
-    if (!file_exists($path)) {
-        throw new Exception('File not found in '.$path, 404);
+    if (!is_readable($path)) {
+        throw new Exception('File not readable in '.$path, 500);
     }
 
     $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
@@ -341,7 +343,7 @@ $utopia->get('/v1/avatars/favicon')
     );
 
 $utopia->get('/v1/avatars/qr')
-    ->desc('Text to QR Generator')
+    ->desc('Get QR Code')
     ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image')
     ->param('size', 400, function () { return new Range(0, 1000); }, 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
     ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin From Edge. Pass an integer between 0 to 10. Defaults to 1.', true)

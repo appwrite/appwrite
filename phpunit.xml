@@ -11,6 +11,7 @@
     <testsuites>
         <testsuite name="Application Test Suite">
             <directory>./tests/e2e/</directory>
+            <directory>./tests/unit/</directory>
         </testsuite>
     </testsuites>
 </phpunit>

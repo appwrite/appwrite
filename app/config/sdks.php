@@ -8,12 +8,6 @@ return [
         'link' => 'https://github.com/appwrite/sdk-for-js',
     ],
     [
-        'label' => 'PHP',
-        'versions' => ['v1.0.0'],
-        'logo' => 'php.svg',
-        'link' => 'https://github.com/appwrite/sdk-for-php',
-    ],
-    [
         'label' => 'Node.js',
         'versions' => ['v1.0.0'],
         'logo' => 'nodejs.svg',
@@ -30,6 +24,12 @@ return [
         'versions' => ['v1.0.0'],
         'logo' => 'python.svg',
         'link' => 'https://github.com/appwrite/sdk-for-python',
+    ],
+    [
+        'label' => 'PHP',
+        'versions' => ['v1.0.0'],
+        'logo' => 'php.svg',
+        'link' => 'https://github.com/appwrite/sdk-for-php',
     ],
     [
         'label' => 'Go',

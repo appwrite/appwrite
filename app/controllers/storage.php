@@ -18,11 +18,14 @@ use Storage\Storage;
 use Storage\Devices\Local;
 use Storage\Validators\File;
 use Storage\Validators\FileSize;
+use Storage\Validators\Upload;
 use Storage\Compression\Algorithms\GZIP;
 use Resize\Resize;
 use OpenSSL\OpenSSL;
 
-Storage::addDevice('local', new Local('app-'.$project->getUid()));
+include_once 'shared/api.php';
+
+Storage::addDevice('local', new Local('/storage/uploads/app-'.$project->getUid()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
     'default' => 'default.gif',
@@ -187,7 +190,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             if (!Storage::exists($storage)) {
-                throw new Exception('No such storage device');
+                throw new Exception('No such storage device', 400);
             }
 
             if ((strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
@@ -207,7 +210,6 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             $algorithm = $file->getAttribute('algorithm');
             $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
             $cipher = $file->getAttribute('fileOpenSSLCipher');
-            //$mimeType       = $file->getAttribute('mimeType', 'unknown');
 
             $compressor = new GZIP();
             $device = Storage::getDevice('local');
@@ -401,20 +403,21 @@ $utopia->post('/v1/storage/files')
     ->label('sdk.description', '/docs/references/storage/create-file.md')
     ->label('sdk.consumes', 'multipart/form-data')
     ->param('files', [], function () { return new File(); }, 'Binary Files.', false)
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    // ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
     ->action(
-        function ($files, $read, $write, $folderId) use ($request, $response, $user, $projectDB, $audit, $usage) {
+        function ($files, $read, $write, $folderId = '') use ($request, $response, $user, $projectDB, $audit, $usage) {
             $files = $request->getFiles('files');
             $read = (empty($read)) ? ['user:'.$user->getUid()] : $read;
             $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
 
             /*
-             * Validation
+             * Validators
              */
-            //$fileType 	= new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
+            //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
             $fileSize = new FileSize(2097152 * 2); // 4MB
+            $upload = new Upload();
 
             if (empty($files)) {
                 throw new Exception('No files sent', 400);
@@ -448,11 +451,20 @@ $utopia->post('/v1/storage/files')
             $device = Storage::getDevice('local');
 
             foreach ($files['tmp_name'] as $i => $tmpName) {
+                if (!$upload->isValid($tmpName)) {
+                    throw new Exception('Invalid file', 403);
+                }
+
                 // Save to storage
                 $name = $files['name'][$i];
                 $size = $device->getFileSize($tmpName);
-                $path = $device->upload($tmpName, $files['name'][$i]);
-                $mimeType = $device->getFileMimeType($path);
+                $path = $device->getPath(uniqid().'.'.pathinfo($name, PATHINFO_EXTENSION));
+                
+                if (!$device->upload($tmpName, $path)) { // TODO deprecate 'upload' and replace with 'move'
+                    throw new Exception('Failed moving file', 500);
+                }
+
+                $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
                 // Check if file size is exceeding allowed limit
                 if (!$antiVirus->fileScan($path)) {
@@ -468,8 +480,12 @@ $utopia->post('/v1/storage/files')
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                 $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-                $sizeCompressed = (int) $device->write($path, $data);
+                if(!$device->write($path, $data)) {
+                    throw new Exception('Failed to save file', 500);
+                }
 
+                $sizeActual = $device->getFileSize($path);
+                
                 $file = $projectDB->createDocument([
                     '$collection' => Database::SYSTEM_COLLECTION_FILES,
                     '$permissions' => [
@@ -483,7 +499,7 @@ $utopia->post('/v1/storage/files')
                     'signature' => $device->getFileHash($path),
                     'mimeType' => $mimeType,
                     'sizeOriginal' => $size,
-                    'sizeCompressed' => $sizeCompressed,
+                    'sizeActual' => $sizeActual,
                     'algorithm' => $compressor->getName(),
                     'token' => bin2hex(random_bytes(64)),
                     'comment' => '',
@@ -503,7 +519,7 @@ $utopia->post('/v1/storage/files')
                 ;
 
                 $usage
-                    ->setParam('storage', $sizeCompressed)
+                    ->setParam('storage', $sizeActual)
                 ;
 
                 $list[] = $file->getArrayCopy();
@@ -523,11 +539,11 @@ $utopia->put('/v1/storage/files/:fileId')
     ->label('sdk.method', 'updateFile')
     ->label('sdk.description', '/docs/references/storage/update-file.md')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. [Learn more about permissions and roles](/docs/permissions).', true)
-    ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    //->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
     ->action(
-        function ($fileId, $read, $write, $folderId) use ($response, $projectDB) {
+        function ($fileId, $read, $write, $folderId = '') use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
             if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {

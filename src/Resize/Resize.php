@@ -113,7 +113,9 @@ class Resize
     {
         // Create directory with write permissions
         if (null !== $path && !file_exists(dirname($path))) {
-            mkdir(dirname($path), 0777, true);
+            if (!@mkdir(dirname($path), 0755, true)) {
+                throw new Exception('Can\'t create directory '.dirname($path));
+            }
         }
 
         switch ($type) {
