@@ -6,6 +6,9 @@ trait SideClient
 {
     public function getHeaders():array
     {
-        return [];
+        return [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $this->getUser()['session'],
+        ];
     }
 }

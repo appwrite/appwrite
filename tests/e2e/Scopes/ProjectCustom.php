@@ -20,37 +20,10 @@ trait ProjectCustom
             return self::$project;
         }
 
-        $email = uniqid().'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
-
-        $root = $this->client->call(Client::METHOD_POST, '/account', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], [
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
-
-        $this->assertEquals(201, $root['headers']['status-code']);
-
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => 'console',
-        ], [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $session = $this->client->parseCookie($session['headers']['set-cookie'])['a_session_console'];
-
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $session,
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Team',
@@ -63,7 +36,7 @@ trait ProjectCustom
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $session,
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project',
@@ -85,7 +58,7 @@ trait ProjectCustom
         $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$uid'] . '/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $session,
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Key',
