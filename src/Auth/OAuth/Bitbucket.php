@@ -32,13 +32,9 @@ class Bitbucket extends OAuth
      */
     public function getLoginURL(): string
     {
-        // add each required scope to the user scopes and pass $this->scopes to the query builder
-        // var_dump($this->getScopes());
         foreach ($this->requiredScope as $item) {
             $this->addScope($item);
         }
-        // var_dump($this->getScopes());
-        // exit();
 
         return 'https://bitbucket.org/site/oauth2/authorize?' .http_build_query([
                 'response_type' => 'code',
