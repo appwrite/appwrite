@@ -279,7 +279,7 @@ trait AccountBase
      */
     public function testGetAccountLogs($data):array
     {
-        sleep(5);
+        sleep(10);
         $session = (isset($data['session'])) ? $data['session'] : '';
 
         /**

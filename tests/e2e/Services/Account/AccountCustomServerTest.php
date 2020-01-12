@@ -19,12 +19,12 @@ class AccountCustomServerTest extends Scope
         $name = 'User Name';
 
         /**
-         * Test for SUCCESS
+         * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
-            'X-Appwrite-Key' => $this->getProject()['apiKey'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'email' => $email,
             'password' => $password,

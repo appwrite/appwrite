@@ -1,21 +1,16 @@
 <?php
 
-namespace Tests\E2E;
+namespace Tests\E2E\Services\Locale;
 
 use Tests\E2E\Client;
 
-class ProjectLocaleTest extends BaseProjects
+trait LocaleBase
 {
-    public function testRegisterSuccess(): array
+    public function testGetLocale():array
     {
-        return $this->initProject([]);
-    }
-
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testLocaleReadSuccess(array $data): array
-    {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/locale', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
@@ -29,14 +24,18 @@ class ProjectLocaleTest extends BaseProjects
         $this->assertArrayHasKey('eu', $response['body']);
         $this->assertArrayHasKey('currency', $response['body']);
 
-        return $data;
+        /**
+         * Test for FAILURE
+         */
+
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testLocaleCountriesReadSuccess(array $data): array
+    public function testGetCountries():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
@@ -59,15 +58,19 @@ class ProjectLocaleTest extends BaseProjects
         $this->assertIsArray($response['body']);
         $this->assertCount(194, $response['body']);
         $this->assertEquals($response['body']['US'], 'Estados Unidos');
+        
+        /**
+         * Test for FAILURE
+         */
 
-        return $data;
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testLocaleCountriesEUReadSuccess(array $data): array
+    public function testGetCountriesEU():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
@@ -90,15 +93,42 @@ class ProjectLocaleTest extends BaseProjects
         $this->assertIsArray($response['body']);
         $this->assertCount(28, $response['body']);
         $this->assertEquals($response['body']['DE'], 'Alemania');
+        
+        /**
+         * Test for FAILURE
+         */
 
-        return $data;
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testLocaleContinentsReadSuccess(array $data): array
+    public function testGetCountriesPhones():array
     {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/locale/countries/phones', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ]);
+        
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertCount(194, $response['body']);
+        $this->assertEquals($response['body']['US'], 'United States +1');
+        $this->assertEquals($response['body']['IL'], 'Israel +972');
+        
+        /**
+         * Test for FAILURE
+         */
+
+        return [];
+    }
+
+    public function testGetContinents():array
+    {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
@@ -121,14 +151,19 @@ class ProjectLocaleTest extends BaseProjects
         $this->assertCount(7, $response['body']);
         $this->assertEquals($response['body']['NA'], 'América del Norte');
 
-        return $data;
+        
+        /**
+         * Test for FAILURE
+         */
+
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testLocaleCurrenciesReadSuccess(array $data): array
+    public function testGetCurrencies():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/locale/currencies', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
@@ -139,20 +174,24 @@ class ProjectLocaleTest extends BaseProjects
         $this->assertCount(117, $response['body']);
         $this->assertEquals($response['body'][0]['symbol'], '$');
         $this->assertEquals($response['body'][0]['name'], 'US Dollar');
+        
+        /**
+         * Test for FAILURE
+         */
 
-        return $data;
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testLocaleLangsSuccess(array $data): array
+    public function testLangaugaes(): array
     {
+        /**
+         * Test for SUCCESS
+         */
         $languages           = require('app/config/locales.php');
         $defaultCountries    = require('app/config/locales/en.countries.php');
         $defaultContinents   = require('app/config/locales/en.continents.php');
 
-        foreach ($languages as $key => $lang) {
+        foreach ($languages as $lang) {
             $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$uid'],
@@ -187,7 +226,11 @@ class ProjectLocaleTest extends BaseProjects
             $this->assertEquals($response['headers']['status-code'], 200);
             $this->assertCount(7, $response['body']);
         }
+                
+        /**
+         * Test for FAILURE
+         */
 
-        return $data;
+        return [];
     }
 }

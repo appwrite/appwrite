@@ -1,21 +1,16 @@
 <?php
 
-namespace Tests\E2E;
+namespace Tests\E2E\Services\Avatars;
 
 use Tests\E2E\Client;
 
-class ProjectAvatarsTest extends BaseProjects
+trait AvatarsBase
 {
-    public function testRegisterSuccess(): array
+    public function testGetCreditCard():array
     {
-        return $this->initProject([]);
-    }
-
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testAvatarsCCReadSuccess(array $data): array
-    {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]);
@@ -47,14 +42,38 @@ class ProjectAvatarsTest extends BaseProjects
         $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        return $data;
+        /**
+         * Test for FAILURE
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/unknown', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'width' => 300,
+            'height' => 300,
+            'quality' => 30,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+       
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'width' => 2001,
+            'height' => 300,
+            'quality' => 30,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+       
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testAvatarsBrowserReadSuccess(array $data): array
+    public function testGetBrowser():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]);
@@ -85,15 +104,39 @@ class ProjectAvatarsTest extends BaseProjects
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
+        
+        /**
+         * Test for FAILURE
+         */
 
-        return $data;
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/unknown', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'width' => 300,
+            'height' => 300,
+            'quality' => 30,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'width' => 2001,
+            'height' => 300,
+            'quality' => 30,
+        ]);
+            
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testAvatarsFlagReadSuccess(array $data): array
+    public function testGetFlag():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]);
@@ -124,15 +167,38 @@ class ProjectAvatarsTest extends BaseProjects
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/unknown', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'width' => 300,
+            'height' => 300,
+            'quality' => 30,
+        ]);
 
-        return $data;
+        $this->assertEquals(400, $response['headers']['status-code']);
+        
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'width' => 2001,
+            'height' => 300,
+            'quality' => 30,
+        ]);
+            
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testAvatarsRemoteImageReadSuccess(array $data): array
+    public function testGetImage():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -167,15 +233,42 @@ class ProjectAvatarsTest extends BaseProjects
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'url' => 'https://appwrite.io/images/unknown.png',
+            'width' => 300,
+            'height' => 300,
+            'quality' => 30,
+        ]);
 
-        return $data;
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'url' => 'https://appwrite.io/images/apple.png',
+            'width' => 2001,
+            'height' => 300,
+            'quality' => 30,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // TODO Add test for non-image file (PDF, WORD)
+
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testAvatarsFaviconReadSuccess(array $data): array
+    public function testGetFavicon():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -186,14 +279,53 @@ class ProjectAvatarsTest extends BaseProjects
         $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
-        return $data;
+        // $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
+        //     'x-appwrite-project' => $this->getProject()['$uid'],
+        // ], [
+        //     'url' => 'https://www.bbc.com/',
+        // ]);
+
+        // $this->assertEquals(200, $response['headers']['status-code']);
+        // $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        // $this->assertNotEmpty($response['body']);
+
+        // $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
+        //     'x-appwrite-project' => $this->getProject()['$uid'],
+        // ], [
+        //     'url' => 'https://edition.cnn.com/',
+        // ]);
+
+        // $this->assertEquals(200, $response['headers']['status-code']);
+        // $this->assertEquals('image/x-icon; charset=UTF-8', $response['headers']['content-type']);
+        // $this->assertNotEmpty($response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'url' => 'unknown-address',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'url' => 'http://unknown-address.test',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return [];
     }
 
-    /**
-     * @depends testRegisterSuccess
-     */
-    public function testAvatarsQRReadSuccess(array $data): array
+    public function testGetQR():array
     {
+        /**
+         * Test for SUCCESS
+         */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -240,7 +372,43 @@ class ProjectAvatarsTest extends BaseProjects
         $this->assertEquals('attachment; filename="qr.png"', $response['headers']['content-disposition']);
         $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'text' => 'url:https://appwrite.io/',
+            'size' => 1001,
+            'margin' => 10,
+            'download' => 1,
+        ]);
 
-        return $data;
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'text' => 'url:https://appwrite.io/',
+            'size' => 400,
+            'margin' => 11,
+            'download' => 1,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], [
+            'text' => 'url:https://appwrite.io/',
+            'size' => 400,
+            'margin' => 10,
+            'download' => 2,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return [];
     }
 }
