@@ -1,5 +1,5 @@
 Allow the user to login into his account by providing a valid email and password combination. Use the success and failure arguments to provide a redirect URL\'s back to your app when login is completed. 
 
-Please notice that in order to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.
+Please note that in order to avoid a [Redirect Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URLs are the ones from domains you have set when adding your platforms in the console interface.
 
 When accessing this route using Javascript from the browser, success and failure parameter URLs are required. Appwrite server will respond with a 301 redirect status code and will set the user session cookie. This behavior is enforced because modern browsers are limiting 3rd party cookies in XHR of fetch requests to protect user privacy.

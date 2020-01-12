@@ -1,1 +1,0 @@
-Use this endpoint to complete the confirmation of the user account email address. Both the **userId** and **token** arguments will be passed as query parameters to the redirect URL you have provided when sending your request to the /auth/register endpoint.
