@@ -11,11 +11,12 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale', [
+        $response = $this->client->call(Client::METHOD_GET, '/locale', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
-        ]);
+        ], $this->getHeaders()));
 
+        $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertArrayHasKey('ip', $response['body']);
         $this->assertArrayHasKey('countryCode', $response['body']);
         $this->assertArrayHasKey('country', $response['body']);
@@ -27,7 +28,7 @@ trait LocaleBase
         /**
          * Test for FAILURE
          */
-
+        
         return [];
     }
 
@@ -36,10 +37,10 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
+        $response = $this->client->call(Client::METHOD_GET, '/locale/countries', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
-        ]);
+        ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
@@ -71,10 +72,10 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', [
+        $response = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
-        ]);
+        ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
@@ -106,10 +107,10 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/countries/phones', [
+        $response = $this->client->call(Client::METHOD_GET, '/locale/countries/phones', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
-        ]);
+        ], $this->getHeaders()));
         
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
@@ -129,10 +130,10 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
+        $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
-        ]);
+        ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
@@ -164,10 +165,10 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/currencies', [
+        $response = $this->client->call(Client::METHOD_GET, '/locale/currencies', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
-        ]);
+        ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);

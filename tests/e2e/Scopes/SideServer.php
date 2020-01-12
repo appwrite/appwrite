@@ -11,9 +11,8 @@ trait SideServer
 
     public function getHeaders():array
     {
-
         return [
-            'x-appwrite-key' => $this->getProject()
+            'x-appwrite-key' => $this->getProject()['apiKey']
         ];
     }
 }
