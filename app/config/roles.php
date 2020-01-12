@@ -46,6 +46,9 @@ $admins = [
     'tasks.write',
     'webhooks.read',
     'webhooks.write',
+    'locale.read',
+    'avatars.read',
+    'health.read',
 ];
 
 return [

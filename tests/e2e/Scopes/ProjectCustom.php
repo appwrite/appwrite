@@ -90,7 +90,18 @@ trait ProjectCustom
         ], [
             'name' => 'Demo Project Key',
             'scopes' => [
+                'users.read',
+                'users.write',
+                'teams.read',
+                'teams.write',
+                'collections.read',
+                'collections.write',
+                'documents.read',
+                'documents.write',
                 'files.read',
+                'files.write',
+                'locale.read',
+                'avatars.read',
             ],
         ]);
 

@@ -1,17 +1,5 @@
 <?php
-
-$scopes = [ // TODO sync with project list
-    'users.read',
-    'users.write',
-    'teams.read',
-    'teams.write',
-    'collections.read',
-    'collections.write',
-    'documents.read',
-    'documents.write',
-    'files.read',
-    'files.write',
-];
+$scopes = $this->getParam('scopes', []);
 ?>
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
