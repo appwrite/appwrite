@@ -27,7 +27,7 @@ abstract class OAuth
     /**
      * @var array
      */
-    protected $scopes;
+    protected $userScopes;
 
     /**
      * OAuth constructor.
@@ -36,15 +36,15 @@ abstract class OAuth
      * @param string $appSecret
      * @param string $callback
      * @param array  $state
-     * @param array $scope
+     * @param array $userScopes
      */
-    public function __construct(string $appId, string $appSecret, string $callback, $state = [], $scopes)
+    public function __construct(string $appId, string $appSecret, string $callback, $state = [], $userScopes = [])
     {
         $this->appID = $appId;
         $this->appSecret = $appSecret;
         $this->callback = $callback;
         $this->state = $state;
-        $this->scopes = $scopes;
+        $this->userScopes = $userScopes;
     }
 
     /**
@@ -92,8 +92,8 @@ abstract class OAuth
      */
     protected function addScope(string $scope){
         // Add a scope to the scopes array if it isn't already present 
-        if (!in_array($scope, $this->scopes)){
-            $this->$scopes[] = $scope; 
+        if (!in_array($scope, $this->userScopes)){
+            $this->userScopes[] = $scope; 
         }
     }
 
@@ -101,10 +101,10 @@ abstract class OAuth
       * @return array
       */
     protected function getScopes(){
-        return $this->scopes;
+        return $this->userScopes;
     }
 
-    
+
     // The parseState function was designed specifically for Amazon OAuth Adapter to override.
     // The response from Amazon is html encoded and hence it needs to be html_decoded before
     // json_decoding
