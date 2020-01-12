@@ -82,6 +82,6 @@ return [
     ],
     ROLE_APP => [
         'label' => 'Application',
-        'scopes' => ['public'],
+        'scopes' => ['health.read'],
     ],
 ];

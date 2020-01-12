@@ -1,15 +1,15 @@
 <?php
 
-namespace Tests\E2E\Services\Locale;
+namespace Tests\E2E\Services\Health;
 
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 
-class LocaleCustomServerTest extends Scope
+class HealthCustomServerTest extends Scope
 {
-    use LocaleBase;
+    use HealthBase;
     use ProjectCustom;
     use SideServer;
 }
