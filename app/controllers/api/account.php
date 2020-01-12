@@ -575,7 +575,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                 }
             }
 
-            // Create login token, confirm user account and update OAuth ID and Access Token
+            // Create session token, verify user account and update OAuth ID and Access Token
 
             $secret = Auth::tokenGenerator();
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -953,9 +953,9 @@ $utopia->post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User account email address.')
-    ->param('reset', '', function () use ($clients) { return new Host($clients); }, 'Reset URL in your app to redirect the user after the reset token has been sent to the user email.')
+    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email.')
     ->action(
-        function ($email, $reset) use ($request, $response, $projectDB, $register, $audit, $project) {
+        function ($email, $url) use ($request, $response, $projectDB, $register, $audit, $project) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -996,16 +996,16 @@ $utopia->post('/v1/account/recovery')
                 throw new Exception('Failed to save user to DB', 500);
             }
 
-            $reset = Template::parseURL($reset);
-            $reset['query'] = Template::mergeQuery(((isset($reset['query'])) ? $reset['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
-            $reset = Template::unParseURL($reset);
+            $url = Template::parseURL($url);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
+            $url = Template::unParseURL($url);
 
             $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{name}}', $profile->getAttribute('name'))
-                ->setParam('{{redirect}}', $reset)
+                ->setParam('{{redirect}}', $url)
             ;
 
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
@@ -1025,6 +1025,7 @@ $utopia->post('/v1/account/recovery')
             $audit
                 ->setParam('userId', $profile->getUid())
                 ->setParam('event', 'account.recovery.create')
+                ->setParam('resource', 'users/'.$profile->getUid())
             ;
 
             $response
@@ -1094,10 +1095,150 @@ $utopia->put('/v1/account/recovery')
             $audit
                 ->setParam('userId', $profile->getUid())
                 ->setParam('event', 'account.recovery.update')
+                ->setParam('resource', 'users/'.$profile->getUid())
             ;
 
             $recovery = $profile->search('$uid', $recovery, $profile->getAttribute('tokens', []));
 
             $response->json($recovery->getArrayCopy(['$uid', 'type', 'expire']));
+        }
+    );
+
+    $utopia->post('/v1/account/verification')
+    ->desc('Create Verification')
+    ->label('scope', 'account')
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createAccountVerification')
+    ->label('sdk.description', '/docs/references/account/create-verification.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email.') // TODO add our own built-in confirm page
+    ->action(
+        function ($url) use ($request, $response, $register, $user, $project, $projectDB, $audit) {
+            $verificationSecret = Auth::tokenGenerator();
+            
+            $verification = new Document([
+                '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+                '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
+                'type' => Auth::TOKEN_TYPE_VERIFICATION,
+                'secret' => Auth::hash($verificationSecret), // On way hash encryption to protect DB leak
+                'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
+                'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+                'ip' => $request->getIP(),
+            ]);
+                
+            Authorization::setRole('user:'.$user->getUid());
+
+            $verification = $projectDB->createDocument($verification->getArrayCopy());
+
+            if (false === $verification) {
+                throw new Exception('Failed saving verification to DB', 500);
+            }
+
+            $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
+
+            $user = $projectDB->updateDocument($user->getArrayCopy());
+
+            if (false === $user) {
+                throw new Exception('Failed to save user to DB', 500);
+            }
+            
+            $url = Template::parseURL($url);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getUid(), 'token' => $verificationSecret]);
+            $url = Template::unParseURL($url);
+
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.verification.body'));
+            $body
+                ->setParam('{{direction}}', Locale::getText('settings.direction'))
+                ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
+                ->setParam('{{name}}', $user->getAttribute('name'))
+                ->setParam('{{redirect}}', $url)
+            ;
+
+            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
+
+            $mail->addAddress($user->getAttribute('email'), $user->getAttribute('name'));
+
+            $mail->Subject = Locale::getText('auth.emails.verification.title');
+            $mail->Body = $body->render();
+            $mail->AltBody = strip_tags($body->render());
+
+            try {
+                $mail->send();
+            } catch (\Exception $error) {
+                throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
+            }
+
+            $audit
+                ->setParam('userId', $user->getUid())
+                ->setParam('event', 'account.verification.create')
+                ->setParam('resource', 'users/'.$user->getUid())
+            ;
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($verification->getArrayCopy(['$uid', 'type', 'expire']))
+            ;
+        }
+    );
+
+$utopia->put('/v1/account/verification')
+    ->desc('Updated Verification')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateAccountVerification')
+    ->label('sdk.description', '/docs/references/account/update-verification.md')
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},userId:{param-userId}')
+    ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
+    ->param('token', '', function () { return new Text(256); }, 'Valid reset token.')    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
+    ->action(
+        function ($userId, $token) use ($response, $user, $projectDB, $audit) {
+            $profile = $projectDB->getCollection([ // Get user by email address
+                'limit' => 1,
+                'first' => true,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    '$uid='.$userId,
+                ],
+            ]);
+
+            if (empty($profile)) {
+                throw new Exception('User not found', 404); // TODO maybe hide this
+            }
+
+            $verification = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_VERIFICATION, $token);
+
+            if (!$verification) {
+                throw new Exception('Invalid verification token', 401);
+            }
+
+            Authorization::setRole('user:'.$profile->getUid());
+
+            $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
+                'confirm' => true,
+            ]));
+
+            if (false === $profile) {
+                throw new Exception('Failed saving user to DB', 500);
+            }
+
+            /**
+             * We act like we're updating and validating
+             *  the verification token but actually we don't need it anymore.
+             */
+            if (!$projectDB->deleteDocument($verification)) {
+                throw new Exception('Failed to remove verification from DB', 500);
+            }
+
+            $audit
+                ->setParam('userId', $profile->getUid())
+                ->setParam('event', 'account.verification.update')
+                ->setParam('resource', 'users/'.$user->getUid())
+            ;
+
+            $verification = $profile->search('$uid', $verification, $profile->getAttribute('tokens', []));
+
+            $response->json($verification->getArrayCopy(['$uid', 'type', 'expire']));
         }
     );

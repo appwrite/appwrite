@@ -791,7 +791,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
             'email' => $email,
-            'reset' => 'http://localhost/recovery',
+            'url' => 'http://localhost/recovery',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -816,7 +816,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
             'email' => $email,
-            'reset' => 'localhost/recovery',
+            'url' => 'localhost/recovery',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -827,7 +827,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
             'email' => $email,
-            'reset' => 'http://remotehost/recovery',
+            'url' => 'http://remotehost/recovery',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -838,7 +838,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
             'email' => 'not-found@localhost.test',
-            'reset' => 'http://localhost/recovery',
+            'url' => 'http://localhost/recovery',
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);

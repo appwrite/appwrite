@@ -29,7 +29,7 @@ class Auth
      * Token Types.
      */
     const TOKEN_TYPE_LOGIN = 1;
-    const TOKEN_TYPE_CONFIRM = 2;
+    const TOKEN_TYPE_VERIFICATION = 2;
     const TOKEN_TYPE_RECOVERY = 3;
     const TOKEN_TYPE_INVITE = 4;
 

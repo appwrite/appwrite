@@ -108,7 +108,7 @@ $utopia->post('/v1/auth/register')
                 ->setAttribute('tokens', new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
                     '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
-                    'type' => Auth::TOKEN_TYPE_CONFIRM,
+                    'type' => Auth::TOKEN_TYPE_VERIFICATION,
                     'secret' => Auth::hash($confirmSecret), // On way hash encryption to protect DB leak
                     'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
                     'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
@@ -213,7 +213,7 @@ $utopia->post('/v1/auth/register/confirm')
                 throw new Exception('User not found', 404); // TODO maybe hide this
             }
 
-            $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_CONFIRM, $token);
+            $token = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_VERIFICATION, $token);
 
             if (!$token) {
                 throw new Exception('Confirmation token is not valid', 401);
@@ -258,7 +258,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
             $user->setAttribute('tokens', new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
                 '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
-                'type' => Auth::TOKEN_TYPE_CONFIRM,
+                'type' => Auth::TOKEN_TYPE_VERIFICATION,
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
                 'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
