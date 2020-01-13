@@ -9,6 +9,7 @@
 * Added new webhooks events
 * Normailized all webhooks event names
 * Merged Auth and Account service for making the API more REST compatible
+* Added a new Discord OAuth adapter
 
 ## Bug Fixes
 
