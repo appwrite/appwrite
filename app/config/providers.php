@@ -85,7 +85,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
-
+    'discord' => [
+        'developers' => 'https://discordapp.com/developers/docs/topics/oauth2',
+        'icon' => 'icon-discord',
+        'enabled' => true,
+        'mock' => false,
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
