@@ -16,6 +16,11 @@ class Amazon extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $requiredScope = [];
+    
+    /**
      * @return string
      */
     public function getName(): string
