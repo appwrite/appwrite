@@ -36,7 +36,7 @@ class Bitbucket extends OAuth
             $this->addScope($item);
         }
 
-        return 'https://bitbucket.org/site/oauth2/authorize?' .http_build_query([
+        return 'https://bitbucket.org/site/oauth2/authorize?'.http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'scope' => implode(' ', $this->getScopes()),

@@ -18,8 +18,10 @@ class Amazon extends OAuth
     /**
      * @var array
      */
-    protected $requiredScope = [];
-    
+    protected $requiredScope = [
+        "profile"
+    ];
+
     /**
      * @return string
      */
