@@ -27,7 +27,7 @@ abstract class OAuth
     /**
      * @var array
      */
-    protected $userScopes;
+    protected $scopes;
 
     /**
      * OAuth constructor.
@@ -36,15 +36,17 @@ abstract class OAuth
      * @param string $appSecret
      * @param string $callback
      * @param array  $state
-     * @param array $userScopes
+     * @param array $scopes
      */
-    public function __construct(string $appId, string $appSecret, string $callback, $state = [], $userScopes = [])
+    public function __construct(string $appId, string $appSecret, string $callback, $state = [], $scopes = [])
     {
         $this->appID = $appId;
         $this->appSecret = $appSecret;
         $this->callback = $callback;
         $this->state = $state;
-        $this->userScopes = $userScopes;
+        foreach($scopes as $scope) {
+            $this->addScope($scope);
+        }
     }
 
     /**
@@ -92,8 +94,8 @@ abstract class OAuth
      */
     protected function addScope(string $scope){
         // Add a scope to the scopes array if it isn't already present 
-        if (!in_array($scope, $this->userScopes)){
-            $this->userScopes[] = $scope; 
+        if (!in_array($scope, $this->scopes)){
+            $this->scopes[] = $scope; 
         }
     }
 
@@ -101,7 +103,7 @@ abstract class OAuth
       * @return array
       */
     protected function getScopes(){
-        return $this->userScopes;
+        return $this->scopes;
     }
 
 
