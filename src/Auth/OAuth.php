@@ -90,7 +90,7 @@ abstract class OAuth
     /**
      * @param $scope
      * 
-     * @return array
+     * @return $this
      */
     protected function addScope(string $scope):OAuth{
         // Add a scope to the scopes array if it isn't already present 
