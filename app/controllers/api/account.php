@@ -500,7 +500,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
             if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
                 throw new Exception('Invalid redirect URL for failure login', 400);
             }
-
+            $state['failure'] = null;
             $accessToken = $oauth->getAccessToken($code);
 
             if (empty($accessToken)) {
@@ -512,7 +512,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
             }
 
             $oauthID = $oauth->getUserID($accessToken);
-
+            
             if (empty($oauthID)) {
                 if (!empty($state['failure'])) {
                     $response->redirect($state['failure'], 301, 0);

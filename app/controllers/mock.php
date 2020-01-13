@@ -6,6 +6,7 @@ use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Storage\Validators\File;
+use Utopia\Response;
 use Utopia\Validator\Host;
 
 $result = [];
@@ -219,17 +220,17 @@ $utopia->get('/v1/mock/tests/general/empty')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/login')
+$utopia->get('/v1/mock/tests/general/oauth')
     ->desc('Mock an OAuth login route')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
     ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.') // Important to deny an open redirect attack
     ->param('scope', '', function () { return new Text(100); }, 'OAuth scope list.')
-    ->param('state', '', function () { return new Text(100); }, 'OAuth state.')
+    ->param('state', '', function () { return new Text(1024); }, 'OAuth state.')
     ->action(
         function ($clientId, $redirectURI, $scope, $state) use ($response) {
-            $response->redirect($redirectURI);
+            $response->redirect($redirectURI.'?'.http_build_query(['code' => 'abcdef', 'state' => $state]));
         }
     );
 
@@ -247,7 +248,7 @@ $utopia->get('/v1/mock/tests/general/oauth/token')
                 throw new Exception('Invalid client ID');
             }
 
-            if($clientSecret != 'secret') {
+            if($clientSecret != '123456') {
                 throw new Exception('Invalid client secret');
             }
 
@@ -273,8 +274,32 @@ $utopia->get('/v1/mock/tests/general/oauth/user')
             $response->json([
                 'id' => 1,
                 'name' => 'User Name',
-                'email' => 'user@localhost',
+                'email' => 'user@localhost.test',
             ]);
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/oauth/success')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->json([
+                'result' => 'success',
+            ]);
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/oauth/failure')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response
+                ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
+                ->json([
+                    'result' => 'failure',
+                ]);
         }
     );
 
