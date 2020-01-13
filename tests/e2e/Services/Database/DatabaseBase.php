@@ -123,7 +123,9 @@ trait DatabaseBase
                         'lastName' => 'Jackson',
                     ],
                 ]
-            ]
+            ],
+            'read' => ['user:'.$this->getUser()['$uid']],
+            'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
         $document2 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
@@ -153,7 +155,9 @@ trait DatabaseBase
                         'lastName' => 'Jackson',
                     ],
                 ]
-            ]
+            ],
+            'read' => ['user:'.$this->getUser()['$uid']],
+            'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
         $document3 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
@@ -177,7 +181,9 @@ trait DatabaseBase
                         'lastName' => 'Maree Stoermer',
                     ],
                 ],
-            ]
+            ],
+            'read' => ['user:'.$this->getUser()['$uid']],
+            'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
         $document4 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
@@ -186,7 +192,9 @@ trait DatabaseBase
         ], $this->getHeaders()), [
             'data' => [
                 'releaseYear' => 2020, // Missing title, expect an 400 error
-            ]
+            ],
+            'read' => ['user:'.$this->getUser()['$uid']],
+            'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
         $this->assertEquals($document1['headers']['status-code'], 201);
@@ -196,8 +204,8 @@ trait DatabaseBase
         $this->assertIsArray($document1['body']['$permissions']);
         $this->assertIsArray($document1['body']['$permissions']['read']);
         $this->assertIsArray($document1['body']['$permissions']['write']);
-        $this->assertCount(0, $document1['body']['$permissions']['read']);
-        $this->assertCount(0, $document1['body']['$permissions']['write']);
+        $this->assertCount(1, $document1['body']['$permissions']['read']);
+        $this->assertCount(1, $document1['body']['$permissions']['write']);
         $this->assertCount(2, $document1['body']['actors']);
 
         $this->assertEquals($document2['headers']['status-code'], 201);
@@ -207,8 +215,8 @@ trait DatabaseBase
         $this->assertIsArray($document2['body']['$permissions']);
         $this->assertIsArray($document2['body']['$permissions']['read']);
         $this->assertIsArray($document2['body']['$permissions']['write']);
-        $this->assertCount(0, $document2['body']['$permissions']['read']);
-        $this->assertCount(0, $document2['body']['$permissions']['write']);
+        $this->assertCount(1, $document2['body']['$permissions']['read']);
+        $this->assertCount(1, $document2['body']['$permissions']['write']);
         $this->assertCount(3, $document2['body']['actors']);
         $this->assertEquals($document2['body']['actors'][0]['firstName'], 'Tom');
         $this->assertEquals($document2['body']['actors'][0]['lastName'], 'Holland');
@@ -224,8 +232,8 @@ trait DatabaseBase
         $this->assertIsArray($document3['body']['$permissions']);
         $this->assertIsArray($document3['body']['$permissions']['read']);
         $this->assertIsArray($document3['body']['$permissions']['write']);
-        $this->assertCount(0, $document3['body']['$permissions']['read']);
-        $this->assertCount(0, $document3['body']['$permissions']['write']);
+        $this->assertCount(1, $document3['body']['$permissions']['read']);
+        $this->assertCount(1, $document3['body']['$permissions']['write']);
         $this->assertCount(2, $document3['body']['actors']);
         $this->assertEquals($document3['body']['actors'][0]['firstName'], 'Tom');
         $this->assertEquals($document3['body']['actors'][0]['lastName'], 'Holland');
@@ -441,7 +449,9 @@ trait DatabaseBase
             'data' => [
                 'name' => 'Thor: Ragnaroc',
                 'releaseYear' => 2017,
-            ]
+            ],
+            'read' => ['user:'.$this->getUser()['$uid']],
+            'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
         $id = $document['body']['$uid'];
@@ -491,7 +501,9 @@ trait DatabaseBase
             'data' => [
                 'name' => 'Thor: Ragnarok',
                 'releaseYear' => 2017,
-            ]
+            ],
+            'read' => ['user:'.$this->getUser()['$uid']],
+            'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
         $id = $document['body']['$uid'];
