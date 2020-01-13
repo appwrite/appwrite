@@ -49,13 +49,14 @@ class Amazon extends OAuth
         foreach ($this->requiredScope as $item) {
             $this->addScope($item);
         }
-        
-        return 'https://www.amazon.com/ap/oa?' .
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&response_type=code'.
-            '&state='.urlencode(json_encode($this->state)).
-            '&scope=profile';
+
+        return 'https://www.amazon.com/ap/oa?'.http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'scope' => implode(' ', $this->getScopes()),
+                'state' => json_encode($this->state),
+                'redirect_uri' => $this->callback
+            ]);
     }
 
     /**
