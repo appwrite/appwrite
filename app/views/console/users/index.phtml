@@ -318,7 +318,10 @@ $providers = $this->getParam('providers', []);
                 data-param-project-id="{{router.params.project}}"
                 data-scope="console">
                 <ul class="list">
-                    <?php foreach ($providers as $provider => $data): if (isset($data['enabled']) && !$data['enabled']) { continue; } ?>
+                    <?php foreach ($providers as $provider => $data):
+                        if (isset($data['enabled']) && !$data['enabled']) { continue; }
+                        if (isset($data['mock']) && $data['mock']) { continue; }
+                        ?>
                         <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
                             <div data-ui-modal class="modal close" data-button-text="Settings" data-button-class="pull-end">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
