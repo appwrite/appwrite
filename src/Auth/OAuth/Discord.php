@@ -19,10 +19,12 @@ class Discord extends OAuth
      */
     protected $user = [];
 
-
+    /**
+     * @var array
+     */
     protected $scope = [
-            'identify',
-            'email'
+        'identify',
+        'email'
     ];
 
     /**
@@ -43,7 +45,8 @@ class Discord extends OAuth
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'scope' => implode(' ', $this->scope),
-                'redirect_uri' => $this->callback
+                'state' => json_encode($this->state),
+                'redirect_uri' => $this->callback,
             ]);
 
         return $url;
@@ -70,9 +73,7 @@ class Discord extends OAuth
             ])
         );
 
-
         $accessToken = json_decode($accessToken, true);
-
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
