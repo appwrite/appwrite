@@ -6,6 +6,7 @@ use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Storage\Validators\File;
+use Utopia\Validator\Host;
 
 $result = [];
 
@@ -215,6 +216,65 @@ $utopia->get('/v1/mock/tests/general/empty')
     ->action(
         function () use ($response) {
             $response->noContent();
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/oauth/login')
+    ->desc('Mock an OAuth login route')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
+    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.') // Important to deny an open redirect attack
+    ->param('scope', '', function () { return new Text(100); }, 'OAuth scope list.')
+    ->param('state', '', function () { return new Text(100); }, 'OAuth state.')
+    ->action(
+        function ($clientId, $redirectURI, $scope, $state) use ($response) {
+            $response->redirect($redirectURI);
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/oauth/token')
+    ->desc('Mock an OAuth login route')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
+    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.')
+    ->param('client_secret', '', function () { return new Text(100); }, 'OAuth scope list.')
+    ->param('code', '', function () { return new Text(100); }, 'OAuth state.')
+    ->action(
+        function ($clientId, $redirectURI, $clientSecret, $code) use ($response) {
+            if($clientId != '1') {
+                throw new Exception('Invalid client ID');
+            }
+
+            if($clientSecret != 'secret') {
+                throw new Exception('Invalid client secret');
+            }
+
+            if($code != 'abcdef') {
+                throw new Exception('Invalid token');
+            }
+
+            $response->json(['access_token' => '123456']);
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/oauth/user')
+    ->desc('Mock an OAuth user route')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('token', '', function () { return new Text(100); }, 'OAuth Access Token.')
+    ->action(
+        function ($token) use ($response) {
+            if($token != '123456') {
+                throw new Exception('Invalid token');
+            }
+
+            $response->json([
+                'id' => 1,
+                'name' => 'User Name',
+                'email' => 'user@localhost',
+            ]);
         }
     );
 
