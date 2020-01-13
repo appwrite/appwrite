@@ -219,30 +219,24 @@ $utopia->get('/v1/mock/tests/general/empty')
         }
     );
 
-    $utopia->get('/v1/mock/tests/general/oauth/login')
+$utopia->get('/v1/mock/tests/general/oauth/login')
     ->desc('Mock an OAuth login route')
     ->label('scope', 'public')
-    ->label('sdk.namespace', 'general')
-    ->label('sdk.method', 'empty')
-    ->label('sdk.description', 'Mock an OAuth login route')
+    ->label('docs', false)
     ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.')
+    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.') // Important to deny an open redirect attack
     ->param('scope', '', function () { return new Text(100); }, 'OAuth scope list.')
     ->param('state', '', function () { return new Text(100); }, 'OAuth state.')
     ->action(
         function ($clientId, $redirectURI, $scope, $state) use ($response) {
-            var_dump($clientId, $redirectURI, $scope, $state);
-            exit();
-            $response->redirect('');
+            $response->redirect($redirectURI);
         }
     );
 
 $utopia->get('/v1/mock/tests/general/oauth/token')
     ->desc('Mock an OAuth login route')
     ->label('scope', 'public')
-    ->label('sdk.namespace', 'general')
-    ->label('sdk.method', 'empty')
-    ->label('sdk.description', 'Mock an OAuth login route')
+    ->label('docs', false)
     ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
     ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.')
     ->param('client_secret', '', function () { return new Text(100); }, 'OAuth scope list.')
@@ -268,9 +262,7 @@ $utopia->get('/v1/mock/tests/general/oauth/token')
 $utopia->get('/v1/mock/tests/general/oauth/user')
     ->desc('Mock an OAuth user route')
     ->label('scope', 'public')
-    ->label('sdk.namespace', 'general')
-    ->label('sdk.method', 'empty')
-    ->label('sdk.description', 'Mock an OAuth user route')
+    ->label('docs', false)
     ->param('token', '', function () { return new Text(100); }, 'OAuth Access Token.')
     ->action(
         function ($token) use ($response) {
