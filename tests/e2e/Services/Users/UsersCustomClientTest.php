@@ -1,14 +1,14 @@
 <?php
 
-namespace Tests\E2E\Services\Database;
+namespace Tests\E2E\Services\Users;
 
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 
-class DatabaseCustomClientTest extends Scope
+class UsersCustomClientTest extends Scope
 {
-    use DatabaseBase;
+    use UsersBase;
     use ProjectCustom;
     use SideClient;
 }
