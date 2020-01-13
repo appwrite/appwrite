@@ -46,6 +46,10 @@ class Amazon extends OAuth
      */
     public function getLoginURL(): string
     {
+        foreach ($this->requiredScope as $item) {
+            $this->addScope($item);
+        }
+        
         return 'https://www.amazon.com/ap/oa?' .
             'client_id='.urlencode($this->appID).
             '&redirect_uri='.urlencode($this->callback).
