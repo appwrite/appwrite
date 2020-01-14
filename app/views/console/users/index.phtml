@@ -309,11 +309,11 @@ $providers = $this->getParam('providers', []);
         </li>
         
         <li data-state="/console/users/providers?project={{router.params.project}}">
-            <h2>Providers</h2>
-            
+            <h2>OAuth Providers</h2>
+
             <div class="box margin-bottom margin-top-large"
                 data-service="projects.getProject"
-                data-event="load,platform-create,platform-update,platform-delete"
+                data-event="load,project-create,project-update,project-delete"
                 data-name="console-project"
                 data-param-project-id="{{router.params.project}}"
                 data-scope="console">
@@ -365,7 +365,6 @@ $providers = $this->getParam('providers', []);
                             </div>
 
                             <img src="/images/oauth/<?php echo strtolower($provider); ?>.png" alt="<?php echo ucfirst($provider); ?> Logo" class="pull-start provider margin-end" />
-
                             <span>
                                 <?php echo ucfirst($provider); ?>
                                 <span data-ls-if="

@@ -6,7 +6,7 @@ $scopes = $this->getParam('scopes', []);
         API Keys
     </h1>
 </div>
-<div class="zone xl"
+<div class="zone xl" xdata-debug="1"
     data-service="projects.listKeys"
     data-scope="console"
     data-event="load,key-create,key-update,key-delete"
@@ -29,13 +29,13 @@ $scopes = $this->getParam('scopes', []);
 
                     <h1>Update API Key</h1>
 
-                    <form
+                    <form xdata-debug="1"
                         data-service="projects.updateKey"
                         data-scope="console"
                         data-event="submit"
                         data-success="alert,trigger"
                         data-success-param-alert-text="Updated API key successfully"
-                        data-success-triggers="key-update,modal-close"
+                        data-success-param-trigger-events="key-update,modal-close"
                         data-failure="alert"
                         data-failure-param-alert-text="Failed to update API key"
                         data-failure-param-alert-classname="error">

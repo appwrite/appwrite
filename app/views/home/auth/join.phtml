@@ -7,9 +7,9 @@
         data-param-user-id="{{router.params.userId}}"
         data-param-secret="{{router.params.secret}}"
         data-success="redirect,alert,trigger"
-        data-success-redirect-url="/console?project={{router.params.project}}"
-        data-success-alert="Joined Team Successfully"
-        data-success-triggers="account.update"
+        data-success-param-redirect-url="/console?project={{router.params.project}}"
+        data-success-param-alert-text="Joined Team Successfully"
+        data-success-param-trigger-events="account.update"
         data-failure="alert"
         data-failure-param-alert-text="Failed to join team. Please try again later"
         data-failure-param-alert-classname="error">
