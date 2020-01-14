@@ -384,6 +384,7 @@ $utopia->post('/v1/account/sessions')
             
             $response
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($session->getArrayCopy(['$uid', 'type', 'expire']))
             ;
@@ -612,9 +613,9 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
 
             $response
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
+                ->redirect($state['success'])
             ;
-
-            $response->redirect($state['success']);
         }
     );
 
@@ -827,6 +828,7 @@ $utopia->delete('/v1/account')
 
             $response
                 ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
                 ->noContent()
             ;
         }
@@ -862,7 +864,10 @@ $utopia->delete('/v1/account/sessions')
                 ;
 
                 if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
+                    $response
+                        ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                        ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
+                    ;
                 }
             }
 
@@ -902,7 +907,10 @@ $utopia->delete('/v1/account/sessions/:id')
                     ;
 
                     if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                        $response->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
+                        $response
+                            ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                            ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
+                        ;
                     }
                 }
             }
@@ -938,6 +946,7 @@ $utopia->delete('/v1/account/sessions/current')
 
             $response
                 ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
                 ->noContent()
             ;
         }

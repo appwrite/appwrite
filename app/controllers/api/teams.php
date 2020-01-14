@@ -594,7 +594,10 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ->setParam('event', 'auth.join')
             ;
 
-            $response->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE);
+            $response
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
+            ;
 
             if ($success) {
                 $response->redirect($success);

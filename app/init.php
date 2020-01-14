@@ -56,7 +56,7 @@ define('COOKIE_DOMAIN',
     )
         ? null
         : '.'.parse_url($scheme.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
-define('COOKIE_SAMESITE', null); // Response::COOKIE_SAMESITE_NONE
+define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
  * Registry
@@ -222,7 +222,10 @@ if (APP_MODE_ADMIN === $mode) {
     Auth::setCookieName('a_session_'.$console->getUid());
 }
 
-$session = Auth::decodeSession($request->getCookie(Auth::$cookieName, $request->getHeader('X-Appwrite-Key', '')));
+$session = Auth::decodeSession(
+    $request->getCookie(Auth::$cookieName, // Get sessions
+        $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
+            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
 Auth::$unique = $session['id'];
 Auth::$secret = $session['secret'];
 
