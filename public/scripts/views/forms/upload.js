@@ -102,7 +102,8 @@
             "/preview?width=" +
             previewWidth +
             "&height=" +
-            previewHeight;
+            previewHeight +
+            "&project=console";
 
           file.className = "file avatar";
           file.tabIndex = 0;
