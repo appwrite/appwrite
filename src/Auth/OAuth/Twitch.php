@@ -140,7 +140,7 @@ class Twitch extends OAuth
     {
         if (empty($this->user)) {
             $this->user = json_decode($this->request('GET',
-                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true);
+                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true)['data']['0'];
         }
 
         return $this->user;
