@@ -91,6 +91,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'twitch' => [
+        'developers' => 'https://dev.twitch.tv/docs/authentication',
+        'icon' => 'icon-twitch',
+        'enabled' => true,
+        'mock' => false,
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
