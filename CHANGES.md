@@ -8,6 +8,7 @@
 * Limited console dashboard to show max 5 alerts at the same time
 * Added new webhooks events
 * Normailized all webhooks event names
+* Added support for SameSite cookie option with fallback cookie for old clients
 * Merged Auth and Account service for making the API more REST compatible
 * Added a new Discord OAuth adapter
 
