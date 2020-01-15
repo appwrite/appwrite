@@ -13,7 +13,12 @@ class Twitch extends OAuth
     /**
      * @var string
      */
-    private $endpoint = 'https://id.twitch.tv';
+    private $endpoint = 'https://id.twitch.tv/oauth2/';
+
+    /**
+     * @var string
+     */
+    private $resourceEndpoint = 'https://api.twitch.tv/helix/users';
 
     /**
      * @var array
@@ -40,13 +45,14 @@ class Twitch extends OAuth
      */
     public function getLoginURL():string
     {
-        return $this->endpoint . '/oauth2/authorize?'.
+        return $this->endpoint . 'authorize?'.
             http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'scope' => implode(' ', $this->scope),
                 'redirect_uri' => $this->callback,
-                'state' => $this->state,
+                'force_verify' => true,
+                'state' => json_encode($this->state)
             ]);
     }
 
@@ -57,23 +63,21 @@ class Twitch extends OAuth
      */
     public function getAccessToken(string $code):string
     {
-        $accessToken = $this->request(
+        $result = json_decode($this->request(
             'POST',
-             $this->endpoint . '/oauth2/token?',
+            $this->endpoint . 'token',
             [],
             http_build_query([
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $this->callback,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
+                "client_id" => $this->appID,
+                "client_secret" => $this->appSecret,
+                "code" => $code,
+                "grant_type" => "authorization_code",
+                "redirect_uri" => $this->callback
             ])
-        );
+        ), true);
 
-        $accessToken = json_decode($accessToken, true);
-
-        if (isset($output['access_token'])) {
-            return $output['access_token'];
+        if (isset($result['access_token'])) {
+            return $result['access_token'];
         }
 
         return '';
@@ -102,12 +106,10 @@ class Twitch extends OAuth
      */
     public function getUserEmail(string $accessToken):string
     {
-        $emails = json_decode($this->request('GET', $this->endpoint . '/userinfo', ['Authorization: Bearer '.urlencode($accessToken)]), true);
+        $user = $this->getUser($accessToken);
 
-        foreach ($emails as $email) {
-            if ($email['primary'] && $email['verified']) {
-                return $email['email'];
-            }
+        if (isset($user['email'])) {
+            return $user['email'];
         }
 
         return '';
@@ -122,8 +124,8 @@ class Twitch extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
+        if (isset($user['display_name'])) {
+            return $user['display_name'];
         }
 
         return '';
@@ -137,7 +139,8 @@ class Twitch extends OAuth
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET', $this->endpoint . '/userinfo', ['Authorization: Bearer '.urlencode($accessToken)]), true);
+            $this->user = json_decode($this->request('GET',
+                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true);
         }
 
         return $this->user;
