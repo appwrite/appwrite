@@ -68,7 +68,7 @@ services:
     command: 'mysqld --innodb-flush-method=fsync'
 
   smtp:
-    image: appwrite/smtp:1.0.0
+    image: appwrite/smtp:1.0.1
     restart: unless-stopped
     networks:
     - appwrite
