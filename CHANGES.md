@@ -13,6 +13,8 @@
 * Added a new Discord OAuth adapter
 * Added a new Twitch OAuth adapter
 * Added a new Spotify OAuth adapter
+* Upgraded MariaDB image to version 1.0.2
+* Upgraded SMTP image to version 1.0.1
 
 ## Bug Fixes
 
