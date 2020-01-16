@@ -138,7 +138,7 @@ $utopia->post('/v1/teams')
                     'write' => ['team:{self}/owner'],
                 ],
                 'name' => $name,
-                'sum' => ($mode !== APP_MODE_ADMIN) ? 1 : 0,
+                'sum' => ($user->getUid()) ? 1 : 0,
                 'dateCreated' => time(),
             ]);
 
@@ -148,7 +148,7 @@ $utopia->post('/v1/teams')
                 throw new Exception('Failed saving team to DB', 500);
             }
 
-            if ($mode !== APP_MODE_ADMIN) { // Don't add user on admin mode
+            if ($user->getUid()) { // Don't add user on server mode
                 $membership = new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                     '$permissions' => [
@@ -234,7 +234,7 @@ $utopia->delete('/v1/teams/:teamId')
             ]);
 
             foreach ($memberships as $member) {
-                if (!$projectDB->deleteDocument($member)) {
+                if (!$projectDB->deleteDocument($member->getUid())) {
                     throw new Exception('Failed to remove membership for team from DB', 500);
                 }
             }
@@ -389,86 +389,6 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $response
                 //->setStatusCode(Response::STATUS_CODE_CREATED) TODO change response of this endpoint
                 ->noContent();
-        }
-    );
-
-$utopia->post('/v1/teams/:teamId/memberships/:inviteId/resend')
-    ->desc('Create Team Membership (Resend)')
-    ->label('scope', 'account')
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'createTeamMembershipResend')
-    ->label('sdk.description', '/docs/references/teams/create-team-membership-resend.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
-    ->param('redirect', '', function () use ($clients) { return new Host($clients); }, 'Reset page to redirect user back to your app from the invitation email.')
-    ->action(
-        function ($teamId, $inviteId, $redirect) use ($response, $register, $project, $user, $audit, $projectDB) {
-            $membership = $projectDB->getDocument($inviteId);
-
-            if (empty($membership->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
-                throw new Exception('Membership not found', 404);
-            }
-
-            $team = $projectDB->getDocument($membership->getAttribute('teamId'));
-
-            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-                throw new Exception('Team not found', 404);
-            }
-
-            if ($team->getUid() !== $teamId) {
-                throw new Exception('Team IDs don\'t match', 404);
-            }
-
-            $invitee = $projectDB->getDocument($membership->getAttribute('userId'));
-
-            if (empty($invitee->getUid()) || Database::SYSTEM_COLLECTION_USERS != $invitee->getCollection()) {
-                throw new Exception('User not found', 404);
-            }
-
-            $secret = Auth::tokenGenerator();
-
-            $membership = $projectDB->updateDocument(array_merge($membership->getArrayCopy(), ['secret' => Auth::hash($secret)]));
-
-            if (false === $membership) {
-                throw new Exception('Failed updating membership to DB', 500);
-            }
-
-            $redirect = Template::parseURL($redirect);
-            $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'userId' => $membership->getAttribute('userId'), 'secret' => $secret]);
-            $redirect = Template::unParseURL($redirect);
-
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
-            $body
-                ->setParam('{{direction}}', Locale::getText('settings.direction'))
-                ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
-                ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
-                ->setParam('{{owner}}', $user->getAttribute('name', ''))
-                ->setParam('{{redirect}}', $redirect)
-            ;
-
-            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-
-            $mail->addAddress($invitee->getAttribute('email'), $invitee->getAttribute('name'));
-
-            $mail->Subject = sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-            $mail->Body = $body->render();
-            $mail->AltBody = strip_tags($body->render());
-
-            try {
-                $mail->send();
-            } catch (\Exception $error) {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
-            }
-
-            $audit
-                ->setParam('userId', $user->getUid())
-                ->setParam('event', 'auth.invite.resend')
-            ;
-
-            $response
-            //    ->setStatusCode(Response::STATUS_CODE_CREATED) TODO change response of this endpoint
-                ->noContent()
-            ;
         }
     );
 
