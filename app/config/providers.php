@@ -97,6 +97,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'spotify' => [
+        'developers' => 'https://developer.spotify.com/documentation/general/guides/authorization-guide/',
+        'icon' => 'icon-spotify',
+        'enabled' => true,
+        'mock' => false,
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
