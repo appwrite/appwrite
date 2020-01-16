@@ -11,6 +11,8 @@
 * Added support for SameSite cookie option with fallback cookie for old clients
 * Merged Auth and Account service for making the API more REST compatible
 * Added a new Discord OAuth adapter
+* Added a new Twitch OAuth adapter
+* Added a new Spotify OAuth adapter
 
 ## Bug Fixes
 
