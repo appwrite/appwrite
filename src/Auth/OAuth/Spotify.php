@@ -138,7 +138,7 @@ class Spotify extends OAuth
     {
         if (empty($this->user)) {
             $this->user = json_decode($this->request('GET',
-                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true);
+                $this->resourceEndpoint . "me", ['Authorization: Bearer '.urlencode($accessToken)]), true);
         }
 
         return $this->user;
