@@ -97,6 +97,7 @@ abstract class Scope extends TestCase
         self::$root = [
             '$uid' => $root['body']['$uid'],
             'name' => $root['body']['name'],
+            'email' => $root['body']['email'],
             'session' => $session,
         ];
 
@@ -147,6 +148,7 @@ abstract class Scope extends TestCase
         self::$user[$this->getProject()['$uid']] = [
             '$uid' => $user['body']['$uid'],
             'name' => $user['body']['name'],
+            'email' => $user['body']['email'],
             'session' => $session,
         ];
 
