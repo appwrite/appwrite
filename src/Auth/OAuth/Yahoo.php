@@ -41,6 +41,17 @@ class Yahoo extends OAuth
         return 'yahoo';
     }
 
+
+    /**
+     * @param $state
+     *
+     * @return json
+     */
+    public function parseState(string $state)
+    {
+        return json_decode(html_entity_decode($state), true);
+    }
+
     /**
      * @return string
      */
@@ -143,7 +154,7 @@ class Yahoo extends OAuth
     {
         if (empty($this->user)) {
             $this->user = json_decode($this->request('GET',
-                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true)['data']['0'];
+                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true);
         }
 
         return $this->user;
