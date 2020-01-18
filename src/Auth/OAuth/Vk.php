@@ -20,7 +20,10 @@ class Vk extends OAuth
     /**
      * @var array
      */
-    protected $scopes = ['openid' ,'email'];
+    protected $scopes = [
+        'openid',
+        'email'
+    ];
 
     /**
      * @var string
@@ -144,10 +147,11 @@ class Vk extends OAuth
         if (empty($this->user['name'])) {
             $user = $this->request(
                 'GET',
-                'https://api.vk.com/method/users.get?'.
-                'v='.urlencode($this->version).
-                '&fields=id,name,email,first_name,last_name'.
-                '&access_token='.urlencode($accessToken)
+                'https://api.vk.com/method/users.get?'. http_build_query([
+                    'v' => $this->version,
+                    'fields' => 'id,name,email,first_name,last_name',
+                    'access_token' => $accessToken
+                ])
             );
             
             $user = json_decode($user, true);

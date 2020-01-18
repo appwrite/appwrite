@@ -23,7 +23,7 @@ class Twitch extends OAuth
     /**
      * @var array
      */
-    protected $scope = [
+    protected $scopes = [
             'user:read:email',
     ];
 
@@ -49,7 +49,7 @@ class Twitch extends OAuth
             http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->scope),
+                'scope' => implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
                 'force_verify' => true,
                 'state' => json_encode($this->state)

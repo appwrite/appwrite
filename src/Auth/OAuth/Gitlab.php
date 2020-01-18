@@ -17,7 +17,9 @@ class Gitlab extends OAuth
     /**
      * @var array
      */
-    protected $scopes = ['read_user'];
+    protected $scopes = [
+        'read_user'
+    ];
 
     /**
      * @return string

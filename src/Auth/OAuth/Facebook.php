@@ -19,7 +19,9 @@ class Facebook extends OAuth
     /**
      * @var array
      */
-    protected $scopes = ['email'];
+    protected $scopes = [
+        'email'
+    ];
 
     /**
      * @return string

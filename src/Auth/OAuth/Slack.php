@@ -14,7 +14,12 @@ class Slack extends OAuth
     /**
      * @var array
      */
-    protected $scopes = ['identity.avatar', 'identity.basic', 'identity.email','identity.team'];
+    protected $scopes = [
+        'identity.avatar', 
+        'identity.basic', 
+        'identity.email',
+        'identity.team'
+    ];
 
     /**
      * @return string

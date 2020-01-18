@@ -23,7 +23,7 @@ class Yahoo extends OAuth
     /**
      * @var array
      */
-    protected $scope = [
+    protected $scopes = [
         'sdct-r',
         'sdpp-w',
     ];
@@ -61,7 +61,7 @@ class Yahoo extends OAuth
             http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->scope),
+                'scope' => implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
                 'state' => json_encode($this->state)
             ]);
