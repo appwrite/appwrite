@@ -109,16 +109,17 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'twitter' => [
+        'developers' => 'https://developer.twitter.com/',
+        'icon' => 'icon-twitter',
+        'enabled' => false,
+        'mock' => false
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
         'icon' => 'icon-appwrite',
         'enabled' => true,
         'mock' => true,
-    ],
-    'twitter' => [
-        'developers' => 'https://developer.twitter.com/',
-        'icon' => 'icon-twitter',
-        'enabled' => false,
     ]
 ];
