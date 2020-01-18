@@ -92,7 +92,8 @@ abstract class OAuth
      * 
      * @return $this
      */
-    protected function addScope(string $scope):OAuth{
+    protected function addScope(string $scope):OAuth
+    {
         // Add a scope to the scopes array if it isn't already present 
         if (!in_array($scope, $this->scopes)){
             $this->scopes[] = $scope; 
@@ -103,7 +104,8 @@ abstract class OAuth
      /**
       * @return array
       */
-    protected function getScopes():array{
+    protected function getScopes():array
+    {
         return $this->scopes;
     }
 
