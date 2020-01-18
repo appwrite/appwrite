@@ -593,6 +593,40 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 401);
         
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'prefs' => '{}'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+        
+        
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'prefs' => '[]'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+        
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'prefs' => '{"test": "value"}'
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
         return $data;
     }
 
@@ -774,7 +808,7 @@ trait AccountBase
     /**
      * @depends testDeleteAccountSession
      */
-    public function testCreateAccountRecovery($data):array
+    public function xtestCreateAccountRecovery($data):array
     {
         $email = (isset($data['email'])) ? $data['email'] : '';
         $name = (isset($data['name'])) ? $data['name'] : '';
@@ -848,7 +882,7 @@ trait AccountBase
     /**
      * @depends testCreateAccountRecovery
      */
-    public function testUpdateAccountRecovery($data):array
+    public function xtestUpdateAccountRecovery($data):array
     {
         $uid = (isset($data['uid'])) ? $data['uid'] : '';
         $recovery = (isset($data['recovery'])) ? $data['recovery'] : '';
