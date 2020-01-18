@@ -18,6 +18,14 @@ class Vk extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = [
+        'openid',
+        'email'
+    ];
+
+    /**
      * @var string
      */
     protected $version = '5.101';
@@ -36,13 +44,14 @@ class Vk extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://oauth.vk.com/authorize?' .
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&response_type=code'.
-            '&state='.urlencode(json_encode($this->state)).
-            '&v='.urlencode($this->version).
-            '&scope=openid+email';
+        return 'https://oauth.vk.com/authorize?' . http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'response_type' => 'code',
+            'state' => json_encode($this->state),
+            'v' => $this->version,
+            'scope' => implode(' ', $this->getScopes())
+        ]);
     }
 
     /**
@@ -57,10 +66,12 @@ class Vk extends OAuth
             'POST',
             'https://oauth.vk.com/access_token?',
             $headers,
-            'code=' . urlencode($code) .
-            '&client_id=' . urlencode($this->appID) .
-            '&client_secret=' . urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback)
+            http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback
+            ])
         );
         $accessToken = json_decode($accessToken, true);
 
@@ -136,10 +147,11 @@ class Vk extends OAuth
         if (empty($this->user['name'])) {
             $user = $this->request(
                 'GET',
-                'https://api.vk.com/method/users.get?'.
-                'v='.urlencode($this->version).
-                '&fields=id,name,email,first_name,last_name'.
-                '&access_token='.urlencode($accessToken)
+                'https://api.vk.com/method/users.get?'. http_build_query([
+                    'v' => $this->version,
+                    'fields' => 'id,name,email,first_name,last_name',
+                    'access_token' => $accessToken
+                ])
             );
             
             $user = json_decode($user, true);

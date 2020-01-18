@@ -15,6 +15,11 @@ class Bitbucket extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = [];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -27,10 +32,12 @@ class Bitbucket extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://bitbucket.org/site/oauth2/authorize?' .
-            'client_id=' . urlencode($this->appID).
-            '&state=' . urlencode(json_encode($this->state)).
-            '&response_type=code';
+        return 'https://bitbucket.org/site/oauth2/authorize?'.http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'scope' => implode(' ', $this->getScopes()),
+                'state' => json_encode($this->state),
+            ]);
     }
 
     /**
@@ -42,15 +49,17 @@ class Bitbucket extends OAuth
     {
         // Required as per Bitbucket Spec.
         $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-
+        
         $accessToken = $this->request(
             'POST',
             'https://bitbucket.org/site/oauth2/access_token',
             $headers,
-            'code=' . urlencode($code) .
-            '&client_id=' . urlencode($this->appID) .
-            '&client_secret=' . urlencode($this->appSecret).
-            '&grant_type=authorization_code'
+            http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'grant_type' => 'authorization_code'
+            ])
         );
 
         $accessToken = json_decode($accessToken, true);
