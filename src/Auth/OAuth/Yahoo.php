@@ -5,7 +5,7 @@ namespace Auth\OAuth;
 use Auth\OAuth;
 
 // Reference Material
-// https://dev.twitch.tv/docs/authentication
+// https://developer.yahoo.com/oauth2/guide/
 
 class Yahoo extends OAuth
 {
