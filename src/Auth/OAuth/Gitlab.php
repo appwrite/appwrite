@@ -15,6 +15,11 @@ class Gitlab extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = ['read_user'];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -27,12 +32,13 @@ class Gitlab extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://gitlab.com/oauth/authorize?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&scope=read_user'.
-            '&state='.urlencode(json_encode($this->state)).
-            '&response_type=code';
+        return 'https://gitlab.com/oauth/authorize?'.http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => implode(' ', $this->getScopes()),
+            'state' => json_encode($this->state),
+            'response_type' => 'code'
+        ]);
     }
 
     /**
@@ -44,12 +50,13 @@ class Gitlab extends OAuth
     {
         $accessToken = $this->request(
             'POST',
-            'https://gitlab.com/oauth/token?'.
-                'code='.urlencode($code).
-                '&client_id='.urlencode($this->appID).
-                '&client_secret='.urlencode($this->appSecret).
-                '&redirect_uri='.urlencode($this->callback).
-                '&grant_type=authorization_code'
+            'https://gitlab.com/oauth/token?'.http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'grant_type' => 'authorization_code'
+            ])
         );
 
         $accessToken = json_decode($accessToken, true);
