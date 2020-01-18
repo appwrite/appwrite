@@ -15,6 +15,11 @@ class Apple extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = ["name", "email"];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -27,13 +32,14 @@ class Apple extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://appleid.apple.com/auth/authorize?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&state='.urlencode(json_encode($this->state)).
-            '&response_type=code'.
-            '&response_mode=form_post'.
-            '&scope=name+email';
+        return 'https://appleid.apple.com/auth/authorize?'.http_build_query([
+            'client_id' => urlencode($this->appID),
+            'redirect_uri' => urlencode($this->callback),
+            'state' => urlencode(json_encode($this->state)),
+            'response_type' => 'code',
+            'response_mode' => 'form_post',
+            'scope' => implode('+', $this->getScopes())
+        ]);
     }
 
     /**

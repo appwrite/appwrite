@@ -49,7 +49,7 @@ class LinkedIn extends OAuth
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
-                'scope' => implode(' ', $this->scope),
+                'scope' => implode(' ', $this->getScopes()),
                 'state' => json_encode($this->state),
             ]);
     }
