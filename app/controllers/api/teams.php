@@ -259,9 +259,9 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('email', '', function () { return new Email(); }, 'New team member email address.')
     ->param('name', '', function () { return new Text(100); }, 'New team member name.', true)
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
-    ->param('redirect', '', function () use ($clients) { return new Host($clients); }, 'Reset page to redirect user back to your app from the invitation email.')
+    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.') // TODO add our own built-in confirm page
     ->action(
-        function ($teamId, $email, $name, $roles, $redirect) use ($response, $register, $project, $user, $audit, $projectDB) {
+        function ($teamId, $email, $name, $roles, $url) use ($response, $register, $project, $user, $audit, $projectDB) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
@@ -354,9 +354,9 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 throw new Exception('Failed saving membership to DB', 500);
             }
 
-            $redirect = Template::parseURL($redirect);
-            $redirect['query'] = Template::mergeQuery(((isset($redirect['query'])) ? $redirect['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret]);
-            $redirect = Template::unParseURL($redirect);
+            $url = Template::parseURL($url);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret]);
+            $url = Template::unParseURL($url);
 
             $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
             $body
@@ -364,7 +364,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
                 ->setParam('{{owner}}', $user->getAttribute('name', ''))
-                ->setParam('{{redirect}}', $redirect)
+                ->setParam('{{redirect}}', $url)
             ;
 
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
@@ -387,8 +387,9 @@ $utopia->post('/v1/teams/:teamId/memberships')
             ;
 
             $response
-                //->setStatusCode(Response::STATUS_CODE_CREATED) TODO change response of this endpoint
-                ->noContent();
+                ->setStatusCode(Response::STATUS_CODE_CREATED) // TODO change response of this endpoint
+                ->json($membership->getArrayCopy())
+            ;
         }
     );
 

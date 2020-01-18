@@ -262,16 +262,25 @@ trait TeamsBase
         return [];
     }
 
-    public function testCreateTeamMembership():array
+    /**
+     * @depends testCreateTeam
+     */
+    public function testCreateTeamMembership($data):array
     {
+        $uid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
+        $email = uniqid().'friend@localhost.test';
+
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/teams/'.$uid.'/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
-            'name' => 'Demo'
+            'email' => $email,
+            'name' => 'Friend User',
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
         ]);
 
         $teamUid = $response['body']['$uid'];
