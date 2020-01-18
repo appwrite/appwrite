@@ -388,7 +388,15 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED) // TODO change response of this endpoint
-                ->json($membership->getArrayCopy())
+                ->json($membership->getArrayCopy([
+                    '$uid',
+                    'userId',
+                    'teamId',
+                    'roles',
+                    'invited',
+                    'joined',
+                    'confirm',
+                ]))
             ;
         }
     );
@@ -538,13 +546,13 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
     ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID')
     ->action(
         function ($teamId, $inviteId) use ($response, $projectDB, $audit) {
-            $invite = $projectDB->getDocument($inviteId);
+            $membership = $projectDB->getDocument($inviteId);
 
-            if (empty($invite->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $invite->getCollection()) {
+            if (empty($membership->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
                 throw new Exception('Invite not found', 404);
             }
 
-            if ($invite->getAttribute('teamId') !== $teamId) {
+            if ($membership->getAttribute('teamId') !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
@@ -554,7 +562,7 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
                 throw new Exception('Team not found', 404);
             }
 
-            if (!$projectDB->deleteDocument($invite->getUid())) {
+            if (!$projectDB->deleteDocument($membership->getUid())) {
                 throw new Exception('Failed to remove membership from DB', 500);
             }
 
@@ -567,7 +575,7 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
             }
 
             $audit
-                ->setParam('userId', $invite->getAttribute('userId'))
+                ->setParam('userId', $membership->getAttribute('userId'))
                 ->setParam('event', 'auth.leave')
             ;
 

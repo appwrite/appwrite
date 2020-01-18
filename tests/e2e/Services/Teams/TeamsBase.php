@@ -283,32 +283,25 @@ trait TeamsBase
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        $teamUid = $response['body']['$uid'];
+        if ($response['headers']['status-code'] !== 201) {var_dump($response);}
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$uid']);
-        $this->assertEquals('Demo', $response['body']['name']);
-        $this->assertGreaterThan(-1, $response['body']['sum']);
-        $this->assertIsInt($response['body']['sum']);
-        $this->assertIsInt($response['body']['dateCreated']);
-
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertEmpty($response['body']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['teamId']);
+        $this->assertCount(2, $response['body']['roles']);
+        $this->assertIsInt($response['body']['joined']);
+        $this->assertEquals(false, $response['body']['confirm']);
 
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-        ], $this->getHeaders()));
+        // $response = $this->client->call(Client::METHOD_POST, '/teams/'.$uid.'/memberships', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$uid'],
+        // ], $this->getHeaders()));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        // $this->assertEquals(404, $response['headers']['status-code']);
 
         return [];
     }
