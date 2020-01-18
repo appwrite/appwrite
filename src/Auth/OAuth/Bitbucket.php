@@ -17,7 +17,7 @@ class Bitbucket extends OAuth
     /**
      * @var array
      */
-    protected $requiredScope = [];
+    protected $scope = [];
 
     /**
      * @return string
@@ -32,10 +32,6 @@ class Bitbucket extends OAuth
      */
     public function getLoginURL(): string
     {
-        foreach ($this->requiredScope as $item) {
-            $this->addScope($item);
-        }
-
         return 'https://bitbucket.org/site/oauth2/authorize?'.http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
