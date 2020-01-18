@@ -67,11 +67,13 @@ class Amazon extends OAuth
             'POST',
             'https://api.amazon.com/auth/o2/token',
             $headers,
-            'code=' . urlencode($code) .
-            '&client_id=' . urlencode($this->appID) .
-            '&client_secret=' . urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback).
-            '&grant_type=authorization_code'
+            http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID ,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback ,
+                'grant_type' => 'authorization_code'
+            ])
         );
         $accessToken = json_decode($accessToken, true);
 
