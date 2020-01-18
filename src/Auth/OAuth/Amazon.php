@@ -18,7 +18,7 @@ class Amazon extends OAuth
     /**
      * @var array
      */
-    protected $requiredScope = [
+    protected $scopes = [
         "profile"
     ];
 
@@ -46,10 +46,6 @@ class Amazon extends OAuth
      */
     public function getLoginURL(): string
     {
-        foreach ($this->requiredScope as $item) {
-            $this->addScope($item);
-        }
-
         return 'https://www.amazon.com/ap/oa?'.http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,

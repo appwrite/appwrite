@@ -17,7 +17,7 @@ class Bitbucket extends OAuth
     /**
      * @var array
      */
-    protected $scope = [];
+    protected $scopes = [];
 
     /**
      * @return string
