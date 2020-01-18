@@ -33,10 +33,10 @@ class Dropbox extends OAuth
     public function getLoginURL(): string
     {
         return 'https://www.dropbox.com/oauth2/authorize?'.http_build_query([
-            'client_id' => $this->appID,
-            'redirect_uri' => $this->callback,
-            'state' => json_encode($this->state),
-            'response_type' => 'code'
+                'client_id' => $this->appID,
+                'redirect_uri' => $this->callback,
+                'state' => json_encode($this->state),
+                'response_type' => 'code'
         ]);
     }
 
