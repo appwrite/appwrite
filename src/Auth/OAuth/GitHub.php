@@ -12,6 +12,11 @@ class Github extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = ['user:email'];
+
+    /**
      * @return string
      */
     public function getName():string
@@ -24,7 +29,13 @@ class Github extends OAuth
      */
     public function getLoginURL():string
     {
-        return 'https://github.com/login/oauth/authorize?client_id='.urlencode($this->appID).'&redirect_uri='.urlencode($this->callback).'&scope=user:email&state='.urlencode(json_encode($this->state));
+        return 'https://github.com/login/oauth/authorize?'. http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => implode(' ', $this->getScopes()),
+            'state' => json_encode($this->state)
+        ]);
+
     }
 
     /**
@@ -38,10 +49,12 @@ class Github extends OAuth
             'POST',
             'https://github.com/login/oauth/access_token',
             [],
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&client_secret='.urlencode($this->appSecret).
-            '&code='.urlencode($code)
+            http_build_query([
+                'client_id' => $this->appID,
+                'redirect_uri' => $this->callback,
+                'client_secret' => $this->appSecret,
+                'code' => $code
+            ])
         );
 
         $output = [];
