@@ -22,9 +22,9 @@ class Discord extends OAuth
     /**
      * @var array
      */
-    protected $scope = [
-        'identify',
-        'email'
+    protected $scopes = [
+            'identify',
+            'email'
     ];
 
     /**
@@ -44,9 +44,9 @@ class Discord extends OAuth
             http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->scope),
                 'state' => json_encode($this->state),
-                'redirect_uri' => $this->callback,
+                'scope' => implode(' ', $this->getScopes()),
+                'redirect_uri' => $this->callback
             ]);
 
         return $url;

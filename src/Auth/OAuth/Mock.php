@@ -14,6 +14,13 @@ class Mock extends OAuth
     /**
      * @var array
      */
+    protected $scopes = [
+        'email'
+    ];
+
+    /**
+     * @var array
+     */
     protected $user = [];
 
     /**
@@ -29,7 +36,12 @@ class Mock extends OAuth
      */
     public function getLoginURL():string
     {
-        return 'http://localhost/'.$this->version.'/mock/tests/general/oauth?client_id='.urlencode($this->appID).'&redirect_uri='.urlencode($this->callback).'&scope=email&state='.urlencode(json_encode($this->state));
+        return 'http://localhost/'.$this->version.'/mock/tests/general/oauth?'. http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => implode(' ', $this->getScopes()),
+            'state' => json_encode($this->state)
+        ]);
     }
 
     /**
@@ -42,14 +54,14 @@ class Mock extends OAuth
         $accessToken = $this->request(
             'GET',
             'http://localhost/'.$this->version.'/mock/tests/general/oauth/token?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&client_secret='.urlencode($this->appSecret).
-            '&code='.urlencode($code)
+            http_build_query([
+                'client_id' => $this->appID,
+                'redirect_uri' => $this->callback,
+                'client_secret' => $this->appSecret,
+                'code' => $code
+            ])
         );
 
-        var_dump($this->appSecret);
-        var_dump($accessToken);
         $accessToken = json_decode($accessToken, true); //
 
         if (isset($accessToken['access_token'])) {

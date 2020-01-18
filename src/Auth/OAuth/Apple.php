@@ -15,6 +15,14 @@ class Apple extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = [
+        "name", 
+        "email"
+    ];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -27,13 +35,14 @@ class Apple extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://appleid.apple.com/auth/authorize?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&state='.urlencode(json_encode($this->state)).
-            '&response_type=code'.
-            '&response_mode=form_post'.
-            '&scope=name+email';
+        return 'https://appleid.apple.com/auth/authorize?'.http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'state' => json_encode($this->state),
+            'response_type' => 'code',
+            'response_mode' => 'form_post',
+            'scope' => implode(' ', $this->getScopes())
+        ]);
     }
 
     /**
@@ -48,15 +57,14 @@ class Apple extends OAuth
             'POST',
             'https://appleid.apple.com/auth/token',
             $headers,
-            'code='.urlencode($code).
-            '&client_id='.urlencode($this->appID).
-            '&client_secret='.urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback).
-            '&grant_type=authorization_code'
+            http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'grant_type' => 'authorization_code'
+            ])
         );
-
-        var_dump($accessToken);
-        exit();
 
         $accessToken = json_decode($accessToken, true);
 
