@@ -85,7 +85,30 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
-
+    'discord' => [
+        'developers' => 'https://discordapp.com/developers/docs/topics/oauth2',
+        'icon' => 'icon-discord',
+        'enabled' => true,
+        'mock' => false,
+    ],
+    'twitch' => [
+        'developers' => 'https://dev.twitch.tv/docs/authentication',
+        'icon' => 'icon-twitch',
+        'enabled' => true,
+        'mock' => false,
+    ],
+    'spotify' => [
+        'developers' => 'https://developer.spotify.com/documentation/general/guides/authorization-guide/',
+        'icon' => 'icon-spotify',
+        'enabled' => true,
+        'mock' => false,
+    ],
+    'yahoo' => [
+        'developers' => 'https://developer.yahoo.com/oauth2/guide/flows_authcode/',
+        'icon' => 'icon-yahoo',
+        'enabled' => true,
+        'mock' => false,
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
