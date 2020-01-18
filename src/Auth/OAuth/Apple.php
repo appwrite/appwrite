@@ -63,9 +63,6 @@ class Apple extends OAuth
             ])
         );
 
-        var_dump($accessToken);
-        exit();
-
         $accessToken = json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
