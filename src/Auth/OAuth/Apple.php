@@ -38,7 +38,7 @@ class Apple extends OAuth
             'state' => json_encode($this->state),
             'response_type' => 'code',
             'response_mode' => 'form_post',
-            'scope' => implode('+', $this->getScopes())
+            'scope' => implode(' ', $this->getScopes())
         ]);
     }
 
