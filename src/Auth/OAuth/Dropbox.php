@@ -15,6 +15,11 @@ class Dropbox extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = [];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -27,11 +32,12 @@ class Dropbox extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://www.dropbox.com/oauth2/authorize?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&state='.urlencode(json_encode($this->state)).
-            '&response_type=code';
+        return 'https://www.dropbox.com/oauth2/authorize?'.http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'state' => json_encode($this->state),
+            'response_type' => 'code'
+        ]);
     }
 
     /**
@@ -46,11 +52,13 @@ class Dropbox extends OAuth
             'POST',
             'https://api.dropboxapi.com/oauth2/token',
             $headers,
-            'code='.urlencode($code).
-            '&client_id='.urlencode($this->appID).
-            '&client_secret='.urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback).
-            '&grant_type=authorization_code'
+            http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'grant_type' => 'authorization_code'
+            ])
         );
 
         $accessToken = json_decode($accessToken, true);
