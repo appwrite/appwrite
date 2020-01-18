@@ -103,7 +103,7 @@ abstract class OAuth
      /**
       * @return array
       */
-    protected function getScopes(){
+    protected function getScopes():array{
         return $this->scopes;
     }
 
