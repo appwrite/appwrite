@@ -15,6 +15,11 @@ class Microsoft extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = ['offline_access', 'user.read'];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -27,13 +32,14 @@ class Microsoft extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&state='.urlencode(json_encode($this->state)).
-            '&scope=offline_access+user.read'.
-            '&response_type=code'.
-            '&response_mode=query';
+        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'state'=> json_encode($this->state),
+            'scope'=> implode(' ', $this->getScopes()),
+            'response_type' => 'code',
+            'response_mode' => 'query'
+        ]);
     }
 
     /**
@@ -49,12 +55,14 @@ class Microsoft extends OAuth
             'POST',
             'https://login.microsoftonline.com/common/oauth2/v2.0/token',
             $headers,
-            'code='.urlencode($code).
-            '&client_id='.urlencode($this->appID).
-            '&client_secret='.urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback).
-            '&scope=offline_access+user.read'.
-            '&grant_type=authorization_code'
+            http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'scope' => implode(' ', $this->getScopes()),
+                'grant_type' => 'authorization_code'
+            ])
         );
 
         $accessToken = json_decode($accessToken, true);
