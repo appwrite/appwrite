@@ -3,6 +3,7 @@
 global $utopia, $register, $response, $user, $audit, $project, $projectDB, $providers;
 
 use Utopia\Exception;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
 use Utopia\Audit\Audit;
@@ -59,12 +60,9 @@ $utopia->get('/v1/account/prefs')
         function () use ($response, $user) {
             $prefs = $user->getAttribute('prefs', '{}');
 
-            if (empty($prefs)) {
-                $prefs = '[]';
-            }
-
             try {
                 $prefs = json_decode($prefs, true);
+                $prefs = ($prefs) ? $prefs : [];
             } catch (\Exception $error) {
                 throw new Exception('Failed to parse prefs', 500);
             }
@@ -302,12 +300,14 @@ $utopia->patch('/v1/account/prefs')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
-    ->param('prefs', '', function () { return new \Utopia\Validator\Mock();}, 'Prefs key-value JSON object.')
+    ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->action(
         function ($prefs) use ($response, $user, $projectDB, $audit) {
+            $old = json_decode($user->getAttribute('prefs', '{}'), true);
+            $old = ($old) ? $old : [];
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
-                'prefs' => json_encode(array_merge(json_decode($user->getAttribute('prefs', '{}'), true), $prefs)),
+                'prefs' => json_encode(array_merge($old, $prefs)),
             ]));
 
             if (false === $user) {
