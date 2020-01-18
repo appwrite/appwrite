@@ -302,7 +302,7 @@ $utopia->patch('/v1/account/prefs')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
-    ->param('prefs', '', function () { return new \Utopia\Validator\Mock();}, 'Prefs key-value JSON object string.')
+    ->param('prefs', '', function () { return new \Utopia\Validator\Mock();}, 'Prefs key-value JSON object.')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->action(
         function ($prefs) use ($response, $user, $projectDB, $audit) {
