@@ -412,23 +412,15 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID')
     ->param('secret', '', function () { return new Text(256); }, 'Secret Key')
-    ->param('success', null, function () use ($clients) { return new Host($clients); }, 'Redirect when registration succeed', true)
-    ->param('failure', null, function () use ($clients) { return new Host($clients); }, 'Redirect when registration failed', true)
     ->action(
-        function ($teamId, $inviteId, $userId, $secret, $success, $failure) use ($response, $request, $user, $audit, $projectDB) {
-            $invite = $projectDB->getDocument($inviteId);
+        function ($teamId, $inviteId, $userId, $secret) use ($response, $request, $user, $audit, $projectDB) {
+            $membership = $projectDB->getDocument($inviteId);
 
-            if (empty($invite->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $invite->getCollection()) {
-                if ($failure) {
-                    $response->redirect($failure);
-
-                    return;
-                }
-
+            if (empty($membership->getUid()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
                 throw new Exception('Invite not found', 404);
             }
 
-            if ($invite->getAttribute('teamId')->getUid() !== $teamId) {
+            if ($membership->getAttribute('teamId')->getUid() !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
@@ -438,23 +430,11 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 throw new Exception('Team not found', 404);
             }
 
-            if (Auth::hash($secret) !== $invite->getAttribute('secret')) {
-                if ($failure) {
-                    $response->redirect($failure);
-
-                    return;
-                }
-
+            if (Auth::hash($secret) !== $membership->getAttribute('secret')) {
                 throw new Exception('Secret key not valid', 401);
             }
 
-            if ($userId != $invite->getAttribute('userId')) {
-                if ($failure) {
-                    $response->redirect($failure);
-
-                    return;
-                }
-
+            if ($userId != $membership->getAttribute('userId')) {
                 throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
             }
 
@@ -469,24 +449,19 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ]);
             }
 
-            if ($invite->getAttribute('userId') !== $user->getUid()) {
-                if ($failure) {
-                    $response->redirect($failure);
-
-                    return;
-                }
-
+            if ($membership->getAttribute('userId') !== $user->getUid()) {
                 throw new Exception('Invite not belong to current user ('.$user->getAttribute('email').')', 401);
             }
 
-            $invite // Attach user to team
+            $membership // Attach user to team
                 ->setAttribute('joined', time())
                 ->setAttribute('confirm', true)
             ;
 
             $user
                 ->setAttribute('confirm', true)
-                ->setAttribute('memberships', $invite, Document::SET_TYPE_APPEND);
+                ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND)
+            ;
 
             // Log user in
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -526,13 +501,16 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->json($membership->getArrayCopy([
+                    '$uid',
+                    'userId',
+                    'teamId',
+                    'roles',
+                    'invited',
+                    'joined',
+                    'confirm',
+                ]))
             ;
-
-            if ($success) {
-                $response->redirect($success);
-            }
-
-            $response->json(array('result' => 'success'));
         }
     );
 
