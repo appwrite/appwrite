@@ -103,6 +103,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'yahoo' => [
+        'developers' => 'https://developer.yahoo.com/oauth2/guide/flows_authcode/',
+        'icon' => 'icon-yahoo',
+        'enabled' => true,
+        'mock' => false,
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
