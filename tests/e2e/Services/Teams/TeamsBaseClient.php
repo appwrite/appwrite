@@ -56,8 +56,6 @@ trait TeamsBaseClient
             'url' => 'http://localhost:5000/join-us#title'
         ]);
 
-        if ($response['headers']['status-code'] !== 201) {var_dump($response);}
-
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$uid']);
         $this->assertNotEmpty($response['body']['userId']);
@@ -69,12 +67,18 @@ trait TeamsBaseClient
         /**
          * Test for FAILURE
          */
-        // $response = $this->client->call(Client::METHOD_POST, '/teams/'.$uid.'/memberships', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$uid'],
-        // ], $this->getHeaders()));
 
-        // $this->assertEquals(404, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, '/teams/'.$uid.'/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], $this->getHeaders()), [
+            'email' => 'dasdkaskdjaskdjasjkd',
+            'name' => 'Friend User',
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }
