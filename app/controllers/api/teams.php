@@ -67,58 +67,6 @@ $utopia->get('/v1/teams/:teamId')
         }
     );
 
-$utopia->get('/v1/teams/:teamId/members')
-    ->desc('Get Team Members')
-    ->label('scope', 'teams.read')
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'getTeamMembers')
-    ->label('sdk.description', '/docs/references/teams/get-team-members.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->action(
-        function ($teamId) use ($response, $projectDB) {
-            $team = $projectDB->getDocument($teamId);
-
-            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-                throw new Exception('Team not found', 404);
-            }
-
-            $memberships = $projectDB->getCollection([
-                'limit' => 50,
-                'offset' => 0,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    'teamId='.$teamId,
-                ],
-            ]);
-
-            $users = [];
-
-            foreach ($memberships as $member) {
-                if (empty($member->getAttribute('userId', null))) {
-                    continue;
-                }
-
-                $temp = $projectDB->getDocument($member->getAttribute('userId', null))->getArrayCopy(['$uid', 'email', 'name']);
-
-                $temp['inviteId'] = $member->getUid();
-                $temp['roles'] = $member->getAttribute('roles', []);
-                $temp['confirm'] = $member->getAttribute('confirm', false);
-                $temp['joined'] = $member->getAttribute('joined', 0);
-                $users[] = $temp;
-            }
-
-            usort($users, function ($a, $b) {
-                if ($a['joined'] === 0 || $b['joined'] === 0) {
-                    return $b['joined'] - $a['joined'];
-                }
-
-                return $a['joined'] - $b['joined'];
-            });
-
-            $response->json($users);
-        }
-    );
-
 $utopia->post('/v1/teams')
     ->desc('Create Team')
     ->label('scope', 'teams.write')
@@ -247,7 +195,61 @@ $utopia->delete('/v1/teams/:teamId')
         }
     );
 
-// Memberships
+$utopia->get('/v1/teams/:teamId/memberships')
+    ->desc('Get Team Memberships')
+    ->label('scope', 'teams.read')
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'getTeamMemberships')
+    ->label('sdk.description', '/docs/references/teams/get-team-members.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->action(
+        function ($teamId) use ($response, $projectDB) {
+            $team = $projectDB->getDocument($teamId);
+
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+                throw new Exception('Team not found', 404);
+            }
+
+            $memberships = $projectDB->getCollection([
+                'limit' => 50,
+                'offset' => 0,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                    'teamId='.$teamId,
+                ],
+            ]);
+
+            $users = [];
+
+            foreach ($memberships as $membership) {
+                if (empty($membership->getAttribute('userId', null))) {
+                    continue;
+                }
+
+                $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+
+                $users[] = array_merge($temp, $membership->getArrayCopy([
+                    '$uid',
+                    'userId',
+                    'teamId',
+                    'roles',
+                    'invited',
+                    'joined',
+                    'confirm',
+                ]));
+            }
+
+            usort($users, function ($a, $b) {
+                if ($a['joined'] === 0 || $b['joined'] === 0) {
+                    return $b['joined'] - $a['joined'];
+                }
+
+                return $a['joined'] - $b['joined'];
+            });
+
+            $response->json($users);
+        }
+    );
 
 $utopia->post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
@@ -388,7 +390,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED) // TODO change response of this endpoint
-                ->json($membership->getArrayCopy([
+                ->json(array_merge($membership->getArrayCopy([
                     '$uid',
                     'userId',
                     'teamId',
@@ -396,6 +398,9 @@ $utopia->post('/v1/teams/:teamId/memberships')
                     'invited',
                     'joined',
                     'confirm',
+                ]), [
+                    'email' => $email,
+                    'name' => $name,
                 ]))
             ;
         }
@@ -496,7 +501,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             ]));
 
             Authorization::enable();
-            
+
             if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
             }
@@ -509,7 +514,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
-                ->json($membership->getArrayCopy([
+                ->json(array_merge($membership->getArrayCopy([
                     '$uid',
                     'userId',
                     'teamId',
@@ -517,6 +522,9 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                     'invited',
                     'joined',
                     'confirm',
+                ]), [
+                    'email' => $user->getAttribute('email'),
+                    'name' => $user->getAttribute('name'),
                 ]))
             ;
         }
