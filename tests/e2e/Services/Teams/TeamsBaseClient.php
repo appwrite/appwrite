@@ -199,6 +199,41 @@ trait TeamsBaseClient
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateTeamMembership
+     */
+    public function testDeleteTeamMembership($data):array
+    {
+        $teamUid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
+        $inviteUid = (isset($data['inviteUid'])) ? $data['inviteUid'] : '';
+        
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid.'/memberships/'.$inviteUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships/'.$inviteUid, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']);
+
         return [];
     }
 }
