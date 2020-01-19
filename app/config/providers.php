@@ -67,6 +67,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'salesforce' => [
+        'developers' => 'https://developer.salesforce.com/docs/',
+        'icon' => 'icon-salesforce',
+        'enabled' => true,
+        'mock' => false,
+    ],
     // 'apple' => [
     //     'developers' => 'https://developer.apple.com/',
     //     'icon' => 'icon-apple',
