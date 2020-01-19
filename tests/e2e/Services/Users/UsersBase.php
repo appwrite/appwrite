@@ -146,6 +146,25 @@ trait UsersBase
         $this->assertEquals($user['body']['key1'], 'value1');
         $this->assertEquals($user['body']['key2'], 'value2');
 
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], $this->getHeaders()), [
+            'prefs' => 'bad-string',
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 400);
+
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/prefs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 400);
+
         return $data;
     }
 
