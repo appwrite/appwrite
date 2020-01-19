@@ -26,6 +26,7 @@ trait TeamsBase
         $this->assertIsInt($response1['body']['dateCreated']);
 
         $teamUid = $response1['body']['$uid'];
+        $teamName = $response1['body']['name'];
 
         $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -66,7 +67,7 @@ trait TeamsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        return ['teamUid' => $teamUid];
+        return ['teamUid' => $teamUid, 'teamName' => $teamName];
     }
 
     /**

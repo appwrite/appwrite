@@ -403,7 +403,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
 $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->desc('Update Team Membership Status')
-    ->label('scope', 'auth')
+    ->label('scope', 'public')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateTeamMembershipStatus')
     ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
@@ -420,11 +420,15 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 throw new Exception('Invite not found', 404);
             }
 
-            if ($membership->getAttribute('teamId')->getUid() !== $teamId) {
+            if ($membership->getAttribute('teamId') !== $teamId) {
                 throw new Exception('Team IDs don\'t match', 404);
             }
 
+            Authorization::disable();
+
             $team = $projectDB->getDocument($teamId);
+            
+            Authorization::enable();
 
             if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
@@ -485,10 +489,14 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 throw new Exception('Failed saving user to DB', 500);
             }
 
+            Authorization::disable();
+
             $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
                 'sum' => $team->getAttribute('sum', 0) + 1,
             ]));
 
+            Authorization::enable();
+            
             if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
             }
