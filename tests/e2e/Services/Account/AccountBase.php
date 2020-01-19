@@ -836,7 +836,7 @@ trait AccountBase
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset', $lastEmail['subject']);
 
-        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&token=', 0) + 7, 256);
+        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
 
         /**
          * Test for FAILURE
@@ -897,7 +897,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]), [
             'userId' => $uid,
-            'token' => $recovery,
+            'secret' => $recovery,
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
         ]);
@@ -913,7 +913,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]), [
             'userId' => 'ewewe',
-            'token' => $recovery,
+            'secret' => $recovery,
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
         ]);
@@ -926,7 +926,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]), [
             'userId' => $uid,
-            'token' => 'sdasdasdasd',
+            'secret' => 'sdasdasdasd',
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
         ]);
@@ -939,7 +939,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]), [
             'userId' => $uid,
-            'token' => $recovery,
+            'secret' => $recovery,
             'password-a' => $newPassowrd.'x',
             'password-b' => $newPassowrd,
         ]);

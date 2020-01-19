@@ -815,7 +815,7 @@ class AccountTest extends Base
         $this->assertEquals($name, $lastEmail['to'][0]['name']);
         $this->assertEquals('Password Reset', $lastEmail['subject']);
 
-        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&token=', 0) + 7, 256);
+        $recovery = substr($lastEmail['text'], strpos($lastEmail['text'], '&userId=', 0) + 8, 256);
 
         /**
          * Test for FAILURE
@@ -876,7 +876,7 @@ class AccountTest extends Base
             'x-appwrite-project' => 'console',
         ], [
             'userId' => $uid,
-            'token' => $recovery,
+            'secret' => $recovery,
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
         ]);
@@ -892,7 +892,7 @@ class AccountTest extends Base
             'x-appwrite-project' => 'console',
         ], [
             'userId' => 'ewewe',
-            'token' => $recovery,
+            'secret' => $recovery,
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
         ]);
@@ -905,7 +905,7 @@ class AccountTest extends Base
             'x-appwrite-project' => 'console',
         ], [
             'userId' => $uid,
-            'token' => 'sdasdasdasd',
+            'secret' => 'sdasdasdasd',
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
         ]);
@@ -918,7 +918,7 @@ class AccountTest extends Base
             'x-appwrite-project' => 'console',
         ], [
             'userId' => $uid,
-            'token' => $recovery,
+            'secret' => $recovery,
             'password-a' => $newPassowrd.'x',
             'password-b' => $newPassowrd,
         ]);

@@ -1003,7 +1003,7 @@ $utopia->post('/v1/account/recovery')
             }
 
             $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getUid(), 'secret' => $secret]);
             $url = Template::unParseURL($url);
 
             $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
@@ -1050,11 +1050,11 @@ $utopia->put('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
-    ->param('token', '', function () { return new Text(256); }, 'Valid reset token.')
+    ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')
     ->param('password-a', '', function () { return new Password(); }, 'New password.')
     ->param('password-b', '', function () {return new Password(); }, 'New password again.')
     ->action(
-        function ($userId, $token, $passwordA, $passwordB) use ($response, $projectDB, $audit) {
+        function ($userId, $secret, $passwordA, $passwordB) use ($response, $projectDB, $audit) {
             if ($passwordA !== $passwordB) {
                 throw new Exception('Passwords must match', 400);
             }
@@ -1072,7 +1072,7 @@ $utopia->put('/v1/account/recovery')
                 throw new Exception('User not found', 404); // TODO maybe hide this
             }
 
-            $recovery = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $token);
+            $recovery = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_RECOVERY, $secret);
 
             if (!$recovery) {
                 throw new Exception('Invalid recovery token', 401);
@@ -1150,7 +1150,7 @@ $utopia->put('/v1/account/recovery')
             }
             
             $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getUid(), 'token' => $verificationSecret]);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getUid(), 'secret' => $verificationSecret]);
             $url = Template::unParseURL($url);
 
             $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.verification.body'));
@@ -1197,9 +1197,9 @@ $utopia->put('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
-    ->param('token', '', function () { return new Text(256); }, 'Valid reset token.')    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
+    ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
     ->action(
-        function ($userId, $token) use ($response, $user, $projectDB, $audit) {
+        function ($userId, $secret) use ($response, $user, $projectDB, $audit) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -1213,7 +1213,7 @@ $utopia->put('/v1/account/verification')
                 throw new Exception('User not found', 404); // TODO maybe hide this
             }
 
-            $verification = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_VERIFICATION, $token);
+            $verification = Auth::tokenVerify($profile->getAttribute('tokens', []), Auth::TOKEN_TYPE_VERIFICATION, $secret);
 
             if (!$verification) {
                 throw new Exception('Invalid verification token', 401);
