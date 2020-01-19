@@ -15,6 +15,7 @@
 * Added a new Spotify OAuth adapter
 * Upgraded MariaDB image to version 1.0.2
 * Upgraded SMTP image to version 1.0.1
+* File upload route (POST /v1/storage/files) now accept a single file per request
 
 ## Bug Fixes
 

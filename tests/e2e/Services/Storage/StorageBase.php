@@ -16,30 +16,30 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
-            'files' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['*'],
             'write' => ['*'],
             'folderId' => 'xyz',
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);
-        $this->assertNotEmpty($file['body'][0]['$uid']);
-        $this->assertEquals('files', $file['body'][0]['$collection']);
-        $this->assertIsInt($file['body'][0]['dateCreated']);
-        $this->assertEquals('logo.png', $file['body'][0]['name']);
-        $this->assertEquals('image/png', $file['body'][0]['mimeType']);
-        $this->assertEquals(47218, $file['body'][0]['sizeOriginal']);
-        $this->assertEquals(54944, $file['body'][0]['sizeActual']);
-        $this->assertEquals('gzip', $file['body'][0]['algorithm']);
-        $this->assertEquals('1', $file['body'][0]['fileOpenSSLVersion']);
-        $this->assertEquals('aes-128-gcm', $file['body'][0]['fileOpenSSLCipher']);
-        $this->assertNotEmpty($file['body'][0]['fileOpenSSLTag']);
-        $this->assertNotEmpty($file['body'][0]['fileOpenSSLIV']);
+        $this->assertNotEmpty($file['body']['$uid']);
+        $this->assertEquals('files', $file['body']['$collection']);
+        $this->assertIsInt($file['body']['dateCreated']);
+        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('image/png', $file['body']['mimeType']);
+        $this->assertEquals(47218, $file['body']['sizeOriginal']);
+        $this->assertEquals(54944, $file['body']['sizeActual']);
+        $this->assertEquals('gzip', $file['body']['algorithm']);
+        $this->assertEquals('1', $file['body']['fileOpenSSLVersion']);
+        $this->assertEquals('aes-128-gcm', $file['body']['fileOpenSSLCipher']);
+        $this->assertNotEmpty($file['body']['fileOpenSSLTag']);
+        $this->assertNotEmpty($file['body']['fileOpenSSLIV']);
 
         /**
          * Test for FAILURE
          */
-        return ['fileId' => $file['body'][0]['$uid']];
+        return ['fileId' => $file['body']['$uid']];
     }
     
     /**
