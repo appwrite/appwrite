@@ -115,6 +115,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'yandex' => [
+        'developers' => 'https://tech.yandex.com/oauth/',
+        'icon' => 'icon-yandex',
+        'enabled' => true,
+        'mock' => false,
+    ],
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
         'icon' => 'icon-twitter',
