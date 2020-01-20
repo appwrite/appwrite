@@ -127,6 +127,12 @@ return [
         'enabled' => false,
         'mock' => false
     ],
+    'paypal' => [
+        'developers' => 'https://developer.paypal.com/docs/api/overview/',
+        'icon' => 'icon-paypal',
+        'enabled' => true,
+        'mock' => false
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
