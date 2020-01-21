@@ -133,6 +133,12 @@ return [
         'enabled' => true,
         'mock' => false
     ],
+    'bitly' => [
+        'developers' => 'https://dev.bitly.com/v4_documentation.html',
+        'icon' => 'icon-bitly',
+        'enabled' => true,
+        'mock' => false
+    ],
     // Keep Last
     'mock' => [
         'developers' => 'https://appwrite.io',
