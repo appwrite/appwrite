@@ -67,6 +67,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'salesforce' => [
+        'developers' => 'https://developer.salesforce.com/docs/',
+        'icon' => 'icon-salesforce',
+        'enabled' => true,
+        'mock' => false,
+    ],
     // 'apple' => [
     //     'developers' => 'https://developer.apple.com/',
     //     'icon' => 'icon-apple',
@@ -109,10 +115,22 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'yandex' => [
+        'developers' => 'https://tech.yandex.com/oauth/',
+        'icon' => 'icon-yandex',
+        'enabled' => true,
+        'mock' => false,
+    ],
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
         'icon' => 'icon-twitter',
         'enabled' => false,
+        'mock' => false
+    ],
+    'paypal' => [
+        'developers' => 'https://developer.paypal.com/docs/api/overview/',
+        'icon' => 'icon-paypal',
+        'enabled' => true,
         'mock' => false
     ],
     // Keep Last
