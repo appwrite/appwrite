@@ -601,6 +601,18 @@
       "src": "entypo"
     },
     {
+      "uid": "94089b37297572e936b0943bcfa041d3",
+      "css": "angle-circled-right",
+      "code": 61752,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "8933c2579166c2ee56ae40dc6a0b4dc6",
+      "css": "angle-circled-left",
+      "code": 61751,
+      "src": "fontawesome"
+    },
+    {
       "uid": "f5896a5c224ad6c2a1fb92456bb8a211",
       "css": "c",
       "code": 59461,
