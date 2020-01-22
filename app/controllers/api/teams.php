@@ -321,7 +321,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             foreach ($memberships as $member) {
                 if ($member->getAttribute('userId') ==  $invitee->getUid()) {
-                    throw new Exception('User has already been invited or is already a member of this team', 400);
+                    throw new Exception('User has already been invited or is already a member of this team', 409);
                 }
 
                 if ($member->getAttribute('userId') == $user->getUid() && in_array('owner', $member->getAttribute('roles', []))) {
