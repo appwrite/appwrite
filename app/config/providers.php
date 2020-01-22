@@ -115,10 +115,28 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
+    'yandex' => [
+        'developers' => 'https://tech.yandex.com/oauth/',
+        'icon' => 'icon-yandex',
+        'enabled' => true,
+        'mock' => false,
+    ],
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
         'icon' => 'icon-twitter',
         'enabled' => false,
+        'mock' => false
+    ],
+    'paypal' => [
+        'developers' => 'https://developer.paypal.com/docs/api/overview/',
+        'icon' => 'icon-paypal',
+        'enabled' => true,
+        'mock' => false
+    ],
+    'bitly' => [
+        'developers' => 'https://dev.bitly.com/v4_documentation.html',
+        'icon' => 'icon-bitly',
+        'enabled' => true,
         'mock' => false
     ],
     // Keep Last
