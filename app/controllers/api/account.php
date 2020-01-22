@@ -213,7 +213,7 @@ $utopia->get('/v1/account/logs')
     );
 
 $utopia->post('/v1/account')
-    ->desc('Create a new account')
+    ->desc('Create Account')
     ->label('webhook', 'account.create')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'account')

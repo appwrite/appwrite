@@ -1,1 +1,0 @@
-Use this endpoint to resend your invitation email for a user to join a team.
