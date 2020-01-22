@@ -699,8 +699,8 @@ $utopia->patch('/v1/account/email')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
-    ->param('email', '', function () { return new Email(); }, 'Email Address')
-    ->param('password', '', function () { return new Password(); }, 'User Password')
+    ->param('email', '', function () { return new Email(); }, 'Email address')
+    ->param('password', '', function () { return new Password(); }, 'User password')
     ->action(
         function ($email, $password) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
