@@ -16,8 +16,6 @@ use Auth\OAuth;
 class Twitter extends OAuth
 {
 
-
-
     /**
      * @var array
      */
@@ -121,7 +119,7 @@ class Twitter extends OAuth
         $this->buildOAuthData();
         $header = $this->buildOAuthHeader();
 
-        $response = request($this->method, $this->endpoint, [$header]);
+        $response = $this->request($this->method, $this->endpoint, [$header]);
 
         $buffer = [];
         parse_str($response, $buffer);
@@ -143,7 +141,7 @@ class Twitter extends OAuth
             'oauth_verifier' => $this->oauthVerifier
         ]);
 
-        $response = request($this->method, $this->endpoint, [], $payload);
+        $response = $this->request($this->method, $this->endpoint, [], $payload);
 
         if ($response) {
             $buffer = [];
@@ -254,7 +252,7 @@ class Twitter extends OAuth
             $this->buildOAuthData($params, true);
             $header = $this->buildOAuthHeader();
 
-            $response = request($this->method, $this->endpoint . '?' . http_build_query($params), [$header]);
+            $response = $this->request($this->method, $this->endpoint . '?' . http_build_query($params), [$header]);
 
             $this->user = json_decode($response, true);
         }
