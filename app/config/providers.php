@@ -43,12 +43,6 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
-    'twitter' => [
-        'developers' => 'https://developer.twitter.com/',
-        'icon' => 'icon-twitter',
-        'enabled' => true,
-        'mock' => false,
-    ],
     'linkedin' => [
         'developers' => 'https://developer.linkedin.com/',
         'icon' => 'icon-linkedin',
@@ -124,7 +118,7 @@ return [
     'twitter' => [
         'developers' => 'https://developer.twitter.com/',
         'icon' => 'icon-twitter',
-        'enabled' => false,
+        'enabled' => true,
         'mock' => false
     ],
     'paypal' => [
