@@ -832,47 +832,6 @@ $utopia->delete('/v1/account')
         }
     );
 
-$utopia->delete('/v1/account/sessions')
-    ->desc('Delete All Account Sessions')
-    ->label('scope', 'account')
-    ->label('webhook', 'account.sessions.delete')
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteAccountSessions')
-    ->label('sdk.description', '/docs/references/account/delete-sessions.md')
-    ->label('abuse-limit', 100)
-    ->action(
-        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
-            $tokens = $user->getAttribute('tokens', []);
-
-            foreach ($tokens as $token) { /* @var $token Document */
-                if (!$projectDB->deleteDocument($token->getUid())) {
-                    throw new Exception('Failed to remove token from DB', 500);
-                }
-
-                $audit
-                    ->setParam('event', 'account.sessions.delete')
-                    ->setParam('resource', '/user/'.$user->getUid())
-                ;
-
-                $webhook
-                    ->setParam('payload', [
-                        'name' => $user->getAttribute('name', ''),
-                        'email' => $user->getAttribute('email', ''),
-                    ])
-                ;
-
-                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $response
-                        ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                        ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
-                    ;
-                }
-            }
-
-            $response->noContent();
-        }
-    );
-
 $utopia->delete('/v1/account/sessions/:id')
     ->desc('Delete Account Session')
     ->label('scope', 'account')
@@ -947,6 +906,47 @@ $utopia->delete('/v1/account/sessions/current')
                 ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
                 ->noContent()
             ;
+        }
+    );
+
+    $utopia->delete('/v1/account/sessions')
+    ->desc('Delete All Account Sessions')
+    ->label('scope', 'account')
+    ->label('webhook', 'account.sessions.delete')
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'deleteAccountSessions')
+    ->label('sdk.description', '/docs/references/account/delete-sessions.md')
+    ->label('abuse-limit', 100)
+    ->action(
+        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
+            $tokens = $user->getAttribute('tokens', []);
+
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (!$projectDB->deleteDocument($token->getUid())) {
+                    throw new Exception('Failed to remove token from DB', 500);
+                }
+
+                $audit
+                    ->setParam('event', 'account.sessions.delete')
+                    ->setParam('resource', '/user/'.$user->getUid())
+                ;
+
+                $webhook
+                    ->setParam('payload', [
+                        'name' => $user->getAttribute('name', ''),
+                        'email' => $user->getAttribute('email', ''),
+                    ])
+                ;
+
+                if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                    $response
+                        ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
+                        ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                    ;
+                }
+            }
+
+            $response->noContent();
         }
     );
 
