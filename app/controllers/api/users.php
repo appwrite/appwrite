@@ -115,7 +115,7 @@ $utopia->get('/v1/users/:userId')
     );
 
 $utopia->get('/v1/users/:userId/prefs')
-    ->desc('Get User Prefs')
+    ->desc('Get User Preferences')
     ->label('scope', 'users.read')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getUserPrefs')
@@ -379,7 +379,7 @@ $utopia->patch('/v1/users/:userId/status')
     );
 
 $utopia->patch('/v1/users/:userId/prefs')
-    ->desc('Update User Prefs')
+    ->desc('Update User Preferences')
     ->label('scope', 'users.write')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateUserPrefs')
