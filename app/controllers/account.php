@@ -80,7 +80,7 @@ $utopia->get('/v1/account/sessions')
     ->action(
         function () use ($response, $user) {
             $tokens = $user->getAttribute('tokens', []);
-            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $reader = new Reader(__DIR__.'/../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $sessions = [];
             $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
             $index = 0;
@@ -158,7 +158,7 @@ $utopia->get('/v1/account/security')
                 'account.update.password',
             ]);
 
-            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $reader = new Reader(__DIR__.'/../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $output = [];
 
             foreach ($logs as $i => &$log) {
@@ -183,7 +183,7 @@ $utopia->get('/v1/account/security')
                 ];
 
                 try {
-                    $record = $reader->country($log['ip']);
+                    $record = $reader->country('79.176.229.216');
                     $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
                     $output[$i]['geo']['country'] = $record->country->name;
                     $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
