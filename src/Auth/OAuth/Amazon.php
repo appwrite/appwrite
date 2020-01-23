@@ -16,6 +16,13 @@ class Amazon extends OAuth
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = [
+        "profile"
+    ];
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -39,12 +46,13 @@ class Amazon extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://www.amazon.com/ap/oa?' .
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&response_type=code'.
-            '&state='.urlencode(json_encode($this->state)).
-            '&scope=profile';
+        return 'https://www.amazon.com/ap/oa?'.http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'scope' => implode(' ', $this->getScopes()),
+                'state' => json_encode($this->state),
+                'redirect_uri' => $this->callback
+            ]);
     }
 
     /**
@@ -59,11 +67,13 @@ class Amazon extends OAuth
             'POST',
             'https://api.amazon.com/auth/o2/token',
             $headers,
-            'code=' . urlencode($code) .
-            '&client_id=' . urlencode($this->appID) .
-            '&client_secret=' . urlencode($this->appSecret).
-            '&redirect_uri='.urlencode($this->callback).
-            '&grant_type=authorization_code'
+            http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID ,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback ,
+                'grant_type' => 'authorization_code'
+            ])
         );
         $accessToken = json_decode($accessToken, true);
 

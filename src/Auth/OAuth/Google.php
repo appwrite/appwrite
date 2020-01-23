@@ -14,6 +14,15 @@ class Google extends OAuth
      * @var string
      */
     protected $version = 'v4';
+
+    /**
+     * @var array
+     */
+    protected $scopes = [
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile'
+    ];
+
     /**
      * @var array
      */
@@ -32,12 +41,13 @@ class Google extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://accounts.google.com/o/oauth2/v2/auth?'.
-            'client_id='.urlencode($this->appID).
-            '&redirect_uri='.urlencode($this->callback).
-            '&scope=https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile'.
-            '&state='.urlencode(json_encode($this->state)).
-            '&response_type=code';
+        return 'https://accounts.google.com/o/oauth2/v2/auth?'. http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => implode(' ', $this->getScopes()),
+            'state' => json_encode($this->state),
+            'response_type' => 'code'
+        ]);
     }
 
     /**
@@ -49,13 +59,14 @@ class Google extends OAuth
     {
         $accessToken = $this->request(
             'POST',
-            'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.
-                'code='.urlencode($code).
-                '&client_id='.urlencode($this->appID).
-                '&client_secret='.urlencode($this->appSecret).
-                '&redirect_uri='.urlencode($this->callback).
-                '&scope='.
-                '&grant_type=authorization_code'
+            'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.http_build_query([
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'scope' => null,
+                'grant_type' => 'authorization_code'
+            ])
         );
 
         $accessToken = json_decode($accessToken, true);

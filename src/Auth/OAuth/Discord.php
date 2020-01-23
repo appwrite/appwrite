@@ -20,7 +20,7 @@ class Discord extends OAuth
     protected $user = [];
 
 
-    protected $scope = [
+    protected $scopes = [
             'identify',
             'email'
     ];
@@ -42,7 +42,7 @@ class Discord extends OAuth
             http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->scope),
+                'scope' => implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback
             ]);
 

@@ -3,6 +3,7 @@
 global $utopia, $register, $response, $user, $audit, $project, $projectDB, $providers;
 
 use Utopia\Exception;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
 use Utopia\Audit\Audit;
@@ -59,12 +60,9 @@ $utopia->get('/v1/account/prefs')
         function () use ($response, $user) {
             $prefs = $user->getAttribute('prefs', '{}');
 
-            if (empty($prefs)) {
-                $prefs = '[]';
-            }
-
             try {
                 $prefs = json_decode($prefs, true);
+                $prefs = ($prefs) ? $prefs : [];
             } catch (\Exception $error) {
                 throw new Exception('Failed to parse prefs', 500);
             }
@@ -82,7 +80,7 @@ $utopia->get('/v1/account/sessions')
     ->action(
         function () use ($response, $user) {
             $tokens = $user->getAttribute('tokens', []);
-            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $reader = new Reader(__DIR__.'/../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $sessions = [];
             $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
             $index = 0;
@@ -160,7 +158,7 @@ $utopia->get('/v1/account/security')
                 'account.update.password',
             ]);
 
-            $reader = new Reader(__DIR__.'/../db/GeoLite2/GeoLite2-Country.mmdb');
+            $reader = new Reader(__DIR__.'/../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $output = [];
 
             foreach ($logs as $i => &$log) {
@@ -185,7 +183,7 @@ $utopia->get('/v1/account/security')
                 ];
 
                 try {
-                    $record = $reader->country($log['ip']);
+                    $record = $reader->country('79.176.229.216');
                     $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
                     $output[$i]['geo']['country'] = $record->country->name;
                     $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
@@ -302,12 +300,14 @@ $utopia->patch('/v1/account/prefs')
     ->label('scope', 'account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
-    ->param('prefs', '', function () { return new \Utopia\Validator\Mock();}, 'Prefs key-value JSON object string.')
+    ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->action(
         function ($prefs) use ($response, $user, $projectDB, $audit) {
+            $old = json_decode($user->getAttribute('prefs', '{}'), true);
+            $old = ($old) ? $old : [];
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
-                'prefs' => json_encode(array_merge(json_decode($user->getAttribute('prefs', '{}'), true), $prefs)),
+                'prefs' => json_encode(array_merge($old, $prefs)),
             ]));
 
             if (false === $user) {
