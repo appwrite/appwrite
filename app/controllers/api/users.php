@@ -158,7 +158,7 @@ $utopia->get('/v1/users/:userId/sessions')
             }
 
             $tokens = $user->getAttribute('tokens', []);
-            $reader = new Reader(__DIR__.'/../db/DBIP/dbip-country-lite-2020-01.mmdb');
+            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $sessions = [];
             $index = 0;
             $countries = Locale::getText('countries');
@@ -228,7 +228,7 @@ $utopia->get('/v1/users/:userId/logs')
 
             $logs = $audit->getLogsByUser($user->getUid());
 
-            $reader = new Reader(__DIR__.'/../db/DBIP/dbip-country-lite-2020-01.mmdb');
+            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $output = [];
 
             foreach ($logs as $i => &$log) {

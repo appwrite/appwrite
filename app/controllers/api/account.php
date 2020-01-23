@@ -173,7 +173,7 @@ $utopia->get('/v1/account/logs')
                 'account.sessions.delete',
             ]);
 
-            $reader = new Reader(__DIR__.'/../db/DBIP/dbip-country-lite-2020-01.mmdb');
+            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $output = [];
 
             foreach ($logs as $i => &$log) {
