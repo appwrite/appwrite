@@ -21,6 +21,7 @@ class Twitter extends OAuth
      */
     protected $user = [];
 
+    protected $scopes = [];
 
     private $requestTokenURL = 'https://api.twitter.com/oauth/request_token';
     private $accessTokenURL = 'https://api.twitter.com/oauth/access_token';
@@ -37,13 +38,20 @@ class Twitter extends OAuth
     private $method = '';
     private $endpoint = '';
 
-
+    /**
+     * [buildOAuthData description]
+     * Generates the array for OAuth v1 authentication
+     * @param  array   $params       POST or GET data as array
+     * @param  boolean $isApiRequest Used for making api authenticated requests
+     * @return void
+     */
     private function buildOAuthData(array $params = [], bool $isApiRequest = false)
     {
         $time = time();
+        $code = md5($time);
         $this->oauth = [
-            'oauth_nonce' => md5($time),
-            'oauth_callback' => $this->callback,
+            'oauth_nonce' => $code,
+            'oauth_callback' => $this->callback . '?code=' . $code . '&state=' . rawurlencode( json_encode($this->state) ),
             'oauth_consumer_key' => $this->appID,
             'oauth_signature_method' => 'HMAC-SHA1',
             'oauth_timestamp' => $time,
@@ -66,6 +74,10 @@ class Twitter extends OAuth
 
     }
 
+    /**
+     * [buildOAuthHeader description]
+     * @return string   Returns the OAuth v1 authentication header
+     */
     private function buildOAuthHeader():string
     {
         $buffer = [];
@@ -88,6 +100,10 @@ class Twitter extends OAuth
         return 'Authorization: OAuth ' . implode(', ', $buffer);
     }
 
+    /**
+     * [createSignatureBaseString description]
+     * @return string [description]
+     */
     private function createSignatureBaseString():string
     {
         $buffer = [];
@@ -100,17 +116,28 @@ class Twitter extends OAuth
         return strtoupper($this->method) . '&' . rawurlencode($this->endpoint) . '&' . rawurlencode($parameterString);
     }
 
+    /**
+     * [createSigningKey description]
+     * @return string [description]
+     */
     private function createSigningKey():string
     {
         return rawurlencode($this->appSecret) . "&" . (empty($this->oauthTokenSecret) ? '' : rawurlencode($this->oauthTokenSecret));
     }
 
+    /**
+     * [createSignature description]
+     * @return string [description]
+     */
     private function createSignature():string
     {
         return base64_encode(hash_hmac('sha1', $this->createSignatureBaseString(), $this->createSigningKey(), true));
     }
 
-
+    /**
+     * [requestOAuthRequestToken description]
+     * @return [type] [description]
+     */
     private function requestOAuthRequestToken()
     {
         $this->method = 'POST';
@@ -124,12 +151,15 @@ class Twitter extends OAuth
         $buffer = [];
         parse_str($response, $buffer);
 
-        if (is_array($buffer)) {
+        if (!empty($buffer)) {
             $this->oauthUnauthorizedToken = $buffer['oauth_token'];
-            $this->oauthVerifier = $buffer['oauth_verifier'];
         }
     }
 
+    /**
+     * [requestOAuthAccessToken description]
+     * @return [type] [description]
+     */
     private function requestOAuthAccessToken()
     {
         $this->method = 'POST';
@@ -138,7 +168,7 @@ class Twitter extends OAuth
         $payload = http_build_query([
             'oauth_consumer_key' => $this->appID,
             'oauth_token' => $this->oauthUnauthorizedToken,
-            'oauth_verifier' => $this->oauthVerifier
+            'oauth_verifier' => $this->oauthVerifier,
         ]);
 
         $response = $this->request($this->method, $this->endpoint, [], $payload);
@@ -150,6 +180,13 @@ class Twitter extends OAuth
             $this->oauthTokenSecret = $buffer['oauth_token_secret'];
         }
 
+    }
+
+
+    public function setTransientTokens($token, $verifier)
+    {
+        $this->oauthUnauthorizedToken = $token;
+        $this->oauthVerifier = $verifier;
     }
 
     /**
@@ -165,11 +202,8 @@ class Twitter extends OAuth
      */
     public function getLoginURL():string
     {
-        if ( empty($this->oauthToken) ) {
-            $this->requestOAuthRequestToken();
-            return $this->authorizeURL . "?oauth_token=" . $this->oauthUnauthorizedToken;
-        }
-        return '';
+        $this->requestOAuthRequestToken();
+        return $this->authorizeURL . "?oauth_token=" . $this->oauthUnauthorizedToken;
     }
 
     /**
@@ -180,10 +214,11 @@ class Twitter extends OAuth
     public function getAccessToken(string $code):string
     {
         $this->requestOAuthAccessToken();
-        $code = '';
+
         if ( !empty($this->oauthToken) ) {
-            return $this->oauthToken;
+            return $this->oauthToken . '#' . $this->oauthTokenSecret;
         }
+
         return '';
     }
 
@@ -243,12 +278,17 @@ class Twitter extends OAuth
     protected function getUser(string $accessToken)
     {
         if ( empty($this->user) ) {
+
             $this->method = 'GET';
             $this->endpoint = $this->showUserURL;
+
             $params = [
                 'include_email' => 'true',
                 'include_entities' => 'true'
             ];
+
+            list($this->oauthToken, $this->oauthTokenSecret) = explode('#', $accessToken);
+
             $this->buildOAuthData($params, true);
             $header = $this->buildOAuthHeader();
 

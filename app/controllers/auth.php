@@ -440,10 +440,18 @@ $utopia->get('/v1/auth/login/oauth/callback/:provider/:projectId')
     ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth code')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params', true)
+    ->param('oauth_token', '', function () { return new Text(1024); }, 'OAuth v1 Transitional Token', true)
+    ->param('oauth_verifier', '', function () { return new Text(1024); }, 'OAuth v1 Transitional Verifier', true)
     ->action(
-        function ($projectId, $provider, $code, $state) use ($response, $request, $domain) {
+        function ($projectId, $provider, $code, $state, $oauth_token, $oauth_verifier) use ($response, $request, $domain) {
             $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/auth/login/oauth/'.$provider.'/redirect?'
-                .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+                .http_build_query([
+                    'project' => $projectId,
+                    'code' => $code,
+                    'state' => $state,
+                    'oauth_token' => $oauth_token,
+                    'oauth_verifier' => $oauth_verifier,
+                ]));
         }
     );
 
@@ -458,8 +466,10 @@ $utopia->get('/v1/auth/login/oauth/:provider/redirect')
     ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth code')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth state params', true)
+    ->param('oauth_token', '', function () { return new Text(1024); }, 'OAuth v1 Transitional Token', true)
+    ->param('oauth_verifier', '', function () { return new Text(1024); }, 'OAuth v1 Transitional Verifier', true)
     ->action(
-        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
+        function ($provider, $code, $state, $oauth_token, $oauth_verifier) use ($response, $request, $user, $projectDB, $project, $audit) {
             $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/auth/login/oauth/callback/'.$provider.'/'.$project->getUid();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
@@ -498,6 +508,10 @@ $utopia->get('/v1/auth/login/oauth/:provider/redirect')
 
             if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
                 throw new Exception('Invalid redirect URL for failure login', 400);
+            }
+
+            if ($provider == 'twitter' && method_exists($oauth, "setTransientTokens")) {
+                $oauth->setTransientTokens($oauth_token, $oauth_verifier);
             }
 
             $accessToken = $oauth->getAccessToken($code);
