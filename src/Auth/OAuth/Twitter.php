@@ -14,16 +14,7 @@ use Auth\OAuth;
 class Twitter extends OAuth
 {
 
-    /**
-     * @var string
-     */
-    private $endpoint = 'https://api.twitter.com/oauth/';
 
-    /**
-     * will store the token from requestToken
-     * @var string
-     */
-    private $oauthToken = '';
 
     /**
      * @var array
@@ -31,29 +22,7 @@ class Twitter extends OAuth
     protected $user = [];
 
 
-    private function requestToken():string
-    {
-        $url = $this->endpoint . 'request_token';
-        $time = time();
-        $params = [
-            'oauth_nonce' => trim(base64_encode($time, '=')),
-            'oauth_callback' => $this->callback,
-            'oauth_signature_method' => 'HMAC-SHA1',
-            'oauth_timestamp' => $time,
-            'oauth_consumer_key' => $this->appID,
-            'oauth_signature' => $this->appSecret,
-            'oauth_version' => '1.0'
-        ];
-        $header = 'OAuth ' . implode(',', $params);
 
-        $response = $this->request('POST', $url, [$header]);
-
-        if ($response) {
-
-        }
-
-        return '';
-    }
 
     /**
      * @return string
@@ -68,10 +37,7 @@ class Twitter extends OAuth
      */
     public function getLoginURL():string
     {
-        return $this->endpoint . 'authorize?'.
-            http_build_query([
-                'oauth_token' => 'code',
-            ]);
+
     }
 
     /**
@@ -81,22 +47,7 @@ class Twitter extends OAuth
      */
     public function getAccessToken(string $code):string
     {
-        $result = json_decode($this->request(
-            'POST',
-            $this->endpoint . 'token',
-            [],
-            http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "code" => $code,
-                "grant_type" => "authorization_code",
-                "redirect_uri" => $this->callback
-            ])
-        ), true);
 
-        if (isset($result['access_token'])) {
-            return $result['access_token'];
-        }
 
         return '';
     }
@@ -157,8 +108,7 @@ class Twitter extends OAuth
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET',
-                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true)['data']['0'];
+
         }
 
         return $this->user;
