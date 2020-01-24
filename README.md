@@ -76,7 +76,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ### Services
 
-* [**Account**](https://appwrite.io/docs/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sigin methods, and security audit log.
+* [**Account**](https://appwrite.io/docs/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sigin methods, and security logs.
 * [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
 * [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and user roles within a team.
 * [**Database**](https://appwrite.io/docs/database) - Manage database collections and documents. Read, create, update and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
