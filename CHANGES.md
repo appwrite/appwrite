@@ -9,7 +9,6 @@
 * Added new webhooks events
 * Normailized all webhooks event names
 * Added support for SameSite cookie option with fallback cookie for old clients
-* Merged Auth and Account service for making the API more REST compatible
 * Added a new Discord OAuth adapter
 * Added a new Twitch OAuth adapter
 * Added a new Spotify OAuth adapter
@@ -30,6 +29,10 @@
 * Fixed bug where tags element would ignore tab key for parsing new tags
 * Fixed OAuth login error saying project UID is missing when its not
 * Fixed wrong input validation for user preferences
+
+## Breaking Changes
+
+* Merged Auth and Account service route to make the API REST compatible
 
 # Version 0.4.0 (PRE-RELEASE)
 
