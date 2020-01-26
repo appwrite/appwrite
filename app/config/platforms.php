@@ -12,8 +12,9 @@ return [
         'name' => 'Web',
         'enabled' => true,
         'beta' => false,
-        'language' => [
+        'languages' => [
             [
+                'key' => 'javascript',
                 'name' => 'JS',
                 'repository' => 'https://github.com/appwrite/sdk-for-js',
                 'enabled' => true,
@@ -22,6 +23,7 @@ return [
                 'source' => realpath(__DIR__ . '/../sdks/js'),
             ],
             [
+                'key' => 'typescript',
                 'name' => 'TypeScript',
                 'repository' => '',
                 'enabled' => true,
@@ -36,8 +38,9 @@ return [
         'name' => 'iOS',
         'enabled' => false,
         'beta' => false,
-        'language' => [
+        'languages' => [
             [
+                'key' => 'swift',
                 'name' => 'Swift',
                 'repository' => '',
                 'enabled' => false,
@@ -46,6 +49,7 @@ return [
                 'source' => '',
             ],
             [
+                'key' => 'objective-c',
                 'name' => 'Objective C',
                 'repository' => '',
                 'enabled' => false,
@@ -60,8 +64,9 @@ return [
         'name' => 'Android',
         'enabled' => false,
         'beta' => false,
-        'language' => [
+        'languages' => [
             [
+                'key' => 'kotlin',
                 'name' => 'Kotlin',
                 'repository' => '',
                 'enabled' => false,
@@ -70,6 +75,7 @@ return [
                 'source' => false,
             ],
             [
+                'name' => 'java',
                 'name' => 'Java',
                 'repository' => '',
                 'enabled' => false,
@@ -84,8 +90,9 @@ return [
         'name' => 'Server',
         'enabled' => true,
         'beta' => false,
-        'language' => [
+        'languages' => [
             [
+                'key' => 'nodejs',
                 'name' => 'Node.js',
                 'repository' => 'https://github.com/appwrite/sdk-for-node',
                 'enabled' => true,
@@ -94,6 +101,7 @@ return [
                 'source' => realpath(__DIR__ . '/../sdks/node'),
             ],
             [
+                'key' => 'php',
                 'name' => 'PHP',
                 'repository' => 'https://github.com/appwrite/sdk-for-php',
                 'enabled' => true,
@@ -101,6 +109,7 @@ return [
                 'source' => realpath(__DIR__ . '/../sdks/php'),
             ],
             [
+                'key' => 'python',
                 'name' => 'Python',
                 'repository' => 'https://github.com/appwrite/sdk-for-python',
                 'enabled' => true,
@@ -109,6 +118,7 @@ return [
                 'source' => realpath(__DIR__ . '/../sdks/python'),
             ],
             [
+                'key' => 'go',
                 'name' => 'Go',
                 'repository' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => true,
@@ -117,6 +127,7 @@ return [
                 'source' => realpath(__DIR__ . '/../sdks/go'),
             ],
             [
+                'key' => 'ruby',
                 'name' => 'Ruby',
                 'repository' => 'https://github.com/appwrite/sdk-for-ruby',
                 'enabled' => true,
