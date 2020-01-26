@@ -6,6 +6,7 @@ $protocol   = $this->getParam('protocol', '');
 $domain     = $this->getParam('domain', '');
 $api        = $this->getParam('api', '');
 $project    = $this->getParam('project', 'console');
+$platforms  = $this->getParam('platforms', []);
 $version    = $this->getParam('version', '0.0.0');
 $isDev      = $this->getParam('isDev', false);
 $litespeed  = $this->getParam('litespeed', true);
@@ -60,6 +61,7 @@ $canonical  = $this->getParam('canonical', '');
             HOME: '<?php echo $this->escape($this->getParam('home')); ?>',
             API: '<?php echo $api; ?>/v1',
             PROJECT: '<?php echo $project; ?>',
+            PLATFORMS: '<?php echo $platforms; ?>',
             LOCALE: '<?php echo $this->escape(Locale::getText('settings.locale')); ?>',
             PREFIX: '<?php echo $this->escape($this->getParam('prefix')); ?>',
             ROLES: <?PHP echo json_encode($this->getParam('roles', [])); ?>,
