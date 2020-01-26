@@ -14,6 +14,14 @@ $analytics  = $this->getParam('analytics', 'UA-26264668-9');
 $env        = $this->getParam('env', '');
 $canonical  = $this->getParam('canonical', '');
 
+if(!empty($platforms)) {
+    $platforms = array_map(function($platform) {
+        return array_map(function($language) {
+            return $language['key'];
+        }, $platform['languages']);
+    }, $platforms);
+}
+
 ?>
 <!DOCTYPE html><!--
 <?php echo Locale::getText('settings.inspire'); ?>

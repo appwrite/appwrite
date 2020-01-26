@@ -62,7 +62,7 @@ return [
     [
         'label' => 'C#',
         'versions' => [],
-        'logo' => 'dotnet.svg',
+        'logo' => 'csharp.svg',
         'link' => 'https://...',
         'tag' => 'Soon',
     ],
