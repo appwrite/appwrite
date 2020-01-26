@@ -2,7 +2,7 @@
 
 include_once 'shared/web.php';
 
-global $utopia, $response, $request, $layout, $version, $providers, $sdks;
+global $utopia, $response, $request, $layout, $version, $providers, $sdks, $platforms;
 
 use Utopia\View;
 
@@ -17,6 +17,7 @@ $layout
     ->setParam('title', APP_NAME)
     ->setParam('description', '')
     ->setParam('class', 'home')
+    ->setParam('platforms', $platforms)
     ->setParam('header', [$header])
     ->setParam('footer', [$footer])
 ;
