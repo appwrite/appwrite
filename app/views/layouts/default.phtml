@@ -16,7 +16,6 @@ $canonical  = $this->getParam('canonical', '');
 
 if(!empty($platforms)) {
     $platforms = array_map(function($platform) {
-        return $platform;
         return array_map(function($language) {
             return $language['key'];
         }, $platform['languages']);
