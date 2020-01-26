@@ -75,7 +75,7 @@ return [
                 'source' => false,
             ],
             [
-                'name' => 'java',
+                'key' => 'java',
                 'name' => 'Java',
                 'repository' => '',
                 'enabled' => false,
