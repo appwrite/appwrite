@@ -136,7 +136,7 @@ PATCH https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/status
 
 Please note that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
 
-When not using the success or failure redirect arguments this endpoint will result with a 200 status code on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies needed for saving the account session token. **
+When not using the success or failure redirect arguments this endpoint will result with a 200 status code on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies needed for saving the account session key. **
 
 ### Parameters
 

@@ -52,7 +52,7 @@ $cli
                 $spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1');
 
                 $result = realpath(__DIR__.'/..').'/sdks/'.$language['key'];
-                $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'];
+                $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'.md');
                 $readme = ($readme) ? file_get_contents($readme) : '';
                 $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
@@ -149,85 +149,31 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     Console::error($exception->getMessage());
                 }
 
-                var_dump('rm -rf '.$target.' && \
+                $gitUrl = $language['gitUrl'];
+                $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
+
+                exec('rm -rf '.$target.' && \
                     mkdir -p '.$target.' && \
                     cd '.$target.' && \
                     git init && \
-                    git remote add origin '.$language['gitUrl'].' && \
+                    git remote add origin '.$gitUrl.' && \
                     git fetch && \
-                    git pull '.$language['gitUrl'].' && \
+                    git pull '.$gitUrl.' && \
                     rm -rf '.$target.'/* && \
-                    cp -r '.$result.' '.$target.' && \
+                    cp -r '.$result.'/ '.$target.'/ && \
                     git add . && \
                     git commit -m "'.$message.'" && \
                     git push -u origin master');
 
-                Console::success("Pushed {$language['name']} SDK to {$language['url']}");
+                Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
+         
+                exec('rm -rf '.$target);
+
+                Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
             }
         }
+
         exit();
-
-        foreach ($clients as $name => $client) {
-
-            
-
-            $sdk
-                ->setLicense($license)
-                ->setLicenseContent($licenseContent)
-                ->setVersion($client['version'])
-                ->setGitRepo($client['gitRepo'])
-                ->setGitURL($client['gitURL'])
-                ->setGitRepoName($client['gitRepoName'])
-                ->setGitUserName($client['gitUserName'])
-                ->setLogo('https://appwrite.io/images/github.png')
-                ->setURL('https://appwrite.io')
-                ->setShareText('Appwrite is a backend as a service for building web or mobile apps')
-                ->setShareURL('http://appwrite.io')
-                ->setShareTags('JS,javascript,reactjs,angular,ios,android')
-                ->setShareVia('appwrite_io')
-                ->setWarning($client['warning'])
-                ->setReadme(($client['readme'] && file_exists($client['readme'])) ? file_get_contents($client['readme']) : '');
-
-            try {
-                $sdk->generate($client['result']);
-            } catch (Exception $exception) {
-                Console::error($exception->getMessage());
-            } catch (Throwable $exception) {
-                Console::error($exception->getMessage());
-            }
-
-            var_dump('rm -rf '.$target.' && \
-            mkdir -p '.$target.' && \
-            cd '.$target.' && \
-            git init && \
-            git remote add origin '.$client['gitRepo'].' && \
-            git fetch && \
-            git pull '.$client['gitRepo'].' && \
-            rm -rf '.$target.'/* && \
-            cp -r '.$client['result'].' '.$target.' && \
-            git add . && \
-            git commit -m "Initial commit" && \
-            git push -u origin master');
-
-            exec('rm -rf '.$target.' && \
-                mkdir -p '.$target.' && \
-                cd '.$target.' && \
-                git init && \
-                git remote add origin '.$client['gitRepo'].' && \
-                git fetch && \
-                git pull '.$client['gitRepo'].' && \
-                rm -rf '.$target.'/* && \
-                cp -r '.$client['result'].' '.$target.' && \
-                git add . && \
-                git commit -m "Initial commit" && \
-                git push -u origin master');
-
-            Console::success("Pushing {$name} SDK to {$client['gitRepo']}");
-
-            exec('rm -rf '.$target);
-
-            Console::success("Remove temp directory '{$target}' for {$name} SDK");
-        }
     });
 
 $cli->run();

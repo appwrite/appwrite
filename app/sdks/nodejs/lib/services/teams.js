@@ -215,7 +215,7 @@ class Teams extends Service {
      * result with a 200 status code on success and with 401 status error on
      * failure. This behavior was applied to help the web clients deal with
      * browsers who don't allow to set 3rd party HTTP cookies needed for saving
-     * the account session token.
+     * the account session key.
      *
      * @param string teamId
      * @param string inviteId

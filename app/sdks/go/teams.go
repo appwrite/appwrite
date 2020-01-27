@@ -145,7 +145,7 @@ func (srv *Teams) DeleteTeamMembership(TeamId string, InviteId string) (map[stri
 // result with a 200 status code on success and with 401 status error on
 // failure. This behavior was applied to help the web clients deal with
 // browsers who don't allow to set 3rd party HTTP cookies needed for saving
-// the account session token.
+// the account session key.
 func (srv *Teams) UpdateTeamMembershipStatus(TeamId string, InviteId string, UserId string, Secret string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{teamId}", TeamId, "{inviteId}", InviteId)
 	path := r.Replace("/teams/{teamId}/memberships/{inviteId}/status")

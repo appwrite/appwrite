@@ -214,12 +214,11 @@ class Account extends Service {
     /**
      * Password Recovery
      *
-     * Sends the user an email with a temporary secret token for password reset.
+     * Sends the user an email with a temporary secret key for password reset.
      * When the user clicks the confirmation link he is redirected back to your
-     * app password reset redirect URL with a secret token and email address
-     * values attached to the URL query string. Use the query string params to
-     * submit a request to the /auth/password/reset endpoint to complete the
-     * process.
+     * app password reset URL with the secret key and email address values
+     * attached to the URL query string. Use the query string params to submit a
+     * request to the /auth/password/reset endpoint to complete the process.
      *
      * @param string email
      * @param string url
@@ -242,7 +241,7 @@ class Account extends Service {
      * Password Reset
      *
      * Use this endpoint to complete the user account password reset. Both the
-     * **userId** and **token** arguments will be passed as query parameters to
+     * **userId** and **secret** arguments will be passed as query parameters to
      * the redirect URL you have provided when sending your request to the
      * /auth/recovery endpoint.
      * 
@@ -417,10 +416,10 @@ class Account extends Service {
      *
      * Use this endpoint to send a verification message to your user email address
      * to confirm they are the valid owners of that address. Both the **userId**
-     * and **token** arguments will be passed as query parameters to the URL you
+     * and **secret** arguments will be passed as query parameters to the URL you
      * have provider to be attached to the verification email. The provided URL
      * should redirect the user back for your app and allow you to complete the
-     * verification process by verifying both the **userId** and **token**
+     * verification process by verifying both the **userId** and **secret**
      * parameters. Learn more about how to [complete the verification
      * process](/docs/account#updateAccountVerification). 
      * 
@@ -448,7 +447,7 @@ class Account extends Service {
      * Updated Verification
      *
      * Use this endpoint to complete the user email verification process. Use both
-     * the **userId** and **token** parameters that were attached to your app URL
+     * the **userId** and **secret** parameters that were attached to your app URL
      * to verify the user email ownership. If confirmed this route will return a
      * 200 status code.
      *

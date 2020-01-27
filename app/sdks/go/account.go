@@ -138,12 +138,12 @@ func (srv *Account) UpdatePrefs(Prefs string) (map[string]interface{}, error) {
 	return srv.client.Call("PATCH", path, nil, params)
 }
 
-// CreateAccountRecovery sends the user an email with a temporary secret token
+// CreateAccountRecovery sends the user an email with a temporary secret key
 // for password reset. When the user clicks the confirmation link he is
-// redirected back to your app password reset redirect URL with a secret token
-// and email address values attached to the URL query string. Use the query
-// string params to submit a request to the /auth/password/reset endpoint to
-// complete the process.
+// redirected back to your app password reset URL with the secret key and
+// email address values attached to the URL query string. Use the query string
+// params to submit a request to the /auth/password/reset endpoint to complete
+// the process.
 func (srv *Account) CreateAccountRecovery(Email string, Url string) (map[string]interface{}, error) {
 	path := "/account/recovery"
 
@@ -156,7 +156,7 @@ func (srv *Account) CreateAccountRecovery(Email string, Url string) (map[string]
 }
 
 // UpdateAccountRecovery use this endpoint to complete the user account
-// password reset. Both the **userId** and **token** arguments will be passed
+// password reset. Both the **userId** and **secret** arguments will be passed
 // as query parameters to the redirect URL you have provided when sending your
 // request to the /auth/recovery endpoint.
 // 
@@ -269,11 +269,11 @@ func (srv *Account) DeleteAccountSession(Id string) (map[string]interface{}, err
 
 // CreateAccountVerification use this endpoint to send a verification message
 // to your user email address to confirm they are the valid owners of that
-// address. Both the **userId** and **token** arguments will be passed as
+// address. Both the **userId** and **secret** arguments will be passed as
 // query parameters to the URL you have provider to be attached to the
 // verification email. The provided URL should redirect the user back for your
 // app and allow you to complete the verification process by verifying both
-// the **userId** and **token** parameters. Learn more about how to [complete
+// the **userId** and **secret** parameters. Learn more about how to [complete
 // the verification process](/docs/account#updateAccountVerification). 
 // 
 // Please note that in order to avoid a [Redirect
@@ -291,8 +291,8 @@ func (srv *Account) CreateAccountVerification(Url string) (map[string]interface{
 }
 
 // UpdateAccountVerification use this endpoint to complete the user email
-// verification process. Use both the **userId** and **token** parameters that
-// were attached to your app URL to verify the user email ownership. If
+// verification process. Use both the **userId** and **secret** parameters
+// that were attached to your app URL to verify the user email ownership. If
 // confirmed this route will return a 200 status code.
 func (srv *Account) UpdateAccountVerification(UserId string, Secret string, PasswordB string) (map[string]interface{}, error) {
 	path := "/account/verification"
