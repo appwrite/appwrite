@@ -66,18 +66,18 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_team_members(self, team_id):
-        """Get Team Members"""
+    def get_team_memberships(self, team_id):
+        """Get Team Memberships"""
 
         params = {}
-        path = '/teams/{teamId}/members'
+        path = '/teams/{teamId}/memberships'
         path = path.replace('{teamId}', team_id)                
 
         return self.client.call('get', path, {
             'content-type': 'application/json',
         }, params)
 
-    def create_team_membership(self, team_id, email, roles, redirect, name=''):
+    def create_team_membership(self, team_id, email, roles, url, name=''):
         """Create Team Membership"""
 
         params = {}
@@ -86,7 +86,7 @@ class Teams(Service):
         params['email'] = email
         params['name'] = name
         params['roles'] = roles
-        params['redirect'] = redirect
+        params['url'] = url
 
         return self.client.call('post', path, {
             'content-type': 'application/json',
@@ -104,20 +104,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_team_membership_resend(self, team_id, invite_id, redirect):
-        """Create Team Membership (Resend)"""
-
-        params = {}
-        path = '/teams/{teamId}/memberships/{inviteId}/resend'
-        path = path.replace('{teamId}', team_id)                
-        path = path.replace('{inviteId}', invite_id)                
-        params['redirect'] = redirect
-
-        return self.client.call('post', path, {
-            'content-type': 'application/json',
-        }, params)
-
-    def update_team_membership_status(self, team_id, invite_id, user_id, secret, success='', failure=''):
+    def update_team_membership_status(self, team_id, invite_id, user_id, secret):
         """Update Team Membership Status"""
 
         params = {}
@@ -126,8 +113,6 @@ class Teams(Service):
         path = path.replace('{inviteId}', invite_id)                
         params['userId'] = user_id
         params['secret'] = secret
-        params['success'] = success
-        params['failure'] = failure
 
         return self.client.call('patch', path, {
             'content-type': 'application/json',

@@ -17,7 +17,6 @@
 
         // Set Client required headers
         clt.SetProject("")
-        clt.SetKey("")
 
         // Create a new Account service passing Client
         var srv := appwrite.Account{
@@ -25,7 +24,7 @@
         }
 
         // Call UpdatePrefs method and handle results
-        var res, err := srv.UpdatePrefs("{}")
+        var res, err := srv.UpdatePrefs("")
         if err != nil {
             panic(err)
         }

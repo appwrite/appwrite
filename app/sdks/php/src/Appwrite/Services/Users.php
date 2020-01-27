@@ -102,7 +102,7 @@ class Users extends Service
     }
 
     /**
-     * Get User Prefs
+     * Get User Preferences
      *
      * Get user preferences by its unique ID.
      *
@@ -122,7 +122,7 @@ class Users extends Service
     }
 
     /**
-     * Update User Prefs
+     * Update User Preferences
      *
      * Update user preferences by its unique ID. You can pass only the specific
      * settings you wish to update.

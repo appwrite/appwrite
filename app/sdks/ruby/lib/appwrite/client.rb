@@ -62,7 +62,17 @@ module Appwrite
         end
         
         def call(method, path = '', headers = {}, params = {})
-            uri = URI.parse(@endpoint + path + ((method == METHOD_GET) ? '?' + encode(params) : ''))
+            uri = URI.parse(@endpoint + path + ((method == METHOD_GET && params.length) ? '?' + encode(params) : ''))
+            return fetch(method, uri, headers, params)
+        end
+
+        protected
+
+        private
+
+        def fetch(method, uri, headers, params, limit = 5)
+            raise ArgumentError, 'Too Many HTTP Redirects' if limit == 0
+
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = (uri.scheme == 'https')
             payload = ''
@@ -83,13 +93,17 @@ module Appwrite
             rescue => error
                 raise 'Request Failed: '  + error.message
             end
+            
+            # Handle Redirects
+            if (response.class == Net::HTTPRedirection || response.class == Net::HTTPMovedPermanently)
+                location = response['location']
+                uri = URI.parse(uri.scheme + "://" + uri.host + "" + location)
+                
+                return fetch(method, uri, headers, {}, limit - 1)
+            end
 
             return JSON.parse(response.body);
         end
-
-        protected
-
-        private
 
         def encode(value, key = nil)
             case value

@@ -17,7 +17,6 @@
 
         // Set Client required headers
         clt.SetProject("")
-        clt.SetKey("")
 
         // Create a new Users service passing Client
         var srv := appwrite.Users{
@@ -25,7 +24,7 @@
         }
 
         // Call UpdateUserPrefs method and handle results
-        var res, err := srv.UpdateUserPrefs("[USER_ID]", "{}")
+        var res, err := srv.UpdateUserPrefs("[USER_ID]", "")
         if err != nil {
             panic(err)
         }

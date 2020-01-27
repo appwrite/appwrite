@@ -29,7 +29,7 @@ POST https://appwrite.io/v1/storage/files
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| files | file | Binary Files. |  |
+| file | file | Binary Files. |  |
 | read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 
@@ -97,7 +97,7 @@ GET https://appwrite.io/v1/storage/files/{fileId}/download
 GET https://appwrite.io/v1/storage/files/{fileId}/preview
 ```
 
-** Get file preview image. Currently, this method supports preview for image files (jpg, png, and gif), other supported formats, like pdf, docs, slides, and spreadsheets will return file icon image. You can also pass query string arguments for cutting and resizing your preview image. **
+** Get a file preview image. Currently, this method supports preview for image files (jpg, png, and gif), other supported formats, like pdf, docs, slides, and spreadsheets, will return the file icon image. You can also pass query string arguments for cutting and resizing your preview image. **
 
 ### Parameters
 

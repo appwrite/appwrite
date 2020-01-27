@@ -7,7 +7,6 @@ $client = new Client();
 
 $client
     ->setProject('')
-    ->setKey('')
 ;
 
 $database = new Database($client);

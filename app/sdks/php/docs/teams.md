@@ -75,10 +75,10 @@ DELETE https://appwrite.io/v1/teams/{teamId}
 | --- | --- | --- | --- |
 | teamId | string | **Required** Team unique ID. |  |
 
-## Get Team Members
+## Get Team Memberships
 
 ```http request
-GET https://appwrite.io/v1/teams/{teamId}/members
+GET https://appwrite.io/v1/teams/{teamId}/memberships
 ```
 
 ** Get team members by the team unique ID. All team members have read access for this list of resources. **
@@ -97,9 +97,9 @@ POST https://appwrite.io/v1/teams/{teamId}/memberships
 
 ** Use this endpoint to invite a new member to your team. An email with a link to join the team will be sent to the new member email address. If member doesn&#039;t exists in the project it will be automatically created.
 
-Use the redirect parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the /teams/{teamId}/memberships/{inviteId}/status endpoint to finally join the user to the team.
+Use the &#039;url&#039; parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the [Update Team Membership Status](/docs/teams#updateTeamMembershipStatus) endpoint to finally join the user to the team.
 
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface. **
+Please note that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface. **
 
 ### Parameters
 
@@ -109,7 +109,7 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 | email | string | New team member email address. |  |
 | name | string | New team member name. |  |
 | roles | array | Invite roles array. Learn more about [roles and permissions](/docs/permissions). |  |
-| redirect | string | Reset page to redirect user back to your app from the invitation email. |  |
+| url | string | URL to redirect the user back to your app from the invitation email. |  |
 
 ## Delete Team Membership
 
@@ -117,7 +117,7 @@ Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWA
 DELETE https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
 ```
 
-** This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member. **
+** This endpoint allows a user to leave a team or for a team owner to delete the membership of any other team member. You can also use this endpoint to delete a user membership even if he didn&#039;t accept it. **
 
 ### Parameters
 
@@ -125,22 +125,6 @@ DELETE https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
 | --- | --- | --- | --- |
 | teamId | string | **Required** Team unique ID. |  |
 | inviteId | string | **Required** Invite unique ID |  |
-
-## Create Team Membership (Resend)
-
-```http request
-POST https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/resend
-```
-
-** Use this endpoint to resend your invitation email for a user to join a team. **
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| teamId | string | **Required** Team unique ID. |  |
-| inviteId | string | **Required** Invite unique ID. |  |
-| redirect | string | Reset page to redirect user back to your app from the invitation email. |  |
 
 ## Update Team Membership Status
 
@@ -150,7 +134,7 @@ PATCH https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/status
 
 ** Use this endpoint to let user accept an invitation to join a team after he is being redirect back to your app from the invitation email. Use the success and failure URL&#039;s to redirect users back to your application after the request completes.
 
-Please notice that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
+Please note that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
 
 When not using the success or failure redirect arguments this endpoint will result with a 200 status code on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies needed for saving the account session token. **
 
@@ -162,6 +146,4 @@ When not using the success or failure redirect arguments this endpoint will resu
 | inviteId | string | **Required** Invite unique ID |  |
 | userId | string | User unique ID |  |
 | secret | string | Secret Key |  |
-| success | string | Redirect when registration succeed |  |
-| failure | string | Redirect when registration failed |  |
 

@@ -56,7 +56,7 @@ class Users(Service):
         }, params)
 
     def get_user_prefs(self, user_id):
-        """Get User Prefs"""
+        """Get User Preferences"""
 
         params = {}
         path = '/users/{userId}/prefs'
@@ -67,7 +67,7 @@ class Users(Service):
         }, params)
 
     def update_user_prefs(self, user_id, prefs):
-        """Update User Prefs"""
+        """Update User Preferences"""
 
         params = {}
         path = '/users/{userId}/prefs'

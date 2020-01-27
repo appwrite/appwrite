@@ -7,9 +7,8 @@ $client = new Client();
 
 $client
     ->setProject('')
-    ->setKey('')
 ;
 
 $account = new Account($client);
 
-$result = $account->updatePrefs('{}');
+$result = $account->updatePrefs('');

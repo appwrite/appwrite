@@ -1,6 +1,4 @@
 import requests
-
-
 class Client:
     def __init__(self):
         self._self_signed = False
@@ -73,5 +71,11 @@ class Client:
         )
 
         response.raise_for_status()
-        
-        return response.json()
+
+        content_type = response.headers['Content-Type']
+
+        if content_type.startswith('application/json'):
+            return response.json()
+
+        return response._content
+

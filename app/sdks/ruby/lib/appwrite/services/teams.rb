@@ -66,8 +66,8 @@ module Appwrite
             }, params);
         end
 
-        def get_team_members(team_id:)
-            path = '/teams/{teamId}/members'
+        def get_team_memberships(team_id:)
+            path = '/teams/{teamId}/memberships'
                 .gsub('{team_id}', team_id)
 
             params = {
@@ -78,7 +78,7 @@ module Appwrite
             }, params);
         end
 
-        def create_team_membership(team_id:, email:, roles:, redirect:, name: '')
+        def create_team_membership(team_id:, email:, roles:, url:, name: '')
             path = '/teams/{teamId}/memberships'
                 .gsub('{team_id}', team_id)
 
@@ -86,7 +86,7 @@ module Appwrite
                 'email': email, 
                 'name': name, 
                 'roles': roles, 
-                'redirect': redirect
+                'url': url
             }
 
             return @client.call('post', path, {
@@ -107,30 +107,14 @@ module Appwrite
             }, params);
         end
 
-        def create_team_membership_resend(team_id:, invite_id:, redirect:)
-            path = '/teams/{teamId}/memberships/{inviteId}/resend'
-                .gsub('{team_id}', team_id)
-                .gsub('{invite_id}', invite_id)
-
-            params = {
-                'redirect': redirect
-            }
-
-            return @client.call('post', path, {
-                'content-type' => 'application/json',
-            }, params);
-        end
-
-        def update_team_membership_status(team_id:, invite_id:, user_id:, secret:, success: '', failure: '')
+        def update_team_membership_status(team_id:, invite_id:, user_id:, secret:)
             path = '/teams/{teamId}/memberships/{inviteId}/status'
                 .gsub('{team_id}', team_id)
                 .gsub('{invite_id}', invite_id)
 
             params = {
                 'userId': user_id, 
-                'secret': secret, 
-                'success': success, 
-                'failure': failure
+                'secret': secret
             }
 
             return @client.call('patch', path, {

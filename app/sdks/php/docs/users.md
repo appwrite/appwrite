@@ -61,7 +61,7 @@ GET https://appwrite.io/v1/users/{userId}/logs
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
 
-## Get User Prefs
+## Get User Preferences
 
 ```http request
 GET https://appwrite.io/v1/users/{userId}/prefs
@@ -75,7 +75,7 @@ GET https://appwrite.io/v1/users/{userId}/prefs
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
 
-## Update User Prefs
+## Update User Preferences
 
 ```http request
 PATCH https://appwrite.io/v1/users/{userId}/prefs
@@ -88,7 +88,7 @@ PATCH https://appwrite.io/v1/users/{userId}/prefs
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
-| prefs | string | Prefs key-value JSON object string. |  |
+| prefs | string | Prefs key-value JSON object. |  |
 
 ## Get User Sessions
 

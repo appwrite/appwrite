@@ -1,0 +1,17 @@
+{
+  "name": "node-appwrite",
+  "homepage": "https://appwrite.io/support",
+  "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
+  "version": "1.0.31",
+  "license": "BSD-3-Clause",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/appwrite/sdk-for-node"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.7"
+  }
+}
