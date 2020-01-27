@@ -95,7 +95,7 @@ if(!empty($platforms)) {
     <?php echo $this->exec($this->getParam('head', [])); ?>
 </head>
 
-<body>
+<body data-general-scroll-to data-general-scroll-direction>
     <?php echo $this->exec($this->getParam('header', [])); ?>
 
     <main data-ls-router data-first-from-server="true" data-acl data-analytics-pageview>

@@ -614,7 +614,7 @@
     },
     {
       "uid": "00d86f3e46c3c3d768e7246eb0eadd7f",
-      "css": "icon-discord",
+      "css": "discord",
       "code": 59463,
       "src": "custom_icons",
       "selected": true,
