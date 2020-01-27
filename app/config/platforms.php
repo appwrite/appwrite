@@ -6,6 +6,7 @@ const APP_PLATFORM_ANDROID = 'android';
 const APP_PLATFORM_UNITY = 'unity';
 const APP_PLATFORM_FLUTTER = 'flutter';
 const APP_PLATFORM_SERVER = 'server';
+const APP_PLATFORM_CLIENT = 'client';
 
 return [
     APP_PLATFORM_WEB => [
