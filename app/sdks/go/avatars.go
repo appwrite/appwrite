@@ -28,7 +28,7 @@ func (srv *Avatars) GetBrowser(Code string, Width int, Height int, Quality int) 
 		"quality": Quality,
 	}
 
-	return srv.Client.Call("GET", path, nil, params)
+	return srv.client.Call("GET", path, nil, params)
 }
 
 // GetCreditCard need to display your users with your billing method or their
@@ -45,7 +45,7 @@ func (srv *Avatars) GetCreditCard(Code string, Width int, Height int, Quality in
 		"quality": Quality,
 	}
 
-	return srv.Client.Call("GET", path, nil, params)
+	return srv.client.Call("GET", path, nil, params)
 }
 
 // GetFavicon use this endpoint to fetch the favorite icon (AKA favicon) of a 
@@ -57,7 +57,7 @@ func (srv *Avatars) GetFavicon(Url string) (map[string]interface{}, error) {
 		"url": Url,
 	}
 
-	return srv.Client.Call("GET", path, nil, params)
+	return srv.client.Call("GET", path, nil, params)
 }
 
 // GetFlag you can use this endpoint to show different country flags icons to
@@ -73,7 +73,7 @@ func (srv *Avatars) GetFlag(Code string, Width int, Height int, Quality int) (ma
 		"quality": Quality,
 	}
 
-	return srv.Client.Call("GET", path, nil, params)
+	return srv.client.Call("GET", path, nil, params)
 }
 
 // GetImage use this endpoint to fetch a remote image URL and crop it to any
@@ -89,7 +89,7 @@ func (srv *Avatars) GetImage(Url string, Width int, Height int) (map[string]inte
 		"height": Height,
 	}
 
-	return srv.Client.Call("GET", path, nil, params)
+	return srv.client.Call("GET", path, nil, params)
 }
 
 // GetQR converts a given plain text to a QR code image. You can use the query
@@ -104,5 +104,5 @@ func (srv *Avatars) GetQR(Text string, Size int, Margin int, Download int) (map[
 		"download": Download,
 	}
 
-	return srv.Client.Call("GET", path, nil, params)
+	return srv.client.Call("GET", path, nil, params)
 }
