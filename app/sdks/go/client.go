@@ -2,7 +2,7 @@ package appwrite
 
 import (
 	"encoding/json"
-  "io/ioutil"
+  	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
