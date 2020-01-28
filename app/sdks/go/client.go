@@ -17,42 +17,42 @@ type Client struct {
 }
 
 // SetEndpoint sets the default endpoint to which the Client connects to
-func (clt *Client) SetEndpoint(endpoint string) {
+func (clt Client) SetEndpoint(endpoint string) {
 	clt.endpoint = endpoint
 }
 
 // SetSelfSigned sets the condition that specify if the Client should allow connections to a server using a self-signed certificate
-func (clt *Client) SetSelfSigned(status bool) {
+func (clt Client) SetSelfSigned(status bool) {
 	clt.selfSigned = status
 }
 
 // AddHeader add a new custom header that the Client should send on each request
-func (clt *Client) AddHeader(key string, value string) {
+func (clt Client) AddHeader(key string, value string) {
 	clt.headers[key] = value
 }
 
 // SetProjectHeader add the 'X-Appwrite-Project' header for the Client. Your Appwrite project ID
-func (clt *Client) SetProjectHeader(value string) {
+func (clt Client) SetProjectHeader(value string) {
 	clt.headers["X-Appwrite-Project"] = value
 }
 
 // SetKeyHeader add the 'X-Appwrite-Key' header for the Client. Your Appwrite project secret key
-func (clt *Client) SetKeyHeader(value string) {
+func (clt Client) SetKeyHeader(value string) {
 	clt.headers["X-Appwrite-Key"] = value
 }
 
 // SetLocaleHeader add the 'X-Appwrite-Locale' header for the Client.
-func (clt *Client) SetLocaleHeader(value string) {
+func (clt Client) SetLocaleHeader(value string) {
 	clt.headers["X-Appwrite-Locale"] = value
 }
 
 // SetModeHeader add the 'X-Appwrite-Mode' header for the Client.
-func (clt *Client) SetModeHeader(value string) {
+func (clt Client) SetModeHeader(value string) {
 	clt.headers["X-Appwrite-Mode"] = value
 }
 
 // Call an API using Client
-func (clt *Client) Call(method string, path string, headers map[string]interface{}, params map[string]interface{}) (map[string]interface{}, error) {
+func (clt Client) Call(method string, path string, headers map[string]interface{}, params map[string]interface{}) (map[string]interface{}, error) {
 	if clt.client == nil {
 		// Create HTTP client
 		clt.client = &http.Client{}
