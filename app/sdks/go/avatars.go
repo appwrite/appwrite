@@ -9,8 +9,11 @@ type Avatars struct {
 	client Client
 }
 
-func New(client *Client) *Avatars {  
-    service := Avatars{client}
+func NewAvatars(clt *Client) *Avatars {  
+    service := Avatars{
+		client: clt,
+	}
+
     return service
 }
 
