@@ -7,23 +7,20 @@ import (
 )
 
 func main() {
-    // Create a Client
     var client := appwrite.Client{}
 
-    // Set Client required headers
     client.SetProject("")
     client.SetKey("")
 
-    // Create a new Database service passing Client
-    var srv := appwrite.Database{
+    var service := appwrite.Database{
         client: &client
     }
 
-    // Call GetCollection method and handle results
-    var res, err := srv.GetCollection("[COLLECTION_ID]")
-    if err != nil {
-        panic(err)
+    var response, error := service.GetCollection("[COLLECTION_ID]")
+
+    if error != nil {
+        panic(error)
     }
 
-    fmt.Println(res)
+    fmt.Println(response)
 }

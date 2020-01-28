@@ -7,23 +7,20 @@ import (
 )
 
 func main() {
-    // Create a Client
     var client := appwrite.Client{}
 
-    // Set Client required headers
     client.SetProject("")
     client.SetKey("")
 
-    // Create a new Users service passing Client
-    var srv := appwrite.Users{
+    var service := appwrite.Users{
         client: &client
     }
 
-    // Call GetUserSessions method and handle results
-    var res, err := srv.GetUserSessions("[USER_ID]")
-    if err != nil {
-        panic(err)
+    var response, error := service.GetUserSessions("[USER_ID]")
+
+    if error != nil {
+        panic(error)
     }
 
-    fmt.Println(res)
+    fmt.Println(response)
 }

@@ -7,23 +7,20 @@ import (
 )
 
 func main() {
-    // Create a Client
     var client := appwrite.Client{}
 
-    // Set Client required headers
     client.SetProject("")
     client.SetKey("")
 
-    // Create a new Storage service passing Client
-    var srv := appwrite.Storage{
+    var service := appwrite.Storage{
         client: &client
     }
 
-    // Call CreateFile method and handle results
-    var res, err := srv.CreateFile(file, [], [])
-    if err != nil {
-        panic(err)
+    var response, error := service.CreateFile(file, [], [])
+
+    if error != nil {
+        panic(error)
     }
 
-    fmt.Println(res)
+    fmt.Println(response)
 }

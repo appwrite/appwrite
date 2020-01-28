@@ -7,23 +7,20 @@ import (
 )
 
 func main() {
-    // Create a Client
     var client := appwrite.Client{}
 
-    // Set Client required headers
     client.SetProject("")
     client.SetKey("")
 
-    // Create a new Teams service passing Client
-    var srv := appwrite.Teams{
+    var service := appwrite.Teams{
         client: &client
     }
 
-    // Call DeleteTeam method and handle results
-    var res, err := srv.DeleteTeam("[TEAM_ID]")
-    if err != nil {
-        panic(err)
+    var response, error := service.DeleteTeam("[TEAM_ID]")
+
+    if error != nil {
+        panic(error)
     }
 
-    fmt.Println(res)
+    fmt.Println(response)
 }

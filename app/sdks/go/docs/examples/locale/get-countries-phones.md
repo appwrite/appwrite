@@ -7,23 +7,20 @@ import (
 )
 
 func main() {
-    // Create a Client
     var client := appwrite.Client{}
 
-    // Set Client required headers
     client.SetProject("")
     client.SetKey("")
 
-    // Create a new Locale service passing Client
-    var srv := appwrite.Locale{
+    var service := appwrite.Locale{
         client: &client
     }
 
-    // Call GetCountriesPhones method and handle results
-    var res, err := srv.GetCountriesPhones()
-    if err != nil {
-        panic(err)
+    var response, error := service.GetCountriesPhones()
+
+    if error != nil {
+        panic(error)
     }
 
-    fmt.Println(res)
+    fmt.Println(response)
 }
