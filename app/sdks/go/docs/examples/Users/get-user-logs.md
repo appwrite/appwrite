@@ -1,35 +1,29 @@
-# Users Examples
+package main
 
-## GetUserLogs
+import (
+    "fmt"
+    "os"
+    "github.com/appwrite/sdk-for-go"
+)
 
-```go
-    package appwrite-getuserlogs
+func main() {
+    // Create a Client
+    var client := appwrite.Client{}
 
-    import (
-        "fmt"
-        "os"
-        "github.com/appwrite/sdk-for-go"
-    )
+    // Set Client required headers
+    client.SetProject("")
+    client.SetKey("")
 
-    func main() {
-        // Create a Client
-        var clt := appwrite.Client{}
-
-        // Set Client required headers
-        clt.SetProject("")
-        clt.SetKey("")
-
-        // Create a new Users service passing Client
-        var srv := appwrite.Users{
-            client: &clt
-        }
-
-        // Call GetUserLogs method and handle results
-        var res, err := srv.GetUserLogs("[USER_ID]")
-        if err != nil {
-            panic(err)
-        }
-
-        fmt.Println(res)
+    // Create a new Users service passing Client
+    var srv := appwrite.Users{
+        client: &client
     }
-```
+
+    // Call GetUserLogs method and handle results
+    var res, err := srv.GetUserLogs("[USER_ID]")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(res)
+}

@@ -1,35 +1,29 @@
-# Avatars Examples
+package main
 
-## GetCreditCard
+import (
+    "fmt"
+    "os"
+    "github.com/appwrite/sdk-for-go"
+)
 
-```go
-    package appwrite-getcreditcard
+func main() {
+    // Create a Client
+    var client := appwrite.Client{}
 
-    import (
-        "fmt"
-        "os"
-        "github.com/appwrite/sdk-for-go"
-    )
+    // Set Client required headers
+    client.SetProject("")
+    client.SetKey("")
 
-    func main() {
-        // Create a Client
-        var clt := appwrite.Client{}
-
-        // Set Client required headers
-        clt.SetProject("")
-        clt.SetKey("")
-
-        // Create a new Avatars service passing Client
-        var srv := appwrite.Avatars{
-            client: &clt
-        }
-
-        // Call GetCreditCard method and handle results
-        var res, err := srv.GetCreditCard("amex")
-        if err != nil {
-            panic(err)
-        }
-
-        fmt.Println(res)
+    // Create a new Avatars service passing Client
+    var srv := appwrite.Avatars{
+        client: &client
     }
-```
+
+    // Call GetCreditCard method and handle results
+    var res, err := srv.GetCreditCard("amex")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(res)
+}

@@ -1,35 +1,29 @@
-# Teams Examples
+package main
 
-## UpdateTeam
+import (
+    "fmt"
+    "os"
+    "github.com/appwrite/sdk-for-go"
+)
 
-```go
-    package appwrite-updateteam
+func main() {
+    // Create a Client
+    var client := appwrite.Client{}
 
-    import (
-        "fmt"
-        "os"
-        "github.com/appwrite/sdk-for-go"
-    )
+    // Set Client required headers
+    client.SetProject("")
+    client.SetKey("")
 
-    func main() {
-        // Create a Client
-        var clt := appwrite.Client{}
-
-        // Set Client required headers
-        clt.SetProject("")
-        clt.SetKey("")
-
-        // Create a new Teams service passing Client
-        var srv := appwrite.Teams{
-            client: &clt
-        }
-
-        // Call UpdateTeam method and handle results
-        var res, err := srv.UpdateTeam("[TEAM_ID]", "[NAME]")
-        if err != nil {
-            panic(err)
-        }
-
-        fmt.Println(res)
+    // Create a new Teams service passing Client
+    var srv := appwrite.Teams{
+        client: &client
     }
-```
+
+    // Call UpdateTeam method and handle results
+    var res, err := srv.UpdateTeam("[TEAM_ID]", "[NAME]")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(res)
+}

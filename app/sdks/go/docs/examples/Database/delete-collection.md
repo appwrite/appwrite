@@ -1,35 +1,29 @@
-# Database Examples
+package main
 
-## DeleteCollection
+import (
+    "fmt"
+    "os"
+    "github.com/appwrite/sdk-for-go"
+)
 
-```go
-    package appwrite-deletecollection
+func main() {
+    // Create a Client
+    var client := appwrite.Client{}
 
-    import (
-        "fmt"
-        "os"
-        "github.com/appwrite/sdk-for-go"
-    )
+    // Set Client required headers
+    client.SetProject("")
+    client.SetKey("")
 
-    func main() {
-        // Create a Client
-        var clt := appwrite.Client{}
-
-        // Set Client required headers
-        clt.SetProject("")
-        clt.SetKey("")
-
-        // Create a new Database service passing Client
-        var srv := appwrite.Database{
-            client: &clt
-        }
-
-        // Call DeleteCollection method and handle results
-        var res, err := srv.DeleteCollection("[COLLECTION_ID]")
-        if err != nil {
-            panic(err)
-        }
-
-        fmt.Println(res)
+    // Create a new Database service passing Client
+    var srv := appwrite.Database{
+        client: &client
     }
-```
+
+    // Call DeleteCollection method and handle results
+    var res, err := srv.DeleteCollection("[COLLECTION_ID]")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println(res)
+}
