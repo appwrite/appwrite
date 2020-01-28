@@ -6,7 +6,7 @@ import (
 
 // Avatars service
 type Avatars struct {
-	client *Client
+	client Client
 }
 
 // GetBrowser you can use this endpoint to show different browser icons to

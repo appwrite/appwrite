@@ -6,7 +6,7 @@ import (
 
 // Users service
 type Users struct {
-	client *Client
+	client Client
 }
 
 // ListUsers get a list of all the project users. You can use the query params

@@ -2,7 +2,6 @@ package main
 
 import (
     "fmt"
-    "os"
     "github.com/appwrite/sdk-for-go"
 )
 

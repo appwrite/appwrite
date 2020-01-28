@@ -6,7 +6,7 @@ import (
 
 // Teams service
 type Teams struct {
-	client *Client
+	client Client
 }
 
 // ListTeams get a list of all the current user teams. You can use the query

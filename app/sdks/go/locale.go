@@ -5,7 +5,7 @@ import (
 
 // Locale service
 type Locale struct {
-	client *Client
+	client Client
 }
 
 // GetLocale get the current user location based on IP. Returns an object with

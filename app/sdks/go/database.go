@@ -6,7 +6,7 @@ import (
 
 // Database service
 type Database struct {
-	client *Client
+	client Client
 }
 
 // ListCollections get a list of all the user collections. You can use the
