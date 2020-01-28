@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.ListDocuments("[COLLECTION_ID]")
+    var response, error := service.ListDocuments("[COLLECTION_ID]", [], 0, 0, "[ORDER_FIELD]", "DESC", "int", "[SEARCH]", 0, 0)
 
     if error != nil {
         panic(error)

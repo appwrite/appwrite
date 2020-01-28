@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.GetFileView("[FILE_ID]")
+    var response, error := service.GetFileView("[FILE_ID]", "pdf")
 
     if error != nil {
         panic(error)

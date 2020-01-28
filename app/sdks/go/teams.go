@@ -9,6 +9,11 @@ type Teams struct {
 	client Client
 }
 
+func New(client *Client) *Teams {  
+    service := Teams{client}
+    return service
+}
+
 // ListTeams get a list of all the current user teams. You can use the query
 // params to filter your results. On admin mode, this endpoint will return a
 // list of all of the project teams. [Learn more about different API
@@ -23,7 +28,7 @@ func (srv *Teams) ListTeams(Search string, Limit int, Offset int, OrderType stri
 		"orderType": OrderType,
 	}
 
-	return srv.client.Call("GET", path, nil, params)
+	return srv.Client.Call("GET", path, nil, params)
 }
 
 // CreateTeam create a new team. The user who creates the team will
@@ -38,7 +43,7 @@ func (srv *Teams) CreateTeam(Name string, Roles []interface{}) (map[string]inter
 		"roles": Roles,
 	}
 
-	return srv.client.Call("POST", path, nil, params)
+	return srv.Client.Call("POST", path, nil, params)
 }
 
 // GetTeam get team by its unique ID. All team members have read access for
@@ -50,7 +55,7 @@ func (srv *Teams) GetTeam(TeamId string) (map[string]interface{}, error) {
 	params := map[string]interface{}{
 	}
 
-	return srv.client.Call("GET", path, nil, params)
+	return srv.Client.Call("GET", path, nil, params)
 }
 
 // UpdateTeam update team by its unique ID. Only team owners have write access
@@ -63,7 +68,7 @@ func (srv *Teams) UpdateTeam(TeamId string, Name string) (map[string]interface{}
 		"name": Name,
 	}
 
-	return srv.client.Call("PUT", path, nil, params)
+	return srv.Client.Call("PUT", path, nil, params)
 }
 
 // DeleteTeam delete team by its unique ID. Only team owners have write access
@@ -75,7 +80,7 @@ func (srv *Teams) DeleteTeam(TeamId string) (map[string]interface{}, error) {
 	params := map[string]interface{}{
 	}
 
-	return srv.client.Call("DELETE", path, nil, params)
+	return srv.Client.Call("DELETE", path, nil, params)
 }
 
 // GetTeamMemberships get team members by the team unique ID. All team members
@@ -87,7 +92,7 @@ func (srv *Teams) GetTeamMemberships(TeamId string) (map[string]interface{}, err
 	params := map[string]interface{}{
 	}
 
-	return srv.client.Call("GET", path, nil, params)
+	return srv.Client.Call("GET", path, nil, params)
 }
 
 // CreateTeamMembership use this endpoint to invite a new member to your team.
@@ -115,7 +120,7 @@ func (srv *Teams) CreateTeamMembership(TeamId string, Email string, Roles []inte
 		"url": Url,
 	}
 
-	return srv.client.Call("POST", path, nil, params)
+	return srv.Client.Call("POST", path, nil, params)
 }
 
 // DeleteTeamMembership this endpoint allows a user to leave a team or for a
@@ -128,5 +133,5 @@ func (srv *Teams) DeleteTeamMembership(TeamId string, InviteId string) (map[stri
 	params := map[string]interface{}{
 	}
 
-	return srv.client.Call("DELETE", path, nil, params)
+	return srv.Client.Call("DELETE", path, nil, params)
 }

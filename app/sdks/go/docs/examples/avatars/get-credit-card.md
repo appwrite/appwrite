@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.GetCreditCard("amex")
+    var response, error := service.GetCreditCard("amex", 0, 0, 0)
 
     if error != nil {
         panic(error)

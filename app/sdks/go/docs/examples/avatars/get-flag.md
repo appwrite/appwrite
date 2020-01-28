@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.GetFlag("af")
+    var response, error := service.GetFlag("af", 0, 0, 0)
 
     if error != nil {
         panic(error)

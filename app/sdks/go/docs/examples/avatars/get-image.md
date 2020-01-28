@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.GetImage("https://example.com")
+    var response, error := service.GetImage("https://example.com", 0, 0)
 
     if error != nil {
         panic(error)

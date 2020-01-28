@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.CreateUser("email@example.com", "password")
+    var response, error := service.CreateUser("email@example.com", "password", "[NAME]")
 
     if error != nil {
         panic(error)

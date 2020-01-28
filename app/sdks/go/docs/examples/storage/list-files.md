@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.ListFiles()
+    var response, error := service.ListFiles("[SEARCH]", 0, 0, "ASC")
 
     if error != nil {
         panic(error)

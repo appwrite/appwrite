@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.GetQR("[TEXT]")
+    var response, error := service.GetQR("[TEXT]", 0, 0, 0)
 
     if error != nil {
         panic(error)
