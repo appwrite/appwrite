@@ -1,4 +1,6 @@
 import requests
+
+
 class Client:
     def __init__(self):
         self._self_signed = False
