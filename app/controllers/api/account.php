@@ -48,6 +48,7 @@ $utopia->get('/v1/account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getAccount')
     ->label('sdk.description', '/docs/references/account/get.md')
+    ->label('sdk.response', ['200' => 'user'])
     ->action(
         function () use ($response, &$user, $oauthKeys) {            
             $response->json(array_merge($user->getArrayCopy(array_merge(

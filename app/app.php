@@ -452,6 +452,11 @@ $utopia->get('/v1/open-api-2.json')
                 'server' => ['Project' => [], 'Key' => []],
             ];
 
+            $platforms = [
+                'client' => APP_PLATFORM_CLIENT,
+                'server' => APP_PLATFORM_SERVER,
+            ];
+
             /*
              * Specifications (v3.0.0):
              * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
@@ -549,6 +554,13 @@ $utopia->get('/v1/open-api-2.json')
                 ],
             ];
 
+            if ($extensions) {
+                $output['securityDefinitions']['Project']['extensions'] = ['demo' => '5df5acd0d48c2'];
+                $output['securityDefinitions']['Key']['extensions'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
+                $output['securityDefinitions']['Locale']['extensions'] = ['demo' => 'en'];
+                $output['securityDefinitions']['Mode']['extensions'] = ['demo' => ''];
+            }
+
             foreach ($utopia->getRoutes() as $key => $method) {
                 foreach ($method as $route) { /* @var $route \Utopia\Route */
                     if (!$route->getLabel('docs', true)) {
@@ -556,6 +568,10 @@ $utopia->get('/v1/open-api-2.json')
                     }
 
                     if (empty($route->getLabel('sdk.namespace', null))) {
+                        continue;
+                    }
+
+                    if(!in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
                         continue;
                     }
 
