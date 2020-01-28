@@ -7,6 +7,7 @@ let locale = new sdk.Locale(client);
 
 client
     .setProject('')
+    .setKey('')
 ;
 
 let promise = locale.getCurrencies();

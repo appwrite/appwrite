@@ -17,6 +17,7 @@
 
         // Set Client required headers
         clt.SetProject("")
+        clt.SetKey("")
 
         // Create a new Avatars service passing Client
         var srv := appwrite.Avatars{

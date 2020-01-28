@@ -17,6 +17,7 @@
 
         // Set Client required headers
         clt.SetProject("")
+        clt.SetKey("")
 
         // Create a new Storage service passing Client
         var srv := appwrite.Storage{

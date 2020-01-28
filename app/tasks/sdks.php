@@ -48,8 +48,8 @@ $cli
                 }
 
                 Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name']);
-
-                $spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1');
+                
+                $spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
 
                 $result = realpath(__DIR__.'/..').'/sdks/'.$language['key'];
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';

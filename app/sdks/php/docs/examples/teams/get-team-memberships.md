@@ -7,6 +7,7 @@ $client = new Client();
 
 $client
     ->setProject('')
+    ->setKey('')
 ;
 
 $teams = new Teams($client);

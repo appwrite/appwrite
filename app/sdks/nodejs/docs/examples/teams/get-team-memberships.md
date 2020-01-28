@@ -7,6 +7,7 @@ let teams = new sdk.Teams(client);
 
 client
     .setProject('')
+    .setKey('')
 ;
 
 let promise = teams.getTeamMemberships('[TEAM_ID]');

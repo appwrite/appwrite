@@ -7,6 +7,7 @@ $client = new Client();
 
 $client
     ->setProject('')
+    ->setKey('')
 ;
 
 $avatars = new Avatars($client);

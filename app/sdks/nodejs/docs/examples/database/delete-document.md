@@ -7,6 +7,7 @@ let database = new sdk.Database(client);
 
 client
     .setProject('')
+    .setKey('')
 ;
 
 let promise = database.deleteDocument('[COLLECTION_ID]', '[DOCUMENT_ID]');

@@ -7,6 +7,7 @@ let users = new sdk.Users(client);
 
 client
     .setProject('')
+    .setKey('')
 ;
 
 let promise = users.deleteUserSessions('[USER_ID]');

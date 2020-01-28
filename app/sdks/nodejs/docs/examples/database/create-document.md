@@ -7,6 +7,7 @@ let database = new sdk.Database(client);
 
 client
     .setProject('')
+    .setKey('')
 ;
 
 let promise = database.createDocument('[COLLECTION_ID]', '{}', [], []);

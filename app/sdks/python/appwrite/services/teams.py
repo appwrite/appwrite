@@ -103,17 +103,3 @@ class Teams(Service):
         return self.client.call('delete', path, {
             'content-type': 'application/json',
         }, params)
-
-    def update_team_membership_status(self, team_id, invite_id, user_id, secret):
-        """Update Team Membership Status"""
-
-        params = {}
-        path = '/teams/{teamId}/memberships/{inviteId}/status'
-        path = path.replace('{teamId}', team_id)                
-        path = path.replace('{inviteId}', invite_id)                
-        params['userId'] = user_id
-        params['secret'] = secret
-
-        return self.client.call('patch', path, {
-            'content-type': 'application/json',
-        }, params)

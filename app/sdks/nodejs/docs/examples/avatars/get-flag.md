@@ -7,6 +7,7 @@ let avatars = new sdk.Avatars(client);
 
 client
     .setProject('')
+    .setKey('')
 ;
 
 let promise = avatars.getFlag('af');

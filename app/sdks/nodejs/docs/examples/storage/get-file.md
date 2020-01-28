@@ -7,6 +7,7 @@ let storage = new sdk.Storage(client);
 
 client
     .setProject('')
+    .setKey('')
 ;
 
 let promise = storage.getFile('[FILE_ID]');

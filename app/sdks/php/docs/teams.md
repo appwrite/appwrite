@@ -126,24 +126,3 @@ DELETE https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
 | teamId | string | **Required** Team unique ID. |  |
 | inviteId | string | **Required** Invite unique ID |  |
 
-## Update Team Membership Status
-
-```http request
-PATCH https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}/status
-```
-
-** Use this endpoint to let user accept an invitation to join a team after he is being redirect back to your app from the invitation email. Use the success and failure URL&#039;s to redirect users back to your application after the request completes.
-
-Please note that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface.
-
-When not using the success or failure redirect arguments this endpoint will result with a 200 status code on success and with 401 status error on failure. This behavior was applied to help the web clients deal with browsers who don&#039;t allow to set 3rd party HTTP cookies needed for saving the account session key. **
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| teamId | string | **Required** Team unique ID. |  |
-| inviteId | string | **Required** Invite unique ID |  |
-| userId | string | User unique ID |  |
-| secret | string | Secret Key |  |
-
