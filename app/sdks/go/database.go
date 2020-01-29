@@ -9,7 +9,7 @@ type Database struct {
 	client Client
 }
 
-func NewDatabase(clt *Client) *Database {  
+func NewDatabase(clt Client) Database {  
     service := Database{
 		client: clt,
 	}

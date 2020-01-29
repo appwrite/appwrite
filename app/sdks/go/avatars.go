@@ -9,7 +9,7 @@ type Avatars struct {
 	client Client
 }
 
-func NewAvatars(clt *Client) *Avatars {  
+func NewAvatars(clt Client) Avatars {  
     service := Avatars{
 		client: clt,
 	}
