@@ -86,7 +86,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     $hostValidator = new Host($clients);
     $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
     
-    if (!$hostValidator->isValid($origin)
+    if (!empty($origin) && !$hostValidator->isValid($origin)
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && empty($request->getHeader('X-Appwrite-Key', ''))) {
         throw new Exception('Access from this client host is forbidden. '.$hostValidator->getDescription(), 403);
