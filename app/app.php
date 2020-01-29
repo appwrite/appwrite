@@ -82,6 +82,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     /*
      * Validate Client Domain - Check to avoid CSRF attack
      *  Adding Appwrite API domains to allow XDOMAIN communication
+     *  Skip this check for non-web platforms which are not requiredto send an origin header
      */
     $hostValidator = new Host($clients);
     $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
