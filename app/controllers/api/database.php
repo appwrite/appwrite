@@ -349,8 +349,8 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
             $output = $document->getArrayCopy();
 
             $paths = explode('/', $request->getParam('q', ''));
-            $paths = array_slice($paths, 6, count($paths));
-
+            $paths = array_slice($paths, 7, count($paths));
+            
             if (count($paths) > 0) {
                 if (count($paths) % 2 == 1) {
                     $output = $document->getAttribute(implode('.', $paths));
