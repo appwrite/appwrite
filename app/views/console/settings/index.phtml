@@ -5,7 +5,7 @@
 </div>
 
 <div class="zone xl"
-    data-service="projects.getProject"
+    data-service="projects.get"
     data-scope="console"
     data-name="console-project"
     data-event="load"
@@ -124,7 +124,7 @@
                 <h2>Members</h2>
 
                 <div class="zone xl"
-                    data-service="teams.getTeamMembers"
+                    data-service="teams.getMemberships"
                     data-scope="console"
                     data-event="load,membership-create,membership-update,membership-delete"
                     data-name="members"
@@ -136,7 +136,7 @@
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
                             <li class="clear">
                                 <form class="pull-end"
-                                    data-service="teams.deleteTeamMembership"
+                                    data-service="teams.deleteMembership"
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger"
@@ -152,7 +152,7 @@
                                     <button class="danger">Leave</button>
                                 </form>
 
-                                <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
+                                <!-- <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
                                     <form
                                         data-service="teams.createTeamMembershipResend"
                                         data-scope="console"
@@ -171,7 +171,7 @@
 
                                         <button class="reverse">Resend</button>
                                     </form>
-                                </div>
+                                </div> -->
 
                                 <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
@@ -189,7 +189,7 @@
                         <h1>Invite Member</h1>
 
                         <form name="teams.createTeamMembership"
-                            data-service="teams.createTeamMembership"
+                            data-service="teams.createMembership"
                             data-scope="console"
                             data-event="submit"
                             data-loading="Sending invitation, please wait..."
@@ -200,11 +200,11 @@
                             data-failure-param-alert-text="Failed to Send Invite"
                             data-failure-param-alert-classname="error">
 
-                            <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                            <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
                             <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
 
-                            <label for="name">Name <small>(optional)</small></label>
-                            <input name="name" id="name" type="text" autocomplete="name">
+                            <label for="team-name">Name <small>(optional)</small></label>
+                            <input name="name" id="team-name" type="text" autocomplete="name">
 
                             <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>

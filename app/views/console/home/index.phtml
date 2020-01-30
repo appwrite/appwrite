@@ -5,7 +5,7 @@ $graph = $this->getParam('graph', false);
 <div class="cover margin-bottom-small">
     <div class="zone xl margin-bottom-large margin-top-small">
         <h1 class="margin-bottom-small"
-            data-service="projects.getProject"
+            data-service="projects.get"
             data-event="load,project-update,platform-create,platform-update,platform-delete"
             data-name="console-project"
             data-param-project-id="{{router.params.project}}"
@@ -25,7 +25,7 @@ $graph = $this->getParam('graph', false);
 <div class="zone xl margin-top-negative-large">
     <div class="box margin-bottom dashboard">
         <div
-            data-service="projects.getProjectUsage"
+            data-service="projects.getUsage"
             data-event="load"
             data-name="usage"
             data-param-project-id="{{router.params.project}}">
@@ -204,8 +204,8 @@ $graph = $this->getParam('graph', false);
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}"/ >
         <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}" />
 
-        <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />
+        <label data-ls-attrs="for=name-{{platform.$uid}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />
 
         <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
         <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="example.com" data-ls-bind="{{platform.url}}" required>

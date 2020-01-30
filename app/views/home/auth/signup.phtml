@@ -8,19 +8,15 @@
     <small class="pull-end">* All fields are required</small>
 
     <form name="register"
-        data-service="auth.register"
+        data-service="account.create"
         data-scope="console"
         data-event="submit"
         data-success="trigger,redirect"
-        data-success-param-trigger-events="auth-register"
-        data-success-param-redirect-url="/console/setup"
+        data-success-param-trigger-events="account.create"
+        data-success-param-redirect-url="/console"
         data-failure="alert"
         data-failure-param-alert-text="Registration Failed. Please try again later"
         data-failure-param-alert-classname="error">
-
-        <input name="confirm" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/console">
-        <input name="success" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/console">
-        <input name="failure" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/signup?failure=1">
 
         <label>Name</label>
         <input name="name" type="text" autocomplete="name" placeholder="" required>

@@ -13,7 +13,7 @@
                 data-name="account"
                 data-event="load"
                 data-failure="trigger"
-                data-failure-param-trigger-events="logout">
+                data-failure-param-trigger-events="account.deleteSession">
 
                 <h2><span class="number"><i class="icon-user"></i></span>Overview</h2>
                 <div class="row responsive">
@@ -109,11 +109,11 @@
                             <hr />
 
                             <form class="margin-top"
-                                data-service="auth.logout"
+                                data-service="account.deleteCurrentSession"
                                 data-scope="console"
                                 data-event="submit"
                                 data-success="trigger"
-                                data-success-param-trigger-events="logout"
+                                data-success-param-trigger-events="account.deleteSession"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Logout failed"
                                 data-failure-param-alert-classname="error">
@@ -150,12 +150,12 @@
                             <p>PLEASE NOTE: Account deletion is irreversible.</p>
 
                             <form class="inline"
-                                data-service="account.deactivate"
+                                data-service="account.delete"
                                 data-scope="console"
                                 data-event="submit"
                                 data-confirm="Are you sure you want to delete your account?"
                                 data-success="trigger"
-                                data-success-param-trigger-events="deactivated"
+                                data-success-param-trigger-events="account.delete"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Account deactivation failed"
                                 data-failure-param-alert-classname="error">
@@ -176,19 +176,19 @@
                 data-service="account.getSessions"
                 data-scope="console"
                 data-name="sessions"
-                data-event="load,session-delete">
+                data-event="load,account.deleteSession">
 
                 <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                     <li class="clear">
                         <span data-ls-if="true != {{session.current}}" style="display: none;">
                             <!-- From remote session (-logout event) -->
                             <form class="pull-end"
-                                data-service="auth.logoutBySession"
+                                data-service="account.deleteSession"
                                 data-scope="console"
                                 data-event="submit"
                                 data-loading="Loading..."
                                 data-success="trigger"
-                                data-success-param-trigger-events="session-delete"
+                                data-success-param-trigger-events="account.deleteSession"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Logout from Session Failed"
                                 data-failure-param-alert-classname="error">
@@ -201,12 +201,12 @@
                         <span data-ls-if="true == {{session.current}}" style="display: none;">
                             <!-- From current session (+logout event) -->
                             <form class="pull-end"
-                                data-service="auth.logoutBySession"
+                                data-service="account.deleteSession"
                                 data-scope="console"
                                 data-event="submit"
                                 data-loading="Loading..."
                                 data-success="trigger,redirect"
-                                data-success-param-trigger-events="logout"
+                                data-success-param-trigger-events="account.deleteSession"
                                 data-success-param-redirect-url="/"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Logout from Session Failed"
@@ -233,11 +233,11 @@
             </div>
 
             <form class="inline margin-bottom-large"
-                data-service="auth.logoutBySession"
+                data-service="account.deleteSessions"
                 data-scope="console"
                 data-event="submit"
                 data-success="trigger,redirect"
-                data-success-param-trigger-events="session-delete"
+                data-success-param-trigger-events="account.deleteSession"
                 data-success-param-redirect-url="/"
                 data-failure="alert"
                 data-failure-param-alert-text="Logout from All Sessions Failed"
@@ -250,7 +250,7 @@
             <h2>Activity</h2>
 
             <div
-                data-service="account.getSecurity"
+                data-service="account.getLogs"
                 data-scope="console"
                 data-name="securityLogs"
                 data-event="load">

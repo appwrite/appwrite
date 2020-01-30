@@ -14,7 +14,7 @@ $home = $this->getParam('home', '');
         <h1>Upload File</h1>
 
         <form
-            data-service="storage.createFile"
+            data-service="storage.create"
             data-event="submit"
             data-scope="sdk"
             data-success="alert,trigger,reset"
@@ -41,7 +41,7 @@ $home = $this->getParam('home', '');
     </div>
 
     <form class="box padding-small margin-bottom search"
-        data-service="storage.listFiles"
+        data-service="storage.list"
         data-event="submit"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -62,7 +62,7 @@ $home = $this->getParam('home', '');
     </form>
 
     <div
-        data-service="storage.listFiles"
+        data-service="storage.list"
         data-event="load,file-create,file-update,file-delete"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -103,7 +103,7 @@ $home = $this->getParam('home', '');
                                     <h1>Update File</h1>
 
                                     <form
-                                        data-service="storage.updateFile"
+                                        data-service="storage.update"
                                         data-event="submit"
                                         data-scope="sdk"
                                         data-success="alert,trigger"
@@ -152,7 +152,7 @@ $home = $this->getParam('home', '');
 
         <div class="clear text-align-center paging">
             <form
-                data-service="storage.listFiles"
+                data-service="storage.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -167,7 +167,7 @@ $home = $this->getParam('home', '');
             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
 
             <form
-                data-service="storage.listFiles"
+                data-service="storage.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"

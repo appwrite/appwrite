@@ -20,7 +20,7 @@ $providers = $this->getParam('providers', []);
                 <h1>Create User</h1>
 
                 <form
-                    data-service="users.createUser"
+                    data-service="users.create"
                     data-event="submit"
                     data-success="alert,trigger,reset"
                     data-success-param-alert-text="Created user successfully"
@@ -45,7 +45,7 @@ $providers = $this->getParam('providers', []);
             </div>
 
             <form class="box padding-small margin-bottom search"
-                data-service="users.listUsers"
+                data-service="users.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -66,7 +66,7 @@ $providers = $this->getParam('providers', []);
             </form>
 
             <div
-                data-service="users.listUsers"
+                data-service="users.list"
                 data-event="load,user-create,user-update,user-delete"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -131,7 +131,7 @@ $providers = $this->getParam('providers', []);
 
                 <div class="clear text-align-center paging">
                     <form
-                        data-service="users.listUsers"
+                        data-service="users.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -146,7 +146,7 @@ $providers = $this->getParam('providers', []);
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-users.sum|pageTotal}}"></span>
 
                     <form
-                        data-service="users.listUsers"
+                        data-service="users.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -170,7 +170,7 @@ $providers = $this->getParam('providers', []);
                 <h1>Create Team</h1>
 
                 <form
-                    data-service="teams.createTeam"
+                    data-service="teams.create"
                     data-event="submit"
                     data-success="alert,trigger,reset"
                     data-success-param-alert-text="Created team successfully"
@@ -187,7 +187,7 @@ $providers = $this->getParam('providers', []);
             </div>
 
             <form class="box padding-small margin-bottom search"
-                data-service="teams.listTeams"
+                data-service="teams.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -208,7 +208,7 @@ $providers = $this->getParam('providers', []);
             </form>
 
             <div
-                data-service="teams.listTeams"
+                data-service="teams.list"
                 data-event="load,team-create,team-update,team-delete"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -246,7 +246,7 @@ $providers = $this->getParam('providers', []);
                                             <h1>Update Team</h1>
 
                                             <form
-                                                data-service="teams.updateTeam"
+                                                data-service="teams.update"
                                                 data-scope="sdk"
                                                 data-event="submit"
                                                 data-success="alert,trigger"
@@ -278,7 +278,7 @@ $providers = $this->getParam('providers', []);
 
                 <div class="clear text-align-center paging">
                     <form
-                        data-service="teams.listTeams"
+                        data-service="teams.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -293,7 +293,7 @@ $providers = $this->getParam('providers', []);
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-teams.sum|pageTotal}}"></span>
 
                     <form
-                        data-service="teams.listTeams"
+                        data-service="teams.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -312,7 +312,7 @@ $providers = $this->getParam('providers', []);
             <h2>OAuth Providers</h2>
 
             <div class="box margin-bottom margin-top-large"
-                data-service="projects.getProject"
+                data-service="projects.get"
                 data-event="load,project-create,project-update,project-delete"
                 data-name="console-project"
                 data-param-project-id="{{router.params.project}}"
@@ -329,7 +329,7 @@ $providers = $this->getParam('providers', []);
                                 <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
 
                                 <form
-                                    data-service="projects.updateProjectOAuth"
+                                    data-service="projects.updateOAuth"
                                     data-scope="console"
                                     data-event="submit"
                                     data-param-project-id="{{router.params.project}}"

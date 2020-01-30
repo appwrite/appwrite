@@ -9,7 +9,7 @@
     <br />
 
     <form name="recovery-reset"
-          data-service="auth.recoveryReset"
+          data-service="account.updateRecovery"
           data-scope="console"
           data-event="submit"
           data-success="alert,redirect"
@@ -20,7 +20,7 @@
           data-failure-param-alert-classname="error">
 
         <input type="hidden" name="userId" data-ls-bind="{{router.params.userId}}">
-        <input type="hidden" name="token" data-ls-bind="{{router.params.token}}">
+        <input type="hidden" name="secret" data-ls-bind="{{router.params.secret}}">
 
         <label>Password</label>
         <input name="passwordA" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="Six or more characters">
