@@ -10,7 +10,7 @@ class Database(Service):
         """List Collections"""
 
         params = {}
-        path = '/database'
+        path = '/database/collections'
         params['search'] = search
         params['limit'] = limit
         params['offset'] = offset
@@ -24,7 +24,7 @@ class Database(Service):
         """Create Collection"""
 
         params = {}
-        path = '/database'
+        path = '/database/collections'
         params['name'] = name
         params['read'] = read
         params['write'] = write
@@ -38,7 +38,7 @@ class Database(Service):
         """Get Collection"""
 
         params = {}
-        path = '/database/{collectionId}'
+        path = '/database/collections/{collectionId}'
         path = path.replace('{collectionId}', collection_id)                
 
         return self.client.call('get', path, {
@@ -49,7 +49,7 @@ class Database(Service):
         """Update Collection"""
 
         params = {}
-        path = '/database/{collectionId}'
+        path = '/database/collections/{collectionId}'
         path = path.replace('{collectionId}', collection_id)                
         params['name'] = name
         params['read'] = read
@@ -64,7 +64,7 @@ class Database(Service):
         """Delete Collection"""
 
         params = {}
-        path = '/database/{collectionId}'
+        path = '/database/collections/{collectionId}'
         path = path.replace('{collectionId}', collection_id)                
 
         return self.client.call('delete', path, {
@@ -75,7 +75,7 @@ class Database(Service):
         """List Documents"""
 
         params = {}
-        path = '/database/{collectionId}/documents'
+        path = '/database/collections/{collectionId}/documents'
         path = path.replace('{collectionId}', collection_id)                
         params['filters'] = filters
         params['offset'] = offset
@@ -95,7 +95,7 @@ class Database(Service):
         """Create Document"""
 
         params = {}
-        path = '/database/{collectionId}/documents'
+        path = '/database/collections/{collectionId}/documents'
         path = path.replace('{collectionId}', collection_id)                
         params['data'] = data
         params['read'] = read
@@ -112,7 +112,7 @@ class Database(Service):
         """Get Document"""
 
         params = {}
-        path = '/database/{collectionId}/documents/{documentId}'
+        path = '/database/collections/{collectionId}/documents/{documentId}'
         path = path.replace('{collectionId}', collection_id)                
         path = path.replace('{documentId}', document_id)                
 
@@ -124,7 +124,7 @@ class Database(Service):
         """Update Document"""
 
         params = {}
-        path = '/database/{collectionId}/documents/{documentId}'
+        path = '/database/collections/{collectionId}/documents/{documentId}'
         path = path.replace('{collectionId}', collection_id)                
         path = path.replace('{documentId}', document_id)                
         params['data'] = data
@@ -139,7 +139,7 @@ class Database(Service):
         """Delete Document"""
 
         params = {}
-        path = '/database/{collectionId}/documents/{documentId}'
+        path = '/database/collections/{collectionId}/documents/{documentId}'
         path = path.replace('{collectionId}', collection_id)                
         path = path.replace('{documentId}', document_id)                
 

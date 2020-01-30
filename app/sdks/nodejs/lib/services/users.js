@@ -15,7 +15,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async listUsers(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+    async list(search = '', limit = 25, offset = 0, orderType = 'ASC') {
         let path = '/users';
         
         return await this.client.call('get', path, {
@@ -40,7 +40,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async createUser(email, password, name = '') {
+    async create(email, password, name = '') {
         let path = '/users';
         
         return await this.client.call('post', path, {
@@ -62,7 +62,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async getUser(userId) {
+    async get(userId) {
         let path = '/users/{userId}'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('get', path, {
@@ -81,7 +81,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async getUserLogs(userId) {
+    async getLogs(userId) {
         let path = '/users/{userId}/logs'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('get', path, {
@@ -100,7 +100,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async getUserPrefs(userId) {
+    async getPrefs(userId) {
         let path = '/users/{userId}/prefs'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('get', path, {
@@ -121,7 +121,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateUserPrefs(userId, prefs) {
+    async updatePrefs(userId, prefs) {
         let path = '/users/{userId}/prefs'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('patch', path, {
@@ -141,7 +141,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async getUserSessions(userId) {
+    async getSessions(userId) {
         let path = '/users/{userId}/sessions'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('get', path, {
@@ -160,7 +160,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async deleteUserSessions(userId) {
+    async deleteSessions(userId) {
         let path = '/users/{userId}/sessions'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('delete', path, {
@@ -180,7 +180,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async deleteUserSession(userId, sessionId) {
+    async deleteSession(userId, sessionId) {
         let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('delete', path, {
@@ -201,7 +201,7 @@ class Users extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateUserStatus(userId, status) {
+    async updateStatus(userId, status) {
         let path = '/users/{userId}/status'.replace(new RegExp('{userId}', 'g'), userId);
         
         return await this.client.call('patch', path, {

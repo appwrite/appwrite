@@ -1,7 +1,7 @@
 module Appwrite
     class Teams < Service
 
-        def list_teams(search: '', limit: 25, offset: 0, order_type: 'ASC')
+        def list(search: '', limit: 25, offset: 0, order_type: 'ASC')
             path = '/teams'
 
             params = {
@@ -16,7 +16,7 @@ module Appwrite
             }, params);
         end
 
-        def create_team(name:, roles: ["owner"])
+        def create(name:, roles: ["owner"])
             path = '/teams'
 
             params = {
@@ -29,7 +29,7 @@ module Appwrite
             }, params);
         end
 
-        def get_team(team_id:)
+        def get(team_id:)
             path = '/teams/{teamId}'
                 .gsub('{team_id}', team_id)
 
@@ -41,7 +41,7 @@ module Appwrite
             }, params);
         end
 
-        def update_team(team_id:, name:)
+        def update(team_id:, name:)
             path = '/teams/{teamId}'
                 .gsub('{team_id}', team_id)
 
@@ -54,7 +54,7 @@ module Appwrite
             }, params);
         end
 
-        def delete_team(team_id:)
+        def delete(team_id:)
             path = '/teams/{teamId}'
                 .gsub('{team_id}', team_id)
 
@@ -66,7 +66,7 @@ module Appwrite
             }, params);
         end
 
-        def get_team_memberships(team_id:)
+        def get_memberships(team_id:)
             path = '/teams/{teamId}/memberships'
                 .gsub('{team_id}', team_id)
 
@@ -78,7 +78,7 @@ module Appwrite
             }, params);
         end
 
-        def create_team_membership(team_id:, email:, roles:, url:, name: '')
+        def create_membership(team_id:, email:, roles:, url:, name: '')
             path = '/teams/{teamId}/memberships'
                 .gsub('{team_id}', team_id)
 
@@ -94,7 +94,7 @@ module Appwrite
             }, params);
         end
 
-        def delete_team_membership(team_id:, invite_id:)
+        def delete_membership(team_id:, invite_id:)
             path = '/teams/{teamId}/memberships/{inviteId}'
                 .gsub('{team_id}', team_id)
                 .gsub('{invite_id}', invite_id)

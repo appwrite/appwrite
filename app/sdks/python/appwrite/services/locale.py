@@ -6,7 +6,7 @@ class Locale(Service):
     def __init__(self, client):
         super(Locale, self).__init__(client)
 
-    def get_locale(self):
+    def get(self):
         """Get User Locale"""
 
         params = {}

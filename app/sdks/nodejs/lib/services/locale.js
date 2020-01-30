@@ -15,7 +15,7 @@ class Locale extends Service {
      * @throws Exception
      * @return {}
      */
-    async getLocale() {
+    async get() {
         let path = '/locale';
         
         return await this.client.call('get', path, {

@@ -1,7 +1,7 @@
 module Appwrite
     class Users < Service
 
-        def list_users(search: '', limit: 25, offset: 0, order_type: 'ASC')
+        def list(search: '', limit: 25, offset: 0, order_type: 'ASC')
             path = '/users'
 
             params = {
@@ -16,7 +16,7 @@ module Appwrite
             }, params);
         end
 
-        def create_user(email:, password:, name: '')
+        def create(email:, password:, name: '')
             path = '/users'
 
             params = {
@@ -30,7 +30,7 @@ module Appwrite
             }, params);
         end
 
-        def get_user(user_id:)
+        def get(user_id:)
             path = '/users/{userId}'
                 .gsub('{user_id}', user_id)
 
@@ -42,7 +42,7 @@ module Appwrite
             }, params);
         end
 
-        def get_user_logs(user_id:)
+        def get_logs(user_id:)
             path = '/users/{userId}/logs'
                 .gsub('{user_id}', user_id)
 
@@ -54,7 +54,7 @@ module Appwrite
             }, params);
         end
 
-        def get_user_prefs(user_id:)
+        def get_prefs(user_id:)
             path = '/users/{userId}/prefs'
                 .gsub('{user_id}', user_id)
 
@@ -66,7 +66,7 @@ module Appwrite
             }, params);
         end
 
-        def update_user_prefs(user_id:, prefs:)
+        def update_prefs(user_id:, prefs:)
             path = '/users/{userId}/prefs'
                 .gsub('{user_id}', user_id)
 
@@ -79,7 +79,7 @@ module Appwrite
             }, params);
         end
 
-        def get_user_sessions(user_id:)
+        def get_sessions(user_id:)
             path = '/users/{userId}/sessions'
                 .gsub('{user_id}', user_id)
 
@@ -91,7 +91,7 @@ module Appwrite
             }, params);
         end
 
-        def delete_user_sessions(user_id:)
+        def delete_sessions(user_id:)
             path = '/users/{userId}/sessions'
                 .gsub('{user_id}', user_id)
 
@@ -103,7 +103,7 @@ module Appwrite
             }, params);
         end
 
-        def delete_user_session(user_id:, session_id:)
+        def delete_session(user_id:, session_id:)
             path = '/users/{userId}/sessions/:session'
                 .gsub('{user_id}', user_id)
 
@@ -116,7 +116,7 @@ module Appwrite
             }, params);
         end
 
-        def update_user_status(user_id:, status:)
+        def update_status(user_id:, status:)
             path = '/users/{userId}/status'
                 .gsub('{user_id}', user_id)
 

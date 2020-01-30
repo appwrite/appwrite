@@ -22,7 +22,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function listTeams(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
+    public function list(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
         $path   = str_replace([], [], '/teams');
         $params = [];
@@ -50,7 +50,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function createTeam(string $name, array $roles = ["owner"]):array
+    public function create(string $name, array $roles = ["owner"]):array
     {
         $path   = str_replace([], [], '/teams');
         $params = [];
@@ -73,7 +73,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function getTeam(string $teamId):array
+    public function get(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
@@ -95,7 +95,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function updateTeam(string $teamId, string $name):array
+    public function update(string $teamId, string $name):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
@@ -117,7 +117,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function deleteTeam(string $teamId):array
+    public function delete(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
@@ -138,7 +138,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function getTeamMemberships(string $teamId):array
+    public function getMemberships(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}/memberships');
         $params = [];
@@ -174,7 +174,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function createTeamMembership(string $teamId, string $email, array $roles, string $url, string $name = ''):array
+    public function createMembership(string $teamId, string $email, array $roles, string $url, string $name = ''):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}/memberships');
         $params = [];
@@ -201,7 +201,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function deleteTeamMembership(string $teamId, string $inviteId):array
+    public function deleteMembership(string $teamId, string $inviteId):array
     {
         $path   = str_replace(['{teamId}', '{inviteId}'], [$teamId, $inviteId], '/teams/{teamId}/memberships/{inviteId}');
         $params = [];

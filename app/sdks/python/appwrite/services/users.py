@@ -6,7 +6,7 @@ class Users(Service):
     def __init__(self, client):
         super(Users, self).__init__(client)
 
-    def list_users(self, search='', limit=25, offset=0, order_type='ASC'):
+    def list(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Users"""
 
         params = {}
@@ -20,7 +20,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_user(self, email, password, name=''):
+    def create(self, email, password, name=''):
         """Create User"""
 
         params = {}
@@ -33,7 +33,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_user(self, user_id):
+    def get(self, user_id):
         """Get User"""
 
         params = {}
@@ -44,7 +44,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_user_logs(self, user_id):
+    def get_logs(self, user_id):
         """Get User Logs"""
 
         params = {}
@@ -55,7 +55,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_user_prefs(self, user_id):
+    def get_prefs(self, user_id):
         """Get User Preferences"""
 
         params = {}
@@ -66,7 +66,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_user_prefs(self, user_id, prefs):
+    def update_prefs(self, user_id, prefs):
         """Update User Preferences"""
 
         params = {}
@@ -78,7 +78,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_user_sessions(self, user_id):
+    def get_sessions(self, user_id):
         """Get User Sessions"""
 
         params = {}
@@ -89,7 +89,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def delete_user_sessions(self, user_id):
+    def delete_sessions(self, user_id):
         """Delete User Sessions"""
 
         params = {}
@@ -100,7 +100,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def delete_user_session(self, user_id, session_id):
+    def delete_session(self, user_id, session_id):
         """Delete User Session"""
 
         params = {}
@@ -112,7 +112,7 @@ class Users(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_user_status(self, user_id, status):
+    def update_status(self, user_id, status):
         """Update User Status"""
 
         params = {}

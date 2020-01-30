@@ -6,7 +6,7 @@ class Teams(Service):
     def __init__(self, client):
         super(Teams, self).__init__(client)
 
-    def list_teams(self, search='', limit=25, offset=0, order_type='ASC'):
+    def list(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Teams"""
 
         params = {}
@@ -20,7 +20,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_team(self, name, roles=[]):
+    def create(self, name, roles=[]):
         """Create Team"""
 
         params = {}
@@ -32,7 +32,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_team(self, team_id):
+    def get(self, team_id):
         """Get Team"""
 
         params = {}
@@ -43,7 +43,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_team(self, team_id, name):
+    def update(self, team_id, name):
         """Update Team"""
 
         params = {}
@@ -55,7 +55,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def delete_team(self, team_id):
+    def delete(self, team_id):
         """Delete Team"""
 
         params = {}
@@ -66,7 +66,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_team_memberships(self, team_id):
+    def get_memberships(self, team_id):
         """Get Team Memberships"""
 
         params = {}
@@ -77,7 +77,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_team_membership(self, team_id, email, roles, url, name=''):
+    def create_membership(self, team_id, email, roles, url, name=''):
         """Create Team Membership"""
 
         params = {}
@@ -92,7 +92,7 @@ class Teams(Service):
             'content-type': 'application/json',
         }, params)
 
-    def delete_team_membership(self, team_id, invite_id):
+    def delete_membership(self, team_id, invite_id):
         """Delete Team Membership"""
 
         params = {}

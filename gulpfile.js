@@ -73,7 +73,8 @@ const configApp  = {
 const configDep = {
     mainFile: 'app-dep.js',
     src: [
-        'node_modules/appwrite/src/sdk.js',
+        //'node_modules/appwrite/src/sdk.js',
+        'public/scripts/dependencies/appwrite.js',
         'public/scripts/dependencies/chart.js',
         'public/scripts/dependencies/markdown-it.js',
         'public/scripts/dependencies/pell.js',

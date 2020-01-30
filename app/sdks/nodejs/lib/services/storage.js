@@ -16,7 +16,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async listFiles(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+    async list(search = '', limit = 25, offset = 0, orderType = 'ASC') {
         let path = '/storage/files';
         
         return await this.client.call('get', path, {
@@ -43,7 +43,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async createFile(file, read, write) {
+    async create(file, read, write) {
         let path = '/storage/files';
         
         return await this.client.call('post', path, {
@@ -66,7 +66,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async getFile(fileId) {
+    async get(fileId) {
         let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
         
         return await this.client.call('get', path, {
@@ -88,7 +88,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateFile(fileId, read, write) {
+    async update(fileId, read, write) {
         let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
         
         return await this.client.call('put', path, {
@@ -110,7 +110,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async deleteFile(fileId) {
+    async delete(fileId) {
         let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
         
         return await this.client.call('delete', path, {
@@ -131,7 +131,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async getFileDownload(fileId) {
+    async getDownload(fileId) {
         let path = '/storage/files/{fileId}/download'.replace(new RegExp('{fileId}', 'g'), fileId);
         
         return await this.client.call('get', path, {
@@ -158,7 +158,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async getFilePreview(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
+    async getPreview(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
         let path = '/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}', 'g'), fileId);
         
         return await this.client.call('get', path, {
@@ -184,7 +184,7 @@ class Storage extends Service {
      * @throws Exception
      * @return {}
      */
-    async getFileView(fileId, as = '') {
+    async getView(fileId, as = '') {
         let path = '/storage/files/{fileId}/view'.replace(new RegExp('{fileId}', 'g'), fileId);
         
         return await this.client.call('get', path, {

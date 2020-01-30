@@ -16,7 +16,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async listTeams(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+    async list(search = '', limit = 25, offset = 0, orderType = 'ASC') {
         let path = '/teams';
         
         return await this.client.call('get', path, {
@@ -43,7 +43,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async createTeam(name, roles = ["owner"]) {
+    async create(name, roles = ["owner"]) {
         let path = '/teams';
         
         return await this.client.call('post', path, {
@@ -65,7 +65,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async getTeam(teamId) {
+    async get(teamId) {
         let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
         
         return await this.client.call('get', path, {
@@ -86,7 +86,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateTeam(teamId, name) {
+    async update(teamId, name) {
         let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
         
         return await this.client.call('put', path, {
@@ -107,7 +107,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async deleteTeam(teamId) {
+    async delete(teamId) {
         let path = '/teams/{teamId}'.replace(new RegExp('{teamId}', 'g'), teamId);
         
         return await this.client.call('delete', path, {
@@ -127,7 +127,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async getTeamMemberships(teamId) {
+    async getMemberships(teamId) {
         let path = '/teams/{teamId}/memberships'.replace(new RegExp('{teamId}', 'g'), teamId);
         
         return await this.client.call('get', path, {
@@ -162,7 +162,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async createTeamMembership(teamId, email, roles, url, name = '') {
+    async createMembership(teamId, email, roles, url, name = '') {
         let path = '/teams/{teamId}/memberships'.replace(new RegExp('{teamId}', 'g'), teamId);
         
         return await this.client.call('post', path, {
@@ -188,7 +188,7 @@ class Teams extends Service {
      * @throws Exception
      * @return {}
      */
-    async deleteTeamMembership(teamId, inviteId) {
+    async deleteMembership(teamId, inviteId) {
         let path = '/teams/{teamId}/memberships/{inviteId}'.replace(new RegExp('{teamId}', 'g'), teamId).replace(new RegExp('{inviteId}', 'g'), inviteId);
         
         return await this.client.call('delete', path, {

@@ -25,7 +25,7 @@ class Database extends Service
      */
     public function listCollections(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
-        $path   = str_replace([], [], '/database');
+        $path   = str_replace([], [], '/database/collections');
         $params = [];
 
         $params['search'] = $search;
@@ -52,7 +52,7 @@ class Database extends Service
      */
     public function createCollection(string $name, array $read, array $write, array $rules):array
     {
-        $path   = str_replace([], [], '/database');
+        $path   = str_replace([], [], '/database/collections');
         $params = [];
 
         $params['name'] = $name;
@@ -77,7 +77,7 @@ class Database extends Service
      */
     public function getCollection(string $collectionId):array
     {
-        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/collections/{collectionId}');
         $params = [];
 
 
@@ -101,7 +101,7 @@ class Database extends Service
      */
     public function updateCollection(string $collectionId, string $name, array $read, array $write, array $rules = []):array
     {
-        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/collections/{collectionId}');
         $params = [];
 
         $params['name'] = $name;
@@ -126,7 +126,7 @@ class Database extends Service
      */
     public function deleteCollection(string $collectionId):array
     {
-        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}');
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/collections/{collectionId}');
         $params = [];
 
 
@@ -158,7 +158,7 @@ class Database extends Service
      */
     public function listDocuments(string $collectionId, array $filters = [], int $offset = 0, int $limit = 50, string $orderField = '$uid', string $orderType = 'ASC', string $orderCast = 'string', string $search = '', int $first = 0, int $last = 0):array
     {
-        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}/documents');
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/collections/{collectionId}/documents');
         $params = [];
 
         $params['filters'] = $filters;
@@ -193,7 +193,7 @@ class Database extends Service
      */
     public function createDocument(string $collectionId, string $data, array $read, array $write, string $parentDocument = '', string $parentProperty = '', string $parentPropertyType = 'assign'):array
     {
-        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/{collectionId}/documents');
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/collections/{collectionId}/documents');
         $params = [];
 
         $params['data'] = $data;
@@ -221,7 +221,7 @@ class Database extends Service
      */
     public function getDocument(string $collectionId, string $documentId):array
     {
-        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
+        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/collections/{collectionId}/documents/{documentId}');
         $params = [];
 
 
@@ -243,7 +243,7 @@ class Database extends Service
      */
     public function updateDocument(string $collectionId, string $documentId, string $data, array $read, array $write):array
     {
-        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
+        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/collections/{collectionId}/documents/{documentId}');
         $params = [];
 
         $params['data'] = $data;
@@ -269,7 +269,7 @@ class Database extends Service
      */
     public function deleteDocument(string $collectionId, string $documentId):array
     {
-        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/{collectionId}/documents/{documentId}');
+        $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/collections/{collectionId}/documents/{documentId}');
         $params = [];
 
 

@@ -6,7 +6,7 @@ class Storage(Service):
     def __init__(self, client):
         super(Storage, self).__init__(client)
 
-    def list_files(self, search='', limit=25, offset=0, order_type='ASC'):
+    def list(self, search='', limit=25, offset=0, order_type='ASC'):
         """List Files"""
 
         params = {}
@@ -20,7 +20,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_file(self, file, read, write):
+    def create(self, file, read, write):
         """Create File"""
 
         params = {}
@@ -33,7 +33,7 @@ class Storage(Service):
             'content-type': 'multipart/form-data',
         }, params)
 
-    def get_file(self, file_id):
+    def get(self, file_id):
         """Get File"""
 
         params = {}
@@ -44,7 +44,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_file(self, file_id, read, write):
+    def update(self, file_id, read, write):
         """Update File"""
 
         params = {}
@@ -57,7 +57,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def delete_file(self, file_id):
+    def delete(self, file_id):
         """Delete File"""
 
         params = {}
@@ -68,7 +68,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_file_download(self, file_id):
+    def get_download(self, file_id):
         """Get File for Download"""
 
         params = {}
@@ -79,7 +79,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_file_preview(self, file_id, width=0, height=0, quality=100, background='', output=''):
+    def get_preview(self, file_id, width=0, height=0, quality=100, background='', output=''):
         """Get File Preview"""
 
         params = {}
@@ -95,7 +95,7 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_file_view(self, file_id, xas=''):
+    def get_view(self, file_id, xas=''):
         """Get File for View"""
 
         params = {}

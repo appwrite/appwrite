@@ -22,7 +22,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function listFiles(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
+    public function list(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
         $path   = str_replace([], [], '/storage/files');
         $params = [];
@@ -50,7 +50,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function createFile(\CurlFile $file, array $read, array $write):array
+    public function create(\CurlFile $file, array $read, array $write):array
     {
         $path   = str_replace([], [], '/storage/files');
         $params = [];
@@ -74,7 +74,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function getFile(string $fileId):array
+    public function get(string $fileId):array
     {
         $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}');
         $params = [];
@@ -97,7 +97,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function updateFile(string $fileId, array $read, array $write):array
+    public function update(string $fileId, array $read, array $write):array
     {
         $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}');
         $params = [];
@@ -120,7 +120,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function deleteFile(string $fileId):array
+    public function delete(string $fileId):array
     {
         $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}');
         $params = [];
@@ -142,7 +142,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function getFileDownload(string $fileId):array
+    public function getDownload(string $fileId):array
     {
         $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}/download');
         $params = [];
@@ -170,7 +170,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function getFilePreview(string $fileId, int $width = 0, int $height = 0, int $quality = 100, string $background = '', string $output = ''):array
+    public function getPreview(string $fileId, int $width = 0, int $height = 0, int $quality = 100, string $background = '', string $output = ''):array
     {
         $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}/preview');
         $params = [];
@@ -197,7 +197,7 @@ class Storage extends Service
      * @throws Exception
      * @return array
      */
-    public function getFileView(string $fileId, string $as = ''):array
+    public function getView(string $fileId, string $as = ''):array
     {
         $path   = str_replace(['{fileId}'], [$fileId], '/storage/files/{fileId}/view');
         $params = [];

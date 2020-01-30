@@ -21,7 +21,7 @@ class Locale extends Service
      * @throws Exception
      * @return array
      */
-    public function getLocale():array
+    public function get():array
     {
         $path   = str_replace([], [], '/locale');
         $params = [];

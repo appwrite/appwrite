@@ -2,7 +2,7 @@ module Appwrite
     class Database < Service
 
         def list_collections(search: '', limit: 25, offset: 0, order_type: 'ASC')
-            path = '/database'
+            path = '/database/collections'
 
             params = {
                 'search': search, 
@@ -17,7 +17,7 @@ module Appwrite
         end
 
         def create_collection(name:, read:, write:, rules:)
-            path = '/database'
+            path = '/database/collections'
 
             params = {
                 'name': name, 
@@ -32,7 +32,7 @@ module Appwrite
         end
 
         def get_collection(collection_id:)
-            path = '/database/{collectionId}'
+            path = '/database/collections/{collectionId}'
                 .gsub('{collection_id}', collection_id)
 
             params = {
@@ -44,7 +44,7 @@ module Appwrite
         end
 
         def update_collection(collection_id:, name:, read:, write:, rules: [])
-            path = '/database/{collectionId}'
+            path = '/database/collections/{collectionId}'
                 .gsub('{collection_id}', collection_id)
 
             params = {
@@ -60,7 +60,7 @@ module Appwrite
         end
 
         def delete_collection(collection_id:)
-            path = '/database/{collectionId}'
+            path = '/database/collections/{collectionId}'
                 .gsub('{collection_id}', collection_id)
 
             params = {
@@ -72,7 +72,7 @@ module Appwrite
         end
 
         def list_documents(collection_id:, filters: [], offset: 0, limit: 50, order_field: '$uid', order_type: 'ASC', order_cast: 'string', search: '', first: 0, last: 0)
-            path = '/database/{collectionId}/documents'
+            path = '/database/collections/{collectionId}/documents'
                 .gsub('{collection_id}', collection_id)
 
             params = {
@@ -93,7 +93,7 @@ module Appwrite
         end
 
         def create_document(collection_id:, data:, read:, write:, parent_document: '', parent_property: '', parent_property_type: 'assign')
-            path = '/database/{collectionId}/documents'
+            path = '/database/collections/{collectionId}/documents'
                 .gsub('{collection_id}', collection_id)
 
             params = {
@@ -111,7 +111,7 @@ module Appwrite
         end
 
         def get_document(collection_id:, document_id:)
-            path = '/database/{collectionId}/documents/{documentId}'
+            path = '/database/collections/{collectionId}/documents/{documentId}'
                 .gsub('{collection_id}', collection_id)
                 .gsub('{document_id}', document_id)
 
@@ -124,7 +124,7 @@ module Appwrite
         end
 
         def update_document(collection_id:, document_id:, data:, read:, write:)
-            path = '/database/{collectionId}/documents/{documentId}'
+            path = '/database/collections/{collectionId}/documents/{documentId}'
                 .gsub('{collection_id}', collection_id)
                 .gsub('{document_id}', document_id)
 
@@ -140,7 +140,7 @@ module Appwrite
         end
 
         def delete_document(collection_id:, document_id:)
-            path = '/database/{collectionId}/documents/{documentId}'
+            path = '/database/collections/{collectionId}/documents/{documentId}'
                 .gsub('{collection_id}', collection_id)
                 .gsub('{document_id}', document_id)
 

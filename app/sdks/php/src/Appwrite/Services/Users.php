@@ -21,7 +21,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function listUsers(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
+    public function list(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
         $path   = str_replace([], [], '/users');
         $params = [];
@@ -47,7 +47,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function createUser(string $email, string $password, string $name = ''):array
+    public function create(string $email, string $password, string $name = ''):array
     {
         $path   = str_replace([], [], '/users');
         $params = [];
@@ -70,7 +70,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function getUser(string $userId):array
+    public function get(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}');
         $params = [];
@@ -90,7 +90,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function getUserLogs(string $userId):array
+    public function getLogs(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/logs');
         $params = [];
@@ -110,7 +110,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function getUserPrefs(string $userId):array
+    public function getPrefs(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/prefs');
         $params = [];
@@ -132,7 +132,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function updateUserPrefs(string $userId, string $prefs):array
+    public function updatePrefs(string $userId, string $prefs):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/prefs');
         $params = [];
@@ -153,7 +153,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function getUserSessions(string $userId):array
+    public function getSessions(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions');
         $params = [];
@@ -173,7 +173,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function deleteUserSessions(string $userId):array
+    public function deleteSessions(string $userId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions');
         $params = [];
@@ -194,7 +194,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function deleteUserSession(string $userId, string $sessionId):array
+    public function deleteSession(string $userId, string $sessionId):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions/:session');
         $params = [];
@@ -216,7 +216,7 @@ class Users extends Service
      * @throws Exception
      * @return array
      */
-    public function updateUserStatus(string $userId, string $status):array
+    public function updateStatus(string $userId, string $status):array
     {
         $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/status');
         $params = [];

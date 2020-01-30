@@ -307,7 +307,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getAccount: function() {
+            get: function() {
                 let path = '/account';
 
                 let payload = {};
@@ -348,7 +348,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createAccount: function(email, password, name = '') {
+            create: function(email, password, name = '') {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
@@ -451,7 +451,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getAccountLogs: function() {
+            getLogs: function() {
                 let path = '/account/logs';
 
                 let payload = {};
@@ -471,7 +471,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateAccountName: function(name) {
+            updateName: function(name) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
@@ -501,7 +501,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateAccountPassword: function(password, oldPassword) {
+            updatePassword: function(password, oldPassword) {
                 if(password === undefined) {
                     throw new Error('Missing required parameter: "password"');
                 }
@@ -536,7 +536,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getAccountPrefs: function() {
+            getPrefs: function() {
                 let path = '/account/prefs';
 
                 let payload = {};
@@ -590,7 +590,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createAccountRecovery: function(email, url) {
+            createRecovery: function(email, url) {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
@@ -637,7 +637,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateAccountRecovery: function(userId, secret, passwordA, passwordB) {
+            updateRecovery: function(userId, secret, passwordA, passwordB) {
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
@@ -689,7 +689,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getAccountSessions: function() {
+            getSessions: function() {
                 let path = '/account/sessions';
 
                 let payload = {};
@@ -723,7 +723,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createAccountSession: function(email, password) {
+            createSession: function(email, password) {
                 if(email === undefined) {
                     throw new Error('Missing required parameter: "email"');
                 }
@@ -759,7 +759,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteAccountSessions: function() {
+            deleteSessions: function() {
                 let path = '/account/sessions';
 
                 let payload = {};
@@ -780,7 +780,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteAccountCurrentSession: function() {
+            deleteCurrentSession: function() {
                 let path = '/account/sessions/current';
 
                 let payload = {};
@@ -805,7 +805,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createAccountSessionOAuth: function(provider, success, failure) {
+            createOAuthSession: function(provider, success, failure) {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -847,7 +847,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteAccountSession: function(id) {
+            deleteSession: function(id) {
                 if(id === undefined) {
                     throw new Error('Missing required parameter: "id"');
                 }
@@ -876,7 +876,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateAccountVerification: function(userId, secret, passwordB) {
+            updateVerification: function(userId, secret, passwordB) {
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
@@ -1172,7 +1172,7 @@
              * @return {Promise}             
              */
             listCollections: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
-                let path = '/database';
+                let path = '/database/collections';
 
                 let payload = {};
 
@@ -1227,7 +1227,7 @@
                     throw new Error('Missing required parameter: "rules"');
                 }
                 
-                let path = '/database';
+                let path = '/database/collections';
 
                 let payload = {};
 
@@ -1268,7 +1268,7 @@
                     throw new Error('Missing required parameter: "collectionId"');
                 }
                 
-                let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+                let path = '/database/collections/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 let payload = {};
 
@@ -1308,7 +1308,7 @@
                     throw new Error('Missing required parameter: "write"');
                 }
                 
-                let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+                let path = '/database/collections/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 let payload = {};
 
@@ -1349,7 +1349,7 @@
                     throw new Error('Missing required parameter: "collectionId"');
                 }
                 
-                let path = '/database/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+                let path = '/database/collections/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 let payload = {};
 
@@ -1385,7 +1385,7 @@
                     throw new Error('Missing required parameter: "collectionId"');
                 }
                 
-                let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+                let path = '/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 let payload = {};
 
@@ -1463,7 +1463,7 @@
                     throw new Error('Missing required parameter: "write"');
                 }
                 
-                let path = '/database/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+                let path = '/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
 
                 let payload = {};
 
@@ -1517,7 +1517,7 @@
                     throw new Error('Missing required parameter: "documentId"');
                 }
                 
-                let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+                let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 let payload = {};
 
@@ -1560,7 +1560,7 @@
                     throw new Error('Missing required parameter: "write"');
                 }
                 
-                let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+                let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 let payload = {};
 
@@ -1603,7 +1603,7 @@
                     throw new Error('Missing required parameter: "documentId"');
                 }
                 
-                let path = '/database/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
+                let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
 
                 let payload = {};
 
@@ -1629,7 +1629,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getLocale: function() {
+            get: function() {
                 let path = '/locale';
 
                 let payload = {};
@@ -1758,7 +1758,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            listFiles: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+            list: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
                 let path = '/storage/files';
 
                 let payload = {};
@@ -1798,7 +1798,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createFile: function(file, read, write) {
+            create: function(file, read, write) {
                 if(file === undefined) {
                     throw new Error('Missing required parameter: "file"');
                 }
@@ -1843,7 +1843,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getFile: function(fileId) {
+            get: function(fileId) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1870,7 +1870,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateFile: function(fileId, read, write) {
+            update: function(fileId, read, write) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1911,7 +1911,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteFile: function(fileId) {
+            delete: function(fileId) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1937,7 +1937,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getFileDownload: function(fileId) {
+            getDownload: function(fileId) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1969,7 +1969,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getFilePreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
+            getPreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -2015,7 +2015,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getFileView: function(fileId, as = '') {
+            getView: function(fileId, as = '') {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -2051,7 +2051,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            listTeams: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+            list: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
                 let path = '/teams';
 
                 let payload = {};
@@ -2091,7 +2091,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createTeam: function(name, roles = ["owner"]) {
+            create: function(name, roles = ["owner"]) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
@@ -2124,7 +2124,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getTeam: function(teamId) {
+            get: function(teamId) {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
@@ -2150,7 +2150,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateTeam: function(teamId, name) {
+            update: function(teamId, name) {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
@@ -2183,7 +2183,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteTeam: function(teamId) {
+            delete: function(teamId) {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
@@ -2208,7 +2208,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getTeamMemberships: function(teamId) {
+            getMemberships: function(teamId) {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
@@ -2248,7 +2248,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createTeamMembership: function(teamId, email, roles, url, name = '') {
+            createMembership: function(teamId, email, roles, url, name = '') {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
@@ -2303,7 +2303,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteTeamMembership: function(teamId, inviteId) {
+            deleteMembership: function(teamId, inviteId) {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
@@ -2348,7 +2348,7 @@
              * @throws {Error}
              * @return {null}             
              */
-            updateTeamMembershipStatus: function(teamId, inviteId, userId, secret) {
+            updateMembershipStatus: function(teamId, inviteId, userId, secret) {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
