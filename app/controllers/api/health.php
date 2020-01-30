@@ -12,7 +12,7 @@ $utopia->get('/v1/health')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getDB')
+    ->label('sdk.method', 'get')
     ->label('docs', false)
     ->action(
         function () use ($response) {

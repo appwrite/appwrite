@@ -13,7 +13,7 @@ $utopia->get('/v1/locale')
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
-    ->label('sdk.method', 'getLocale')
+    ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
     ->action(
         function () use ($response, $request, $utopia) {

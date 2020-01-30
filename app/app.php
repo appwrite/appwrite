@@ -413,7 +413,7 @@ $utopia->get('/v1/proxy')
 $utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
+    ->param('platform', 'client', function () {return new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE]);}, 'Choose target platform.', true)
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
@@ -448,13 +448,15 @@ $utopia->get('/v1/open-api-2.json')
             }
 
             $security = [
-                'client' => ['Project' => []],
-                'server' => ['Project' => [], 'Key' => []],
+                APP_PLATFORM_CLIENT => ['Project' => []],
+                APP_PLATFORM_SERVER => ['Project' => [], 'Key' => []],
+                APP_PLATFORM_CONSOLE => ['Project' => [], 'Key' => []],
             ];
 
             $platforms = [
                 'client' => APP_PLATFORM_CLIENT,
                 'server' => APP_PLATFORM_SERVER,
+                'all' => APP_PLATFORM_CONSOLE,
             ];
 
             /*
@@ -571,7 +573,7 @@ $utopia->get('/v1/open-api-2.json')
                         continue;
                     }
 
-                    if(!in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
+                    if($platform !== APP_PLATFORM_CONSOLE && !in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
                         continue;
                     }
 

@@ -23,7 +23,7 @@ include_once __DIR__ . '/../shared/api.php';
 
 $isDev = (App::ENV_TYPE_PRODUCTION !== $utopia->getEnv());
 
-$utopia->get('/v1/database')
+$utopia->get('/v1/database/collections')
     ->desc('List Collections')
     ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
@@ -71,7 +71,7 @@ $utopia->get('/v1/database')
         }
     );
 
-$utopia->get('/v1/database/:collectionId')
+$utopia->get('/v1/database/collections/:collectionId')
     ->desc('Get Collection')
     ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
@@ -91,7 +91,7 @@ $utopia->get('/v1/database/:collectionId')
         }
     );
 
-$utopia->post('/v1/database')
+$utopia->post('/v1/database/collections')
     ->desc('Create Collection')
     ->label('webhook', 'database.collections.create')
     ->label('scope', 'collections.write')
@@ -160,7 +160,7 @@ $utopia->post('/v1/database')
         }
     );
 
-$utopia->put('/v1/database/:collectionId')
+$utopia->put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->label('scope', 'collections.write')
     ->label('webhook', 'database.collections.update')
@@ -224,7 +224,7 @@ $utopia->put('/v1/database/:collectionId')
         }
     );
 
-$utopia->delete('/v1/database/:collectionId')
+$utopia->delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
     ->label('scope', 'collections.write')
     ->label('webhook', 'database.collections.delete')
@@ -261,7 +261,7 @@ $utopia->delete('/v1/database/:collectionId')
         }
     );
 
-$utopia->get('/v1/database/:collectionId/documents')
+$utopia->get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
     ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
@@ -328,7 +328,7 @@ $utopia->get('/v1/database/:collectionId/documents')
         }
     );
 
-$utopia->get('/v1/database/:collectionId/documents/:documentId')
+$utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
     ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
@@ -373,7 +373,7 @@ $utopia->get('/v1/database/:collectionId/documents/:documentId')
         }
     );
 
-$utopia->post('/v1/database/:collectionId/documents')
+$utopia->post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
     ->label('webhook', 'database.documents.create')
     ->label('scope', 'documents.write')
@@ -480,7 +480,7 @@ $utopia->post('/v1/database/:collectionId/documents')
         }
     );
 
-$utopia->patch('/v1/database/:collectionId/documents/:documentId')
+$utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->label('webhook', 'database.documents.update')
     ->label('scope', 'documents.write')
@@ -559,7 +559,7 @@ $utopia->patch('/v1/database/:collectionId/documents/:documentId')
         }
     );
 
-$utopia->delete('/v1/database/:collectionId/documents/:documentId')
+$utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
     ->label('scope', 'documents.write')
     ->label('webhook', 'database.documents.delete')
