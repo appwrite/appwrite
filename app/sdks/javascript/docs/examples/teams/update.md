@@ -2,6 +2,7 @@ let sdk = new Appwrite();
 
 sdk
     .setProject('')
+    .setKey('')
 ;
 
 let promise = sdk.teams.update('[TEAM_ID]', '[NAME]');

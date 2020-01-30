@@ -14,12 +14,12 @@ $home = $this->getParam('home', '');
         <h1>Upload File</h1>
 
         <form
-            data-service="storage.create"
+            data-service="storage.createFile"
             data-event="submit"
             data-scope="sdk"
             data-success="alert,trigger,reset"
             data-success-param-alert-text="File uploaded successfully"
-            data-success-param-trigger-events="file-create,modal-close"
+            data-success-param-trigger-events="storage.createFile,modal-close"
             data-failure="alert"
             data-failure-param-alert-text="Failed to upload file"
             data-failure-param-alert-classname="error">
@@ -41,7 +41,7 @@ $home = $this->getParam('home', '');
     </div>
 
     <form class="box padding-small margin-bottom search"
-        data-service="storage.list"
+        data-service="storage.listFiles"
         data-event="submit"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -62,8 +62,8 @@ $home = $this->getParam('home', '');
     </form>
 
     <div
-        data-service="storage.list"
-        data-event="load,file-create,file-update,file-delete"
+        data-service="storage.listFiles"
+        data-event="load,storage.createFile,storage.updateFile,storage.deleteFile"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
         data-param-offset="{{router.params.offset}}"
@@ -103,12 +103,12 @@ $home = $this->getParam('home', '');
                                     <h1>Update File</h1>
 
                                     <form
-                                        data-service="storage.update"
+                                        data-service="storage.updateFile"
                                         data-event="submit"
                                         data-scope="sdk"
                                         data-success="alert,trigger"
                                         data-success-param-alert-text="File updated successfully"
-                                        data-success-param-trigger-events="file-update,modal-close"
+                                        data-success-param-trigger-events="storage.updateFile,modal-close"
                                         data-failure="alert"
                                         data-failure-param-alert-text="Failed to update file"
                                         data-failure-param-alert-classname="error">
@@ -152,7 +152,7 @@ $home = $this->getParam('home', '');
 
         <div class="clear text-align-center paging">
             <form
-                data-service="storage.list"
+                data-service="storage.listFiles"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -167,7 +167,7 @@ $home = $this->getParam('home', '');
             <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
 
             <form
-                data-service="storage.list"
+                data-service="storage.listFiles"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"

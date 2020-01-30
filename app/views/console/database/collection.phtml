@@ -29,7 +29,7 @@ $collection = $this->getParam('collection', []);
             data-scope="sdk"
             data-success="alert,trigger,reset"
             data-success-param-alert-text="Created document successfully"
-            data-success-param-trigger-events="document-create,modal-close"
+            data-success-param-trigger-events="database.createCollection,modal-close"
             data-failure="alert"
             data-failure-param-alert-text="Failed to create document"
             data-failure-param-alert-classname="error">
@@ -64,7 +64,7 @@ $collection = $this->getParam('collection', []);
 
     <div
         data-service="database.listDocuments"
-        data-event="load,document-create,document-update,document-delete"
+        data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
         data-param-collection-id="{{router.params.id}}"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"

@@ -53,7 +53,7 @@
 
                         <div class="wrapper"
                             data-service="database.listCollections"
-                            data-event="load,collection-create,collection-update,collection-delete"
+                            data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
                             data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-offset="{{router.params.offset}}"
@@ -150,7 +150,7 @@
 
                             <div class="wrapper"
                                 data-service="database.listDocuments"
-                                data-event="load,document-create,document-update,document-delete"
+                                data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
                                 data-param-collection-id="{{router.params.collectionId}}"
                                 data-param-search="{{router.params.dsearch}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"

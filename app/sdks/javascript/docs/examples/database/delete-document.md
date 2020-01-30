@@ -2,6 +2,7 @@ let sdk = new Appwrite();
 
 sdk
     .setProject('')
+    .setKey('')
 ;
 
 let promise = sdk.database.deleteDocument('[COLLECTION_ID]', '[DOCUMENT_ID]');

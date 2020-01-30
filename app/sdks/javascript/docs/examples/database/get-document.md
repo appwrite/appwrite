@@ -2,6 +2,7 @@ let sdk = new Appwrite();
 
 sdk
     .setProject('')
+    .setKey('')
 ;
 
 let promise = sdk.database.getDocument('[COLLECTION_ID]', '[DOCUMENT_ID]');

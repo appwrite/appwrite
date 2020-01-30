@@ -6,11 +6,11 @@
 <div class="zone xl"
     data-service="projects.listTasks"
     data-scope="console"
-    data-event="load,task-create,task-update,task-delete"
+    data-event="load,projects.createTask,projects.updateTask,projects.deleteTask"
     data-name="console-tasks"
     data-param-project-id="{{router.params.project}}"
     data-success="trigger"
-    data-success-param-trigger-events="project-load">
+    data-success-param-trigger-events="projects.listTasks">
 
     <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom" style="display: none;">
         <h3 class="margin-bottom-small">No Tasks Found</h3>
@@ -80,7 +80,7 @@
                                 data-event="submit"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Updated task successfully"
-                                data-success-param-trigger-events="task-update,modal-close"
+                                data-success-param-trigger-events="projects.updateTask,modal-close"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update task"
                                 data-failure-param-alert-classname="error">
@@ -198,7 +198,7 @@
                                 data-confirm="Are you sure you want to delete this task?"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Deleted task successfully"
-                                data-success-param-trigger-events="task-delete,modal-close"
+                                data-success-param-trigger-events="projects.deleteTask,modal-close"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to delete task"
                                 data-failure-param-alert-classname="error">
@@ -227,7 +227,7 @@
                 data-event="submit"
                 data-success="alert,trigger,reset"
                 data-success-param-alert-text="Created task successfully"
-                data-success-param-trigger-events="task-create,modal-close"
+                data-success-param-trigger-events="projects.createTask,modal-close"
                 data-failure="alert"
                 data-failure-param-alert-text="Failed to create task"
                 data-failure-param-alert-classname="error">

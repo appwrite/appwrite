@@ -4,7 +4,7 @@
     data-event="load,user-update"
     data-param-user-id="{{router.params.id}}"
     data-success="trigger"
-    data-success-param-trigger-events="user-load">
+    data-success-param-trigger-events="users.get">
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
@@ -51,7 +51,7 @@
                             data-event="load"
                             data-param-user-id="{{router.params.id}}"
                             data-success="trigger"
-                            data-success-param-trigger-events="user-prefs-load">
+                            data-success-param-trigger-events="users.getPrefs">
 
                             <div data-ls-if="!{{user-prefs|isEmptyObject}}" style="display: none;">
                                 <table class="vertical">
@@ -92,7 +92,7 @@
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Blocked User Successfully"
-                                data-success-param-trigger-events="user-update"
+                                data-success-param-trigger-events="users.update"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to Block User"
                                 data-failure-param-alert-classname="error">
@@ -108,7 +108,7 @@
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Blocked Activated Successfully"
-                                data-success-param-trigger-events="user-update"
+                                data-success-param-trigger-events="users.update"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to Activate User"
                                 data-failure-param-alert-classname="error">
@@ -141,7 +141,7 @@
                                         data-event="submit"
                                         data-loading="Loading..."
                                         data-success="trigger"
-                                        data-success-param-trigger-events="user-update"
+                                        data-success-param-trigger-events="users.update"
                                         data-failure="alert"
                                         data-failure-param-alert-text="Failed to logout session"
                                         data-failure-param-alert-classname="error">
@@ -168,7 +168,7 @@
                             data-param-user-id="{{router.params.id}}"
                             data-event="submit"
                             data-success="trigger"
-                            data-success-param-trigger-events="user-update"
+                            data-success-param-trigger-events="users.update"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to logout all sessions"
                             data-failure-param-alert-classname="error">

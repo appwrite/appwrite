@@ -139,7 +139,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.28');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.0');
             addGlobalHeader('content-type', '');
 
             /**
@@ -858,6 +858,46 @@
 
                 return http
                     .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Verification
+             *
+             * Use this endpoint to send a verification message to your user email address
+             * to confirm they are the valid owners of that address. Both the **userId**
+             * and **secret** arguments will be passed as query parameters to the URL you
+             * have provider to be attached to the verification email. The provided URL
+             * should redirect the user back for your app and allow you to complete the
+             * verification process by verifying both the **userId** and **secret**
+             * parameters. Learn more about how to [complete the verification
+             * process](/docs/account#updateAccountVerification). 
+             * 
+             * Please note that in order to avoid a [Redirect
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * the only valid redirect URLs are the ones from domains you have set when
+             * adding your platforms in the console interface.
+             *
+             * @param {string} url
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createVerification: function(url) {
+                if(url === undefined) {
+                    throw new Error('Missing required parameter: "url"');
+                }
+                
+                let path = '/account/verification';
+
+                let payload = {};
+
+                if(url) {
+                    payload['url'] = url;
+                }
+
+                return http
+                    .post(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -1742,6 +1782,1139 @@
             }
         };
 
+        let projects = {
+
+            /**
+             * List Projects
+             *
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            list: function() {
+                let path = '/projects';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Project
+             *
+             *
+             * @param {string} name
+             * @param {string} teamId
+             * @param {string} description
+             * @param {string} logo
+             * @param {string} url
+             * @param {string} legalName
+             * @param {string} legalCountry
+             * @param {string} legalState
+             * @param {string} legalCity
+             * @param {string} legalAddress
+             * @param {string} legalTaxId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            create: function(name, teamId, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(teamId === undefined) {
+                    throw new Error('Missing required parameter: "teamId"');
+                }
+                
+                let path = '/projects';
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(teamId) {
+                    payload['teamId'] = teamId;
+                }
+
+                if(description) {
+                    payload['description'] = description;
+                }
+
+                if(logo) {
+                    payload['logo'] = logo;
+                }
+
+                if(url) {
+                    payload['url'] = url;
+                }
+
+                if(legalName) {
+                    payload['legalName'] = legalName;
+                }
+
+                if(legalCountry) {
+                    payload['legalCountry'] = legalCountry;
+                }
+
+                if(legalState) {
+                    payload['legalState'] = legalState;
+                }
+
+                if(legalCity) {
+                    payload['legalCity'] = legalCity;
+                }
+
+                if(legalAddress) {
+                    payload['legalAddress'] = legalAddress;
+                }
+
+                if(legalTaxId) {
+                    payload['legalTaxId'] = legalTaxId;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Project
+             *
+             *
+             * @param {string} projectId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            get: function(projectId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Project
+             *
+             *
+             * @param {string} projectId
+             * @param {string} name
+             * @param {string} description
+             * @param {string} logo
+             * @param {string} url
+             * @param {string} legalName
+             * @param {string} legalCountry
+             * @param {string} legalState
+             * @param {string} legalCity
+             * @param {string} legalAddress
+             * @param {string} legalTaxId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            update: function(projectId, name, description = '', logo = '', url = '', legalName = '', legalCountry = '', legalState = '', legalCity = '', legalAddress = '', legalTaxId = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(description) {
+                    payload['description'] = description;
+                }
+
+                if(logo) {
+                    payload['logo'] = logo;
+                }
+
+                if(url) {
+                    payload['url'] = url;
+                }
+
+                if(legalName) {
+                    payload['legalName'] = legalName;
+                }
+
+                if(legalCountry) {
+                    payload['legalCountry'] = legalCountry;
+                }
+
+                if(legalState) {
+                    payload['legalState'] = legalState;
+                }
+
+                if(legalCity) {
+                    payload['legalCity'] = legalCity;
+                }
+
+                if(legalAddress) {
+                    payload['legalAddress'] = legalAddress;
+                }
+
+                if(legalTaxId) {
+                    payload['legalTaxId'] = legalTaxId;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Project
+             *
+             *
+             * @param {string} projectId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            delete: function(projectId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Keys
+             *
+             *
+             * @param {string} projectId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listKeys: function(projectId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                let path = '/projects/{projectId}/keys'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Key
+             *
+             *
+             * @param {string} projectId
+             * @param {string} name
+             * @param {array} scopes
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createKey: function(projectId, name, scopes) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(scopes === undefined) {
+                    throw new Error('Missing required parameter: "scopes"');
+                }
+                
+                let path = '/projects/{projectId}/keys'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(scopes) {
+                    payload['scopes'] = scopes;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Key
+             *
+             *
+             * @param {string} projectId
+             * @param {string} keyId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getKey: function(projectId, keyId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(keyId === undefined) {
+                    throw new Error('Missing required parameter: "keyId"');
+                }
+                
+                let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Key
+             *
+             *
+             * @param {string} projectId
+             * @param {string} keyId
+             * @param {string} name
+             * @param {array} scopes
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateKey: function(projectId, keyId, name, scopes) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(keyId === undefined) {
+                    throw new Error('Missing required parameter: "keyId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(scopes === undefined) {
+                    throw new Error('Missing required parameter: "scopes"');
+                }
+                
+                let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(scopes) {
+                    payload['scopes'] = scopes;
+                }
+
+                return http
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Key
+             *
+             *
+             * @param {string} projectId
+             * @param {string} keyId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteKey: function(projectId, keyId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(keyId === undefined) {
+                    throw new Error('Missing required parameter: "keyId"');
+                }
+                
+                let path = '/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{keyId}', 'g'), keyId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Project OAuth
+             *
+             *
+             * @param {string} projectId
+             * @param {string} provider
+             * @param {string} appId
+             * @param {string} secret
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateOAuth: function(projectId, provider, appId = '', secret = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(provider === undefined) {
+                    throw new Error('Missing required parameter: "provider"');
+                }
+                
+                let path = '/projects/{projectId}/oauth'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(provider) {
+                    payload['provider'] = provider;
+                }
+
+                if(appId) {
+                    payload['appId'] = appId;
+                }
+
+                if(secret) {
+                    payload['secret'] = secret;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Platforms
+             *
+             *
+             * @param {string} projectId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listPlatforms: function(projectId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                let path = '/projects/{projectId}/platforms'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Platform
+             *
+             *
+             * @param {string} projectId
+             * @param {string} type
+             * @param {string} name
+             * @param {string} key
+             * @param {string} store
+             * @param {string} url
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createPlatform: function(projectId, type, name, key = '', store = '', url = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(type === undefined) {
+                    throw new Error('Missing required parameter: "type"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                let path = '/projects/{projectId}/platforms'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(type) {
+                    payload['type'] = type;
+                }
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(key) {
+                    payload['key'] = key;
+                }
+
+                if(store) {
+                    payload['store'] = store;
+                }
+
+                if(url) {
+                    payload['url'] = url;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Platform
+             *
+             *
+             * @param {string} projectId
+             * @param {string} platformId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getPlatform: function(projectId, platformId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(platformId === undefined) {
+                    throw new Error('Missing required parameter: "platformId"');
+                }
+                
+                let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Platform
+             *
+             *
+             * @param {string} projectId
+             * @param {string} platformId
+             * @param {string} name
+             * @param {string} key
+             * @param {string} store
+             * @param {string} url
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(platformId === undefined) {
+                    throw new Error('Missing required parameter: "platformId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(key) {
+                    payload['key'] = key;
+                }
+
+                if(store) {
+                    payload['store'] = store;
+                }
+
+                if(url) {
+                    payload['url'] = url;
+                }
+
+                return http
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Platform
+             *
+             *
+             * @param {string} projectId
+             * @param {string} platformId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deletePlatform: function(projectId, platformId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(platformId === undefined) {
+                    throw new Error('Missing required parameter: "platformId"');
+                }
+                
+                let path = '/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{platformId}', 'g'), platformId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Tasks
+             *
+             *
+             * @param {string} projectId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listTasks: function(projectId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                let path = '/projects/{projectId}/tasks'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Task
+             *
+             *
+             * @param {string} projectId
+             * @param {string} name
+             * @param {string} status
+             * @param {string} schedule
+             * @param {number} security
+             * @param {string} httpMethod
+             * @param {string} httpUrl
+             * @param {array} httpHeaders
+             * @param {string} httpUser
+             * @param {string} httpPass
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createTask: function(projectId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders = [], httpUser = '', httpPass = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(status === undefined) {
+                    throw new Error('Missing required parameter: "status"');
+                }
+                
+                if(schedule === undefined) {
+                    throw new Error('Missing required parameter: "schedule"');
+                }
+                
+                if(security === undefined) {
+                    throw new Error('Missing required parameter: "security"');
+                }
+                
+                if(httpMethod === undefined) {
+                    throw new Error('Missing required parameter: "httpMethod"');
+                }
+                
+                if(httpUrl === undefined) {
+                    throw new Error('Missing required parameter: "httpUrl"');
+                }
+                
+                let path = '/projects/{projectId}/tasks'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(status) {
+                    payload['status'] = status;
+                }
+
+                if(schedule) {
+                    payload['schedule'] = schedule;
+                }
+
+                if(security) {
+                    payload['security'] = security;
+                }
+
+                if(httpMethod) {
+                    payload['httpMethod'] = httpMethod;
+                }
+
+                if(httpUrl) {
+                    payload['httpUrl'] = httpUrl;
+                }
+
+                if(httpHeaders) {
+                    payload['httpHeaders'] = httpHeaders;
+                }
+
+                if(httpUser) {
+                    payload['httpUser'] = httpUser;
+                }
+
+                if(httpPass) {
+                    payload['httpPass'] = httpPass;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Task
+             *
+             *
+             * @param {string} projectId
+             * @param {string} taskId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getTask: function(projectId, taskId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(taskId === undefined) {
+                    throw new Error('Missing required parameter: "taskId"');
+                }
+                
+                let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Task
+             *
+             *
+             * @param {string} projectId
+             * @param {string} taskId
+             * @param {string} name
+             * @param {string} status
+             * @param {string} schedule
+             * @param {number} security
+             * @param {string} httpMethod
+             * @param {string} httpUrl
+             * @param {array} httpHeaders
+             * @param {string} httpUser
+             * @param {string} httpPass
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateTask: function(projectId, taskId, name, status, schedule, security, httpMethod, httpUrl, httpHeaders = [], httpUser = '', httpPass = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(taskId === undefined) {
+                    throw new Error('Missing required parameter: "taskId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(status === undefined) {
+                    throw new Error('Missing required parameter: "status"');
+                }
+                
+                if(schedule === undefined) {
+                    throw new Error('Missing required parameter: "schedule"');
+                }
+                
+                if(security === undefined) {
+                    throw new Error('Missing required parameter: "security"');
+                }
+                
+                if(httpMethod === undefined) {
+                    throw new Error('Missing required parameter: "httpMethod"');
+                }
+                
+                if(httpUrl === undefined) {
+                    throw new Error('Missing required parameter: "httpUrl"');
+                }
+                
+                let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(status) {
+                    payload['status'] = status;
+                }
+
+                if(schedule) {
+                    payload['schedule'] = schedule;
+                }
+
+                if(security) {
+                    payload['security'] = security;
+                }
+
+                if(httpMethod) {
+                    payload['httpMethod'] = httpMethod;
+                }
+
+                if(httpUrl) {
+                    payload['httpUrl'] = httpUrl;
+                }
+
+                if(httpHeaders) {
+                    payload['httpHeaders'] = httpHeaders;
+                }
+
+                if(httpUser) {
+                    payload['httpUser'] = httpUser;
+                }
+
+                if(httpPass) {
+                    payload['httpPass'] = httpPass;
+                }
+
+                return http
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Task
+             *
+             *
+             * @param {string} projectId
+             * @param {string} taskId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteTask: function(projectId, taskId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(taskId === undefined) {
+                    throw new Error('Missing required parameter: "taskId"');
+                }
+                
+                let path = '/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{taskId}', 'g'), taskId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Project
+             *
+             *
+             * @param {string} projectId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getUsage: function(projectId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                let path = '/projects/{projectId}/usage'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Webhooks
+             *
+             *
+             * @param {string} projectId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listWebhooks: function(projectId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                let path = '/projects/{projectId}/webhooks'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Webhook
+             *
+             *
+             * @param {string} projectId
+             * @param {string} name
+             * @param {array} events
+             * @param {string} url
+             * @param {number} security
+             * @param {string} httpUser
+             * @param {string} httpPass
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createWebhook: function(projectId, name, events, url, security, httpUser = '', httpPass = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(events === undefined) {
+                    throw new Error('Missing required parameter: "events"');
+                }
+                
+                if(url === undefined) {
+                    throw new Error('Missing required parameter: "url"');
+                }
+                
+                if(security === undefined) {
+                    throw new Error('Missing required parameter: "security"');
+                }
+                
+                let path = '/projects/{projectId}/webhooks'.replace(new RegExp('{projectId}', 'g'), projectId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(events) {
+                    payload['events'] = events;
+                }
+
+                if(url) {
+                    payload['url'] = url;
+                }
+
+                if(security) {
+                    payload['security'] = security;
+                }
+
+                if(httpUser) {
+                    payload['httpUser'] = httpUser;
+                }
+
+                if(httpPass) {
+                    payload['httpPass'] = httpPass;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Webhook
+             *
+             *
+             * @param {string} projectId
+             * @param {string} webhookId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getWebhook: function(projectId, webhookId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(webhookId === undefined) {
+                    throw new Error('Missing required parameter: "webhookId"');
+                }
+                
+                let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Webhook
+             *
+             *
+             * @param {string} projectId
+             * @param {string} webhookId
+             * @param {string} name
+             * @param {array} events
+             * @param {string} url
+             * @param {number} security
+             * @param {string} httpUser
+             * @param {string} httpPass
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateWebhook: function(projectId, webhookId, name, events, url, security, httpUser = '', httpPass = '') {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(webhookId === undefined) {
+                    throw new Error('Missing required parameter: "webhookId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(events === undefined) {
+                    throw new Error('Missing required parameter: "events"');
+                }
+                
+                if(url === undefined) {
+                    throw new Error('Missing required parameter: "url"');
+                }
+                
+                if(security === undefined) {
+                    throw new Error('Missing required parameter: "security"');
+                }
+                
+                let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(events) {
+                    payload['events'] = events;
+                }
+
+                if(url) {
+                    payload['url'] = url;
+                }
+
+                if(security) {
+                    payload['security'] = security;
+                }
+
+                if(httpUser) {
+                    payload['httpUser'] = httpUser;
+                }
+
+                if(httpPass) {
+                    payload['httpPass'] = httpPass;
+                }
+
+                return http
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Webhook
+             *
+             *
+             * @param {string} projectId
+             * @param {string} webhookId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteWebhook: function(projectId, webhookId) {
+                if(projectId === undefined) {
+                    throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(webhookId === undefined) {
+                    throw new Error('Missing required parameter: "webhookId"');
+                }
+                
+                let path = '/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}', 'g'), projectId).replace(new RegExp('{webhookId}', 'g'), webhookId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            }
+        };
+
         let storage = {
 
             /**
@@ -1758,7 +2931,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            list: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+            listFiles: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
                 let path = '/storage/files';
 
                 let payload = {};
@@ -1798,7 +2971,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            create: function(file, read, write) {
+            createFile: function(file, read, write) {
                 if(file === undefined) {
                     throw new Error('Missing required parameter: "file"');
                 }
@@ -1843,7 +3016,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            get: function(fileId) {
+            getFile: function(fileId) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1870,7 +3043,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            update: function(fileId, read, write) {
+            updateFile: function(fileId, read, write) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1911,7 +3084,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            delete: function(fileId) {
+            deleteFile: function(fileId) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1937,7 +3110,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getDownload: function(fileId) {
+            getFileDownload: function(fileId) {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -1969,7 +3142,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getPreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
+            getFilePreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -2015,7 +3188,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getView: function(fileId, as = '') {
+            getFileView: function(fileId, as = '') {
                 if(fileId === undefined) {
                     throw new Error('Missing required parameter: "fileId"');
                 }
@@ -2383,6 +3556,311 @@
             }
         };
 
+        let users = {
+
+            /**
+             * List Users
+             *
+             * Get a list of all the project users. You can use the query params to filter
+             * your results.
+             *
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            list: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                let path = '/users';
+
+                let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create User
+             *
+             * Create a new user.
+             *
+             * @param {string} email
+             * @param {string} password
+             * @param {string} name
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            create: function(email, password, name = '') {
+                if(email === undefined) {
+                    throw new Error('Missing required parameter: "email"');
+                }
+                
+                if(password === undefined) {
+                    throw new Error('Missing required parameter: "password"');
+                }
+                
+                let path = '/users';
+
+                let payload = {};
+
+                if(email) {
+                    payload['email'] = email;
+                }
+
+                if(password) {
+                    payload['password'] = password;
+                }
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get User
+             *
+             * Get user by its unique ID.
+             *
+             * @param {string} userId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            get: function(userId) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                let path = '/users/{userId}'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get User Logs
+             *
+             * Get user activity logs list by its unique ID.
+             *
+             * @param {string} userId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getLogs: function(userId) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                let path = '/users/{userId}/logs'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get User Preferences
+             *
+             * Get user preferences by its unique ID.
+             *
+             * @param {string} userId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getPrefs: function(userId) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                let path = '/users/{userId}/prefs'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update User Preferences
+             *
+             * Update user preferences by its unique ID. You can pass only the specific
+             * settings you wish to update.
+             *
+             * @param {string} userId
+             * @param {string} prefs
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updatePrefs: function(userId, prefs) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                if(prefs === undefined) {
+                    throw new Error('Missing required parameter: "prefs"');
+                }
+                
+                let path = '/users/{userId}/prefs'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                if(prefs) {
+                    payload['prefs'] = prefs;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get User Sessions
+             *
+             * Get user sessions list by its unique ID.
+             *
+             * @param {string} userId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getSessions: function(userId) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                let path = '/users/{userId}/sessions'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete User Sessions
+             *
+             * Delete all user sessions by its unique ID.
+             *
+             * @param {string} userId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteSessions: function(userId) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                let path = '/users/{userId}/sessions'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete User Session
+             *
+             * Delete user sessions by its unique ID.
+             *
+             * @param {string} userId
+             * @param {string} sessionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteSession: function(userId, sessionId) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                if(sessionId === undefined) {
+                    throw new Error('Missing required parameter: "sessionId"');
+                }
+                
+                let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                if(sessionId) {
+                    payload['sessionId'] = sessionId;
+                }
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update User Status
+             *
+             * Update user status by its unique ID.
+             *
+             * @param {string} userId
+             * @param {string} status
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateStatus: function(userId, status) {
+                if(userId === undefined) {
+                    throw new Error('Missing required parameter: "userId"');
+                }
+                
+                if(status === undefined) {
+                    throw new Error('Missing required parameter: "status"');
+                }
+                
+                let path = '/users/{userId}/status'.replace(new RegExp('{userId}', 'g'), userId);
+
+                let payload = {};
+
+                if(status) {
+                    payload['status'] = status;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            }
+        };
+
         return {
             setEndpoint: setEndpoint,
             setProject: setProject,
@@ -2393,8 +3871,10 @@
             avatars: avatars,
             database: database,
             locale: locale,
+            projects: projects,
             storage: storage,
-            teams: teams
+            teams: teams,
+            users: users
         };
     };
 

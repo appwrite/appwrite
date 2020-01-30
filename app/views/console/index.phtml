@@ -21,10 +21,10 @@ $home = $this->getParam('home', '');
     <div
         data-service="projects.list"
         data-scope="console"
-        data-event="load,project-create"
+        data-event="load,projects.create"
         data-name="console-projects"
         data-success="trigger"
-        data-success-param-trigger-events="projects-load">
+        data-success-param-trigger-events="projects.list">
 
         <div data-ls-if="0 == {{console-projects.length}}" class="box margin-bottom" style="display: none">
             <h3 class="margin-bottom">Get Started</h3>

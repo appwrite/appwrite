@@ -276,31 +276,31 @@ if(httpUser){payload['httpUser']=httpUser;}
 if(httpPass){payload['httpPass']=httpPass;}
 return http.put(path,{'content-type':'application/json',},payload);},deleteWebhook:function(projectId,webhookId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(webhookId===undefined){throw new Error('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{webhookId}','g'),webhookId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);}};let storage={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/storage/files';let payload={};if(search){payload['search']=search;}
+let path='/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{webhookId}','g'),webhookId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);}};let storage={listFiles:function(search='',limit=25,offset=0,orderType='ASC'){let path='/storage/files';let payload={};if(search){payload['search']=search;}
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}
-return http.get(path,{'content-type':'application/json',},payload);},create:function(file,read,write){if(file===undefined){throw new Error('Missing required parameter: "file"');}
+return http.get(path,{'content-type':'application/json',},payload);},createFile:function(file,read,write){if(file===undefined){throw new Error('Missing required parameter: "file"');}
 if(read===undefined){throw new Error('Missing required parameter: "read"');}
 if(write===undefined){throw new Error('Missing required parameter: "write"');}
 let path='/storage/files';let payload={};if(file){payload['file']=file;}
 if(read){payload['read']=read;}
 if(write){payload['write']=write;}
-return http.post(path,{'content-type':'multipart/form-data',},payload);},get:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},update:function(fileId,read,write){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+return http.post(path,{'content-type':'multipart/form-data',},payload);},getFile:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},updateFile:function(fileId,read,write){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 if(read===undefined){throw new Error('Missing required parameter: "read"');}
 if(write===undefined){throw new Error('Missing required parameter: "write"');}
 let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(read){payload['read']=read;}
 if(write){payload['write']=write;}
-return http.put(path,{'content-type':'application/json',},payload);},delete:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getDownload:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getPreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+return http.put(path,{'content-type':'application/json',},payload);},deleteFile:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getFileDownload:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getFilePreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(width){payload['width']=width;}
 if(height){payload['height']=height;}
 if(quality){payload['quality']=quality;}
 if(background){payload['background']=background;}
 if(output){payload['output']=output;}
-return http.get(path,{'content-type':'application/json',},payload);},getView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+return http.get(path,{'content-type':'application/json',},payload);},getFileView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/view'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(as){payload['as']=as;}
 return http.get(path,{'content-type':'application/json',},payload);}};let teams={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/teams';let payload={};if(search){payload['search']=search;}
 if(limit){payload['limit']=limit;}

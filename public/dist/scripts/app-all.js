@@ -276,31 +276,31 @@ if(httpUser){payload['httpUser']=httpUser;}
 if(httpPass){payload['httpPass']=httpPass;}
 return http.put(path,{'content-type':'application/json',},payload);},deleteWebhook:function(projectId,webhookId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(webhookId===undefined){throw new Error('Missing required parameter: "webhookId"');}
-let path='/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{webhookId}','g'),webhookId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);}};let storage={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/storage/files';let payload={};if(search){payload['search']=search;}
+let path='/projects/{projectId}/webhooks/{webhookId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{webhookId}','g'),webhookId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);}};let storage={listFiles:function(search='',limit=25,offset=0,orderType='ASC'){let path='/storage/files';let payload={};if(search){payload['search']=search;}
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}
-return http.get(path,{'content-type':'application/json',},payload);},create:function(file,read,write){if(file===undefined){throw new Error('Missing required parameter: "file"');}
+return http.get(path,{'content-type':'application/json',},payload);},createFile:function(file,read,write){if(file===undefined){throw new Error('Missing required parameter: "file"');}
 if(read===undefined){throw new Error('Missing required parameter: "read"');}
 if(write===undefined){throw new Error('Missing required parameter: "write"');}
 let path='/storage/files';let payload={};if(file){payload['file']=file;}
 if(read){payload['read']=read;}
 if(write){payload['write']=write;}
-return http.post(path,{'content-type':'multipart/form-data',},payload);},get:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},update:function(fileId,read,write){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+return http.post(path,{'content-type':'multipart/form-data',},payload);},getFile:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},updateFile:function(fileId,read,write){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 if(read===undefined){throw new Error('Missing required parameter: "read"');}
 if(write===undefined){throw new Error('Missing required parameter: "write"');}
 let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(read){payload['read']=read;}
 if(write){payload['write']=write;}
-return http.put(path,{'content-type':'application/json',},payload);},delete:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getDownload:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getPreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+return http.put(path,{'content-type':'application/json',},payload);},deleteFile:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getFileDownload:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getFilePreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(width){payload['width']=width;}
 if(height){payload['height']=height;}
 if(quality){payload['quality']=quality;}
 if(background){payload['background']=background;}
 if(output){payload['output']=output;}
-return http.get(path,{'content-type':'application/json',},payload);},getView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+return http.get(path,{'content-type':'application/json',},payload);},getFileView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/view'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(as){payload['as']=as;}
 return http.get(path,{'content-type':'application/json',},payload);}};let teams={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/teams';let payload={};if(search){payload['search']=search;}
 if(limit){payload['limit']=limit;}
@@ -2395,7 +2395,7 @@ children[prop]=template.cloneNode(true);element.appendChild(children[prop]);(ind
 container.set('$index',originalIndex,true,false);container.set('$prefix',originalPrefix,true,false);container.set('$as',originalAs,true,false);element.dispatchEvent(new Event('looped'));};let template=(element.children.length===1)?element.children[0]:window.document.createElement('li');echo();container.bind(element,expr+'.length',echo);let path=(expr+'.length').split('.');while(path.length){container.bind(element,path.join('.'),echo);path.pop();}}});window.ls.container.get('view').add({selector:'data-ls-template',template:false,repeat:true,controller:function(element,view,http,expression,document){let template=expression.parse(element.getAttribute('data-ls-template'));let type=element.getAttribute('data-type')||'url';element.innerHTML='';if('script'===type){let inlineTemplate=document.getElementById(template);if(inlineTemplate&&inlineTemplate.innerHTML){element.innerHTML=inlineTemplate.innerHTML;element.dispatchEvent(new CustomEvent('template-loaded',{bubbles:true,cancelable:false}));}
 else{element.innerHTML='<span style="color: red">Missing template "'+template+'"</span>';}
 return;}
-http.get(template).then(function(element){return function(data){element.innerHTML=data;view.render(element);element.dispatchEvent(new CustomEvent('template-loaded',{bubbles:true,cancelable:false}));}}(element),function(){throw new Error('Failed loading template');});}});window.ls.error=function(){return function(error){console.error("ERROR-APP",error);};};window.addEventListener("error",function(event){console.error("ERROR-EVENT:",event.error.message,event.error.stack);});document.addEventListener("logout",function(){window.location="/auth/signin";});document.addEventListener("http-get-401",function(){document.dispatchEvent(new CustomEvent("logout"));},true);(function(window){"use strict";window.ls.container.set('alerts',function(window){return{list:[],ids:0,counter:0,max:5,add:function(message,time){var scope=this;message.id=scope.ids++;scope.counter++;scope.list.unshift(message);if(scope.counter>scope.max){scope.list.pop();scope.counter--;}
+http.get(template).then(function(element){return function(data){element.innerHTML=data;view.render(element);element.dispatchEvent(new CustomEvent('template-loaded',{bubbles:true,cancelable:false}));}}(element),function(){throw new Error('Failed loading template');});}});window.ls.error=function(){return function(error){console.error("ERROR-APP",error);};};window.addEventListener("error",function(event){console.error("ERROR-EVENT:",event.error.message,event.error.stack);});document.addEventListener("deleteCurrentSession",function(){window.location="/auth/signin";});document.addEventListener("http-get-401",function(){document.dispatchEvent(new CustomEvent("deleteCurrentSession"));},true);(function(window){"use strict";window.ls.container.set('alerts',function(window){return{list:[],ids:0,counter:0,max:5,add:function(message,time){var scope=this;message.id=scope.ids++;scope.counter++;scope.list.unshift(message);if(scope.counter>scope.max){scope.list.pop();scope.counter--;}
 if(time>0){window.setTimeout(function(message){return function(){scope.remove(message.id)}}(message),time);}
 return message.id;},remove:function(id){let scope=this;for(let index=0;index<scope.list.length;index++){let obj=scope.list[index];if(obj.id===parseInt(id)){scope.counter--;if(typeof obj.callback==="function"){obj.callback();}
 scope.list.splice(index,1);};}}};},true,true);})(window);(function(window){"use strict";window.ls.container.set('console',function(window){var sdk=new window.Appwrite();sdk.setEndpoint(APP_ENV.API).setProject('console').setLocale(APP_ENV.LOCALE);return sdk;},true);})(window);(function(window){"use strict";window.ls.container.set('date',function(){function format(format,timestamp){var jsdate,f

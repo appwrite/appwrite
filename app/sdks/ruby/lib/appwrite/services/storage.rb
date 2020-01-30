@@ -1,7 +1,7 @@
 module Appwrite
     class Storage < Service
 
-        def list(search: '', limit: 25, offset: 0, order_type: 'ASC')
+        def list_files(search: '', limit: 25, offset: 0, order_type: 'ASC')
             path = '/storage/files'
 
             params = {
@@ -16,7 +16,7 @@ module Appwrite
             }, params);
         end
 
-        def create(file:, read:, write:)
+        def create_file(file:, read:, write:)
             path = '/storage/files'
 
             params = {
@@ -30,7 +30,7 @@ module Appwrite
             }, params);
         end
 
-        def get(file_id:)
+        def get_file(file_id:)
             path = '/storage/files/{fileId}'
                 .gsub('{file_id}', file_id)
 
@@ -42,7 +42,7 @@ module Appwrite
             }, params);
         end
 
-        def update(file_id:, read:, write:)
+        def update_file(file_id:, read:, write:)
             path = '/storage/files/{fileId}'
                 .gsub('{file_id}', file_id)
 
@@ -56,7 +56,7 @@ module Appwrite
             }, params);
         end
 
-        def delete(file_id:)
+        def delete_file(file_id:)
             path = '/storage/files/{fileId}'
                 .gsub('{file_id}', file_id)
 
@@ -68,7 +68,7 @@ module Appwrite
             }, params);
         end
 
-        def get_download(file_id:)
+        def get_file_download(file_id:)
             path = '/storage/files/{fileId}/download'
                 .gsub('{file_id}', file_id)
 
@@ -80,7 +80,7 @@ module Appwrite
             }, params);
         end
 
-        def get_preview(file_id:, width: 0, height: 0, quality: 100, background: '', output: '')
+        def get_file_preview(file_id:, width: 0, height: 0, quality: 100, background: '', output: '')
             path = '/storage/files/{fileId}/preview'
                 .gsub('{file_id}', file_id)
 
@@ -97,7 +97,7 @@ module Appwrite
             }, params);
         end
 
-        def get_view(file_id:, as: '')
+        def get_file_view(file_id:, as: '')
             path = '/storage/files/{fileId}/view'
                 .gsub('{file_id}', file_id)
 

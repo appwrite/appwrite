@@ -11,7 +11,7 @@
     data-event="load"
     data-param-project-id="{{router.params.project}}"
     data-success="trigger"
-    data-success-param-trigger-events="project-load">
+    data-success-param-trigger-events="projects.get">
 
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
@@ -19,13 +19,13 @@
                 <h2>Overview</h2>
 
                 <form
-                    data-service="projects.updateProject"
+                    data-service="projects.update"
                     data-scope="console"
                     data-event="submit"
                     data-param-project-id="{{router.params.project}}"
                     data-success="alert,trigger"
                     data-success-param-alert-text="Saved project successfully"
-                    data-success-param-trigger-events="project-update"
+                    data-success-param-trigger-events="projects.update"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to update project"
                     data-failure-param-alert-classname="error">
@@ -72,13 +72,13 @@
             <li data-state="/console/settings/privacy?project={{router.params.project}}">
 
                 <form
-                    data-service="projects.updateProject"
+                    data-service="projects.update"
                     data-scope="console"
                     data-event="submit"
                     data-param-project-id="{{router.params.project}}"
                     data-success="alert,trigger"
                     data-success-param-alert-text="Saved project successfully"
-                    data-success-param-trigger-events="project-update"
+                    data-success-param-trigger-events="projects.update"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to update project"
                     data-failure-param-alert-classname="error">
@@ -126,11 +126,11 @@
                 <div class="zone xl"
                     data-service="teams.getMemberships"
                     data-scope="console"
-                    data-event="load,membership-create,membership-update,membership-delete"
+                    data-event="load,teams.createMembership,teams.deleteMembership"
                     data-name="members"
                     data-param-team-id="{{console-project.teamId}}"
                     data-success="trigger"
-                    data-success-param-trigger-events="members-load">
+                    data-success-param-trigger-events="teams.getMemberships">
 
                     <div class="box margin-bottom">
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
@@ -141,7 +141,7 @@
                                     data-event="submit"
                                     data-success="alert,trigger"
                                     data-success-param-alert-text="Member Removed Successfully"
-                                    data-success-param-trigger-events="membership-delete"
+                                    data-success-param-trigger-events="teams.deleteMembership"
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to Remove Member"
                                     data-failure-param-alert-classname="error">
@@ -195,7 +195,7 @@
                             data-loading="Sending invitation, please wait..."
                             data-success="alert,trigger,reset"
                             data-success-param-alert-text="Invitation Sent Successfully"
-                            data-success-param-trigger-events="membership-create,modal-close"
+                            data-success-param-trigger-events="teams.createMembership,modal-close"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to Send Invite"
                             data-failure-param-alert-classname="error">
