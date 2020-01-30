@@ -364,7 +364,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             }
 
             $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret]);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret, 'teamId' => $teamId]);
             $url = Template::unParseURL($url);
 
             $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));

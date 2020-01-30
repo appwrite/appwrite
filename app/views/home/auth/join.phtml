@@ -1,23 +1,21 @@
 <section class="zone medium">
     <form class="box margin-top-large"
-        data-service="auth.join"
+        data-service="teams.updateMembershipStatus"
         data-scope="console"
         data-event="submit"
+        data-param-invite-id="{{router.params.teamId}}"
         data-param-invite-id="{{router.params.inviteId}}"
         data-param-user-id="{{router.params.userId}}"
         data-param-secret="{{router.params.secret}}"
         data-success="redirect,alert,trigger"
         data-success-param-redirect-url="/console?project={{router.params.project}}"
         data-success-param-alert-text="Joined Team Successfully"
-        data-success-param-trigger-events="account.update"
+        data-success-param-trigger-events="teams.updateMembershipStatus"
         data-failure="alert"
         data-failure-param-alert-text="Failed to join team. Please try again later"
         data-failure-param-alert-classname="error">
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1">Failed to join team. Please try again later</div>
-
-        <input name="success" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/console?company={{router.params.company}}">
-        <input name="failure" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
 
         <div class=""
              data-service="companies.getPreview"
