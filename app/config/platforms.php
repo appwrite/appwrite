@@ -5,23 +5,10 @@ const APP_PLATFORM_IOS = 'ios';
 const APP_PLATFORM_ANDROID = 'android';
 const APP_PLATFORM_UNITY = 'unity';
 const APP_PLATFORM_FLUTTER = 'flutter';
+
 const APP_PLATFORM_SERVER = 'server';
 const APP_PLATFORM_CLIENT = 'client';
-
-$langDart = [
-    'key' => 'dart',
-    'name' => 'Dart',
-    'version' => '0.0.6',
-    'url' => 'https://github.com/appwrite/sdk-for-dart',
-    'enabled' => true,
-    'beta' => false,
-    'family' => APP_PLATFORM_CLIENT,
-    'prism' => 'dart',
-    'source' => realpath(__DIR__ . '/../sdks/dart'),
-    'gitUrl' => 'git@github.com:appwrite/sdk-for-dart.git',
-    'gitRepoName' => 'sdk-for-dart',
-    'gitUserName' => 'appwrite',
-];
+const APP_PLATFORM_CONSOLE = 'console';
 
 return [
     APP_PLATFORM_WEB => [
@@ -126,6 +113,50 @@ return [
             ],
         ],
     ],
+
+    APP_PLATFORM_FLUTTER => [
+        'name' => 'Flutter',
+        'enabled' => false,
+        'beta' => false,
+        'languages' => [
+            [
+                'key' => 'dart',
+                'name' => 'Dart',
+                'version' => '0.0.6',
+                'url' => 'https://github.com/appwrite/sdk-for-dart',
+                'enabled' => true,
+                'beta' => false,
+                'family' => APP_PLATFORM_CLIENT,
+                'prism' => 'dart',
+                'source' => realpath(__DIR__ . '/../sdks/dart'),
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-dart.git',
+                'gitRepoName' => 'sdk-for-dart',
+                'gitUserName' => 'appwrite',
+            ],
+        ],
+    ],
+
+    // APP_PLATFORM_CONSOLE => [
+    //     'name' => 'Console',
+    //     'enabled' => false,
+    //     'beta' => false,
+    //     'languages' => [
+    //         [
+    //             'key' => 'javascript',
+    //             'name' => 'JS',
+    //             'version' => '1.0.0',
+    //             'url' => 'https://github.com/appwrite/sdk-for-console',
+    //             'enabled' => true,
+    //             'beta' => false,
+    //             'family' => APP_PLATFORM_CONSOLE,
+    //             'prism' => 'console',
+    //             'source' => realpath(__DIR__ . '/../sdks/console'),
+    //             'gitUrl' => 'git@github.com:appwrite/sdk-for-console.git',
+    //             'gitRepoName' => 'sdk-for-console',
+    //             'gitUserName' => 'appwrite',
+    //         ],
+    //     ],
+    // ],
 
     APP_PLATFORM_SERVER => [
         'name' => 'Server',
