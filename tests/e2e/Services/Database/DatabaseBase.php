@@ -11,7 +11,7 @@ trait DatabaseBase
         /**
          * Test for SUCCESS
          */
-        $actors = $this->client->call(Client::METHOD_POST, '/database', array_merge([
+        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -48,7 +48,7 @@ trait DatabaseBase
         $this->assertCount(1, $actors['body']['$permissions']['read']);
         $this->assertCount(2, $actors['body']['$permissions']['write']);
 
-        $movies = $this->client->call(Client::METHOD_POST, '/database', array_merge([
+        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -102,7 +102,7 @@ trait DatabaseBase
      */
     public function testCreateDocument(array $data):array
     {
-        $document1 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -128,7 +128,7 @@ trait DatabaseBase
             'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
-        $document2 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $document2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -160,7 +160,7 @@ trait DatabaseBase
             'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
-        $document3 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $document3 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -186,7 +186,7 @@ trait DatabaseBase
             'write' => ['user:'.$this->getUser()['$uid']],
         ]);
 
-        $document4 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $document4 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -250,7 +250,7 @@ trait DatabaseBase
      */
     public function testListDocuments(array $data):array
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -264,7 +264,7 @@ trait DatabaseBase
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -286,7 +286,7 @@ trait DatabaseBase
      */
     public function testListDocumentsLimitAndOffset(array $data):array
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -299,7 +299,7 @@ trait DatabaseBase
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -322,7 +322,7 @@ trait DatabaseBase
      */
     public function testListDocumentsFirstAndLast(array $data):array
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -335,7 +335,7 @@ trait DatabaseBase
 
         $this->assertEquals(1944, $documents['body']['releaseYear']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -357,7 +357,7 @@ trait DatabaseBase
      */
     public function testDocumentsListSuccessSearch(array $data):array
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -367,7 +367,7 @@ trait DatabaseBase
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -377,7 +377,7 @@ trait DatabaseBase
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -396,7 +396,7 @@ trait DatabaseBase
      */
     public function testListDocumentsFilters(array $data):array
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -409,7 +409,7 @@ trait DatabaseBase
         $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
         $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -421,7 +421,7 @@ trait DatabaseBase
         $this->assertCount(1, $documents['body']['documents']);
         $this->assertEquals('Captain America', $documents['body']['documents'][0]['name']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -442,7 +442,7 @@ trait DatabaseBase
      */
     public function testUpdateDocument(array $data):array
     {
-        $document = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -461,7 +461,7 @@ trait DatabaseBase
         $this->assertEquals($document['body']['name'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/' . $collection . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -474,7 +474,7 @@ trait DatabaseBase
         $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
-        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()));
@@ -494,7 +494,7 @@ trait DatabaseBase
      */
     public function testDeleteDocument(array $data):array
     {
-        $document = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', array_merge([
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()), [
@@ -511,21 +511,21 @@ trait DatabaseBase
 
         $this->assertEquals($document['headers']['status-code'], 201);
 
-        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()));
 
         $this->assertEquals($document['headers']['status-code'], 200);
 
-        $document = $this->client->call(Client::METHOD_DELETE, '/database/' . $collection . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()));
 
         $this->assertEquals($document['headers']['status-code'], 204);
 
-        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, array_merge([
+        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], $this->getHeaders()));

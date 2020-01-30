@@ -16,7 +16,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testCollectionCreateSuccess(array $data): array
     {
-        $actors = $this->client->call(Client::METHOD_POST, '/database', [
+        $actors = $this->client->call(Client::METHOD_POST, '/database/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -52,7 +52,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertCount(1, $actors['body']['$permissions']['read']);
         $this->assertCount(2, $actors['body']['$permissions']['write']);
 
-        $movies = $this->client->call(Client::METHOD_POST, '/database', [
+        $movies = $this->client->call(Client::METHOD_POST, '/database/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -105,7 +105,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentCreateSuccess(array $data): array
     {
-        $document1 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+        $document1 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -129,7 +129,7 @@ class ProjectDatabaseTest extends BaseProjects
             ]
         ]);
 
-        $document2 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+        $document2 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -159,7 +159,7 @@ class ProjectDatabaseTest extends BaseProjects
             ]
         ]);
 
-        $document3 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+        $document3 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -183,7 +183,7 @@ class ProjectDatabaseTest extends BaseProjects
             ]
         ]);
 
-        $document4 = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+        $document4 = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -245,7 +245,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentsListSuccessOrderAndCasting(array $data): void
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -259,7 +259,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(2019, $documents['body']['documents'][2]['releaseYear']);
         $this->assertCount(3, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -279,7 +279,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentsListSuccessLimitAndOffset(array $data): void
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -292,7 +292,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -313,7 +313,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentsListSuccessFirstAndLast(array $data): void
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -326,7 +326,7 @@ class ProjectDatabaseTest extends BaseProjects
 
         $this->assertEquals(1944, $documents['body']['releaseYear']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -346,7 +346,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentsListSuccessSearch(array $data): void
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -356,7 +356,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -366,7 +366,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
         $this->assertCount(1, $documents['body']['documents']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -383,7 +383,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentsListSuccessFilters(array $data): void
     {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -396,7 +396,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals('Spider-Man: Far From Home', $documents['body']['documents'][0]['name']);
         $this->assertEquals('Spider-Man: Homecoming', $documents['body']['documents'][1]['name']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -408,7 +408,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertCount(1, $documents['body']['documents']);
         $this->assertEquals('Captain America', $documents['body']['documents'][0]['name']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/database/' . $data['moviesId'] . '/documents', [
+        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -427,7 +427,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentsUpdateSuccess(array $data): void
     {
-        $document = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -444,7 +444,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals($document['body']['name'], 'Thor: Ragnaroc');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
-        $document = $this->client->call(Client::METHOD_PATCH, '/database/' . $collection . '/documents/' . $id, [
+        $document = $this->client->call(Client::METHOD_PATCH, '/database/collections/' . $collection . '/documents/' . $id, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -457,7 +457,7 @@ class ProjectDatabaseTest extends BaseProjects
         $this->assertEquals($document['body']['name'], 'Thor: Ragnarok');
         $this->assertEquals($document['body']['releaseYear'], 2017);
 
-        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, [
+        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]);
@@ -476,7 +476,7 @@ class ProjectDatabaseTest extends BaseProjects
      */
     public function testDocumentsDeleteSuccess(array $data): void
     {
-        $document = $this->client->call(Client::METHOD_POST, '/database/' . $data['moviesId'] . '/documents', [
+        $document = $this->client->call(Client::METHOD_POST, '/database/collections/' . $data['moviesId'] . '/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ], [
@@ -491,21 +491,21 @@ class ProjectDatabaseTest extends BaseProjects
 
         $this->assertEquals($document['headers']['status-code'], 201);
 
-        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, [
+        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 200);
 
-        $document = $this->client->call(Client::METHOD_DELETE, '/database/' . $collection . '/documents/' . $id, [
+        $document = $this->client->call(Client::METHOD_DELETE, '/database/collections/' . $collection . '/documents/' . $id, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]);
 
         $this->assertEquals($document['headers']['status-code'], 204);
 
-        $document = $this->client->call(Client::METHOD_GET, '/database/' . $collection . '/documents/' . $id, [
+        $document = $this->client->call(Client::METHOD_GET, '/database/collections/' . $collection . '/documents/' . $id, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]);
