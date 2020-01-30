@@ -26,7 +26,7 @@ $home = $this->getParam('home', '');
             <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
             <label for="file-read">Files</label>
-            <input type="file" name="files" id="file-files" required>
+            <input type="file" name="file" id="file-file" required>
 
             <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />

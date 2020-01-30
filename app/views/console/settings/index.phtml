@@ -69,7 +69,7 @@
                     </div>
                 </form>
             </li>
-            <li data-state="/console/settings/privacy?project={{router.params.project}}">
+            <!-- <li data-state="/console/settings/privacy?project={{router.params.project}}">
 
                 <form
                     data-service="projects.update"
@@ -119,7 +119,7 @@
                         <button class="" type="submit">Save</button>
                     </div>
                 </form>
-            </li>
+            </li> -->
             <li data-state="/console/settings/members?project={{router.params.project}}">
                 <h2>Members</h2>
 
@@ -183,7 +183,7 @@
                         </ul>
                     </div>
 
-                    <div data-ui-modal class="modal close width-small" data-button-text="Invite Member" data-button-class="">
+                    <div data-ui-modal class="modal close width-medium" data-button-text="Invite Member" data-button-class="">
                         <button type="button" class="close pull-end" data-ui-modal-close><i class="icon-cancel"></i></button>
 
                         <h1>Invite Member</h1>
@@ -201,18 +201,18 @@
                             data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                            <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
-
+                            <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                            
+                            <label for="email">Email</label>
+                            <input name="email" id="email" type="email" autocomplete="email" required>
+                            
                             <label for="team-name">Name <small>(optional)</small></label>
                             <input name="name" id="team-name" type="text" autocomplete="name">
 
-                            <label for="email">Email</label>
-                            <input name="email" id="email" type="email" autocomplete="email" required>
-
-                            <label for="roles">Role</label>
+                            <!-- <label for="roles">Role</label>
                             <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array">
                                 <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
-                            </select>
+                            </select> -->
 
                             <div class="clear">
                                 <button>Send Invite</button>
