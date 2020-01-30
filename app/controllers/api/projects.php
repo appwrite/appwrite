@@ -2,6 +2,7 @@
 
 global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $providers;
 
+use Auth\Auth;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
@@ -366,8 +367,13 @@ $utopia->delete('/v1/projects/:projectId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'delete')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->param('password', '', function () { return new UID(); }, 'Your Password for confirmation.')
     ->action(
-        function ($projectId) use ($response, $consoleDB) {
+        function ($projectId, $password) use ($response, $consoleDB, $user) {
+            if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
+                throw new Exception('Invalid credentials', 401);
+            }
+
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
