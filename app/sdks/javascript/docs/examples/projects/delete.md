@@ -5,7 +5,7 @@ sdk
     .setKey('')
 ;
 
-let promise = sdk.projects.delete('[PROJECT_ID]');
+let promise = sdk.projects.delete('[PROJECT_ID]', '[PASSWORD]');
 
 promise.then(function (response) {
     console.log(response);

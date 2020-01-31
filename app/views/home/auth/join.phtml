@@ -3,7 +3,7 @@
         data-service="teams.updateMembershipStatus"
         data-scope="console"
         data-event="submit"
-        data-param-invite-id="{{router.params.teamId}}"
+        data-param-team-id="{{router.params.teamId}}"
         data-param-invite-id="{{router.params.inviteId}}"
         data-param-user-id="{{router.params.userId}}"
         data-param-secret="{{router.params.secret}}"
@@ -11,7 +11,8 @@
         data-success-param-redirect-url="/console?project={{router.params.project}}"
         data-success-param-alert-text="Joined Team Successfully"
         data-success-param-trigger-events="teams.updateMembershipStatus"
-        data-failure="alert"
+        data-failure="redirect,alert"
+        data-success-param-redirect-url="/console"
         data-failure-param-alert-text="Failed to join team. Please try again later"
         data-failure-param-alert-classname="error">
 

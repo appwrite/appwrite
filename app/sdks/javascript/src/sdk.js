@@ -1988,17 +1988,26 @@
              *
              *
              * @param {string} projectId
+             * @param {string} password
              * @throws {Error}
              * @return {Promise}             
              */
-            delete: function(projectId) {
+            delete: function(projectId, password) {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
+                }
+                
+                if(password === undefined) {
+                    throw new Error('Missing required parameter: "password"');
                 }
                 
                 let path = '/projects/{projectId}'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 let payload = {};
+
+                if(password) {
+                    payload['password'] = password;
+                }
 
                 return http
                     .delete(path, {
@@ -3519,7 +3528,7 @@
              * @param {string} userId
              * @param {string} secret
              * @throws {Error}
-             * @return {null}             
+             * @return {Promise}             
              */
             updateMembershipStatus: function(teamId, inviteId, userId, secret) {
                 if(teamId === undefined) {
@@ -3550,9 +3559,10 @@
                     payload['secret'] = secret;
                 }
 
-                payload['project'] = config.project;
-
-                return iframe('patch', path, payload);
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
