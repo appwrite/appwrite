@@ -23,74 +23,6 @@ include_once __DIR__ . '/../shared/api.php';
 
 $isDev = (App::ENV_TYPE_PRODUCTION !== $utopia->getEnv());
 
-$utopia->get('/v1/database/collections')
-    ->desc('List Collections')
-    ->label('scope', 'collections.read')
-    ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.method', 'listCollections')
-    ->label('sdk.description', '/docs/references/database/list-collections.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 40000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            /*$vl = new Structure($projectDB);
-
-            var_dump($vl->isValid(new Document([
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['*'],
-                ],
-                'label' => 'Platforms',
-                'key' => 'platforms',
-                'type' => 'document',
-                'default' => [],
-                'required' => false,
-                'array' => true,
-                'options' => [Database::SYSTEM_COLLECTION_PLATFORMS],
-            ])));
-
-            var_dump($vl->getDescription());*/
-
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'name',
-                'orderType' => $orderType,
-                'orderCast' => 'string',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
-                ],
-            ]);
-
-            $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
-        }
-    );
-
-$utopia->get('/v1/database/collections/:collectionId')
-    ->desc('Get Collection')
-    ->label('scope', 'collections.read')
-    ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.method', 'getCollection')
-    ->label('sdk.description', '/docs/references/database/get-collection.md')
-    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(
-        function ($collectionId) use ($response, $projectDB) {
-            $collection = $projectDB->getDocument($collectionId, false);
-
-            if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
-
-            $response->json($collection->getArrayCopy());
-        }
-    );
-
 $utopia->post('/v1/database/collections')
     ->desc('Create Collection')
     ->label('webhook', 'database.collections.create')
@@ -157,6 +89,74 @@ $utopia->post('/v1/database/collections')
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($data)
             ;
+        }
+    );
+
+$utopia->get('/v1/database/collections')
+    ->desc('List Collections')
+    ->label('scope', 'collections.read')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'listCollections')
+    ->label('sdk.description', '/docs/references/database/list-collections.md')
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 40000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->action(
+        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
+            /*$vl = new Structure($projectDB);
+
+            var_dump($vl->isValid(new Document([
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['*'],
+                ],
+                'label' => 'Platforms',
+                'key' => 'platforms',
+                'type' => 'document',
+                'default' => [],
+                'required' => false,
+                'array' => true,
+                'options' => [Database::SYSTEM_COLLECTION_PLATFORMS],
+            ])));
+
+            var_dump($vl->getDescription());*/
+
+            $results = $projectDB->getCollection([
+                'limit' => $limit,
+                'offset' => $offset,
+                'orderField' => 'name',
+                'orderType' => $orderType,
+                'orderCast' => 'string',
+                'search' => $search,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
+                ],
+            ]);
+
+            $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
+        }
+    );
+
+$utopia->get('/v1/database/collections/:collectionId')
+    ->desc('Get Collection')
+    ->label('scope', 'collections.read')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'getCollection')
+    ->label('sdk.description', '/docs/references/database/get-collection.md')
+    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->action(
+        function ($collectionId) use ($response, $projectDB) {
+            $collection = $projectDB->getDocument($collectionId, false);
+
+            if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+                throw new Exception('Collection not found', 404);
+            }
+
+            $response->json($collection->getArrayCopy());
         }
     );
 
@@ -258,6 +258,113 @@ $utopia->delete('/v1/database/collections/:collectionId')
             ;
 
             $response->noContent();
+        }
+    );
+
+$utopia->post('/v1/database/collections/:collectionId/documents')
+    ->desc('Create Document')
+    ->label('webhook', 'database.documents.create')
+    ->label('scope', 'documents.write')
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.method', 'createDocument')
+    ->label('sdk.description', '/docs/references/database/create-document.md')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID.')
+    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string.')
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
+    ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
+    ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
+    ->action(
+        function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
+            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
+            
+            if (empty($data)) {
+                throw new Exception('Missing payload', 400);
+            }
+
+            if (isset($data['$uid'])) {
+                throw new Exception('$uid is not allowed for creating new documents, try update instead', 400);
+            }
+            
+            $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
+
+            if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+                throw new Exception('Collection not found', 404);
+            }
+
+            $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
+            $data['$permissions'] = [
+                'read' => $read,
+                'write' => $write,
+            ];
+
+            // Read parent document + validate not 404 + validate read / write permission like patch method
+            // Add payload to parent document property
+            if ((!empty($parentDocument)) && (!empty($parentProperty))) {
+                $parentDocument = $projectDB->getDocument($parentDocument);
+
+                if (empty($parentDocument->getArrayCopy())) { // Check empty
+                    throw new Exception('No parent document found', 404);
+                }
+
+                /*
+                 * 1. Check child has valid structure,
+                 * 2. Check user have write permission for parent document
+                 * 3. Assign parent data (including child) to $data
+                 * 4. Validate the combined result has valid structure (inside $projectDB->createDocument method)
+                 */
+
+                $new = new Document($data);
+
+                $structure = new Structure($projectDB);
+
+                if (!$structure->isValid($new)) {
+                    throw new Exception('Invalid data structure: '.$structure->getDescription(), 400);
+                }
+
+                $authorization = new Authorization($parentDocument, 'write');
+
+                if (!$authorization->isValid($new->getPermissions())) {
+                    throw new Exception('Unauthorized action', 401);
+                }
+
+                $parentDocument
+                    ->setAttribute($parentProperty, $data, $parentPropertyType);
+
+                $data = $parentDocument->getArrayCopy();
+            }
+
+            try {
+                $data = $projectDB->createDocument($data);
+            } catch (AuthorizationException $exception) {
+                throw new Exception('Unauthorized action', 401);
+            } catch (StructureException $exception) {
+                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+            } catch (\Exception $exception) {
+                throw new Exception('Failed saving document to DB'.$exception->getMessage(), 500);
+            }
+
+            $data = $data->getArrayCopy();
+
+            $webhook
+                ->setParam('payload', $data)
+            ;
+
+            $audit
+                ->setParam('event', 'database.documents.create')
+                ->setParam('resource', 'database/document/'.$data['$uid'])
+                ->setParam('data', $data)
+            ;
+
+            /*
+             * View
+             */
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($data)
+            ;
         }
     );
 
@@ -370,113 +477,6 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
              * View
              */
             $response->json($output);
-        }
-    );
-
-$utopia->post('/v1/database/collections/:collectionId/documents')
-    ->desc('Create Document')
-    ->label('webhook', 'database.documents.create')
-    ->label('scope', 'documents.write')
-    ->label('sdk.namespace', 'database')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.method', 'createDocument')
-    ->label('sdk.description', '/docs/references/database/create-document.md')
-    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID.')
-    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string.')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
-    ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
-    ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
-    ->action(
-        function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
-            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
-            
-            if (empty($data)) {
-                throw new Exception('Missing payload', 400);
-            }
-
-            if (isset($data['$uid'])) {
-                throw new Exception('$uid is not allowed for creating new documents, try update instead', 400);
-            }
-            
-            $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
-
-            if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
-
-            $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
-            $data['$permissions'] = [
-                'read' => $read,
-                'write' => $write,
-            ];
-
-            // Read parent document + validate not 404 + validate read / write permission like patch method
-            // Add payload to parent document property
-            if ((!empty($parentDocument)) && (!empty($parentProperty))) {
-                $parentDocument = $projectDB->getDocument($parentDocument);
-
-                if (empty($parentDocument->getArrayCopy())) { // Check empty
-                    throw new Exception('No parent document found', 404);
-                }
-
-                /*
-                 * 1. Check child has valid structure,
-                 * 2. Check user have write permission for parent document
-                 * 3. Assign parent data (including child) to $data
-                 * 4. Validate the combined result has valid structure (inside $projectDB->createDocument method)
-                 */
-
-                $new = new Document($data);
-
-                $structure = new Structure($projectDB);
-
-                if (!$structure->isValid($new)) {
-                    throw new Exception('Invalid data structure: '.$structure->getDescription(), 400);
-                }
-
-                $authorization = new Authorization($parentDocument, 'write');
-
-                if (!$authorization->isValid($new->getPermissions())) {
-                    throw new Exception('Unauthorized action', 401);
-                }
-
-                $parentDocument
-                    ->setAttribute($parentProperty, $data, $parentPropertyType);
-
-                $data = $parentDocument->getArrayCopy();
-            }
-
-            try {
-                $data = $projectDB->createDocument($data);
-            } catch (AuthorizationException $exception) {
-                throw new Exception('Unauthorized action', 401);
-            } catch (StructureException $exception) {
-                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-            } catch (\Exception $exception) {
-                throw new Exception('Failed saving document to DB'.$exception->getMessage(), 500);
-            }
-
-            $data = $data->getArrayCopy();
-
-            $webhook
-                ->setParam('payload', $data)
-            ;
-
-            $audit
-                ->setParam('event', 'database.documents.create')
-                ->setParam('resource', 'database/document/'.$data['$uid'])
-                ->setParam('data', $data)
-            ;
-
-            /*
-             * View
-             */
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($data)
-            ;
         }
     );
 

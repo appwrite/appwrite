@@ -21,6 +21,66 @@ include_once __DIR__ . '/../shared/api.php';
 
 $scopes = include __DIR__.'/../../../app/config/scopes.php';
 
+$utopia->post('/v1/projects')
+    ->desc('Create Project')
+    ->label('scope', 'projects.write')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'create')
+    ->param('name', null, function () { return new Text(100); }, 'Project name')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('description', '', function () { return new Text(255); }, 'Project description', true)
+    ->param('logo', '', function () { return new Text(1024); }, 'Project logo', true)
+    ->param('url', '', function () { return new URL(); }, 'Project URL', true)
+    ->param('legalName', '', function () { return new Text(256); }, 'Project Legal Name', true)
+    ->param('legalCountry', '', function () { return new Text(256); }, 'Project Legal Country', true)
+    ->param('legalState', '', function () { return new Text(256); }, 'Project Legal State', true)
+    ->param('legalCity', '', function () { return new Text(256); }, 'Project Legal City', true)
+    ->param('legalAddress', '', function () { return new Text(256); }, 'Project Legal Address', true)
+    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project Legal Tax ID', true)
+    ->action(
+        function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB) {
+            $team = $projectDB->getDocument($teamId);
+
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+                throw new Exception('Team not found', 404);
+            }
+
+            $project = $consoleDB->createDocument(
+                [
+                    '$collection' => Database::SYSTEM_COLLECTION_PROJECTS,
+                    '$permissions' => [
+                        'read' => ['team:'.$teamId],
+                        'write' => ['team:'.$teamId.'/owner', 'team:'.$teamId.'/developer'],
+                    ],
+                    'name' => $name,
+                    'description' => $description,
+                    'logo' => $logo,
+                    'url' => $url,
+                    'legalName' => $legalName,
+                    'legalCountry' => $legalCountry,
+                    'legalState' => $legalState,
+                    'legalCity' => $legalCity,
+                    'legalAddress' => $legalAddress,
+                    'legalTaxId' => $legalTaxId,
+                    'teamId' => $team->getUid(),
+                    'webhooks' => [],
+                    'keys' => [],
+                ]
+            );
+
+            if (false === $project) {
+                throw new Exception('Failed saving project to DB', 500);
+            }
+
+            $consoleDB->createNamespace($project->getUid());
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($project->getArrayCopy())
+            ;
+        }
+    );
+
 $utopia->get('/v1/projects')
     ->desc('List Projects')
     ->label('scope', 'projects.read')
@@ -215,66 +275,6 @@ $utopia->get('/v1/projects/:projectId/usage')
         }
     );
 
-$utopia->post('/v1/projects')
-    ->desc('Create Project')
-    ->label('scope', 'projects.write')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'create')
-    ->param('name', null, function () { return new Text(100); }, 'Project name')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('description', '', function () { return new Text(255); }, 'Project description', true)
-    ->param('logo', '', function () { return new Text(1024); }, 'Project logo', true)
-    ->param('url', '', function () { return new URL(); }, 'Project URL', true)
-    ->param('legalName', '', function () { return new Text(256); }, 'Project Legal Name', true)
-    ->param('legalCountry', '', function () { return new Text(256); }, 'Project Legal Country', true)
-    ->param('legalState', '', function () { return new Text(256); }, 'Project Legal State', true)
-    ->param('legalCity', '', function () { return new Text(256); }, 'Project Legal City', true)
-    ->param('legalAddress', '', function () { return new Text(256); }, 'Project Legal Address', true)
-    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project Legal Tax ID', true)
-    ->action(
-        function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB) {
-            $team = $projectDB->getDocument($teamId);
-
-            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-                throw new Exception('Team not found', 404);
-            }
-
-            $project = $consoleDB->createDocument(
-                [
-                    '$collection' => Database::SYSTEM_COLLECTION_PROJECTS,
-                    '$permissions' => [
-                        'read' => ['team:'.$teamId],
-                        'write' => ['team:'.$teamId.'/owner', 'team:'.$teamId.'/developer'],
-                    ],
-                    'name' => $name,
-                    'description' => $description,
-                    'logo' => $logo,
-                    'url' => $url,
-                    'legalName' => $legalName,
-                    'legalCountry' => $legalCountry,
-                    'legalState' => $legalState,
-                    'legalCity' => $legalCity,
-                    'legalAddress' => $legalAddress,
-                    'legalTaxId' => $legalTaxId,
-                    'teamId' => $team->getUid(),
-                    'webhooks' => [],
-                    'keys' => [],
-                ]
-            );
-
-            if (false === $project) {
-                throw new Exception('Failed saving project to DB', 500);
-            }
-
-            $consoleDB->createNamespace($project->getUid());
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($project->getArrayCopy())
-            ;
-        }
-    );
-
 $utopia->patch('/v1/projects/:projectId')
     ->desc('Update Project')
     ->label('scope', 'projects.write')
@@ -400,6 +400,70 @@ $utopia->delete('/v1/projects/:projectId')
 
 // Webhooks
 
+$utopia->post('/v1/projects/:projectId/webhooks')
+    ->desc('Create Webhook')
+    ->label('scope', 'projects.write')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createWebhook')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('name', null, function () { return new Text(256); }, 'Webhook name')
+    ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list')
+    ->param('url', null, function () { return new Text(2000); }, 'Webhook URL')
+    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled')
+    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user', true)
+    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password', true)
+    ->action(
+        function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $tag = null;
+            $httpPass = json_encode([
+                'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+                'method' => OpenSSL::CIPHER_AES_128_GCM,
+                'iv' => bin2hex($iv),
+                'tag' => bin2hex($tag),
+                'version' => '1',
+            ]);
+
+            $webhook = $consoleDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_WEBHOOKS,
+                '$permissions' => [
+                    'read' => ['team:'.$project->getAttribute('teamId', null)],
+                    'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
+                ],
+                'name' => $name,
+                'events' => $events,
+                'url' => $url,
+                'security' => (int) $security,
+                'httpUser' => $httpUser,
+                'httpPass' => $httpPass,
+            ]);
+
+            if (false === $webhook) {
+                throw new Exception('Failed saving webhook to DB', 500);
+            }
+
+            $project->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND);
+
+            $project = $consoleDB->updateDocument($project->getArrayCopy());
+
+            if (false === $project) {
+                throw new Exception('Failed saving project to DB', 500);
+            }
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($webhook->getArrayCopy())
+            ;
+        }
+    );
+
 $utopia->get('/v1/projects/:projectId/webhooks')
     ->desc('List Webhooks')
     ->label('scope', 'projects.read')
@@ -464,69 +528,6 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
         }
     );
 
-$utopia->post('/v1/projects/:projectId/webhooks')
-    ->desc('Create Webhook')
-    ->label('scope', 'projects.write')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('name', null, function () { return new Text(256); }, 'Webhook name')
-    ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list')
-    ->param('url', null, function () { return new Text(2000); }, 'Webhook URL')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled')
-    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password', true)
-    ->action(
-        function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
-            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $tag = null;
-            $httpPass = json_encode([
-                'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-                'method' => OpenSSL::CIPHER_AES_128_GCM,
-                'iv' => bin2hex($iv),
-                'tag' => bin2hex($tag),
-                'version' => '1',
-            ]);
-
-            $webhook = $consoleDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_WEBHOOKS,
-                '$permissions' => [
-                    'read' => ['team:'.$project->getAttribute('teamId', null)],
-                    'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
-                ],
-                'name' => $name,
-                'events' => $events,
-                'url' => $url,
-                'security' => (int) $security,
-                'httpUser' => $httpUser,
-                'httpPass' => $httpPass,
-            ]);
-
-            if (false === $webhook) {
-                throw new Exception('Failed saving webhook to DB', 500);
-            }
-
-            $project->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND);
-
-            $project = $consoleDB->updateDocument($project->getArrayCopy());
-
-            if (false === $project) {
-                throw new Exception('Failed saving project to DB', 500);
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($webhook->getArrayCopy())
-            ;
-        }
-    );
 
 $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
@@ -614,49 +615,6 @@ $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 // Keys
 
-$utopia->get('/v1/projects/:projectId/keys')
-    ->desc('List Keys')
-    ->label('scope', 'projects.read')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listKeys')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->action(
-        function ($projectId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $response->json($project->getAttribute('keys', [])); //FIXME make sure array objects return correctly
-        }
-    );
-
-$utopia->get('/v1/projects/:projectId/keys/:keyId')
-    ->desc('Get Key')
-    ->label('scope', 'projects.read')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
-    ->action(
-        function ($projectId, $keyId) use ($response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
-
-            if (empty($key) && $key instanceof Document) {
-                throw new Exception('Key not found', 404);
-            }
-
-            $response->json($key->getArrayCopy());
-        }
-    );
-
 $utopia->post('/v1/projects/:projectId/keys')
     ->desc('Create Key')
     ->label('scope', 'projects.write')
@@ -700,6 +658,49 @@ $utopia->post('/v1/projects/:projectId/keys')
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($key->getArrayCopy())
             ;
+        }
+    );
+
+$utopia->get('/v1/projects/:projectId/keys')
+    ->desc('List Keys')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listKeys')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->action(
+        function ($projectId) use ($response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $response->json($project->getAttribute('keys', [])); //FIXME make sure array objects return correctly
+        }
+    );
+
+$utopia->get('/v1/projects/:projectId/keys/:keyId')
+    ->desc('Get Key')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getKey')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
+    ->action(
+        function ($projectId, $keyId) use ($response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
+
+            if (empty($key) && $key instanceof Document) {
+                throw new Exception('Key not found', 404);
+            }
+
+            $response->json($key->getArrayCopy());
         }
     );
 
@@ -769,70 +770,6 @@ $utopia->delete('/v1/projects/:projectId/keys/:keyId')
     );
 
 // Tasks
-
-$utopia->get('/v1/projects/:projectId/tasks')
-    ->desc('List Tasks')
-    ->label('scope', 'projects.read')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listTasks')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $tasks = $project->getAttribute('tasks', []);
-
-            foreach ($tasks as $task) { /* @var $task Document */
-                $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
-
-                if (empty($httpPass) || !isset($httpPass['version'])) {
-                    continue;
-                }
-
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-
-                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
-            }
-
-            $response->json($tasks);
-        }
-    );
-
-$utopia->get('/v1/projects/:projectId/tasks/:taskId')
-    ->desc('Get Task')
-    ->label('scope', 'projects.read')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
-    ->action(
-        function ($projectId, $taskId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
-
-            if (empty($task) && $task instanceof Document) {
-                throw new Exception('Task not found', 404);
-            }
-
-            $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
-
-            if (!empty($httpPass) && isset($httpPass['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
-            }
-
-            $response->json($task->getArrayCopy());
-        }
-    );
 
 $utopia->post('/v1/projects/:projectId/tasks')
     ->desc('Create Task')
@@ -913,6 +850,70 @@ $utopia->post('/v1/projects/:projectId/tasks')
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($task->getArrayCopy())
             ;
+        }
+    );
+
+$utopia->get('/v1/projects/:projectId/tasks')
+    ->desc('List Tasks')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listTasks')
+    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->action(
+        function ($projectId) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $tasks = $project->getAttribute('tasks', []);
+
+            foreach ($tasks as $task) { /* @var $task Document */
+                $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
+
+                if (empty($httpPass) || !isset($httpPass['version'])) {
+                    continue;
+                }
+
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
+
+                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
+            }
+
+            $response->json($tasks);
+        }
+    );
+
+$utopia->get('/v1/projects/:projectId/tasks/:taskId')
+    ->desc('Get Task')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getTask')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
+    ->action(
+        function ($projectId, $taskId) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
+
+            if (empty($task) && $task instanceof Document) {
+                throw new Exception('Task not found', 404);
+            }
+
+            $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
+
+            if (!empty($httpPass) && isset($httpPass['version'])) {
+                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
+                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
+            }
+
+            $response->json($task->getArrayCopy());
         }
     );
 
@@ -1017,51 +1018,6 @@ $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
 
 // Platforms
 
-$utopia->get('/v1/projects/:projectId/platforms')
-    ->desc('List Platforms')
-    ->label('scope', 'projects.read')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listPlatforms')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $platforms = $project->getAttribute('platforms', []);
-
-            $response->json($platforms);
-        }
-    );
-
-$utopia->get('/v1/projects/:projectId/platforms/:platformId')
-    ->desc('Get Platform')
-    ->label('scope', 'projects.read')
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getPlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
-    ->action(
-        function ($projectId, $platformId) use ($request, $response, $consoleDB) {
-            $project = $consoleDB->getDocument($projectId);
-
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
-                throw new Exception('Project not found', 404);
-            }
-
-            $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
-
-            if (empty($platform) && $platform instanceof Document) {
-                throw new Exception('Platform not found', 404);
-            }
-
-            $response->json($platform->getArrayCopy());
-        }
-    );
-
 $utopia->post('/v1/projects/:projectId/platforms')
     ->desc('Create Platform')
     ->label('scope', 'projects.write')
@@ -1112,6 +1068,51 @@ $utopia->post('/v1/projects/:projectId/platforms')
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($platform->getArrayCopy())
             ;
+        }
+    );
+    
+$utopia->get('/v1/projects/:projectId/platforms')
+    ->desc('List Platforms')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listPlatforms')
+    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->action(
+        function ($projectId) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $platforms = $project->getAttribute('platforms', []);
+
+            $response->json($platforms);
+        }
+    );
+
+$utopia->get('/v1/projects/:projectId/platforms/:platformId')
+    ->desc('Get Platform')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getPlatform')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
+    ->action(
+        function ($projectId, $platformId) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
+
+            if (empty($platform) && $platform instanceof Document) {
+                throw new Exception('Platform not found', 404);
+            }
+
+            $response->json($platform->getArrayCopy());
         }
     );
 

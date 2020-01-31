@@ -41,182 +41,6 @@ $utopia->init(function() use ($providers, &$oauthKeys) {
 
 });
 
-$utopia->get('/v1/account')
-    ->desc('Get Account')
-    ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/account/get.md')
-    ->label('sdk.response', ['200' => 'user'])
-    ->action(
-        function () use ($response, &$user, $oauthKeys) {            
-            $response->json(array_merge($user->getArrayCopy(array_merge(
-                [
-                    '$uid',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauthKeys
-            )), ['roles' => Authorization::getRoles()]));
-        }
-    );
-
-$utopia->get('/v1/account/prefs')
-    ->desc('Get Account Preferences')
-    ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getPrefs')
-    ->label('sdk.description', '/docs/references/account/get-prefs.md')
-    ->action(
-        function () use ($response, $user) {
-            $prefs = $user->getAttribute('prefs', '{}');
-
-            try {
-                $prefs = json_decode($prefs, true);
-                $prefs = ($prefs) ? $prefs : [];
-            } catch (\Exception $error) {
-                throw new Exception('Failed to parse prefs', 500);
-            }
-
-            $response->json($prefs);
-        }
-    );
-
-$utopia->get('/v1/account/sessions')
-    ->desc('Get Account Sessions')
-    ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getSessions')
-    ->label('sdk.description', '/docs/references/account/get-sessions.md')
-    ->action(
-        function () use ($response, $user) {
-            $tokens = $user->getAttribute('tokens', []);
-            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
-            $sessions = [];
-            $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-            $index = 0;
-            $countries = Locale::getText('countries');
-
-            foreach ($tokens as $token) { /* @var $token Document */
-                if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
-                    continue;
-                }
-
-                $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
-
-                $dd = new DeviceDetector($userAgent);
-
-                // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-                // $dd->skipBotDetection();
-
-                $dd->parse();
-
-                $sessions[$index] = [
-                    '$uid' => $token->getUid(),
-                    'OS' => $dd->getOs(),
-                    'client' => $dd->getClient(),
-                    'device' => $dd->getDevice(),
-                    'brand' => $dd->getBrand(),
-                    'model' => $dd->getModel(),
-                    'ip' => $token->getAttribute('ip', ''),
-                    'geo' => [],
-                    'current' => ($current == $token->getUid()) ? true : false,
-                ];
-
-                try {
-                    $record = $reader->country($token->getAttribute('ip', ''));
-                    $sessions[$index]['geo']['isoCode'] = strtolower($record->country->isoCode);
-                    $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                } catch (\Exception $e) {
-                    $sessions[$index]['geo']['isoCode'] = '--';
-                    $sessions[$index]['geo']['country'] = Locale::getText('locale.country.unknown');
-                }
-
-                ++$index;
-            }
-
-            $response->json($sessions);
-        }
-    );
-
-$utopia->get('/v1/account/logs')
-    ->desc('Get Account Logs')
-    ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'getLogs')
-    ->label('sdk.description', '/docs/references/account/get-logs.md')
-    ->action(
-        function () use ($response, $register, $project, $user) {
-            $adapter = new AuditAdapter($register->get('db'));
-            $adapter->setNamespace('app_'.$project->getUid());
-
-            $audit = new Audit($adapter);
-            $countries = Locale::getText('countries');
-
-            $logs = $audit->getLogsByUserAndActions($user->getUid(), [
-                'auth.register', // TODO Deprectate this
-                'auth.login', // TODO Deprectate this
-                'auth.logout', // TODO Deprectate this
-                'auth.recovery', // TODO Deprectate this
-                'auth.recovery.reset', // TODO Deprectate this
-                'auth.oauth.login', // TODO Deprectate this
-                'auth.invite', // TODO Deprectate this
-                'auth.join', // TODO Deprectate this
-                'auth.leave', // TODO Deprectate this
-                'account.create',
-                'account.delete',
-                'account.update.name',
-                'account.update.email',
-                'account.update.password',
-                'account.update.prefs',
-                'account.sessions.create',
-                'account.sessions.delete',
-            ]);
-
-            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
-            $output = [];
-
-            foreach ($logs as $i => &$log) {
-                $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
-                $dd = new DeviceDetector($log['userAgent']);
-
-                $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-                $dd->parse();
-
-                $output[$i] = [
-                    'event' => $log['event'],
-                    'ip' => $log['ip'],
-                    'time' => strtotime($log['time']),
-                    'OS' => $dd->getOs(),
-                    'client' => $dd->getClient(),
-                    'device' => $dd->getDevice(),
-                    'brand' => $dd->getBrand(),
-                    'model' => $dd->getModel(),
-                    'geo' => [],
-                ];
-
-                try {
-                    $record = $reader->country($log['ip']);
-                    $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
-                    $output[$i]['geo']['country'] = $record->country->name;
-                    $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                } catch (\Exception $e) {
-                    $output[$i]['geo']['isoCode'] = '--';
-                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
-                }
-            }
-
-            $response->json($output);
-        }
-    );
-
 $utopia->post('/v1/account')
     ->desc('Create Account')
     ->label('webhook', 'account.create')
@@ -624,6 +448,184 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
             ;
         }
     );
+
+$utopia->get('/v1/account')
+    ->desc('Get Account')
+    ->label('scope', 'account')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'get')
+    ->label('sdk.description', '/docs/references/account/get.md')
+    ->label('sdk.response', ['200' => 'user'])
+    ->action(
+        function () use ($response, &$user, $oauthKeys) {            
+            $response->json(array_merge($user->getArrayCopy(array_merge(
+                [
+                    '$uid',
+                    'email',
+                    'registration',
+                    'name',
+                ],
+                $oauthKeys
+            )), ['roles' => Authorization::getRoles()]));
+        }
+    );
+
+$utopia->get('/v1/account/prefs')
+    ->desc('Get Account Preferences')
+    ->label('scope', 'account')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getPrefs')
+    ->label('sdk.description', '/docs/references/account/get-prefs.md')
+    ->action(
+        function () use ($response, $user) {
+            $prefs = $user->getAttribute('prefs', '{}');
+
+            try {
+                $prefs = json_decode($prefs, true);
+                $prefs = ($prefs) ? $prefs : [];
+            } catch (\Exception $error) {
+                throw new Exception('Failed to parse prefs', 500);
+            }
+
+            $response->json($prefs);
+        }
+    );
+
+$utopia->get('/v1/account/sessions')
+    ->desc('Get Account Sessions')
+    ->label('scope', 'account')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getSessions')
+    ->label('sdk.description', '/docs/references/account/get-sessions.md')
+    ->action(
+        function () use ($response, $user) {
+            $tokens = $user->getAttribute('tokens', []);
+            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
+            $sessions = [];
+            $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
+            $index = 0;
+            $countries = Locale::getText('countries');
+
+            foreach ($tokens as $token) { /* @var $token Document */
+                if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
+                    continue;
+                }
+
+                $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
+
+                $dd = new DeviceDetector($userAgent);
+
+                // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+                // $dd->skipBotDetection();
+
+                $dd->parse();
+
+                $sessions[$index] = [
+                    '$uid' => $token->getUid(),
+                    'OS' => $dd->getOs(),
+                    'client' => $dd->getClient(),
+                    'device' => $dd->getDevice(),
+                    'brand' => $dd->getBrand(),
+                    'model' => $dd->getModel(),
+                    'ip' => $token->getAttribute('ip', ''),
+                    'geo' => [],
+                    'current' => ($current == $token->getUid()) ? true : false,
+                ];
+
+                try {
+                    $record = $reader->country($token->getAttribute('ip', ''));
+                    $sessions[$index]['geo']['isoCode'] = strtolower($record->country->isoCode);
+                    $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
+                } catch (\Exception $e) {
+                    $sessions[$index]['geo']['isoCode'] = '--';
+                    $sessions[$index]['geo']['country'] = Locale::getText('locale.country.unknown');
+                }
+
+                ++$index;
+            }
+
+            $response->json($sessions);
+        }
+    );
+
+$utopia->get('/v1/account/logs')
+    ->desc('Get Account Logs')
+    ->label('scope', 'account')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getLogs')
+    ->label('sdk.description', '/docs/references/account/get-logs.md')
+    ->action(
+        function () use ($response, $register, $project, $user) {
+            $adapter = new AuditAdapter($register->get('db'));
+            $adapter->setNamespace('app_'.$project->getUid());
+
+            $audit = new Audit($adapter);
+            $countries = Locale::getText('countries');
+
+            $logs = $audit->getLogsByUserAndActions($user->getUid(), [
+                'auth.register', // TODO Deprectate this
+                'auth.login', // TODO Deprectate this
+                'auth.logout', // TODO Deprectate this
+                'auth.recovery', // TODO Deprectate this
+                'auth.recovery.reset', // TODO Deprectate this
+                'auth.oauth.login', // TODO Deprectate this
+                'auth.invite', // TODO Deprectate this
+                'auth.join', // TODO Deprectate this
+                'auth.leave', // TODO Deprectate this
+                'account.create',
+                'account.delete',
+                'account.update.name',
+                'account.update.email',
+                'account.update.password',
+                'account.update.prefs',
+                'account.sessions.create',
+                'account.sessions.delete',
+            ]);
+
+            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
+            $output = [];
+
+            foreach ($logs as $i => &$log) {
+                $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+                $dd = new DeviceDetector($log['userAgent']);
+
+                $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+                $dd->parse();
+
+                $output[$i] = [
+                    'event' => $log['event'],
+                    'ip' => $log['ip'],
+                    'time' => strtotime($log['time']),
+                    'OS' => $dd->getOs(),
+                    'client' => $dd->getClient(),
+                    'device' => $dd->getDevice(),
+                    'brand' => $dd->getBrand(),
+                    'model' => $dd->getModel(),
+                    'geo' => [],
+                ];
+
+                try {
+                    $record = $reader->country($log['ip']);
+                    $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
+                    $output[$i]['geo']['country'] = $record->country->name;
+                    $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
+                } catch (\Exception $e) {
+                    $output[$i]['geo']['isoCode'] = '--';
+                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
+                }
+            }
+
+            $response->json($output);
+        }
+    );
+
+
 
 $utopia->patch('/v1/account/name')
     ->desc('Update Account Name')

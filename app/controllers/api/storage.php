@@ -116,6 +116,140 @@ $mimes = [
     'application/pdf',
 ];
 
+$utopia->post('/v1/storage/files')
+    ->desc('Create File')
+    ->label('scope', 'files.write')
+    ->label('webhook', 'storage.files.create')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'createFile')
+    ->label('sdk.description', '/docs/references/storage/create-file.md')
+    ->label('sdk.consumes', 'multipart/form-data')
+    ->param('file', [], function () { return new File(); }, 'Binary Files.', false)
+    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    // ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
+    ->action(
+        function ($file, $read, $write, $folderId = '') use ($request, $response, $user, $projectDB, $webhook, $audit, $usage) {
+            $file = $request->getFiles('file');
+            $read = (empty($read)) ? ['user:'.$user->getUid()] : $read;
+            $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
+
+            /*
+             * Validators
+             */
+            //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
+            $fileSize = new FileSize(2097152 * 2); // 4MB
+            $upload = new Upload();
+
+            if (empty($file)) {
+                throw new Exception('No file sent', 400);
+            }
+
+            // Make sure we handle a single file and multiple files the same way
+            $file['name'] = (is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+            $file['tmp_name'] = (is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+            $file['size'] = (is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+
+            // Check if file type is allowed (feature for project settings?)
+            //if (!$fileType->isValid($file['tmp_name'])) {
+            //throw new Exception('File type not allowed', 400);
+            //}
+
+            // Check if file size is exceeding allowed limit
+            if (!$fileSize->isValid($file['size'])) {
+                throw new Exception('File size not allowed', 400);
+            }
+
+            $antiVirus = new Network('clamav', 3310);
+
+            /*
+             * Models
+             */
+            $list = [];
+            $device = Storage::getDevice('local');
+
+            if (!$upload->isValid($file['tmp_name'])) {
+                throw new Exception('Invalid file', 403);
+            }
+
+            // Save to storage
+            $size = $device->getFileSize($file['tmp_name']);
+            $path = $device->getPath(uniqid().'.'.pathinfo($file['name'], PATHINFO_EXTENSION));
+            
+            if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+                throw new Exception('Failed moving file', 500);
+            }
+
+            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+
+            // Check if file size is exceeding allowed limit
+            if (!$antiVirus->fileScan($path)) {
+                $device->delete($path);
+                throw new Exception('Invalid file', 403);
+            }
+
+            // Compression
+            $compressor = new GZIP();
+            $data = $device->read($path);
+            $data = $compressor->compress($data);
+            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+            $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+
+            if(!$device->write($path, $data)) {
+                throw new Exception('Failed to save file', 500);
+            }
+
+            $sizeActual = $device->getFileSize($path);
+            
+            $file = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_FILES,
+                '$permissions' => [
+                    'read' => $read,
+                    'write' => $write,
+                ],
+                'dateCreated' => time(),
+                'folderId' => $folderId,
+                'name' => $file['name'],
+                'path' => $path,
+                'signature' => $device->getFileHash($path),
+                'mimeType' => $mimeType,
+                'sizeOriginal' => $size,
+                'sizeActual' => $sizeActual,
+                'algorithm' => $compressor->getName(),
+                'token' => bin2hex(random_bytes(64)),
+                'comment' => '',
+                'fileOpenSSLVersion' => '1',
+                'fileOpenSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
+                'fileOpenSSLTag' => bin2hex($tag),
+                'fileOpenSSLIV' => bin2hex($iv),
+            ]);
+
+            if (false === $file) {
+                throw new Exception('Failed saving file to DB', 500);
+            }
+
+            $webhook
+                ->setParam('payload', $file->getArrayCopy())
+            ;
+
+            $audit
+                ->setParam('event', 'storage.files.create')
+                ->setParam('resource', 'storage/files/'.$file->getUid())
+            ;
+
+            $usage
+                ->setParam('storage', $sizeActual)
+            ;
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($file->getArrayCopy())
+            ;
+        }
+    );
+
 $utopia->get('/v1/storage/files')
     ->desc('List Files')
     ->label('scope', 'files.read')
@@ -399,140 +533,6 @@ $utopia->get('/v1/storage/files/:fileId/view')
                 ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
                 ->addHeader('X-Peak', memory_get_peak_usage())
                 ->send($output)
-            ;
-        }
-    );
-
-$utopia->post('/v1/storage/files')
-    ->desc('Create File')
-    ->label('scope', 'files.write')
-    ->label('webhook', 'storage.files.create')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'createFile')
-    ->label('sdk.description', '/docs/references/storage/create-file.md')
-    ->label('sdk.consumes', 'multipart/form-data')
-    ->param('file', [], function () { return new File(); }, 'Binary Files.', false)
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    // ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
-    ->action(
-        function ($file, $read, $write, $folderId = '') use ($request, $response, $user, $projectDB, $webhook, $audit, $usage) {
-            $file = $request->getFiles('file');
-            $read = (empty($read)) ? ['user:'.$user->getUid()] : $read;
-            $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
-
-            /*
-             * Validators
-             */
-            //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
-            $fileSize = new FileSize(2097152 * 2); // 4MB
-            $upload = new Upload();
-
-            if (empty($file)) {
-                throw new Exception('No file sent', 400);
-            }
-
-            // Make sure we handle a single file and multiple files the same way
-            $file['name'] = (is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-            $file['tmp_name'] = (is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-            $file['size'] = (is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-
-            // Check if file type is allowed (feature for project settings?)
-            //if (!$fileType->isValid($file['tmp_name'])) {
-            //throw new Exception('File type not allowed', 400);
-            //}
-
-            // Check if file size is exceeding allowed limit
-            if (!$fileSize->isValid($file['size'])) {
-                throw new Exception('File size not allowed', 400);
-            }
-
-            $antiVirus = new Network('clamav', 3310);
-
-            /*
-             * Models
-             */
-            $list = [];
-            $device = Storage::getDevice('local');
-
-            if (!$upload->isValid($file['tmp_name'])) {
-                throw new Exception('Invalid file', 403);
-            }
-
-            // Save to storage
-            $size = $device->getFileSize($file['tmp_name']);
-            $path = $device->getPath(uniqid().'.'.pathinfo($file['name'], PATHINFO_EXTENSION));
-            
-            if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-                throw new Exception('Failed moving file', 500);
-            }
-
-            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
-
-            // Check if file size is exceeding allowed limit
-            if (!$antiVirus->fileScan($path)) {
-                $device->delete($path);
-                throw new Exception('Invalid file', 403);
-            }
-
-            // Compression
-            $compressor = new GZIP();
-            $data = $device->read($path);
-            $data = $compressor->compress($data);
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
-            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
-
-            if(!$device->write($path, $data)) {
-                throw new Exception('Failed to save file', 500);
-            }
-
-            $sizeActual = $device->getFileSize($path);
-            
-            $file = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_FILES,
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-                'dateCreated' => time(),
-                'folderId' => $folderId,
-                'name' => $file['name'],
-                'path' => $path,
-                'signature' => $device->getFileHash($path),
-                'mimeType' => $mimeType,
-                'sizeOriginal' => $size,
-                'sizeActual' => $sizeActual,
-                'algorithm' => $compressor->getName(),
-                'token' => bin2hex(random_bytes(64)),
-                'comment' => '',
-                'fileOpenSSLVersion' => '1',
-                'fileOpenSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-                'fileOpenSSLTag' => bin2hex($tag),
-                'fileOpenSSLIV' => bin2hex($iv),
-            ]);
-
-            if (false === $file) {
-                throw new Exception('Failed saving file to DB', 500);
-            }
-
-            $webhook
-                ->setParam('payload', $file->getArrayCopy())
-            ;
-
-            $audit
-                ->setParam('event', 'storage.files.create')
-                ->setParam('resource', 'storage/files/'.$file->getUid())
-            ;
-
-            $usage
-                ->setParam('storage', $sizeActual)
-            ;
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($file->getArrayCopy())
             ;
         }
     );

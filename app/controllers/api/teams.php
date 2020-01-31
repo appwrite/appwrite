@@ -20,55 +20,6 @@ use Auth\Auth;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$utopia->get('/v1/teams')
-    ->desc('List Teams')
-    ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'list')
-    ->label('sdk.description', '/docs/references/teams/list-teams.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'dateCreated',
-                'orderType' => $orderType,
-                'orderCast' => 'int',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_TEAMS,
-                ],
-            ]);
-
-            $response->json(['sum' => $projectDB->getSum(), 'teams' => $results]);
-        }
-    );
-
-$utopia->get('/v1/teams/:teamId')
-    ->desc('Get Team')
-    ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'get')
-    ->label('sdk.description', '/docs/references/teams/get-team.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->action(
-        function ($teamId) use ($response, $projectDB) {
-            $team = $projectDB->getDocument($teamId);
-
-            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-                throw new Exception('Team not found', 404);
-            }
-
-            $response->json($team->getArrayCopy([]));
-        }
-    );
-
 $utopia->post('/v1/teams')
     ->desc('Create Team')
     ->label('scope', 'teams.write')
@@ -129,6 +80,55 @@ $utopia->post('/v1/teams')
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($team->getArrayCopy())
             ;
+        }
+    );
+
+$utopia->get('/v1/teams')
+    ->desc('List Teams')
+    ->label('scope', 'teams.read')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'list')
+    ->label('sdk.description', '/docs/references/teams/list-teams.md')
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->action(
+        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
+            $results = $projectDB->getCollection([
+                'limit' => $limit,
+                'offset' => $offset,
+                'orderField' => 'dateCreated',
+                'orderType' => $orderType,
+                'orderCast' => 'int',
+                'search' => $search,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_TEAMS,
+                ],
+            ]);
+
+            $response->json(['sum' => $projectDB->getSum(), 'teams' => $results]);
+        }
+    );
+
+$utopia->get('/v1/teams/:teamId')
+    ->desc('Get Team')
+    ->label('scope', 'teams.read')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'get')
+    ->label('sdk.description', '/docs/references/teams/get-team.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->action(
+        function ($teamId) use ($response, $projectDB) {
+            $team = $projectDB->getDocument($teamId);
+
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+                throw new Exception('Team not found', 404);
+            }
+
+            $response->json($team->getArrayCopy([]));
         }
     );
 
@@ -197,63 +197,6 @@ $utopia->delete('/v1/teams/:teamId')
             }
 
             $response->noContent();
-        }
-    );
-
-$utopia->get('/v1/teams/:teamId/memberships')
-    ->desc('Get Team Memberships')
-    ->label('scope', 'teams.read')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'getMemberships')
-    ->label('sdk.description', '/docs/references/teams/get-team-members.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->action(
-        function ($teamId) use ($response, $projectDB) {
-            $team = $projectDB->getDocument($teamId);
-
-            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
-                throw new Exception('Team not found', 404);
-            }
-
-            $memberships = $projectDB->getCollection([
-                'limit' => 50,
-                'offset' => 0,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    'teamId='.$teamId,
-                ],
-            ]);
-
-            $users = [];
-
-            foreach ($memberships as $membership) {
-                if (empty($membership->getAttribute('userId', null))) {
-                    continue;
-                }
-
-                $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
-
-                $users[] = array_merge($temp, $membership->getArrayCopy([
-                    '$uid',
-                    'userId',
-                    'teamId',
-                    'roles',
-                    'invited',
-                    'joined',
-                    'confirm',
-                ]));
-            }
-
-            usort($users, function ($a, $b) {
-                if ($a['joined'] === 0 || $b['joined'] === 0) {
-                    return $b['joined'] - $a['joined'];
-                }
-
-                return $a['joined'] - $b['joined'];
-            });
-
-            $response->json($users);
         }
     );
 
@@ -410,6 +353,63 @@ $utopia->post('/v1/teams/:teamId/memberships')
                     'name' => $name,
                 ]))
             ;
+        }
+    );
+
+$utopia->get('/v1/teams/:teamId/memberships')
+    ->desc('Get Team Memberships')
+    ->label('scope', 'teams.read')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'teams')
+    ->label('sdk.method', 'getMemberships')
+    ->label('sdk.description', '/docs/references/teams/get-team-members.md')
+    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->action(
+        function ($teamId) use ($response, $projectDB) {
+            $team = $projectDB->getDocument($teamId);
+
+            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+                throw new Exception('Team not found', 404);
+            }
+
+            $memberships = $projectDB->getCollection([
+                'limit' => 50,
+                'offset' => 0,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                    'teamId='.$teamId,
+                ],
+            ]);
+
+            $users = [];
+
+            foreach ($memberships as $membership) {
+                if (empty($membership->getAttribute('userId', null))) {
+                    continue;
+                }
+
+                $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
+
+                $users[] = array_merge($temp, $membership->getArrayCopy([
+                    '$uid',
+                    'userId',
+                    'teamId',
+                    'roles',
+                    'invited',
+                    'joined',
+                    'confirm',
+                ]));
+            }
+
+            usort($users, function ($a, $b) {
+                if ($a['joined'] === 0 || $b['joined'] === 0) {
+                    return $b['joined'] - $a['joined'];
+                }
+
+                return $a['joined'] - $b['joined'];
+            });
+
+            $response->json($users);
         }
     );
 
