@@ -151,6 +151,42 @@
 
                                     <button class="danger">Leave</button>
                                 </form>
+                                
+                                <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
+                                    <form class="pull-end"
+                                        data-service="teams.deleteMembership"
+                                        data-scope="console"
+                                        data-event="submit"
+                                        data-success="trigger"
+                                        data-success-param-trigger-events="teams.deleteMembership.resend"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to Resend Invitation"
+                                        data-failure-param-alert-classname="error">
+
+                                        <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$uid}}">
+
+                                        <button class="reverse">Resend</button>
+                                    </form>
+
+                                    <form class="pull-end"
+                                        data-service="teams.createMembership"
+                                        data-scope="console"
+                                        data-event="teams.deleteMembership.resend"
+                                        data-success="alert,trigger"
+                                        data-success-param-alert-text="Invitation Sent Successfully"
+                                        data-success-param-trigger-events="teams.createMembership.resent"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to Send inivitation"
+                                        data-failure-param-alert-classname="error">
+
+                                        <input name="teamId" type="hidden" data-ls-bind="{{member.teamId}}">
+                                        <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                                        <input name="email" type="hidden" data-ls-bind="{{member.email}}">
+                                        <input name="name" type="hidden" data-ls-bind="{{member.name}}">
+                                        <input name="roles" type="hidden" data-ls-bind="{{member.roles}}" data-cast-to="json">
+                                    </form>
+                                </div>
 
                                 <!-- <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
                                     <form

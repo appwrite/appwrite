@@ -17,8 +17,12 @@
         data-failure-param-alert-classname="error">
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1">Failed to join team. Please try again later</div>
+        
+        <h2 class="margin-bottom-small">Invitation</h2>
 
-        <div class=""
+        <p>You have been invited to join a team project on <?php echo APP_NAME; ?></p>
+        
+        <!-- <div class=""
              data-service="companies.getPreview"
              data-scope="api"
              data-name="api-company"
@@ -27,16 +31,12 @@
              data-success="trigger"
              data-success-triggers="api-company.load">
 
-            <h2 class="margin-bottom-small">Invitation</h2>
-
-            <p>You have been invited to join <span data-ls-bind="{{api-company.name}}"></span> team on <?php echo APP_NAME; ?></p>
-
             <div data-ls-if="{{api-company.logo}} !== '' || {{api-company.logo}} !== undefined">
                 <div data-ls-style="background: {{api-company.theme-color}}; color: {{api-company.theme-color-contrast}}; width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto; text-align: center">
                     <img data-ls-attrs="src={{env.API}}/v1/storage/files/{{api-company.logo}}/preview?project={{env.PROJECT}}&height=120" alt="Logo" style="opacity: 0; line-height: 80px; vertical-align: middle; max-width: 80px; max-height: 80px" />
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="agree margin-top margin-bottom">
             <div class="pull-start margin-end-small margin-bottom">
