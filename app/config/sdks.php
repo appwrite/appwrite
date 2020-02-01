@@ -4,7 +4,7 @@ return [
     [
         'label' => 'JS',
         'versions' => ['v1.0.0'],
-        'logo' => 'js.svg',
+        'logo' => 'javascript.svg',
         'link' => 'https://github.com/appwrite/sdk-for-js',
     ],
     [
