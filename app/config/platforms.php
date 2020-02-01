@@ -11,9 +11,9 @@ const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 
 return [
-    'description' => 'Client libraries for integrating with '.APP_NAME.' to build web-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) tutorial to start building your first web application.',
     APP_PLATFORM_WEB => [
         'name' => 'Web',
+        'description' => 'Client libraries for integrating with '.APP_NAME.' to build web-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) tutorial to start building your first web application.',
         'enabled' => true,
         'beta' => false,
         'languages' => [
