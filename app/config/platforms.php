@@ -11,6 +11,7 @@ const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 
 return [
+    'description' => 'Client libraries for integrating with '.APP_NAME.' to build web-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) tutorial to start building your first web application.',
     APP_PLATFORM_WEB => [
         'name' => 'Web',
         'enabled' => true,
@@ -35,7 +36,7 @@ return [
                 'name' => 'TypeScript',
                 'url' => '',
                 'enabled' => false,
-                'beta' => false,
+                'beta' => true,
                 'family' => APP_PLATFORM_CLIENT,
                 'prism' => 'typescript',
                 'source' => false,
@@ -48,6 +49,7 @@ return [
     
     APP_PLATFORM_IOS => [
         'name' => 'iOS',
+        'description' => 'Client libraries for integrating with '.APP_NAME.' to build iOS applications. Read the [getting started for iOS](/docs/getting-started-for-ios) tutorial to start building your first iOS application.',
         'enabled' => false,
         'beta' => false,
         'languages' => [
@@ -82,6 +84,7 @@ return [
 
     APP_PLATFORM_ANDROID => [
         'name' => 'Android',
+        'description' => 'Client libraries for integrating with '.APP_NAME.' to build Android applications. Read the [getting started for Android](/docs/getting-started-for-android) tutorial to start building your first Android application.',
         'enabled' => false,
         'beta' => false,
         'languages' => [
@@ -116,6 +119,7 @@ return [
 
     APP_PLATFORM_FLUTTER => [
         'name' => 'Flutter',
+        'description' => 'Client libraries for integrating with '.APP_NAME.' to build cross-platform Flutter applications. Read the [getting started for Flutter](/docs/getting-started-for-flutter) tutorial to start building your first Flutter application.',
         'enabled' => false,
         'beta' => false,
         'languages' => [
@@ -125,7 +129,7 @@ return [
                 'version' => '0.0.6',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'enabled' => true,
-                'beta' => false,
+                'beta' => true,
                 'family' => APP_PLATFORM_CLIENT,
                 'prism' => 'dart',
                 'source' => realpath(__DIR__ . '/../sdks/dart'),
@@ -160,6 +164,7 @@ return [
 
     APP_PLATFORM_SERVER => [
         'name' => 'Server',
+        'description' => 'Libraries for integrating with '.APP_NAME.' to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
         'beta' => false,
         'languages' => [
@@ -210,7 +215,7 @@ return [
                 'name' => 'Go',
                 'version' => '0.0.5',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
-                'enabled' => true,
+                'enabled' => false,
                 'beta' => true,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'go',
