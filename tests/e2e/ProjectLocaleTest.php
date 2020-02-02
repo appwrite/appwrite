@@ -75,7 +75,7 @@ class ProjectLocaleTest extends BaseProjects
 
         $this->assertEquals($countries['headers']['status-code'], 200);
         $this->assertIsArray($countries['body']);
-        $this->assertCount(28, $countries['body']);
+        $this->assertCount(27, $countries['body']);
         $this->assertEquals($countries['body']['DE'], 'Germany');
 
         // Test locale code change to ES
