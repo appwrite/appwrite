@@ -65,7 +65,7 @@ class WebhooksV1
                 [
                     'Content-Type: application/json',
                     'Content-Length: '.strlen($payload),
-                    'X-'.APP_NAME.'-Event: '.$event,
+                    'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
                     'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
                 ]
