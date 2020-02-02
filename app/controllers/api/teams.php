@@ -28,7 +28,7 @@ $utopia->post('/v1/teams')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/teams/create-team.md')
     ->param('name', null, function () { return new Text(100); }, 'Team name.')
-    ->param('roles', ['owner'], function () { return new ArrayList(new Text(128)); }, 'User roles array. Use this param to set the roles in the team for the user who created the team. The default role is **owner**, a role can be any string.', true)
+    ->param('roles', ['owner'], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions).', true)
     ->action(
         function ($name, $roles) use ($response, $projectDB, $user, $mode) {
             Authorization::disable();
@@ -210,7 +210,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
     ->param('email', '', function () { return new Email(); }, 'New team member email address.')
     ->param('name', '', function () { return new Text(100); }, 'New team member name.', true)
-    ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Invite roles array. Learn more about [roles and permissions](/docs/permissions).')
+    ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.') // TODO add our own built-in confirm page
     ->action(
         function ($teamId, $email, $name, $roles, $url) use ($response, $register, $project, $user, $audit, $projectDB) {
