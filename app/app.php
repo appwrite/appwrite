@@ -23,7 +23,6 @@ use Utopia\Validator\WhiteList;
  * Configuration files
  */
 $roles = include __DIR__.'/config/roles.php'; // User roles and scopes
-$sdks = include __DIR__.'/config/sdks.php'; // List of SDK clients
 $services = include __DIR__.'/config/services.php'; // List of services
 
 $webhook = new Event('v1-webhooks', 'WebhooksV1');
