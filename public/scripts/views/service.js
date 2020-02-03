@@ -340,6 +340,8 @@
               return;
             }
 
+            element.classList.add("load-service-end");
+
             for (let i = 0; i < failure.length; i++) {
               // Trigger success callbacks
               container.resolve(
