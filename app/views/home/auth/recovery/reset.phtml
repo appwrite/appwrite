@@ -9,15 +9,18 @@
     <br />
 
     <form name="recovery-reset"
-          data-service="account.updateRecovery"
-          data-scope="console"
-          data-event="submit"
-          data-success="alert,redirect"
-          data-success-param-alert="Password Reset Completed"
-          data-success-param-url="/auth/signin"
-          data-failure="alert"
-          data-failure-param-alert-text="Password Reset Failed"
-          data-failure-param-alert-classname="error">
+        data-analytics-event="submit"
+        data-analytics-category="home"
+        data-analytics-label="Update Account Recovery"
+        data-service="account.updateRecovery"
+        data-scope="console"
+        data-event="submit"
+        data-success="alert,redirect"
+        data-success-param-alert="Password Reset Completed"
+        data-success-param-url="/auth/signin"
+        data-failure="alert"
+        data-failure-param-alert-text="Password Reset Failed"
+        data-failure-param-alert-classname="error">
 
         <input type="hidden" name="userId" data-ls-bind="{{router.params.userId}}">
         <input type="hidden" name="secret" data-ls-bind="{{router.params.secret}}">
