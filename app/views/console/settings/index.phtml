@@ -19,6 +19,9 @@
                 <h2>Overview</h2>
 
                 <form
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Update Project"
                     data-service="projects.update"
                     data-scope="console"
                     data-event="submit"
@@ -136,6 +139,9 @@
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
                             <li class="clear">
                                 <form class="pull-end"
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Delete Team Membership"
                                     data-service="teams.deleteMembership"
                                     data-scope="console"
                                     data-event="submit"
@@ -154,6 +160,9 @@
                                 
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
                                     <form class="pull-end"
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Create Team Membership (resend)"
                                         data-service="teams.deleteMembership"
                                         data-scope="console"
                                         data-event="submit"
@@ -188,27 +197,6 @@
                                     </form>
                                 </div>
 
-                                <!-- <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
-                                    <form
-                                        data-service="teams.createTeamMembershipResend"
-                                        data-scope="console"
-                                        data-event="submit"
-                                        data-loading="Resending invitation, please wait..."
-                                        data-success="alert,trigger"
-                                        data-success-param-alert-text="Invitation Sent Successfully"
-                                        data-success-param-trigger-events="membership-resend"
-                                        data-failure="alert"
-                                        data-failure-param-alert-text="Failed to Send Invite"
-                                        data-failure-param-alert-classname="error">
-                                        
-                                        <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
-                                        <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
-
-                                        <button class="reverse">Resend</button>
-                                    </form>
-                                </div> -->
-
                                 <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                 <div class="margin-bottom-small">
@@ -225,6 +213,9 @@
                         <h1>Invite Member</h1>
 
                         <form name="teams.createTeamMembership"
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Create Team Membership"
                             data-service="teams.createMembership"
                             data-scope="console"
                             data-event="submit"

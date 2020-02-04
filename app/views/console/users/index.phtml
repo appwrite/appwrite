@@ -20,6 +20,9 @@ $providers = $this->getParam('providers', []);
                 <h1>Create User</h1>
 
                 <form
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create User"
                     data-service="users.create"
                     data-event="submit"
                     data-success="alert,trigger,reset"
@@ -170,6 +173,9 @@ $providers = $this->getParam('providers', []);
                 <h1>Create Team</h1>
 
                 <form
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create Team"
                     data-service="teams.create"
                     data-event="submit"
                     data-success="alert,trigger,reset"
@@ -246,6 +252,9 @@ $providers = $this->getParam('providers', []);
                                             <h1>Update Team</h1>
 
                                             <form
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Update Team"
                                                 data-service="teams.update"
                                                 data-scope="sdk"
                                                 data-event="submit"
@@ -329,6 +338,9 @@ $providers = $this->getParam('providers', []);
                                 <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
 
                                 <form
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Update Project OAuth"
                                     data-service="projects.updateOAuth"
                                     data-scope="console"
                                     data-event="submit"

@@ -14,6 +14,9 @@ $home = $this->getParam('home', '');
         <h1>Upload File</h1>
 
         <form
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Storage File"
             data-service="storage.createFile"
             data-event="submit"
             data-scope="sdk"
@@ -103,6 +106,9 @@ $home = $this->getParam('home', '');
                                     <h1>Update File</h1>
 
                                     <form
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Update Storage File"
                                         data-service="storage.updateFile"
                                         data-event="submit"
                                         data-scope="sdk"

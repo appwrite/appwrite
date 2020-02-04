@@ -2,7 +2,14 @@
     &nbsp;&nbsp;&nbsp;
     <div class="list pull-start project-only">
         <label>
-            <select data-switch data-ls-bind="{{router.params.project}}" data-unsync="1" data-ls-loop="projects" data-ls-as="option">
+            <select
+                data-analytics-event="change"
+                data-analytics-category="console/header"
+                data-analytics-label="Project Switch"
+                data-switch
+                data-ls-bind="{{router.params.project}}"
+                data-unsync="1"
+                data-ls-loop="projects" data-ls-as="option">
                 <option data-ls-attrs="value={{option.$uid}}" data-ls-bind="{{option.name}}"></option>
             </select>
         </label>
@@ -29,7 +36,10 @@
     </div>
 
     <nav>
-        <a class="logo" href="/console">
+        <a class="logo" href="/console"
+            data-analytics-event="click"
+            data-analytics-category="console/navigation"
+            data-analytics-label="Logo">
             <img src="/images/appwrite-nav.svg" alt="Appwrite Logo" />
         </a>
 
@@ -37,7 +47,10 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/home?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/home?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="Home">
                         <i class="icon-home"></i>
                         Home
                     </a>
@@ -48,19 +61,28 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/database?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/database?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="Database">
                         <i class="icon-database"></i>
                         Database
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/storage?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/storage?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="Storage">
                         <i class="icon-folder"></i>
                         Storage
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/users?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/users?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="Users">
                         <i class="icon-users"></i>
                         Users
                     </a>
@@ -71,19 +93,28 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="API Keys">
                         <i class="icon-key-inv"></i>
                         API Keys
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="Webhooks">
                         <i class="icon-link"></i>
                         Webhooks
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}">
+                    <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"
+                        data-analytics-event="click"
+                        data-analytics-category="console/navigation"
+                        data-analytics-label="Tasks">
                         <i class="icon-clock"></i>
                         Tasks
                     </a>
@@ -93,7 +124,11 @@
 
         <ul class="links bottom project-only">
             <li>
-                <a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> Settings</a>
+                <a data-ls-attrs="href=/console/settings?project={{router.params.project}}"
+                    data-analytics-event="click"
+                    data-analytics-category="console/navigation"
+                    data-analytics-label="Settings">
+                    <i class="icon-cog"></i> Settings</a>
             </li>
         </ul>
     </nav>
@@ -126,7 +161,11 @@
 <div data-ui-modal class="modal box close" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="create-project">
     <h1>Create Project</h1>
 
-    <form data-setup>
+    <form
+        data-setup
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Project">
         <p>Appwrite project is set of services and resources shared across different platforms like Web, iOS or Android.</p>
 
         <label>Name</label>

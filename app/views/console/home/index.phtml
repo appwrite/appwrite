@@ -96,6 +96,9 @@ $graph = $this->getParam('graph', false);
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Delete Project Platform"
                     data-service="projects.deletePlatform"
                     data-scope="console"
                     data-event="submit"
@@ -123,10 +126,10 @@ $graph = $this->getParam('graph', false);
     </div>
 
     <div data-ls-if="(!{{console-project.platforms.length}})" class="box dashboard margin-bottom" style="display: none;">
-        <div class="margin-bottom margin-top-small margin-end margin-start">
-            <h3 class="margin-bottom">No Platforms Added to Your Project</h3>
+        <div class="margin-bottom-small margin-top-small margin-end margin-start">
+            <h3 class="margin-bottom-small text-bold-2">No Platforms Added to Your Project</h3>
 
-            <p class="margin-bottom-no">Add your first platform to start building your new application.</p>
+            <p class="margin-bottom-no">Add your first platform and build your new application.</p>
         </div>
     </div>
 
@@ -156,6 +159,9 @@ $graph = $this->getParam('graph', false);
     <h1>New Web App</h1>
 
     <form
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Create Project Platform"
         data-service="projects.createPlatform"
         data-scope="console"
         data-event="submit"
@@ -191,6 +197,9 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-web-update">
     <form
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Update Project Platform"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"

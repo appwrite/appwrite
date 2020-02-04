@@ -4,7 +4,7 @@
   window.ls.container.get("view").add({
     selector: "data-analytics-event",
     controller: function(element) {
-      var action = element.getAttribute("data-event-action") || "click";
+      var action = element.getAttribute("data-analytics-event") || "click";
 
       element.addEventListener(action, function() {
         var category =

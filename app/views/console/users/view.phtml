@@ -87,6 +87,9 @@
 
                         <div data-ls-if="{{user.status}} !== <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update User Status"
                                 data-service="users.updateStatus"
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
@@ -103,6 +106,9 @@
 
                         <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update User Status"
                                 data-service="users.updateStatus"
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
@@ -137,6 +143,9 @@
                             <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                                 <li class="clear">
                                     <form class="pull-end"
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Delete User Session"
                                         data-service="users.deleteSession"
                                         data-event="submit"
                                         data-loading="Loading..."
@@ -164,6 +173,9 @@
                         </div>
 
                         <form class="inline margin-bottom-large"
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Delete User Sessions"
                             data-service="users.deleteSessions"
                             data-param-user-id="{{router.params.id}}"
                             data-event="submit"

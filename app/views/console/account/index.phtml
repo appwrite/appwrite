@@ -21,6 +21,9 @@
                         <div class="box margin-bottom-xl">
                             <div>
                                 <form name="account.update"
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Update Account Name"
                                     data-service="account.updateName"
                                     data-scope="console"
                                     data-event="submit"
@@ -50,6 +53,9 @@
                             <hr />
 
                             <form name="update-email"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Account Email"
                                 data-service="account.updateEmail"
                                 data-scope="console"
                                 data-event="submit"
@@ -84,6 +90,9 @@
                                 <h1>Update Password</h1>
 
                                 <form name="update-password"
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Update Account Password"
                                     data-service="account.updatePassword"
                                     data-scope="console"
                                     data-event="submit"
@@ -109,6 +118,9 @@
                             <hr />
 
                             <form class="margin-top"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Account Current Session"
                                 data-service="account.deleteCurrentSession"
                                 data-scope="console"
                                 data-event="submit"
@@ -150,6 +162,9 @@
                             <p>PLEASE NOTE: Account deletion is irreversible.</p>
 
                             <form class="inline"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Account"
                                 data-service="account.delete"
                                 data-scope="console"
                                 data-event="submit"
@@ -183,6 +198,9 @@
                         <span data-ls-if="true != {{session.current}}" style="display: none;">
                             <!-- From remote session (-logout event) -->
                             <form class="pull-end"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Account Session"
                                 data-service="account.deleteSession"
                                 data-scope="console"
                                 data-event="submit"
@@ -201,6 +219,9 @@
                         <span data-ls-if="true == {{session.current}}" style="display: none;">
                             <!-- From current session (+logout event) -->
                             <form class="pull-end"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Account Current Session"
                                 data-service="account.deleteSession"
                                 data-scope="console"
                                 data-event="submit"
@@ -233,6 +254,9 @@
             </div>
 
             <form class="inline margin-bottom-large"
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Delete Account Sessions"
                 data-service="account.deleteSessions"
                 data-scope="console"
                 data-event="submit"
