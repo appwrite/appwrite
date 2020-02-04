@@ -63,6 +63,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_STATSD_PORT=8125 \
     _APP_SMTP_HOST=smtp \
     _APP_SMTP_PORT=25 \
+    _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION
 #ENV _APP_SMTP_SECURE ''
 #ENV _APP_SMTP_USERNAME ''

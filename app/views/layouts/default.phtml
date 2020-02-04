@@ -4,8 +4,6 @@ use Utopia\Locale\Locale;
 
 $protocol   = $this->getParam('protocol', '');
 $domain     = $this->getParam('domain', '');
-$api        = $this->getParam('api', '');
-$project    = $this->getParam('project', 'console');
 $platforms  = $this->getParam('platforms', []);
 $version    = $this->getParam('version', '0.0.0');
 $isDev      = $this->getParam('isDev', false);
@@ -35,7 +33,7 @@ if(!empty($platforms)) {
     <link rel="icon" type="image/png" href="<?php echo $this->escape($this->getParam('icon', '')); ?>?v=1" />
     <link href="https://fonts.googleapis.com/css?family=Poppins:100,300,400,500,600" rel="stylesheet">
     <link rel="apple-touch-icon" href="/images/apple.png">
-    <link rel="preconnect" href="<?php echo $api; ?>" />
+    <!-- <link rel="preconnect" href="" /> -->
     <?php if (!empty($canonical)): ?>
         <link rel="canonical" href="<?php echo $canonical; ?>" />
     <?php endif; ?>
@@ -67,8 +65,9 @@ if(!empty($platforms)) {
             PROTOCOL: '<?php echo $protocol; ?>',
             DOMAIN: '<?php echo $domain; ?>',
             HOME: '<?php echo $this->escape($this->getParam('home')); ?>',
-            API: '<?php echo $api; ?>/v1',
-            PROJECT: '<?php echo $project; ?>',
+            SETUP: '<?php echo $this->escape($this->getParam('setup')); ?>',
+            API: '/v1',
+            PROJECT: 'console',
             PLATFORMS: <?php echo json_encode($platforms); ?>,
             LOCALE: '<?php echo $this->escape(Locale::getText('settings.locale')); ?>',
             PREFIX: '<?php echo $this->escape($this->getParam('prefix')); ?>',
