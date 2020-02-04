@@ -63,8 +63,10 @@ $utopia->post('/v1/projects')
                     'legalAddress' => $legalAddress,
                     'legalTaxId' => $legalTaxId,
                     'teamId' => $team->getUid(),
+                    'platforms' => [],
                     'webhooks' => [],
                     'keys' => [],
+                    'tasks' => [],
                 ]
             );
 
