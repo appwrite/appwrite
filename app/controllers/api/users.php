@@ -21,6 +21,71 @@ use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
+$utopia->post('/v1/users')
+    ->desc('Create User')
+    ->label('scope', 'users.write')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/users/create-user.md')
+    ->param('email', '', function () { return new Email(); }, 'User account email.')
+    ->param('password', '', function () { return new Password(); }, 'User account password.')
+    ->param('name', '', function () { return new Text(100); }, 'User account name.', true)
+    ->action(
+        function ($email, $password, $name) use ($response, $register, $projectDB, $providers) {
+            $profile = $projectDB->getCollection([ // Get user by email address
+                'limit' => 1,
+                'first' => true,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    'email='.$email,
+                ],
+            ]);
+
+            if (!empty($profile)) {
+                throw new Exception('User already registered', 400);
+            }
+
+            $user = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                '$permissions' => [
+                    'read' => ['*'],
+                    'write' => ['user:{self}'],
+                ],
+                'email' => $email,
+                'status' => Auth::USER_STATUS_UNACTIVATED,
+                'password' => Auth::passwordHash($password),
+                'password-update' => time(),
+                'registration' => time(),
+                'confirm' => false,
+                'reset' => false,
+                'name' => $name,
+            ]);
+
+            $oauthKeys = [];
+
+            foreach ($providers as $key => $provider) {
+                if (!$provider['enabled']) {
+                    continue;
+                }
+
+                $oauthKeys[] = 'oauth'.ucfirst($key);
+                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+            }
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json(array_merge($user->getArrayCopy(array_merge([
+                    '$uid',
+                    'status',
+                    'email',
+                    'registration',
+                    'confirm',
+                    'name',
+                ], $oauthKeys)), ['roles' => []]));
+        }
+    );
+    
 $utopia->get('/v1/users')
     ->desc('List Users')
     ->label('scope', 'users.read')
@@ -269,71 +334,6 @@ $utopia->get('/v1/users/:userId/logs')
             }
 
             $response->json($output);
-        }
-    );
-
-$utopia->post('/v1/users')
-    ->desc('Create User')
-    ->label('scope', 'users.write')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/users/create-user.md')
-    ->param('email', '', function () { return new Email(); }, 'User account email.')
-    ->param('password', '', function () { return new Password(); }, 'User account password.')
-    ->param('name', '', function () { return new Text(100); }, 'User account name.', true)
-    ->action(
-        function ($email, $password, $name) use ($response, $register, $projectDB, $providers) {
-            $profile = $projectDB->getCollection([ // Get user by email address
-                'limit' => 1,
-                'first' => true,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    'email='.$email,
-                ],
-            ]);
-
-            if (!empty($profile)) {
-                throw new Exception('User already registered', 400);
-            }
-
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['user:{self}'],
-                ],
-                'email' => $email,
-                'status' => Auth::USER_STATUS_UNACTIVATED,
-                'password' => Auth::passwordHash($password),
-                'password-update' => time(),
-                'registration' => time(),
-                'confirm' => false,
-                'reset' => false,
-                'name' => $name,
-            ]);
-
-            $oauthKeys = [];
-
-            foreach ($providers as $key => $provider) {
-                if (!$provider['enabled']) {
-                    continue;
-                }
-
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json(array_merge($user->getArrayCopy(array_merge([
-                    '$uid',
-                    'status',
-                    'email',
-                    'registration',
-                    'confirm',
-                    'name',
-                ], $oauthKeys)), ['roles' => []]));
         }
     );
 
