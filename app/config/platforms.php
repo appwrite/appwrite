@@ -177,7 +177,7 @@ return [
                 'beta' => false,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'javascript',
-                'source' => realpath(__DIR__ . '/../sdks/node'),
+                'source' => realpath(__DIR__ . '/../sdks/nodejs'),
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-node.git',
                 'gitRepoName' => 'sdk-for-node',
                 'gitUserName' => 'appwrite',

@@ -6,14 +6,12 @@ return [
         'controller' => 'controllers/web/home.php',
         'sdk' => false,
         'tests' => false,
-        'blacklist' => [],
     ],
     'console/' => [
         'name' => 'Console',
         'controller' => 'controllers/web/console.php',
         'sdk' => false,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/account' => [
         'name' => 'Account',
@@ -21,9 +19,6 @@ return [
         'controller' => 'controllers/api/account.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [
-            APP_PLATFORM_SERVER
-        ],
     ],
     'v1/avatars' => [
         'name' => 'Avatars',
@@ -31,7 +26,6 @@ return [
         'controller' => 'controllers/api/avatars.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/database' => [
         'name' => 'Database',
@@ -39,7 +33,6 @@ return [
         'controller' => 'controllers/api/database.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/locale' => [
         'name' => 'Locale',
@@ -47,21 +40,18 @@ return [
         'controller' => 'controllers/api/locale.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/health' => [
         'name' => 'Health',
         'controller' => 'controllers/api/health.php',
         'sdk' => false,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/projects' => [
         'name' => 'Projects',
         'controller' => 'controllers/api/projects.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/storage' => [
         'name' => 'Storage',
@@ -69,7 +59,6 @@ return [
         'controller' => 'controllers/api/storage.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/teams' => [
         'name' => 'Teams',
@@ -77,7 +66,6 @@ return [
         'controller' => 'controllers/api/teams.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [],
     ],
     'v1/users' => [
         'name' => 'Users',
@@ -85,13 +73,6 @@ return [
         'controller' => 'controllers/api/users.php',
         'sdk' => true,
         'tests' => false,
-        'blacklist' => [
-            APP_PLATFORM_CLIENT,
-            APP_PLATFORM_IOS,
-            APP_PLATFORM_ANDROID,
-            APP_PLATFORM_UNITY,
-            APP_PLATFORM_FLUTTER
-        ],
     ],
     'v1/mock' => [
         'name' => 'Mock',
@@ -99,7 +80,6 @@ return [
         'controller' => 'controllers/mock.php',
         'sdk' => false,
         'tests' => true,
-        'blacklist' => [],
     ],
     'v1/graphql' => [
         'name' => 'GraphQL',
@@ -107,6 +87,5 @@ return [
         'controller' => 'controllers/api/graphql.php',
         'sdk' => false,
         'tests' => false,
-        'blacklist' => [],
     ],
 ];

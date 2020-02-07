@@ -232,7 +232,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider')
     ->label('sdk.response.type', 'text/html')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider. Currently, supported providers are: ' . implode(', ', array_keys($providers)))
+    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter($providers, function($node) {return (!$node['mock']);}))))
     ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
     ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
