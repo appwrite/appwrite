@@ -6,6 +6,7 @@
 * New database rule validation options
 * Update docs example with auth info
 * Allow non-web platform skip origin header
+* Added ENV vars to change system email sender name and address 
 
 ## Bug Fixes
 
