@@ -117,3 +117,13 @@ SMTP server user name. Empty by default.
 ### _APP_SMTP_PASSWORD
 
 SMTP server user password. Empty by default.
+
+## System Settings
+
+### _APP_SYSTEM_EMAIL_NAME
+
+This is the sender name value that will appear on email messages sent to developers from the Appwrite console. The default value is: 'Appwrite Team'.
+
+### _APP_SYSTEM_EMAIL_ADDRESS
+
+This is the sender email address that will appear on email messages sent to developers from the Appwrite console. The default value is 'team@appwrite.io'. You should choose an email address that is allowed to be used from your SMTP server to avoid the server email ending in the users' SPAM folders.

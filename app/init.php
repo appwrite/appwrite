@@ -124,8 +124,11 @@ $register->set('smtp', function () use ($request) {
     $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
     $mail->SMTPAutoTLS = false;
 
-    $mail->setFrom('team@appwrite.io', APP_NAME.' Team');
-    $mail->addReplyTo('team@appwrite.io', APP_NAME.' Team');
+    $from = $request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Team');
+    $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', 'team@appwrite.io');
+
+    $mail->setFrom($email, $from);
+    $mail->addReplyTo($email, $from);
 
     $mail->isHTML(true);
 
