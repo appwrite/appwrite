@@ -335,7 +335,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $audit
                 ->setParam('userId', $invitee->getUid())
-                ->setParam('event', 'auth.invite')
+                ->setParam('event', 'teams.membership.create')
             ;
 
             $response
@@ -515,7 +515,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             $audit
                 ->setParam('userId', $user->getUid())
-                ->setParam('event', 'auth.join')
+                ->setParam('event', 'teams.membership.update')
             ;
 
             $response
@@ -578,7 +578,7 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
 
             $audit
                 ->setParam('userId', $membership->getAttribute('userId'))
-                ->setParam('event', 'auth.leave')
+                ->setParam('event', 'teams.membership.delete')
             ;
 
             $response->noContent();
