@@ -969,7 +969,7 @@ $utopia->delete('/v1/account/sessions')
     );
 
 $utopia->post('/v1/account/recovery')
-    ->desc('Password Recovery')
+    ->desc('Create Password Recovery')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -1061,7 +1061,7 @@ $utopia->post('/v1/account/recovery')
     );
 
 $utopia->put('/v1/account/recovery')
-    ->desc('Password Reset')
+    ->desc('Complete Password Recovery')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
