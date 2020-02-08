@@ -12,6 +12,7 @@ const APP_PLATFORM_CONSOLE = 'console';
 
 return [
     APP_PLATFORM_WEB => [
+        'key' => APP_PLATFORM_WEB,
         'name' => 'Web',
         'description' => 'Client libraries for integrating with '.APP_NAME.' to build web-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) tutorial to start building your first web application.',
         'enabled' => true,
@@ -48,6 +49,7 @@ return [
     ],
     
     APP_PLATFORM_IOS => [
+        'key' => APP_PLATFORM_IOS,
         'name' => 'iOS',
         'description' => 'Client libraries for integrating with '.APP_NAME.' to build iOS applications. Read the [getting started for iOS](/docs/getting-started-for-ios) tutorial to start building your first iOS application.',
         'enabled' => false,
@@ -83,6 +85,7 @@ return [
     ],
 
     APP_PLATFORM_ANDROID => [
+        'key' => APP_PLATFORM_ANDROID,
         'name' => 'Android',
         'description' => 'Client libraries for integrating with '.APP_NAME.' to build Android applications. Read the [getting started for Android](/docs/getting-started-for-android) tutorial to start building your first Android application.',
         'enabled' => false,
@@ -118,6 +121,7 @@ return [
     ],
 
     APP_PLATFORM_FLUTTER => [
+        'key' => APP_PLATFORM_FLUTTER,
         'name' => 'Flutter',
         'description' => 'Client libraries for integrating with '.APP_NAME.' to build cross-platform Flutter applications. Read the [getting started for Flutter](/docs/getting-started-for-flutter) tutorial to start building your first Flutter application.',
         'enabled' => false,
@@ -163,6 +167,7 @@ return [
     // ],
 
     APP_PLATFORM_SERVER => [
+        'key' => APP_PLATFORM_SERVER,
         'name' => 'Server',
         'description' => 'Libraries for integrating with '.APP_NAME.' to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
