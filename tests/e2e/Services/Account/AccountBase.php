@@ -808,7 +808,7 @@ trait AccountBase
     /**
      * @depends testDeleteAccountSession
      */
-    public function xtestCreateAccountRecovery($data):array
+    public function testCreateAccountRecovery($data):array
     {
         $email = (isset($data['email'])) ? $data['email'] : '';
         $name = (isset($data['name'])) ? $data['name'] : '';
@@ -882,7 +882,7 @@ trait AccountBase
     /**
      * @depends testCreateAccountRecovery
      */
-    public function xtestUpdateAccountRecovery($data):array
+    public function testUpdateAccountRecovery($data):array
     {
         $uid = (isset($data['uid'])) ? $data['uid'] : '';
         $recovery = (isset($data['recovery'])) ? $data['recovery'] : '';
