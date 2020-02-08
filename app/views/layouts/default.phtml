@@ -17,7 +17,7 @@ if(!empty($platforms)) {
         return [
             'key' => $platform['key'],
             'name' => $platform['name'],
-            'langauges' => array_map(function($language) {
+            'languages' => array_map(function($language) {
                 return [
                     'key' => $language['key'],
                     'name' => $language['name'],
@@ -27,8 +27,7 @@ if(!empty($platforms)) {
     }, $platforms);
 }
 
-?>
-<!DOCTYPE html><!--
+?><!DOCTYPE html><!--
 <?php echo Locale::getText('settings.inspire'); ?>
 
 --><html lang="<?php echo Locale::getText('settings.locale'); ?>" class="<?php echo $this->getParam('class', 'none'); ?>  <?php echo $env; ?>">
