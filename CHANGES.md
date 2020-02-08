@@ -22,6 +22,7 @@
 * File upload route (POST /v1/storage/files) now accept a single file per request
 * Added ENV vars to change system email sender name and address 
 
+
 ## Bug Fixes
 
 * Fixed bug where user status was saved as a string instead of an integer
