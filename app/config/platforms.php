@@ -234,7 +234,7 @@ return [
                 'name' => 'Go',
                 'version' => '0.0.5',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
-                'enabled' => false,
+                'enabled' => true,
                 'beta' => true,
                 'family' => APP_PLATFORM_SERVER,
                 'prism' => 'go',

@@ -20,9 +20,11 @@ if(!empty($platforms)) {
             'languages' => array_map(function($language) {
                 return [
                     'key' => $language['key'],
-                    'name' => $language['name'],
+                    'name' => $language['name'] . (($language['beta']) ? ' (beta)' : ''),
                 ];
-            }, $platform['languages'])
+            }, array_filter($platform['languages'], function($node) {
+                return ($node['enabled']);
+            }))
         ];
     }, $platforms);
 }
