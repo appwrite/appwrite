@@ -376,7 +376,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
-    ->param('filters', [], function () { return new ArrayList(new Text(128)); }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$uid>=5bed2d152c362\'', true)
+    ->param('filters', [], function () { return new ArrayList(new Text(128)); }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$uid>=5bed2d152c362\'.', true)
     ->param('offset', 0, function () { return new Range(0, 900000000); }, 'Offset value. Use this value to manage pagination.', true)
     ->param('limit', 50, function () { return new Range(0, 1000); }, 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
     ->param('order-field', '$uid', function () { return new Text(128); }, 'Document field that results will be sorted by.', true)
@@ -443,7 +443,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', '/docs/references/database/get-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
-    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
+    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(
         function ($collectionId, $documentId) use ($response, $request, $projectDB, $isDev) {
             $document = $projectDB->getDocument($documentId, $isDev);
@@ -489,8 +489,8 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.method', 'updateDocument')
     ->label('sdk.description', '/docs/references/database/update-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
-    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
-    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string')
+    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
+    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON string.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(
@@ -568,7 +568,7 @@ $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
-    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID')
+    ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(
         function ($collectionId, $documentId) use ($response, $projectDB, $audit, $webhook, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);

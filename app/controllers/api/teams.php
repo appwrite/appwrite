@@ -250,11 +250,11 @@ $utopia->post('/v1/teams/:teamId/memberships')
                         'write' => ['user:{self}'],
                     ],
                     'email' => $email,
+                    'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash(Auth::passwordGenerator()),
                     'password-update' => time(),
                     'registration' => time(),
-                    'confirm' => false,
                     'reset' => false,
                     'name' => $name,
                     'tokens' => [],
@@ -475,7 +475,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             ;
 
             $user
-                ->setAttribute('confirm', true)
+                ->setAttribute('emailVerification', true)
                 ->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND)
             ;
 

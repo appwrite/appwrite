@@ -57,7 +57,7 @@ $utopia->post('/v1/users')
                 'password' => Auth::passwordHash($password),
                 'password-update' => time(),
                 'registration' => time(),
-                'confirm' => false,
+                'emailVerification' => false,
                 'reset' => false,
                 'name' => $name,
             ]);
@@ -80,7 +80,7 @@ $utopia->post('/v1/users')
                     'status',
                     'email',
                     'registration',
-                    'confirm',
+                    'emailVerification',
                     'name',
                 ], $oauthKeys)), ['roles' => []]));
         }
@@ -129,7 +129,7 @@ $utopia->get('/v1/users')
                         'status',
                         'email',
                         'registration',
-                        'confirm',
+                        'emailVerification',
                         'name',
                     ],
                     $oauthKeys
@@ -173,7 +173,7 @@ $utopia->get('/v1/users/:userId')
                     'status',
                     'email',
                     'registration',
-                    'confirm',
+                    'emailVerification',
                     'name',
                 ],
                 $oauthKeys
@@ -379,7 +379,7 @@ $utopia->patch('/v1/users/:userId/status')
                     'status',
                     'email',
                     'registration',
-                    'confirm',
+                    'emailVerification',
                     'name',
                 ], $oauthKeys)), ['roles' => []]));
         }

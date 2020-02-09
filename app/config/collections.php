@@ -268,8 +268,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Confirmation Status',
-                'key' => 'confirm',
+                'label' => 'Email Verification Status',
+                'key' => 'emailVerification',
                 'type' => 'boolean',
                 'default' => '',
                 'required' => true,

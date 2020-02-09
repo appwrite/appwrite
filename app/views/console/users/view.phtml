@@ -32,10 +32,10 @@
 
                                 <div class="margin-top-small" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
-                                    <span data-ls-if="{{user.confirm}} === true" style="display: none;">
+                                    <span data-ls-if="{{user.emailVerification}} === true" style="display: none;">
                                         <span class="tag green">Verified</span>
                                     </span>
-                                    <span data-ls-if="{{user.confirm}} !== true" style="display: none;">
+                                    <span data-ls-if="{{user.emailVerification}} !== true" style="display: none;">
                                         <span class="tag">Unverified</span>
                                     </span>
                                 </div>

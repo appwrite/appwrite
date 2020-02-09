@@ -113,11 +113,11 @@ $providers = $this->getParam('providers', []);
                                         <small data-ls-bind="{{user.email}}"></span>
                                     </td>
                                     <td data-title="Status: ">
-                                        <span data-ls-if="{{user.confirm}} === true">
+                                        <span data-ls-if="{{user.emailVerification}} === true">
                                             &nbsp;<span class="tag green">Verified</span>
                                         </span>
 
-                                        <span data-ls-if="{{user.confirm}} !== true">
+                                        <span data-ls-if="{{user.emailVerification}} !== true">
                                             &nbsp;<span class="tag">Unverified</span>
                                         </span>
 

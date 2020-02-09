@@ -50,9 +50,9 @@ $utopia->post('/v1/account')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/account/create.md')
     ->label('abuse-limit', 10)
-    ->param('email', '', function () { return new Email(); }, 'Account email')
-    ->param('password', '', function () { return new Password(); }, 'User password')
-    ->param('name', '', function () { return new Text(100); }, 'User name', true)
+    ->param('email', '', function () { return new Email(); }, 'Account email.')
+    ->param('password', '', function () { return new Password(); }, 'User password.')
+    ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
         function ($email, $password, $name) use ($register, $request, $response, $audit, $projectDB, $project, $webhook, $oauthKeys) {
             if ('console' === $project->getUid()) {
@@ -95,11 +95,11 @@ $utopia->post('/v1/account')
                     'write' => ['user:{self}'],
                 ],
                 'email' => $email,
+                'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => Auth::passwordHash($password),
                 'password-update' => time(),
                 'registration' => time(),
-                'confirm' => false,
                 'reset' => false,
                 'name' => $name,
             ]);
@@ -147,8 +147,8 @@ $utopia->post('/v1/account/sessions')
     ->label('sdk.description', '/docs/references/account/create-session.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('email', '', function () { return new Email(); }, 'User account email address')
-    ->param('password', '', function () { return new Password(); }, 'User account password')
+    ->param('email', '', function () { return new Email(); }, 'User account email address.')
+    ->param('password', '', function () { return new Password(); }, 'User account password.')
     ->action(
         function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook) {
             $profile = $projectDB->getCollection([ // Get user by email address
@@ -388,11 +388,11 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                         '$collection' => Database::SYSTEM_COLLECTION_USERS,
                         '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
                         'email' => $email,
+                        'emailVerification' => true,
                         'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'password-update' => time(),
                         'registration' => time(),
-                        'confirm' => true,
                         'reset' => false,
                         'name' => $name,
                     ]);
@@ -737,6 +737,7 @@ $utopia->patch('/v1/account/email')
 
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'email' => $email,
+                'emailVerification' => false,
             ]));
 
             if (false === $user) {
@@ -1103,7 +1104,7 @@ $utopia->put('/v1/account/recovery')
             $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
                 'password' => Auth::passwordHash($passwordA),
                 'password-update' => time(),
-                'confirm' => true,
+                'emailVerification' => true,
             ]));
 
             if (false === $profile) {
@@ -1130,8 +1131,8 @@ $utopia->put('/v1/account/recovery')
         }
     );
 
-    $utopia->post('/v1/account/verification')
-    ->desc('Create Verification')
+$utopia->post('/v1/account/verification/email')
+    ->desc('Create Email Verification')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -1139,7 +1140,7 @@ $utopia->put('/v1/account/recovery')
     ->label('sdk.description', '/docs/references/account/create-verification.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email.') // TODO add our own built-in confirm page
+    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email.') // TODO add built-in confirm page
     ->action(
         function ($url) use ($request, $response, $register, $user, $project, $projectDB, $audit) {
             $verificationSecret = Auth::tokenGenerator();
@@ -1210,7 +1211,7 @@ $utopia->put('/v1/account/recovery')
     );
 
 $utopia->put('/v1/account/verification')
-    ->desc('Updated Verification')
+    ->desc('Complete Email Verification')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -1244,7 +1245,7 @@ $utopia->put('/v1/account/verification')
             Authorization::setRole('user:'.$profile->getUid());
 
             $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
-                'confirm' => true,
+                'emailVerification' => true,
             ]));
 
             if (false === $profile) {
