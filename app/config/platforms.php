@@ -20,7 +20,7 @@ return [
         'languages' => [
             [
                 'key' => 'javascript',
-                'name' => 'JS',
+                'name' => 'JavaScript',
                 'version' => '1.0.28',
                 'url' => 'https://github.com/appwrite/sdk-for-js',
                 'enabled' => true,
