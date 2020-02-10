@@ -7,7 +7,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
  */
 
 .ide {
-	background-color: #373738;
+	background-color: var(--config-prism-background);
 	overflow: hidden;
 	position: relative;
 	z-index: 1;
@@ -286,7 +286,7 @@ pre[class*="language-"].line-numbers > code {
 }
 
 .line-numbers .line-numbers-rows {
-	background: #39393c;
+	background: var(--config-prism-numbers);
 	position: absolute;
 	pointer-events: none;
 	top: -20px;
