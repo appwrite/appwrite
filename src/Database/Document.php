@@ -122,6 +122,26 @@ class Document extends ArrayObject
     }
 
     /**
+     * Remove Attribute.
+     *
+     * Method for removing a specific field attribute
+     *
+     * @param string $key
+     * @param mixed  $value
+     * @param string $type
+     *
+     * @return mixed
+     */
+    public function removeAttribute($key)
+    {
+        if(isset($this[$key])) {
+            unset($this[$key]);
+        }
+
+        return $this;
+    }
+
+    /**
      * Search.
      *
      * Get array child by key and value match
