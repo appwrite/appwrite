@@ -232,7 +232,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider')
     ->label('sdk.response.type', 'text/html')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter($providers, function($node) {return (!$node['mock']);}))))
+    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter($providers, function($node) {return (!$node['mock']);}))).'.')
     ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
     ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
@@ -269,10 +269,10 @@ $utopia->get('/v1/account/sessions/oauth/callback/:provider/:projectId')
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider')
-    ->param('code', '', function () { return new Text(1024); }, 'OAuth code')
-    ->param('state', '', function () { return new Text(2048); }, 'Login state params', true)
+    ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID.')
+    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider.')
+    ->param('code', '', function () { return new Text(1024); }, 'OAuth code.')
+    ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
     ->action(
         function ($projectId, $provider, $code, $state) use ($response, $request, $domain) {
             $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/account/sessions/oauth/'.$provider.'/redirect?'
@@ -288,9 +288,9 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider')
-    ->param('code', '', function () { return new Text(1024); }, 'OAuth code')
-    ->param('state', '', function () { return new Text(2048); }, 'OAuth state params', true)
+    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider.')
+    ->param('code', '', function () { return new Text(1024); }, 'OAuth code.')
+    ->param('state', '', function () { return new Text(2048); }, 'OAuth state params.', true)
     ->action(
         function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
             $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth/callback/'.$provider.'/'.$project->getUid();
@@ -625,8 +625,6 @@ $utopia->get('/v1/account/logs')
         }
     );
 
-
-
 $utopia->patch('/v1/account/name')
     ->desc('Update Account Name')
     ->label('webhook', 'account.update.name')
@@ -635,7 +633,7 @@ $utopia->patch('/v1/account/name')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
-    ->param('name', '', function () { return new Text(100); }, 'User name')
+    ->param('name', '', function () { return new Text(100); }, 'User name.')
     ->action(
         function ($name) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
@@ -671,8 +669,8 @@ $utopia->patch('/v1/account/password')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
-    ->param('password', '', function () { return new Password(); }, 'New password')
-    ->param('old-password', '', function () { return new Password(); }, 'Old password')
+    ->param('password', '', function () { return new Password(); }, 'New password.')
+    ->param('old-password', '', function () { return new Password(); }, 'Old password.')
     ->action(
         function ($password, $oldPassword) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -712,8 +710,8 @@ $utopia->patch('/v1/account/email')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
-    ->param('email', '', function () { return new Email(); }, 'Email address')
-    ->param('password', '', function () { return new Password(); }, 'User password')
+    ->param('email', '', function () { return new Email(); }, 'Email address.')
+    ->param('password', '', function () { return new Password(); }, 'User password.')
     ->action(
         function ($email, $password) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
@@ -1219,7 +1217,7 @@ $utopia->put('/v1/account/verification')
     ->label('sdk.description', '/docs/references/account/update-verification.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
+    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
     ->action(
         function ($userId, $secret) use ($response, $user, $projectDB, $audit) {

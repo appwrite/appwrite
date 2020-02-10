@@ -2,6 +2,7 @@
 <?php
 
 require_once __DIR__.'/../../vendor/autoload.php';
+require_once __DIR__.'/../../app/init.php';
 
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
@@ -17,7 +18,7 @@ use Appwrite\SDK\Language\Go;
 
 $cli = new CLI();
 
-$version = '0.4.0'; // Server version
+$version = APP_VERSION_STABLE; // Server version
 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
 $cli

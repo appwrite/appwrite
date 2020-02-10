@@ -421,9 +421,9 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->label('sdk.method', 'updateMembershipStatus')
     ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID')
-    ->param('secret', '', function () { return new Text(256); }, 'Secret Key')
+    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
+    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
+    ->param('secret', '', function () { return new Text(256); }, 'Secret key.')
     ->action(
         function ($teamId, $inviteId, $userId, $secret) use ($response, $request, $user, $audit, $projectDB) {
             $membership = $projectDB->getDocument($inviteId);
@@ -545,7 +545,7 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('sdk.method', 'deleteMembership')
     ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID')
+    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
     ->action(
         function ($teamId, $inviteId) use ($response, $projectDB, $audit) {
             $membership = $projectDB->getDocument($inviteId);
