@@ -27,6 +27,11 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		font-size: 10px;
 		.func-end(10px);
 		opacity: 0.95;
+
+		@media screen {
+			background: var(--config-color-focus)!important;
+			color: var(--config-color-normal)!important;
+		}
 	}
 
 	&[data-lang="bash"]::after {
