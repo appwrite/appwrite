@@ -2328,7 +2328,7 @@ let defaults={'selector':'','controller':function(){},'template':'','repeat':fal
 if(prop in object){continue;}
 object[prop]=defaults[prop];}
 if(!object.selector){throw new Error('View component is missing a selector attribute');}
-stock[object.selector]=object;return this;},render:function(element,callback){parse(element,false,callback);element.dispatchEvent(new window.Event('rendered',{bubbles:false}));}}},true,false);window.ls.container.set('router',function(window){let getJsonFromUrl=function(URL){let query;if(URL){let pos=location.href.indexOf('?');if(pos===-1)return[];query=location.href.substr(pos+1);}else{query=location.search.substr(1);}
+stock[object.selector]=object;return this;},render:function(element,callback){parse(element,false,callback);element.dispatchEvent(new window.Event('rendered',{bubbles:false}));}}},true,false);window.ls.container.set('router',function(window){let getJsonFromUrl=function(URL){let query;if(URL){let pos=location.search.indexOf('?');if(pos===-1)return[];query=location.search.substr(pos+1);}else{query=location.search.substr(1);}
 let result={};query.split('&').forEach(function(part){if(!part){return;}
 part=part.split('+').join(' ');let eq=part.indexOf('=');let key=eq>-1?part.substr(0,eq):part;let val=eq>-1?decodeURIComponent(part.substr(eq+1)):'';let from=key.indexOf('[');if(from===-1){result[decodeURIComponent(key)]=val;}
 else{let to=key.indexOf(']');let index=decodeURIComponent(key.substring(from+1,to));key=decodeURIComponent(key.substring(0,from));if(!result[key]){result[key]=[];}
