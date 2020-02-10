@@ -40,7 +40,7 @@ $utopia->post('/v1/teams')
                     'write' => ['team:{self}/owner'],
                 ],
                 'name' => $name,
-                'sum' => ($user->getUid()) ? 1 : 0,
+                'sum' => ($mode !== APP_MODE_ADMIN) ? 1 : 0,
                 'dateCreated' => time(),
             ]);
 
@@ -50,7 +50,7 @@ $utopia->post('/v1/teams')
                 throw new Exception('Failed saving team to DB', 500);
             }
 
-            if ($user->getUid()) { // Don't add user on server mode
+            if ($mode !== APP_MODE_ADMIN) { // Don't add user on server mode
                 $membership = new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                     '$permissions' => [
