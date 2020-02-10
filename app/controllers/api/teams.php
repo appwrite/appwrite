@@ -208,7 +208,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->label('sdk.method', 'createMembership')
     ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('email', '', function () { return new Email(); }, 'New team member email address.')
+    ->param('email', '', function () { return new Email(); }, 'New team member email.')
     ->param('name', '', function () { return new Text(100); }, 'New team member name.', true)
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.') // TODO add our own built-in confirm page

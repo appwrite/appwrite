@@ -50,7 +50,7 @@ $utopia->post('/v1/account')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/account/create.md')
     ->label('abuse-limit', 10)
-    ->param('email', '', function () { return new Email(); }, 'Account email.')
+    ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
@@ -147,8 +147,8 @@ $utopia->post('/v1/account/sessions')
     ->label('sdk.description', '/docs/references/account/create-session.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('email', '', function () { return new Email(); }, 'User account email address.')
-    ->param('password', '', function () { return new Password(); }, 'User account password.')
+    ->param('email', '', function () { return new Email(); }, 'User email.')
+    ->param('password', '', function () { return new Password(); }, 'User password.')
     ->action(
         function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook) {
             $profile = $projectDB->getCollection([ // Get user by email address
@@ -669,8 +669,8 @@ $utopia->patch('/v1/account/password')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
-    ->param('password', '', function () { return new Password(); }, 'New password.')
-    ->param('old-password', '', function () { return new Password(); }, 'Old password.')
+    ->param('password', '', function () { return new Password(); }, 'New user password.')
+    ->param('old-password', '', function () { return new Password(); }, 'Old user password.')
     ->action(
         function ($password, $oldPassword) use ($response, $user, $projectDB, $audit, $oauthKeys) {
             if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -710,7 +710,7 @@ $utopia->patch('/v1/account/email')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
-    ->param('email', '', function () { return new Email(); }, 'Email address.')
+    ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->action(
         function ($email, $password) use ($response, $user, $projectDB, $audit, $oauthKeys) {
@@ -976,7 +976,7 @@ $utopia->post('/v1/account/recovery')
     ->label('sdk.description', '/docs/references/account/create-recovery.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('email', '', function () { return new Email(); }, 'User account email address.')
+    ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email.')
     ->action(
         function ($email, $url) use ($request, $response, $projectDB, $register, $audit, $project) {

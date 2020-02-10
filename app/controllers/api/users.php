@@ -28,9 +28,9 @@ $utopia->post('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/users/create-user.md')
-    ->param('email', '', function () { return new Email(); }, 'User account email.')
-    ->param('password', '', function () { return new Password(); }, 'User account password.')
-    ->param('name', '', function () { return new Text(100); }, 'User account name.', true)
+    ->param('email', '', function () { return new Email(); }, 'User email.')
+    ->param('password', '', function () { return new Password(); }, 'User password.')
+    ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
         function ($email, $password, $name) use ($response, $register, $projectDB, $providers) {
             $profile = $projectDB->getCollection([ // Get user by email address
