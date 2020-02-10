@@ -49,6 +49,8 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 409);
 
+        sleep(5);
+
         return [
             'uid' => $uid,
             'email' => $email,
