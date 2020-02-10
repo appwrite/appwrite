@@ -54,7 +54,7 @@ header {
       position: absolute;
       content: "";
       display: block;
-      background: @config-color-danger;
+      background: var(--config-color-danger);
       width: 8px;
       height: 8px;
       border-radius: 50%;
@@ -86,7 +86,7 @@ header {
         border-bottom: none;
 
         svg g {
-          fill: @config-color-focus
+          fill: var(--config-color-focus)
         }
       }
     }
@@ -109,7 +109,7 @@ header {
 
       &:hover {
         border-bottom: none;
-        color: @config-color-focus;
+        color: var(--config-color-focus);
       }
     }
   }

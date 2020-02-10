@@ -23,7 +23,7 @@
         padding: 12px 35px;
         margin: 0 auto;
         list-style: none;
-        background: @config-color-fade;
+        background: var(--config-color-fade);
         text-align: center;
         font-weight: bold;
         border-radius: 20px;
@@ -40,17 +40,17 @@
 
         &.error {
           color: #ffffff;
-          background: @config-color-danger;
+          background: var(--config-color-danger);
         }
 
         &.success {
           color: #ffffff;
-          background: @config-color-success;
+          background: var(--config-color-success);
         }
 
         &.warning {
           color: #ffffff;
-          background: @config-color-warning;
+          background: var(--config-color-success);
         }
 
         &.open {
@@ -65,13 +65,13 @@
   }
 
   .cookie-alert {
-    background: @config-color-focus-fade!important;
-    color: @config-color-focus;
+    background: var(--config-color-focus-fade)!important;
+    color: var(--config-color-focus);
 
     a {
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       font-weight: 400;
-      border-bottom: dotted 1px @config-color-focus;
+      border-bottom: dotted 1px var(--config-color-focus);
     }
   }
 

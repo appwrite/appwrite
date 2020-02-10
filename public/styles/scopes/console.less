@@ -126,7 +126,7 @@
         position: absolute;
         content: "";
         display: block;
-        background: @config-color-danger;
+        background: var(--config-color-danger);
         width: 8px;
         height: 8px;
         border-radius: 50%;
@@ -164,7 +164,7 @@
         }
 
         svg g {
-          fill: @config-color-focus
+          fill: var(--config-color-focus)
         }
       }
 
@@ -181,7 +181,7 @@
           border-bottom: none;
 
           svg g {
-            fill: @config-color-focus
+            fill: var(--config-color-focus)
           }
         }
       }
@@ -294,7 +294,7 @@
           line-height: 25px;
           border-radius: 50%;
           padding: 0;
-          background: @config-color-focus;
+          background: var(--config-color-focus);
           color: #ffffff;
           text-align: center;
           font-size: 12px;
@@ -330,7 +330,7 @@
             color: #e4e4e4;
             font-weight: 500;
             //background: #142a3a;
-            //background: @config-color-focus;
+            //background: var(--config-color-focus);
           }
         }
       }
@@ -351,7 +351,7 @@
     width: ~"calc(100% + 100px)";
     margin: 0 -50px;
     box-sizing: border-box;
-    //border-top: solid 1px @config-color-fade-super;
+    //border-top: solid 1px var(--config-color-fade-super);
     background: transparent;
     .func-padding-end(30px);
     .func-padding-start(30px);
@@ -400,7 +400,7 @@
       padding: 20px;
       background: #fcfeff;
       border: none;
-      color: @config-color-link;
+      color: var(--config-color-link);
     }
 
     .col {
@@ -432,7 +432,7 @@
     }
 
     .value {
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       vertical-align: bottom;
       line-height: 45px;
 
@@ -452,18 +452,18 @@
       display: inline-block;
       margin-bottom: 5px;
       .func-margin-start(5px);
-      color: @config-color-focus;
+      color: var(--config-color-focus);
     }
 
     .metric {
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       font-weight: 400;
       font-size: 13px;
       line-height: 16px;
     }
 
     .range {
-      color: @config-color-fade;
+      color: var(--config-color-fade);
       font-weight: 400;
       font-size: 14px;
       line-height: 16px;
@@ -536,14 +536,14 @@
       height: 30px;
       line-height: 30px;
       text-align: center;
-      background: @config-color-fade;
-      color: @config-color-fade-super;
+      background: var(--config-color-fade);
+      color: var(--config-color-fade-super);
       border-radius: 50%;
       .func-margin-end(15px);
 
       &.fade {
         background: transparent;
-        color: @config-color-fade;
+        color: var(--config-color-fade);
       }
     }
   }
@@ -632,7 +632,7 @@
       left: -20px;
       right: -20px;
       bottom: -20px;
-      background: #f6f7f8;
+      background: var(--config-color-background);
       opacity: .7;
       z-index: 300;
     }
@@ -643,7 +643,7 @@
   }
 
   .confirm {
-    background: @config-color-link;
+    background: var(--config-color-link);
     color: #ffffff;
     border-radius: 25px;
     padding: 12px;

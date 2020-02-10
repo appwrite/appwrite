@@ -1,5 +1,5 @@
 *::placeholder {
-  color: @config-color-placeholder;
+  color: var(--config-color-placeholder);
   text-align: @config-start;
 }
 
@@ -16,7 +16,7 @@ input:-moz-placeholder {
 button,
 .button {
   display: inline-block;
-  background: @config-color-focus;
+  background: var(--config-color-focus);
   border-radius: 26px;
   border: none;
   color: #ffffff;
@@ -31,7 +31,7 @@ button,
 
   &:hover,
   &:focus {
-    background: @config-color-focus-hover;
+    background: var(--config-color-focus-hover);
     border-bottom: none;
   }
 
@@ -69,13 +69,13 @@ button,
     height: 50px;
     line-height: 48px;
     padding: 0 23px;
-    color: @config-color-focus;
-    border: solid 2px @config-color-focus;
+    color: var(--config-color-focus);
+    border: solid 2px var(--config-color-focus);
 
     &:hover,
     &:focus {
-      color: @config-color-focus-hover;
-      border-color: @config-color-focus-hover;
+      color: var(--config-color-focus-hover);
+      border-color: var(--config-color-focus-hover);
     }
   }
 
@@ -93,7 +93,7 @@ button,
 
   &.white {
     background: #ffffff;
-    color: @config-color-focus;
+    color: var(--config-color-focus);
 
     &.reverse {
       color: #ffffff;
@@ -111,22 +111,22 @@ button,
   }
 
   &.success {
-    background: @config-color-success;
+    background: var(--config-color-success);
 
     &.reverse {
-      color: @config-color-success;
+      color: var(--config-color-success);
       background: #ffffff;
-      border: solid 2px @config-color-success;
+      border: solid 2px var(--config-color-success);
     }
   }
 
   &.danger {
-    background: @config-color-danger;
+    background: var(--config-color-danger);
 
     &.reverse {
-      color: @config-color-danger;
+      color: var(--config-color-danger);
       background: #ffffff;
-      border: solid 2px @config-color-danger;
+      border: solid 2px var(--config-color-danger);
     }
   }
 
@@ -134,21 +134,21 @@ button,
   &:disabled,
   .disabled {
     //opacity: .3;
-    background: @config-color-fade;
+    background: var(--config-color-fade);
     cursor: default;
   }
 
   &.link {
     background: transparent;
     border-radius: 0;
-    color: @config-color-link;
+    color: var(--config-color-link);
     height: auto;
     line-height: normal;
     padding: 0;
     .func-padding-end(0) !important;
 
     &:hover {
-      border-bottom: dotted 1px @config-color-link;
+      border-bottom: dotted 1px var(--config-color-link);
     }
 
     &:focus {
@@ -214,7 +214,7 @@ select {
   box-sizing: content-box;
   height: 40px;
   line-height: 40px;
-  border: solid 1px @config-color-fade-light;
+  border: solid 1px var(--config-color-fade-light);
   border-radius: 10px;
   padding: 5px 15px;
   font-size: 16px;
@@ -255,7 +255,7 @@ select {
 
   &:disabled {
     //opacity: .3;
-    background: @config-color-fade-super;
+    background: var(--config-color-fade-super);
   }
 
   &.strip {
@@ -265,8 +265,8 @@ select {
     width: 100%;
     background-color: transparent;
     background-position: @config-end 2px top 50%;
-    border-bottom: solid 1px @config-color-fade-light;
-    color: @config-color-placeholder;
+    border-bottom: solid 1px var(--config-color-fade-light);
+    color: var(--config-color-placeholder);
 
     &:focus {
       border-color: #b3d7fd;
@@ -471,12 +471,12 @@ fieldset {
   }
 
   &.green {
-    background: @config-color-success;
+    background: var(--config-color-success);
     color: #fff;
   }
 
   &.red {
-    background: @config-color-danger;
+    background: var(--config-color-danger);
     color: #fff;
   }
 
@@ -486,7 +486,7 @@ fieldset {
   }
 
   &.focus {
-    background: @config-color-focus;
+    background: var(--config-color-focus);
     color: #ffffff;
   }
 
@@ -501,7 +501,7 @@ fieldset {
   }
 
   &.link {
-    background: @config-color-link;
+    background: var(--config-color-link);
     color: #fff;
   }
 }
@@ -525,7 +525,7 @@ input[type=checkbox] {
     top: -5px;
     border-radius: 50%;
     position: absolute;
-    border: solid 3px @config-color-focus;
+    border: solid 3px var(--config-color-focus);
     vertical-align: middle;
   }
 
@@ -536,7 +536,7 @@ input[type=checkbox] {
     font-size: 16px;
     line-height: 20px;
     color: #ffffff;
-    background: @config-color-focus;
+    background: var(--config-color-focus);
   }
 
   &:focus {
@@ -551,7 +551,7 @@ input[type=checkbox] {
 
   &:checked:focus:after,
   &:checked:hover:after {
-    border-color: @config-color-focus;
+    border-color: var(--config-color-focus);
   }
 }
 
@@ -604,7 +604,7 @@ input[type=checkbox] {
   .error {
     font-size: 12px;
     margin-top: -25px;
-    color: @config-color-danger;
+    color: var(--config-color-danger);
     height: 40px;
     .func-padding-start(2px);
   }
@@ -633,7 +633,7 @@ input[type=checkbox] {
     content: attr(placeholder);
     display: block;
     /* For Firefox */
-    color: @config-color-placeholder;
+    color: var(--config-color-placeholder);
   }
 
   .pell-actionbar {
@@ -670,7 +670,7 @@ input[type=checkbox] {
     &.pell-button-selected,
     &:focus,
     &:hover {
-      color: @config-color-link;
+      color: var(--config-color-link);
     }
   }
 
@@ -719,7 +719,7 @@ input[type=checkbox].switch {
   height: 42px;
   line-height: 42px;
   border-radius: 21px;
-  background: @config-color-fade;
+  background: var(--config-color-fade);
   display: block;
   margin: 0;
   padding: 5px;
@@ -727,7 +727,7 @@ input[type=checkbox].switch {
   .func-padding-end(5px);
 
   &:checked {
-    background: @config-color-focus;
+    background: var(--config-color-focus);
     .func-padding-start(5px);
     .func-padding-end(30px);
   }
@@ -761,15 +761,15 @@ input[type=checkbox].switch {
   position: relative;
 
   &.weak {
-    background: @config-color-danger;
+    background: var(--config-color-danger);
   }
 
   &.medium {
-    background: @config-color-warning;
+    background: var(--config-color-success);
   }
 
   &.strong {
-    background: @config-color-success;
+    background: var(--config-color-success);
   }
 }
 
@@ -829,7 +829,7 @@ input[type=checkbox].switch {
 
 hr {
   height: 1px;
-  background: @config-color-background;
+  background: var(--config-border-color);
   border: none;
 }
 
@@ -882,7 +882,7 @@ hr {
   }
 
   .progress {
-    background: @config-color-success;
+    background: var(--config-color-success);
     height: 6px;
     border-radius: 3px;
     .margin-bottom-small;
@@ -907,7 +907,7 @@ hr {
       border: solid 10px #f1f1f1;
 
       &:hover:before {
-        background: @config-color-focus;
+        background: var(--config-color-focus);
       }
 
       &:before {
@@ -983,11 +983,11 @@ ol {
     &::before {
       display: inline-block;
       content: counter(x-counter);
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       color: #ffffff;
       background: #ffffff;
-      background: @config-color-focus;
-      border: solid 2px @config-color-focus;
+      background: var(--config-color-focus);
+      border: solid 2px var(--config-color-focus);
       .func-margin-end(15px);
       .func-margin-start(-45px);
       width: 26px;
@@ -1000,7 +1000,7 @@ ol {
 }
 
 .required {
-  color: @config-color-danger;
+  color: var(--config-color-danger);
   font-size: 8px;
   position: relative;
   top: -8px;
@@ -1041,7 +1041,7 @@ ol {
     }
 
     li {
-      border-bottom: solid 1px @config-color-fade-super;
+      border-bottom: solid 1px var(--config-color-fade-super);
       margin: 0;
       padding: 0;
       .clear;
@@ -1060,7 +1060,7 @@ ol {
         cursor: pointer;
 
         &:hover {
-          background: @config-color-fade-super;
+          background: var(--config-color-fade-super);
           border-color: transparent;
         }
       }

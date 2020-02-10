@@ -6,7 +6,7 @@
  */
 
 .zone {
-  max-width: @config-width-xl;
+  max-width: var(--config-width-xl);
   margin: 0 auto 40px auto;
 
   &.xxxl {
@@ -18,23 +18,23 @@
   }
 
   &.xxl {
-    max-width: @config-width-xxl;
+    max-width: var(--config-width-xxl);
   }
 
   &.xl {
-    max-width: @config-width-xl;
+    max-width: var(--config-width-xl);
   }
 
   &.large {
-    max-width: @config-width-large;
+    max-width: var(--config-width-large);
   }
 
   &.medium {
-    max-width: @config-width-medium;
+    max-width: var(--config-width-medium);
   }
 
   &.small {
-    max-width: @config-width-small;
+    max-width: var(--config-width-small);
   }
 }
 
@@ -269,8 +269,8 @@
       height: 15px;
       margin: -15px -15px 10px -15px;
       border-radius: 10px 10px 0 0;
-      background: @config-color-fade-super;
-      border-bottom: solid 1px @config-color-fade-super;
+      background: var(--config-color-fade-super);
+      border-bottom: solid 1px var(--config-color-fade-super);
     }
 
         &:nth-child(3n) {
