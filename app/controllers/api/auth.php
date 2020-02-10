@@ -138,7 +138,7 @@ $utopia->post('/v1/auth/register')
             $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $confirmSecret]);
             $confirm = Template::unParseURL($confirm);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.verification.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -150,7 +150,7 @@ $utopia->post('/v1/auth/register')
 
             $mail->addAddress($email, $name);
 
-            $mail->Subject = Locale::getText('auth.emails.confirm.title');
+            $mail->Subject = Locale::getText('account.emails.verification.title');
             $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
@@ -276,7 +276,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
             $confirm['query'] = Template::mergeQuery(((isset($confirm['query'])) ? $confirm['query'] : ''), ['userId' => $user->getUid(), 'token' => $secret]);
             $confirm = Template::unParseURL($confirm);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.confirm.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.verification.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -288,7 +288,7 @@ $utopia->post('/v1/auth/register/confirm/resend')
 
             $mail->addAddress($user->getAttribute('email'), $user->getAttribute('name'));
 
-            $mail->Subject = Locale::getText('auth.emails.confirm.title');
+            $mail->Subject = Locale::getText('account.emails.verification.title');
             $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
@@ -728,7 +728,7 @@ $utopia->post('/v1/auth/recovery')
             $reset['query'] = Template::mergeQuery(((isset($reset['query'])) ? $reset['query'] : ''), ['userId' => $profile->getUid(), 'token' => $secret]);
             $reset = Template::unParseURL($reset);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.recovery.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -740,7 +740,7 @@ $utopia->post('/v1/auth/recovery')
 
             $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
 
-            $mail->Subject = Locale::getText('auth.emails.recovery.title');
+            $mail->Subject = Locale::getText('account.emails.recovery.title');
             $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 

@@ -633,6 +633,125 @@ trait AccountBase
     /**
      * @depends testUpdateAccountPrefs
      */
+    public function testCreateAccountVerification($data):array
+    {
+        $email = (isset($data['email'])) ? $data['email'] : '';
+        $name = (isset($data['name'])) ? $data['name'] : '';
+        $session = (isset($data['session'])) ? $data['session'] : '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertEquals(2, $response['body']['type']);
+        $this->assertIsNumeric($response['body']['expire']);
+        
+        $lastEmail = $this->getLastEmail();
+
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
+        $this->assertEquals($name, $lastEmail['to'][0]['name']);
+        $this->assertEquals('Account Verification', $lastEmail['subject']);
+
+        $verification = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'url' => 'localhost/recovery',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'url' => 'http://remotehost/recovery',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $data['verification'] = $verification;
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateAccountVerification
+     */
+    public function testUpdateAccountVerification($data):array
+    {
+        $uid = (isset($data['uid'])) ? $data['uid'] : '';
+        $session = (isset($data['session'])) ? $data['session'] : '';
+        $verification = (isset($data['verification'])) ? $data['verification'] : '';
+        
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'userId' => $uid,
+            'secret' => $verification,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'userId' => 'ewewe',
+            'secret' => $verification,
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+        ]), [
+            'userId' => $uid,
+            'secret' => 'sdasdasdasd',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateAccountVerification
+     */
     public function testDeleteAccountSession($data):array
     {
         $email = (isset($data['email'])) ? $data['email'] : '';
@@ -699,7 +818,7 @@ trait AccountBase
     }
 
     /**
-     * @depends testUpdateAccountPrefs
+     * @depends testUpdateAccountVerification
      */
     public function testDeleteAccountSessionCurrent($data):array
     {
@@ -756,7 +875,7 @@ trait AccountBase
     }
 
     /**
-     * @depends testUpdateAccountPrefs
+     * @depends testUpdateAccountVerification
      */
     public function testDeleteAccountSessions($data):array
     {
@@ -826,7 +945,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty(3, $response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$uid']);
         $this->assertEquals(3, $response['body']['type']);
         $this->assertIsNumeric($response['body']['expire']);
         

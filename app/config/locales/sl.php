@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Ekipa',
-    'auth.emails.confirm.title' => 'Potrditev računa',
-    'auth.emails.confirm.body' => 'sl.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Ponastavitev gesla',
-    'auth.emails.recovery.body' => 'sl.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Povabilo v %s Ekipo za %s',
-    'auth.emails.invitation.body' => 'sl.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Ekipa',
+    'account.emails.verification.title' => 'Potrditev računa',
+    'account.emails.verification.body' => 'sl.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Ponastavitev gesla',
+    'account.emails.recovery.body' => 'sl.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Povabilo v %s Ekipo za %s',
+    'account.emails.invitation.body' => 'sl.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Neznano',
 

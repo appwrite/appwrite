@@ -5,13 +5,13 @@ return [
     'settings.locale' => 'ru',
     'settings.direction' => 'ltr',
 
-    'auth.emails.team' => 'Թիմ %s',
-    'auth.emails.confirm.title' => 'Հաշվեհամարի հաստատում',
-    'auth.emails.confirm.body' => 'hy.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Գաղտնաբառի փոփոխում',
-    'auth.emails.recovery.body' => 'hy.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Հրավիրում ենք %s թիմ, %s պրոեկտի համար',
-    'auth.emails.invitation.body' => 'hy.email.auth.invitation.tpl',
+    'account.emails.team' => 'Թիմ %s',
+    'account.emails.verification.title' => 'Հաշվեհամարի հաստատում',
+    'account.emails.verification.body' => 'hy.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Գաղտնաբառի փոփոխում',
+    'account.emails.recovery.body' => 'hy.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Հրավիրում ենք %s թիմ, %s պրոեկտի համար',
+    'account.emails.invitation.body' => 'hy.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Անհայտ',
 

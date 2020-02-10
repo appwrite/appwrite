@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Takımı',
-    'auth.emails.confirm.title' => 'Hesap Doğrulama',
-    'auth.emails.confirm.body' => 'tr.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Şifre Sıfırlama',
-    'auth.emails.recovery.body' => 'tr.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => '%s takımına davet %s',
-    'auth.emails.invitation.body' => 'tr.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Takımı',
+    'account.emails.verification.title' => 'Hesap Doğrulama',
+    'account.emails.verification.body' => 'tr.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Şifre Sıfırlama',
+    'account.emails.recovery.body' => 'tr.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => '%s takımına davet %s',
+    'account.emails.invitation.body' => 'tr.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Bilinmeyen',
 

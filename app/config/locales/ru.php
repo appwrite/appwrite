@@ -5,13 +5,13 @@ return [
     'settings.locale' => 'ru',
     'settings.direction' => 'ltr',
 
-    'auth.emails.team' => 'Команда %s',
-    'auth.emails.confirm.title' => 'Подтверждение аккаунта',
-    'auth.emails.confirm.body' => 'ru.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Сброс пароля',
-    'auth.emails.recovery.body' => 'ru.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Приглашение в команду %s по проекту %s',
-    'auth.emails.invitation.body' => 'ru.email.auth.invitation.tpl',
+    'account.emails.team' => 'Команда %s',
+    'account.emails.verification.title' => 'Подтверждение аккаунта',
+    'account.emails.verification.body' => 'ru.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Сброс пароля',
+    'account.emails.recovery.body' => 'ru.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Приглашение в команду %s по проекту %s',
+    'account.emails.invitation.body' => 'ru.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Неизвестно',
 

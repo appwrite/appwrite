@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => 'Pangkat ng %s',
-    'auth.emails.confirm.title' => 'Pagkumpirma ng Account',
-    'auth.emails.confirm.body' => 'ph.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Pagreset ng Password',
-    'auth.emails.recovery.body' => 'ph.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Paanyaya sa Pangkat ng %s sa %s',
-    'auth.emails.invitation.body' => 'ph.email.auth.invitation.tpl',
+    'account.emails.team' => 'Pangkat ng %s',
+    'account.emails.verification.title' => 'Pagkumpirma ng Account',
+    'account.emails.verification.body' => 'ph.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Pagreset ng Password',
+    'account.emails.recovery.body' => 'ph.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Paanyaya sa Pangkat ng %s sa %s',
+    'account.emails.invitation.body' => 'ph.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Hindi alam',
 

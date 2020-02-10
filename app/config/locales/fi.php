@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Tiimi',
-    'auth.emails.confirm.title' => 'Tilin Vahvistus',
-    'auth.emails.confirm.body' => 'en.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Salasanan Nollaus',
-    'auth.emails.recovery.body' => 'en.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Kutsu %s Tiimiin %s',
-    'auth.emails.invitation.body' => 'en.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Tiimi',
+    'account.emails.verification.title' => 'Tilin Vahvistus',
+    'account.emails.verification.body' => 'en.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Salasanan Nollaus',
+    'account.emails.recovery.body' => 'en.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Kutsu %s Tiimiin %s',
+    'account.emails.invitation.body' => 'en.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Unknown',
 

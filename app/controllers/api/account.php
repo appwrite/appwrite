@@ -1024,7 +1024,7 @@ $utopia->post('/v1/account/recovery')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getUid(), 'secret' => $secret]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.recovery.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.recovery.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -1036,7 +1036,7 @@ $utopia->post('/v1/account/recovery')
 
             $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
 
-            $mail->Subject = Locale::getText('auth.emails.recovery.title');
+            $mail->Subject = Locale::getText('account.emails.recovery.title');
             $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
@@ -1129,7 +1129,7 @@ $utopia->put('/v1/account/recovery')
         }
     );
 
-$utopia->post('/v1/account/verification/email')
+$utopia->post('/v1/account/verification')
     ->desc('Create Email Verification')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -1173,7 +1173,7 @@ $utopia->post('/v1/account/verification/email')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getUid(), 'secret' => $verificationSecret]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.verification.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.verification.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -1185,7 +1185,7 @@ $utopia->post('/v1/account/verification/email')
 
             $mail->addAddress($user->getAttribute('email'), $user->getAttribute('name'));
 
-            $mail->Subject = Locale::getText('auth.emails.verification.title');
+            $mail->Subject = Locale::getText('account.emails.verification.title');
             $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 
@@ -1218,7 +1218,7 @@ $utopia->put('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
+    ->param('secret', '', function () { return new Text(256); }, 'Valid verification token.')
     ->action(
         function ($userId, $secret) use ($response, $user, $projectDB, $audit) {
             $profile = $projectDB->getCollection([ // Get user by email address

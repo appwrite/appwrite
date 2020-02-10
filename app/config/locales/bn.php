@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s টীম',
-    'auth.emails.confirm.title' => 'অ্যাকাউন্ট নিশ্চিতকরণ',
-    'auth.emails.confirm.body' => 'bn.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'পাসওয়ার্ড রিসেট',
-    'auth.emails.recovery.body' => 'bn.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'আমন্ত্রণ %s এই টীম-এ যেটি এখানের %s',
-    'auth.emails.invitation.body' => 'bn.email.auth.invitation.tpl',
+    'account.emails.team' => '%s টীম',
+    'account.emails.verification.title' => 'অ্যাকাউন্ট নিশ্চিতকরণ',
+    'account.emails.verification.body' => 'bn.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'পাসওয়ার্ড রিসেট',
+    'account.emails.recovery.body' => 'bn.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'আমন্ত্রণ %s এই টীম-এ যেটি এখানের %s',
+    'account.emails.invitation.body' => 'bn.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'অজানা',
 

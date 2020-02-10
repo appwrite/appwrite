@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s-teamet',
-    'auth.emails.confirm.title' => 'Kontobekräftelse',
-    'auth.emails.confirm.body' => 'sv.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Ändra lösenord',
-    'auth.emails.recovery.body' => 'sv.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Inbjudan till %s-teamet i %s',
-    'auth.emails.invitation.body' => 'sv.email.auth.invitation.tpl',
+    'account.emails.team' => '%s-teamet',
+    'account.emails.verification.title' => 'Kontobekräftelse',
+    'account.emails.verification.body' => 'sv.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Ändra lösenord',
+    'account.emails.recovery.body' => 'sv.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Inbjudan till %s-teamet i %s',
+    'account.emails.invitation.body' => 'sv.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Okänt',
 

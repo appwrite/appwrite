@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Servizio - Utenti
-    'auth.emails.team' => 'Team %s',
-    'auth.emails.confirm.title' => 'Conferma dell\'account',
-    'auth.emails.confirm.body' => 'it.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Recupero password',
-    'auth.emails.recovery.body' => 'it.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Invito al team %s di %s',
-    'auth.emails.invitation.body' => 'it.email.auth.invitation.tpl',
+    'account.emails.team' => 'Team %s',
+    'account.emails.verification.title' => 'Conferma dell\'account',
+    'account.emails.verification.body' => 'it.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Recupero password',
+    'account.emails.recovery.body' => 'it.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Invito al team %s di %s',
+    'account.emails.invitation.body' => 'it.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Sconosciuto',
 

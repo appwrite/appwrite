@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Echipa',
-    'auth.emails.confirm.title' => 'Confirmă Contul',
-    'auth.emails.confirm.body' => 'ro.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Resetează Parola',
-    'auth.emails.recovery.body' => 'ro.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Invitație în Echipa %s la %s',
-    'auth.emails.invitation.body' => 'ro.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Echipa',
+    'account.emails.verification.title' => 'Confirmă Contul',
+    'account.emails.verification.body' => 'ro.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Resetează Parola',
+    'account.emails.recovery.body' => 'ro.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Invitație în Echipa %s la %s',
+    'account.emails.invitation.body' => 'ro.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Necunoscut',
 

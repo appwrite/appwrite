@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => 'Tim %s',
-    'auth.emails.confirm.title' => 'Konfirmasi Akun',
-    'auth.emails.confirm.body' => 'id.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Reset Kata Sandi',
-    'auth.emails.recovery.body' => 'id.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Undangan ke Tim %s di %s',
-    'auth.emails.invitation.body' => 'id.email.auth.invitation.tpl',
+    'account.emails.team' => 'Tim %s',
+    'account.emails.verification.title' => 'Konfirmasi Akun',
+    'account.emails.verification.body' => 'id.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Reset Kata Sandi',
+    'account.emails.recovery.body' => 'id.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Undangan ke Tim %s di %s',
+    'account.emails.invitation.body' => 'id.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Tidak diketahui',
 

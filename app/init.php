@@ -268,6 +268,6 @@ $register->get('smtp')
         $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
         ($project->getUid() === 'console')
             ? $request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server')
-            : sprintf(Locale::getText('auth.emails.team'), $project->getAttribute('name')
+            : sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
         )
     );

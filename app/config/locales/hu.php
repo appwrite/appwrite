@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Csapat',
-    'auth.emails.confirm.title' => 'Fiók megerősítés',
-    'auth.emails.confirm.body' => 'hu.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Jelszó Visszaállítás',
-    'auth.emails.recovery.body' => 'hu.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Meghívás a %s Csapathoz %s',
-    'auth.emails.invitation.body' => 'hu.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Csapat',
+    'account.emails.verification.title' => 'Fiók megerősítés',
+    'account.emails.verification.body' => 'hu.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Jelszó Visszaállítás',
+    'account.emails.recovery.body' => 'hu.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Meghívás a %s Csapathoz %s',
+    'account.emails.invitation.body' => 'hu.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Ismeretlen',
 

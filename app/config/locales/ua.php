@@ -5,13 +5,13 @@ return [
     'settings.locale' => 'ua',
     'settings.direction' => 'ltr',
 
-    'auth.emails.team' => '%s Команда',
-    'auth.emails.confirm.title' => 'Підтвердження Акаунту' ,
-    'auth.emails.confirm.body' => 'ua.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Скидання пароля',
-    'auth.emails.recovery.body' => 'ua.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Запрошення до %s Команди у %s',
-    'auth.emails.invitation.body' => 'ua.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Команда',
+    'account.emails.verification.title' => 'Підтвердження Акаунту' ,
+    'account.emails.verification.body' => 'ua.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Скидання пароля',
+    'account.emails.recovery.body' => 'ua.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Запрошення до %s Команди у %s',
+    'account.emails.invitation.body' => 'ua.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Невідомо',
 

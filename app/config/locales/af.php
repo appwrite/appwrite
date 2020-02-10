@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s span',
-    'auth.emails.confirm.title' => 'Profiel Bevestiging',
-    'auth.emails.confirm.body' => 'af.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Verander Wagwoord',
-    'auth.emails.recovery.body' => 'af.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Uitnodiging na %s span by %s',
-    'auth.emails.invitation.body' => 'af.email.auth.invitation.tpl',
+    'account.emails.team' => '%s span',
+    'account.emails.verification.title' => 'Profiel Bevestiging',
+    'account.emails.verification.body' => 'af.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Verander Wagwoord',
+    'account.emails.recovery.body' => 'af.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Uitnodiging na %s span by %s',
+    'account.emails.invitation.body' => 'af.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Onbekend',
 

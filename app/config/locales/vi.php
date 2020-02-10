@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Team',
-    'auth.emails.confirm.title' => 'Xác nhận tài khoản',
-    'auth.emails.confirm.body' => 'vi.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Đặt lại mật khẩu',
-    'auth.emails.recovery.body' => 'vi.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Lời mới vào %s Team ở %s',
-    'auth.emails.invitation.body' => 'vi.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Team',
+    'account.emails.verification.title' => 'Xác nhận tài khoản',
+    'account.emails.verification.body' => 'vi.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Đặt lại mật khẩu',
+    'account.emails.recovery.body' => 'vi.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Lời mới vào %s Team ở %s',
+    'account.emails.invitation.body' => 'vi.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Chưa xác định',
 

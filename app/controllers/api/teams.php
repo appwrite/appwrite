@@ -310,7 +310,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getUid(), 'teamId' => $team->getUid(), 'userId' => $invitee->getUid(), 'secret' => $secret, 'teamId' => $teamId]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('auth.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.invitation.body'));
             $body
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
@@ -323,7 +323,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $mail->addAddress($email, $name);
 
-            $mail->Subject = sprintf(Locale::getText('auth.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
+            $mail->Subject = sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
             $mail->Body = $body->render();
             $mail->AltBody = strip_tags($body->render());
 

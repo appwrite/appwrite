@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => 'Ομάδα %s',
-    'auth.emails.confirm.title' => 'Επιβεβαίωση Λογαριασμού',
-    'auth.emails.confirm.body' => 'gr.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Επαναφορά Κωδικού Πρόσβασης',
-    'auth.emails.recovery.body' => 'gr.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Πρόσκληση στην ομάδα %s στο %s',
-    'auth.emails.invitation.body' => 'gr.email.auth.invitation.tpl',
+    'account.emails.team' => 'Ομάδα %s',
+    'account.emails.verification.title' => 'Επιβεβαίωση Λογαριασμού',
+    'account.emails.verification.body' => 'gr.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Επαναφορά Κωδικού Πρόσβασης',
+    'account.emails.recovery.body' => 'gr.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Πρόσκληση στην ομάδα %s στο %s',
+    'account.emails.invitation.body' => 'gr.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Άγνωστο',
 
