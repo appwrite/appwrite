@@ -102,7 +102,15 @@ if(!empty($platforms)) {
     <?php echo $this->exec($this->getParam('head', [])); ?>
 </head>
 
-<body class="light-theme" data-general-scroll-to data-general-scroll-direction>
+<body class="theme-light" data-general-scroll-to data-general-scroll-direction>
+    <script>
+        let theme = window.localStorage.getItem('user-theme');
+
+        if(theme === 'theme-dark') {
+            document.body.classList.remove('theme-light');
+            document.body.classList.add('theme-dark');
+        }
+    </script>
     <?php echo $this->exec($this->getParam('header', [])); ?>
 
     <main data-ls-router data-first-from-server="true" data-acl data-analytics-pageview>

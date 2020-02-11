@@ -36,7 +36,7 @@
   --config-social-discord: #7189dc;
   --config-social-facebook: #4070b4;
 
-  .dark-theme {
+  .theme-dark {
       --config-color-background-fade: #1c2138;
       --config-color-background-focus: #1F253F;
       --config-color-link: rgb(76, 174, 219);
@@ -68,16 +68,24 @@
   }
 }
 
-.light-theme {
+.theme-light {
   .force-light {
     display: block;
   }
 }
 
-.dark-theme {
+.theme-dark {
   .force-dark {
     display: block;
   }
+}
+
+.force-dark {
+  display: none;
+}
+
+.force-light {
+  display: none;
 }
 
 @watch: ~"only screen and (max-width: 260px)";
@@ -142,14 +150,6 @@ ul {
     margin: 0;
     list-style: none;
   }
-}
-
-.force-dark {
-  display: none;
-}
-
-.force-light {
-  display: none;
 }
 
 .force-left {
