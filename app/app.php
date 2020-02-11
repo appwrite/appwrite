@@ -140,7 +140,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         $role = Auth::USER_ROLE_APP;
         $scopes = array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-        Authorization::disable();  // Cancel security segmentation for API keys.
+        Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
 
     Authorization::setRole('user:'.$user->getUid());

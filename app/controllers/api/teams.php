@@ -40,17 +40,17 @@ $utopia->post('/v1/teams')
                     'write' => ['team:{self}/owner'],
                 ],
                 'name' => $name,
-                'sum' => ($mode !== APP_MODE_ADMIN) ? 1 : 0,
+                'sum' => ($mode !== APP_MODE_ADMIN && $user->getUid()) ? 1 : 0,
                 'dateCreated' => time(),
             ]);
 
-            Authorization::enable();
+            Authorization::reset();
 
             if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
             }
 
-            if ($mode !== APP_MODE_ADMIN) { // Don't add user on server mode
+            if ($mode !== APP_MODE_ADMIN && $user->getUid()) { // Don't add user on server mode
                 $membership = new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                     '$permissions' => [
@@ -260,7 +260,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                     'tokens' => [],
                 ]);
 
-                Authorization::enable();
+                Authorization::reset();
 
                 if (false === $invitee) {
                     throw new Exception('Failed saving user to DB', 500);
@@ -440,7 +440,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             $team = $projectDB->getDocument($teamId);
             
-            Authorization::enable();
+            Authorization::reset();
 
             if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
@@ -507,7 +507,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 'sum' => $team->getAttribute('sum', 0) + 1,
             ]));
 
-            Authorization::enable();
+            Authorization::reset();
 
             if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
