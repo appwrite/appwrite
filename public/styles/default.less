@@ -37,6 +37,18 @@
   }
 }
 
+.light-theme {
+  .force-light {
+    display: block;
+  }
+}
+
+.dark-theme {
+  .force-dark {
+    display: block;
+  }
+}
+
 @watch: ~"only screen and (max-width: 260px)";
 @phones: ~"only screen and (max-width: 550px)";
 @tablets: ~"only screen and (min-width: 551px) and (max-width: 1200px)";
@@ -99,6 +111,14 @@ ul {
     margin: 0;
     list-style: none;
   }
+}
+
+.force-dark {
+  display: none;
+}
+
+.force-light {
+  display: none;
 }
 
 .force-left {
