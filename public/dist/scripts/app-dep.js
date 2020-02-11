@@ -55,8 +55,8 @@ if(success===undefined){throw new Error('Missing required parameter: "success"')
 if(failure===undefined){throw new Error('Missing required parameter: "failure"');}
 let path='/account/sessions/oauth/{provider}'.replace(new RegExp('{provider}','g'),provider);let payload={};if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
-return http.get(path,{'content-type':'application/json',},payload);},deleteSession:function(id){if(id===undefined){throw new Error('Missing required parameter: "id"');}
-let path='/account/sessions/{id}'.replace(new RegExp('{id}','g'),id);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createVerification:function(url){if(url===undefined){throw new Error('Missing required parameter: "url"');}
+return http.get(path,{'content-type':'application/json',},payload);},deleteSession:function(sessionUid){if(sessionUid===undefined){throw new Error('Missing required parameter: "id"');}
+let path='/account/sessions/{sessionUid}'.replace(new RegExp('{sessionUid}','g'),sessionUid);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createVerification:function(url){if(url===undefined){throw new Error('Missing required parameter: "url"');}
 let path='/account/verification';let payload={};if(url){payload['url']=url;}
 return http.post(path,{'content-type':'application/json',},payload);},updateVerification:function(userId,secret,passwordB){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(secret===undefined){throw new Error('Missing required parameter: "secret"');}

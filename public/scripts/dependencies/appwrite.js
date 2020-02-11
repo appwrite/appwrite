@@ -771,27 +771,6 @@
             },
 
             /**
-             * Delete Current Account Session
-             *
-             * Use this endpoint to log out the currently logged in user from his account.
-             * When successful this endpoint will delete the user session and remove the
-             * session secret cookie from the user client.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            deleteCurrentSession: function() {
-                let path = '/account/sessions/current';
-
-                let payload = {};
-
-                return http
-                    .delete(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
              * Create Account Session with OAuth
              *
              * Allow the user to login to his account using the OAuth provider of his

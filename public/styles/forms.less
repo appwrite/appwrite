@@ -401,10 +401,10 @@ fieldset {
 
   &:hover:after {
     white-space: nowrap;
-    background: #333;
+    background: var(--config-color-tooltip-background);
     border-radius: 5px;
     bottom: 26px;
-    color: var(--config-color-background-input);
+    color: var(--config-color-tooltip-text);
     content: attr(data-tooltip);
     padding: 5px 15px;
     position: absolute;
@@ -417,7 +417,7 @@ fieldset {
 
   &:hover:before {
     border: solid;
-    border-color: #333 transparent;
+    border-color: var(--config-color-tooltip-background) transparent;
     border-width: 6px 6px 0 6px;
     bottom: 20px;
     content: "";
