@@ -122,6 +122,7 @@ button,
 
   &.danger {
     background: var(--config-color-danger);
+    color: #fff;
 
     &.reverse {
       color: var(--config-color-danger);
@@ -289,7 +290,7 @@ input[type=url] {
 select {
   background: transparent;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='24' height='24' viewBox='0 0 24 24'><path fill='%23868686' d='M7.406 7.828l4.594 4.594 4.594-4.594 1.406 1.406-6 6-6-6z'></path></svg>");
+  background-image: var(--config-console-nav-switch-arrow);
   background-position: @config-end 15px top 50%;
   background-repeat: no-repeat;
   background-color: #fff;
@@ -581,7 +582,7 @@ input[type=checkbox] {
 }
 
 .paging {
-  color: #8d8e8e;
+  color: var(--config-color-fade);
   padding: 5px 15px;
   font-size: 12px;
   

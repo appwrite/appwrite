@@ -14,8 +14,8 @@
     .func-padding-end(50px);
     .func-padding-start(270px);
     margin: 0;
-    color: #4b4b4b;
-    background: #eceff1;
+    color: var(--config-color-normal);
+    background: var(--config-console-background);
 
     .project-only {
       display: none !important;
@@ -73,7 +73,7 @@
     height: 40px;
     line-height: 40px;
     padding: 15px 30px;
-    background: #fff;
+    background: var(--config-color-background-fade);
     box-shadow: 0 0 2px rgba(0, 0, 0, .10);
     margin: 0 -50px;
     z-index: 2;
@@ -95,8 +95,8 @@
         padding-bottom: 0;
         border: none;
         border-radius: 26px;
-        background-color: #ececec;
-        color: #868686;
+        background-color: var(--config-console-nav-switch-background);
+        color: var(--config-console-nav-switch-color);
       }
     }
 
@@ -138,8 +138,7 @@
     nav {
       //box-shadow: 0 0 2px rgba(0, 0, 0, .05);
       background: #1b3445;
-      background: linear-gradient(rgb(19, 42, 59), rgb(48, 40, 57));
-      background: linear-gradient(#143650, #302839);
+      background: linear-gradient(var(--config-console-nav-start), var(--config-console-nav-end));
       color: #788c99;
       position: fixed;
       height: 100%;
@@ -281,7 +280,7 @@
           margin-bottom: 0 !important;
 
           a {
-            border-top: solid 1px #2a253a;
+            border-top: solid 1px var(--config-console-nav-border);
             border-bottom: none;
           }
         }
@@ -414,7 +413,7 @@
         content: "";
         display: block;
         width: 2px;
-        background: #eceff1;
+        background: var(--config-console-background);
         height: ~"calc(100% + 110px)";
         position: absolute;
         top: -20px;
@@ -496,16 +495,16 @@
       overflow: hidden;
       //border-radius: 10px;
       //padding-top: 15px;
-      background-color: #ffffff;
+      background-color: var(--config-color-background-fade);
       background-image:
         linear-gradient(transparent 1px, transparent 1px),
         linear-gradient(90deg, transparent 1px, transparent 1px),
-        linear-gradient(rgb(241, 241, 241) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(241, 241, 241) 1px, transparent 1px);
+        linear-gradient(var(--config-border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);
       background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
       background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
       background-repeat: round;
-      border: solid 1px rgb(241, 241, 241);
+      border: solid 1px var(--config-border-color);
       border-right: solid 1px transparent;
       border-bottom: solid 1px transparent;
 
