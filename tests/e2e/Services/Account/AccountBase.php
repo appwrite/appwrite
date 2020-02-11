@@ -297,7 +297,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']);
         $this->assertCount(2, $response['body']);
         
-        $this->assertEquals('account.create', $response['body'][0]['event']);
+        $this->assertEquals('account.sessions.create', $response['body'][0]['event']);
         $this->assertEquals($response['body'][0]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body'][0]['time']);
 
@@ -322,7 +322,7 @@ trait AccountBase
         $this->assertEquals('--', $response['body'][0]['geo']['isoCode']);
         $this->assertEquals('Unknown', $response['body'][0]['geo']['country']);
 
-        $this->assertEquals('account.sessions.create', $response['body'][1]['event']);
+        $this->assertEquals('account.create', $response['body'][1]['event']);
         $this->assertEquals($response['body'][1]['ip'], filter_var($response['body'][0]['ip'], FILTER_VALIDATE_IP));
         $this->assertIsNumeric($response['body'][1]['time']);
 
