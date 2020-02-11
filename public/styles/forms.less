@@ -13,6 +13,10 @@ input:-moz-placeholder {
   text-align: @config-start;
 }
 
+input, textarea {
+  background: var(--config-color-background-input);
+}
+
 button,
 .button {
   display: inline-block;
@@ -134,7 +138,7 @@ button,
   &.disabled,
   &:disabled,
   .disabled {
-    //opacity: .3;
+    color: var(--config-color-normal);
     background: var(--config-color-fade);
     cursor: default;
   }
@@ -213,6 +217,7 @@ select {
   -moz-appearance: none;
   -webkit-transform: translateZ(0px);
   box-sizing: content-box;
+  color: var(--config-color-dark);
   height: 40px;
   line-height: 40px;
   border: solid 1px var(--config-color-fade-light);
@@ -228,26 +233,6 @@ select {
     padding: 15px;
     height: auto;
   }
-  
-  &[xtype=file] {
-    line-height: normal;
-    height: auto;
-    border: none;
-    position: absolute;
-    top: 0;
-    .func-start(0);
-    bottom: 0;
-    opacity: 0;
-    cursor: pointer;
-    padding: 0;
-    margin: 0;
-    font-size: 0;
-    width: 100%;
-
-    &:disabled {
-      opacity: 0 !important;
-    }
-  }
 
   &:focus {
     outline: none;
@@ -255,7 +240,7 @@ select {
   }
 
   &:disabled {
-    //opacity: .3;
+    color: var(--config-color-normal);
     background: var(--config-color-fade-super);
   }
 
@@ -293,7 +278,7 @@ select {
   background-image: var(--config-console-nav-switch-arrow);
   background-position: @config-end 15px top 50%;
   background-repeat: no-repeat;
-  background-color: #fff;
+  background-color: var(--config-color-background-input);
   width: ~"calc(100% - 62px)";
   .text-one-liner;
   .func-padding-end(45px);
@@ -314,6 +299,7 @@ input[type=search].strip {
   background: transparent;
   -webkit-appearance: none;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAdZJREFUWIXt1s2LjWEYBvDfnDMzFpNIamZIFrMiJYMyFmKhZKfOwoiFr2LFn2BByG6WVrKwMcjWxgoLIlKIUk6RrzAjZWZ8LO731FlwvB+PUbjq6X0X7/VeV/d9P9fz8IdRL8Hpw3x8w0xaOz9GNxq4gJeZcGs1cRab0fU7xLfgMSYzoT3YgNXYhIO4iM+4iTWphGs4jikcFSXvhEGczr4/UFW8C2N4jXUFudvwCYeqGNgnSr6yJH8rpkWLCqMfE9hdUryFE3iC3qLEk7ij+kT34Q32FiHV8Qr7K4q3cArXihCGxd5elMjARnzBvE4f1dreV+AtnicycC/7/7K8BhaIvqXCO3zFwrwGZtCT0EAtW9N5DTSxWGR/CizNns/yEgbFEK5NZGCnaEPHE7e9Ai9wA6OJDIzistgJubFdxHB/RfFVYgCHixJruI5x5dNwDm6J47sUhkTvjpUw0Y1zeOrXR3hHjOA9zmBuTs4Arog4/yhuUZWwHPdFMh7280BZgiP4ILJ/UuymqRQmejPxphiquzgvKnMJDzOxB9glZqiRiecykbfHdawX98EhcdxO4BGu4nYm2EJDzEKPSMIdYrBnFYUq8d/EP2di1gey3cS4ErflvxffASbhcakIINaMAAAAAElFTkSuQmCC");
+  background-color: var(--config-color-background-input);
   background-position: @config-start 15px top 50%;
   background-repeat: no-repeat;
   background-size: 20px 20px;
@@ -361,7 +347,7 @@ fieldset {
 }
 
 .file-preview {
-  background: #fff url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIElEQVQoU2NkYGAwZsAEZ9GFGIeIQix+wfQgyDODXSEAcUwGCrDSHgkAAAAASUVORK5CYII=) !important;
+  background: var(--config-color-background-input) url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIElEQVQoU2NkYGAwZsAEZ9GFGIeIQix+wfQgyDODXSEAcUwGCrDSHgkAAAAASUVORK5CYII=) !important;
   border: solid 1px #e2e2e2;
   box-shadow: inset 0 0 3px #a0a0a0;
   border-radius: 8px;
@@ -418,7 +404,7 @@ fieldset {
     background: #333;
     border-radius: 5px;
     bottom: 26px;
-    color: #fff;
+    color: var(--config-color-background-input);
     content: attr(data-tooltip);
     padding: 5px 15px;
     position: absolute;
@@ -522,7 +508,7 @@ input[type=checkbox] {
     display: block;
     width: 20px;
     height: 20px;
-    background: #fff;
+    background: var(--config-color-background-input);
     top: -5px;
     border-radius: 50%;
     position: absolute;
@@ -536,7 +522,7 @@ input[type=checkbox] {
     content: '\e83d';
     font-size: 16px;
     line-height: 20px;
-    color: #ffffff;
+    color: var(--config-color-background-fade);
     background: var(--config-color-focus);
   }
 
@@ -575,7 +561,7 @@ input[type=checkbox] {
     width: 50px;
     line-height: 50px;
     text-align: center;
-    background: #fbfbfb;
+    background: var(--config-color-background-focus);
     margin: 1px;
     border-radius: 0 10px 10px 0;
   }
@@ -588,6 +574,11 @@ input[type=checkbox] {
   
   form {
     display: inline-block;
+  }
+
+  button:disabled {
+    color: var(--config-color-background-fade);
+    opacity: .6;
   }
 }
 
@@ -1113,7 +1104,7 @@ ol {
 
 .tags {
   .input;
-  background: #ffffff;
+  background: var(--config-color-background-input);
   min-height: 42px;
   height: auto;
 
