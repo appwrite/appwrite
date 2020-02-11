@@ -567,15 +567,6 @@ $utopia->get('/v1/account/logs')
             $countries = Locale::getText('countries');
 
             $logs = $audit->getLogsByUserAndActions($user->getUid(), [
-                'auth.register', // TODO Deprectate this
-                'auth.login', // TODO Deprectate this
-                'auth.logout', // TODO Deprectate this
-                'auth.recovery', // TODO Deprectate this
-                'auth.recovery.reset', // TODO Deprectate this
-                'auth.oauth.login', // TODO Deprectate this
-                'auth.invite', // TODO Deprectate this
-                'auth.join', // TODO Deprectate this
-                'auth.leave', // TODO Deprectate this
                 'account.create',
                 'account.delete',
                 'account.update.name',
@@ -584,6 +575,13 @@ $utopia->get('/v1/account/logs')
                 'account.update.prefs',
                 'account.sessions.create',
                 'account.sessions.delete',
+                'account.recovery.create',
+                'account.recovery.update',
+                'account.verification.create',
+                'account.verification.update',
+                'teams.membership.create',
+                'teams.membership.update',
+                'teams.membership.delete',
             ]);
 
             $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
@@ -645,6 +643,7 @@ $utopia->patch('/v1/account/name')
             }
 
             $audit
+                ->setParam('userId', $user->getUid())
                 ->setParam('event', 'account.update.name')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
@@ -686,6 +685,7 @@ $utopia->patch('/v1/account/password')
             }
 
             $audit
+                ->setParam('userId', $user->getUid())
                 ->setParam('event', 'account.update.password')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
@@ -743,6 +743,7 @@ $utopia->patch('/v1/account/email')
             }
 
             $audit
+                ->setParam('userId', $user->getUid())
                 ->setParam('event', 'account.update.email')
                 ->setParam('resource', 'users/'.$user->getUid())
             ;
@@ -826,6 +827,7 @@ $utopia->delete('/v1/account')
              */
 
             $audit
+                ->setParam('userId', $user->getUid())
                 ->setParam('event', 'account.delete')
                 ->setParam('resource', 'users/'.$user->getUid())
                 ->setParam('data', $user->getArrayCopy())
@@ -846,7 +848,7 @@ $utopia->delete('/v1/account')
         }
     );
 
-$utopia->delete('/v1/account/sessions/:id')
+$utopia->delete('/v1/account/sessions/:sessionUid')
     ->desc('Delete Account Session')
     ->label('scope', 'account')
     ->label('webhook', 'account.sessions.delete')
@@ -855,18 +857,23 @@ $utopia->delete('/v1/account/sessions/:id')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
     ->label('abuse-limit', 100)
-    ->param('id', null, function () { return new UID(); }, 'Session unique ID.')
+    ->param('sessionUid', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete current device session.')
     ->action(
-        function ($id) use ($response, $request, $user, $projectDB, $webhook, $audit) {
+        function ($sessionUid) use ($response, $request, $user, $projectDB, $webhook, $audit) {
+            $sessionUid = ($sessionUid === 'current')
+                    ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
+                    : $sessionUid;
+                    
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
-                if (($id == $token->getUid()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
+                if (($sessionUid == $token->getUid()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
                     if (!$projectDB->deleteDocument($token->getUid())) {
                         throw new Exception('Failed to remove token from DB', 500);
                     }
 
                     $audit
+                        ->setParam('userId', $user->getUid())
                         ->setParam('event', 'account.sessions.delete')
                         ->setParam('resource', '/user/'.$user->getUid())
                     ;
@@ -884,44 +891,12 @@ $utopia->delete('/v1/account/sessions/:id')
                             ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
                         ;
                     }
+
+                    return $response->noContent();
                 }
             }
 
-            $response->noContent();
-        }
-    );
-
-$utopia->delete('/v1/account/sessions/current')
-    ->desc('Delete Current Account Session')
-    ->label('webhook', 'account.sessions.delete')
-    ->label('scope', 'account')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteCurrentSession')
-    ->label('sdk.description', '/docs/references/account/delete-session-current.md')
-    ->label('abuse-limit', 100)
-    ->action(
-        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
-            $token = Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-
-            if (!$projectDB->deleteDocument($token)) {
-                throw new Exception('Failed to remove token from DB', 500);
-            }
-
-            $webhook
-                ->setParam('payload', [
-                    'name' => $user->getAttribute('name', ''),
-                    'email' => $user->getAttribute('email', ''),
-                ])
-            ;
-
-            $audit->setParam('event', 'account.sessions.delete');
-
-            $response
-                ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
-                ->noContent()
-            ;
+            throw new Exception('Session not found', 404);
         }
     );
 
@@ -944,6 +919,7 @@ $utopia->delete('/v1/account/sessions')
                 }
 
                 $audit
+                    ->setParam('userId', $user->getUid())
                     ->setParam('event', 'account.sessions.delete')
                     ->setParam('resource', '/user/'.$user->getUid())
                 ;

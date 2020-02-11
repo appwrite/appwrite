@@ -847,12 +847,12 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteSession: function(id) {
-                if(id === undefined) {
+            deleteSession: function(sessionUid) {
+                if(sessionUid === undefined) {
                     throw new Error('Missing required parameter: "id"');
                 }
                 
-                let path = '/account/sessions/{id}'.replace(new RegExp('{id}', 'g'), id);
+                let path = '/account/sessions/{sessionUid}'.replace(new RegExp('{sessionUid}', 'g'), sessionUid);
 
                 let payload = {};
 
