@@ -857,7 +857,7 @@ $utopia->delete('/v1/account/sessions/:sessionUid')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
     ->label('abuse-limit', 100)
-    ->param('sessionUid', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete current device session.')
+    ->param('sessionUid', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(
         function ($sessionUid) use ($response, $request, $user, $projectDB, $webhook, $audit) {
             $sessionUid = ($sessionUid === 'current')
