@@ -124,7 +124,7 @@ $register->set('smtp', function () use ($request) {
     $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
     $mail->SMTPAutoTLS = false;
 
-    $from = $request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server');
+    $from = urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
     $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
@@ -267,7 +267,7 @@ $register->get('smtp')
     ->setFrom(
         $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
         ($project->getUid() === 'console')
-            ? $request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server')
+            ? urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
             : sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
         )
     );
