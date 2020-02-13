@@ -203,7 +203,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage) {
+$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $mode, $project, $utopia) {
 
     /*
      * Trigger Events for background jobs
@@ -215,12 +215,18 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     if (!empty($audit->getParam('event'))) {
         $audit->trigger();
     }
+    
+    $route = $utopia->match($request);
 
-    $usage
-        ->setParam('request', $request->getSize())
-        ->setParam('response', $response->getSize())
-        ->trigger()
-    ;
+    if($project->getUid()
+        && $mode !== APP_MODE_ADMIN
+        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
+        $usage
+            ->setParam('request', $request->getSize())
+            ->setParam('response', $response->getSize())
+            ->trigger()
+        ;
+    }
 });
 
 $utopia->options(function () use ($request, $response, $domain, $project) {

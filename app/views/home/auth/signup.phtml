@@ -14,7 +14,7 @@
         data-service="account.create"
         data-scope="console"
         data-event="submit"
-        data-success="trigger,redirect"
+        data-success="trigger"
         data-success-param-trigger-events="account.create"
         data-success-param-redirect-url="/console"
         data-failure="alert"
@@ -36,8 +36,6 @@
             </div>
             By signing up, you agree to the <a data-ls-attrs="href={{env.HOME}}/policy/terms" tabindex="-1" target="_blank">Terms and Conditions</a> and <a data-ls-attrs="href={{env.HOME}}/policy/privacy" target="_blank" tabindex="-1">Privacy Policy</a>
         </div>
-
-        <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/confirm" />
 
         <button type="submit">Sign Up</button>
     </form>
