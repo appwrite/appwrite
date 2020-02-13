@@ -231,6 +231,7 @@ $utopia->get('/v1/mock/tests/general/empty')
     ->action(
         function () use ($response) {
             $response->noContent();
+            exit();
         }
     );
 
