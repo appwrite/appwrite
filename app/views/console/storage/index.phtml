@@ -1,5 +1,7 @@
 <?php
 $home = $this->getParam('home', '');
+$fileLimit = $this->getParam('fileLimit', 0);
+$fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 ?>
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
@@ -29,8 +31,10 @@ $home = $this->getParam('home', '');
             data-failure-param-alert-classname="error">
             <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
-            <label for="file-read">Files</label>
-            <input type="file" name="file" id="file-file" required>
+            <label for="file-read">File</label>
+            <input type="file" name="file" id="file-file" size="1" required>
+
+            <div class="text-fade text-size-small margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
             <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />

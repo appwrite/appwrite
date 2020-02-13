@@ -21,6 +21,8 @@
 * Upgraded SMTP image to version 1.0.1
 * File upload route (POST /v1/storage/files) now accept a single file per request
 * Added ENV vars to change system email sender name and address 
+* Usage for requests made by project admin in the console are not counted as API usage
+* Added ENV var to change default file upload size limit. New default value is 100MB
 
 ## Bug Fixes
 

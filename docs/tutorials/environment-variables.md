@@ -16,6 +16,10 @@ Allows you to disable abuse checks and API rate limiting. By default, set to 'en
 
 This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to keep it a secret.
 
+### _APP_STORAGE_LIMIT
+
+Maximun file size allowed for file upload. The deafult value is 100MB limitation. You should pass your size limit value in bytes.
+
 ### _APP_CONSOLE_WHITELIST_EMAILS
 
 This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.

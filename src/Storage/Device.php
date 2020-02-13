@@ -163,28 +163,4 @@ abstract class Device
      * @return float
      */
     abstract public function getPartitionTotalSpace():float;
-
-    /**
-     * Human readable data size format from bytes input.
-     *
-     * As published on https://gist.github.com/liunian/9338301 (first comment)
-     *
-     * @param int $bytes
-     * @param int $decimals
-     *
-     * @return string
-     */
-    public function human($bytes, $decimals = 2)
-    {
-        $units = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
-        $step = 1024;
-        $i = 0;
-
-        while (($bytes / $step) > 0.9) {
-            $bytes = $bytes / $step;
-            ++$i;
-        }
-
-        return round($bytes, $decimals).$units[$i];
-    }
 }

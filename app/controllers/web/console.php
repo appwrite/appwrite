@@ -7,6 +7,7 @@ global $utopia, $response, $request, $layout, $version, $providers, $projectDB;
 use Utopia\View;
 use Database\Database;
 use Database\Validator\UID;
+use Storage\Storage;
 
 $utopia->init(function () use ($layout, $utopia) {
     $layout
@@ -203,9 +204,11 @@ $utopia->get('/console/storage')
     ->label('scope', 'console')
     ->action(function () use ($request, $layout) {
         $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
-
+        
         $page
-            ->setParam('home', $request->getServer('_APP_HOME', ''))
+            ->setParam('home', $request->getServer('_APP_HOME', 0))
+            ->setParam('fileLimit', $request->getServer('_APP_STORAGE_LIMIT', 0))
+            ->setParam('fileLimitHuman', Storage::human($request->getServer('_APP_STORAGE_LIMIT', 0)))
         ;
 
         $layout

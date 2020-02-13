@@ -172,9 +172,9 @@ $utopia->get('/v1/health/stats')
                         'version' => shell_exec('nginx -v 2>&1'),
                     ],
                     'storage' => [
-                        'used' => $device->human($device->getDirectorySize($device->getRoot().'/')),
-                        'partitionTotal' => $device->human($device->getPartitionTotalSpace()),
-                        'partitionFree' => $device->human($device->getPartitionFreeSpace()),
+                        'used' => Storage::human($device->getDirectorySize($device->getRoot().'/')),
+                        'partitionTotal' => Storage::human($device->getPartitionTotalSpace()),
+                        'partitionFree' => Storage::human($device->getPartitionFreeSpace()),
                     ],
                     'cache' => [
                         'uptime' => (isset($cacheStats['uptime_in_seconds'])) ? $cacheStats['uptime_in_seconds'] : 0,
