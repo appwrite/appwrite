@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.CreateDocument("[COLLECTION_ID]", "{}", [], [], "[PARENT_DOCUMENT]", "", "assign")
+    var response, error := service.CreateDocument("[COLLECTION_ID]", , [], [], "[PARENT_DOCUMENT]", "", "assign")
 
     if error != nil {
         panic(error)

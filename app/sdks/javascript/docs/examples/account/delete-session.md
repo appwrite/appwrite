@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.account.deleteSession('[ID]');
+let promise = sdk.account.deleteSession('[SESSION_UID]');
 
 promise.then(function (response) {
     console.log(response);

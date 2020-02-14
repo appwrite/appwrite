@@ -111,7 +111,7 @@ func (srv *Database) ListDocuments(CollectionId string, Filters []interface{}, O
 }
 
 // CreateDocument create a new Document.
-func (srv *Database) CreateDocument(CollectionId string, Data string, Read []interface{}, Write []interface{}, ParentDocument string, ParentProperty string, ParentPropertyType string) (map[string]interface{}, error) {
+func (srv *Database) CreateDocument(CollectionId string, Data object, Read []interface{}, Write []interface{}, ParentDocument string, ParentProperty string, ParentPropertyType string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{collectionId}", CollectionId)
 	path := r.Replace("/database/collections/{collectionId}/documents")
 
@@ -140,7 +140,7 @@ func (srv *Database) GetDocument(CollectionId string, DocumentId string) (map[st
 }
 
 // UpdateDocument
-func (srv *Database) UpdateDocument(CollectionId string, DocumentId string, Data string, Read []interface{}, Write []interface{}) (map[string]interface{}, error) {
+func (srv *Database) UpdateDocument(CollectionId string, DocumentId string, Data object, Read []interface{}, Write []interface{}) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{collectionId}", CollectionId, "{documentId}", DocumentId)
 	path := r.Replace("/database/collections/{collectionId}/documents/{documentId}")
 

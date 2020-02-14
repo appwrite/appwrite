@@ -32,7 +32,7 @@ POST https://appwrite.io/v1/database/collections
 | name | string | Collection name. |  |
 | read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
-| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation |  |
+| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation. |  |
 
 ## Get Collection
 
@@ -64,7 +64,7 @@ PUT https://appwrite.io/v1/database/collections/{collectionId}
 | name | string | Collection name. |  |
 | read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions(/docs/permissions) and get a full list of available permissions. |  |
 | write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
-| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation | [] |
+| rules | array | Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation. | [] |
 
 ## Delete Collection
 
@@ -92,8 +92,8 @@ GET https://appwrite.io/v1/database/collections/{collectionId}/documents
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| collectionId | string | **Required** Collection unique ID. |  |
-| filters | array | Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, &gt;, &lt;, &lt;=, &gt;=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: &#039;name=John Doe&#039; or &#039;category.$uid&gt;=5bed2d152c362&#039; | [] |
+| collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
+| filters | array | Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, &gt;, &lt;, &lt;=, &gt;=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: &#039;name=John Doe&#039; or &#039;category.$uid&gt;=5bed2d152c362&#039;. | [] |
 | offset | integer | Offset value. Use this value to manage pagination. | 0 |
 | limit | integer | Maximum number of documents to return in response.  Use this value to manage pagination. | 50 |
 | order-field | string | Document field that results will be sorted by. | $uid |
@@ -115,8 +115,8 @@ POST https://appwrite.io/v1/database/collections/{collectionId}/documents
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| collectionId | string | **Required** Collection unique ID. |  |
-| data | string | Document data as JSON string. |  |
+| collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
+| data | object | Document data as JSON string. |  |
 | read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | parentDocument | string | Parent document unique ID. Use when you want your new document to be a child of a parent document. |  |
@@ -135,8 +135,8 @@ GET https://appwrite.io/v1/database/collections/{collectionId}/documents/{docume
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| collectionId | string | **Required** Collection unique ID |  |
-| documentId | string | **Required** Document unique ID |  |
+| collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
+| documentId | string | **Required** Document unique ID. |  |
 
 ## Update Document
 
@@ -148,9 +148,9 @@ PATCH https://appwrite.io/v1/database/collections/{collectionId}/documents/{docu
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| collectionId | string | **Required** Collection unique ID |  |
-| documentId | string | **Required** Document unique ID |  |
-| data | string | Document data as JSON string |  |
+| collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
+| documentId | string | **Required** Document unique ID. |  |
+| data | object | Document data as JSON string. |  |
 | read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 
@@ -166,6 +166,6 @@ DELETE https://appwrite.io/v1/database/collections/{collectionId}/documents/{doc
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| collectionId | string | **Required** Collection unique ID |  |
-| documentId | string | **Required** Document unique ID |  |
+| collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
+| documentId | string | **Required** Document unique ID. |  |
 

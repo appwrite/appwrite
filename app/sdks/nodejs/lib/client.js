@@ -99,23 +99,49 @@ class Client {
         return this;
     }
       
-    call(method, path = '', headers = {}, params = {}) {
+    async call(method, path = '', headers = {}, params = {}) {
         if(this.selfSigned) { // Allow self signed requests
             process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
         }
 
         headers = Object.assign(this.headers, headers);
-        
+
+        let contentType = headers['content-type'].toLowerCase();
         let options = {
             method: method.toUpperCase(),
             uri: this.endpoint + path,
             qs: (method.toUpperCase() === 'GET') ? params : {},
             headers: headers,
-            body: (method.toUpperCase() === 'GET') ? '' : params,
-            json: (headers['content-type'].toLowerCase().startsWith('application/json')),
+            body: (method.toUpperCase() === 'GET' || contentType.startsWith('multipart/form-data')) ? null : params,
+            json: (contentType.startsWith('application/json')),
+            formData: (contentType.startsWith('multipart/form-data')) ? this.flatten(params) : null,
         };
 
-        return request(options);      
+        let response = await request(options);
+
+        if(contentType.startsWith('multipart/form-data')) {
+            response = JSON.parse(response);
+        }
+
+        return response;
+    }
+
+    flatten(data, prefix = '') {
+        let output = {};
+
+        for (const key in data) {
+            let value = data[key];
+            let finalKey = prefix ? prefix + '[' + key +']' : key;
+
+            if (Array.isArray(value)) {
+                output = Object.assign(output, this.flatten(value, finalKey)); // @todo: handle name collision here if needed
+            }
+            else {
+                output[finalKey] = value;
+            }
+        }
+
+        return output;
     }
 }
 

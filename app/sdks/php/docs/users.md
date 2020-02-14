@@ -29,9 +29,9 @@ POST https://appwrite.io/v1/users
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| email | string | User account email. |  |
-| password | string | User account password. |  |
-| name | string | User account name. |  |
+| email | string | User email. |  |
+| password | string | User password. |  |
+| name | string | User name. |  |
 
 ## Get User
 
@@ -88,7 +88,7 @@ PATCH https://appwrite.io/v1/users/{userId}/prefs
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
-| prefs | string | Prefs key-value JSON object. |  |
+| prefs | object | Prefs key-value JSON object. |  |
 
 ## Get User Sessions
 

@@ -182,7 +182,7 @@ class Database extends Service
      * Create a new Document.
      *
      * @param string  $collectionId
-     * @param string  $data
+     * @param array  $data
      * @param array  $read
      * @param array  $write
      * @param string  $parentDocument
@@ -191,7 +191,7 @@ class Database extends Service
      * @throws Exception
      * @return array
      */
-    public function createDocument(string $collectionId, string $data, array $read, array $write, string $parentDocument = '', string $parentProperty = '', string $parentPropertyType = 'assign'):array
+    public function createDocument(string $collectionId, array $data, array $read, array $write, string $parentDocument = '', string $parentProperty = '', string $parentPropertyType = 'assign'):array
     {
         $path   = str_replace(['{collectionId}'], [$collectionId], '/database/collections/{collectionId}/documents');
         $params = [];
@@ -235,13 +235,13 @@ class Database extends Service
      *
      * @param string  $collectionId
      * @param string  $documentId
-     * @param string  $data
+     * @param array  $data
      * @param array  $read
      * @param array  $write
      * @throws Exception
      * @return array
      */
-    public function updateDocument(string $collectionId, string $documentId, string $data, array $read, array $write):array
+    public function updateDocument(string $collectionId, string $documentId, array $data, array $read, array $write):array
     {
         $path   = str_replace(['{collectionId}', '{documentId}'], [$collectionId, $documentId], '/database/collections/{collectionId}/documents/{documentId}');
         $params = [];

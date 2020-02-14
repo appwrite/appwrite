@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.account.updatePrefs('');
+let promise = sdk.account.updatePrefs({});
 
 promise.then(function (response) {
     console.log(response);

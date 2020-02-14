@@ -1,9 +1,6 @@
 let sdk = new Appwrite();
 
-sdk
-;
-
-let promise = sdk.account.updateVerification('[USER_ID]', '[SECRET]', 'password');
+let promise = sdk.account.updateVerification('[USER_ID]', '[SECRET]');
 
 promise.then(function (response) {
     console.log(response);

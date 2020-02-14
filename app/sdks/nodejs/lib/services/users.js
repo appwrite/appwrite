@@ -117,7 +117,7 @@ class Users extends Service {
      * settings you wish to update.
      *
      * @param string userId
-     * @param string prefs
+     * @param object prefs
      * @throws Exception
      * @return {}
      */

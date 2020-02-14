@@ -10,7 +10,7 @@ client
     .setKey('')
 ;
 
-let promise = users.updatePrefs('[USER_ID]', '');
+let promise = users.updatePrefs('[USER_ID]', {});
 
 promise.then(function (response) {
     console.log(response);

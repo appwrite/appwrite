@@ -15,26 +15,12 @@ class Account extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Use this endpoint to allow a new user to register an account in your
-     /// project. Use the success and failure URLs to redirect users back to your
-     /// application after signup completes.
-     /// 
-     /// If registration completes successfully user will be sent with a
-     /// confirmation email in order to confirm he is the owner of the account email
-     /// address. Use the confirmation parameter to redirect the user from the
-     /// confirmation email back to your app. When the user is redirected, use the
-     /// /auth/confirm endpoint to complete the account confirmation.
-     /// 
-     /// Please note that in order to avoid a [Redirect
-     /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     /// the only valid redirect URLs are the ones from domains you have set when
-     /// adding your platforms in the console interface.
-     /// 
-     /// When accessing this route using Javascript from the browser, success and
-     /// failure parameter URLs are required. Appwrite server will respond with a
-     /// 301 redirect status code and will set the user session cookie. This
-     /// behavior is enforced because modern browsers are limiting 3rd party cookies
-     /// in XHR of fetch requests to protect user privacy.
+     /// Use this endpoint to allow a new user to register a new account in your
+     /// project. After the user registration completes successfully, you can use
+     /// the [/account/verfication](/docs/account#createVerification) route to start
+     /// verifying the user email address. To allow your new user to login to his
+     /// new account, you need to create a new [account
+     /// session](/docs/account#createSession).
     Future<Response> create({email, password, name = null}) async {
        String path = '/account';
 
@@ -105,7 +91,7 @@ class Account extends Service {
 
        return await this.client.call('patch', path: path, params: params);
     }
-     /// Get currently logged in user preferences key-value object.
+     /// Get currently logged in user preferences as a key-value object.
     Future<Response> getPrefs() async {
        String path = '/account/prefs';
 
@@ -129,7 +115,8 @@ class Account extends Service {
      /// When the user clicks the confirmation link he is redirected back to your
      /// app password reset URL with the secret key and email address values
      /// attached to the URL query string. Use the query string params to submit a
-     /// request to the /auth/password/reset endpoint to complete the process.
+     /// request to the [PUT /account/recovery](/docs/account#updateRecovery)
+     /// endpoint to complete the process.
     Future<Response> createRecovery({email, url}) async {
        String path = '/account/recovery';
 
@@ -142,8 +129,8 @@ class Account extends Service {
     }
      /// Use this endpoint to complete the user account password reset. Both the
      /// **userId** and **secret** arguments will be passed as query parameters to
-     /// the redirect URL you have provided when sending your request to the
-     /// /auth/recovery endpoint.
+     /// the redirect URL you have provided when sending your request to the [POST
+     /// /account/recovery](/docs/account#createRecovery) endpoint.
      /// 
      /// Please note that in order to avoid a [Redirect
      /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -172,19 +159,7 @@ class Account extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// Allow the user to login into his account by providing a valid email and
-     /// password combination. Use the success and failure arguments to provide a
-     /// redirect URL's back to your app when login is completed. 
-     /// 
-     /// Please note that in order to avoid a [Redirect
-     /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     /// the only valid redirect URLs are the ones from domains you have set when
-     /// adding your platforms in the console interface.
-     /// 
-     /// When accessing this route using Javascript from the browser, success and
-     /// failure parameter URLs are required. Appwrite server will respond with a
-     /// 301 redirect status code and will set the user session cookie. This
-     /// behavior is enforced because modern browsers are limiting 3rd party cookies
-     /// in XHR of fetch requests to protect user privacy.
+     /// password combination. This route will create a new session for the user.
     Future<Response> createSession({email, password}) async {
        String path = '/account/sessions';
 
@@ -199,17 +174,6 @@ class Account extends Service {
      /// from the end client.
     Future<Response> deleteSessions() async {
        String path = '/account/sessions';
-
-       Map<String, dynamic> params = {
-       };
-
-       return await this.client.call('delete', path: path, params: params);
-    }
-     /// Use this endpoint to log out the currently logged in user from his account.
-     /// When successful this endpoint will delete the user session and remove the
-     /// session secret cookie from the user client.
-    Future<Response> deleteCurrentSession() async {
-       String path = '/account/sessions/current';
 
        Map<String, dynamic> params = {
        };
@@ -233,25 +197,46 @@ class Account extends Service {
      /// Use this endpoint to log out the currently logged in user from all his
      /// account sessions across all his different devices. When using the option id
      /// argument, only the session unique ID provider will be deleted.
-    Future<Response> deleteSession({id}) async {
-       String path = '/account/sessions/{id}'.replaceAll(RegExp('{id}'), id);
+    Future<Response> deleteSession({sessionUid}) async {
+       String path = '/account/sessions/{sessionUid}'.replaceAll(RegExp('{sessionUid}'), sessionUid);
 
        Map<String, dynamic> params = {
        };
 
        return await this.client.call('delete', path: path, params: params);
     }
+     /// Use this endpoint to send a verification message to your user email address
+     /// to confirm they are the valid owners of that address. Both the **userId**
+     /// and **secret** arguments will be passed as query parameters to the URL you
+     /// have provider to be attached to the verification email. The provided URL
+     /// should redirect the user back for your app and allow you to complete the
+     /// verification process by verifying both the **userId** and **secret**
+     /// parameters. Learn more about how to [complete the verification
+     /// process](/docs/account#updateAccountVerification). 
+     /// 
+     /// Please note that in order to avoid a [Redirect
+     /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     /// the only valid redirect URLs are the ones from domains you have set when
+     /// adding your platforms in the console interface.
+    Future<Response> createVerification({url}) async {
+       String path = '/account/verification';
+
+       Map<String, dynamic> params = {
+         'url': url,
+       };
+
+       return await this.client.call('post', path: path, params: params);
+    }
      /// Use this endpoint to complete the user email verification process. Use both
      /// the **userId** and **secret** parameters that were attached to your app URL
      /// to verify the user email ownership. If confirmed this route will return a
      /// 200 status code.
-    Future<Response> updateVerification({userId, secret, passwordB}) async {
+    Future<Response> updateVerification({userId, secret}) async {
        String path = '/account/verification';
 
        Map<String, dynamic> params = {
          'userId': userId,
          'secret': secret,
-         'password-b': passwordB,
        };
 
        return await this.client.call('put', path: path, params: params);

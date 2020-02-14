@@ -12,4 +12,4 @@ $client
 
 $users = new Users($client);
 
-$result = $users->updatePrefs('[USER_ID]', '');
+$result = $users->updatePrefs('[USER_ID]', []);

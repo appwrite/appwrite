@@ -10,4 +10,4 @@ client = Client()
 
 users = Users(client)
 
-result = users.update_prefs('[USER_ID]', '')
+result = users.update_prefs('[USER_ID]', {})

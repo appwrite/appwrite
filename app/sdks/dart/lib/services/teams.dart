@@ -76,14 +76,14 @@ class Teams extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Use this endpoint to invite a new member to your team. An email with a link
-     /// to join the team will be sent to the new member email address. If member
-     /// doesn't exists in the project it will be automatically created.
+     /// Use this endpoint to invite a new member to join your team. An email with a
+     /// link to join the team will be sent to the new member email address if the
+     /// member doesn't exist in the project it will be created automatically.
      /// 
-     /// Use the 'url' parameter to redirect the user from the invitation email back
+     /// Use the 'URL' parameter to redirect the user from the invitation email back
      /// to your app. When the user is redirected, use the [Update Team Membership
-     /// Status](/docs/teams#updateTeamMembershipStatus) endpoint to finally join
-     /// the user to the team.
+     /// Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to
+     /// accept the invitation to the team.
      /// 
      /// Please note that in order to avoid a [Redirect
      /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -112,21 +112,9 @@ class Teams extends Service {
 
        return await this.client.call('delete', path: path, params: params);
     }
-     /// Use this endpoint to let user accept an invitation to join a team after he
-     /// is being redirect back to your app from the invitation email. Use the
-     /// success and failure URL's to redirect users back to your application after
-     /// the request completes.
-     /// 
-     /// Please note that in order to avoid a [Redirect
-     /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     /// the only valid redirect URL's are the once from domains you have set when
-     /// added your platforms in the console interface.
-     /// 
-     /// When not using the success or failure redirect arguments this endpoint will
-     /// result with a 200 status code on success and with 401 status error on
-     /// failure. This behavior was applied to help the web clients deal with
-     /// browsers who don't allow to set 3rd party HTTP cookies needed for saving
-     /// the account session key.
+     /// Use this endpoint to allow a user to accept an invitation to join a team
+     /// after he is being redirected back to your app from the invitation email he
+     /// was sent.
     Future<Response> updateMembershipStatus({teamId, inviteId, userId, secret}) async {
        String path = '/teams/{teamId}/memberships/{inviteId}/status'.replaceAll(RegExp('{teamId}'), teamId).replaceAll(RegExp('{inviteId}'), inviteId);
 

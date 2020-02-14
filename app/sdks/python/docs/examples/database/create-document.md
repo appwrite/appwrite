@@ -10,4 +10,4 @@ client = Client()
 
 database = Database(client)
 
-result = database.create_document('[COLLECTION_ID]', '{}', {}, {})
+result = database.create_document('[COLLECTION_ID]', {}, {}, {})

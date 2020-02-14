@@ -170,7 +170,7 @@ class Database extends Service {
      * Create a new Document.
      *
      * @param string collectionId
-     * @param string data
+     * @param object data
      * @param array read
      * @param array write
      * @param string parentDocument
@@ -221,7 +221,7 @@ class Database extends Service {
      *
      * @param string collectionId
      * @param string documentId
-     * @param string data
+     * @param object data
      * @param array read
      * @param array write
      * @throws Exception

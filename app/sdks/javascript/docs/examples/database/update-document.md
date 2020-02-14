@@ -4,7 +4,7 @@ sdk
     .setProject('')
 ;
 
-let promise = sdk.database.updateDocument('[COLLECTION_ID]', '[DOCUMENT_ID]', '{}', [], []);
+let promise = sdk.database.updateDocument('[COLLECTION_ID]', '[DOCUMENT_ID]', {}, [], []);
 
 promise.then(function (response) {
     console.log(response);

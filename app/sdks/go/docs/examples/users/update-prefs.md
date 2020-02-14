@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.UpdatePrefs("[USER_ID]", "")
+    var response, error := service.UpdatePrefs("[USER_ID]", )
 
     if error != nil {
         panic(error)

@@ -30,7 +30,7 @@ POST https://appwrite.io/v1/teams
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | name | string | Team name. |  |
-| roles | array | User roles array. Use this param to set the roles in the team for the user who created the team. The default role is **owner**, a role can be any string. | [&quot;owner&quot;] |
+| roles | array | Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). | [&quot;owner&quot;] |
 
 ## Get Team
 
@@ -95,9 +95,9 @@ GET https://appwrite.io/v1/teams/{teamId}/memberships
 POST https://appwrite.io/v1/teams/{teamId}/memberships
 ```
 
-** Use this endpoint to invite a new member to your team. An email with a link to join the team will be sent to the new member email address. If member doesn&#039;t exists in the project it will be automatically created.
+** Use this endpoint to invite a new member to join your team. An email with a link to join the team will be sent to the new member email address if the member doesn&#039;t exist in the project it will be created automatically.
 
-Use the &#039;url&#039; parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the [Update Team Membership Status](/docs/teams#updateTeamMembershipStatus) endpoint to finally join the user to the team.
+Use the &#039;URL&#039; parameter to redirect the user from the invitation email back to your app. When the user is redirected, use the [Update Team Membership Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to accept the invitation to the team.
 
 Please note that in order to avoid a [Redirect Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md) the only valid redirect URL&#039;s are the once from domains you have set when added your platforms in the console interface. **
 
@@ -106,9 +106,9 @@ Please note that in order to avoid a [Redirect Attacks](https://github.com/OWASP
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | teamId | string | **Required** Team unique ID. |  |
-| email | string | New team member email address. |  |
+| email | string | New team member email. |  |
 | name | string | New team member name. |  |
-| roles | array | Invite roles array. Learn more about [roles and permissions](/docs/permissions). |  |
+| roles | array | Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). |  |
 | url | string | URL to redirect the user back to your app from the invitation email. |  |
 
 ## Delete Team Membership
@@ -124,5 +124,5 @@ DELETE https://appwrite.io/v1/teams/{teamId}/memberships/{inviteId}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | teamId | string | **Required** Team unique ID. |  |
-| inviteId | string | **Required** Invite unique ID |  |
+| inviteId | string | **Required** Invite unique ID. |  |
 

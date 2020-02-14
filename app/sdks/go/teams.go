@@ -98,15 +98,15 @@ func (srv *Teams) GetMemberships(TeamId string) (map[string]interface{}, error) 
 	return srv.client.Call("GET", path, nil, params)
 }
 
-// CreateMembership use this endpoint to invite a new member to your team. An
-// email with a link to join the team will be sent to the new member email
-// address. If member doesn't exists in the project it will be automatically
-// created.
+// CreateMembership use this endpoint to invite a new member to join your
+// team. An email with a link to join the team will be sent to the new member
+// email address if the member doesn't exist in the project it will be created
+// automatically.
 // 
-// Use the 'url' parameter to redirect the user from the invitation email back
+// Use the 'URL' parameter to redirect the user from the invitation email back
 // to your app. When the user is redirected, use the [Update Team Membership
-// Status](/docs/teams#updateTeamMembershipStatus) endpoint to finally join
-// the user to the team.
+// Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to
+// accept the invitation to the team.
 // 
 // Please note that in order to avoid a [Redirect
 // Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)

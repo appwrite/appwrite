@@ -80,7 +80,7 @@ func (srv *Users) GetPrefs(UserId string) (map[string]interface{}, error) {
 
 // UpdatePrefs update user preferences by its unique ID. You can pass only the
 // specific settings you wish to update.
-func (srv *Users) UpdatePrefs(UserId string, Prefs string) (map[string]interface{}, error) {
+func (srv *Users) UpdatePrefs(UserId string, Prefs object) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/prefs")
 

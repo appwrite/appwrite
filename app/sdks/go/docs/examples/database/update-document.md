@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.UpdateDocument("[COLLECTION_ID]", "[DOCUMENT_ID]", "{}", [], [])
+    var response, error := service.UpdateDocument("[COLLECTION_ID]", "[DOCUMENT_ID]", , [], [])
 
     if error != nil {
         panic(error)
