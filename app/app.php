@@ -342,10 +342,8 @@ $utopia->get('/robots.txt')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $response->text('# robotstxt.org/
-
-User-agent: *
-');
+            $template = new View(__DIR__.'/views/general/robots.phtml');
+            $response->text($template->render(false));
         }
     );
 
@@ -355,14 +353,8 @@ $utopia->get('/humans.txt')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $response->text('# humanstxt.org/
-# The humans responsible & technology colophon
-
-# TEAM
-    <name> -- <role> -- <twitter>
-
-# THANKS
-    <name>');
+            $template = new View(__DIR__.'/views/general/humans.phtml');
+            $response->text($template->render(false));
         }
     );
 
@@ -370,7 +362,7 @@ $utopia->get('/v1/info') // This is only visible to gods
     ->label('scope', 'god')
     ->label('docs', false)
     ->action(
-        function () use ($response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
+        function () use ($response, $user, $project, $version, $env) {
             $response->json([
                 'name' => 'API',
                 'version' => $version,

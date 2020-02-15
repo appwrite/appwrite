@@ -1387,12 +1387,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "4474932a797e8e5441163fa007aea8b6c6ae0186"
+                "reference": "ac1bdf5d34432620c5be97249a5e5ab0e49a69c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/4474932a797e8e5441163fa007aea8b6c6ae0186",
-                "reference": "4474932a797e8e5441163fa007aea8b6c6ae0186",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ac1bdf5d34432620c5be97249a5e5ab0e49a69c7",
+                "reference": "ac1bdf5d34432620c5be97249a5e5ab0e49a69c7",
                 "shasum": ""
             },
             "require": {
@@ -1423,7 +1423,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-02-13T08:25:02+00:00"
+            "time": "2020-02-15T05:02:58+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1988,12 +1988,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "35ac7d8479b312530648b28914620120446fa0ae"
+                "reference": "70d7abb1fdad964379676d629923de0dd1918f4f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/35ac7d8479b312530648b28914620120446fa0ae",
-                "reference": "35ac7d8479b312530648b28914620120446fa0ae",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/70d7abb1fdad964379676d629923de0dd1918f4f",
+                "reference": "70d7abb1fdad964379676d629923de0dd1918f4f",
                 "shasum": ""
             },
             "require": {
@@ -2026,7 +2026,7 @@
                 }
             ],
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
-            "time": "2020-02-10T19:49:09+00:00"
+            "time": "2020-02-14T12:50:24+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -3156,12 +3156,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "4d62307f9899420a2027d2b963f5c9b2b5b06fbd"
+                "reference": "d876bc45c9b4cd115585ec5e6fcf522611469f20"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/4d62307f9899420a2027d2b963f5c9b2b5b06fbd",
-                "reference": "4d62307f9899420a2027d2b963f5c9b2b5b06fbd",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d876bc45c9b4cd115585ec5e6fcf522611469f20",
+                "reference": "d876bc45c9b4cd115585ec5e6fcf522611469f20",
                 "shasum": ""
             },
             "require": {
@@ -3213,20 +3213,20 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-02-13T13:24:02+00:00"
+            "time": "2020-02-14T15:15:54+00:00"
         },
         {
             "name": "webmozart/assert",
-            "version": "1.6.0",
+            "version": "1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozart/assert.git",
-                "reference": "573381c0a64f155a0d9a23f4b0c797194805b925"
+                "reference": "aed98a490f9a8f78468232db345ab9cf606cf598"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/assert/zipball/573381c0a64f155a0d9a23f4b0c797194805b925",
-                "reference": "573381c0a64f155a0d9a23f4b0c797194805b925",
+                "url": "https://api.github.com/repos/webmozart/assert/zipball/aed98a490f9a8f78468232db345ab9cf606cf598",
+                "reference": "aed98a490f9a8f78468232db345ab9cf606cf598",
                 "shasum": ""
             },
             "require": {
@@ -3261,7 +3261,7 @@
                 "check",
                 "validate"
             ],
-            "time": "2019-11-24T13:36:37+00:00"
+            "time": "2020-02-14T12:15:55+00:00"
         }
     ],
     "aliases": [],
