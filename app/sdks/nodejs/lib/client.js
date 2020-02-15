@@ -15,7 +15,7 @@ class Client {
     /**
      * Set Project
      *
-     * Your Appwrite project ID
+     * Your project ID
      *
      * @param string value
      *
@@ -30,7 +30,7 @@ class Client {
     /**
      * Set Key
      *
-     * Your Appwrite project secret key
+     * Your secret API key
      *
      * @param string value
      *

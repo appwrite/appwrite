@@ -31,12 +31,12 @@ func (clt *Client) AddHeader(key string, value string) {
 	clt.headers[key] = value
 }
 
-// Your Appwrite project ID
+// Your project ID
 func (clt *Client) SetProject(value string) {
 	clt.headers["X-Appwrite-Project"] = value
 }
 
-// Your Appwrite project secret key
+// Your secret API key
 func (clt *Client) SetKey(value string) {
 	clt.headers["X-Appwrite-Key"] = value
 }

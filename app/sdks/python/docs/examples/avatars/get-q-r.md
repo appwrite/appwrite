@@ -4,8 +4,8 @@ from appwrite.services.avatars import Avatars
 client = Client()
 
 (client
-  .set_project('5df5acd0d48c2')
-  .set_key('919c2d18fb5d4...a2ae413da83346ad2')
+  .set_project('5df5acd0d48c2') # Your project ID
+  .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 )
 
 avatars = Avatars(client)

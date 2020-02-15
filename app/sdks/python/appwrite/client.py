@@ -23,13 +23,13 @@ class Client:
         return self
 
     def set_project(self, value):
-        """Your Appwrite project ID"""
+        """Your project ID"""
 
         self._global_headers['x-appwrite-project'] = value.lower()
         return self
 
     def set_key(self, value):
-        """Your Appwrite project secret key"""
+        """Your secret API key"""
 
         self._global_headers['x-appwrite-key'] = value.lower()
         return self

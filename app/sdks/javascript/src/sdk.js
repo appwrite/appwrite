@@ -25,7 +25,7 @@
         /**
          * Set Project
          *
-         * Your Appwrite project ID
+         * Your project ID
          *
          * @param value string
          *
@@ -43,7 +43,7 @@
         /**
          * Set Key
          *
-         * Your Appwrite project secret key
+         * Your secret API key
          *
          * @param value string
          *

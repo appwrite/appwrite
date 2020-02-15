@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    .setProject('5df5acd0d48c2')
+    .setProject('5df5acd0d48c2') // Your project ID
 ;
 
 let promise = sdk.storage.getFile('[FILE_ID]');
