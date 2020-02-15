@@ -81,7 +81,7 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
-        $sessionUid = $response['body']['$uid'];
+        $sessionId = $response['body']['$uid'];
         $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$uid']];
 
         /**
@@ -121,7 +121,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 400);
 
         return array_merge($data, [
-            'sessionUid' => $sessionUid,
+            'sessionId' => $sessionId,
             'session' => $session,
         ]);
     }
@@ -219,7 +219,7 @@ trait AccountBase
     public function testGetAccountSessions($data):array
     {
         $session = (isset($data['session'])) ? $data['session'] : '';
-        $sessionUid = (isset($data['sessionUid'])) ? $data['sessionUid'] : '';
+        $sessionId = (isset($data['sessionId'])) ? $data['sessionId'] : '';
 
         /**
          * Test for SUCCESS
@@ -235,7 +235,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(1, $response['body']);
-        $this->assertEquals($sessionUid, $response['body'][0]['$uid']);
+        $this->assertEquals($sessionId, $response['body'][0]['$uid']);
         
         $this->assertIsArray($response['body'][0]['OS']);
         $this->assertEquals('Windows', $response['body'][0]['OS']['name']);

@@ -848,7 +848,7 @@ $utopia->delete('/v1/account')
         }
     );
 
-$utopia->delete('/v1/account/sessions/:sessionUid')
+$utopia->delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
     ->label('scope', 'account')
     ->label('webhook', 'account.sessions.delete')
@@ -857,17 +857,17 @@ $utopia->delete('/v1/account/sessions/:sessionUid')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
     ->label('abuse-limit', 100)
-    ->param('sessionUid', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
+    ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(
-        function ($sessionUid) use ($response, $request, $user, $projectDB, $webhook, $audit) {
-            $sessionUid = ($sessionUid === 'current')
+        function ($sessionId) use ($response, $request, $user, $projectDB, $webhook, $audit) {
+            $sessionId = ($sessionId === 'current')
                     ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
-                    : $sessionUid;
+                    : $sessionId;
                     
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
-                if (($sessionUid == $token->getUid()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
+                if (($sessionId == $token->getUid()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
                     if (!$projectDB->deleteDocument($token->getUid())) {
                         throw new Exception('Failed to remove token from DB', 500);
                     }
