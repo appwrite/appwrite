@@ -1,7 +1,7 @@
 let sdk = new Appwrite();
 
 sdk
-    .setProject('')
+    .setProject('5df5acd0d48c2')
 ;
 
 let promise = sdk.database.listDocuments('[COLLECTION_ID]');

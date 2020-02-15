@@ -6,8 +6,8 @@ let client = new sdk.Client();
 let users = new sdk.Users(client);
 
 client
-    .setProject('')
-    .setKey('')
+    .setProject('5df5acd0d48c2')
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2')
 ;
 
 let promise = users.get('[USER_ID]');

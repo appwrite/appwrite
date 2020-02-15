@@ -6,8 +6,8 @@ let client = new sdk.Client();
 let avatars = new sdk.Avatars(client);
 
 client
-    .setProject('')
-    .setKey('')
+    .setProject('5df5acd0d48c2')
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2')
 ;
 
 let promise = avatars.getBrowser('aa');

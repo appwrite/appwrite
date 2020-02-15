@@ -6,8 +6,8 @@ let client = new sdk.Client();
 let locale = new sdk.Locale(client);
 
 client
-    .setProject('')
-    .setKey('')
+    .setProject('5df5acd0d48c2')
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2')
 ;
 
 let promise = locale.getCountries();

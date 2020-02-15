@@ -1,4 +1,5 @@
 const sdk = require('node-appwrite');
+const fs = require('fs');
 
 // Init SDK
 let client = new sdk.Client();
@@ -6,8 +7,8 @@ let client = new sdk.Client();
 let storage = new sdk.Storage(client);
 
 client
-    .setProject('')
-    .setKey('')
+    .setProject('5df5acd0d48c2')
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2')
 ;
 
 let promise = storage.createFile(fs.createReadStream(__dirname + '/file.png')), [], []);
