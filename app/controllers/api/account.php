@@ -27,16 +27,16 @@ use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$oauthKeys = [];
+$oauth2Keys = [];
 
-$utopia->init(function() use ($providers, &$oauthKeys) {
+$utopia->init(function() use ($providers, &$oauth2Keys) {
     foreach ($providers as $key => $provider) {
         if (!$provider['enabled']) {
             continue;
         }
 
-        $oauthKeys[] = 'oauth'.ucfirst($key);
-        $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+        $oauth2Keys[] = 'oauth2'.ucfirst($key);
+        $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
     }
 
 });
@@ -54,7 +54,7 @@ $utopia->post('/v1/account')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
-        function ($email, $password, $name) use ($register, $request, $response, $audit, $projectDB, $project, $webhook, $oauthKeys) {
+        function ($email, $password, $name) use ($register, $request, $response, $audit, $projectDB, $project, $webhook, $oauth2Keys) {
             if ('console' === $project->getUid()) {
                 $whitlistEmails = $project->getAttribute('authWhitelistEmails');
                 $whitlistIPs = $project->getAttribute('authWhitelistIPs');
@@ -132,7 +132,7 @@ $utopia->post('/v1/account')
                         'registration',
                         'name',
                     ],
-                    $oauthKeys
+                    $oauth2Keys
                 )), ['roles' => Authorization::getRoles()]));
         }
     );
@@ -220,27 +220,27 @@ $utopia->post('/v1/account/sessions')
         }
     );
 
-$utopia->get('/v1/account/sessions/oauth/:provider')
-    ->desc('Create Account Session with OAuth')
+$utopia->get('/v1/account/sessions/oauth2/:provider')
+    ->desc('Create Account Session with OAuth2')
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createOAuthSession')
-    ->label('sdk.description', '/docs/references/account/create-session-oauth.md')
+    ->label('sdk.method', 'createOAuth2Session')
+    ->label('sdk.description', '/docs/references/account/create-session-oauth2.md')
     ->label('sdk.response.code', 301)
     ->label('sdk.response.type', 'text/html')
     ->label('sdk.location', true)
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter($providers, function($node) {return (!$node['mock']);}))).'.')
+    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter($providers, function($node) {return (!$node['mock']);}))).'.')
     ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
     ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
         function ($provider, $success, $failure) use ($response, $request, $project) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth/callback/'.$provider.'/'.$project->getUid();
-            $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
-            $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getUid();
+            $appId = $project->getAttribute('usersOauth2'.ucfirst($provider).'Appid', '');
+            $appSecret = $project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}');
 
             $appSecret = json_decode($appSecret, true);
 
@@ -253,53 +253,53 @@ $utopia->get('/v1/account/sessions/oauth/:provider')
                 throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
             }
 
-            $classname = 'Auth\\OAuth\\'.ucfirst($provider);
+            $classname = 'Auth\\OAuth2\\'.ucfirst($provider);
 
             if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);
             }
 
-            $oauth = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
+            $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
 
-            $response->redirect($oauth->getLoginURL());
+            $response->redirect($oauth2->getLoginURL());
         }
     );
 
-$utopia->get('/v1/account/sessions/oauth/callback/:provider/:projectId')
-    ->desc('OAuth Callback')
+$utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+    ->desc('OAuth2 Callback')
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID.')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider.')
-    ->param('code', '', function () { return new Text(1024); }, 'OAuth code.')
+    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth2 provider.')
+    ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
     ->action(
         function ($projectId, $provider, $code, $state) use ($response, $request, $domain) {
-            $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/account/sessions/oauth/'.$provider.'/redirect?'
+            $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
                 .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
 
-$utopia->get('/v1/account/sessions/oauth/:provider/redirect')
-    ->desc('OAuth Redirect')
+$utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
+    ->desc('OAuth2 Redirect')
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('webhook', 'account.sessions.create')
     ->label('scope', 'public')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth provider.')
-    ->param('code', '', function () { return new Text(1024); }, 'OAuth code.')
-    ->param('state', '', function () { return new Text(2048); }, 'OAuth state params.', true)
+    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth2 provider.')
+    ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
+    ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
         function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth/callback/'.$provider.'/'.$project->getUid();
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getUid();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
 
-            $appId = $project->getAttribute('usersOauth'.ucfirst($provider).'Appid', '');
-            $appSecret = $project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}');
+            $appId = $project->getAttribute('usersOauth2'.ucfirst($provider).'Appid', '');
+            $appSecret = $project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}');
 
             $appSecret = json_decode($appSecret, true);
 
@@ -308,19 +308,19 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                 $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
             }
 
-            $classname = 'Auth\\OAuth\\'.ucfirst($provider);
+            $classname = 'Auth\\OAuth2\\'.ucfirst($provider);
 
             if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);
             }
 
-            $oauth = new $classname($appId, $appSecret, $callback);
+            $oauth2 = new $classname($appId, $appSecret, $callback);
 
             if (!empty($state)) {
                 try {
-                    $state = array_merge($defaultState, $oauth->parseState($state));
+                    $state = array_merge($defaultState, $oauth2->parseState($state));
                 } catch (\Exception $exception) {
-                    throw new Exception('Failed to parse login state params as passed from OAuth provider');
+                    throw new Exception('Failed to parse login state params as passed from OAuth2 provider');
                 }
             } else {
                 $state = $defaultState;
@@ -334,7 +334,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                 throw new Exception('Invalid redirect URL for failure login', 400);
             }
             $state['failure'] = null;
-            $accessToken = $oauth->getAccessToken($code);
+            $accessToken = $oauth2->getAccessToken($code);
 
             if (empty($accessToken)) {
                 if (!empty($state['failure'])) {
@@ -344,14 +344,14 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                 throw new Exception('Failed to obtain access token');
             }
 
-            $oauthID = $oauth->getUserID($accessToken);
+            $oauth2ID = $oauth2->getUserID($accessToken);
             
-            if (empty($oauthID)) {
+            if (empty($oauth2ID)) {
                 if (!empty($state['failure'])) {
                     $response->redirect($state['failure'], 301, 0);
                 }
 
-                throw new Exception('Missing ID from OAuth provider', 400);
+                throw new Exception('Missing ID from OAuth2 provider', 400);
             }
 
             $current = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
@@ -365,13 +365,13 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                 'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    'oauth'.ucfirst($provider).'='.$oauthID,
+                    'oauth2'.ucfirst($provider).'='.$oauth2ID,
                 ],
             ]) : $user;
 
-            if (empty($user)) { // No user logged in or with oauth provider ID, create new one or connect with account with same email
-                $name = $oauth->getUserName($accessToken);
-                $email = $oauth->getUserEmail($accessToken);
+            if (empty($user)) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
+                $name = $oauth2->getUserName($accessToken);
+                $email = $oauth2->getUserEmail($accessToken);
 
                 $user = $projectDB->getCollection([ // Get user by provider email address
                     'limit' => 1,
@@ -390,7 +390,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                         '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
                         'email' => $email,
                         'emailVerification' => true,
-                        'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth provider
+                        'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
                         'password-update' => time(),
                         'registration' => time(),
@@ -406,7 +406,7 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
                 }
             }
 
-            // Create session token, verify user account and update OAuth ID and Access Token
+            // Create session token, verify user account and update OAuth2 ID and Access Token
 
             $secret = Auth::tokenGenerator();
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -421,8 +421,8 @@ $utopia->get('/v1/account/sessions/oauth/:provider/redirect')
             ]);
 
             $user
-                ->setAttribute('oauth'.ucfirst($provider), $oauthID)
-                ->setAttribute('oauth'.ucfirst($provider).'AccessToken', $accessToken)
+                ->setAttribute('oauth2'.ucfirst($provider), $oauth2ID)
+                ->setAttribute('oauth2'.ucfirst($provider).'AccessToken', $accessToken)
                 ->setAttribute('status', Auth::USER_STATUS_ACTIVATED)
                 ->setAttribute('tokens', $session, Document::SET_TYPE_APPEND)
             ;
@@ -459,7 +459,7 @@ $utopia->get('/v1/account')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
-        function () use ($response, &$user, $oauthKeys) {            
+        function () use ($response, &$user, $oauth2Keys) {            
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
                     '$uid',
@@ -467,7 +467,7 @@ $utopia->get('/v1/account')
                     'registration',
                     'name',
                 ],
-                $oauthKeys
+                $oauth2Keys
             )), ['roles' => Authorization::getRoles()]));
         }
     );
@@ -634,7 +634,7 @@ $utopia->patch('/v1/account/name')
     ->label('sdk.description', '/docs/references/account/update-name.md')
     ->param('name', '', function () { return new Text(100); }, 'User name.')
     ->action(
-        function ($name) use ($response, $user, $projectDB, $audit, $oauthKeys) {
+        function ($name) use ($response, $user, $projectDB, $audit, $oauth2Keys) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'name' => $name,
             ]));
@@ -656,7 +656,7 @@ $utopia->patch('/v1/account/name')
                     'registration',
                     'name',
                 ],
-                $oauthKeys
+                $oauth2Keys
             )), ['roles' => Authorization::getRoles()]));
         }
     );
@@ -672,7 +672,7 @@ $utopia->patch('/v1/account/password')
     ->param('password', '', function () { return new Password(); }, 'New user password.')
     ->param('old-password', '', function () { return new Password(); }, 'Old user password.')
     ->action(
-        function ($password, $oldPassword) use ($response, $user, $projectDB, $audit, $oauthKeys) {
+        function ($password, $oldPassword) use ($response, $user, $projectDB, $audit, $oauth2Keys) {
             if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
@@ -698,7 +698,7 @@ $utopia->patch('/v1/account/password')
                     'registration',
                     'name',
                 ],
-                $oauthKeys
+                $oauth2Keys
             )), ['roles' => Authorization::getRoles()]));
         }
     );
@@ -714,7 +714,7 @@ $utopia->patch('/v1/account/email')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->action(
-        function ($email, $password) use ($response, $user, $projectDB, $audit, $oauthKeys) {
+        function ($email, $password) use ($response, $user, $projectDB, $audit, $oauth2Keys) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
@@ -756,7 +756,7 @@ $utopia->patch('/v1/account/email')
                     'registration',
                     'name',
                 ],
-                $oauthKeys
+                $oauth2Keys
             )), ['roles' => Authorization::getRoles()]));
         }
     );

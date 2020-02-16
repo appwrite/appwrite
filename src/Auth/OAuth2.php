@@ -2,7 +2,7 @@
 
 namespace Auth;
 
-abstract class OAuth
+abstract class OAuth2
 {
     /**
      * @var string
@@ -30,7 +30,7 @@ abstract class OAuth
     protected $scopes;
 
     /**
-     * OAuth constructor.
+     * OAuth2 constructor.
      *
      * @param string $appId
      * @param string $appSecret
@@ -92,7 +92,7 @@ abstract class OAuth
      * 
      * @return $this
      */
-    protected function addScope(string $scope):OAuth
+    protected function addScope(string $scope):OAuth2
     {
         // Add a scope to the scopes array if it isn't already present 
         if (!in_array($scope, $this->scopes)){
@@ -110,7 +110,7 @@ abstract class OAuth
     }
 
 
-    // The parseState function was designed specifically for Amazon OAuth Adapter to override.
+    // The parseState function was designed specifically for Amazon OAuth2 Adapter to override.
     // The response from Amazon is html encoded and hence it needs to be html_decoded before
     // json_decoding
     /**
@@ -138,7 +138,7 @@ abstract class OAuth
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Console_OAuth_Agent');
+        curl_setopt($ch, CURLOPT_USERAGENT, APP_USERAGENT);
 
         if (!empty($payload)) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);

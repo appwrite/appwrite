@@ -1,14 +1,19 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://developer.okta.com/blog/2019/06/04/what-the-heck-is-sign-in-with-apple
+// https://discordapp.com/developers/docs/topics/oauth2
 
-class Apple extends OAuth
+class Discord extends OAuth2
 {
+    /**
+     * @var string
+     */
+    private $endpoint = 'https://discordapp.com/api';
+
     /**
      * @var array
      */
@@ -18,8 +23,8 @@ class Apple extends OAuth
      * @var array
      */
     protected $scopes = [
-        "name", 
-        "email"
+            'identify',
+            'email'
     ];
 
     /**
@@ -27,22 +32,24 @@ class Apple extends OAuth
      */
     public function getName(): string
     {
-        return 'apple';
+        return 'discord';
     }
-    
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://appleid.apple.com/auth/authorize?'.http_build_query([
-            'client_id' => $this->appID,
-            'redirect_uri' => $this->callback,
-            'state' => json_encode($this->state),
-            'response_type' => 'code',
-            'response_mode' => 'form_post',
-            'scope' => implode(' ', $this->getScopes())
-        ]);
+        $url = $this->endpoint . '/oauth2/authorize?'.
+            http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'state' => json_encode($this->state),
+                'scope' => implode(' ', $this->getScopes()),
+                'redirect_uri' => $this->callback
+            ]);
+
+        return $url;
     }
 
     /**
@@ -52,17 +59,17 @@ class Apple extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
         $accessToken = $this->request(
             'POST',
-            'https://appleid.apple.com/auth/token',
-            $headers,
+            $this->endpoint . '/oauth2/token',
+            ['Content-Type: application/x-www-form-urlencoded'],
             http_build_query([
+                'grant_type' => 'authorization_code',
                 'code' => $code,
+                'redirect_uri' => $this->callback,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback,
-                'grant_type' => 'authorization_code'
+                'scope' => implode(' ', $this->scope)
             ])
         );
 
@@ -84,8 +91,8 @@ class Apple extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['account_id'])) {
-            return $user['account_id'];
+        if (isset($user['id'])) {
+            return $user['id'];
         }
 
         return '';
@@ -116,8 +123,8 @@ class Apple extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name']['display_name'];
+        if (isset($user['username'])) {
+            return $user['username'];
         }
 
         return '';
@@ -131,8 +138,11 @@ class Apple extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
-            $user = $this->request('POST', '', $headers);
+            $user = $this->request(
+                'GET',
+                $this->endpoint . '/users/@me',
+                ['Authorization: Bearer '.urlencode($accessToken)]
+            );
             $this->user = json_decode($user, true);
         }
 

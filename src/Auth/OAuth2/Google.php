@@ -1,30 +1,40 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-// Reference Material
-// https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html#OAuthonBitbucketCloud-Createaconsumer
+// Reference Material 
+// https://developers.google.com/oauthplayground/
+// https://developers.google.com/identity/protocols/OAuth2
+// https://developers.google.com/identity/protocols/OAuth2WebServer
 
-class Bitbucket extends OAuth
+class Google extends OAuth2
 {
+    /**
+     * @var string
+     */
+    protected $version = 'v4';
+
+    /**
+     * @var array
+     */
+    protected $scopes = [
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile'
+    ];
+
     /**
      * @var array
      */
     protected $user = [];
 
     /**
-     * @var array
-     */
-    protected $scopes = [];
-
-    /**
      * @return string
      */
     public function getName(): string
     {
-        return 'bitbucket';
+        return 'google';
     }
 
     /**
@@ -32,12 +42,13 @@ class Bitbucket extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://bitbucket.org/site/oauth2/authorize?'.http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope' => implode(' ', $this->getScopes()),
-                'state' => json_encode($this->state),
-            ]);
+        return 'https://accounts.google.com/o/oauth2/v2/auth?'. http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => implode(' ', $this->getScopes()),
+            'state' => json_encode($this->state),
+            'response_type' => 'code'
+        ]);
     }
 
     /**
@@ -47,17 +58,14 @@ class Bitbucket extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        // Required as per Bitbucket Spec.
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-        
         $accessToken = $this->request(
             'POST',
-            'https://bitbucket.org/site/oauth2/access_token',
-            $headers,
-            http_build_query([
+            'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'scope' => null,
                 'grant_type' => 'authorization_code'
             ])
         );
@@ -80,8 +88,8 @@ class Bitbucket extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['uuid'])) {
-            return $user['uuid'];
+        if (isset($user['id'])) {
+            return $user['id'];
         }
 
         return '';
@@ -112,8 +120,8 @@ class Bitbucket extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
+        if (isset($user['name'])) {
+            return $user['name'];
         }
 
         return '';
@@ -127,12 +135,10 @@ class Bitbucket extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token='.urlencode($accessToken));
+            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v2/userinfo?access_token='.urlencode($accessToken));
             $this->user = json_decode($user, true);
-
-            $email = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.urlencode($accessToken));
-            $this->user['email'] = json_decode($email, true)['values'][0]['email'];
         }
+
         return $this->user;
     }
 }

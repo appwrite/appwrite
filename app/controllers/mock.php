@@ -235,28 +235,28 @@ $utopia->get('/v1/mock/tests/general/empty')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth')
-    ->desc('Mock an OAuth login route')
+$utopia->get('/v1/mock/tests/general/oauth2')
+    ->desc('Mock an OAuth2 login route')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.') // Important to deny an open redirect attack
-    ->param('scope', '', function () { return new Text(100); }, 'OAuth scope list.')
-    ->param('state', '', function () { return new Text(1024); }, 'OAuth state.')
+    ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
+    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
+    ->param('scope', '', function () { return new Text(100); }, 'OAuth2 scope list.')
+    ->param('state', '', function () { return new Text(1024); }, 'OAuth2 state.')
     ->action(
         function ($clientId, $redirectURI, $scope, $state) use ($response) {
             $response->redirect($redirectURI.'?'.http_build_query(['code' => 'abcdef', 'state' => $state]));
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/token')
-    ->desc('Mock an OAuth login route')
+$utopia->get('/v1/mock/tests/general/oauth2/token')
+    ->desc('Mock an OAuth2 login route')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.')
-    ->param('client_secret', '', function () { return new Text(100); }, 'OAuth scope list.')
-    ->param('code', '', function () { return new Text(100); }, 'OAuth state.')
+    ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
+    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth2 Redirect URI.')
+    ->param('client_secret', '', function () { return new Text(100); }, 'OAuth2 scope list.')
+    ->param('code', '', function () { return new Text(100); }, 'OAuth2 state.')
     ->action(
         function ($clientId, $redirectURI, $clientSecret, $code) use ($response) {
             if($clientId != '1') {
@@ -275,11 +275,11 @@ $utopia->get('/v1/mock/tests/general/oauth/token')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/user')
-    ->desc('Mock an OAuth user route')
+$utopia->get('/v1/mock/tests/general/oauth2/user')
+    ->desc('Mock an OAuth2 user route')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('token', '', function () { return new Text(100); }, 'OAuth Access Token.')
+    ->param('token', '', function () { return new Text(100); }, 'OAuth2 Access Token.')
     ->action(
         function ($token) use ($response) {
             if($token != '123456') {
@@ -294,7 +294,7 @@ $utopia->get('/v1/mock/tests/general/oauth/user')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/success')
+$utopia->get('/v1/mock/tests/general/oauth2/success')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
@@ -305,7 +305,7 @@ $utopia->get('/v1/mock/tests/general/oauth/success')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/failure')
+$utopia->get('/v1/mock/tests/general/oauth2/failure')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(

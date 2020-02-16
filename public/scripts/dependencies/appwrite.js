@@ -771,10 +771,10 @@
             },
 
             /**
-             * Create Account Session with OAuth
+             * Create Account Session with OAuth2
              *
-             * Allow the user to login to his account using the OAuth provider of his
-             * choice. Each OAuth provider should be enabled from the Appwrite console
+             * Allow the user to login to his account using the OAuth2 provider of his
+             * choice. Each OAuth2 provider should be enabled from the Appwrite console
              * first. Use the success and failure arguments to provide a redirect URL's
              * back to your app when login is completed.
              *
@@ -784,7 +784,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createOAuthSession: function(provider, success, failure) {
+            createOAuth2Session: function(provider, success, failure) {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -797,7 +797,7 @@
                     throw new Error('Missing required parameter: "failure"');
                 }
                 
-                let path = '/account/sessions/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
+                let path = '/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
 
                 let payload = {};
 
@@ -2161,7 +2161,7 @@
             },
 
             /**
-             * Update Project OAuth
+             * Update Project OAuth2
              *
              *
              * @param {string} projectId
@@ -2171,7 +2171,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateOAuth: function(projectId, provider, appId = '', secret = '') {
+            updateOAuth2: function(projectId, provider, appId = '', secret = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2180,7 +2180,7 @@
                     throw new Error('Missing required parameter: "provider"');
                 }
                 
-                let path = '/projects/{projectId}/oauth'.replace(new RegExp('{projectId}', 'g'), projectId);
+                let path = '/projects/{projectId}/oauth2'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 let payload = {};
 

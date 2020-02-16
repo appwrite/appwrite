@@ -62,15 +62,15 @@ $utopia->post('/v1/users')
                 'name' => $name,
             ]);
 
-            $oauthKeys = [];
+            $oauth2Keys = [];
 
             foreach ($providers as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
 
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
             }
 
             $response
@@ -82,7 +82,7 @@ $utopia->post('/v1/users')
                     'registration',
                     'emailVerification',
                     'name',
-                ], $oauthKeys)), ['roles' => []]));
+                ], $oauth2Keys)), ['roles' => []]));
         }
     );
     
@@ -111,18 +111,18 @@ $utopia->get('/v1/users')
                 ],
             ]);
 
-            $oauthKeys = [];
+            $oauth2Keys = [];
 
             foreach ($providers as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
 
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
             }
 
-            $results = array_map(function ($value) use ($oauthKeys) { /* @var $value \Database\Document */
+            $results = array_map(function ($value) use ($oauth2Keys) { /* @var $value \Database\Document */
                 return $value->getArrayCopy(array_merge(
                     [
                         '$uid',
@@ -132,7 +132,7 @@ $utopia->get('/v1/users')
                         'emailVerification',
                         'name',
                     ],
-                    $oauthKeys
+                    $oauth2Keys
                 ));
             }, $results);
 
@@ -156,15 +156,15 @@ $utopia->get('/v1/users/:userId')
                 throw new Exception('User not found', 404);
             }
 
-            $oauthKeys = [];
+            $oauth2Keys = [];
 
             foreach ($providers as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
 
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
             }
 
             $response->json(array_merge($user->getArrayCopy(array_merge(
@@ -176,7 +176,7 @@ $utopia->get('/v1/users/:userId')
                     'emailVerification',
                     'name',
                 ],
-                $oauthKeys
+                $oauth2Keys
             )), ['roles' => []]));
         }
     );
@@ -362,15 +362,15 @@ $utopia->patch('/v1/users/:userId/status')
                 throw new Exception('Failed saving user to DB', 500);
             }
             
-            $oauthKeys = [];
+            $oauth2Keys = [];
 
             foreach ($providers as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
 
-                $oauthKeys[] = 'oauth'.ucfirst($key);
-                $oauthKeys[] = 'oauth'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
             }
 
             $response
@@ -381,7 +381,7 @@ $utopia->patch('/v1/users/:userId/status')
                     'registration',
                     'emailVerification',
                     'name',
-                ], $oauthKeys)), ['roles' => []]));
+                ], $oauth2Keys)), ['roles' => []]));
         }
     );
 

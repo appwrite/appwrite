@@ -1,10 +1,10 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-class Github extends OAuth
+class Github extends OAuth2
 {
     /**
      * @var array

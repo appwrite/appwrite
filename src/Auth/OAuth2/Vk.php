@@ -1,8 +1,8 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
 // https://vk.com/dev/first_guide
@@ -10,7 +10,7 @@ use Auth\OAuth;
 // https://vk.com/dev/api_requests
 // https://plugins.miniorange.com/guide-to-configure-vkontakte-as-oauth-server
 
-class Vk extends OAuth
+class Vk extends OAuth2
 {
     /**
      * @var array

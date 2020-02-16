@@ -1,15 +1,13 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-// Reference Material
-// https://tech.yandex.com/passport/doc/dg/reference/request-docpage/
-// https://tech.yandex.com/oauth/doc/dg/reference/web-client-docpage/
+// Reference Material 
+// https://docs.gitlab.com/ee/api/oauth2.html
 
-
-class Yandex extends OAuth
+class Gitlab extends OAuth2
 {
     /**
      * @var array
@@ -19,38 +17,30 @@ class Yandex extends OAuth
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected $scopes = [
+        'read_user'
+    ];
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return 'Yandex';
+        return 'gitlab';
     }
-
-    /**
-     * @param $state
-     *
-     * @return json
-     */
-    public function parseState(string $state)
-    {
-        return json_decode(html_entity_decode($state), true);
-    }
-
 
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://oauth.yandex.com/authorize?'.http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope'=> implode(' ', $this->getScopes()),
-                'state' => json_encode($this->state)
-            ]);
+        return 'https://gitlab.com/oauth/authorize?'.http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'scope' => implode(' ', $this->getScopes()),
+            'state' => json_encode($this->state),
+            'response_type' => 'code'
+        ]);
     }
 
     /**
@@ -60,22 +50,19 @@ class Yandex extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        $headers = [
-            "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret),
-            "Content-Type: application/x-www-form-urlencoded",
-        ];
-
         $accessToken = $this->request(
             'POST',
-            'https://oauth.yandex.com/token',
-            $headers,
-            http_build_query([
+            'https://gitlab.com/oauth/token?'.http_build_query([
                 'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
                 'grant_type' => 'authorization_code'
             ])
         );
+
         $accessToken = json_decode($accessToken, true);
-        
+
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
         }
@@ -108,8 +95,8 @@ class Yandex extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['default_email'])) {
-            return $user['default_email'];
+        if (isset($user['email'])) {
+            return $user['email'];
         }
 
         return '';
@@ -124,8 +111,8 @@ class Yandex extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
+        if (isset($user['name'])) {
+            return $user['name'];
         }
 
         return '';
@@ -139,12 +126,10 @@ class Yandex extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://login.yandex.ru/info?'.http_build_query([
-                'format' => 'json',
-                'oauth_token' => $accessToken
-            ]));
+            $user = $this->request('GET', 'https://gitlab.com/api/v4/user?access_token='.urlencode($accessToken));
             $this->user = json_decode($user, true);
         }
+
         return $this->user;
     }
 }

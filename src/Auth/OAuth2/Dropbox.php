@@ -1,13 +1,14 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-// Reference Material 
-// https://docs.gitlab.com/ee/api/oauth2.html
+// Reference Material
+// https://www.dropbox.com/developers/reference/oauth-guide
+// https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
 
-class Gitlab extends OAuth
+class Dropbox extends OAuth2
 {
     /**
      * @var array
@@ -17,29 +18,26 @@ class Gitlab extends OAuth
     /**
      * @var array
      */
-    protected $scopes = [
-        'read_user'
-    ];
+    protected $scopes = [];
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return 'gitlab';
+        return 'dropbox';
     }
-
+    
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://gitlab.com/oauth/authorize?'.http_build_query([
-            'client_id' => $this->appID,
-            'redirect_uri' => $this->callback,
-            'scope' => implode(' ', $this->getScopes()),
-            'state' => json_encode($this->state),
-            'response_type' => 'code'
+        return 'https://www.dropbox.com/oauth2/authorize?'.http_build_query([
+                'client_id' => $this->appID,
+                'redirect_uri' => $this->callback,
+                'state' => json_encode($this->state),
+                'response_type' => 'code'
         ]);
     }
 
@@ -50,9 +48,12 @@ class Gitlab extends OAuth
      */
     public function getAccessToken(string $code): string
     {
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
         $accessToken = $this->request(
             'POST',
-            'https://gitlab.com/oauth/token?'.http_build_query([
+            'https://api.dropboxapi.com/oauth2/token',
+            $headers,
+            http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
@@ -79,8 +80,8 @@ class Gitlab extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['account_id'])) {
+            return $user['account_id'];
         }
 
         return '';
@@ -112,7 +113,7 @@ class Gitlab extends OAuth
         $user = $this->getUser($accessToken);
 
         if (isset($user['name'])) {
-            return $user['name'];
+            return $user['name']['display_name'];
         }
 
         return '';
@@ -126,7 +127,8 @@ class Gitlab extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://gitlab.com/api/v4/user?access_token='.urlencode($accessToken));
+            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
+            $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
             $this->user = json_decode($user, true);
         }
 

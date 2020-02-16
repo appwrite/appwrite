@@ -1,29 +1,31 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://dev.bitly.com/v4_documentation.html
-//
-class Bitly extends OAuth
+// https://dev.twitch.tv/docs/authentication
+
+class Spotify extends OAuth2
 {
 
     /**
      * @var string
      */
-    private $endpoint = 'https://bitly.com/oauth/';
+    private $endpoint = 'https://accounts.spotify.com/';
 
     /**
      * @var string
      */
-    private $resourceEndpoint = 'https://api-ssl.bitly.com/';
+    private $resourceEndpoint = 'https://api.spotify.com/v1/';
 
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected $scopes = [
+        'user-read-email',
+    ];
 
     /**
      * @var array
@@ -35,7 +37,7 @@ class Bitly extends OAuth
      */
     public function getName():string
     {
-        return 'bitly';
+        return 'spotify';
     }
 
     /**
@@ -45,7 +47,9 @@ class Bitly extends OAuth
     {
         return $this->endpoint . 'authorize?'.
             http_build_query([
+                'response_type' => 'code',
                 'client_id' => $this->appID,
+                'scope' => implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
                 'state' => json_encode($this->state)
             ]);
@@ -58,23 +62,19 @@ class Bitly extends OAuth
      */
     public function getAccessToken(string $code):string
     {
-        $response = $this->request(
+        $header = "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret);
+        $result = json_decode($this->request(
             'POST',
-            $this->resourceEndpoint . 'oauth/access_token',
-            ["Content-Type: application/x-www-form-urlencoded"],
+            $this->endpoint . 'api/token',
+            [$header],
             http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
                 "code" => $code,
-                "redirect_uri" => $this->callback,
-                "state" => json_encode($this->state)
+                "grant_type" => "authorization_code",
+                "redirect_uri" => $this->callback
             ])
-        );
+        ), true);
 
-        $result = null;
-
-        if ($response) {
-            parse_str($response, $result);
+        if (isset($result['access_token'])) {
             return $result['access_token'];
         }
 
@@ -90,8 +90,8 @@ class Bitly extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['login'])) {
-            return $user['login'];
+        if (isset($user['id'])) {
+            return $user['id'];
         }
 
         return '';
@@ -106,8 +106,8 @@ class Bitly extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['emails'])) {
-            return $user['emails'][0]['email'];
+        if (isset($user['email'])) {
+            return $user['email'];
         }
 
         return '';
@@ -122,8 +122,8 @@ class Bitly extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
+        if (isset($user['display_name'])) {
+            return $user['display_name'];
         }
 
         return '';
@@ -136,15 +136,10 @@ class Bitly extends OAuth
      */
     protected function getUser(string $accessToken)
     {
-        $headers = [
-            'Authorization: Bearer '. urlencode($accessToken),
-            "Accept: application/json"
-        ];
-
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET', $this->resourceEndpoint . "v4/user", $headers), true);
+            $this->user = json_decode($this->request('GET',
+                $this->resourceEndpoint . "me", ['Authorization: Bearer '.urlencode($accessToken)]), true);
         }
-
 
         return $this->user;
     }

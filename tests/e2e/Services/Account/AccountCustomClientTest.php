@@ -13,7 +13,7 @@ class AccountCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    public function testCreateOAuthAccountSession():array
+    public function testCreateOAuth2AccountSession():array
     {
         $provider = 'mock';
         $appId = '1';
@@ -22,7 +22,7 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$uid'].'/oauth', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$uid'].'/oauth2', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
@@ -35,13 +35,13 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth/'.$provider, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$uid'],
         ]), [
-            'success' => 'http://localhost/v1/mock/tests/general/oauth/success',
-            'failure' => 'http://localhost/v1/mock/tests/general/oauth/failure',
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

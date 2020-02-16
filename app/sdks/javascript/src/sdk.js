@@ -746,7 +746,7 @@
             },
 
             /**
-             * Create Account Session with OAuth
+             * Create Account Session with OAuth2
              *
              * Allow the user to login to his account using the OAuth provider of his
              * choice. Each OAuth provider should be enabled from the Appwrite console
@@ -759,7 +759,7 @@
              * @throws {Error}
              * @return {string}             
              */
-            createOAuthSession: function(provider, success, failure) {
+            createOAuth2Session: function(provider, success, failure) {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -772,7 +772,7 @@
                     throw new Error('Missing required parameter: "failure"');
                 }
                 
-                let path = '/account/sessions/oauth/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
+                let path = '/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
 
                 let payload = {};
 

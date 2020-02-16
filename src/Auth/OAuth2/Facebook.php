@@ -1,10 +1,10 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-class Facebook extends OAuth
+class Facebook extends OAuth2
 {
     /**
      * @var string

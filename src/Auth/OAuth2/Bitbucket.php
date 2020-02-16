@@ -1,19 +1,14 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://discordapp.com/developers/docs/topics/oauth2
+// https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html#OAuthonBitbucketCloud-Createaconsumer
 
-class Discord extends OAuth
+class Bitbucket extends OAuth2
 {
-    /**
-     * @var string
-     */
-    private $endpoint = 'https://discordapp.com/api';
-
     /**
      * @var array
      */
@@ -22,17 +17,14 @@ class Discord extends OAuth
     /**
      * @var array
      */
-    protected $scopes = [
-            'identify',
-            'email'
-    ];
+    protected $scopes = [];
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return 'discord';
+        return 'bitbucket';
     }
 
     /**
@@ -40,16 +32,12 @@ class Discord extends OAuth
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . '/oauth2/authorize?'.
-            http_build_query([
+        return 'https://bitbucket.org/site/oauth2/authorize?'.http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'state' => json_encode($this->state),
                 'scope' => implode(' ', $this->getScopes()),
-                'redirect_uri' => $this->callback
+                'state' => json_encode($this->state),
             ]);
-
-        return $url;
     }
 
     /**
@@ -59,17 +47,18 @@ class Discord extends OAuth
      */
     public function getAccessToken(string $code): string
     {
+        // Required as per Bitbucket Spec.
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        
         $accessToken = $this->request(
             'POST',
-            $this->endpoint . '/oauth2/token',
-            ['Content-Type: application/x-www-form-urlencoded'],
+            'https://bitbucket.org/site/oauth2/access_token',
+            $headers,
             http_build_query([
-                'grant_type' => 'authorization_code',
                 'code' => $code,
-                'redirect_uri' => $this->callback,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'scope' => implode(' ', $this->scope)
+                'grant_type' => 'authorization_code'
             ])
         );
 
@@ -91,8 +80,8 @@ class Discord extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['uuid'])) {
+            return $user['uuid'];
         }
 
         return '';
@@ -123,8 +112,8 @@ class Discord extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['username'])) {
-            return $user['username'];
+        if (isset($user['display_name'])) {
+            return $user['display_name'];
         }
 
         return '';
@@ -138,14 +127,12 @@ class Discord extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request(
-                'GET',
-                $this->endpoint . '/users/@me',
-                ['Authorization: Bearer '.urlencode($accessToken)]
-            );
+            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token='.urlencode($accessToken));
             $this->user = json_decode($user, true);
-        }
 
+            $email = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.urlencode($accessToken));
+            $this->user['email'] = json_decode($email, true)['values'][0]['email'];
+        }
         return $this->user;
     }
 }

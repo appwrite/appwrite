@@ -1,14 +1,13 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://developer.amazon.com/docs/login-with-amazon/authorization-code-grant.html
-// https://developer.amazon.com/docs/login-with-amazon/register-web.html
-// https://developer.amazon.com/docs/login-with-amazon/obtain-customer-profile.html
-class Amazon extends OAuth
+// https://developer.okta.com/blog/2019/06/04/what-the-heck-is-sign-in-with-apple
+
+class Apple extends OAuth2
 {
     /**
      * @var array
@@ -19,7 +18,8 @@ class Amazon extends OAuth
      * @var array
      */
     protected $scopes = [
-        "profile"
+        "name", 
+        "email"
     ];
 
     /**
@@ -27,32 +27,22 @@ class Amazon extends OAuth
      */
     public function getName(): string
     {
-        return 'amazon';
+        return 'apple';
     }
-
-    /**
-     * @param $state
-     *
-     * @return json
-     */
-    public function parseState(string $state)
-    {
-        return json_decode(html_entity_decode($state), true);
-    }
-
-
+    
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://www.amazon.com/ap/oa?'.http_build_query([
-                'response_type' => 'code',
-                'client_id' => $this->appID,
-                'scope' => implode(' ', $this->getScopes()),
-                'state' => json_encode($this->state),
-                'redirect_uri' => $this->callback
-            ]);
+        return 'https://appleid.apple.com/auth/authorize?'.http_build_query([
+            'client_id' => $this->appID,
+            'redirect_uri' => $this->callback,
+            'state' => json_encode($this->state),
+            'response_type' => 'code',
+            'response_mode' => 'form_post',
+            'scope' => implode(' ', $this->getScopes())
+        ]);
     }
 
     /**
@@ -62,19 +52,20 @@ class Amazon extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8';
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
         $accessToken = $this->request(
             'POST',
-            'https://api.amazon.com/auth/o2/token',
+            'https://appleid.apple.com/auth/token',
             $headers,
             http_build_query([
                 'code' => $code,
-                'client_id' => $this->appID ,
+                'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback ,
+                'redirect_uri' => $this->callback,
                 'grant_type' => 'authorization_code'
             ])
         );
+
         $accessToken = json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
@@ -93,8 +84,8 @@ class Amazon extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['user_id'])) {
-            return $user['user_id'];
+        if (isset($user['account_id'])) {
+            return $user['account_id'];
         }
 
         return '';
@@ -126,7 +117,7 @@ class Amazon extends OAuth
         $user = $this->getUser($accessToken);
 
         if (isset($user['name'])) {
-            return $user['name'];
+            return $user['name']['display_name'];
         }
 
         return '';
@@ -140,9 +131,11 @@ class Amazon extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.amazon.com/user/profile?access_token='.urlencode($accessToken));
+            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
+            $user = $this->request('POST', '', $headers);
             $this->user = json_decode($user, true);
         }
+
         return $this->user;
     }
 }

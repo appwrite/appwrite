@@ -1,15 +1,15 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://help.salesforce.com/articleView?id=remoteaccess_oauth_endpoints.htm&type=5
-// https://help.salesforce.com/articleView?id=remoteaccess_oauth_tokens_scopes.htm&type=5
-// https://help.salesforce.com/articleView?id=remoteaccess_oauth_web_server_flow.htm&type=5
+// https://tech.yandex.com/passport/doc/dg/reference/request-docpage/
+// https://tech.yandex.com/oauth/doc/dg/reference/web-client-docpage/
 
-class Salesforce extends OAuth
+
+class Yandex extends OAuth2
 {
     /**
      * @var array
@@ -19,16 +19,14 @@ class Salesforce extends OAuth
     /**
      * @var array
      */
-    protected $scopes = [
-        "openid"
-    ];
+    protected $scopes = [];
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return 'Salesforce';
+        return 'Yandex';
     }
 
     /**
@@ -47,10 +45,9 @@ class Salesforce extends OAuth
      */
     public function getLoginURL(): string
     {
-        return 'https://login.salesforce.com/services/oauth2/authorize?'.http_build_query([
+        return 'https://oauth.yandex.com/authorize?'.http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'redirect_uri'=> $this->callback,
                 'scope'=> implode(' ', $this->getScopes()),
                 'state' => json_encode($this->state)
             ]);
@@ -70,16 +67,15 @@ class Salesforce extends OAuth
 
         $accessToken = $this->request(
             'POST',
-            'https://login.salesforce.com/services/oauth2/token',
+            'https://oauth.yandex.com/token',
             $headers,
             http_build_query([
                 'code' => $code,
-                'redirect_uri' => $this->callback ,
                 'grant_type' => 'authorization_code'
             ])
         );
         $accessToken = json_decode($accessToken, true);
-
+        
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
         }
@@ -96,8 +92,8 @@ class Salesforce extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['user_id'])) {
-            return $user['user_id'];
+        if (isset($user['id'])) {
+            return $user['id'];
         }
 
         return '';
@@ -112,8 +108,8 @@ class Salesforce extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        if (isset($user['default_email'])) {
+            return $user['default_email'];
         }
 
         return '';
@@ -128,8 +124,8 @@ class Salesforce extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
+        if (isset($user['display_name'])) {
+            return $user['display_name'];
         }
 
         return '';
@@ -143,7 +139,10 @@ class Salesforce extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo?access_token='.urlencode($accessToken));
+            $user = $this->request('GET', 'https://login.yandex.ru/info?'.http_build_query([
+                'format' => 'json',
+                'oauth_token' => $accessToken
+            ]));
             $this->user = json_decode($user, true);
         }
         return $this->user;

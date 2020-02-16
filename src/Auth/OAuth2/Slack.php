@@ -1,10 +1,10 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-class Slack extends OAuth
+class Slack extends OAuth2
 {
     /**
      * @var array

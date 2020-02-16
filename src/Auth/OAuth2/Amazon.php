@@ -1,13 +1,15 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
-// https://docs.microsoft.com/en-us/graph/auth-v2-user
-class Microsoft extends OAuth
+// https://developer.amazon.com/docs/login-with-amazon/authorization-code-grant.html
+// https://developer.amazon.com/docs/login-with-amazon/register-web.html
+// https://developer.amazon.com/docs/login-with-amazon/obtain-customer-profile.html
+
+class Amazon extends OAuth2
 {
     /**
      * @var array
@@ -18,8 +20,7 @@ class Microsoft extends OAuth
      * @var array
      */
     protected $scopes = [
-        'offline_access', 
-        'user.read'
+        "profile"
     ];
 
     /**
@@ -27,22 +28,32 @@ class Microsoft extends OAuth
      */
     public function getName(): string
     {
-        return 'microsoft';
+        return 'amazon';
     }
-    
+
+    /**
+     * @param $state
+     *
+     * @return json
+     */
+    public function parseState(string $state)
+    {
+        return json_decode(html_entity_decode($state), true);
+    }
+
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.http_build_query([
-            'client_id' => $this->appID,
-            'redirect_uri' => $this->callback,
-            'state'=> json_encode($this->state),
-            'scope'=> implode(' ', $this->getScopes()),
-            'response_type' => 'code',
-            'response_mode' => 'query'
-        ]);
+        return 'https://www.amazon.com/ap/oa?'.http_build_query([
+                'response_type' => 'code',
+                'client_id' => $this->appID,
+                'scope' => implode(' ', $this->getScopes()),
+                'state' => json_encode($this->state),
+                'redirect_uri' => $this->callback
+            ]);
     }
 
     /**
@@ -52,22 +63,19 @@ class Microsoft extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
-
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded;charset=UTF-8';
         $accessToken = $this->request(
             'POST',
-            'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+            'https://api.amazon.com/auth/o2/token',
             $headers,
             http_build_query([
                 'code' => $code,
-                'client_id' => $this->appID,
+                'client_id' => $this->appID ,
                 'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback,
-                'scope' => implode(' ', $this->getScopes()),
+                'redirect_uri' => $this->callback ,
                 'grant_type' => 'authorization_code'
             ])
         );
-
         $accessToken = json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
@@ -86,8 +94,8 @@ class Microsoft extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['user_id'])) {
+            return $user['user_id'];
         }
 
         return '';
@@ -102,8 +110,8 @@ class Microsoft extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['userPrincipalName'])) {
-            return $user['userPrincipalName'];
+        if (isset($user['email'])) {
+            return $user['email'];
         }
 
         return '';
@@ -118,8 +126,8 @@ class Microsoft extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['displayName'])) {
-            return $user['displayName'];
+        if (isset($user['name'])) {
+            return $user['name'];
         }
 
         return '';
@@ -133,11 +141,9 @@ class Microsoft extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
-            $user = $this->request('GET', 'https://graph.microsoft.com/v1.0/me', $headers);
+            $user = $this->request('GET', 'https://api.amazon.com/user/profile?access_token='.urlencode($accessToken));
             $this->user = json_decode($user, true);
         }
-
         return $this->user;
     }
 }

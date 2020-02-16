@@ -1,10 +1,10 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-class LinkedIn extends OAuth
+class LinkedIn extends OAuth2
 {
     /**
      * @var array

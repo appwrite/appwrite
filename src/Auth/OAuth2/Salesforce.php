@@ -1,13 +1,15 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://www.dropbox.com/developers/reference/oauth-guide
-// https://www.dropbox.com/developers/documentation/http/documentation#users-get_current_account
-class Dropbox extends OAuth
+// https://help.salesforce.com/articleView?id=remoteaccess_oauth_endpoints.htm&type=5
+// https://help.salesforce.com/articleView?id=remoteaccess_oauth_tokens_scopes.htm&type=5
+// https://help.salesforce.com/articleView?id=remoteaccess_oauth_web_server_flow.htm&type=5
+
+class Salesforce extends OAuth2
 {
     /**
      * @var array
@@ -17,27 +19,41 @@ class Dropbox extends OAuth
     /**
      * @var array
      */
-    protected $scopes = [];
+    protected $scopes = [
+        "openid"
+    ];
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return 'dropbox';
+        return 'Salesforce';
     }
-    
+
+    /**
+     * @param $state
+     *
+     * @return json
+     */
+    public function parseState(string $state)
+    {
+        return json_decode(html_entity_decode($state), true);
+    }
+
+
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://www.dropbox.com/oauth2/authorize?'.http_build_query([
+        return 'https://login.salesforce.com/services/oauth2/authorize?'.http_build_query([
+                'response_type' => 'code',
                 'client_id' => $this->appID,
-                'redirect_uri' => $this->callback,
-                'state' => json_encode($this->state),
-                'response_type' => 'code'
-        ]);
+                'redirect_uri'=> $this->callback,
+                'scope'=> implode(' ', $this->getScopes()),
+                'state' => json_encode($this->state)
+            ]);
     }
 
     /**
@@ -47,20 +63,21 @@ class Dropbox extends OAuth
      */
     public function getAccessToken(string $code): string
     {
-        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+        $headers = [
+            "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret),
+            "Content-Type: application/x-www-form-urlencoded",
+        ];
+
         $accessToken = $this->request(
             'POST',
-            'https://api.dropboxapi.com/oauth2/token',
+            'https://login.salesforce.com/services/oauth2/token',
             $headers,
             http_build_query([
                 'code' => $code,
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'redirect_uri' => $this->callback,
+                'redirect_uri' => $this->callback ,
                 'grant_type' => 'authorization_code'
             ])
         );
-
         $accessToken = json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
@@ -79,8 +96,8 @@ class Dropbox extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['account_id'])) {
-            return $user['account_id'];
+        if (isset($user['user_id'])) {
+            return $user['user_id'];
         }
 
         return '';
@@ -112,7 +129,7 @@ class Dropbox extends OAuth
         $user = $this->getUser($accessToken);
 
         if (isset($user['name'])) {
-            return $user['name']['display_name'];
+            return $user['name'];
         }
 
         return '';
@@ -126,11 +143,9 @@ class Dropbox extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
-            $user = $this->request('POST', 'https://api.dropboxapi.com/2/users/get_current_account', $headers);
+            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo?access_token='.urlencode($accessToken));
             $this->user = json_decode($user, true);
         }
-
         return $this->user;
     }
 }

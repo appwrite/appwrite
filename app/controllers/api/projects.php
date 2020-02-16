@@ -103,11 +103,11 @@ $utopia->get('/v1/projects')
 
             foreach ($results as $project) {
                 foreach ($providers as $provider => $node) {
-                    $secret = json_decode($project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}'), true);
+                    $secret = json_decode($project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}'), true);
 
                     if (!empty($secret) && isset($secret['version'])) {
                         $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
-                        $project->setAttribute('usersOauth'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
+                        $project->setAttribute('usersOauth2'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
                     }
                 }
             }
@@ -131,11 +131,11 @@ $utopia->get('/v1/projects/:projectId')
             }
 
             foreach ($providers as $provider => $node) {
-                $secret = json_decode($project->getAttribute('usersOauth'.ucfirst($provider).'Secret', '{}'), true);
+                $secret = json_decode($project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}'), true);
 
                 if (!empty($secret) && isset($secret['version'])) {
                     $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
-                    $project->setAttribute('usersOauth'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
+                    $project->setAttribute('usersOauth2'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
                 }
             }
 
@@ -322,11 +322,11 @@ $utopia->patch('/v1/projects/:projectId')
         }
     );
 
-$utopia->patch('/v1/projects/:projectId/oauth')
-    ->desc('Update Project OAuth')
+$utopia->patch('/v1/projects/:projectId/oauth2')
+    ->desc('Update Project OAuth2')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateOAuth')
+    ->label('sdk.method', 'updateOAuth2')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'Provider Name', false)
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
@@ -351,8 +351,8 @@ $utopia->patch('/v1/projects/:projectId/oauth')
             ]);
 
             $project = $consoleDB->updateDocument(array_merge($project->getArrayCopy(), [
-                'usersOauth'.ucfirst($provider).'Appid' => $appId,
-                'usersOauth'.ucfirst($provider).'Secret' => $secret,
+                'usersOauth2'.ucfirst($provider).'Appid' => $appId,
+                'usersOauth2'.ucfirst($provider).'Secret' => $secret,
             ]));
 
             if (false === $project) {

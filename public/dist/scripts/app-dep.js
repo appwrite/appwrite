@@ -50,10 +50,10 @@ return http.put(path,{'content-type':'application/json',},payload);},getSessions
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/account/sessions';let payload={};if(email){payload['email']=email;}
 if(password){payload['password']=password;}
-return http.post(path,{'content-type':'application/json',},payload);},deleteSessions:function(){let path='/account/sessions';let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createOAuthSession:function(provider,success,failure){if(provider===undefined){throw new Error('Missing required parameter: "provider"');}
+return http.post(path,{'content-type':'application/json',},payload);},deleteSessions:function(){let path='/account/sessions';let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createOAuth2Session:function(provider,success,failure){if(provider===undefined){throw new Error('Missing required parameter: "provider"');}
 if(success===undefined){throw new Error('Missing required parameter: "success"');}
 if(failure===undefined){throw new Error('Missing required parameter: "failure"');}
-let path='/account/sessions/oauth/{provider}'.replace(new RegExp('{provider}','g'),provider);let payload={};if(success){payload['success']=success;}
+let path='/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}','g'),provider);let payload={};if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
 return http.get(path,{'content-type':'application/json',},payload);},deleteSession:function(sessionId){if(sessionId===undefined){throw new Error('Missing required parameter: "id"');}
 let path='/account/sessions/{sessionId}'.replace(new RegExp('{sessionId}','g'),sessionId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createVerification:function(url){if(url===undefined){throw new Error('Missing required parameter: "url"');}
@@ -186,9 +186,9 @@ let path='/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}','
 if(scopes){payload['scopes']=scopes;}
 return http.put(path,{'content-type':'application/json',},payload);},deleteKey:function(projectId,keyId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(keyId===undefined){throw new Error('Missing required parameter: "keyId"');}
-let path='/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{keyId}','g'),keyId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},updateOAuth:function(projectId,provider,appId='',secret=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/keys/{keyId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{keyId}','g'),keyId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},updateOAuth2:function(projectId,provider,appId='',secret=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(provider===undefined){throw new Error('Missing required parameter: "provider"');}
-let path='/projects/{projectId}/oauth'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(provider){payload['provider']=provider;}
+let path='/projects/{projectId}/oauth2'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(provider){payload['provider']=provider;}
 if(appId){payload['appId']=appId;}
 if(secret){payload['secret']=secret;}
 return http.patch(path,{'content-type':'application/json',},payload);},listPlatforms:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}

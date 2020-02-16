@@ -1078,7 +1078,7 @@ $collections = [
 ];
 
 /*
- * Add enabled OAuth providers to default data rules
+ * Add enabled OAuth2 providers to default data rules
  */
 foreach ($providers as $key => $provider) {
     if (!$provider['enabled']) {
@@ -1087,8 +1087,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' ID',
-        'key' => 'usersOauth'.ucfirst($key).'Appid',
+        'label' => 'OAuth2 '.ucfirst($key).' ID',
+        'key' => 'usersOauth2'.ucfirst($key).'Appid',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1097,8 +1097,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' Secret',
-        'key' => 'usersOauth'.ucfirst($key).'Secret',
+        'label' => 'OAuth2 '.ucfirst($key).' Secret',
+        'key' => 'usersOauth2'.ucfirst($key).'Secret',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1107,8 +1107,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' ID',
-        'key' => 'oauth'.ucfirst($key),
+        'label' => 'OAuth2 '.ucfirst($key).' ID',
+        'key' => 'oauth2'.ucfirst($key),
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1117,8 +1117,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' Access Token',
-        'key' => 'oauth'.ucfirst($key).'AccessToken',
+        'label' => 'OAuth2 '.ucfirst($key).' Access Token',
+        'key' => 'oauth2'.ucfirst($key).'AccessToken',
         'type' => 'text',
         'default' => '',
         'required' => false,

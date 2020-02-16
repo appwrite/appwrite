@@ -1,52 +1,48 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
-// Reference Material 
-// https://developers.google.com/oauthplayground/
-// https://developers.google.com/identity/protocols/OAuth2
-// https://developers.google.com/identity/protocols/OAuth2WebServer
-class Google extends OAuth
+// Reference Material
+// https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
+// https://docs.microsoft.com/en-us/graph/auth-v2-user
+
+class Microsoft extends OAuth2
 {
-    /**
-     * @var string
-     */
-    protected $version = 'v4';
-
-    /**
-     * @var array
-     */
-    protected $scopes = [
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
-    ];
-
     /**
      * @var array
      */
     protected $user = [];
 
     /**
+     * @var array
+     */
+    protected $scopes = [
+        'offline_access', 
+        'user.read'
+    ];
+
+    /**
      * @return string
      */
     public function getName(): string
     {
-        return 'google';
+        return 'microsoft';
     }
-
+    
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://accounts.google.com/o/oauth2/v2/auth?'. http_build_query([
+        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'scope' => implode(' ', $this->getScopes()),
-            'state' => json_encode($this->state),
-            'response_type' => 'code'
+            'state'=> json_encode($this->state),
+            'scope'=> implode(' ', $this->getScopes()),
+            'response_type' => 'code',
+            'response_mode' => 'query'
         ]);
     }
 
@@ -57,14 +53,18 @@ class Google extends OAuth
      */
     public function getAccessToken(string $code): string
     {
+        $headers[] = 'Content-Type: application/x-www-form-urlencoded';
+
         $accessToken = $this->request(
             'POST',
-            'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.http_build_query([
+            'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+            $headers,
+            http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'redirect_uri' => $this->callback,
-                'scope' => null,
+                'scope' => implode(' ', $this->getScopes()),
                 'grant_type' => 'authorization_code'
             ])
         );
@@ -103,8 +103,8 @@ class Google extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        if (isset($user['userPrincipalName'])) {
+            return $user['userPrincipalName'];
         }
 
         return '';
@@ -119,8 +119,8 @@ class Google extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['name'])) {
-            return $user['name'];
+        if (isset($user['displayName'])) {
+            return $user['displayName'];
         }
 
         return '';
@@ -134,7 +134,8 @@ class Google extends OAuth
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v2/userinfo?access_token='.urlencode($accessToken));
+            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
+            $user = $this->request('GET', 'https://graph.microsoft.com/v1.0/me', $headers);
             $this->user = json_decode($user, true);
         }
 

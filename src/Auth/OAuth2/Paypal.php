@@ -1,13 +1,13 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
 // https://developer.paypal.com/docs/api/overview/
 
-class Paypal extends OAuth
+class Paypal extends OAuth2
 {
     /**
      * @var string

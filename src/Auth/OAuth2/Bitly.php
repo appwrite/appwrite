@@ -1,31 +1,29 @@
 <?php
 
-namespace Auth\OAuth;
+namespace Auth\OAuth2;
 
-use Auth\OAuth;
+use Auth\OAuth2;
 
 // Reference Material
-// https://dev.twitch.tv/docs/authentication
+// https://dev.bitly.com/v4_documentation.html
 
-class Spotify extends OAuth
+class Bitly extends OAuth2
 {
 
     /**
      * @var string
      */
-    private $endpoint = 'https://accounts.spotify.com/';
+    private $endpoint = 'https://bitly.com/oauth/';
 
     /**
      * @var string
      */
-    private $resourceEndpoint = 'https://api.spotify.com/v1/';
+    private $resourceEndpoint = 'https://api-ssl.bitly.com/';
 
     /**
      * @var array
      */
-    protected $scopes = [
-        'user-read-email',
-    ];
+    protected $scopes = [];
 
     /**
      * @var array
@@ -37,7 +35,7 @@ class Spotify extends OAuth
      */
     public function getName():string
     {
-        return 'spotify';
+        return 'bitly';
     }
 
     /**
@@ -47,9 +45,7 @@ class Spotify extends OAuth
     {
         return $this->endpoint . 'authorize?'.
             http_build_query([
-                'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
                 'state' => json_encode($this->state)
             ]);
@@ -62,19 +58,23 @@ class Spotify extends OAuth
      */
     public function getAccessToken(string $code):string
     {
-        $header = "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret);
-        $result = json_decode($this->request(
+        $response = $this->request(
             'POST',
-            $this->endpoint . 'api/token',
-            [$header],
+            $this->resourceEndpoint . 'oauth/access_token',
+            ["Content-Type: application/x-www-form-urlencoded"],
             http_build_query([
+                "client_id" => $this->appID,
+                "client_secret" => $this->appSecret,
                 "code" => $code,
-                "grant_type" => "authorization_code",
-                "redirect_uri" => $this->callback
+                "redirect_uri" => $this->callback,
+                "state" => json_encode($this->state)
             ])
-        ), true);
+        );
 
-        if (isset($result['access_token'])) {
+        $result = null;
+
+        if ($response) {
+            parse_str($response, $result);
             return $result['access_token'];
         }
 
@@ -90,8 +90,8 @@ class Spotify extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['id'])) {
-            return $user['id'];
+        if (isset($user['login'])) {
+            return $user['login'];
         }
 
         return '';
@@ -106,8 +106,8 @@ class Spotify extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['email'])) {
-            return $user['email'];
+        if (isset($user['emails'])) {
+            return $user['emails'][0]['email'];
         }
 
         return '';
@@ -122,8 +122,8 @@ class Spotify extends OAuth
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['display_name'])) {
-            return $user['display_name'];
+        if (isset($user['name'])) {
+            return $user['name'];
         }
 
         return '';
@@ -136,10 +136,15 @@ class Spotify extends OAuth
      */
     protected function getUser(string $accessToken)
     {
+        $headers = [
+            'Authorization: Bearer '. urlencode($accessToken),
+            "Accept: application/json"
+        ];
+
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET',
-                $this->resourceEndpoint . "me", ['Authorization: Bearer '.urlencode($accessToken)]), true);
+            $this->user = json_decode($this->request('GET', $this->resourceEndpoint . "v4/user", $headers), true);
         }
+
 
         return $this->user;
     }

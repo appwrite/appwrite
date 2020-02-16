@@ -184,8 +184,8 @@ class Account extends Service {
      /// choice. Each OAuth provider should be enabled from the Appwrite console
      /// first. Use the success and failure arguments to provide a redirect URL's
      /// back to your app when login is completed.
-    Future<Response> createOAuthSession({provider, success, failure}) async {
-       String path = '/account/sessions/oauth/{provider}'.replaceAll(RegExp('{provider}'), provider);
+    Future<Response> createOAuth2Session({provider, success, failure}) async {
+       String path = '/account/sessions/oauth2/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
        Map<String, dynamic> params = {
          'success': success,
