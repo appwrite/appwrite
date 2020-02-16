@@ -7,7 +7,7 @@ sdk
 let promise = sdk.avatars.getCreditCard('amex');
 
 promise.then(function (response) {
-    console.log(response);
+    console.log(response); // Success
 }, function (error) {
-    console.log(error);
+    console.log(error); // Failure
 });

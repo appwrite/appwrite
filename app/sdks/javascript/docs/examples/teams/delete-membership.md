@@ -7,7 +7,7 @@ sdk
 let promise = sdk.teams.deleteMembership('[TEAM_ID]', '[INVITE_ID]');
 
 promise.then(function (response) {
-    console.log(response);
+    console.log(response); // Success
 }, function (error) {
-    console.log(error);
+    console.log(error); // Failure
 });

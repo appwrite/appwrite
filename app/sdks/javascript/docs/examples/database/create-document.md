@@ -7,7 +7,7 @@ sdk
 let promise = sdk.database.createDocument('[COLLECTION_ID]', {}, [], []);
 
 promise.then(function (response) {
-    console.log(response);
+    console.log(response); // Success
 }, function (error) {
-    console.log(error);
+    console.log(error); // Failure
 });

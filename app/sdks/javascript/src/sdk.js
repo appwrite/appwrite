@@ -757,7 +757,7 @@
              * @param {string} success
              * @param {string} failure
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             createOAuthSession: function(provider, success, failure) {
                 if(provider === undefined) {
@@ -784,10 +784,11 @@
                     payload['failure'] = failure;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -797,16 +798,16 @@
              * account sessions across all his different devices. When using the option id
              * argument, only the session unique ID provider will be deleted.
              *
-             * @param {string} sessionUid
+             * @param {string} sessionId
              * @throws {Error}
              * @return {Promise}             
              */
-            deleteSession: function(sessionUid) {
-                if(sessionUid === undefined) {
-                    throw new Error('Missing required parameter: "sessionUid"');
+            deleteSession: function(sessionId) {
+                if(sessionId === undefined) {
+                    throw new Error('Missing required parameter: "sessionId"');
                 }
                 
-                let path = '/account/sessions/{sessionUid}'.replace(new RegExp('{sessionUid}', 'g'), sessionUid);
+                let path = '/account/sessions/{sessionId}'.replace(new RegExp('{sessionId}', 'g'), sessionId);
 
                 let payload = {};
 
@@ -1717,7 +1718,7 @@
              *
              * @param {string} fileId
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getFileDownload: function(fileId) {
                 if(fileId === undefined) {
@@ -1728,10 +1729,11 @@
 
                 let payload = {};
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1749,7 +1751,7 @@
              * @param {string} background
              * @param {string} output
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getFilePreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
                 if(fileId === undefined) {
@@ -1780,10 +1782,11 @@
                     payload['output'] = output;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1795,7 +1798,7 @@
              * @param {string} fileId
              * @param {string} as
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getFileView: function(fileId, as = '') {
                 if(fileId === undefined) {
@@ -1810,10 +1813,11 @@
                     payload['as'] = as;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                return config.endpoint + path + ((query) ? '?' + query : '');
             }
         };
 

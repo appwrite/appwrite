@@ -1,9 +1,9 @@
 let sdk = new Appwrite();
 
-let promise = sdk.account.createOAuthSession('bitbucket', 'https://example.com', 'https://example.com');
+sdk
+    .setProject('5df5acd0d48c2') // Your project ID
+;
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+let result = sdk.account.createOAuthSession('bitbucket', 'https://example.com', 'https://example.com');
+
+console.log(result); // Resource URL

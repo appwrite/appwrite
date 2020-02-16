@@ -4,10 +4,6 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let promise = sdk.storage.getFileDownload('[FILE_ID]');
+let result = sdk.storage.getFileDownload('[FILE_ID]');
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(result); // Resource URL

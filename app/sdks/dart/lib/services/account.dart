@@ -197,8 +197,8 @@ class Account extends Service {
      /// Use this endpoint to log out the currently logged in user from all his
      /// account sessions across all his different devices. When using the option id
      /// argument, only the session unique ID provider will be deleted.
-    Future<Response> deleteSession({sessionUid}) async {
-       String path = '/account/sessions/{sessionUid}'.replaceAll(RegExp('{sessionUid}'), sessionUid);
+    Future<Response> deleteSession({sessionId}) async {
+       String path = '/account/sessions/{sessionId}'.replaceAll(RegExp('{sessionId}'), sessionId);
 
        Map<String, dynamic> params = {
        };

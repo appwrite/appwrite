@@ -7,7 +7,7 @@ sdk
 let promise = sdk.teams.update('[TEAM_ID]', '[NAME]');
 
 promise.then(function (response) {
-    console.log(response);
+    console.log(response); // Success
 }, function (error) {
-    console.log(error);
+    console.log(error); // Failure
 });
