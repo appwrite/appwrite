@@ -628,7 +628,7 @@ $utopia->get('/v1/open-api-2.json')
                         ];
                     }
 
-                    if ((!empty($scope) && 'public' != $scope)) {
+                    if ((!empty($scope))) { //  && 'public' != $scope
                         $temp['security'][] = $route->getLabel('sdk.security', $security[$platform]);
                     }
 
