@@ -25,7 +25,7 @@ use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
-Storage::addDevice('local', new Local('/storage/uploads/app-'.$project->getUid()));
+Storage::addDevice('local', new Local('/storage/uploads/app-'.$project->getId()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
     'default' => 'default.gif',
@@ -132,8 +132,8 @@ $utopia->post('/v1/storage/files')
     ->action(
         function ($file, $read, $write, $folderId = '') use ($request, $response, $user, $projectDB, $webhook, $audit, $usage) {
             $file = $request->getFiles('file');
-            $read = (empty($read)) ? ['user:'.$user->getUid()] : $read;
-            $write = (empty($write)) ? ['user:'.$user->getUid()] : $write;
+            $read = (empty($read)) ? ['user:'.$user->getId()] : $read;
+            $write = (empty($write)) ? ['user:'.$user->getId()] : $write;
 
             /*
              * Validators
@@ -236,7 +236,7 @@ $utopia->post('/v1/storage/files')
 
             $audit
                 ->setParam('event', 'storage.files.create')
-                ->setParam('resource', 'storage/files/'.$file->getUid())
+                ->setParam('resource', 'storage/files/'.$file->getId())
             ;
 
             $usage
@@ -276,7 +276,7 @@ $utopia->get('/v1/storage/files')
             ]);
 
             $results = array_map(function ($value) { /* @var $value \Database\Document */
-                return $value->getArrayCopy(['$uid', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
+                return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
             }, $results);
 
             $response->json(['sum' => $projectDB->getSum(), 'files' => $results]);
@@ -295,11 +295,11 @@ $utopia->get('/v1/storage/files/:fileId')
         function ($fileId) use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
-            $response->json($file->getArrayCopy(['$uid', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']));
+            $response->json($file->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']));
         }
     );
 
@@ -341,7 +341,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
@@ -357,7 +357,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 throw new Exception('File not found in '.$path, 404);
             }
 
-            $cache = new Cache(new Filesystem('/storage/cache/app-'.$project->getUid())); // Limit file number or size
+            $cache = new Cache(new Filesystem('/storage/cache/app-'.$project->getId())); // Limit file number or size
             $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
             if ($data) {
@@ -367,8 +367,10 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                     ->setContentType((in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                     ->addHeader('Expires', $date)
                     ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->send($data, 0)
+                    ->send($data)
                 ;
+
+                return;
             }
 
             $source = $device->read($path);
@@ -402,7 +404,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 ->setContentType($outputs[$output])
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'miss')
-                ->send('', null)
+                ->send('')
             ;
 
             $data = $resize->output($output, $quality);
@@ -412,8 +414,6 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             echo $data;
 
             unset($resize);
-
-            exit(0);
         }
     );
 
@@ -431,7 +431,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
         function ($fileId) use ($response, $request, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
@@ -485,7 +485,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
         function ($fileId, $as) use ($response, $request, $projectDB, $mimes) {
             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
@@ -556,7 +556,7 @@ $utopia->put('/v1/storage/files/:fileId')
         function ($fileId, $read, $write, $folderId = '') use ($response, $projectDB, $audit, $webhook) {
             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
@@ -578,7 +578,7 @@ $utopia->put('/v1/storage/files/:fileId')
 
             $audit
                 ->setParam('event', 'storage.files.update')
-                ->setParam('resource', 'storage/files/'.$file->getUid())
+                ->setParam('resource', 'storage/files/'.$file->getId())
             ;
 
             $response->json($file->getArrayCopy());
@@ -598,7 +598,7 @@ $utopia->delete('/v1/storage/files/:fileId')
         function ($fileId) use ($response, $projectDB, $webhook, $audit, $usage) {
             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 
@@ -616,7 +616,7 @@ $utopia->delete('/v1/storage/files/:fileId')
 
             $audit
                 ->setParam('event', 'storage.files.delete')
-                ->setParam('resource', 'storage/files/'.$file->getUid())
+                ->setParam('resource', 'storage/files/'.$file->getId())
             ;
 
             $usage
@@ -640,7 +640,7 @@ $utopia->get('/v1/storage/files/:fileId/scan')
         function ($fileId, $storage) use ($response, $request, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getUid()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);
             }
 

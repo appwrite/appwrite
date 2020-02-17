@@ -89,25 +89,25 @@
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}" />
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
 
-                                <label data-ls-attrs="for=name-{{task.$uid}}">Name</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
+                                <label data-ls-attrs="for=name-{{task.$id}}">Name</label>
+                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$id}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
 
-                                <label data-ls-attrs="for=status-{{task.$uid}}" class="margin-bottom">Status
+                                <label data-ls-attrs="for=status-{{task.$id}}" class="margin-bottom">Status
                                     <div class="margin-top-small">
                                         <input name="status" type="radio" checked="checked" required data-ls-bind="{{task.status}}" value="play" /> &nbsp; <span>Play</span>
                                         <input name="status" type="radio" required data-ls-bind="{{task.status}}" value="pause" /> &nbsp; <span>Pause</span>
                                     </div>
                                 </label>
 
-                                <label data-ls-attrs="for=schedule-{{task.$uid}}">Schedule (CRON Syntax)</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" placeholder="* * * * *" />
+                                <label data-ls-attrs="for=schedule-{{task.$id}}">Schedule (CRON Syntax)</label>
+                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$id}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" placeholder="* * * * *" />
 
                                 <div class="row thin">
                                     <div class="col span-4">
-                                        <label data-ls-attrs="for=httpMethod-{{task.$uid}}">HTTP Method</label>
-                                        <select data-ls-attrs="id=httpMethod-{{task.$uid}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
+                                        <label data-ls-attrs="for=httpMethod-{{task.$id}}">HTTP Method</label>
+                                        <select data-ls-attrs="id=httpMethod-{{task.$id}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
                                             <option value="POST">POST</option>
                                             <option value="GET">GET</option>
                                             <option value="PUT">PUT</option>
@@ -120,8 +120,8 @@
                                         </select>
                                     </div>
                                     <div class="col span-8">
-                                        <label data-ls-attrs="for=httpUrl-{{task.$uid}}">HTTP URL</label>
-                                        <input type="url" class="full-width" data-ls-attrs="id=httpUrl-{{task.$uid}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
+                                        <label data-ls-attrs="for=httpUrl-{{task.$id}}">HTTP URL</label>
+                                        <input type="url" class="full-width" data-ls-attrs="id=httpUrl-{{task.$id}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
                                     </div>
                                 </div>
 
@@ -166,7 +166,7 @@
                                         </div>
                                     </div>
 
-                                    <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom">
+                                    <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom">
                                         <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
                                         <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="1" /> &nbsp; <span>Enabled</span>
@@ -181,12 +181,12 @@
 
                                     <div class="row thin">
                                         <div class="col span-6">
-                                            <label data-ls-attrs="for=httpUser-{{task.$uid}}">User</label>
-                                            <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{task.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
+                                            <label data-ls-attrs="for=httpUser-{{task.$id}}">User</label>
+                                            <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{task.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
                                         </div>
                                         <div class="col span-6">
-                                            <label data-ls-attrs="for=httpPass-{{task.$uid}}">Password</label>
-                                            <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
+                                            <label data-ls-attrs="for=httpPass-{{task.$id}}">Password</label>
+                                            <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
                                         </div>
                                     </div>
                                 </div>
@@ -210,7 +210,7 @@
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}" />
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
 
                                 <button class="danger fill">Delete</button>
                             </form>

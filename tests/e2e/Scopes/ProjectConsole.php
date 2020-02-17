@@ -7,7 +7,7 @@ trait ProjectConsole
     public function getProject(): array
     {
         return [
-            '$uid' => 'console',
+            '$id' => 'console',
             'name' => 'Appwrite',
             'apiKey' => '',
         ];

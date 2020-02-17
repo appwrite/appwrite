@@ -33,7 +33,7 @@
                     data-failure-param-alert-text="Failed to update project"
                     data-failure-param-alert-classname="error">
 
-                    <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
+                    <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
 
                     <div class="row">
                         <div class="col span-9">
@@ -41,9 +41,9 @@
                                 <label for="name">Name</label>
                                 <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{console-project.name}}" data-forms-text-direction required>
 
-                                <label for="name">Project UID</label>
+                                <label for="name">Project ID</label>
                                 <div class="input-copy">
-                                    <input data-forms-copy type="text" disabled data-ls-bind="{{console-project.$uid}}" />
+                                    <input data-forms-copy type="text" disabled data-ls-bind="{{console-project.$id}}" />
                                 </div>
 
                                 <label for="name">API Endpoint</label>
@@ -89,7 +89,7 @@
                     <h2>Privacy & Legal</h2>
 
                     <div class="box margin-bottom">
-                        <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
+                        <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
 
                         <div class="row thin">
                             <div class="col span-6">
@@ -153,7 +153,7 @@
                                     data-failure-param-alert-classname="error">
 
                                     <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                    <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$uid}}">
+                                    <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$id}}">
 
                                     <button class="danger">Leave</button>
                                 </form>
@@ -173,7 +173,7 @@
                                         data-failure-param-alert-classname="error">
 
                                         <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$uid}}">
+                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$id}}">
 
                                         <button class="reverse">Resend</button>
                                     </form>

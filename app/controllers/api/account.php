@@ -55,7 +55,7 @@ $utopia->post('/v1/account')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
         function ($email, $password, $name) use ($register, $request, $response, $audit, $projectDB, $project, $webhook, $oauth2Keys) {
-            if ('console' === $project->getUid()) {
+            if ('console' === $project->getId()) {
                 $whitlistEmails = $project->getAttribute('authWhitelistEmails');
                 $whitlistIPs = $project->getAttribute('authWhitelistIPs');
                 $whitlistDomains = $project->getAttribute('authWhitelistDomains');
@@ -118,16 +118,16 @@ $utopia->post('/v1/account')
             ;
 
             $audit
-                ->setParam('userId', $user->getUid())
+                ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.create')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
             ;
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json(array_merge($user->getArrayCopy(array_merge(
                     [
-                        '$uid',
+                        '$id',
                         'email',
                         'registration',
                         'name',
@@ -162,9 +162,9 @@ $utopia->post('/v1/account/sessions')
 
             if (false == $profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
                 $audit
-                    //->setParam('userId', $profile->getUid())
+                    //->setParam('userId', $profile->getId())
                     ->setParam('event', 'account.sesssions.failed')
-                    ->setParam('resource', 'users/'.($profile ? $profile->getUid() : ''))
+                    ->setParam('resource', 'users/'.($profile ? $profile->getId() : ''))
                 ;
 
                 throw new Exception('Invalid credentials', 401); // Wrong password or username
@@ -174,7 +174,7 @@ $utopia->post('/v1/account/sessions')
             $secret = Auth::tokenGenerator();
             $session = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
+                '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -182,7 +182,7 @@ $utopia->post('/v1/account/sessions')
                 'ip' => $request->getIP(),
             ]);
 
-            Authorization::setRole('user:'.$profile->getUid());
+            Authorization::setRole('user:'.$profile->getId());
 
             $session = $projectDB->createDocument($session->getArrayCopy());
 
@@ -206,16 +206,16 @@ $utopia->post('/v1/account/sessions')
             ;
 
             $audit
-                ->setParam('userId', $profile->getUid())
+                ->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.sessions.create')
-                ->setParam('resource', 'users/'.$profile->getUid())
+                ->setParam('resource', 'users/'.$profile->getId())
             ;
             
             $response
-                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($session->getArrayCopy(['$uid', 'type', 'expire']))
+                ->json($session->getArrayCopy(['$id', 'type', 'expire']))
             ;
         }
     );
@@ -238,7 +238,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
         function ($provider, $success, $failure) use ($response, $request, $project) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getUid();
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $appId = $project->getAttribute('usersOauth2'.ucfirst($provider).'Appid', '');
             $appSecret = $project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}');
 
@@ -294,7 +294,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
         function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getUid();
+            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
 
@@ -360,7 +360,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
             }
 
-            $user = (empty($user->getUid())) ? $projectDB->getCollection([ // Get user by provider id
+            $user = (empty($user->getId())) ? $projectDB->getCollection([ // Get user by provider id
                 'limit' => 1,
                 'first' => true,
                 'filters' => [
@@ -382,7 +382,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                     ],
                 ]);
 
-                if (!$user || empty($user->getUid())) { // Last option -> create user alone, generate random password
+                if (!$user || empty($user->getId())) { // Last option -> create user alone, generate random password
                     Authorization::disable();
 
                     $user = $projectDB->createDocument([
@@ -412,7 +412,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
             $session = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:'.$user['$uid']], 'write' => ['user:'.$user['$uid']]],
+                '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
                 'expire' => $expiry,
@@ -427,7 +427,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setAttribute('tokens', $session, Document::SET_TYPE_APPEND)
             ;
 
-            Authorization::setRole('user:'.$user->getUid());
+            Authorization::setRole('user:'.$user->getId());
 
             $user = $projectDB->updateDocument($user->getArrayCopy());
 
@@ -436,15 +436,15 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             $audit
-                ->setParam('userId', $user->getUid())
+                ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.sessions.create')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
                 ->setParam('data', ['provider' => $provider])
             ;
 
             $response
-                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getUid(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
                 ->redirect($state['success'])
             ;
         }
@@ -462,7 +462,7 @@ $utopia->get('/v1/account')
         function () use ($response, &$user, $oauth2Keys) {            
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
-                    '$uid',
+                    '$id',
                     'email',
                     'registration',
                     'name',
@@ -525,7 +525,7 @@ $utopia->get('/v1/account/sessions')
                 $dd->parse();
 
                 $sessions[$index] = [
-                    '$uid' => $token->getUid(),
+                    '$id' => $token->getId(),
                     'OS' => $dd->getOs(),
                     'client' => $dd->getClient(),
                     'device' => $dd->getDevice(),
@@ -533,7 +533,7 @@ $utopia->get('/v1/account/sessions')
                     'model' => $dd->getModel(),
                     'ip' => $token->getAttribute('ip', ''),
                     'geo' => [],
-                    'current' => ($current == $token->getUid()) ? true : false,
+                    'current' => ($current == $token->getId()) ? true : false,
                 ];
 
                 try {
@@ -562,12 +562,12 @@ $utopia->get('/v1/account/logs')
     ->action(
         function () use ($response, $register, $project, $user) {
             $adapter = new AuditAdapter($register->get('db'));
-            $adapter->setNamespace('app_'.$project->getUid());
+            $adapter->setNamespace('app_'.$project->getId());
 
             $audit = new Audit($adapter);
             $countries = Locale::getText('countries');
 
-            $logs = $audit->getLogsByUserAndActions($user->getUid(), [
+            $logs = $audit->getLogsByUserAndActions($user->getId(), [
                 'account.create',
                 'account.delete',
                 'account.update.name',
@@ -644,14 +644,14 @@ $utopia->patch('/v1/account/name')
             }
 
             $audit
-                ->setParam('userId', $user->getUid())
+                ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.update.name')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
             ;
 
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
-                    '$uid',
+                    '$id',
                     'email',
                     'registration',
                     'name',
@@ -686,14 +686,14 @@ $utopia->patch('/v1/account/password')
             }
 
             $audit
-                ->setParam('userId', $user->getUid())
+                ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.update.password')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
             ;
 
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
-                    '$uid',
+                    '$id',
                     'email',
                     'registration',
                     'name',
@@ -744,14 +744,14 @@ $utopia->patch('/v1/account/email')
             }
 
             $audit
-                ->setParam('userId', $user->getUid())
+                ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.update.email')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
             ;
 
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
-                    '$uid',
+                    '$id',
                     'email',
                     'registration',
                     'name',
@@ -785,7 +785,7 @@ $utopia->patch('/v1/account/prefs')
 
             $audit
                 ->setParam('event', 'account.update.prefs')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
             ;
 
             $prefs = $user->getAttribute('prefs', '{}');
@@ -828,9 +828,9 @@ $utopia->delete('/v1/account')
              */
 
             $audit
-                ->setParam('userId', $user->getUid())
+                ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.delete')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
                 ->setParam('data', $user->getArrayCopy())
             ;
 
@@ -868,15 +868,15 @@ $utopia->delete('/v1/account/sessions/:sessionId')
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
-                if (($sessionId == $token->getUid()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
-                    if (!$projectDB->deleteDocument($token->getUid())) {
+                if (($sessionId == $token->getId()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
+                    if (!$projectDB->deleteDocument($token->getId())) {
                         throw new Exception('Failed to remove token from DB', 500);
                     }
 
                     $audit
-                        ->setParam('userId', $user->getUid())
+                        ->setParam('userId', $user->getId())
                         ->setParam('event', 'account.sessions.delete')
-                        ->setParam('resource', '/user/'.$user->getUid())
+                        ->setParam('resource', '/user/'.$user->getId())
                     ;
 
                     $webhook
@@ -915,14 +915,14 @@ $utopia->delete('/v1/account/sessions')
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
-                if (!$projectDB->deleteDocument($token->getUid())) {
+                if (!$projectDB->deleteDocument($token->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
                 $audit
-                    ->setParam('userId', $user->getUid())
+                    ->setParam('userId', $user->getId())
                     ->setParam('event', 'account.sessions.delete')
-                    ->setParam('resource', '/user/'.$user->getUid())
+                    ->setParam('resource', '/user/'.$user->getId())
                 ;
 
                 $webhook
@@ -973,7 +973,7 @@ $utopia->post('/v1/account/recovery')
             $secret = Auth::tokenGenerator();
             $recovery = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:'.$profile->getUid()], 'write' => ['user:'.$profile->getUid()]],
+                '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
                 'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
                 'expire' => time() + Auth::TOKEN_EXPIRATION_RECOVERY,
@@ -981,7 +981,7 @@ $utopia->post('/v1/account/recovery')
                 'ip' => $request->getIP(),
             ]);
                 
-            Authorization::setRole('user:'.$profile->getUid());
+            Authorization::setRole('user:'.$profile->getId());
 
             $recovery = $projectDB->createDocument($recovery->getArrayCopy());
 
@@ -998,7 +998,7 @@ $utopia->post('/v1/account/recovery')
             }
 
             $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getUid(), 'secret' => $secret]);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
             $url = Template::unParseURL($url);
 
             $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.recovery.body'));
@@ -1024,14 +1024,14 @@ $utopia->post('/v1/account/recovery')
             }
 
             $audit
-                ->setParam('userId', $profile->getUid())
+                ->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.recovery.create')
-                ->setParam('resource', 'users/'.$profile->getUid())
+                ->setParam('resource', 'users/'.$profile->getId())
             ;
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($recovery->getArrayCopy(['$uid', 'type', 'expire']))
+                ->json($recovery->getArrayCopy(['$id', 'type', 'expire']))
             ;
         }
     );
@@ -1060,7 +1060,7 @@ $utopia->put('/v1/account/recovery')
                 'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    '$uid='.$userId,
+                    '$id='.$userId,
                 ],
             ]);
 
@@ -1074,7 +1074,7 @@ $utopia->put('/v1/account/recovery')
                 throw new Exception('Invalid recovery token', 401);
             }
 
-            Authorization::setRole('user:'.$profile->getUid());
+            Authorization::setRole('user:'.$profile->getId());
 
             $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
                 'password' => Auth::passwordHash($passwordA),
@@ -1095,14 +1095,14 @@ $utopia->put('/v1/account/recovery')
             }
 
             $audit
-                ->setParam('userId', $profile->getUid())
+                ->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.recovery.update')
-                ->setParam('resource', 'users/'.$profile->getUid())
+                ->setParam('resource', 'users/'.$profile->getId())
             ;
 
-            $recovery = $profile->search('$uid', $recovery, $profile->getAttribute('tokens', []));
+            $recovery = $profile->search('$id', $recovery, $profile->getAttribute('tokens', []));
 
-            $response->json($recovery->getArrayCopy(['$uid', 'type', 'expire']));
+            $response->json($recovery->getArrayCopy(['$id', 'type', 'expire']));
         }
     );
 
@@ -1122,7 +1122,7 @@ $utopia->post('/v1/account/verification')
             
             $verification = new Document([
                 '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
-                '$permissions' => ['read' => ['user:'.$user->getUid()], 'write' => ['user:'.$user->getUid()]],
+                '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
                 'type' => Auth::TOKEN_TYPE_VERIFICATION,
                 'secret' => Auth::hash($verificationSecret), // On way hash encryption to protect DB leak
                 'expire' => time() + Auth::TOKEN_EXPIRATION_CONFIRM,
@@ -1130,7 +1130,7 @@ $utopia->post('/v1/account/verification')
                 'ip' => $request->getIP(),
             ]);
                 
-            Authorization::setRole('user:'.$user->getUid());
+            Authorization::setRole('user:'.$user->getId());
 
             $verification = $projectDB->createDocument($verification->getArrayCopy());
 
@@ -1147,7 +1147,7 @@ $utopia->post('/v1/account/verification')
             }
             
             $url = Template::parseURL($url);
-            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getUid(), 'secret' => $verificationSecret]);
+            $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
             $url = Template::unParseURL($url);
 
             $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.verification.body'));
@@ -1173,14 +1173,14 @@ $utopia->post('/v1/account/verification')
             }
 
             $audit
-                ->setParam('userId', $user->getUid())
+                ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.verification.create')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
             ;
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($verification->getArrayCopy(['$uid', 'type', 'expire']))
+                ->json($verification->getArrayCopy(['$id', 'type', 'expire']))
             ;
         }
     );
@@ -1203,7 +1203,7 @@ $utopia->put('/v1/account/verification')
                 'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                    '$uid='.$userId,
+                    '$id='.$userId,
                 ],
             ]);
 
@@ -1217,7 +1217,7 @@ $utopia->put('/v1/account/verification')
                 throw new Exception('Invalid verification token', 401);
             }
 
-            Authorization::setRole('user:'.$profile->getUid());
+            Authorization::setRole('user:'.$profile->getId());
 
             $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
                 'emailVerification' => true,
@@ -1236,13 +1236,13 @@ $utopia->put('/v1/account/verification')
             }
 
             $audit
-                ->setParam('userId', $profile->getUid())
+                ->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.verification.update')
-                ->setParam('resource', 'users/'.$user->getUid())
+                ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $verification = $profile->search('$uid', $verification, $profile->getAttribute('tokens', []));
+            $verification = $profile->search('$id', $verification, $profile->getAttribute('tokens', []));
 
-            $response->json($verification->getArrayCopy(['$uid', 'type', 'expire']));
+            $response->json($verification->getArrayCopy(['$id', 'type', 'expire']));
         }
     );

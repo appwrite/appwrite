@@ -25,9 +25,9 @@ class Structure extends Validator
      */
     protected $rules = [
         [
-            'label' => '$uid',
+            'label' => '$id',
             '$collection' => Database::SYSTEM_COLLECTION_RULES,
-            'key' => '$uid',
+            'key' => '$id',
             'type' => 'uid',
             'default' => null,
             'required' => false,
@@ -111,7 +111,7 @@ class Structure extends Validator
     {
         $document = (is_array($document)) ? new Document($document) : $document;
 
-        $this->id = $document->getUid();
+        $this->id = $document->getId();
 
         if (is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
@@ -121,7 +121,7 @@ class Structure extends Validator
 
         $collection = $this->getCollection($document->getCollection());
 
-        if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             $this->message = 'Collection not found';
 
             return false;
@@ -247,8 +247,8 @@ class Structure extends Validator
         return true;
     }
 
-    protected function getCollection($uid)
+    protected function getCollection($id)
     {
-        return $this->database->getDocument($uid);
+        return $this->database->getDocument($id);
     }
 }

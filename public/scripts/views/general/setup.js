@@ -14,7 +14,7 @@
 
         console.teams.create(formData["name"] || "").then(
           function(data) {
-            let team = data["$uid"];
+            let team = data["$id"];
 
             formData = JSON.parse(
               JSON.stringify(formData).replace(
@@ -27,7 +27,7 @@
               function(project) {
                 //router.change();
                 alerts.remove(loaderId);
-                window.location.href = "/console/home?project=" + project["$uid"];
+                window.location.href = "/console/home?project=" + project["$id"];
               },
               function() {
                 throw new Error("Failed to setup project");

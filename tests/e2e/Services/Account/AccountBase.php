@@ -18,18 +18,18 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => $password,
             'name' => $name,
         ]);
 
-        $uid = $response['body']['$uid'];
+        $id = $response['body']['$id'];
 
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
@@ -40,7 +40,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => $password,
@@ -52,7 +52,7 @@ trait AccountBase
         sleep(5);
 
         return [
-            'uid' => $uid,
+            'uid' => $id,
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -73,7 +73,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => $password,
@@ -81,8 +81,8 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
-        $sessionId = $response['body']['$uid'];
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$uid']];
+        $sessionId = $response['body']['$id'];
+        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         /**
          * Test for FAILURE
@@ -90,7 +90,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email.'x',
             'password' => $password,
@@ -101,7 +101,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => $password.'x',
@@ -112,7 +112,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => '',
             'password' => '',
@@ -141,18 +141,18 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
         $this->assertContains('*', $response['body']['roles']);
-        $this->assertContains('user:'.$response['body']['$uid'], $response['body']['roles']);
+        $this->assertContains('user:'.$response['body']['$id'], $response['body']['roles']);
         $this->assertContains('role:1', $response['body']['roles']);
         $this->assertCount(3, $response['body']['roles']);
 
@@ -161,15 +161,15 @@ trait AccountBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'content-type' => 'application/json',
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session.'xx',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session.'xx',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -190,8 +190,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -205,7 +205,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -227,15 +227,15 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(1, $response['body']);
-        $this->assertEquals($sessionId, $response['body'][0]['$uid']);
+        $this->assertEquals($sessionId, $response['body'][0]['$id']);
         
         $this->assertIsArray($response['body'][0]['OS']);
         $this->assertEquals('Windows', $response['body'][0]['OS']['name']);
@@ -266,7 +266,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -288,8 +288,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -353,7 +353,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -378,8 +378,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'name' => $newName
         ]);
@@ -388,7 +388,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $newName);
@@ -399,7 +399,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -407,8 +407,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
         ]);
         
@@ -417,8 +417,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'name' => 'ocSRq1d3QphHivJyUmYY7WMnrxyjdk5YvVwcDqx2zS0coxESN8RmsQwLWw5Whnf0WbVohuFWTRAaoKgCOO0Y0M7LwgFnZmi8881Y7'
         ]);
@@ -445,8 +445,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'password' => 'new-password',
             'old-password' => $password,
@@ -456,7 +456,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], 'New Name');
@@ -464,7 +464,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => 'new-password',
@@ -478,7 +478,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -486,8 +486,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
         ]);
         
@@ -512,8 +512,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'email' => $newEmail,
             'password' => 'new-password',
@@ -523,7 +523,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertIsNumeric($response['body']['registration']);
         $this->assertEquals($response['body']['email'], $newEmail);
         $this->assertEquals($response['body']['name'], 'New Name');
@@ -534,7 +534,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -542,8 +542,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
         ]);
         
@@ -568,8 +568,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => [
                 'key1' => 'value1',
@@ -590,7 +590,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -598,8 +598,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => '{}'
         ]);
@@ -610,8 +610,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => '[]'
         ]);
@@ -621,8 +621,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => '{"test": "value"}'
         ]);
@@ -647,15 +647,15 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
             
         ]), [
             'url' => 'http://localhost/verification',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(2, $response['body']['type']);
         $this->assertIsNumeric($response['body']['expire']);
         
@@ -673,8 +673,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'url' => 'localhost/recovery',
         ]);
@@ -684,8 +684,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'url' => 'http://remotehost/recovery',
         ]);
@@ -702,7 +702,7 @@ trait AccountBase
      */
     public function testUpdateAccountVerification($data):array
     {
-        $uid = (isset($data['uid'])) ? $data['uid'] : '';
+        $id = (isset($data['uid'])) ? $data['uid'] : '';
         $session = (isset($data['session'])) ? $data['session'] : '';
         $verification = (isset($data['verification'])) ? $data['verification'] : '';
         
@@ -712,10 +712,10 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'userId' => $uid,
+            'userId' => $id,
             'secret' => $verification,
         ]);
 
@@ -727,8 +727,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'userId' => 'ewewe',
             'secret' => $verification,
@@ -739,10 +739,10 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
-            'userId' => $uid,
+            'userId' => $id,
             'secret' => 'sdasdasdasd',
         ]);
 
@@ -766,22 +766,22 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => $password,
         ]);
 
-        $sessionNewUid = $response['body']['$uid'];
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$uid']];
+        $sessionNewUid = $response['body']['$id'];
+        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $sessionNew,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $sessionNew,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -789,8 +789,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/'.$sessionNewUid, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $sessionNew,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $sessionNew,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 204);
@@ -798,8 +798,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -810,8 +810,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $sessionNew,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $sessionNew,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -833,21 +833,21 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => $password,
         ]);
 
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$uid']];
+        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $sessionNew,
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $sessionNew,
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -855,8 +855,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $sessionNew,
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $sessionNew,
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 204);
@@ -867,8 +867,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $sessionNew,
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $sessionNew,
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -889,8 +889,8 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
-            'cookie' => 'a_session_'.$this->getProject()['$uid'].'=' . $session,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 204);
@@ -901,7 +901,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -915,13 +915,13 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'password' => $password,
         ]);
 
-        $data['session'] = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$uid']];
+        $data['session'] = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         return $data;
     }
@@ -940,14 +940,14 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'url' => 'http://localhost/recovery',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(3, $response['body']['type']);
         $this->assertIsNumeric($response['body']['expire']);
         
@@ -965,7 +965,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'url' => 'localhost/recovery',
@@ -976,7 +976,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => $email,
             'url' => 'http://remotehost/recovery',
@@ -987,7 +987,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'email' => 'not-found@localhost.test',
             'url' => 'http://localhost/recovery',
@@ -1005,7 +1005,7 @@ trait AccountBase
      */
     public function testUpdateAccountRecovery($data):array
     {
-        $uid = (isset($data['uid'])) ? $data['uid'] : '';
+        $id = (isset($data['uid'])) ? $data['uid'] : '';
         $recovery = (isset($data['recovery'])) ? $data['recovery'] : '';
         $newPassowrd = 'test-recovery';
         
@@ -1015,9 +1015,9 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => $uid,
+            'userId' => $id,
             'secret' => $recovery,
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
@@ -1031,7 +1031,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'userId' => 'ewewe',
             'secret' => $recovery,
@@ -1044,9 +1044,9 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => $uid,
+            'userId' => $id,
             'secret' => 'sdasdasdasd',
             'password-a' => $newPassowrd,
             'password-b' => $newPassowrd,
@@ -1057,9 +1057,9 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => $uid,
+            'userId' => $id,
             'secret' => $recovery,
             'password-a' => $newPassowrd.'x',
             'password-b' => $newPassowrd,

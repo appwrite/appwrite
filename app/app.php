@@ -130,9 +130,9 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      */
     if (null !== $key && $user->isEmpty()) {
         $user = new Document([
-            '$uid' => 0,
+            '$id' => 0,
             'status' => Auth::USER_STATUS_ACTIVATED,
-            'email' => 'app.'.$project->getUid().'@service.'.$domain,
+            'email' => 'app.'.$project->getId().'@service.'.$domain,
             'password' => '',
             'name' => $project->getAttribute('name', 'Untitled'),
         ]);
@@ -143,7 +143,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
 
-    Authorization::setRole('user:'.$user->getUid());
+    Authorization::setRole('user:'.$user->getId());
     Authorization::setRole('role:'.$role);
 
     array_map(function ($node) {
@@ -159,7 +159,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     // TDOO Check if user is god
 
     if (!in_array($scope, $scopes)) {
-        if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
+        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
         }
         
@@ -178,14 +178,14 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      * Background Jobs
      */
     $webhook
-        ->setParam('projectId', $project->getUid())
+        ->setParam('projectId', $project->getId())
         ->setParam('event', $route->getLabel('webhook', ''))
         ->setParam('payload', [])
     ;
 
     $audit
-        ->setParam('projectId', $project->getUid())
-        ->setParam('userId', $user->getUid())
+        ->setParam('projectId', $project->getId())
+        ->setParam('userId', $user->getId())
         ->setParam('event', '')
         ->setParam('resource', '')
         ->setParam('userAgent', $request->getServer('HTTP_USER_AGENT', ''))
@@ -194,7 +194,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 
     $usage
-        ->setParam('projectId', $project->getUid())
+        ->setParam('projectId', $project->getId())
         ->setParam('url', $request->getServer('HTTP_HOST', '').$request->getServer('REQUEST_URI', ''))
         ->setParam('method', $request->getServer('REQUEST_METHOD', 'UNKNOWN'))
         ->setParam('request', 0)
@@ -218,7 +218,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     
     $route = $utopia->match($request);
 
-    if($project->getUid()
+    if($project->getId()
         && $mode !== APP_MODE_ADMIN
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
         $usage
@@ -369,11 +369,11 @@ $utopia->get('/v1/info') // This is only visible to gods
                 'environment' => $env,
                 'time' => date('Y-m-d H:i:s', time()),
                 'user' => [
-                    'id' => $user->getUid(),
+                    'id' => $user->getId(),
                     'name' => $user->getAttribute('name', ''),
                 ],
                 'project' => [
-                    'id' => $project->getUid(),
+                    'id' => $project->getId(),
                     'name' => $project->getAttribute('name', ''),
                 ],
             ]);

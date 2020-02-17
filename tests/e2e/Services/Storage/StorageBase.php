@@ -14,7 +14,7 @@ trait StorageBase
          */
         $file = $this->client->call(Client::METHOD_POST, '/storage/files', array_merge([
             'content-type' => 'multipart/form-data',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'read' => ['*'],
@@ -23,7 +23,7 @@ trait StorageBase
         ]);
 
         $this->assertEquals($file['headers']['status-code'], 201);
-        $this->assertNotEmpty($file['body']['$uid']);
+        $this->assertNotEmpty($file['body']['$id']);
         $this->assertEquals('files', $file['body']['$collection']);
         $this->assertIsInt($file['body']['dateCreated']);
         $this->assertEquals('logo.png', $file['body']['name']);
@@ -39,7 +39,7 @@ trait StorageBase
         /**
          * Test for FAILURE
          */
-        return ['fileId' => $file['body']['$uid']];
+        return ['fileId' => $file['body']['$id']];
     }
     
     /**
@@ -52,11 +52,11 @@ trait StorageBase
          */
         $file1 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals($file1['headers']['status-code'], 200);
-        $this->assertNotEmpty($file1['body']['$uid']);
+        $this->assertNotEmpty($file1['body']['$id']);
         $this->assertIsInt($file1['body']['dateCreated']);
         $this->assertEquals('logo.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
@@ -74,7 +74,7 @@ trait StorageBase
 
         $file2 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/preview', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file2['headers']['status-code']);
@@ -83,7 +83,7 @@ trait StorageBase
 
         $file3 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file3['headers']['status-code']);
@@ -93,7 +93,7 @@ trait StorageBase
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file4['headers']['status-code']);
@@ -117,7 +117,7 @@ trait StorageBase
          */
         $files = $this->client->call(Client::METHOD_GET, '/storage/files', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $files['headers']['status-code']);
@@ -141,14 +141,14 @@ trait StorageBase
          */
         $file = $this->client->call(Client::METHOD_PUT, '/storage/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'read' => ['*'],
             'write' => ['*'],
         ]);
 
         $this->assertEquals(200, $file['headers']['status-code']);
-        $this->assertNotEmpty($file['body']['$uid']);
+        $this->assertNotEmpty($file['body']['$id']);
         $this->assertIsInt($file['body']['dateCreated']);
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
@@ -181,7 +181,7 @@ trait StorageBase
          */
         $file = $this->client->call(Client::METHOD_DELETE, '/storage/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $file['headers']['status-code']);

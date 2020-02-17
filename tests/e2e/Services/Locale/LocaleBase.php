@@ -13,7 +13,7 @@ trait LocaleBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/locale', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -39,7 +39,7 @@ trait LocaleBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/locale/countries', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -51,7 +51,7 @@ trait LocaleBase
 
         $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-locale' => 'es',
         ]);
 
@@ -74,7 +74,7 @@ trait LocaleBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -86,7 +86,7 @@ trait LocaleBase
 
         $response = $this->client->call(Client::METHOD_GET, '/locale/countries/eu', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-locale' => 'es',
         ]);
 
@@ -109,7 +109,7 @@ trait LocaleBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/locale/countries/phones', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -132,7 +132,7 @@ trait LocaleBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/locale/continents', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -143,7 +143,7 @@ trait LocaleBase
         // Test locale code change to ES
         $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-locale' => 'es',
         ]);
 
@@ -167,7 +167,7 @@ trait LocaleBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/locale/currencies', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -195,7 +195,7 @@ trait LocaleBase
         foreach ($languages as $lang) {
             $response = $this->client->call(Client::METHOD_GET, '/locale/countries', [
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$uid'],
+                'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-locale' => $lang,
             ]);
             
@@ -212,7 +212,7 @@ trait LocaleBase
 
             $response = $this->client->call(Client::METHOD_GET, '/locale/continents', [
                 'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$uid'],
+                'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-locale' => $lang,
             ]);
             

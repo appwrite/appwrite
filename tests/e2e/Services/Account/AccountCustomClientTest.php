@@ -22,7 +22,7 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$uid'].'/oauth2', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$this->getProject()['$id'].'/oauth2', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
@@ -38,7 +38,7 @@ class AccountCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/'.$provider, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',

@@ -78,7 +78,7 @@ $utopia->post('/v1/database/collections')
 
             $audit
                 ->setParam('event', 'database.collections.create')
-                ->setParam('resource', 'database/collection/'.$data['$uid'])
+                ->setParam('resource', 'database/collection/'.$data['$id'])
                 ->setParam('data', $data)
             ;
 
@@ -152,7 +152,7 @@ $utopia->get('/v1/database/collections/:collectionId')
         function ($collectionId) use ($response, $projectDB) {
             $collection = $projectDB->getDocument($collectionId, false);
 
-            if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -177,7 +177,7 @@ $utopia->put('/v1/database/collections/:collectionId')
         function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
             $collection = $projectDB->getDocument($collectionId, false);
 
-            if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -216,7 +216,7 @@ $utopia->put('/v1/database/collections/:collectionId')
 
             $audit
                 ->setParam('event', 'database.collections.update')
-                ->setParam('resource', 'database/collections/'.$data['$uid'])
+                ->setParam('resource', 'database/collections/'.$data['$id'])
                 ->setParam('data', $data)
             ;
 
@@ -237,7 +237,7 @@ $utopia->delete('/v1/database/collections/:collectionId')
         function ($collectionId) use ($response, $projectDB, $webhook, $audit) {
             $collection = $projectDB->getDocument($collectionId, false);
 
-            if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -253,7 +253,7 @@ $utopia->delete('/v1/database/collections/:collectionId')
 
             $audit
                 ->setParam('event', 'database.collections.delete')
-                ->setParam('resource', 'database/collections/'.$data['$uid'])
+                ->setParam('resource', 'database/collections/'.$data['$id'])
                 ->setParam('data', $data)
             ;
 
@@ -284,13 +284,13 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
                 throw new Exception('Missing payload', 400);
             }
 
-            if (isset($data['$uid'])) {
-                throw new Exception('$uid is not allowed for creating new documents, try update instead', 400);
+            if (isset($data['$id'])) {
+                throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
             }
             
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
 
-            if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -354,7 +354,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
 
             $audit
                 ->setParam('event', 'database.documents.create')
-                ->setParam('resource', 'database/document/'.$data['$uid'])
+                ->setParam('resource', 'database/document/'.$data['$id'])
                 ->setParam('data', $data)
             ;
 
@@ -376,10 +376,10 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
-    ->param('filters', [], function () { return new ArrayList(new Text(128)); }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$uid>=5bed2d152c362\'.', true)
+    ->param('filters', [], function () { return new ArrayList(new Text(128)); }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$id>=5bed2d152c362\'.', true)
     ->param('offset', 0, function () { return new Range(0, 900000000); }, 'Offset value. Use this value to manage pagination.', true)
     ->param('limit', 50, function () { return new Range(0, 1000); }, 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
-    ->param('order-field', '$uid', function () { return new Text(128); }, 'Document field that results will be sorted by.', true)
+    ->param('order-field', '$id', function () { return new Text(128); }, 'Document field that results will be sorted by.', true)
     ->param('order-type', 'ASC', function () { return new WhiteList(array('DESC', 'ASC')); }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->param('order-cast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
@@ -389,7 +389,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
         function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search, $first, $last) use ($response, $projectDB, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);
 
-            if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -430,7 +430,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
                 /*
                  * View
                  */
-                $response->json($collection->getArrayCopy(/*['$uid', '$collection', 'name', 'documents']*/[], ['rules']));
+                $response->json($collection->getArrayCopy(/*['$id', '$collection', 'name', 'documents']*/[], ['rules']));
             }
         }
     );
@@ -449,7 +449,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
             $document = $projectDB->getDocument($documentId, $isDev);
             $collection = $projectDB->getDocument($collectionId, $isDev);
 
-            if (empty($document->getArrayCopy()) || $document->getCollection() != $collection->getUid()) { // Check empty
+            if (empty($document->getArrayCopy()) || $document->getCollection() != $collection->getId()) { // Check empty
                 throw new Exception('No document found', 404);
             }
 
@@ -463,7 +463,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
                     $output = $document->getAttribute(implode('.', $paths));
                 } else {
                     $id = (int) array_pop($paths);
-                    $output = $document->search('$uid', $id, $document->getAttribute(implode('.', $paths)));
+                    $output = $document->search('$id', $id, $document->getAttribute(implode('.', $paths)));
                 }
 
                 $output = ($output instanceof Document) ? $output->getArrayCopy() : $output;
@@ -504,7 +504,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
                 throw new Exception('Data param should be a valid JSON', 400);
             }
 
-            if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -524,8 +524,8 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
 
             $data = array_merge($document->getArrayCopy(), $data);
 
-            $data['$collection'] = $collection->getUid(); // Make sure user don't switch collectionID
-            $data['$uid'] = $document->getUid(); // Make sure user don't switch document unique ID
+            $data['$collection'] = $collection->getId(); // Make sure user don't switch collectionID
+            $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
 
             if (empty($data)) {
                 throw new Exception('Missing payload', 400);
@@ -548,7 +548,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
 
             $audit
                 ->setParam('event', 'database.documents.update')
-                ->setParam('resource', 'database/document/'.$data['$uid'])
+                ->setParam('resource', 'database/document/'.$data['$id'])
                 ->setParam('data', $data)
             ;
 
@@ -578,7 +578,7 @@ $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
                 throw new Exception('No document found', 404);
             }
 
-            if (is_null($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -600,7 +600,7 @@ $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
 
             $audit
                 ->setParam('event', 'database.documents.delete')
-                ->setParam('resource', 'database/document/'.$data['$uid'])
+                ->setParam('resource', 'database/document/'.$data['$id'])
                 ->setParam('data', $data) // Audit document in case of malicious or disastrous action
             ;
 

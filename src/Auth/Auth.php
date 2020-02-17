@@ -200,7 +200,7 @@ class Auth
                $token['type'] == $type &&
                $token['secret'] === self::hash($secret) &&
                $token['expire']  >= time()) {
-                return $token->getUid();
+                return $token->getId();
             }
         }
 

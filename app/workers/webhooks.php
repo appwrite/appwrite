@@ -36,7 +36,7 @@ class WebhooksV1
 
         Authorization::enable();
 
-        if (is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
+        if (is_null($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
             throw new Exception('Project Not Found');
         }
 

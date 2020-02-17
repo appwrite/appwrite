@@ -44,12 +44,12 @@ $scopes = $this->getParam('scopes', []);
                         data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                        <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}" />
+                        <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{key.$uid}}">Name</label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
+                        <label data-ls-attrs="for=name-{{key.$id}}">Name</label>
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
 
-                        <label data-ls-attrs="for=scopes-{{key.$uid}}">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
+                        <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
                         <div class="row thin margin-bottom">
                             <?php foreach ($scopes as $i => $scope) : ?>
                                 <div class="col span-6">
@@ -85,7 +85,7 @@ $scopes = $this->getParam('scopes', []);
                     data-failure-param-alert-classname="error">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                    <input type="hidden" name="keyId" data-ls-bind="{{key.$uid}}" />
+                    <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
                     <button class="reverse danger">Delete</button>
                 </form>

@@ -110,7 +110,7 @@ $graph = $this->getParam('graph', false);
                     data-failure-param-alert-text="Failed to delete platform"
                     data-failure-param-alert-classname="error">
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                    <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}" />
+                    <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
 
                     <button class="reverse danger">Delete</button>
                 </form>
@@ -211,10 +211,10 @@ $graph = $this->getParam('graph', false);
         data-failure-param-alert-classname="error">
 
         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}"/ >
-        <input type="hidden" name="platformId" data-ls-bind="{{platform.$uid}}" />
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
 
-        <label data-ls-attrs="for=name-{{platform.$uid}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />
+        <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />
 
         <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
         <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="example.com" data-ls-bind="{{platform.url}}" required>

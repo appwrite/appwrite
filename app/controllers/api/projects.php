@@ -41,7 +41,7 @@ $utopia->post('/v1/projects')
         function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
-            if (empty($team->getUid()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+            if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
                 throw new Exception('Team not found', 404);
             }
 
@@ -62,7 +62,7 @@ $utopia->post('/v1/projects')
                     'legalCity' => $legalCity,
                     'legalAddress' => $legalAddress,
                     'legalTaxId' => $legalTaxId,
-                    'teamId' => $team->getUid(),
+                    'teamId' => $team->getId(),
                     'platforms' => [],
                     'webhooks' => [],
                     'keys' => [],
@@ -74,7 +74,7 @@ $utopia->post('/v1/projects')
                 throw new Exception('Failed saving project to DB', 500);
             }
 
-            $consoleDB->createNamespace($project->getUid());
+            $consoleDB->createNamespace($project->getId());
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -126,7 +126,7 @@ $utopia->get('/v1/projects/:projectId')
         function ($projectId) use ($request, $response, $providers, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -153,7 +153,7 @@ $utopia->get('/v1/projects/:projectId/usage')
         function ($projectId) use ($response, $consoleDB, $projectDB, $register) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -170,7 +170,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 $database = $client->selectDB('telegraf');
 
                 // Requests
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getUid().'\' GROUP BY time(1d) FILL(null)');
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time(1d) FILL(null)');
                 $points = $result->getPoints();
 
                 foreach ($points as $point) {
@@ -181,7 +181,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 }
 
                 // Network
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getUid().'\' GROUP BY time(1d) FILL(null)');
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time(1d) FILL(null)');
                 $points = $result->getPoints();
 
                 foreach ($points as $point) {
@@ -223,7 +223,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                     'limit' => 0,
                     'offset' => 0,
                     'filters' => [
-                        '$collection='.$collection['$uid'],
+                        '$collection='.$collection['$id'],
                     ],
                 ]);
 
@@ -297,7 +297,7 @@ $utopia->patch('/v1/projects/:projectId')
         function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -335,7 +335,7 @@ $utopia->patch('/v1/projects/:projectId/oauth2')
         function ($projectId, $provider, $appId, $secret) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -378,7 +378,7 @@ $utopia->delete('/v1/projects/:projectId')
 
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -389,7 +389,7 @@ $utopia->delete('/v1/projects/:projectId')
             }
 
             // Delete all DBs
-            // $consoleDB->deleteNamespace($project->getUid());
+            // $consoleDB->deleteNamespace($project->getId());
 
             // Optimize DB?
 
@@ -418,7 +418,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
         function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -476,7 +476,7 @@ $utopia->get('/v1/projects/:projectId/webhooks')
         function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -509,11 +509,11 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
         function ($projectId, $webhookId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
+            $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
             if (empty($webhook) && $webhook instanceof Document) {
                 throw new Exception('Webhook not found', 404);
@@ -548,7 +548,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
         function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -563,7 +563,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
                 'version' => '1',
             ]);
 
-            $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
+            $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
             if (empty($webhook) && $webhook instanceof Document) {
                 throw new Exception('Webhook not found', 404);
@@ -597,17 +597,17 @@ $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
         function ($projectId, $webhookId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $webhook = $project->search('$uid', $webhookId, $project->getAttribute('webhooks', []));
+            $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
             if (empty($webhook) && $webhook instanceof Document) {
                 throw new Exception('Webhook not found', 404);
             }
 
-            if (!$consoleDB->deleteDocument($webhook->getUid())) {
+            if (!$consoleDB->deleteDocument($webhook->getId())) {
                 throw new Exception('Failed to remove webhook from DB', 500);
             }
 
@@ -629,7 +629,7 @@ $utopia->post('/v1/projects/:projectId/keys')
         function ($projectId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -673,7 +673,7 @@ $utopia->get('/v1/projects/:projectId/keys')
         function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -692,11 +692,11 @@ $utopia->get('/v1/projects/:projectId/keys/:keyId')
         function ($projectId, $keyId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
+            $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
             if (empty($key) && $key instanceof Document) {
                 throw new Exception('Key not found', 404);
@@ -719,11 +719,11 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
         function ($projectId, $keyId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
+            $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
             if (empty($key) && $key instanceof Document) {
                 throw new Exception('Key not found', 404);
@@ -753,17 +753,17 @@ $utopia->delete('/v1/projects/:projectId/keys/:keyId')
         function ($projectId, $keyId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $key = $project->search('$uid', $keyId, $project->getAttribute('keys', []));
+            $key = $project->search('$id', $keyId, $project->getAttribute('keys', []));
 
             if (empty($key) && $key instanceof Document) {
                 throw new Exception('Key not found', 404);
             }
 
-            if (!$consoleDB->deleteDocument($key->getUid())) {
+            if (!$consoleDB->deleteDocument($key->getId())) {
                 throw new Exception('Failed to remove key from DB', 500);
             }
 
@@ -792,7 +792,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
         function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -865,7 +865,7 @@ $utopia->get('/v1/projects/:projectId/tasks')
         function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -898,11 +898,11 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
         function ($projectId, $taskId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
+            $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
             if (empty($task) && $task instanceof Document) {
                 throw new Exception('Task not found', 404);
@@ -939,11 +939,11 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
         function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
+            $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
             if (empty($task) && $task instanceof Document) {
                 throw new Exception('Task not found', 404);
@@ -1000,17 +1000,17 @@ $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
         function ($projectId, $taskId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $task = $project->search('$uid', $taskId, $project->getAttribute('tasks', []));
+            $task = $project->search('$id', $taskId, $project->getAttribute('tasks', []));
 
             if (empty($task) && $task instanceof Document) {
                 throw new Exception('Task not found', 404);
             }
 
-            if (!$consoleDB->deleteDocument($task->getUid())) {
+            if (!$consoleDB->deleteDocument($task->getId())) {
                 throw new Exception('Failed to remove tasks from DB', 500);
             }
 
@@ -1035,7 +1035,7 @@ $utopia->post('/v1/projects/:projectId/platforms')
         function ($projectId, $type, $name, $key, $store, $url) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -1083,7 +1083,7 @@ $utopia->get('/v1/projects/:projectId/platforms')
         function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
@@ -1104,11 +1104,11 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
         function ($projectId, $platformId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
+            $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
             if (empty($platform) && $platform instanceof Document) {
                 throw new Exception('Platform not found', 404);
@@ -1133,11 +1133,11 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
         function ($projectId, $platformId, $name, $key, $store, $url) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
+            $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
             if (empty($platform) && $platform instanceof Document) {
                 throw new Exception('Platform not found', 404);
@@ -1170,17 +1170,17 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
         function ($projectId, $platformId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
-            if (empty($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $platform = $project->search('$uid', $platformId, $project->getAttribute('platforms', []));
+            $platform = $project->search('$id', $platformId, $project->getAttribute('platforms', []));
 
             if (empty($platform) && $platform instanceof Document) {
                 throw new Exception('Platform not found', 404);
             }
 
-            if (!$consoleDB->deleteDocument($platform->getUid())) {
+            if (!$consoleDB->deleteDocument($platform->getId())) {
                 throw new Exception('Failed to remove platform from DB', 500);
             }
 

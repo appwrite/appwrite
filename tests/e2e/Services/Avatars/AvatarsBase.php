@@ -12,7 +12,7 @@ trait AvatarsBase
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -20,7 +20,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 200,
             'height' => 200,
@@ -31,7 +31,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 300,
             'height' => 300,
@@ -47,7 +47,7 @@ trait AvatarsBase
          */
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/unknown', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 300,
             'height' => 300,
@@ -57,7 +57,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
        
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 2001,
             'height' => 300,
@@ -75,7 +75,7 @@ trait AvatarsBase
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -83,7 +83,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 200,
             'height' => 200,
@@ -94,7 +94,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 300,
             'height' => 300,
@@ -110,7 +110,7 @@ trait AvatarsBase
          */
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/unknown', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 300,
             'height' => 300,
@@ -120,7 +120,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
         
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 2001,
             'height' => 300,
@@ -138,7 +138,7 @@ trait AvatarsBase
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -146,7 +146,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 200,
             'height' => 200,
@@ -157,7 +157,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 300,
             'height' => 300,
@@ -172,7 +172,7 @@ trait AvatarsBase
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/unknown', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 300,
             'height' => 300,
@@ -182,7 +182,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
         
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'width' => 2001,
             'height' => 300,
@@ -200,7 +200,7 @@ trait AvatarsBase
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io/images/apple.png',
         ]);
@@ -210,7 +210,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io/images/apple.png',
             'width' => 200,
@@ -222,7 +222,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io/images/apple.png',
             'width' => 300,
@@ -238,7 +238,7 @@ trait AvatarsBase
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io/images/unknown.png',
             'width' => 300,
@@ -249,7 +249,7 @@ trait AvatarsBase
         $this->assertEquals(404, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io/images/apple.png',
             'width' => 2001,
@@ -270,7 +270,7 @@ trait AvatarsBase
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'https://appwrite.io/',
         ]);
@@ -280,7 +280,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         // $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
-        //     'x-appwrite-project' => $this->getProject()['$uid'],
+        //     'x-appwrite-project' => $this->getProject()['$id'],
         // ], [
         //     'url' => 'https://www.bbc.com/',
         // ]);
@@ -290,7 +290,7 @@ trait AvatarsBase
         // $this->assertNotEmpty($response['body']);
 
         // $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
-        //     'x-appwrite-project' => $this->getProject()['$uid'],
+        //     'x-appwrite-project' => $this->getProject()['$id'],
         // ], [
         //     'url' => 'https://edition.cnn.com/',
         // ]);
@@ -303,7 +303,7 @@ trait AvatarsBase
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'unknown-address',
         ]);
@@ -311,7 +311,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'url' => 'http://unknown-address.test',
         ]);
@@ -327,7 +327,7 @@ trait AvatarsBase
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'text' => 'url:https://appwrite.io/',
         ]);
@@ -337,7 +337,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'text' => 'url:https://appwrite.io/',
             'size' => 200,
@@ -348,7 +348,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'text' => 'url:https://appwrite.io/',
             'size' => 200,
@@ -360,7 +360,7 @@ trait AvatarsBase
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'text' => 'url:https://appwrite.io/',
             'size' => 200,
@@ -377,7 +377,7 @@ trait AvatarsBase
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'text' => 'url:https://appwrite.io/',
             'size' => 1001,
@@ -388,7 +388,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'text' => 'url:https://appwrite.io/',
             'size' => 400,
@@ -399,7 +399,7 @@ trait AvatarsBase
         $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'text' => 'url:https://appwrite.io/',
             'size' => 400,

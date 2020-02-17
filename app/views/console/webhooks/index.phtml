@@ -68,12 +68,12 @@ $events = [
                         data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}" />
+                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{webhook.$uid}}">Name</label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
+                        <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
 
-                        <label data-ls-attrs="for=events-{{webhook.$uid}}">Events</label>
+                        <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
                         <div class="row thin margin-bottom">
                             <?php foreach ($events as $i => $event) : ?>
                                 <div class="col span-6">
@@ -87,8 +87,8 @@ $events = [
                             <?php endforeach; ?>
                         </div>
 
-                        <label data-ls-attrs="for=url-{{webhook.$uid}}">POST URL</label>
-                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
+                        <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
+                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
 
                         <div class="margin-bottom toggle" data-ls-ui-open>
                             <i class="icon-plus pull-end margin-top-tiny"></i>
@@ -99,11 +99,11 @@ $events = [
                                 <small class="text-size-small">(optional)</small>
                             </h2>
 
-                            <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom-small">
+                            <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                                 <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$uid}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$uid}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
                             </label>
 
                             <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
@@ -114,12 +114,12 @@ $events = [
 
                             <div class="row thin">
                                 <div class="col span-6">
-                                    <label data-ls-attrs="for=httpUser-{{webhook.$uid}}">User</label>
-                                    <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
+                                    <label data-ls-attrs="for=httpUser-{{webhook.$id}}">User</label>
+                                    <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{webhook.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                 </div>
                                 <div class="col span-6">
-                                    <label data-ls-attrs="for=httpPass-{{webhook.$uid}}">Password</label>
-                                    <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                                    <label data-ls-attrs="for=httpPass-{{webhook.$id}}">Password</label>
+                                    <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
                             </div>
                         </div>
@@ -144,7 +144,7 @@ $events = [
                     data-failure-param-alert-classname="error">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}" />
+                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
                     <button class="danger reverse">Delete</button>
                 </form>
@@ -211,7 +211,7 @@ $events = [
                         <small class="text-size-small">(optional)</small>
                     </h2>
 
-                    <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom-small">
+                    <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                         <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
                         <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span>Enabled</span>

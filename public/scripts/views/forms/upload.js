@@ -104,7 +104,7 @@
 
         var remove = (function(result) {
           return function(event) {
-            render(result.$uid);
+            render(result.$id);
           };
         })(result);
 
@@ -128,7 +128,7 @@
           function(response) {
             onComplete(message);
 
-            render(response.$uid);
+            render(response.$id);
           },
           function(error) {
             alerts.add({ text: "An error occurred!", class: "" }, 3000); // File(s) uploaded.

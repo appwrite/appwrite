@@ -3,9 +3,10 @@
 
 require_once __DIR__.'/../init.php';
 
-global $register, $projectDB, $console;
+global $register, $projectDB, $console, $providers;
 
 use Database\Database;
+use Database\Document;
 use Database\Validator\Authorization;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
@@ -19,65 +20,147 @@ $callbacks = [
     },
     '0.5.0' => function($project) use ($db, $projectDB) {
 
-        Console::info('Altering table for project: '.$project->getUid());
+        Console::info('Upgrading project: '.$project->getId());
 
-        try {
-            $statement = $db->prepare("
-                ALTER TABLE `appwrite`.`app_{$project->getUid()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
-                ALTER TABLE `appwrite`.`app_{$project->getUid()}.audit.audit` DROP INDEX IF EXISTS `index_1`;
-                ALTER TABLE `appwrite`.`app_{$project->getUid()}.audit.audit` ADD INDEX IF NOT EXISTS `index_1` (`userId` ASC);
-            ");
-
-            $statement->execute();
-        }
-        catch (\Exception $e) {
-            Console::error($e->getMessage().'/');
-        }
-
-        $statement->closeCursor();
+        // Update all documents $uid -> $id
 
         $limit = 30;
         $sum = 30;
         $offset = 0;
 
         while ($sum >= 30) {
-            $users = $projectDB->getCollection([
+            $all = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
-                'orderField' => 'name',
-                'orderType' => 'ASC',
+                'orderField' => '$uid',
+                'orderType' => 'DESC',
                 'orderCast' => 'string',
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                ],
             ]);
 
-            $sum = count($users);
+            $sum = count($all);
             
-            Console::success('Fetched '.$sum.' users...');
-
-            foreach($users as $user) {
-                $user
-                    ->setAttribute('emailVerification', $user->getAttribute('confirm', false))
-                    ->removeAttribute('confirm')
-                ;
-
-                if(!$projectDB->updateDocument($user->getArrayCopy())) {
-                    Console::error('Failed to update user');
+            Console::success('Fetched '.$sum.' (offset: '.$offset.' / limit: '.$limit.') documents from a total of '.$projectDB->getSum());
+            
+            foreach($all as $document) {
+                if(empty($document->getAttribute('$uid', null))) {
+                    Console::info('Skipped document');
+                    continue;
                 }
-                else {
-                    Console::success('Updated user succefully');
+                
+                $document = fixDocument($document);
+
+                if(empty($document->getId())) {
+                    throw new Exception('Missing ID');
+                }
+
+                try {
+                    $new = $projectDB->overwriteDocument($document->getArrayCopy());
+                    Console::success('Updated document succefully');
+                } catch (\Throwable $th) {
+                    Console::error('Failed to update document: '.$th->getMessage());
+                    continue;
+                }
+
+                if($new->getId() !== $document->getId()) {
+                    throw new Exception('Duplication Error');
                 }
             }
 
             $offset = $offset + $limit;
         }
+
+        try {
+            $statement = $db->prepare("
+                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
+                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` DROP INDEX IF EXISTS `index_1`;
+                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` ADD INDEX IF NOT EXISTS `index_1` (`userId` ASC);
+            ");
+
+            $statement->closeCursor();
+
+            $statement->execute();
+        }
+        catch (\Exception $e) {
+            Console::error('Failed to alter table for project: '.$project->getId().' with message: '.$e->getMessage().'/');
+        }
     },
 ];
 
+function fixDocument(Document $document) {
+    global $providers;
+
+    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_PROJECTS){
+        foreach($providers as $key => $provider) {
+            if(!empty($document->getAttribute('usersOauth'.ucfirst($key).'Appid'))) {
+                $document
+                    ->setAttribute('usersOauth2'.ucfirst($key).'Appid', $document->getAttribute('usersOauth'.ucfirst($key).'Appid', ''))
+                    ->removeAttribute('usersOauth'.ucfirst($key).'Appid')
+                ;
+            }
+
+            if(!empty($document->getAttribute('usersOauth'.ucfirst($key).'Secret'))) {
+                $document
+                    ->setAttribute('usersOauth2'.ucfirst($key).'Secret', $document->getAttribute('usersOauth'.ucfirst($key).'Secret', ''))
+                    ->removeAttribute('usersOauth'.ucfirst($key).'Secret')
+                ;
+            }
+        }
+    }
+
+    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_USERS) {
+        foreach($providers as $key => $provider) {
+            if(!empty($document->getAttribute('oauth'.ucfirst($key)))) {
+                $document
+                    ->setAttribute('oauth2'.ucfirst($key), $document->getAttribute('oauth'.ucfirst($key), ''))
+                    ->removeAttribute('oauth'.ucfirst($key))
+                ;
+            }
+
+            if(!empty($document->getAttribute('oauth'.ucfirst($key).'AccessToken'))) {
+                $document
+                    ->setAttribute('oauth2'.ucfirst($key).'AccessToken', $document->getAttribute('oauth'.ucfirst($key).'AccessToken', ''))
+                    ->removeAttribute('oauth'.ucfirst($key).'AccessToken')
+                ;
+            }
+        }
+    
+        if($document->getAttribute('confirm', null) !== null) {
+            $document
+                ->setAttribute('emailVerification', $document->getAttribute('confirm', $document->getAttribute('emailVerification', false)))
+                ->removeAttribute('confirm')
+            ;
+        }
+    }
+
+    if(empty($document->getAttribute('$uid', null))) {
+        return $document;
+    }
+
+    $document
+        ->setAttribute('$id', $document->getAttribute('$uid', null))
+        ->removeAttribute('$uid')
+    ;
+
+    foreach($document as &$attr) {
+        if($attr instanceof Document) {
+            $attr = fixDocument($attr);
+        }
+
+        if(is_array($attr)) {
+            foreach($attr as &$child) {
+                if($child instanceof Document) {
+                    $child = fixDocument($child);
+                }
+            }
+        }
+    }
+
+    return $document;
+}
+
 $cli
     ->task('run')
-    ->action(function () use ($console, $db, $projectDB, $consoleDB, $callbacks) {
+    ->action(function () use ($console, $projectDB, $consoleDB, $callbacks) {
         Console::success('Starting Upgrade');
 
         Authorization::disable();
@@ -89,9 +172,15 @@ $cli
 
         while ($sum >= 30) {
             foreach($projects as $project) {
-                $projectDB->setNamespace('app_'.$project->getUid());
+                $projectDB->setNamespace('app_'.$project->getId());
 
-                $callbacks['0.5.0']($project);
+                try {
+                    $callbacks['0.5.0']($project);
+                } catch (\Throwable $th) {
+                    Console::error('Failed to update project ("'.$project->getId().'") version with error: '.$th->getMessage());
+                    $projectDB->setNamespace('app_console');
+                    $projectDB->deleteDocument($project->getId());
+                }
             }
 
             $projects = $consoleDB->getCollection([

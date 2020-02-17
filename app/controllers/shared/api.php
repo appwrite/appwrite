@@ -16,9 +16,9 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
     $timeLimit = new TimeLimit($route->getLabel('abuse-key', 'url:{url},ip:{ip}'), $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function () use ($register) {
         return $register->get('db');
     });
-    $timeLimit->setNamespace('app_'.$project->getUid());
+    $timeLimit->setNamespace('app_'.$project->getId());
     $timeLimit
-        ->setParam('{userId}', $user->getUid())
+        ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getServer('HTTP_USER_AGENT', ''))
         ->setParam('{ip}', $request->getIP())
         ->setParam('{url}', $request->getServer('HTTP_HOST', '').$route->getURL())

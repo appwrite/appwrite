@@ -76,7 +76,7 @@ $utopia->post('/v1/users')
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json(array_merge($user->getArrayCopy(array_merge([
-                    '$uid',
+                    '$id',
                     'status',
                     'email',
                     'registration',
@@ -125,7 +125,7 @@ $utopia->get('/v1/users')
             $results = array_map(function ($value) use ($oauth2Keys) { /* @var $value \Database\Document */
                 return $value->getArrayCopy(array_merge(
                     [
-                        '$uid',
+                        '$id',
                         'status',
                         'email',
                         'registration',
@@ -152,7 +152,7 @@ $utopia->get('/v1/users/:userId')
         function ($userId) use ($response, $projectDB, $providers) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
@@ -169,7 +169,7 @@ $utopia->get('/v1/users/:userId')
 
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
-                    '$uid',
+                    '$id',
                     'status',
                     'email',
                     'registration',
@@ -193,7 +193,7 @@ $utopia->get('/v1/users/:userId/prefs')
         function ($userId) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
@@ -222,7 +222,7 @@ $utopia->get('/v1/users/:userId/sessions')
         function ($userId) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
@@ -247,7 +247,7 @@ $utopia->get('/v1/users/:userId/sessions')
                 $dd->parse();
 
                 $sessions[$index] = [
-                    '$uid' => $token->getUid(),
+                    '$id' => $token->getId(),
                     'OS' => $dd->getOs(),
                     'client' => $dd->getClient(),
                     'device' => $dd->getDevice(),
@@ -285,18 +285,18 @@ $utopia->get('/v1/users/:userId/logs')
         function ($userId) use ($response, $register, $projectDB, $project) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
             $adapter = new AuditAdapter($register->get('db'));
-            $adapter->setNamespace('app_'.$project->getUid());
+            $adapter->setNamespace('app_'.$project->getId());
 
             $audit = new Audit($adapter);
             
             $countries = Locale::getText('countries');
 
-            $logs = $audit->getLogsByUser($user->getUid());
+            $logs = $audit->getLogsByUser($user->getId());
 
             $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $output = [];
@@ -350,7 +350,7 @@ $utopia->patch('/v1/users/:userId/status')
         function ($userId, $status) use ($response, $projectDB, $providers) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
@@ -375,7 +375,7 @@ $utopia->patch('/v1/users/:userId/status')
 
             $response
                 ->json(array_merge($user->getArrayCopy(array_merge([
-                    '$uid',
+                    '$id',
                     'status',
                     'email',
                     'registration',
@@ -398,7 +398,7 @@ $utopia->patch('/v1/users/:userId/prefs')
         function ($userId, $prefs) use ($response, $projectDB, $providers) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
@@ -441,15 +441,15 @@ $utopia->delete('/v1/users/:userId/sessions/:session')
         function ($userId, $sessionId) use ($response, $request, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
-                if ($sessionId == $token->getUid()) {
-                    if (!$projectDB->deleteDocument($token->getUid())) {
+                if ($sessionId == $token->getId()) {
+                    if (!$projectDB->deleteDocument($token->getId())) {
                         throw new Exception('Failed to remove token from DB', 500);
                     }
                 }
@@ -472,14 +472,14 @@ $utopia->delete('/v1/users/:userId/sessions')
         function ($userId) use ($response, $request, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
-            if (empty($user->getUid()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
 
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
-                if (!$projectDB->deleteDocument($token->getUid())) {
+                if (!$projectDB->deleteDocument($token->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
             }

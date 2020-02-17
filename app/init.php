@@ -220,10 +220,10 @@ $console = $consoleDB->getDocument('console');
 
 $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 
-Auth::setCookieName('a_session_'.$project->getUid());
+Auth::setCookieName('a_session_'.$project->getId());
 
 if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a_session_'.$console->getUid());
+    Auth::setCookieName('a_session_'.$console->getId());
 }
 
 $session = Auth::decodeSession(
@@ -235,7 +235,7 @@ Auth::$secret = $session['secret'];
 
 $projectDB = new Database();
 $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_'.$project->getUid());
+$projectDB->setNamespace('app_'.$project->getId());
 $projectDB->setMocks($collections);
 
 $user = $projectDB->getDocument(Auth::$unique);
@@ -244,21 +244,21 @@ if (APP_MODE_ADMIN === $mode) {
     $user = $consoleDB->getDocument(Auth::$unique);
 
     $user
-        ->setAttribute('$uid', 'admin-'.$user->getAttribute('$uid'))
+        ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
     ;
 }
 
-if (empty($user->getUid()) // Check a document has been found in the DB
+if (empty($user->getId()) // Check a document has been found in the DB
     || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
     || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-    $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+    $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
 }
 
 if (APP_MODE_ADMIN === $mode) {
     if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
         Authorization::disable();
     } else {
-        $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
     }
 }
 
@@ -266,7 +266,7 @@ if (APP_MODE_ADMIN === $mode) {
 $register->get('smtp')
     ->setFrom(
         $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-        ($project->getUid() === 'console')
+        ($project->getId() === 'console')
             ? urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
             : sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
         )

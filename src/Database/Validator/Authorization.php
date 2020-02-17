@@ -79,7 +79,7 @@ class Authorization extends Validator
         $permission = null;
 
         foreach ($permissions[$this->action] as $permission) {
-            $permission = str_replace(':{self}', ':'.$this->document->getUid(), $permission);
+            $permission = str_replace(':{self}', ':'.$this->document->getId(), $permission);
 
             if (in_array($permission, self::getRoles())) {
                 return true;

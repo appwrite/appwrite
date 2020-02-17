@@ -102,7 +102,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                     <tbody data-ls-loop="project-files.files" data-ls-as="file">
                         <tr>
                             <td class="hide">
-                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=45&height=45&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
+                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=45&height=45&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
                             </td>
                             <td data-title="Name: ">
                                 <div data-ui-modal class="box modal close" data-button-text="{{file.name}}" data-button-class="link">
@@ -124,9 +124,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         data-failure-param-alert-text="Failed to update file"
                                         data-failure-param-alert-classname="error">
 
-                                        <label for="files-fileId">File UID</label>
+                                        <label for="files-fileId">File ID</label>
                                         <div class="input-copy">
-                                            <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$uid}}" />
+                                            <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$id}}" />
                                         </div>
                                         <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
@@ -139,7 +139,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         <hr />
 
                                         <div class="pull-end">
-                                            <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?project={{router.params.project}}&mode=admin" target="_blank">Open preview <i class="icon-link-ext"></i></a>
+                                            <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?project={{router.params.project}}&mode=admin" target="_blank">Open preview <i class="icon-link-ext"></i></a>
                                         </div>
 
                                         <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

@@ -31,7 +31,7 @@ trait ProjectCustom
 
         $this->assertEquals(201, $team['headers']['status-code']);
         $this->assertEquals('Demo Project Team', $team['body']['name']);
-        $this->assertNotEmpty($team['body']['$uid']);
+        $this->assertNotEmpty($team['body']['$id']);
 
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
@@ -40,7 +40,7 @@ trait ProjectCustom
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project',
-            'teamId' => $team['body']['$uid'],
+            'teamId' => $team['body']['$id'],
             'description' => 'Demo Project Description',
             'logo' => '',
             'url' => 'https://appwrite.io',
@@ -55,7 +55,7 @@ trait ProjectCustom
         $this->assertEquals(201, $project['headers']['status-code']);
         $this->assertNotEmpty($project['body']);
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$uid'] . '/keys', [
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
@@ -86,13 +86,13 @@ trait ProjectCustom
         //     'email' => $this->demoEmail,
         //     'password' => $this->demoPassword,
         //     'session' => $session,
-        //     'projectUid' => $project['body']['$uid'],
+        //     'projectUid' => $project['body']['$id'],
         //     'projectAPIKeySecret' => $key['body']['secret'],
-        //     'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a_session_' . $project['body']['$uid']],
+        //     'projectSession' => $this->client->parseCookie($user['headers']['set-cookie'])['a_session_' . $project['body']['$id']],
         // ];
 
         self::$project = [
-            '$uid' => $project['body']['$uid'],
+            '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],
             'apiKey' => $key['body']['secret'],
         ];

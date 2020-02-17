@@ -11,14 +11,14 @@ trait TeamsBaseServer
      */
     public function testGetTeamMemberships($data):array
     {
-        $uid = (isset($data['teamUid'])) ? $data['teamUid'] : '';
+        $id = (isset($data['teamUid'])) ? $data['teamUid'] : '';
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$uid.'/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$id.'/memberships', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         
         $this->assertEquals(200, $response['headers']['status-code']);

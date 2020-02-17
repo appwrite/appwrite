@@ -18,11 +18,11 @@ trait TeamsBaseClient
          */
         $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body'][0]['$uid']);
+        $this->assertNotEmpty($response['body'][0]['$id']);
         $this->assertEquals($this->getUser()['name'], $response['body'][0]['name']);
         $this->assertEquals($this->getUser()['email'], $response['body'][0]['email']);
         $this->assertEquals('owner', $response['body'][0]['roles'][0]);
@@ -48,7 +48,7 @@ trait TeamsBaseClient
          */
         $response = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => 'Friend User',
@@ -57,7 +57,7 @@ trait TeamsBaseClient
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
@@ -79,7 +79,7 @@ trait TeamsBaseClient
          */
         $response = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => 'dasdkaskdjaskdjasjkd',
             'name' => 'Friend User',
@@ -91,7 +91,7 @@ trait TeamsBaseClient
 
         $response = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => 'Friend User',
@@ -103,7 +103,7 @@ trait TeamsBaseClient
 
         $response = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => 'Friend User',
@@ -137,14 +137,14 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$inviteUid.'/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
             'userId' => $userUid,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['$uid']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertCount(2, $response['body']['roles']);
@@ -157,7 +157,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$inviteUid.'/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => 'sdasdasd',
             'userId' => $userUid,
@@ -168,7 +168,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$inviteUid.'/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => '',
             'userId' => $userUid,
@@ -179,7 +179,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$inviteUid.'/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
             'userId' => 'sdasd',
@@ -190,7 +190,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_PATCH, '/teams/'.$teamUid.'/memberships/'.$inviteUid.'/status', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
             'userId' => '',
@@ -215,7 +215,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid.'/memberships/'.$inviteUid, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
@@ -227,7 +227,7 @@ trait TeamsBaseClient
         $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships/'.$inviteUid, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);

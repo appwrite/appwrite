@@ -95,7 +95,7 @@ abstract class Scope extends TestCase
         $session = $this->client->parseCookie($session['headers']['set-cookie'])['a_session_console'];
 
         self::$root = [
-            '$uid' => $root['body']['$uid'],
+            '$id' => $root['body']['$id'],
             'name' => $root['body']['name'],
             'email' => $root['body']['email'],
             'session' => $session,
@@ -114,8 +114,8 @@ abstract class Scope extends TestCase
      */
     public function getUser(): array
     {
-        if(isset(self::$user[$this->getProject()['$uid']])) {
-            return self::$user[$this->getProject()['$uid']];
+        if(isset(self::$user[$this->getProject()['$id']])) {
+            return self::$user[$this->getProject()['$id']];
         }
 
         $email = uniqid().'user@localhost.test';
@@ -125,7 +125,7 @@ abstract class Scope extends TestCase
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'email' => $email,
             'password' => $password,
@@ -137,21 +137,21 @@ abstract class Scope extends TestCase
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], [
             'email' => $email,
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie($session['headers']['set-cookie'])['a_session_'.$this->getProject()['$uid']];
+        $session = $this->client->parseCookie($session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
-        self::$user[$this->getProject()['$uid']] = [
-            '$uid' => $user['body']['$uid'],
+        self::$user[$this->getProject()['$id']] = [
+            '$id' => $user['body']['$id'],
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
             'session' => $session,
         ];
 
-        return self::$user[$this->getProject()['$uid']];
+        return self::$user[$this->getProject()['$id']];
     }
 }

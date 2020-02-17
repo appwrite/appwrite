@@ -13,7 +13,7 @@ trait HealthBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/health', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -33,7 +33,7 @@ trait HealthBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/health/db', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -53,7 +53,7 @@ trait HealthBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/health/db', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -73,7 +73,7 @@ trait HealthBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/health/time', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -97,7 +97,7 @@ trait HealthBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/health/webhooks', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -118,7 +118,7 @@ trait HealthBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/health/storage/local', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -138,7 +138,7 @@ trait HealthBase
          */
         $response = $this->client->call(Client::METHOD_GET, '/health/storage/anti-virus', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);

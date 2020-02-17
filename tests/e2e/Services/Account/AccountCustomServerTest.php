@@ -23,7 +23,7 @@ class AccountCustomServerTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$uid'],
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'email' => $email,

@@ -109,7 +109,7 @@ if(read){payload['read']=read;}
 if(write){payload['write']=write;}
 if(rules){payload['rules']=rules;}
 return http.put(path,{'content-type':'application/json',},payload);},deleteCollection:function(collectionId){if(collectionId===undefined){throw new Error('Missing required parameter: "collectionId"');}
-let path='/database/collections/{collectionId}'.replace(new RegExp('{collectionId}','g'),collectionId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},listDocuments:function(collectionId,filters=[],offset=0,limit=50,orderField='$uid',orderType='ASC',orderCast='string',search='',first=0,last=0){if(collectionId===undefined){throw new Error('Missing required parameter: "collectionId"');}
+let path='/database/collections/{collectionId}'.replace(new RegExp('{collectionId}','g'),collectionId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},listDocuments:function(collectionId,filters=[],offset=0,limit=50,orderField='$id',orderType='ASC',orderCast='string',search='',first=0,last=0){if(collectionId===undefined){throw new Error('Missing required parameter: "collectionId"');}
 let path='/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}','g'),collectionId);let payload={};if(filters){payload['filters']=filters;}
 if(offset){payload['offset']=offset;}
 if(limit){payload['limit']=limit;}

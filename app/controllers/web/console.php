@@ -183,7 +183,7 @@ $utopia->get('/console/database/collection')
     ->action(function ($id) use ($layout, $projectDB) {
         $collection = $projectDB->getDocument($id, false);
 
-        if (empty($collection->getUid()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             throw new Exception('Collection not found', 404);
         }
 
