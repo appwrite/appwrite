@@ -57,11 +57,13 @@ const configApp  = {
         'public/scripts/views/general/scroll-direction.js',
         'public/scripts/views/general/setup.js',
         'public/scripts/views/general/switch.js',
+        'public/scripts/views/general/theme.js',
         
         'public/scripts/views/paging/back.js',
         'public/scripts/views/paging/next.js',
 
         'public/scripts/views/ui/highlight.js',
+        'public/scripts/views/ui/loader.js',
         'public/scripts/views/ui/modal.js',
         'public/scripts/views/ui/open.js',
         'public/scripts/views/ui/phases.js',
@@ -73,7 +75,8 @@ const configApp  = {
 const configDep = {
     mainFile: 'app-dep.js',
     src: [
-        'node_modules/appwrite/src/sdk.js',
+        //'node_modules/appwrite/src/sdk.js',
+        'public/scripts/dependencies/appwrite.js',
         'public/scripts/dependencies/chart.js',
         'public/scripts/dependencies/markdown-it.js',
         'public/scripts/dependencies/pell.js',

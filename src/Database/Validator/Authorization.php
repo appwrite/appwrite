@@ -79,7 +79,7 @@ class Authorization extends Validator
         $permission = null;
 
         foreach ($permissions[$this->action] as $permission) {
-            $permission = str_replace(':{self}', ':'.$this->document->getUid(), $permission);
+            $permission = str_replace(':{self}', ':'.$this->document->getId(), $permission);
 
             if (in_array($permission, self::getRoles())) {
                 return true;
@@ -111,9 +111,27 @@ class Authorization extends Validator
      * @var bool
      */
     public static $status = true;
+    
+    /**
+     * Default value in case we need
+     *  to reset Authorization status
+     * 
+     * @var bool
+     */
+    public static $statusDefault = true;
 
     /**
-     *
+     * Change default status.
+     * This will be used for the
+     *  value set on the self::reset() method 
+     */
+    public static function setDefaultStatus($status) {
+        self::$statusDefault = $status;
+        self::$status = $status;
+    }
+
+    /**
+     *  Enable Authorization checks
      */
     public static function enable()
     {
@@ -121,10 +139,18 @@ class Authorization extends Validator
     }
 
     /**
-     *
+     * Disable Authorization checks
      */
     public static function disable()
     {
         self::$status = false;
+    }
+
+    /**
+     * Disable Authorization checks
+     */
+    public static function reset()
+    {
+        self::$status = self::$statusDefault;
     }
 }

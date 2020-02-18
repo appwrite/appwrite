@@ -169,5 +169,6 @@ docker exec appwrite /bin/bash -c '/usr/share/nginx/html/vendor/bin/phpunit'
 
 From time to time, our team will add tutorials that will help contributors find their way in the Appwrite source code. Below is a list of currently available tutorials:
 
-* [Adding Support for a New OAuth Provider](./docs/tutorials/add-oauth-provider.md)
-* [Appwrite Environment Variables](./docs/tutorials/add-oauth-provider.md)
+* [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
+* [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
+* [Running in Production](./docs/tutorials/running-in-production.md)

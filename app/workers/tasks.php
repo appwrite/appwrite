@@ -38,7 +38,7 @@ class TasksV1
          *      If error count bigger than allowed change status to pause
          */
 
-        $taskId = (isset($this->args['$uid'])) ? $this->args['$uid'] : null;
+        $taskId = (isset($this->args['$id'])) ? $this->args['$id'] : null;
         $updated = (isset($this->args['updated'])) ? $this->args['updated'] : null;
         $next = (isset($this->args['next'])) ? $this->args['next'] : null;
         $delay = time() - $next;
@@ -58,7 +58,7 @@ class TasksV1
 
         Authorization::enable();
 
-        if (is_null($task->getUid()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
+        if (is_null($task->getId()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
             throw new Exception('Task Not Found');
         }
 
@@ -98,7 +98,7 @@ class TasksV1
             $ch,
             CURLOPT_HTTPHEADER,
             array_merge($headers, [
-                'X-'.APP_NAME.'-Task-UID: '.$task->getAttribute('$uid', ''),
+                'X-'.APP_NAME.'-Task-ID: '.$task->getAttribute('$id', ''),
                 'X-'.APP_NAME.'-Task-Name: '.$task->getAttribute('name', ''),
             ])
         );

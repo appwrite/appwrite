@@ -1,5 +1,7 @@
 <?php
 $home = $this->getParam('home', '');
+$fileLimit = $this->getParam('fileLimit', 0);
+$fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 ?>
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large margin-top">
@@ -14,19 +16,25 @@ $home = $this->getParam('home', '');
         <h1>Upload File</h1>
 
         <form
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Create Storage File"
             data-service="storage.createFile"
             data-event="submit"
             data-scope="sdk"
+            data-loading="Uploading File..."
             data-success="alert,trigger,reset"
             data-success-param-alert-text="File uploaded successfully"
-            data-success-param-trigger-events="file-create,modal-close"
+            data-success-param-trigger-events="storage.createFile,modal-close"
             data-failure="alert"
             data-failure-param-alert-text="Failed to upload file"
             data-failure-param-alert-classname="error">
             <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
-            <label for="file-read">Files</label>
-            <input type="file" name="files" id="file-files" required>
+            <label for="file-read">File</label>
+            <input type="file" name="file" id="file-file" size="1" required>
+
+            <div class="text-fade text-size-small margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
             <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
@@ -63,7 +71,7 @@ $home = $this->getParam('home', '');
 
     <div
         data-service="storage.listFiles"
-        data-event="load,file-create,file-update,file-delete"
+        data-event="load,storage.createFile,storage.updateFile,storage.deleteFile"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
         data-param-offset="{{router.params.offset}}"
@@ -72,7 +80,7 @@ $home = $this->getParam('home', '');
         data-name="project-files">
 
         <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom">
-            <h3 class="margin-bottom">No Files Found</h3>
+            <h3 class="margin-bottom-small text-bold-2">No Files Found</h3>
 
             <p class="margin-bottom-no">Upload your first file to get started</p>
         </div>
@@ -94,7 +102,7 @@ $home = $this->getParam('home', '');
                     <tbody data-ls-loop="project-files.files" data-ls-as="file">
                         <tr>
                             <td class="hide">
-                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?width=45&height=45&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
+                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=45&height=45&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
                             </td>
                             <td data-title="Name: ">
                                 <div data-ui-modal class="box modal close" data-button-text="{{file.name}}" data-button-class="link">
@@ -103,19 +111,22 @@ $home = $this->getParam('home', '');
                                     <h1>Update File</h1>
 
                                     <form
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Update Storage File"
                                         data-service="storage.updateFile"
                                         data-event="submit"
                                         data-scope="sdk"
                                         data-success="alert,trigger"
                                         data-success-param-alert-text="File updated successfully"
-                                        data-success-param-trigger-events="file-update,modal-close"
+                                        data-success-param-trigger-events="storage.updateFile,modal-close"
                                         data-failure="alert"
                                         data-failure-param-alert-text="Failed to update file"
                                         data-failure-param-alert-classname="error">
 
-                                        <label for="files-fileId">File UID</label>
+                                        <label for="files-fileId">File ID</label>
                                         <div class="input-copy">
-                                            <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$uid}}" />
+                                            <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$id}}" />
                                         </div>
                                         <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
@@ -128,7 +139,7 @@ $home = $this->getParam('home', '');
                                         <hr />
 
                                         <div class="pull-end">
-                                            <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$uid}}/preview?project={{router.params.project}}&mode=admin" target="_blank">Open preview <i class="icon-link-ext"></i></a>
+                                            <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?project={{router.params.project}}&mode=admin" target="_blank">Open preview <i class="icon-link-ext"></i></a>
                                         </div>
 
                                         <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

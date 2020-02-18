@@ -21,6 +21,8 @@ Appwrite API services aim to make developer's life a lot easier by hiding the co
 
 Using Appwrite, you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and team data, storage and file management, image manipulation and cropping, schedule cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
+Appwrite can also integrate really well with your backend. Appwrite can word behind your own proxy facing your internal network, or alongside your own custom backend. You can use Appwrite server SDK to integrate your backend with Appwrite's APIs and webhooks.
+
 [https://appwrite.io](https://appwrite.io)
 
 ![Appwrite](public/images/github.png)
@@ -51,7 +53,7 @@ docker-compose up -d --remove-orphans
 ```
 
 
-Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please notice that on non-linux native hosts, the server might take a few minutes to start after installation completes.
+Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 
 For advanced production and custom installation, check out our Docker [environment variables](docs/tutorials/environment-variables.md) docs.
@@ -71,8 +73,7 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ### Services
 
-* [**Auth**](https://appwrite.io/docs/auth) - Manage user authentication using multiple sign-in methods and account recovery.
-* [**Account**](https://appwrite.io/docs/account) - Manage current user account. Track and manage the user sessions, devices, and security audit log.
+* [**Account**](https://appwrite.io/docs/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sigin methods, and security logs.
 * [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
 * [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites and user roles within a team.
 * [**Database**](https://appwrite.io/docs/database) - Manage database collections and documents. Read, create, update and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.

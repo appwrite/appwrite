@@ -13,6 +13,7 @@ use Utopia\Validator\Range;
 use Utopia\View;
 use Utopia\Exception;
 use Auth\Auth;
+use Database\Database;
 use Database\Document;
 use Database\Validator\Authorization;
 use Event\Event;
@@ -22,7 +23,6 @@ use Utopia\Validator\WhiteList;
  * Configuration files
  */
 $roles = include __DIR__.'/config/roles.php'; // User roles and scopes
-$sdks = include __DIR__.'/config/sdks.php'; // List of SDK clients
 $services = include __DIR__.'/config/services.php'; // List of services
 
 $webhook = new Event('v1-webhooks', 'WebhooksV1');
@@ -54,6 +54,7 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
 }))));
 
 $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
+    
     $route = $utopia->match($request);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
@@ -119,19 +120,19 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
 
     $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
-
+    
     // Check if given key match project API keys
     $key = $project->search('secret', $request->getHeader('X-Appwrite-Key', ''), $project->getAttribute('keys', []));
-
+    
     /*
      * Try app auth when we have project key and no user
      *  Mock user to app and grant API key scopes in addition to default app scopes
      */
     if (null !== $key && $user->isEmpty()) {
         $user = new Document([
-            '$uid' => 0,
+            '$id' => 0,
             'status' => Auth::USER_STATUS_ACTIVATED,
-            'email' => 'app.'.$project->getUid().'@service.'.$domain,
+            'email' => 'app.'.$project->getId().'@service.'.$domain,
             'password' => '',
             'name' => $project->getAttribute('name', 'Untitled'),
         ]);
@@ -139,10 +140,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         $role = Auth::USER_ROLE_APP;
         $scopes = array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-        Authorization::disable();  // Cancel security segmentation for API keys.
+        Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
 
-    Authorization::setRole('user:'.$user->getUid());
+    Authorization::setRole('user:'.$user->getId());
     Authorization::setRole('role:'.$role);
 
     array_map(function ($node) {
@@ -158,6 +159,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     // TDOO Check if user is god
 
     if (!in_array($scope, $scopes)) {
+        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
+            throw new Exception('Project not found', 404);
+        }
+        
         throw new Exception($user->getAttribute('email', 'Guest').' (role: '.strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
@@ -173,14 +178,14 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      * Background Jobs
      */
     $webhook
-        ->setParam('projectId', $project->getUid())
+        ->setParam('projectId', $project->getId())
         ->setParam('event', $route->getLabel('webhook', ''))
         ->setParam('payload', [])
     ;
 
     $audit
-        ->setParam('projectId', $project->getUid())
-        ->setParam('userId', $user->getUid())
+        ->setParam('projectId', $project->getId())
+        ->setParam('userId', $user->getId())
         ->setParam('event', '')
         ->setParam('resource', '')
         ->setParam('userAgent', $request->getServer('HTTP_USER_AGENT', ''))
@@ -189,7 +194,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 
     $usage
-        ->setParam('projectId', $project->getUid())
+        ->setParam('projectId', $project->getId())
         ->setParam('url', $request->getServer('HTTP_HOST', '').$request->getServer('REQUEST_URI', ''))
         ->setParam('method', $request->getServer('REQUEST_METHOD', 'UNKNOWN'))
         ->setParam('request', 0)
@@ -198,7 +203,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage) {
+$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $mode, $project, $utopia) {
 
     /*
      * Trigger Events for background jobs
@@ -206,16 +211,22 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     if (!empty($webhook->getParam('event'))) {
         $webhook->trigger();
     }
-
+    
     if (!empty($audit->getParam('event'))) {
         $audit->trigger();
     }
+    
+    $route = $utopia->match($request);
 
-    $usage
-        ->setParam('request', $request->getSize())
-        ->setParam('response', $response->getSize())
-        ->trigger()
-    ;
+    if($project->getId()
+        && $mode !== APP_MODE_ADMIN
+        && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
+        $usage
+            ->setParam('request', $request->getSize())
+            ->setParam('response', $response->getSize())
+            ->trigger()
+        ;
+    }
 });
 
 $utopia->options(function () use ($request, $response, $domain, $project) {
@@ -236,6 +247,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
         case 402: // Error allowed publicly
         case 403: // Error allowed publicly
         case 404: // Error allowed publicly
+        case 409: // Error allowed publicly
         case 412: // Error allowed publicly
         case 429: // Error allowed publicly
             $code = $error->getCode();
@@ -330,10 +342,8 @@ $utopia->get('/robots.txt')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $response->text('# robotstxt.org/
-
-User-agent: *
-');
+            $template = new View(__DIR__.'/views/general/robots.phtml');
+            $response->text($template->render(false));
         }
     );
 
@@ -343,33 +353,27 @@ $utopia->get('/humans.txt')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $response->text('# humanstxt.org/
-# The humans responsible & technology colophon
-
-# TEAM
-    <name> -- <role> -- <twitter>
-
-# THANKS
-    <name>');
+            $template = new View(__DIR__.'/views/general/humans.phtml');
+            $response->text($template->render(false));
         }
     );
 
 $utopia->get('/v1/info') // This is only visible to gods
-->label('scope', 'god')
+    ->label('scope', 'god')
     ->label('docs', false)
     ->action(
-        function () use ($response, $user, $project, $version, $env) { //TODO CONSIDER BLOCKING THIS ACTION TO ROLE GOD
+        function () use ($response, $user, $project, $version, $env) {
             $response->json([
                 'name' => 'API',
                 'version' => $version,
                 'environment' => $env,
                 'time' => date('Y-m-d H:i:s', time()),
                 'user' => [
-                    'id' => $user->getUid(),
+                    'id' => $user->getId(),
                     'name' => $user->getAttribute('name', ''),
                 ],
                 'project' => [
-                    'id' => $project->getUid(),
+                    'id' => $project->getId(),
                     'name' => $project->getAttribute('name', ''),
                 ],
             ]);
@@ -407,7 +411,7 @@ $utopia->get('/v1/proxy')
 $utopia->get('/v1/open-api-2.json')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('platform', 'client', function () {return new WhiteList(['client', 'server']);}, 'Choose target platform.', true)
+    ->param('platform', 'client', function () {return new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE]);}, 'Choose target platform.', true)
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
@@ -436,14 +440,21 @@ $utopia->get('/v1/open-api-2.json')
                 if (!$tests && !$service['sdk']) {
                     continue;
                 }
-
+                
                 /** @noinspection PhpIncludeInspection */
                 include_once $service['controller'];
             }
 
             $security = [
-                'client' => ['Project' => []],
-                'server' => ['Project' => [], 'Key' => []],
+                APP_PLATFORM_CLIENT => ['Project' => []],
+                APP_PLATFORM_SERVER => ['Project' => [], 'Key' => []],
+                APP_PLATFORM_CONSOLE => ['Project' => [], 'Key' => []],
+            ];
+
+            $platforms = [
+                'client' => APP_PLATFORM_CLIENT,
+                'server' => APP_PLATFORM_SERVER,
+                'all' => APP_PLATFORM_CONSOLE,
             ];
 
             /*
@@ -476,13 +487,13 @@ $utopia->get('/v1/open-api-2.json')
                     'Project' => [
                         'type' => 'apiKey',
                         'name' => 'X-Appwrite-Project',
-                        'description' => 'Your Appwrite project ID',
+                        'description' => 'Your project ID',
                         'in' => 'header',
                     ],
                     'Key' => [
                         'type' => 'apiKey',
                         'name' => 'X-Appwrite-Key',
-                        'description' => 'Your Appwrite project secret key',
+                        'description' => 'Your secret API key',
                         'in' => 'header',
                     ],
                     'Locale' => [
@@ -543,6 +554,13 @@ $utopia->get('/v1/open-api-2.json')
                 ],
             ];
 
+            if ($extensions) {
+                $output['securityDefinitions']['Project']['extensions'] = ['demo' => '5df5acd0d48c2'];
+                $output['securityDefinitions']['Key']['extensions'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
+                $output['securityDefinitions']['Locale']['extensions'] = ['demo' => 'en'];
+                $output['securityDefinitions']['Mode']['extensions'] = ['demo' => ''];
+            }
+
             foreach ($utopia->getRoutes() as $key => $method) {
                 foreach ($method as $route) { /* @var $route \Utopia\Route */
                     if (!$route->getLabel('docs', true)) {
@@ -550,6 +568,10 @@ $utopia->get('/v1/open-api-2.json')
                     }
 
                     if (empty($route->getLabel('sdk.namespace', null))) {
+                        continue;
+                    }
+
+                    if($platform !== APP_PLATFORM_CONSOLE && !in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
                         continue;
                     }
 
@@ -582,6 +604,17 @@ $utopia->get('/v1/open-api-2.json')
                     ];
 
                     if ($extensions) {
+                        $platformList = $route->getLabel('sdk.platform', []);
+
+                        if(in_array(APP_PLATFORM_CLIENT, $platformList)) {
+                            $platformList = array_merge($platformList, [
+                                APP_PLATFORM_WEB,
+                                APP_PLATFORM_IOS,
+                                APP_PLATFORM_ANDROID,
+                                APP_PLATFORM_FLUTTER,
+                            ]);
+                        }
+
                         $temp['extensions'] = [
                             'weight' => $route->getOrder(),
                             'cookies' => $route->getLabel('sdk.cookies', false),
@@ -591,10 +624,11 @@ $utopia->get('/v1/open-api-2.json')
                             'rate-limit' => $route->getLabel('abuse-limit', 0),
                             'rate-time' => $route->getLabel('abuse-time', 3600),
                             'scope' => $route->getLabel('scope', ''),
+                            'platforms' => $platformList,
                         ];
                     }
 
-                    if ((!empty($scope) && 'public' != $scope)) {
+                    if ((!empty($scope))) { //  && 'public' != $scope
                         $temp['security'][] = $route->getLabel('sdk.security', $security[$platform]);
                     }
 
@@ -640,8 +674,9 @@ $utopia->get('/v1/open-api-2.json')
                                 break;
                             case 'Utopia\Validator\JSON':
                             case 'Utopia\Validator\Mock':
+                            case 'Utopia\Validator\Assoc':
                                 $node['type'] = 'object';
-                                $node['type'] = 'string';
+                                $node['type'] = 'object';
                                 $node['x-example'] = '{}';
                                 //$node['format'] = 'json';
                                 break;
@@ -722,7 +757,93 @@ $utopia->get('/v1/open-api-2.json')
 
             ksort($output['paths']);
 
-            $response->json($output);
+            $response
+                ->json($output);
+        }
+    );
+
+
+$utopia->get('/v1/debug')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response, $request, $utopia, $domain, $services) {
+            $output = [
+                'scopes' => [],
+                'webhooks' => [],
+                'methods' => [],
+                'routes' => [],
+                'docs' => [],
+            ];
+
+            foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
+                /** @noinspection PhpIncludeInspection */
+                if($service['tests']) {
+                    continue;
+                }
+
+                include_once $service['controller'];
+            }
+            
+            $i = 0;
+
+            foreach ($utopia->getRoutes() as $key => $method) {
+                foreach ($method as $route) { /* @var $route \Utopia\Route */
+                    if (!$route->getLabel('docs', true)) {
+                        continue;
+                    }
+
+                    if (empty($route->getLabel('sdk.namespace', null))) {
+                        continue;
+                    }
+
+                    if ($route->getLabel('scope', false)) {
+                        $output['scopes'][$route->getLabel('scope', false)] = $route->getMethod().' '.$route->getURL();
+                    }
+
+                    if ($route->getLabel('sdk.description', false)) {
+                        if(!realpath(__DIR__.'/../'.$route->getLabel('sdk.description', false))) {
+                            throw new Exception('Docs file ('.$route->getLabel('sdk.description', false).') is missing', 500);
+                        }
+
+                        if(array_key_exists($route->getLabel('sdk.description', false), $output['docs'])) {
+                            throw new Exception('Docs file ('.$route->getLabel('sdk.description', false).') is already in use by another route', 500);
+                        }
+
+                        $output['docs'][$route->getLabel('sdk.description', false)] = $route->getMethod().' '.$route->getURL();
+                    }
+
+                    if ($route->getLabel('webhook', false)) {
+                        if(array_key_exists($route->getLabel('webhook', false), $output['webhooks'])) {
+                            //throw new Exception('Webhook ('.$route->getLabel('webhook', false).') is already in use by another route', 500);
+                        }
+
+                        $output['webhooks'][$route->getLabel('webhook', false)] = $route->getMethod().' '.$route->getURL();
+                    }
+
+                    if ($route->getLabel('sdk.namespace', false)) {
+                        $method = $route->getLabel('sdk.namespace', false).'->'.$route->getLabel('sdk.method', false).'()';
+                        if(array_key_exists($method, $output['methods'])) {
+                            throw new Exception('Method ('.$method.') is already in use by another route', 500);
+                        }
+
+                        $output['methods'][$method] = $route->getMethod().' '.$route->getURL();
+                    }
+
+                    $output['routes'][$route->getURL().' ('.$route->getMethod().')'] = [];
+
+                    $i++;
+                }
+            }
+
+            ksort($output['scopes']);
+            ksort($output['webhooks']);
+            ksort($output['methods']);
+            ksort($output['routes']);
+            ksort($output['docs']);
+
+            $response
+                ->json($output);
         }
     );
 

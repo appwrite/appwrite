@@ -109,8 +109,8 @@ class Redis extends Adapter
     {
         $data = $this->adapter->createDocument($data);
 
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
 
         return $data;
     }
@@ -128,8 +128,8 @@ class Redis extends Adapter
     {
         $data = $this->adapter->updateDocument($data);
 
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
 
         return $data;
     }

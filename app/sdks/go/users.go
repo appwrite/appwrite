@@ -6,12 +6,20 @@ import (
 
 // Users service
 type Users struct {
-	client *Client
+	client Client
 }
 
-// ListUsers get a list of all the project users. You can use the query params
-// to filter your results.
-func (srv *Users) ListUsers(Search string, Limit int, Offset int, OrderType string) (map[string]interface{}, error) {
+func NewUsers(clt Client) Users {  
+    service := Users{
+		client: clt,
+	}
+
+    return service
+}
+
+// List get a list of all the project users. You can use the query params to
+// filter your results.
+func (srv *Users) List(Search string, Limit int, Offset int, OrderType string) (map[string]interface{}, error) {
 	path := "/users"
 
 	params := map[string]interface{}{
@@ -24,8 +32,8 @@ func (srv *Users) ListUsers(Search string, Limit int, Offset int, OrderType stri
 	return srv.client.Call("GET", path, nil, params)
 }
 
-// CreateUser create a new user.
-func (srv *Users) CreateUser(Email string, Password string, Name string) (map[string]interface{}, error) {
+// Create create a new user.
+func (srv *Users) Create(Email string, Password string, Name string) (map[string]interface{}, error) {
 	path := "/users"
 
 	params := map[string]interface{}{
@@ -37,8 +45,8 @@ func (srv *Users) CreateUser(Email string, Password string, Name string) (map[st
 	return srv.client.Call("POST", path, nil, params)
 }
 
-// GetUser get user by its unique ID.
-func (srv *Users) GetUser(UserId string) (map[string]interface{}, error) {
+// Get get user by its unique ID.
+func (srv *Users) Get(UserId string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}")
 
@@ -48,8 +56,8 @@ func (srv *Users) GetUser(UserId string) (map[string]interface{}, error) {
 	return srv.client.Call("GET", path, nil, params)
 }
 
-// GetUserLogs get user activity logs list by its unique ID.
-func (srv *Users) GetUserLogs(UserId string) (map[string]interface{}, error) {
+// GetLogs get user activity logs list by its unique ID.
+func (srv *Users) GetLogs(UserId string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/logs")
 
@@ -59,8 +67,8 @@ func (srv *Users) GetUserLogs(UserId string) (map[string]interface{}, error) {
 	return srv.client.Call("GET", path, nil, params)
 }
 
-// GetUserPrefs get user preferences by its unique ID.
-func (srv *Users) GetUserPrefs(UserId string) (map[string]interface{}, error) {
+// GetPrefs get user preferences by its unique ID.
+func (srv *Users) GetPrefs(UserId string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/prefs")
 
@@ -70,9 +78,9 @@ func (srv *Users) GetUserPrefs(UserId string) (map[string]interface{}, error) {
 	return srv.client.Call("GET", path, nil, params)
 }
 
-// UpdateUserPrefs update user preferences by its unique ID. You can pass only
-// the specific settings you wish to update.
-func (srv *Users) UpdateUserPrefs(UserId string, Prefs string) (map[string]interface{}, error) {
+// UpdatePrefs update user preferences by its unique ID. You can pass only the
+// specific settings you wish to update.
+func (srv *Users) UpdatePrefs(UserId string, Prefs object) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/prefs")
 
@@ -83,8 +91,8 @@ func (srv *Users) UpdateUserPrefs(UserId string, Prefs string) (map[string]inter
 	return srv.client.Call("PATCH", path, nil, params)
 }
 
-// GetUserSessions get user sessions list by its unique ID.
-func (srv *Users) GetUserSessions(UserId string) (map[string]interface{}, error) {
+// GetSessions get user sessions list by its unique ID.
+func (srv *Users) GetSessions(UserId string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/sessions")
 
@@ -94,8 +102,8 @@ func (srv *Users) GetUserSessions(UserId string) (map[string]interface{}, error)
 	return srv.client.Call("GET", path, nil, params)
 }
 
-// DeleteUserSessions delete all user sessions by its unique ID.
-func (srv *Users) DeleteUserSessions(UserId string) (map[string]interface{}, error) {
+// DeleteSessions delete all user sessions by its unique ID.
+func (srv *Users) DeleteSessions(UserId string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/sessions")
 
@@ -105,8 +113,8 @@ func (srv *Users) DeleteUserSessions(UserId string) (map[string]interface{}, err
 	return srv.client.Call("DELETE", path, nil, params)
 }
 
-// DeleteUserSession delete user sessions by its unique ID.
-func (srv *Users) DeleteUserSession(UserId string, SessionId string) (map[string]interface{}, error) {
+// DeleteSession delete user sessions by its unique ID.
+func (srv *Users) DeleteSession(UserId string, SessionId string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/sessions/:session")
 
@@ -117,8 +125,8 @@ func (srv *Users) DeleteUserSession(UserId string, SessionId string) (map[string
 	return srv.client.Call("DELETE", path, nil, params)
 }
 
-// UpdateUserStatus update user status by its unique ID.
-func (srv *Users) UpdateUserStatus(UserId string, Status string) (map[string]interface{}, error) {
+// UpdateStatus update user status by its unique ID.
+func (srv *Users) UpdateStatus(UserId string, Status string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{userId}", UserId)
 	path := r.Replace("/users/{userId}/status")
 

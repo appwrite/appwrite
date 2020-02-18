@@ -4,12 +4,12 @@
   window.ls.container.get("view").add({
     selector: "data-analytics-event",
     controller: function(element) {
-      var action = element.getAttribute("data-event-action") || "click";
+      var action = element.getAttribute("data-analytics-event") || "click";
 
       element.addEventListener(action, function() {
         var category =
-          element.getAttribute("data-event-category") || "undefined";
-        var label = element.getAttribute("data-event-label") || "undefined";
+          element.getAttribute("data-analytics-category") || "undefined";
+        var label = element.getAttribute("data-analytics-label") || "undefined";
 
         if (!ga) {
           console.error("Google Analytics ga object is not available");

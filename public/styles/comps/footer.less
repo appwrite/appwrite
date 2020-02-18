@@ -1,5 +1,5 @@
 body > footer {
-  color: @config-color-fade;
+  color: var(--config-color-fade);
   line-height: 40px;
   margin: 0 -50px;
   padding: 12px 50px;
@@ -18,9 +18,10 @@ body > footer {
   }
 
   a {
-    color: #505050;
+    color: var(--config-color-fade);
+    font-size: 13px;
     &:hover {
-      border-bottom-color: #505050;
+      border-bottom-color: var(--config-color-fade);
     }
   }
 
@@ -28,6 +29,7 @@ body > footer {
     .clear;
 
     li {
+      font-size: 13px;
       .pull-start;
       .margin-end;
     }

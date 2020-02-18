@@ -125,7 +125,7 @@ class Database
             'limit' => 15,
             'search' => '',
             'relations' => true,
-            'orderField' => '$uid',
+            'orderField' => '$id',
             'orderType' => 'ASC',
             'orderCast' => 'int',
             'first' => false,
@@ -208,15 +208,51 @@ class Database
      */
     public function updateDocument(array $data)
     {
-        if (!isset($data['$uid'])) {
-            throw new Exception('Must define $uid attribute');
+        if (!isset($data['$id'])) {
+            throw new Exception('Must define $id attribute');
         }
 
-        $document = $this->getDocument($data['$uid']); // TODO make sure user don\'t need read permission for write operations
+        $document = $this->getDocument($data['$id']); // TODO make sure user don\'t need read permission for write operations
 
         // Make sure reserved keys stay constant
-        $data['$uid'] = $document->getUid();
+        $data['$id'] = $document->getId();
         $data['$collection'] = $document->getCollection();
+
+        $validator = new Authorization($document, 'write');
+
+        if (!$validator->isValid($document->getPermissions())) { // Check if user has write access to this document
+            throw new AuthorizationException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
+        }
+
+        $new = new Document($data);
+
+        if (!$validator->isValid($new->getPermissions())) { // Check if user has write access to this document
+            throw new AuthorizationException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
+        }
+
+        $validator = new Structure($this);
+
+        if (!$validator->isValid($new)) { // Make sure updated structure still apply collection rules (if any)
+            throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
+        }
+
+        return new Document($this->adapter->updateDocument($data));
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return Document|false
+     *
+     * @throws Exception
+     */
+    public function overwriteDocument(array $data)
+    {
+        if (!isset($data['$id'])) {
+            throw new Exception('Must define $id attribute');
+        }
+
+        $document = $this->getDocument($data['$id']); // TODO make sure user don\'t need read permission for write operations
 
         $validator = new Authorization($document, 'write');
 

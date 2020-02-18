@@ -1,10 +1,10 @@
 <div
-    data-service="users.getUser"
+    data-service="users.get"
     data-name="user"
-    data-event="load,user-update"
+    data-event="load,users.update"
     data-param-user-id="{{router.params.id}}"
     data-success="trigger"
-    data-success-param-trigger-events="user-load">
+    data-success-param-trigger-events="users.get">
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
@@ -32,10 +32,10 @@
 
                                 <div class="margin-top-small" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
-                                    <span data-ls-if="{{user.confirm}} === true" style="display: none;">
+                                    <span data-ls-if="{{user.emailVerification}} === true" style="display: none;">
                                         <span class="tag green">Verified</span>
                                     </span>
-                                    <span data-ls-if="{{user.confirm}} !== true" style="display: none;">
+                                    <span data-ls-if="{{user.emailVerification}} !== true" style="display: none;">
                                         <span class="tag">Unverified</span>
                                     </span>
                                 </div>
@@ -46,12 +46,12 @@
                         <h3 class="margin-bottom">Preferences</h3>
 
                         <div class="box margin-bottom"
-                            data-service="users.getUserPrefs"
+                            data-service="users.getPrefs"
                             data-name="user-prefs"
                             data-event="load"
                             data-param-user-id="{{router.params.id}}"
                             data-success="trigger"
-                            data-success-param-trigger-events="user-prefs-load">
+                            data-success-param-trigger-events="users.getPrefs">
 
                             <div data-ls-if="!{{user-prefs|isEmptyObject}}" style="display: none;">
                                 <table class="vertical">
@@ -82,17 +82,20 @@
                     <div class="col span-4">
                         <label>User ID</label>
                         <div class="input-copy margin-bottom-large">
-                            <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{user.$uid}}" disabled data-forms-copy>
+                            <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{user.$id}}" disabled data-forms-copy>
                         </div>
 
                         <div data-ls-if="{{user.status}} !== <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
-                                data-service="users.updateUserStatus"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update User Status"
+                                data-service="users.updateStatus"
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Blocked User Successfully"
-                                data-success-param-trigger-events="user-update"
+                                data-success-param-trigger-events="users.update"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to Block User"
                                 data-failure-param-alert-classname="error">
@@ -103,12 +106,15 @@
 
                         <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
-                                data-service="users.updateUserStatus"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update User Status"
+                                data-service="users.updateStatus"
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Blocked Activated Successfully"
-                                data-success-param-trigger-events="user-update"
+                                data-success-param-trigger-events="users.update"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to Activate User"
                                 data-failure-param-alert-classname="error">
@@ -123,7 +129,7 @@
                 <h2>Devices</h2>
 
                 <div
-                    data-service="users.getUserSessions"
+                    data-service="users.getSessions"
                     data-name="sessions"
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,user-update">
@@ -137,11 +143,14 @@
                             <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                                 <li class="clear">
                                     <form class="pull-end"
-                                        data-service="users.deleteUsersSession"
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Delete User Session"
+                                        data-service="users.deleteSession"
                                         data-event="submit"
                                         data-loading="Loading..."
                                         data-success="trigger"
-                                        data-success-param-trigger-events="user-update"
+                                        data-success-param-trigger-events="users.update"
                                         data-failure="alert"
                                         data-failure-param-alert-text="Failed to logout session"
                                         data-failure-param-alert-classname="error">
@@ -164,11 +173,14 @@
                         </div>
 
                         <form class="inline margin-bottom-large"
-                            data-service="users.deleteUsersSessions"
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Delete User Sessions"
+                            data-service="users.deleteSessions"
                             data-param-user-id="{{router.params.id}}"
                             data-event="submit"
                             data-success="trigger"
-                            data-success-param-trigger-events="user-update"
+                            data-success-param-trigger-events="users.update"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to logout all sessions"
                             data-failure-param-alert-classname="error">
@@ -183,7 +195,7 @@
                 <h2>Audit Log</h2>
 
                 <div
-                    data-service="users.getUserLogs"
+                    data-service="users.getLogs"
                     data-name="logs"
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,logs-load">

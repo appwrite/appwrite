@@ -7,19 +7,19 @@
 
     <p>Login using email and password</p>
 
-    <form name="login"
-        data-service="auth.login"
+    <form name="account.createSession"
+        data-analytics-event="submit"
+        data-analytics-category="home"
+        data-analytics-label="Create Account Session"
+        data-service="account.createSession"
         data-scope="console"
         data-event="submit"
         data-success="trigger,redirect"
-        data-success-param-trigger-events="login"
+        data-success-param-trigger-events="account.createSession"
         data-success-param-redirect-url="/console"
         data-failure="alert"
         data-failure-param-alert-text="Login failed. Please check your credentials."
         data-failure-param-alert-classname="error">
-
-        <input name="success" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/console">
-        <input name="failure" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/signin?failure=1">
 
         <input name="email" type="email" class="full-width" autocomplete="email" placeholder="Email" required>
 

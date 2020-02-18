@@ -3,7 +3,12 @@ $home = $this->getParam('home', '');
 ?>
 <div class="cover" style="background-size: 400px 400px; background-repeat: no-repeat;">
     <div class="zone xl">
-        <div class="margin-top margin-bottom"><a href="/"><img src="/images/appwrite.svg" height="30" alt="Logo" /></a></div>
+        <div class="margin-top margin-bottom">
+            <a href="/">
+                <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" height="30" />
+                <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" height="30" />
+            </a>
+        </div>
 
         <h1 class="margin-bottom">Welcome to Appwrite Console</h1>
 
@@ -19,23 +24,23 @@ $home = $this->getParam('home', '');
 
 <section class="zone xl margin-bottom-large margin-top-negative-large">
     <div
-        data-service="projects.listProjects"
+        data-service="projects.list"
         data-scope="console"
-        data-event="load,project-create"
+        data-event="load,projects.create"
         data-name="console-projects"
         data-success="trigger"
-        data-success-triggers="projects-load">
+        data-success-param-trigger-events="projects.list">
 
         <div data-ls-if="0 == {{console-projects.length}}" class="box margin-bottom" style="display: none">
-            <h3 class="margin-bottom">Get Started</h3>
+            <h3 class="margin-bottom-small text-bold-2">Get Started</h3>
 
             <p class="margin-bottom-no">No Projects Found, Create your first project now.</p>
         </div>
 
         <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3" style="visibility: hidden">
             <li class="margin-bottom">
-                <a data-ls-attrs="href=/console/home?project={{project.$uid}}" class="box">
-                    <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-large">&nbsp;</div>
+                <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
+                    <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-large text-bold">&nbsp;</div>
 
                     <i class="icon-right-open"></i>
                 </a>

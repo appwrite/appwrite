@@ -1,11 +1,25 @@
 html.home {
     body {
         padding: 0 50px;
+        color: var(--config-color-normal)
     }
 
-    .logo img {
-        max-height: 35px;
-        margin: 45px 25px 25px 25px;
+    .logo {
+        a {
+            display: block;
+            border-bottom: none;
+
+            &:hover {
+                opacity: .8;
+                border-bottom: none;
+            }
+        }
+
+        img {
+            max-height: 35px;
+            width: 198px;
+            margin: 45px auto 25px auto;
+        }
     }
 
     footer {

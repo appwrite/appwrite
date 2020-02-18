@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s 小组',
-    'auth.emails.confirm.title' => '账户确认',
-    'auth.emails.confirm.body' => 'zh.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => '重设密码',
-    'auth.emails.recovery.body' => 'zh.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => '邀请加入%s小组（%s）', // I used brackets to keep the order
-    'auth.emails.invitation.body' => 'zh.email.auth.invitation.tpl',
+    'account.emails.team' => '%s 小组',
+    'account.emails.verification.title' => '账户确认',
+    'account.emails.verification.body' => 'zh.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => '重设密码',
+    'account.emails.recovery.body' => 'zh.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => '邀请加入%s小组（%s）', // I used brackets to keep the order
+    'account.emails.invitation.body' => 'zh.email.auth.invitation.tpl',
 
     'locale.country.unknown' => '未知',
 

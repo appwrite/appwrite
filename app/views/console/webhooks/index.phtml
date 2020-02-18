@@ -1,16 +1,25 @@
 <?php
 
 $events = [
+    'database.collections.create',
+    'database.collections.update',
+    'database.collections.delete',
     'database.documents.create',
-    'database.documents.patch',
+    'database.documents.update',
     'database.documents.delete',
-    'auth.register',
-    'auth.confirm',
-    'auth.login',
-    'auth.logout',
-    'account.update-name',
-    'account.update-email',
-    'account.update-password',
+    'storage.files.create',
+    'storage.files.update',
+    'storage.files.delete',
+    // 'auth.register',
+    // 'auth.confirm',
+    // 'auth.login',
+    // 'auth.logout',
+    'account.create',
+    'account.update.email',
+    'account.update.name',
+    'account.update.password',
+    'account.update.prefs',
+    'account.delete',
 ];
 
 ?>
@@ -23,14 +32,14 @@ $events = [
 <div class="zone xl"
     data-service="projects.listWebhooks"
     data-scope="console"
-    data-event="load,webhook-create,webhook-update,webhook-delete"
+    data-event="load,projects.createWebhook,projects.updateWebhook,projects.deleteWebhook"
     data-name="console-webhooks"
     data-param-project-id="{{router.params.project}}"
     data-success="trigger"
-    data-success-param-trigger-events="webhook-load">
+    data-success-param-trigger-events="projects.listWebhooks">
 
     <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom" style="display: none;">
-        <h3 class="margin-bottom-small">No Webhooks Found</h3>
+        <h3 class="margin-bottom-small text-bold-2">No Webhooks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
     </div>
@@ -45,23 +54,26 @@ $events = [
                     <h1>Update Webhook</h1>
 
                     <form
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Update Project Webhook"
                         data-service="projects.updateWebhook"
                         data-scope="console"
                         data-event="submit"
                         data-success="alert,trigger,reset"
                         data-success-param-alert-text="Updated webhook successfully"
-                        data-success-param-trigger-events="webhook-update,modal-close"
+                        data-success-param-trigger-events="projects.updateWebhook,modal-close"
                         data-failure="alert"
                         data-failure-param-alert-text="Failed to update webhook"
                         data-failure-param-alert-classname="error">
 
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}" />
+                        <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{webhook.$uid}}">Name</label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
+                        <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
 
-                        <label data-ls-attrs="for=events-{{webhook.$uid}}">Events</label>
+                        <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
                         <div class="row thin margin-bottom">
                             <?php foreach ($events as $i => $event) : ?>
                                 <div class="col span-6">
@@ -75,8 +87,8 @@ $events = [
                             <?php endforeach; ?>
                         </div>
 
-                        <label data-ls-attrs="for=url-{{webhook.$uid}}">POST URL</label>
-                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$uid}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
+                        <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
+                        <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
 
                         <div class="margin-bottom toggle" data-ls-ui-open>
                             <i class="icon-plus pull-end margin-top-tiny"></i>
@@ -87,27 +99,27 @@ $events = [
                                 <small class="text-size-small">(optional)</small>
                             </h2>
 
-                            <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom-small">
-                                <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                            <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
+                                <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$uid}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$uid}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
                             </label>
 
-                            <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
+                            <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
                                 <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                             </p>
 
-                            <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
+                            <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                             <div class="row thin">
                                 <div class="col span-6">
-                                    <label data-ls-attrs="for=httpUser-{{webhook.$uid}}">User</label>
-                                    <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{webhook.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
+                                    <label data-ls-attrs="for=httpUser-{{webhook.$id}}">User</label>
+                                    <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{webhook.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                 </div>
                                 <div class="col span-6">
-                                    <label data-ls-attrs="for=httpPass-{{webhook.$uid}}">Password</label>
-                                    <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{webhook.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
+                                    <label data-ls-attrs="for=httpPass-{{webhook.$id}}">Password</label>
+                                    <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
                             </div>
                         </div>
@@ -117,19 +129,22 @@ $events = [
                 </div>
 
                 <form class="pull-end margin-end"
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Delete Project Webhook"
                     data-service="projects.deleteWebhook"
                     data-scope="console"
                     data-event="submit"
                     data-confirm="Are you sure you want to delete this webhook?"
                     data-success="alert,trigger"
                     data-success-param-alert-text="Deleted webhook successfully"
-                    data-success-param-trigger-events="webhook-delete"
+                    data-success-param-trigger-events="projects.deleteWebhook"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to delete webhook"
                     data-failure-param-alert-classname="error">
 
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$uid}}" />
+                    <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
                     <button class="danger reverse">Delete</button>
                 </form>
@@ -152,12 +167,15 @@ $events = [
             <h1>Add Webhook</h1>
 
             <form
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Project Webhook"
                 data-service="projects.createWebhook"
                 data-scope="console"
                 data-event="submit"
                 data-success="alert,trigger,reset"
                 data-success-param-alert-text="Created webhook successfully"
-                data-success-param-trigger-events="webhook-create,modal-close"
+                data-success-param-trigger-events="projects.createWebhook,modal-close"
                 data-failure="alert"
                 data-failure-param-alert-text="Failed to create webhook"
                 data-failure-param-alert-classname="error">
@@ -193,31 +211,31 @@ $events = [
                         <small class="text-size-small">(optional)</small>
                     </h2>
 
-                    <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom-small">
-                        <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                    <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
+                        <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
                         <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span>Enabled</span>
                         <input name="security" type="radio" required data-ls-attrs="id=secure-no" value="0" /> &nbsp; <span>Disabled</span>
                     </label>
 
-                    <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
+                    <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
                         <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                     </p>
 
-                    <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
+                    <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                     <div class="row thin">
                         <div class="col span-6">
                             <label for="httpUser">User</label>
-                            <input type="text" class="full-width" id="httpUser" name="httpUser" autocomplete="off" />
+                            <input type="text" class="full-width margin-bottom-no" id="httpUser" name="httpUser" autocomplete="off" />
                         </div>
                         <div class="col span-6">
                             <label for="httpPass">Password</label>
-                            <input type="password" class="full-width" id="httpPass" name="httpPass" autocomplete="off" />
+                            <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>
-
+                
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </div>

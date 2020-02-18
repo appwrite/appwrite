@@ -3,24 +3,27 @@
         Password Reset
     </h1>
 
-    <small class="pull-end">* All fields are required</small>
+    <small class="pull-end text-size-small">* All fields are required</small>
 
     <br />
     <br />
 
     <form name="recovery-reset"
-          data-service="auth.recoveryReset"
-          data-scope="console"
-          data-event="submit"
-          data-success="alert,redirect"
-          data-success-param-alert="Password Reset Completed"
-          data-success-param-url="/auth/signin"
-          data-failure="alert"
-          data-failure-param-alert-text="Password Reset Failed"
-          data-failure-param-alert-classname="error">
+        data-analytics-event="submit"
+        data-analytics-category="home"
+        data-analytics-label="Update Account Recovery"
+        data-service="account.updateRecovery"
+        data-scope="console"
+        data-event="submit"
+        data-success="alert,redirect"
+        data-success-param-alert="Password Reset Completed"
+        data-success-param-url="/auth/signin"
+        data-failure="alert"
+        data-failure-param-alert-text="Password Reset Failed"
+        data-failure-param-alert-classname="error">
 
         <input type="hidden" name="userId" data-ls-bind="{{router.params.userId}}">
-        <input type="hidden" name="token" data-ls-bind="{{router.params.token}}">
+        <input type="hidden" name="secret" data-ls-bind="{{router.params.secret}}">
 
         <label>Password</label>
         <input name="passwordA" type="password" autocomplete="off" placeholder="" required data-forms-password-meter pattern=".{6,}" title="Six or more characters">

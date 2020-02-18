@@ -25,11 +25,11 @@ class Document extends ArrayObject
     {
         foreach ($input as $key => &$value) {
             if (is_array($value)) {
-                if (isset($value['$uid']) || isset($value['$collection'])) {
+                if (isset($value['$id']) || isset($value['$collection'])) {
                     $input[$key] = new self($value);
                 } else {
                     foreach ($value as $childKey => $child) {
-                        if (isset($child['$uid']) || isset($child['$collection'])) {
+                        if (isset($child['$id']) || isset($child['$collection'])) {
                             $value[$childKey] = new self($child);
                         }
                     }
@@ -43,9 +43,9 @@ class Document extends ArrayObject
     /**
      * @return string|null
      */
-    public function getUid()
+    public function getId()
     {
-        return $this->getAttribute('$uid', null);
+        return $this->getAttribute('$id', null);
     }
 
     /**
@@ -122,6 +122,26 @@ class Document extends ArrayObject
     }
 
     /**
+     * Remove Attribute.
+     *
+     * Method for removing a specific field attribute
+     *
+     * @param string $key
+     * @param mixed  $value
+     * @param string $type
+     *
+     * @return mixed
+     */
+    public function removeAttribute($key)
+    {
+        if(isset($this[$key])) {
+            unset($this[$key]);
+        }
+
+        return $this;
+    }
+
+    /**
      * Search.
      *
      * Get array child by key and value match
@@ -170,7 +190,7 @@ class Document extends ArrayObject
      */
     public function isEmpty()
     {
-        return empty($this->getUid());
+        return empty($this->getId());
     }
 
     /**

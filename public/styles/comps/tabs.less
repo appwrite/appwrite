@@ -47,7 +47,7 @@
 
     .selected {
       font-weight: 400;
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       position: relative;
       opacity: 1;
 
@@ -55,7 +55,7 @@
         content: "";
         display: block;
         height: 2px;
-        background: @config-color-focus;
+        background: var(--config-color-focus);
         width: ~"calc(100% - 46px)";
         position: absolute;
         bottom: 0;
@@ -71,7 +71,7 @@
     li {
       .pull-start;
       .func-padding-end(50px);
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       opacity: .9;
       cursor: pointer;
 

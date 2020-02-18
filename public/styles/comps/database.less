@@ -15,23 +15,23 @@
 
         hr {
             margin: 0 -20px;
-            background: #efefef;
-            height: 2px;
+            background: var(--config-color-background);
+            height: 1px;
         }
 
         h3 {
             font-size: 13px;
             line-height: 20px;
             height: 20px;
-            background-color: #f5f5f5;
+            background-color: var(--config-color-fade-super);
             margin: -20px -20px 0 -20px;
             padding: 10px 20px;
-            border-bottom: solid 1px #e1e2e2;
+            border-bottom: solid 1px var(--config-color-background);
             font-weight: 600;
         }
 
         .empty {
-            height: 160px;
+            height: 162px;
             font-size: 12px;
             text-align: center;
             margin: 50px 0;
@@ -44,7 +44,7 @@
         }
 
         .search {
-            background-color: #f5f5f5;
+            background-color: var(--config-color-fade-super);
             margin: 0 -20px 0 -20px;
             padding: 10px 15px;
 
@@ -59,7 +59,7 @@
 
         .code {
             height: 411px;
-            background: #f5f5f5;
+            background: var(--config-color-fade-super);
             margin: 0 -20px -20px -20px;
             padding: 20px;
             width: ~"calc(100% - 10px)";
@@ -74,7 +74,7 @@
         }
 
         .paging {
-            background: #f5f5f5;
+            background: var(--config-color-fade-super);
             margin: 0 -20px -20px -20px;
             padding: 20px;
         }
@@ -83,7 +83,7 @@
             margin: 0 -20px;
             padding: 0 20px!important;
             text-align: inherit;
-            color: @config-color-focus;
+            color: var(--config-color-focus);
             width: 100%;
             font-size: 15px;
             line-height: 55px;
@@ -95,7 +95,7 @@
             
             &:hover {
                 border: none;
-                background: @config-color-focus-fade;
+                background: var(--config-color-focus-fade);
             }
         }
         
@@ -114,7 +114,6 @@
                 position: relative;
                 
                 button {
-                    background: red;
                     position: absolute;
                     top: 0;
                     bottom: 0;

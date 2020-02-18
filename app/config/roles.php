@@ -13,7 +13,6 @@ $logged = [
     'public',
     'home',
     'console',
-    'auth',
     'account',
     'teams.read',
     'teams.write',
@@ -29,10 +28,27 @@ $logged = [
 ];
 
 $admins = [
+    'teams.read',
+    'teams.write',
+    'documents.read',
+    'documents.write',
+    'files.read',
+    'files.write',
     'users.read',
     'users.write',
     'collections.read',
     'collections.write',
+    'platforms.read',
+    'platforms.write',
+    'keys.read',
+    'keys.write',
+    'tasks.read',
+    'tasks.write',
+    'webhooks.read',
+    'webhooks.write',
+    'locale.read',
+    'avatars.read',
+    'health.read',
 ];
 
 return [
@@ -42,7 +58,6 @@ return [
             'public',
             'home',
             'console',
-            'auth',
             'files.read',
             'locale.read',
             'avatars.read',
@@ -55,11 +70,11 @@ return [
     ],
     ROLE_ADMIN => [
         'label' => 'Admin',
-        'scopes' => array_merge($logged, $admins, []),
+        'scopes' => array_merge($admins, []),
     ],
     ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => array_merge($logged, $admins, []),
+        'scopes' => array_merge($admins, []),
     ],
     ROLE_OWNER => [
         'label' => 'Owner',
@@ -67,6 +82,6 @@ return [
     ],
     ROLE_APP => [
         'label' => 'Application',
-        'scopes' => ['public'],
+        'scopes' => ['health.read'],
     ],
 ];

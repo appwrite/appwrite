@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s टीम',
-    'auth.emails.confirm.title' => 'अकाउंट  कन्फर्मेशन ',
-    'auth.emails.confirm.body' => 'hi.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'पासवर्ड  रिसेट ',
-    'auth.emails.recovery.body' => 'hi.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'इनविटेशन  %s टीम  %s',
-    'auth.emails.invitation.body' => 'hi.email.auth.invitation.tpl',
+    'account.emails.team' => '%s टीम',
+    'account.emails.verification.title' => 'अकाउंट  कन्फर्मेशन ',
+    'account.emails.verification.body' => 'hi.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'पासवर्ड  रिसेट ',
+    'account.emails.recovery.body' => 'hi.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'इनविटेशन  %s टीम  %s',
+    'account.emails.invitation.body' => 'hi.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'अज्ञात',
 

@@ -24,11 +24,11 @@ class Storage extends Service {
      /// Create a new file. The user who creates the file will automatically be
      /// assigned to read and write access unless he has passed custom values for
      /// read and write arguments.
-    Future<Response> createFile({files, read, write}) async {
+    Future<Response> createFile({file, read, write}) async {
        String path = '/storage/files';
 
        Map<String, dynamic> params = {
-         'files': files,
+         'file': file,
          'read': read,
          'write': write,
        };
@@ -78,9 +78,9 @@ class Storage extends Service {
 
        return await this.client.call('get', path: path, params: params);
     }
-     /// Get file preview image. Currently, this method supports preview for image
+     /// Get a file preview image. Currently, this method supports preview for image
      /// files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
-     /// and spreadsheets will return file icon image. You can also pass query
+     /// and spreadsheets, will return the file icon image. You can also pass query
      /// string arguments for cutting and resizing your preview image.
     Future<Response> getFilePreview({fileId, width = null, height = null, quality = 100, background = null, output = null}) async {
        String path = '/storage/files/{fileId}/preview'.replaceAll(RegExp('{fileId}'), fileId);

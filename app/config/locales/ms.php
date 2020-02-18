@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Team',
-    'auth.emails.confirm.title' => 'Pengesahan akaun',
-    'auth.emails.confirm.body' => 'ms.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Tetapkan semula kata laluan',
-    'auth.emails.recovery.body' => 'ms.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Undangan ke dalam kumpulan %s di %s',
-    'auth.emails.invitation.body' => 'ms.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Team',
+    'account.emails.verification.title' => 'Pengesahan akaun',
+    'account.emails.verification.body' => 'ms.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Tetapkan semula kata laluan',
+    'account.emails.recovery.body' => 'ms.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Undangan ke dalam kumpulan %s di %s',
+    'account.emails.invitation.body' => 'ms.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Tidak Diketahui',
 

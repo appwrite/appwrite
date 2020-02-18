@@ -20,12 +20,12 @@ class Storage(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create_file(self, files, read, write):
+    def create_file(self, file, read, write):
         """Create File"""
 
         params = {}
         path = '/storage/files'
-        params['files'] = files
+        params['file'] = file
         params['read'] = read
         params['write'] = write
 

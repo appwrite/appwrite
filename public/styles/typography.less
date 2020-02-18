@@ -1,6 +1,5 @@
 * {
   font-family: Poppins,sans-serif,Arial;
-  //font-family: Heebo,sans-serif,Arial;
   -webkit-font-smoothing: antialiased;
   font-weight: 300;
 }
@@ -14,14 +13,14 @@ h4, h5, h6 {
 }
 
 a, .link {
-  color: @config-color-link;
+  color: var(--config-color-link);
   text-decoration: none;
   border-left: 2px solid transparent;
   border-right: 2px solid transparent;
   border-bottom: solid 1px transparent;
 
   &:hover {
-    border-bottom: dotted 1px @config-color-link;
+    border-bottom: dotted 1px var(--config-color-link);
   }
 
   &.disabled {
@@ -30,10 +29,6 @@ a, .link {
 
   &.disabled:hover {
     border-bottom: none;
-  }
-
-  &:visited {
-    //scolor: #4a8c83;
   }
 
   &.tag:hover {
@@ -53,7 +48,7 @@ p {
 
 small {
   font-size: 16px;
-  color: @config-color-fade;
+  color: var(--config-color-fade);
 }
 
 .text-size-small {
@@ -74,12 +69,16 @@ small {
   font-weight: 400!important;
 }
 
+.text-bold-2 {
+  font-weight: 600!important;
+}
+
 .text-danger {
-  color: @config-color-danger;
+  color: var(--config-color-danger);
 }
 
 .text-success {
-  color: @config-color-success
+  color: var(--config-color-success)
 }
 
 .text-upper {
@@ -87,24 +86,36 @@ small {
 }
 
 .text-warning {
-  color: @config-color-warning
+  color: var(--config-color-success)
 }
 
 .text-focus {
-  color: @config-color-focus;
+  color: var(--config-color-focus);
 }
 
 .text-fade {
-  color: @config-color-fade;
+  color: var(--config-color-fade);
+}
+
+&.text-green {
+  color: var(--config-color-success);
+}
+
+&.text-red {
+  color: var(--config-color-danger);
+}
+
+&.text-yellow {
+  color: #ffe28b;
 }
 
 .text-disclaimer {
   font-size: 11px;
-  color: @config-color-fade;
+  color: var(--config-color-fade);
 }
 
 .text-fade-extra {
-  color: @config-color-fade;
+  color: var(--config-color-fade);
   opacity: .5;
 }
 

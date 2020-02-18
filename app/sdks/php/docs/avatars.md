@@ -13,9 +13,9 @@ GET https://appwrite.io/v1/avatars/browsers/{code}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | code | string | **Required** Browser Code. |  |
-| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
-| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
-| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100 | 100 |
+| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100. | 100 |
+| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100. | 100 |
+| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100. | 100 |
 
 ## Get Credit Card Icon
 
@@ -30,9 +30,9 @@ GET https://appwrite.io/v1/avatars/credit-cards/{code}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | code | string | **Required** Credit Card Code. Possible values: amex, argencard, cabal, censosud, diners, discover, elo, hipercard, jcb, mastercard, naranja, targeta-shopping, union-china-pay, visa. |  |
-| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
-| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
-| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100 | 100 |
+| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100. | 100 |
+| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100. | 100 |
+| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100. | 100 |
 
 ## Get Favicon
 
@@ -61,9 +61,9 @@ GET https://appwrite.io/v1/avatars/flags/{code}
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | code | string | **Required** Country Code. ISO Alpha-2 country code format. |  |
-| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
-| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100 | 100 |
-| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100 | 100 |
+| width | integer | Image width. Pass an integer between 0 to 2000. Defaults to 100. | 100 |
+| height | integer | Image height. Pass an integer between 0 to 2000. Defaults to 100. | 100 |
+| quality | integer | Image quality. Pass an integer between 0 to 100. Defaults to 100. | 100 |
 
 ## Get Image from URL
 
@@ -78,8 +78,8 @@ GET https://appwrite.io/v1/avatars/image
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | url | string | **Required** Image URL which you want to crop. |  |
-| width | integer | Resize preview image width, Pass an integer between 0 to 4000 | 400 |
-| height | integer | Resize preview image height, Pass an integer between 0 to 4000 | 400 |
+| width | integer | Resize preview image width, Pass an integer between 0 to 2000. | 400 |
+| height | integer | Resize preview image height, Pass an integer between 0 to 2000. | 400 |
 
 ## Get QR Code
 
@@ -93,7 +93,7 @@ GET https://appwrite.io/v1/avatars/qr
 
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
-| text | string | **Required** Plain text to be converted to QR code image |  |
+| text | string | **Required** Plain text to be converted to QR code image. |  |
 | size | integer | QR code size. Pass an integer between 0 to 1000. Defaults to 400. | 400 |
 | margin | integer | Margin From Edge. Pass an integer between 0 to 10. Defaults to 1. | 1 |
 | download | integer | Return resulting image with &#039;Content-Disposition: attachment &#039; headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0. | 0 |

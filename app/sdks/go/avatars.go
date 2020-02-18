@@ -6,7 +6,15 @@ import (
 
 // Avatars service
 type Avatars struct {
-	client *Client
+	client Client
+}
+
+func NewAvatars(clt Client) Avatars {  
+    service := Avatars{
+		client: clt,
+	}
+
+    return service
 }
 
 // GetBrowser you can use this endpoint to show different browser icons to

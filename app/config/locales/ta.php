@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s குழு',
-    'auth.emails.confirm.title' => 'கணக்கினை  உறுதி செய்தல்',
-    'auth.emails.confirm.body' => 'ta.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'கடவுச்சொல் மீட்டமைப்பு',
-    'auth.emails.recovery.body' => 'ta.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => '%s குழுவின் அழைப்பு: %s',
-    'auth.emails.invitation.body' => 'ta.email.auth.invitation.tpl',
+    'account.emails.team' => '%s குழு',
+    'account.emails.verification.title' => 'கணக்கினை  உறுதி செய்தல்',
+    'account.emails.verification.body' => 'ta.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'கடவுச்சொல் மீட்டமைப்பு',
+    'account.emails.recovery.body' => 'ta.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => '%s குழுவின் அழைப்பு: %s',
+    'account.emails.invitation.body' => 'ta.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'அறியவில்லை',
 

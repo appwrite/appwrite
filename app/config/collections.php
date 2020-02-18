@@ -6,7 +6,7 @@ use Database\Database;
 
 $collections = [
     'console' => [
-        '$uid' => 'console',
+        '$id' => 'console',
         '$collection' => 'projects',
         '$permissions' => ['read' => ['*']],
         'name' => 'Appwrite',
@@ -71,7 +71,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_COLLECTIONS,
+        '$id' => Database::SYSTEM_COLLECTION_COLLECTIONS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Collections',
         'structure' => true,
@@ -126,7 +126,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_RULES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_RULES,
+        '$id' => Database::SYSTEM_COLLECTION_RULES,
         '$permissions' => ['read' => ['*']],
         'name' => 'Collections Rule',
         'structure' => true,
@@ -198,7 +198,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_USERS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_USERS,
+        '$id' => Database::SYSTEM_COLLECTION_USERS,
         '$permissions' => ['read' => ['*']],
         'name' => 'User',
         'structure' => true,
@@ -268,8 +268,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Confirmation Status',
-                'key' => 'confirm',
+                'label' => 'Email Verification Status',
+                'key' => 'emailVerification',
                 'type' => 'boolean',
                 'default' => '',
                 'required' => true,
@@ -308,7 +308,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_TOKENS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_TOKENS,
+        '$id' => Database::SYSTEM_COLLECTION_TOKENS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Token',
         'structure' => true,
@@ -362,7 +362,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_MEMBERSHIPS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+        '$id' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Membership',
         'structure' => true,
@@ -434,7 +434,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_TEAMS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_TEAMS,
+        '$id' => Database::SYSTEM_COLLECTION_TEAMS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Team',
         'structure' => true,
@@ -470,7 +470,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_PROJECTS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_PROJECTS,
+        '$id' => Database::SYSTEM_COLLECTION_PROJECTS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Project',
         'structure' => true,
@@ -610,7 +610,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_WEBHOOKS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_WEBHOOKS,
+        '$id' => Database::SYSTEM_COLLECTION_WEBHOOKS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Webhook',
         'structure' => true,
@@ -673,7 +673,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_KEYS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_KEYS,
+        '$id' => Database::SYSTEM_COLLECTION_KEYS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Key',
         'structure' => true,
@@ -708,7 +708,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_TASKS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_TASKS,
+        '$id' => Database::SYSTEM_COLLECTION_TASKS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Task',
         'structure' => true,
@@ -861,7 +861,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_PLATFORMS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        '$id' => Database::SYSTEM_COLLECTION_PLATFORMS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Platform',
         'structure' => true,
@@ -933,7 +933,7 @@ $collections = [
     ],
     Database::SYSTEM_COLLECTION_FILES => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$uid' => Database::SYSTEM_COLLECTION_FILES,
+        '$id' => Database::SYSTEM_COLLECTION_FILES,
         '$permissions' => ['read' => ['*']],
         'name' => 'File',
         'structure' => true,
@@ -1078,7 +1078,7 @@ $collections = [
 ];
 
 /*
- * Add enabled OAuth providers to default data rules
+ * Add enabled OAuth2 providers to default data rules
  */
 foreach ($providers as $key => $provider) {
     if (!$provider['enabled']) {
@@ -1087,8 +1087,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' ID',
-        'key' => 'usersOauth'.ucfirst($key).'Appid',
+        'label' => 'OAuth2 '.ucfirst($key).' ID',
+        'key' => 'usersOauth2'.ucfirst($key).'Appid',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1097,8 +1097,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' Secret',
-        'key' => 'usersOauth'.ucfirst($key).'Secret',
+        'label' => 'OAuth2 '.ucfirst($key).' Secret',
+        'key' => 'usersOauth2'.ucfirst($key).'Secret',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1107,8 +1107,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' ID',
-        'key' => 'oauth'.ucfirst($key),
+        'label' => 'OAuth2 '.ucfirst($key).' ID',
+        'key' => 'oauth2'.ucfirst($key),
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1117,8 +1117,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth '.ucfirst($key).' Access Token',
-        'key' => 'oauth'.ucfirst($key).'AccessToken',
+        'label' => 'OAuth2 '.ucfirst($key).' Access Token',
+        'key' => 'oauth2'.ucfirst($key).'AccessToken',
         'type' => 'text',
         'default' => '',
         'required' => false,

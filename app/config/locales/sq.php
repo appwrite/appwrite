@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => 'Grup %s',
-    'auth.emails.confirm.title' => 'Konfirmimi i llogarisë',
-    'auth.emails.confirm.body' => 'sq.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Rivendosni fjalëkalimin',
-    'auth.emails.recovery.body' => 'sq.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Ftesë në grup %s në %s',
-    'auth.emails.invitation.body' => 'sq.email.auth.invitation.tpl',
+    'account.emails.team' => 'Grup %s',
+    'account.emails.verification.title' => 'Konfirmimi i llogarisë',
+    'account.emails.verification.body' => 'sq.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Rivendosni fjalëkalimin',
+    'account.emails.recovery.body' => 'sq.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Ftesë në grup %s në %s',
+    'account.emails.invitation.body' => 'sq.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'I panjohur',
 

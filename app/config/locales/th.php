@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s ทีม',
-    'auth.emails.confirm.title' => 'ยืนยันบัญชี',
-    'auth.emails.confirm.body' => 'th.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'รีเซ็ตรหัสผ่าน',
-    'auth.emails.recovery.body' => 'th.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'ขอเชิญเข้าร่วม %s ทีมที่ %s',
-    'auth.emails.invitation.body' => 'th.email.auth.invitation.tpl',
+    'account.emails.team' => '%s ทีม',
+    'account.emails.verification.title' => 'ยืนยันบัญชี',
+    'account.emails.verification.body' => 'th.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'รีเซ็ตรหัสผ่าน',
+    'account.emails.recovery.body' => 'th.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'ขอเชิญเข้าร่วม %s ทีมที่ %s',
+    'account.emails.invitation.body' => 'th.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'ไม่ทราบ',
 

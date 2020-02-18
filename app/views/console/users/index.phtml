@@ -20,11 +20,14 @@ $providers = $this->getParam('providers', []);
                 <h1>Create User</h1>
 
                 <form
-                    data-service="users.createUser"
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create User"
+                    data-service="users.create"
                     data-event="submit"
                     data-success="alert,trigger,reset"
                     data-success-param-alert-text="Created user successfully"
-                    data-success-param-trigger-events="user-create,modal-close"
+                    data-success-param-trigger-events="users.create,modal-close"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to create user"
                     data-failure-param-alert-classname="error">
@@ -45,7 +48,7 @@ $providers = $this->getParam('providers', []);
             </div>
 
             <form class="box padding-small margin-bottom search"
-                data-service="users.listUsers"
+                data-service="users.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -66,8 +69,8 @@ $providers = $this->getParam('providers', []);
             </form>
 
             <div
-                data-service="users.listUsers"
-                data-event="load,user-create,user-update,user-delete"
+                data-service="users.list"
+                data-event="load,users.create,users.update,users.delete"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset="{{router.params.offset}}"
@@ -76,7 +79,7 @@ $providers = $this->getParam('providers', []);
                 data-name="project-users">
 
                 <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
-                    <h3 class="margin-bottom">No Users Found</h3>
+                    <h3 class="margin-bottom-small text-bold-2">No Users Found</h3>
 
                     <p class="margin-bottom-no">Create your first user to get started</p>
                 </div>
@@ -101,7 +104,7 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="45" alt="User Avatar" class="avatar pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <a data-ls-attrs="href=/console/users/view?id={{user.$uid}}&project={{router.params.project}}">
+                                        <a data-ls-attrs="href=/console/users/view?id={{user.$id}}&project={{router.params.project}}">
                                             <span data-ls-bind="{{user.name}}"></span>
                                             <span data-ls-if="{{user.name}} === ''">-----</span>
                                         </a>
@@ -110,11 +113,11 @@ $providers = $this->getParam('providers', []);
                                         <small data-ls-bind="{{user.email}}"></span>
                                     </td>
                                     <td data-title="Status: ">
-                                        <span data-ls-if="{{user.confirm}} === true">
+                                        <span data-ls-if="{{user.emailVerification}} === true">
                                             &nbsp;<span class="tag green">Verified</span>
                                         </span>
 
-                                        <span data-ls-if="{{user.confirm}} !== true">
+                                        <span data-ls-if="{{user.emailVerification}} !== true">
                                             &nbsp;<span class="tag">Unverified</span>
                                         </span>
 
@@ -131,7 +134,7 @@ $providers = $this->getParam('providers', []);
 
                 <div class="clear text-align-center paging">
                     <form
-                        data-service="users.listUsers"
+                        data-service="users.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -146,7 +149,7 @@ $providers = $this->getParam('providers', []);
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-users.sum|pageTotal}}"></span>
 
                     <form
-                        data-service="users.listUsers"
+                        data-service="users.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -170,11 +173,14 @@ $providers = $this->getParam('providers', []);
                 <h1>Create Team</h1>
 
                 <form
-                    data-service="teams.createTeam"
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create Team"
+                    data-service="teams.create"
                     data-event="submit"
                     data-success="alert,trigger,reset"
                     data-success-param-alert-text="Created team successfully"
-                    data-success-param-trigger-events="filter-teams-changed,team-create,modal-close"
+                    data-success-param-trigger-events="filter-teams-changed,teams.create,modal-close"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to create team"
                     data-failure-param-alert-classname="error">
@@ -187,7 +193,7 @@ $providers = $this->getParam('providers', []);
             </div>
 
             <form class="box padding-small margin-bottom search"
-                data-service="teams.listTeams"
+                data-service="teams.list"
                 data-event="submit"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -208,8 +214,8 @@ $providers = $this->getParam('providers', []);
             </form>
 
             <div
-                data-service="teams.listTeams"
-                data-event="load,team-create,team-update,team-delete"
+                data-service="teams.list"
+                data-event="load,teams.create,teams.update,teams.delete"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset="{{router.params.offset}}"
@@ -218,7 +224,7 @@ $providers = $this->getParam('providers', []);
                 data-name="project-teams">
 
                 <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom" style="display: none;">
-                    <h3 class="margin-bottom">No Teams Found</h3>
+                    <h3 class="margin-bottom-small text-bold-2">No Teams Found</h3>
 
                     <p class="margin-bottom-no">Create your first team to get started</p>
                 </div>
@@ -246,29 +252,32 @@ $providers = $this->getParam('providers', []);
                                             <h1>Update Team</h1>
 
                                             <form
-                                                data-service="teams.updateTeam"
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Update Team"
+                                                data-service="teams.update"
                                                 data-scope="sdk"
                                                 data-event="submit"
                                                 data-success="alert,trigger"
                                                 data-success-param-alert-text="Updated team successfully"
-                                                data-success-param-trigger-events="team-update,modal-close"
+                                                data-success-param-trigger-events="teams.update,modal-close"
                                                 data-failure="alert"
                                                 data-failure-param-alert-text="Failed to update team"
                                                 data-failure-param-alert-classname="error">
 
-                                                <label for="name">UID</label>
+                                                <label for="name">ID</label>
                                                 <div class="input-copy">
-                                                    <input name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$uid}}" />
+                                                    <input name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$id}}" />
                                                 </div>
 
                                                 <label for="name">Name</label>
-                                                <input name="name" data-ls-attrs="id=name-{{team.$uid}}" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
+                                                <input name="name" data-ls-attrs="id=name-{{team.$id}}" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
 
                                                 <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                             </form>
                                         </div>
                                     </td>
-                                    <td data-title="Members: "><span data-ls-bind="{{team.sum}} Users"></span></td>
+                                    <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
                                     <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|date-text}}"></small></td>
                                 </tr>
                             </tbody>
@@ -278,7 +287,7 @@ $providers = $this->getParam('providers', []);
 
                 <div class="clear text-align-center paging">
                     <form
-                        data-service="teams.listTeams"
+                        data-service="teams.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -293,7 +302,7 @@ $providers = $this->getParam('providers', []);
                     <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-teams.sum|pageTotal}}"></span>
 
                     <form
-                        data-service="teams.listTeams"
+                        data-service="teams.list"
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -309,11 +318,11 @@ $providers = $this->getParam('providers', []);
         </li>
         
         <li data-state="/console/users/providers?project={{router.params.project}}">
-            <h2>Providers</h2>
-            
+            <h2>OAuth2 Providers</h2>
+
             <div class="box margin-bottom margin-top-large"
-                data-service="projects.getProject"
-                data-event="load,platform-create,platform-update,platform-delete"
+                data-service="projects.get"
+                data-event="load,projects.create,projects.update,projects.deleteProject"
                 data-name="console-project"
                 data-param-project-id="{{router.params.project}}"
                 data-scope="console">
@@ -326,36 +335,39 @@ $providers = $this->getParam('providers', []);
                             <div data-ui-modal class="modal close" data-button-text="Settings" data-button-class="pull-end">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1><?php echo ucfirst($provider); ?> OAuth Settings</h1>
+                                <h1><?php echo ucfirst($provider); ?> OAuth2 Settings</h1>
 
                                 <form
-                                    data-service="projects.updateProjectOAuth"
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Update Project OAuth2"
+                                    data-service="projects.updateOAuth2"
                                     data-scope="console"
                                     data-event="submit"
                                     data-param-project-id="{{router.params.project}}"
                                     data-success="alert,trigger"
-                                    data-success-param-alert-text="Updated project OAuth settings successfully"
-                                    data-success-param-trigger-events="project-update,modal-close"
+                                    data-success-param-alert-text="Updated project OAuth2 settings successfully"
+                                    data-success-param-trigger-events="projects.update,modal-close"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to update project OAuth settings"
+                                    data-failure-param-alert-text="Failed to update project OAuth2 settings"
                                     data-failure-param-alert-classname="error">
                                     <input name="provider" id="provider<?php echo ucfirst($provider); ?>" type="hidden" autocomplete="off" value="<?php echo $provider; ?>">
 
-                                    <label for="oauth<?php echo ucfirst($provider); ?>Appid">App ID</label>
-                                    <input name="appId" id="oauth<?php echo ucfirst($provider); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}}">
+                                    <label for="oauth2<?php echo ucfirst($provider); ?>Appid">App ID</label>
+                                    <input name="appId" id="oauth2<?php echo ucfirst($provider); ?>Appid" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Appid}}">
 
-                                    <label for="oauth<?php echo ucfirst($provider); ?>Secret">App Secret</label>
-                                    <input name="secret" id="oauth<?php echo ucfirst($provider); ?>Secret" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}">
+                                    <label for="oauth2<?php echo ucfirst($provider); ?>Secret">App Secret</label>
+                                    <input name="secret" id="oauth2<?php echo ucfirst($provider); ?>Secret" type="text" autocomplete="off" data-ls-bind="{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Secret}}">
 
                                     <div class="info row thin margin-bottom margin-top">
                                         <div class="col span-1">
                                             <i class="icon-info-circled text-sign"></i>
                                         </div>
                                         <div class="col span-11">
-                                            <p>To complete set up, add this OAuth redirect URI to your <?php echo ucfirst($provider); ?> app configuration.</p>
+                                            <p>To complete set up, add this OAuth2 redirect URI to your <?php echo ucfirst($provider); ?> app configuration.</p>
 
                                             <div class="input-copy">
-                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/auth/login/oauth/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
+                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1/account/sessions/oauth2/callback/<?php echo $provider; ?>/{{router.params.project}}" class="margin-bottom-no" />
                                             </div>
                                         </div>
                                     </div>
@@ -364,18 +376,17 @@ $providers = $this->getParam('providers', []);
                                 </form>
                             </div>
 
-                            <img src="/images/oauth/<?php echo strtolower($provider); ?>.png" alt="<?php echo ucfirst($provider); ?> Logo" class="pull-start provider margin-end" />
-
+                            <img src="/images/oauth2/<?php echo strtolower($provider); ?>.png" alt="<?php echo ucfirst($provider); ?> Logo" class="pull-start provider margin-end" />
                             <span>
                                 <?php echo ucfirst($provider); ?>
                                 <span data-ls-if="
-                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Appid}} ||
-                                    !{{console-project.usersOauth<?php echo ucfirst($provider); ?>Secret}}">
+                                    !{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Appid}} ||
+                                    !{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Secret}}">
                                     &nbsp;<span class="tag red">Disabled</span>
                                 </span>
                             </span>
                             <p class="margin-bottom-no margin-top-small text-one-liner">
-                                <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth Developer Docs<i class="icon-link-ext"></i></a>
+                                <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Developer Docs<i class="icon-link-ext"></i></a>
                             </p>
                         </li>
                     <?php endforeach; ?>

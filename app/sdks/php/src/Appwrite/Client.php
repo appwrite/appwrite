@@ -50,7 +50,7 @@ class Client
     /**
      * Set Project
      *
-     * Your Appwrite project ID
+     * Your project ID
      *
      * @param string $value
      *
@@ -66,7 +66,7 @@ class Client
     /**
      * Set Key
      *
-     * Your Appwrite project secret key
+     * Your secret API key
      *
      * @param string $value
      *
@@ -185,6 +185,7 @@ class Client
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_USERAGENT, php_uname('s') . '-' . php_uname('r') . ':php-' . phpversion());
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) use (&$responseHeaders) {
             $len = strlen($header);
             $header = explode(':', strtolower($header), 2);

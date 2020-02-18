@@ -44,18 +44,18 @@ class Storage extends Service
      * assigned to read and write access unless he has passed custom values for
      * read and write arguments.
      *
-     * @param \CurlFile  $files
+     * @param \CurlFile  $file
      * @param array  $read
      * @param array  $write
      * @throws Exception
      * @return array
      */
-    public function createFile(\CurlFile $files, array $read, array $write):array
+    public function createFile(\CurlFile $file, array $read, array $write):array
     {
         $path   = str_replace([], [], '/storage/files');
         $params = [];
 
-        $params['files'] = $files;
+        $params['file'] = $file;
         $params['read'] = $read;
         $params['write'] = $write;
 
@@ -156,9 +156,9 @@ class Storage extends Service
     /**
      * Get File Preview
      *
-     * Get file preview image. Currently, this method supports preview for image
+     * Get a file preview image. Currently, this method supports preview for image
      * files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
-     * and spreadsheets will return file icon image. You can also pass query
+     * and spreadsheets, will return the file icon image. You can also pass query
      * string arguments for cutting and resizing your preview image.
      *
      * @param string  $fileId

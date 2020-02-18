@@ -1,25 +1,31 @@
 <section class="zone medium">
     <form class="box margin-top-large"
-        data-service="auth.join"
+        data-analytics-event="submit"
+        data-analytics-category="home"
+        data-analytics-label="Update Team Membership Status"
+        data-service="teams.updateMembershipStatus"
         data-scope="console"
         data-event="submit"
+        data-param-team-id="{{router.params.teamId}}"
         data-param-invite-id="{{router.params.inviteId}}"
         data-param-user-id="{{router.params.userId}}"
         data-param-secret="{{router.params.secret}}"
         data-success="redirect,alert,trigger"
-        data-success-redirect-url="/console?project={{router.params.project}}"
-        data-success-alert="Joined Team Successfully"
-        data-success-triggers="account.update"
-        data-failure="alert"
+        data-success-param-redirect-url="/console?project={{router.params.project}}"
+        data-success-param-alert-text="Joined Team Successfully"
+        data-success-param-trigger-events="teams.updateMembershipStatus"
+        data-failure="redirect,alert"
+        data-success-param-redirect-url="/console"
         data-failure-param-alert-text="Failed to join team. Please try again later"
         data-failure-param-alert-classname="error">
 
         <div class="text-danger margin-bottom-large" style="display: none;" data-ls-if="{{router.params.failure}} == 1">Failed to join team. Please try again later</div>
+        
+        <h2 class="margin-bottom-small">Invitation</h2>
 
-        <input name="success" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/console?company={{router.params.company}}">
-        <input name="failure" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?failure=1&company={{router.params.company}}&inviteId={{router.params.inviteId}}&secret={{router.params.secret}}&userId={{router.params.userId}}">
-
-        <div class=""
+        <p>You have been invited to join a team project on <?php echo APP_NAME; ?></p>
+        
+        <!-- <div class=""
              data-service="companies.getPreview"
              data-scope="api"
              data-name="api-company"
@@ -28,16 +34,12 @@
              data-success="trigger"
              data-success-triggers="api-company.load">
 
-            <h2 class="margin-bottom-small">Invitation</h2>
-
-            <p>You have been invited to join <span data-ls-bind="{{api-company.name}}"></span> team on <?php echo APP_NAME; ?></p>
-
             <div data-ls-if="{{api-company.logo}} !== '' || {{api-company.logo}} !== undefined">
                 <div data-ls-style="background: {{api-company.theme-color}}; color: {{api-company.theme-color-contrast}}; width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto; text-align: center">
                     <img data-ls-attrs="src={{env.API}}/v1/storage/files/{{api-company.logo}}/preview?project={{env.PROJECT}}&height=120" alt="Logo" style="opacity: 0; line-height: 80px; vertical-align: middle; max-width: 80px; max-height: 80px" />
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="agree margin-top margin-bottom">
             <div class="pull-start margin-end-small margin-bottom">

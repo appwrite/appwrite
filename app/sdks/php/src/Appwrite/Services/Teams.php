@@ -22,7 +22,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function listTeams(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
+    public function list(string $search = '', int $limit = 25, int $offset = 0, string $orderType = 'ASC'):array
     {
         $path   = str_replace([], [], '/teams');
         $params = [];
@@ -50,7 +50,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function createTeam(string $name, array $roles = ["owner"]):array
+    public function create(string $name, array $roles = ["owner"]):array
     {
         $path   = str_replace([], [], '/teams');
         $params = [];
@@ -73,7 +73,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function getTeam(string $teamId):array
+    public function get(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
@@ -95,7 +95,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function updateTeam(string $teamId, string $name):array
+    public function update(string $teamId, string $name):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
@@ -117,7 +117,7 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function deleteTeam(string $teamId):array
+    public function delete(string $teamId):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}');
         $params = [];
@@ -129,7 +129,7 @@ class Teams extends Service
     }
 
     /**
-     * Get Team Members
+     * Get Team Memberships
      *
      * Get team members by the team unique ID. All team members have read access
      * for this list of resources.
@@ -138,9 +138,9 @@ class Teams extends Service
      * @throws Exception
      * @return array
      */
-    public function getTeamMembers(string $teamId):array
+    public function getMemberships(string $teamId):array
     {
-        $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}/members');
+        $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}/memberships');
         $params = [];
 
 
@@ -152,16 +152,16 @@ class Teams extends Service
     /**
      * Create Team Membership
      *
-     * Use this endpoint to invite a new member to your team. An email with a link
-     * to join the team will be sent to the new member email address. If member
-     * doesn't exists in the project it will be automatically created.
+     * Use this endpoint to invite a new member to join your team. An email with a
+     * link to join the team will be sent to the new member email address if the
+     * member doesn't exist in the project it will be created automatically.
      * 
-     * Use the redirect parameter to redirect the user from the invitation email
-     * back to your app. When the user is redirected, use the
-     * /teams/{teamId}/memberships/{inviteId}/status endpoint to finally join the
-     * user to the team.
+     * Use the 'URL' parameter to redirect the user from the invitation email back
+     * to your app. When the user is redirected, use the [Update Team Membership
+     * Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to
+     * accept the invitation to the team.
      * 
-     * Please notice that in order to avoid a [Redirect
+     * Please note that in order to avoid a [Redirect
      * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      * the only valid redirect URL's are the once from domains you have set when
      * added your platforms in the console interface.
@@ -169,12 +169,12 @@ class Teams extends Service
      * @param string  $teamId
      * @param string  $email
      * @param array  $roles
-     * @param string  $redirect
+     * @param string  $url
      * @param string  $name
      * @throws Exception
      * @return array
      */
-    public function createTeamMembership(string $teamId, string $email, array $roles, string $redirect, string $name = ''):array
+    public function createMembership(string $teamId, string $email, array $roles, string $url, string $name = ''):array
     {
         $path   = str_replace(['{teamId}'], [$teamId], '/teams/{teamId}/memberships');
         $params = [];
@@ -182,7 +182,7 @@ class Teams extends Service
         $params['email'] = $email;
         $params['name'] = $name;
         $params['roles'] = $roles;
-        $params['redirect'] = $redirect;
+        $params['url'] = $url;
 
         return $this->client->call(Client::METHOD_POST, $path, [
             'content-type' => 'application/json',
@@ -193,87 +193,21 @@ class Teams extends Service
      * Delete Team Membership
      *
      * This endpoint allows a user to leave a team or for a team owner to delete
-     * the membership of any other team member.
+     * the membership of any other team member. You can also use this endpoint to
+     * delete a user membership even if he didn't accept it.
      *
      * @param string  $teamId
      * @param string  $inviteId
      * @throws Exception
      * @return array
      */
-    public function deleteTeamMembership(string $teamId, string $inviteId):array
+    public function deleteMembership(string $teamId, string $inviteId):array
     {
         $path   = str_replace(['{teamId}', '{inviteId}'], [$teamId, $inviteId], '/teams/{teamId}/memberships/{inviteId}');
         $params = [];
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
-            'content-type' => 'application/json',
-        ], $params);
-    }
-
-    /**
-     * Create Team Membership (Resend)
-     *
-     * Use this endpoint to resend your invitation email for a user to join a
-     * team.
-     *
-     * @param string  $teamId
-     * @param string  $inviteId
-     * @param string  $redirect
-     * @throws Exception
-     * @return array
-     */
-    public function createTeamMembershipResend(string $teamId, string $inviteId, string $redirect):array
-    {
-        $path   = str_replace(['{teamId}', '{inviteId}'], [$teamId, $inviteId], '/teams/{teamId}/memberships/{inviteId}/resend');
-        $params = [];
-
-        $params['redirect'] = $redirect;
-
-        return $this->client->call(Client::METHOD_POST, $path, [
-            'content-type' => 'application/json',
-        ], $params);
-    }
-
-    /**
-     * Update Team Membership Status
-     *
-     * Use this endpoint to let user accept an invitation to join a team after he
-     * is being redirect back to your app from the invitation email. Use the
-     * success and failure URL's to redirect users back to your application after
-     * the request completes.
-     * 
-     * Please notice that in order to avoid a [Redirect
-     * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
-     * the only valid redirect URL's are the once from domains you have set when
-     * added your platforms in the console interface.
-     * 
-     * When not using the success or failure redirect arguments this endpoint will
-     * result with a 200 status code on success and with 401 status error on
-     * failure. This behavior was applied to help the web clients deal with
-     * browsers who don't allow to set 3rd party HTTP cookies needed for saving
-     * the account session token.
-     *
-     * @param string  $teamId
-     * @param string  $inviteId
-     * @param string  $userId
-     * @param string  $secret
-     * @param string  $success
-     * @param string  $failure
-     * @throws Exception
-     * @return array
-     */
-    public function updateTeamMembershipStatus(string $teamId, string $inviteId, string $userId, string $secret, string $success = '', string $failure = ''):array
-    {
-        $path   = str_replace(['{teamId}', '{inviteId}'], [$teamId, $inviteId], '/teams/{teamId}/memberships/{inviteId}/status');
-        $params = [];
-
-        $params['userId'] = $userId;
-        $params['secret'] = $secret;
-        $params['success'] = $success;
-        $params['failure'] = $failure;
-
-        return $this->client->call(Client::METHOD_PATCH, $path, [
             'content-type' => 'application/json',
         ], $params);
     }

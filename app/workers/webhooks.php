@@ -36,7 +36,7 @@ class WebhooksV1
 
         Authorization::enable();
 
-        if (is_null($project->getUid()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
+        if (is_null($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
             throw new Exception('Project Not Found');
         }
 
@@ -65,7 +65,7 @@ class WebhooksV1
                 [
                     'Content-Type: application/json',
                     'Content-Length: '.strlen($payload),
-                    'X-'.APP_NAME.'-Event: '.$event,
+                    'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
                     'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
                 ]

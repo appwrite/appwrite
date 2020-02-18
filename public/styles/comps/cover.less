@@ -1,18 +1,15 @@
 .cover {
-  background: @config-color-focus-fade;
+  background: var(--config-color-focus-fade);
   padding: 30px 50px;
   margin: 0 -50px;
   position: relative;
-  border-bottom: solid 1px #dedede;
-  //box-shadow: 0 0 3px rgba(0, 0, 0, 0.05);
-  //border-bottom: solid 2px #e3e9ec;;
 
   h1,
   h2,
   h3,
   h4,
   .title {
-    color: @config-color-focus;
+    color: var(--config-color-focus);
     font-weight: 600;
     margin-bottom: 40px !important;
     font-size: 28px;
@@ -24,7 +21,7 @@
   }
 
   p {
-    color: #737373;
+    color: var(--config-color-fade);
   }
 
   .button {
@@ -33,13 +30,13 @@
 
   a,
   .link {
-    color: @config-color-focus;
+    color: var(--config-color-focus);
     border-left: none;
     border-right: none;
     cursor: pointer;
 
     &:hover {
-      border-bottom-color: @config-color-focus;
+      border-bottom-color: var(--config-color-focus);
     }
   }
 }

@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => 'Time %s',
-    'auth.emails.confirm.title' => 'Confirmação de Conta',
-    'auth.emails.confirm.body' => 'pt-br.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Redefinição de Senha',
-    'auth.emails.recovery.body' => 'pt-br.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Convite para a Equipe %s em %s',
-    'auth.emails.invitation.body' => 'pt-br.email.auth.invitation.tpl',
+    'account.emails.team' => 'Time %s',
+    'account.emails.verification.title' => 'Confirmação de Conta',
+    'account.emails.verification.body' => 'pt-br.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Redefinição de Senha',
+    'account.emails.recovery.body' => 'pt-br.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Convite para a Equipe %s em %s',
+    'account.emails.invitation.body' => 'pt-br.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Desconhecido',
 

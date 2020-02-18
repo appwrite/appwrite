@@ -7,7 +7,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
  */
 
 .ide {
-	background-color: #373738;
+	background-color: var(--config-prism-background);
 	overflow: hidden;
 	position: relative;
 	z-index: 1;
@@ -30,48 +30,48 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 	}
 
 	&[data-lang="bash"]::after {
-		background: #2b2626;
-		color: #fff;
+		background: var(--config-language-bash);
+		color: var(--config-language-bash-contrast);
 	}
 
 	&[data-lang="javascript"]::after {
-		background: #fff054;
-		color: #333232;
+		background: var(--config-language-javascript);
+		color: var(--config-language-javascript-contrast);
 	}
 
 	&[data-lang="html"]::after {
-		background: #ff895b;
-		color: #ffffff;
+		background: var(--config-language-html);
+		color: var(--config-language-html-contrast);
 	}
 
 	&[data-lang="php"]::after {
-		background: #6182bb;
-		color: #ffffff;
+		background: var(--config-language-php);
+		color: var(--config-language-php-contrast);
 	}
 
-	&[data-lang="node.js"]::after {
-		background: #8cc500;
-		color: #373738;
+	&[data-lang="nodejs"]::after {
+		background: var(--config-language-nodejs);
+		color: var(--config-language-nodejs-contrast);
 	}
 
 	&[data-lang="ruby"]::after {
-		background: #fc3f48;
-		color: #ffffff;
+		background: var(--config-language-ruby);
+		color: var(--config-language-ruby-contrast);
 	}
 
 	&[data-lang="python"]::after {
-		background: #3873a2;
-		color: #ffffff;
+		background: var(--config-python-javascript);
+		color: var(--config-language-python-contrast);
 	}
 
 	&[data-lang="go"]::after {
-		background: #00add8;
-		color: #ffffff;
+		background: var(--config-language-go);
+		color: var(--config-language-go-contrast);
 	}
 
 	&[data-lang="dart"]::after {
-		background: #035698;
-		color: #2bb1f0;
+		background: var(--config-language-dart);
+		color: var(--config-language-dart-contrast);
 	}
 
 	.tag {
@@ -286,10 +286,11 @@ pre[class*="language-"].line-numbers > code {
 }
 
 .line-numbers .line-numbers-rows {
-	background: #39393c;
+	background: var(--config-prism-numbers);
 	position: absolute;
 	pointer-events: none;
 	top: -20px;
+	bottom: -21px;
 	padding: 20px 0;
 	font-size: 100%;
 	left: -60px;

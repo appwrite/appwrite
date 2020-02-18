@@ -4,14 +4,38 @@
 
 * Upgraded core API PHP version to 7.4
 * New database rule validation options
-* Update docs example with auth info
-* Allow non-web platform skip origin header
+* Allow non-web platform to skip origin header
+* Limited console dashboard to show max 5 alerts at the same time
+* Added more webhooks events
+* Normailized all webhooks event names
+* Added support for SameSite cookie option with fallback cookie for old clients
+* Added a new Discord OAuth adapter
+* Added a new Twitch OAuth adapter
+* Added a new Spotify OAuth adapter
+* Added a new Yahoo OAuth adapter
+* Added a new Salesforce OAuth adapter
+* Added a new Yandex OAuth adapter
+* Added a new Paypal OAuth adapter
+* Added a new Bitly OAuth adapter
+* Upgraded MariaDB image to version 1.0.2
+* Upgraded SMTP image to version 1.0.1
+* File upload route (POST /v1/storage/files) now accept a single file per request
 * Added ENV vars to change system email sender name and address 
+* Usage for requests made by project admin in the console are not counted as API usage
+* Added ENV var to change default file upload size limit. New default value is 100MB
 
 ## Bug Fixes
 
 * Fixed bug where user status was saved as a string instead of an integer
+* Fixed gravatar icons not showing up correctly on the console
+* Fixed code location of project not found error
 * Fixed bug where tags element would ignore tab key for parsing new tags
+* Fixed OAuth login error saying project UID is missing when its not
+* Fixed wrong input validation for user preferences
+
+## Breaking Changes
+
+* Merged Auth and Account service route to make the API REST compatible
 
 # Version 0.4.0 (PRE-RELEASE)
 

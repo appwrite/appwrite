@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Equip',
-    'auth.emails.confirm.title' => 'Confirmació del compte',
-    'auth.emails.confirm.body' => 'cat.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Restablir contrasenya',
-    'auth.emails.recovery.body' => 'cat.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Invitació a l\'Equip %s a %s',
-    'auth.emails.invitation.body' => 'cat.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Equip',
+    'account.emails.verification.title' => 'Confirmació del compte',
+    'account.emails.verification.body' => 'cat.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Restablir contrasenya',
+    'account.emails.recovery.body' => 'cat.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Invitació a l\'Equip %s a %s',
+    'account.emails.invitation.body' => 'cat.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Desconegut',
 

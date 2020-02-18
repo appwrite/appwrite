@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Lið',
-    'auth.emails.confirm.title' => 'Vátta brúkari',
-    'auth.emails.confirm.body' => 'fo.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Glómt passord',
-    'auth.emails.recovery.body' => 'fo.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Innbjóðing til %s Lið hjá %s',
-    'auth.emails.invitation.body' => 'fo.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Lið',
+    'account.emails.verification.title' => 'Vátta brúkari',
+    'account.emails.verification.body' => 'fo.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Glómt passord',
+    'account.emails.recovery.body' => 'fo.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Innbjóðing til %s Lið hjá %s',
+    'account.emails.invitation.body' => 'fo.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Ókjent',
 

@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s tým',
-    'auth.emails.confirm.title' => 'Potvrzení účtu',
-    'auth.emails.confirm.body' => 'cz.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Resetovat heslo',
-    'auth.emails.recovery.body' => 'cz.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Pozvánka do týmu% s na% s',
-    'auth.emails.invitation.body' => 'cz.email.auth.invitation.tpl',
+    'account.emails.team' => '%s tým',
+    'account.emails.verification.title' => 'Potvrzení účtu',
+    'account.emails.verification.body' => 'cz.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Resetovat heslo',
+    'account.emails.recovery.body' => 'cz.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Pozvánka do týmu% s na% s',
+    'account.emails.invitation.body' => 'cz.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Neznámý',
 

@@ -23,7 +23,7 @@ class Client {
     }
 
 
-     /// Your Appwrite project ID
+     /// Your project ID
     Client setProject(value) {
         this.addHeader('X-Appwrite-Project', value);
 
@@ -31,7 +31,7 @@ class Client {
     }
 
 
-     /// Your Appwrite project secret key
+     /// Your secret API key
     Client setKey(value) {
         this.addHeader('X-Appwrite-Key', value);
 

@@ -6,7 +6,15 @@ import (
 
 // Storage service
 type Storage struct {
-	client *Client
+	client Client
+}
+
+func NewStorage(clt Client) Storage {  
+    service := Storage{
+		client: clt,
+	}
+
+    return service
 }
 
 // ListFiles get a list of all the user files. You can use the query params to
@@ -28,11 +36,11 @@ func (srv *Storage) ListFiles(Search string, Limit int, Offset int, OrderType st
 // CreateFile create a new file. The user who creates the file will
 // automatically be assigned to read and write access unless he has passed
 // custom values for read and write arguments.
-func (srv *Storage) CreateFile(Files string, Read []interface{}, Write []interface{}) (map[string]interface{}, error) {
+func (srv *Storage) CreateFile(File string, Read []interface{}, Write []interface{}) (map[string]interface{}, error) {
 	path := "/storage/files"
 
 	params := map[string]interface{}{
-		"files": Files,
+		"file": File,
 		"read": Read,
 		"write": Write,
 	}
@@ -91,10 +99,10 @@ func (srv *Storage) GetFileDownload(FileId string) (map[string]interface{}, erro
 	return srv.client.Call("GET", path, nil, params)
 }
 
-// GetFilePreview get file preview image. Currently, this method supports
+// GetFilePreview get a file preview image. Currently, this method supports
 // preview for image files (jpg, png, and gif), other supported formats, like
-// pdf, docs, slides, and spreadsheets will return file icon image. You can
-// also pass query string arguments for cutting and resizing your preview
+// pdf, docs, slides, and spreadsheets, will return the file icon image. You
+// can also pass query string arguments for cutting and resizing your preview
 // image.
 func (srv *Storage) GetFilePreview(FileId string, Width int, Height int, Quality int, Background string, Output string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{fileId}", FileId)

@@ -2,18 +2,20 @@
   height: 100%;
   width: 100%;
   padding: 0;
-
+  overflow: auto;
+  
   body {
     position: relative;
     height: ~"calc(100% - 70px)";
     width: ~"calc(100% - 320px)";
+    overflow: auto;
     padding-top: 70px;
     padding-bottom: 0;
     .func-padding-end(50px);
     .func-padding-start(270px);
     margin: 0;
-    color: #4b4b4b;
-    background: #eceff1;
+    color: var(--config-color-normal);
+    background: var(--config-console-background);
 
     .project-only {
       display: none !important;
@@ -71,7 +73,7 @@
     height: 40px;
     line-height: 40px;
     padding: 15px 30px;
-    background: #fff;
+    background: var(--config-color-background-fade);
     box-shadow: 0 0 2px rgba(0, 0, 0, .10);
     margin: 0 -50px;
     z-index: 2;
@@ -93,8 +95,8 @@
         padding-bottom: 0;
         border: none;
         border-radius: 26px;
-        background-color: #ececec;
-        color: #868686;
+        background-color: var(--config-console-nav-switch-background);
+        color: var(--config-console-nav-switch-color);
       }
     }
 
@@ -124,7 +126,7 @@
         position: absolute;
         content: "";
         display: block;
-        background: @config-color-danger;
+        background: var(--config-color-danger);
         width: 8px;
         height: 8px;
         border-radius: 50%;
@@ -134,10 +136,8 @@
     }
 
     nav {
-      //box-shadow: 0 0 2px rgba(0, 0, 0, .05);
       background: #1b3445;
-      background: linear-gradient(rgb(19, 42, 59), rgb(48, 40, 57));
-      background: linear-gradient(#143650, #302839);
+      background: linear-gradient(var(--config-console-nav-start), var(--config-console-nav-end));
       color: #788c99;
       position: fixed;
       height: 100%;
@@ -162,7 +162,7 @@
         }
 
         svg g {
-          fill: @config-color-focus
+          fill: var(--config-color-focus)
         }
       }
 
@@ -179,7 +179,7 @@
           border-bottom: none;
 
           svg g {
-            fill: @config-color-focus
+            fill: var(--config-color-focus)
           }
         }
       }
@@ -259,9 +259,7 @@
       }
 
       .links {
-        //border-bottom: solid 1px #182d3c;
         .margin-bottom-small;
-        //padding-bottom: 5px;
 
         &.top {
           border: none;
@@ -279,7 +277,7 @@
           margin-bottom: 0 !important;
 
           a {
-            border-top: solid 1px #2a253a;
+            border-top: solid 1px var(--config-console-nav-border);
             border-bottom: none;
           }
         }
@@ -292,7 +290,7 @@
           line-height: 25px;
           border-radius: 50%;
           padding: 0;
-          background: @config-color-focus;
+          background: var(--config-color-focus);
           color: #ffffff;
           text-align: center;
           font-size: 12px;
@@ -315,6 +313,7 @@
           color: #87a5b9;
           font-weight: 400;
           .func-border-start(5px, transparent);
+          font-size: 13px;
 
           i {
             .func-margin-end(8px);
@@ -326,8 +325,6 @@
           &.selected {
             color: #e4e4e4;
             font-weight: 500;
-            //background: #142a3a;
-            //background: @config-color-focus;
           }
         }
       }
@@ -348,7 +345,6 @@
     width: ~"calc(100% + 100px)";
     margin: 0 -50px;
     box-sizing: border-box;
-    //border-top: solid 1px @config-color-fade-super;
     background: transparent;
     .func-padding-end(30px);
     .func-padding-start(30px);
@@ -397,7 +393,7 @@
       padding: 20px;
       background: #fcfeff;
       border: none;
-      color: @config-color-link;
+      color: var(--config-color-link);
     }
 
     .col {
@@ -411,7 +407,7 @@
         content: "";
         display: block;
         width: 2px;
-        background: #eceff1;
+        background: var(--config-console-background);
         height: ~"calc(100% + 110px)";
         position: absolute;
         top: -20px;
@@ -429,7 +425,7 @@
     }
 
     .value {
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       vertical-align: bottom;
       line-height: 45px;
 
@@ -449,18 +445,18 @@
       display: inline-block;
       margin-bottom: 5px;
       .func-margin-start(5px);
-      color: @config-color-focus;
+      color: var(--config-color-focus);
     }
 
     .metric {
-      color: @config-color-focus;
+      color: var(--config-color-focus);
       font-weight: 400;
       font-size: 13px;
       line-height: 16px;
     }
 
     .range {
-      color: @config-color-fade;
+      color: var(--config-color-fade);
       font-weight: 400;
       font-size: 14px;
       line-height: 16px;
@@ -491,18 +487,16 @@
       padding-bottom: 26%;
       .func-margin-end(-2px);
       overflow: hidden;
-      //border-radius: 10px;
-      //padding-top: 15px;
-      background-color: #ffffff;
+      background-color: var(--config-color-background-fade);
       background-image:
         linear-gradient(transparent 1px, transparent 1px),
         linear-gradient(90deg, transparent 1px, transparent 1px),
-        linear-gradient(rgb(241, 241, 241) 1px, transparent 1px),
-        linear-gradient(90deg, rgb(241, 241, 241) 1px, transparent 1px);
+        linear-gradient(var(--config-border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);
       background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
       background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
       background-repeat: round;
-      border: solid 1px rgb(241, 241, 241);
+      border: solid 1px var(--config-border-color);
       border-right: solid 1px transparent;
       border-bottom: solid 1px transparent;
 
@@ -533,14 +527,14 @@
       height: 30px;
       line-height: 30px;
       text-align: center;
-      background: @config-color-fade;
-      color: @config-color-fade-super;
+      background: var(--config-color-fade);
+      color: var(--config-color-fade-super);
       border-radius: 50%;
       .func-margin-end(15px);
 
       &.fade {
         background: transparent;
-        color: @config-color-fade;
+        color: var(--config-color-fade);
       }
     }
   }
@@ -629,7 +623,7 @@
       left: -20px;
       right: -20px;
       bottom: -20px;
-      background: #f6f7f8;
+      background: var(--config-color-background);
       opacity: .7;
       z-index: 300;
     }
@@ -640,7 +634,7 @@
   }
 
   .confirm {
-    background: @config-color-link;
+    background: var(--config-color-link);
     color: #ffffff;
     border-radius: 25px;
     padding: 12px;
@@ -668,7 +662,6 @@
       .cover {
         margin: -30px -30px 30px -30px;
         padding: 30px;
-
 
         &.android {
           background: #a4ca24;
@@ -705,6 +698,10 @@
       border-radius: 50%;
       margin-bottom: 20px;
     }
+  }
+
+  .scroll-to {
+    display: none;
   }
 }
 

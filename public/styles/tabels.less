@@ -9,7 +9,7 @@ table {
 
   thead {
     box-shadow: 0 0 2px rgba(0,0,0,.25);
-    border-bottom: solid 1px @config-color-fade-super;
+    border-bottom: solid 1px var(--config-color-fade-super);
     font-size: 14px;
 
     th {
@@ -48,7 +48,7 @@ table {
   }
 
   tr {
-    border-bottom: solid 1px @config-color-fade-super;
+    border-bottom: solid 1px var(--config-color-fade-super);
 
     &:last-child {
       border-bottom: none;
@@ -56,7 +56,7 @@ table {
   }
 
   tr:nth-child(even) {
-    background: #fbfbfb;
+    background: var(--config-color-background-focus);
   }
 
   th {
@@ -64,7 +64,7 @@ table {
     font-weight: normal;
 
     i {
-      color: @config-color-fade;
+      color: var(--config-color-fade);
       font-size: 10px;
       display: inline-block;
       vertical-align: top;
@@ -101,7 +101,7 @@ table {
 
   &.vertical {
     @media @phones, @tablets {
-      border-top: solid 1px @config-color-fade-super;
+      border-top: solid 1px var(--config-color-fade-super);
       display: block;
       overflow: hidden;
       padding-top: 12px;

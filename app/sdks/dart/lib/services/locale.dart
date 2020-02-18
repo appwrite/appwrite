@@ -10,7 +10,9 @@ class Locale extends Service {
      /// country code, country name, continent name, continent code, ip address and
      /// suggested currency. You can use the locale header to get the data in a
      /// supported language.
-    Future<Response> getLocale() async {
+     /// 
+     /// ([IP Geolocation by DB-IP](https://db-ip.com))
+    Future<Response> get() async {
        String path = '/locale';
 
        Map<String, dynamic> params = {
@@ -39,8 +41,7 @@ class Locale extends Service {
        return await this.client.call('get', path: path, params: params);
     }
      /// List of all countries that are currently members of the EU. You can use the
-     /// locale header to get the data in a supported language. UK brexit date is
-     /// currently set to 2019-10-31 and will be updated if and when needed.
+     /// locale header to get the data in a supported language.
     Future<Response> getCountriesEU() async {
        String path = '/locale/countries/eu';
 

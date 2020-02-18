@@ -2,7 +2,7 @@ package appwrite
 
 import (
 	"encoding/json"
-  "io/ioutil"
+  	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,23 +31,21 @@ func (clt *Client) AddHeader(key string, value string) {
 	clt.headers[key] = value
 }
 
-// SetProjectHeader add the 'X-Appwrite-Project' header for the Client. Your Appwrite project ID
-func (clt *Client) SetProjectHeader(value string) {
+// Your project ID
+func (clt *Client) SetProject(value string) {
 	clt.headers["X-Appwrite-Project"] = value
 }
 
-// SetKeyHeader add the 'X-Appwrite-Key' header for the Client. Your Appwrite project secret key
-func (clt *Client) SetKeyHeader(value string) {
+// Your secret API key
+func (clt *Client) SetKey(value string) {
 	clt.headers["X-Appwrite-Key"] = value
 }
 
-// SetLocaleHeader add the 'X-Appwrite-Locale' header for the Client.
-func (clt *Client) SetLocaleHeader(value string) {
+func (clt *Client) SetLocale(value string) {
 	clt.headers["X-Appwrite-Locale"] = value
 }
 
-// SetModeHeader add the 'X-Appwrite-Mode' header for the Client.
-func (clt *Client) SetModeHeader(value string) {
+func (clt *Client) SetMode(value string) {
 	clt.headers["X-Appwrite-Mode"] = value
 }
 

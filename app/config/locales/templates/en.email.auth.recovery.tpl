@@ -15,7 +15,7 @@
     <a href="{{redirect}}">{{redirect}}</a>
     <br />
     <br />
-    If you didn’t ask to reset your password, you can ignore this message.
+    If you didn't ask to reset your password, you can ignore this message.
     <br />
     <br />
     Thanks,

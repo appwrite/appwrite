@@ -25,7 +25,7 @@ const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
 const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
-const APP_VERSION_STABLE = '0.4.0';
+const APP_VERSION_STABLE = '0.5.0';
 
 $register = new Registry();
 $request = new Request();
@@ -37,10 +37,10 @@ $response = new Response();
 $env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
 $domain = $request->getServer('HTTP_HOST', '');
 $version = $request->getServer('_APP_VERSION', 'UNKNOWN');
-$providers = include __DIR__.'/../app/config/providers.php'; // OAuth providers list
+$providers = include __DIR__.'/../app/config/providers.php'; // OAuth2 providers list
 $platforms = include __DIR__.'/../app/config/platforms.php';
-$locales = include __DIR__.'/../app/config/locales.php'; // OAuth providers list
-$collections = include __DIR__.'/../app/config/collections.php'; // OAuth providers list
+$locales = include __DIR__.'/../app/config/locales.php'; // Locales list
+$collections = include __DIR__.'/../app/config/collections.php'; // Collections list
 $redisHost = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort = $request->getServer('_APP_REDIS_PORT', '');
 $utopia = new App('Asia/Tel_Aviv', $env);
@@ -57,7 +57,7 @@ define('COOKIE_DOMAIN',
     )
         ? null
         : '.'.parse_url($scheme.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
-define('COOKIE_SAMESITE', null); // Response::COOKIE_SAMESITE_NONE
+define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
  * Registry
@@ -112,8 +112,8 @@ $register->set('smtp', function () use ($request) {
 
     $mail->isSMTP();
 
-    $username = $request->getServer('_APP_SMTP_USERNAME', '');
-    $password = $request->getServer('_APP_SMTP_PASSWORD', '');
+    $username = $request->getServer('_APP_SMTP_USERNAME', null);
+    $password = $request->getServer('_APP_SMTP_PASSWORD', null);
 
     $mail->XMailer = 'Appwrite Mailer';
     $mail->Host = $request->getServer('_APP_SMTP_HOST', 'smtp');
@@ -121,10 +121,11 @@ $register->set('smtp', function () use ($request) {
     $mail->SMTPAuth = (!empty($username) && !empty($password));
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', '');
+    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
+    $mail->SMTPAutoTLS = false;
 
-    $from = $request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Team');
-    $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', 'team@appwrite.io');
+    $from = urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
+    $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
     $mail->addReplyTo($email, $from);
@@ -219,19 +220,22 @@ $console = $consoleDB->getDocument('console');
 
 $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 
-Auth::setCookieName('a_session_'.$project->getUid());
+Auth::setCookieName('a_session_'.$project->getId());
 
 if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a_session_'.$console->getUid());
+    Auth::setCookieName('a_session_'.$console->getId());
 }
 
-$session = Auth::decodeSession($request->getCookie(Auth::$cookieName, $request->getHeader('X-Appwrite-Key', '')));
+$session = Auth::decodeSession(
+    $request->getCookie(Auth::$cookieName, // Get sessions
+        $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
+            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
 Auth::$unique = $session['id'];
 Auth::$secret = $session['secret'];
 
 $projectDB = new Database();
 $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_'.$project->getUid());
+$projectDB->setNamespace('app_'.$project->getId());
 $projectDB->setMocks($collections);
 
 $user = $projectDB->getDocument(Auth::$unique);
@@ -240,23 +244,30 @@ if (APP_MODE_ADMIN === $mode) {
     $user = $consoleDB->getDocument(Auth::$unique);
 
     $user
-        ->setAttribute('$uid', 'admin-'.$user->getAttribute('$uid'))
+        ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
     ;
 }
 
-if (empty($user->getUid()) // Check a document has been found in the DB
+if (empty($user->getId()) // Check a document has been found in the DB
     || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
     || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-    $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+    $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
 }
 
 if (APP_MODE_ADMIN === $mode) {
     if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
         Authorization::disable();
     } else {
-        $user = new Document(['$uid' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
     }
 }
 
 // Set project mail
-$register->get('smtp')->setFrom(APP_EMAIL_TEAM, sprintf(Locale::getText('auth.emails.team'), $project->getAttribute('name')));
+$register->get('smtp')
+    ->setFrom(
+        $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+        ($project->getId() === 'console')
+            ? urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
+            : sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
+        )
+    );

@@ -6,6 +6,7 @@ use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Storage\Validators\File;
+use Utopia\Response;
 use Utopia\Validator\Host;
 
 $result = [];
@@ -175,9 +176,23 @@ $utopia->post('/v1/mock/tests/general/upload')
         function ($x, $y, $z, $file) use ($request) {
             $file = $request->getFiles('file');
             $file['tmp_name'] = (is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
+            $file['name'] = (is_array($file['name'])) ? $file['name'] : [$file['name']];
+            $file['size'] = (is_array($file['size'])) ? $file['size'] : [$file['size']];
+
+            foreach ($file['name'] as $i => $name) {
+                if($name !== 'file.png') {
+                    throw new Exception('Wrong file name', 400);
+                }
+            }
+
+            foreach ($file['size'] as $i => $size) {
+                if($size !== 38756) {
+                    throw new Exception('Wrong file size', 400);
+                }
+            }
 
             foreach ($file['tmp_name'] as $i => $tmpName) {
-                if(md5(file_get_contents($tmpName)) !== 'asdasdasd') {
+                if(md5(file_get_contents($tmpName)) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
                     throw new Exception('Wrong file uploaded', 400);
                 }
             }
@@ -216,38 +231,39 @@ $utopia->get('/v1/mock/tests/general/empty')
     ->action(
         function () use ($response) {
             $response->noContent();
+            exit();
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/login')
-    ->desc('Mock an OAuth login route')
+$utopia->get('/v1/mock/tests/general/oauth2')
+    ->desc('Mock an OAuth2 login route')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.') // Important to deny an open redirect attack
-    ->param('scope', '', function () { return new Text(100); }, 'OAuth scope list.')
-    ->param('state', '', function () { return new Text(100); }, 'OAuth state.')
+    ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
+    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
+    ->param('scope', '', function () { return new Text(100); }, 'OAuth2 scope list.')
+    ->param('state', '', function () { return new Text(1024); }, 'OAuth2 state.')
     ->action(
         function ($clientId, $redirectURI, $scope, $state) use ($response) {
-            $response->redirect($redirectURI);
+            $response->redirect($redirectURI.'?'.http_build_query(['code' => 'abcdef', 'state' => $state]));
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/token')
-    ->desc('Mock an OAuth login route')
+$utopia->get('/v1/mock/tests/general/oauth2/token')
+    ->desc('Mock an OAuth2 login route')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('client_id', '', function () { return new Text(100); }, 'OAuth Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth Redirect URI.')
-    ->param('client_secret', '', function () { return new Text(100); }, 'OAuth scope list.')
-    ->param('code', '', function () { return new Text(100); }, 'OAuth state.')
+    ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
+    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth2 Redirect URI.')
+    ->param('client_secret', '', function () { return new Text(100); }, 'OAuth2 scope list.')
+    ->param('code', '', function () { return new Text(100); }, 'OAuth2 state.')
     ->action(
         function ($clientId, $redirectURI, $clientSecret, $code) use ($response) {
             if($clientId != '1') {
                 throw new Exception('Invalid client ID');
             }
 
-            if($clientSecret != 'secret') {
+            if($clientSecret != '123456') {
                 throw new Exception('Invalid client secret');
             }
 
@@ -259,11 +275,11 @@ $utopia->get('/v1/mock/tests/general/oauth/token')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth/user')
-    ->desc('Mock an OAuth user route')
+$utopia->get('/v1/mock/tests/general/oauth2/user')
+    ->desc('Mock an OAuth2 user route')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('token', '', function () { return new Text(100); }, 'OAuth Access Token.')
+    ->param('token', '', function () { return new Text(100); }, 'OAuth2 Access Token.')
     ->action(
         function ($token) use ($response) {
             if($token != '123456') {
@@ -273,8 +289,32 @@ $utopia->get('/v1/mock/tests/general/oauth/user')
             $response->json([
                 'id' => 1,
                 'name' => 'User Name',
-                'email' => 'user@localhost',
+                'email' => 'user@localhost.test',
             ]);
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/oauth2/success')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->json([
+                'result' => 'success',
+            ]);
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/oauth2/failure')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response
+                ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
+                ->json([
+                    'result' => 'failure',
+                ]);
         }
     );
 

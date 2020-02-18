@@ -160,40 +160,6 @@ window.ls.container
     }
   })
   .add({
-    selector: "data-code-example",
-    controller: function(window, document, element, cookie) {
-      let prefix = element.dataset["codeExample"] || "unknown";
-
-      element.addEventListener("change", function() {
-        select(element.value);
-      });
-
-      let select = function(value) {
-        for (let i = 0; i < element.length; i++) {
-          document.body.classList.remove(
-            prefix + "-" + element.options[i].value
-          );
-        }
-
-        document.body.classList.add(prefix + "-" + value);
-
-        cookie.set("language-" + prefix, value, 365);
-
-        document.dispatchEvent(new CustomEvent("updated-language-" + prefix));
-      };
-
-      document.addEventListener("updated-language-" + prefix, function() {
-        element.value = cookie.get("language-" + prefix);
-      });
-
-      let def = cookie.get("language-" + prefix) || element.options[0].value;
-
-      select(def);
-
-      element.value = def;
-    }
-  })
-  .add({
     selector: "data-ls-ui-chart",
     controller: function(element, container, date, document) {
       let child = document.createElement("canvas");

@@ -53,7 +53,7 @@
 
                         <div class="wrapper"
                             data-service="database.listCollections"
-                            data-event="load,collection-create,collection-update,collection-delete"
+                            data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
                             data-param-search="{{router.params.search}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-offset="{{router.params.offset}}"
@@ -67,7 +67,7 @@
 
                             <div data-ls-if="0 != {{project-collections.sum}}">
                                 <ul data-ls-loop="project-collections.collections" data-ls-as="collection" class="items">
-                                    <li data-ls-attrs="class={{collection.$uid|selectedCollection}},data-uid={{router.params.collectionId}}">
+                                    <li data-ls-attrs="class={{collection.$id|selectedCollection}},data-uid={{router.params.collectionId}}">
                                         <form
                                             data-service="database.listDocuments"
                                             data-event="submit"
@@ -79,8 +79,8 @@
                                             data-name="project-documents"
                                             data-success="state"
                                             data-success-param-state-keys="collectionId=collectionId,search=dsearch,offset=doffset">
-                                            <input name="collectionId" data-ls-bind="{{collection.$uid}}" type="hidden" />
-                                            <button><span data-ls-bind="{{collection.$uid}}"></span></button>
+                                            <input name="collectionId" data-ls-bind="{{collection.$id}}" type="hidden" />
+                                            <button><span data-ls-bind="{{collection.$id}}"></span></button>
                                         </form>
 
                                         <i class="icon-right-open pull-end"></i>
@@ -150,7 +150,7 @@
 
                             <div class="wrapper"
                                 data-service="database.listDocuments"
-                                data-event="load,document-create,document-update,document-delete"
+                                data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
                                 data-param-collection-id="{{router.params.collectionId}}"
                                 data-param-search="{{router.params.dsearch}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
@@ -165,7 +165,7 @@
 
                                 <div data-ls-if="0 != {{project-documents.sum}}">
                                     <ul data-ls-loop="project-documents.documents" data-ls-as="node" class="items">
-                                        <li data-ls-attrs="class={{node.$uid|selectedDocument}},data-uid={{router.params.documentId}}">
+                                        <li data-ls-attrs="class={{node.$id|selectedDocument}},data-uid={{router.params.documentId}}">
                                             <form
                                                 data-service="database.getDocument"
                                                 data-event="submit"
@@ -174,12 +174,12 @@
                                                 data-success="state"
                                                 data-success-param-state-keys="documentId=documentId">
                                                 <input name="collectionId" data-ls-bind="{{router.params.collectionId}}" type="hidden" />
-                                                <input name="documentId" data-ls-bind="{{node.$uid}}" type="hidden" />
-                                                <button><span data-ls-bind="{{node.$uid}}"></span></button>
+                                                <input name="documentId" data-ls-bind="{{node.$id}}" type="hidden" />
+                                                <button><span data-ls-bind="{{node.$id}}"></span></button>
                                             </form>
 
                                             <i class="icon-right-open pull-end"></i>
-                                            <span data-ls-bind="{{node.$uid}}"></span>
+                                            <span data-ls-bind="{{node.$id}}"></span>
                                         </li>
                                     </ul>
                                 </div>
@@ -222,7 +222,7 @@
                     </div>
                     <div class="col span-6">
                         <h3>
-                            <b data-ls-if="({{project-document.$uid}})">Preview</b>
+                            <b data-ls-if="({{project-document.$id}})">Preview</b>
                         </h3>
                         
                         <div
@@ -236,7 +236,7 @@
                             data-success-param-state-keys="documentId=documentId">
                         </div>
 
-                        <div data-ls-if="({{project-document.$uid}})" style="display: none">
+                        <div data-ls-if="({{project-document.$id}})" style="display: none">
                             
                             <div class="code">
                                 <input type="hidden" data-forms-code data-ls-bind="{{project-document}}" />

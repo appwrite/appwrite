@@ -1,6 +1,6 @@
 .box {
   position: relative;
-  background: #ffffff;
+  background: var(--config-color-background-fade);
   border-radius: 10px;
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.05);
   padding: 30px;
@@ -16,43 +16,49 @@
   }
 
   &.danger {
-    background: @config-color-danger;
+    background: var(--config-color-danger);
     color: #fff;
-  }
-
-  &.focus {
-    background: @config-color-focus;
-    color: #ffffff;
 
     button,
     .button {
       background: #ffffff;
-      color: @config-color-focus;
+      color: var(--config-color-danger);
+    }
+  }
+
+  &.focus {
+    background: var(--config-color-focus);
+    color: var(--config-color-background-fade);
+
+    button,
+    .button {
+      background: var(--config-color-background-fade);
+      color: var(--config-color-focus);
     }
   }
 
   &.warning {
-    background: @config-color-warning;
+    background: var(--config-color-success);
     color: #2d2d2d;
 
     button,
     .button {
       background: rgba(45, 45, 45, 0.8);
-      color: @config-color-warning;
+      color: var(--config-color-success);
     }
   }
 
   &>footer {
     margin: 30px -30px -30px -30px;
     padding: 15px 30px;
-    background: #f5f5f5;
-    border: solid 1px #eaeaea;
+    background: var(--config-color-background-fade);
+    border: solid 1px var(--config-border-color);
     border-radius: 0 0 10px 10px;
   }
 
   hr {
     height: 2px;
-    background: @config-color-background;
+    background: var(--config-border-color);
     border: none;
     margin: 30px -30px;
   }
@@ -63,14 +69,14 @@
     padding: 20px 30px 20px 30px;
     margin-bottom: 30px;
     margin: -30px -30px 20px -30px;
-    background: #f9f9f9;
+    background: var(--config-color-background-fade);
     border-bottom: solid 1px #efefef;
   }
 
   .toggle {
     position: relative;
-    border-top: 2px solid #f6f7f8;
-    border-bottom: 2px solid #f6f7f8;
+    border-top: 2px solid var(--config-color-background);
+    border-bottom: 2px solid var(--config-color-background);
     margin: 0 -30px;
     padding: 30px;
     height: 35px;
@@ -114,7 +120,7 @@
 
   .list {
     li {
-      border-bottom: solid 2px #f6f7f8;
+      border-bottom: solid 2px var(--config-border-color);
       margin: 0 -30px 30px -30px;
       padding: 0 30px 30px 30px;
 
@@ -153,8 +159,8 @@ a.box:hover {
   border-bottom: none;
   border-right: none;
   border-left: none;
-  background: #f8fdff;
   box-shadow: 0 0 1px rgba(0, 0, 0, .2);
+  opacity: .7;
 }
 
 .box-asidex {

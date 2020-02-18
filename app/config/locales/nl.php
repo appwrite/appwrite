@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s Team',
-    'auth.emails.confirm.title' => 'Account Bevestiging',
-    'auth.emails.confirm.body' => 'nl.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'Wachtwoord herstellen',
-    'auth.emails.recovery.body' => 'nl.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => 'Uitnodiging naar %s Team voor %s',
-    'auth.emails.invitation.body' => 'nl.email.auth.invitation.tpl',
+    'account.emails.team' => '%s Team',
+    'account.emails.verification.title' => 'Account Bevestiging',
+    'account.emails.verification.body' => 'nl.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'Wachtwoord herstellen',
+    'account.emails.recovery.body' => 'nl.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => 'Uitnodiging naar %s Team voor %s',
+    'account.emails.invitation.body' => 'nl.email.auth.invitation.tpl',
 
     'locale.country.unknown' => 'Onbekend',
 

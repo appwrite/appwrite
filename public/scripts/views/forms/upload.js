@@ -11,16 +11,11 @@
       var previewHeight = element.dataset["previewHeight"] || 200;
       var accept = element.dataset["accept"] || "";
       var required = element.dataset["required"] || false;
-      var multiple = element.dataset["multiple"] || false;
       var className = element.dataset["class"] || "upload";
       var max = parseInt(element.dataset["max"] || 4);
       var sdk =
         scope === "sdk" ? container.get("sdk") : container.get("console");
-      var output = element.value
-        ? multiple
-          ? JSON.parse(element.value)
-          : [element.value]
-        : [];
+      var output = element.value || null;
       var total = 0;
 
       var wrapper = document.createElement("div");
@@ -35,7 +30,6 @@
       input.type = "file";
       input.accept = accept;
       input.required = required;
-      input.multiple = multiple;
       input.tabIndex = -1;
 
       count.className = "count";
@@ -80,63 +74,44 @@
         progress.style.display = "none";
       };
 
-      var render = function(files) {
-        // Generate image previews + remove buttons + input array (array only when multiple is on)
-        if (!Array.isArray(files)) {
-          // Support single file
-          files = [files];
-        }
-
+      var render = function(result) {
         preview.innerHTML = "";
 
         count.innerHTML = "0 / " + max;
 
-        files.map(function(obj) {
-          var file = document.createElement("li");
-          var image = document.createElement("img");
+        if(!result) {
+          return;
+        }
 
-          image.src = image.src =
-            env.API +
-            "/storage/files/" +
-            obj +
-            "/preview?width=" +
-            previewWidth +
-            "&height=" +
-            previewHeight;
+        var file = document.createElement("li");
+        var image = document.createElement("img");
 
-          file.className = "file avatar";
-          file.tabIndex = 0;
-          file.appendChild(image);
+        image.src = image.src =
+          env.API +
+          "/storage/files/" +
+          result +
+          "/preview?width=" +
+          previewWidth +
+          "&height=" +
+          previewHeight +
+          "&project=console";
 
-          count.innerHTML = files.length + " / " + max;
+        file.className = "file avatar";
+        file.tabIndex = 0;
+        file.appendChild(image);
 
-          preview.appendChild(file);
+        preview.appendChild(file);
 
-          if (files.length >= max) {
-            input.disabled = true;
-            upload.classList.add("disabled");
-          } else {
-            input.disabled = false;
-            upload.classList.remove("disabled");
-          }
+        var remove = (function(result) {
+          return function(event) {
+            render(result.$id);
+          };
+        })(result);
 
-          var remove = (function(obj) {
-            return function(event) {
-              output = Array.isArray(output)
-                ? output.filter(function(e) {
-                    return e !== obj;
-                  })
-                : [];
+        file.addEventListener("click", remove);
+        file.addEventListener("keypress", remove);
 
-              render(output);
-            };
-          })(obj);
-
-          file.addEventListener("click", remove);
-          file.addEventListener("keypress", remove);
-
-          element.value = multiple ? JSON.stringify(output) : output[0];
-        });
+        element.value = result;
       };
 
       input.addEventListener("change", function() {
@@ -149,24 +124,11 @@
           expression.parse(element.dataset["write"] || "[]")
         );
 
-        if (!multiple) {
-          output = [];
-        }
-
         sdk.storage.createFile(files[0], read, write, 1).then(
           function(response) {
-            response.map(function(obj) {
-              if (!Array.isArray(output)) {
-                // Support single file
-                throw new Error("Can't append new file to non array value");
-              }
-
-              output[output.length] = obj["$uid"];
-            });
-
             onComplete(message);
 
-            render(output);
+            render(response.$id);
           },
           function(error) {
             alerts.add({ text: "An error occurred!", class: "" }, 3000); // File(s) uploaded.
@@ -178,10 +140,10 @@
       });
 
       element.addEventListener("change", function() {
+        console.log('change', element);
         if (!element.value) {
           return;
         }
-        output = multiple ? JSON.parse(element.value) : [element.value];
         render(output);
       });
 
@@ -194,10 +156,6 @@
       wrapper.appendChild(preview);
       wrapper.appendChild(progress);
       wrapper.appendChild(upload);
-
-      if (multiple) {
-        wrapper.appendChild(count);
-      }
 
       upload.appendChild(input);
 

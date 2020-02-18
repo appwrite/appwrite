@@ -68,13 +68,13 @@ class AuthTest extends TestCase
         $hash = Auth::hash($secret);
         $tokens1 = [
             new Document([
-                '$uid' => 'token1',
+                '$id' => 'token1',
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() + 60 * 60 * 24,
                 'secret' => $hash,
             ]),
             new Document([
-                '$uid' => 'token2',
+                '$id' => 'token2',
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => 'secret2',
@@ -83,13 +83,13 @@ class AuthTest extends TestCase
 
         $tokens2 = [
             new Document([ // Correct secret and type time, wrong expire time
-                '$uid' => 'token1',
+                '$id' => 'token1',
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => $hash,
             ]),
             new Document([
-                '$uid' => 'token2',
+                '$id' => 'token2',
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => 'secret2',
@@ -98,13 +98,13 @@ class AuthTest extends TestCase
 
         $tokens3 = [ // Correct secret and expire time, wrong type
             new Document([
-                '$uid' => 'token1',
+                '$id' => 'token1',
                 'type' => Auth::TOKEN_TYPE_RECOVERY,
                 'expire' => time() + 60 * 60 * 24,
                 'secret' => $hash,
             ]),
             new Document([
-                '$uid' => 'token2',
+                '$id' => 'token2',
                 'type' => Auth::TOKEN_TYPE_LOGIN,
                 'expire' => time() - 60 * 60 * 24,
                 'secret' => 'secret2',

@@ -5,13 +5,13 @@
 </div>
 
 <div class="zone xl"
-    data-service="projects.getProject"
+    data-service="projects.get"
     data-scope="console"
     data-name="console-project"
     data-event="load"
     data-param-project-id="{{router.params.project}}"
     data-success="trigger"
-    data-success-param-trigger-events="project-load">
+    data-success-param-trigger-events="projects.get">
 
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
@@ -19,18 +19,21 @@
                 <h2>Overview</h2>
 
                 <form
-                    data-service="projects.updateProject"
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Update Project"
+                    data-service="projects.update"
                     data-scope="console"
                     data-event="submit"
                     data-param-project-id="{{router.params.project}}"
                     data-success="alert,trigger"
                     data-success-param-alert-text="Saved project successfully"
-                    data-success-param-trigger-events="project-update"
+                    data-success-param-trigger-events="projects.update"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to update project"
                     data-failure-param-alert-classname="error">
 
-                    <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
+                    <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
 
                     <div class="row">
                         <div class="col span-9">
@@ -38,9 +41,9 @@
                                 <label for="name">Name</label>
                                 <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{console-project.name}}" data-forms-text-direction required>
 
-                                <label for="name">Project UID</label>
+                                <label for="name">Project ID</label>
                                 <div class="input-copy">
-                                    <input data-forms-copy type="text" disabled data-ls-bind="{{console-project.$uid}}" />
+                                    <input data-forms-copy type="text" disabled data-ls-bind="{{console-project.$id}}" />
                                 </div>
 
                                 <label for="name">API Endpoint</label>
@@ -69,16 +72,16 @@
                     </div>
                 </form>
             </li>
-            <li data-state="/console/settings/privacy?project={{router.params.project}}">
+            <!-- <li data-state="/console/settings/privacy?project={{router.params.project}}">
 
                 <form
-                    data-service="projects.updateProject"
+                    data-service="projects.update"
                     data-scope="console"
                     data-event="submit"
                     data-param-project-id="{{router.params.project}}"
                     data-success="alert,trigger"
                     data-success-param-alert-text="Saved project successfully"
-                    data-success-param-trigger-events="project-update"
+                    data-success-param-trigger-events="projects.update"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to update project"
                     data-failure-param-alert-classname="error">
@@ -86,7 +89,7 @@
                     <h2>Privacy & Legal</h2>
 
                     <div class="box margin-bottom">
-                        <input name="$uid" type="hidden" data-ls-bind="{{console-project.$uid}}" />
+                        <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
 
                         <div class="row thin">
                             <div class="col span-6">
@@ -119,57 +122,78 @@
                         <button class="" type="submit">Save</button>
                     </div>
                 </form>
-            </li>
+            </li> -->
             <li data-state="/console/settings/members?project={{router.params.project}}">
                 <h2>Members</h2>
 
                 <div class="zone xl"
-                    data-service="teams.getTeamMembers"
+                    data-service="teams.getMemberships"
                     data-scope="console"
-                    data-event="load,membership-create,membership-update,membership-delete"
+                    data-event="load,teams.createMembership,teams.deleteMembership"
                     data-name="members"
                     data-param-team-id="{{console-project.teamId}}"
                     data-success="trigger"
-                    data-success-param-trigger-events="members-load">
+                    data-success-param-trigger-events="teams.getMemberships">
 
                     <div class="box margin-bottom">
                         <ul data-ls-loop="members" data-ls-as="member" class="list">
                             <li class="clear">
                                 <form class="pull-end"
-                                    data-service="teams.deleteTeamMembership"
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Delete Team Membership"
+                                    data-service="teams.deleteMembership"
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger"
                                     data-success-param-alert-text="Member Removed Successfully"
-                                    data-success-param-trigger-events="membership-delete"
+                                    data-success-param-trigger-events="teams.deleteMembership"
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to Remove Member"
                                     data-failure-param-alert-classname="error">
 
                                     <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                    <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
+                                    <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$id}}">
 
                                     <button class="danger">Leave</button>
                                 </form>
-
+                                
                                 <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
-                                    <form
-                                        data-service="teams.createTeamMembershipResend"
+                                    <form class="pull-end"
+                                        data-analytics-event="submit"
+                                        data-analytics-category="console"
+                                        data-analytics-label="Create Team Membership (resend)"
+                                        data-service="teams.deleteMembership"
                                         data-scope="console"
                                         data-event="submit"
-                                        data-loading="Resending invitation, please wait..."
-                                        data-success="alert,trigger"
-                                        data-success-param-alert-text="Invitation Sent Successfully"
-                                        data-success-param-trigger-events="membership-resend"
+                                        data-success="trigger"
+                                        data-success-param-trigger-events="teams.deleteMembership.resend"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="Failed to Send Invite"
+                                        data-failure-param-alert-text="Failed to Resend Invitation"
                                         data-failure-param-alert-classname="error">
-                                        
+
                                         <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.inviteId}}">
-                                        <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$id}}">
 
                                         <button class="reverse">Resend</button>
+                                    </form>
+
+                                    <form class="pull-end"
+                                        data-service="teams.createMembership"
+                                        data-scope="console"
+                                        data-event="teams.deleteMembership.resend"
+                                        data-success="alert,trigger"
+                                        data-success-param-alert-text="Invitation Sent Successfully"
+                                        data-success-param-trigger-events="teams.createMembership.resent"
+                                        data-failure="alert"
+                                        data-failure-param-alert-text="Failed to Send inivitation"
+                                        data-failure-param-alert-classname="error">
+
+                                        <input name="teamId" type="hidden" data-ls-bind="{{member.teamId}}">
+                                        <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                                        <input name="email" type="hidden" data-ls-bind="{{member.email}}">
+                                        <input name="name" type="hidden" data-ls-bind="{{member.name}}">
+                                        <input name="roles" type="hidden" data-ls-bind="{{member.roles}}" data-cast-to="json">
                                     </form>
                                 </div>
 
@@ -183,34 +207,37 @@
                         </ul>
                     </div>
 
-                    <div data-ui-modal class="modal close width-small" data-button-text="Invite Member" data-button-class="">
+                    <div data-ui-modal class="modal close width-medium" data-button-text="Invite Member" data-button-class="">
                         <button type="button" class="close pull-end" data-ui-modal-close><i class="icon-cancel"></i></button>
 
                         <h1>Invite Member</h1>
 
                         <form name="teams.createTeamMembership"
-                            data-service="teams.createTeamMembership"
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Create Team Membership"
+                            data-service="teams.createMembership"
                             data-scope="console"
                             data-event="submit"
                             data-loading="Sending invitation, please wait..."
                             data-success="alert,trigger,reset"
                             data-success-param-alert-text="Invitation Sent Successfully"
-                            data-success-param-trigger-events="membership-create,modal-close"
+                            data-success-param-trigger-events="teams.createMembership,modal-close"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to Send Invite"
                             data-failure-param-alert-classname="error">
 
-                            <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                            <input name="redirect" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
-
-                            <label for="name">Name <small>(optional)</small></label>
-                            <input name="name" id="name" type="text" autocomplete="name">
-
+                            <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                            <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/join?project={{router.params.project}}" />
+                            
                             <label for="email">Email</label>
                             <input name="email" id="email" type="email" autocomplete="email" required>
+                            
+                            <label for="team-name">Name <small>(optional)</small></label>
+                            <input name="name" id="team-name" type="text" autocomplete="name">
 
-                            <label for="roles">Role</label>
-                            <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array">
+                            <label for="roles" style="display: none">Role</label>
+                            <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array" style="display: none">
                                 <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
                             </select>
 

@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s 팀',
-    'auth.emails.confirm.title' => '계정 확인',
-    'auth.emails.confirm.body' => 'ko.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => '비밀번호 재설정',
-    'auth.emails.recovery.body' => 'ko.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => '%s 팀(%s 프로젝트)에 합류 초대',
-    'auth.emails.invitation.body' => 'ko.email.auth.invitation.tpl',
+    'account.emails.team' => '%s 팀',
+    'account.emails.verification.title' => '계정 확인',
+    'account.emails.verification.body' => 'ko.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => '비밀번호 재설정',
+    'account.emails.recovery.body' => 'ko.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => '%s 팀(%s 프로젝트)에 합류 초대',
+    'account.emails.invitation.body' => 'ko.email.auth.invitation.tpl',
 
     'locale.country.unknown' => '알려지지 않은',
 

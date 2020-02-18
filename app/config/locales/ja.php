@@ -6,13 +6,13 @@ return [
     'settings.direction' => 'ltr',
 
     // Service - Users
-    'auth.emails.team' => '%s チーム',
-    'auth.emails.confirm.title' => 'アカウント確認のお願い',
-    'auth.emails.confirm.body' => 'ja.email.auth.confirm.tpl',
-    'auth.emails.recovery.title' => 'パスワード再設定のお願い',
-    'auth.emails.recovery.body' => 'ja.email.auth.recovery.tpl',
-    'auth.emails.invitation.title' => '%s チーム（%s プロジェクト）への招待',
-    'auth.emails.invitation.body' => 'ja.email.auth.invitation.tpl',
+    'account.emails.team' => '%s チーム',
+    'account.emails.verification.title' => 'アカウント確認のお願い',
+    'account.emails.verification.body' => 'ja.email.auth.confirm.tpl',
+    'account.emails.recovery.title' => 'パスワード再設定のお願い',
+    'account.emails.recovery.body' => 'ja.email.auth.recovery.tpl',
+    'account.emails.invitation.title' => '%s チーム（%s プロジェクト）への招待',
+    'account.emails.invitation.body' => 'ja.email.auth.invitation.tpl',
 
     'locale.country.unknown' => '不明',
 

@@ -1,5 +1,5 @@
 *::placeholder {
-  color: @config-color-placeholder;
+  color: var(--config-color-placeholder);
   text-align: @config-start;
 }
 
@@ -13,13 +13,17 @@ input:-moz-placeholder {
   text-align: @config-start;
 }
 
+input, textarea {
+  background: var(--config-color-background-input);
+}
+
 button,
 .button {
   display: inline-block;
-  background: @config-color-focus;
+  background: var(--config-color-focus);
   border-radius: 26px;
   border: none;
-  color: #ffffff;
+  color: var(--config-color-background-fade);
   height: 52px;
   line-height: 52px;
   padding: 0 25px;
@@ -31,7 +35,7 @@ button,
 
   &:hover,
   &:focus {
-    background: @config-color-focus-hover;
+    background: var(--config-color-focus-hover);
     border-bottom: none;
   }
 
@@ -69,13 +73,13 @@ button,
     height: 50px;
     line-height: 48px;
     padding: 0 23px;
-    color: @config-color-focus;
-    border: solid 2px @config-color-focus;
+    color: var(--config-color-focus);
+    border: solid 2px var(--config-color-focus);
 
     &:hover,
     &:focus {
-      color: @config-color-focus-hover;
-      border-color: @config-color-focus-hover;
+      color: var(--config-color-focus-hover);
+      border-color: var(--config-color-focus-hover);
     }
   }
 
@@ -93,7 +97,7 @@ button,
 
   &.white {
     background: #ffffff;
-    color: @config-color-focus;
+    color: var(--config-color-focus);
 
     &.reverse {
       color: #ffffff;
@@ -111,44 +115,45 @@ button,
   }
 
   &.success {
-    background: @config-color-success;
+    background: var(--config-color-success);
 
     &.reverse {
-      color: @config-color-success;
+      color: var(--config-color-success);
       background: #ffffff;
-      border: solid 2px @config-color-success;
+      border: solid 2px var(--config-color-success);
     }
   }
 
   &.danger {
-    background: @config-color-danger;
+    background: var(--config-color-danger);
+    color: #fff;
 
     &.reverse {
-      color: @config-color-danger;
-      background: #ffffff;
-      border: solid 2px @config-color-danger;
+      color: var(--config-color-danger);
+      background: var(--config-color-background-fade);
+      border: solid 2px var(--config-color-danger);
     }
   }
 
   &.disabled,
   &:disabled,
   .disabled {
-    //opacity: .3;
-    background: @config-color-fade;
+    color: var(--config-color-normal);
+    background: var(--config-color-fade);
     cursor: default;
   }
 
   &.link {
     background: transparent;
     border-radius: 0;
-    color: @config-color-link;
+    color: var(--config-color-link);
     height: auto;
     line-height: normal;
     padding: 0;
     .func-padding-end(0) !important;
 
     &:hover {
-      border-bottom: dotted 1px @config-color-link;
+      border-bottom: dotted 1px var(--config-color-link);
     }
 
     &:focus {
@@ -212,9 +217,10 @@ select {
   -moz-appearance: none;
   -webkit-transform: translateZ(0px);
   box-sizing: content-box;
+  color: var(--config-color-dark);
   height: 40px;
   line-height: 40px;
-  border: solid 1px @config-color-fade-light;
+  border: solid 1px var(--config-color-fade-light);
   border-radius: 10px;
   padding: 5px 15px;
   font-size: 16px;
@@ -227,26 +233,6 @@ select {
     padding: 15px;
     height: auto;
   }
-  
-  &[xtype=file] {
-    line-height: normal;
-    height: auto;
-    border: none;
-    position: absolute;
-    top: 0;
-    .func-start(0);
-    bottom: 0;
-    opacity: 0;
-    cursor: pointer;
-    padding: 0;
-    margin: 0;
-    font-size: 0;
-    width: 100%;
-
-    &:disabled {
-      opacity: 0 !important;
-    }
-  }
 
   &:focus {
     outline: none;
@@ -254,8 +240,8 @@ select {
   }
 
   &:disabled {
-    //opacity: .3;
-    background: @config-color-fade-super;
+    color: var(--config-color-normal);
+    background: var(--config-color-fade-super);
   }
 
   &.strip {
@@ -265,8 +251,8 @@ select {
     width: 100%;
     background-color: transparent;
     background-position: @config-end 2px top 50%;
-    border-bottom: solid 1px @config-color-fade-light;
-    color: @config-color-placeholder;
+    border-bottom: solid 1px var(--config-color-fade-light);
+    color: var(--config-color-placeholder);
 
     &:focus {
       border-color: #b3d7fd;
@@ -289,10 +275,10 @@ input[type=url] {
 select {
   background: transparent;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='24' height='24' viewBox='0 0 24 24'><path fill='%23868686' d='M7.406 7.828l4.594 4.594 4.594-4.594 1.406 1.406-6 6-6-6z'></path></svg>");
+  background-image: var(--config-console-nav-switch-arrow);
   background-position: @config-end 15px top 50%;
   background-repeat: no-repeat;
-  background-color: #fff;
+  background-color: var(--config-color-background-input);
   width: ~"calc(100% - 62px)";
   .text-one-liner;
   .func-padding-end(45px);
@@ -313,6 +299,7 @@ input[type=search].strip {
   background: transparent;
   -webkit-appearance: none;
   background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEwAACxMBAJqcGAAAAdZJREFUWIXt1s2LjWEYBvDfnDMzFpNIamZIFrMiJYMyFmKhZKfOwoiFr2LFn2BByG6WVrKwMcjWxgoLIlKIUk6RrzAjZWZ8LO731FlwvB+PUbjq6X0X7/VeV/d9P9fz8IdRL8Hpw3x8w0xaOz9GNxq4gJeZcGs1cRab0fU7xLfgMSYzoT3YgNXYhIO4iM+4iTWphGs4jikcFSXvhEGczr4/UFW8C2N4jXUFudvwCYeqGNgnSr6yJH8rpkWLCqMfE9hdUryFE3iC3qLEk7ij+kT34Q32FiHV8Qr7K4q3cArXihCGxd5elMjARnzBvE4f1dreV+AtnicycC/7/7K8BhaIvqXCO3zFwrwGZtCT0EAtW9N5DTSxWGR/CizNns/yEgbFEK5NZGCnaEPHE7e9Ai9wA6OJDIzistgJubFdxHB/RfFVYgCHixJruI5x5dNwDm6J47sUhkTvjpUw0Y1zeOrXR3hHjOA9zmBuTs4Arog4/yhuUZWwHPdFMh7280BZgiP4ILJ/UuymqRQmejPxphiquzgvKnMJDzOxB9glZqiRiecykbfHdawX98EhcdxO4BGu4nYm2EJDzEKPSMIdYrBnFYUq8d/EP2di1gey3cS4ErflvxffASbhcakIINaMAAAAAElFTkSuQmCC");
+  background-color: var(--config-color-background-input);
   background-position: @config-start 15px top 50%;
   background-repeat: no-repeat;
   background-size: 20px 20px;
@@ -360,7 +347,7 @@ fieldset {
 }
 
 .file-preview {
-  background: #fff url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIElEQVQoU2NkYGAwZsAEZ9GFGIeIQix+wfQgyDODXSEAcUwGCrDSHgkAAAAASUVORK5CYII=) !important;
+  background: var(--config-color-background-input) url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIElEQVQoU2NkYGAwZsAEZ9GFGIeIQix+wfQgyDODXSEAcUwGCrDSHgkAAAAASUVORK5CYII=) !important;
   border: solid 1px #e2e2e2;
   box-shadow: inset 0 0 3px #a0a0a0;
   border-radius: 8px;
@@ -414,10 +401,10 @@ fieldset {
 
   &:hover:after {
     white-space: nowrap;
-    background: #333;
+    background: var(--config-color-tooltip-background);
     border-radius: 5px;
     bottom: 26px;
-    color: #fff;
+    color: var(--config-color-tooltip-text);
     content: attr(data-tooltip);
     padding: 5px 15px;
     position: absolute;
@@ -430,7 +417,7 @@ fieldset {
 
   &:hover:before {
     border: solid;
-    border-color: #333 transparent;
+    border-color: var(--config-color-tooltip-background) transparent;
     border-width: 6px 6px 0 6px;
     bottom: 20px;
     content: "";
@@ -453,8 +440,8 @@ fieldset {
 
 .tag {
   display: inline-block;
-  background: #e7e7e7;
-  color: #868686;
+  background: var(--config-color-fade-light);
+  color: var(--config-color-normal);
   border-radius: 12px;
   line-height: 24px;
   padding: 0 8px;
@@ -471,12 +458,12 @@ fieldset {
   }
 
   &.green {
-    background: @config-color-success;
+    background: var(--config-color-success);
     color: #fff;
   }
 
   &.red {
-    background: @config-color-danger;
+    background: var(--config-color-danger);
     color: #fff;
   }
 
@@ -486,7 +473,7 @@ fieldset {
   }
 
   &.focus {
-    background: @config-color-focus;
+    background: var(--config-color-focus);
     color: #ffffff;
   }
 
@@ -501,7 +488,7 @@ fieldset {
   }
 
   &.link {
-    background: @config-color-link;
+    background: var(--config-color-link);
     color: #fff;
   }
 }
@@ -521,11 +508,11 @@ input[type=checkbox] {
     display: block;
     width: 20px;
     height: 20px;
-    background: #fff;
+    background: var(--config-color-background-input);
     top: -5px;
     border-radius: 50%;
     position: absolute;
-    border: solid 3px @config-color-focus;
+    border: solid 3px var(--config-color-focus);
     vertical-align: middle;
   }
 
@@ -535,8 +522,8 @@ input[type=checkbox] {
     content: '\e83d';
     font-size: 16px;
     line-height: 20px;
-    color: #ffffff;
-    background: @config-color-focus;
+    color: var(--config-color-background-fade);
+    background: var(--config-color-focus);
   }
 
   &:focus {
@@ -551,7 +538,7 @@ input[type=checkbox] {
 
   &:checked:focus:after,
   &:checked:hover:after {
-    border-color: @config-color-focus;
+    border-color: var(--config-color-focus);
   }
 }
 
@@ -574,19 +561,24 @@ input[type=checkbox] {
     width: 50px;
     line-height: 50px;
     text-align: center;
-    background: #fbfbfb;
+    background: var(--config-color-background-focus);
     margin: 1px;
     border-radius: 0 10px 10px 0;
   }
 }
 
 .paging {
-  color: #8d8e8e;
+  color: var(--config-color-fade);
   padding: 5px 15px;
   font-size: 12px;
   
   form {
     display: inline-block;
+  }
+
+  button:disabled {
+    color: var(--config-color-background-fade);
+    opacity: .6;
   }
 }
 
@@ -604,7 +596,7 @@ input[type=checkbox] {
   .error {
     font-size: 12px;
     margin-top: -25px;
-    color: @config-color-danger;
+    color: var(--config-color-danger);
     height: 40px;
     .func-padding-start(2px);
   }
@@ -633,7 +625,7 @@ input[type=checkbox] {
     content: attr(placeholder);
     display: block;
     /* For Firefox */
-    color: @config-color-placeholder;
+    color: var(--config-color-placeholder);
   }
 
   .pell-actionbar {
@@ -670,7 +662,7 @@ input[type=checkbox] {
     &.pell-button-selected,
     &:focus,
     &:hover {
-      color: @config-color-link;
+      color: var(--config-color-link);
     }
   }
 
@@ -719,7 +711,7 @@ input[type=checkbox].switch {
   height: 42px;
   line-height: 42px;
   border-radius: 21px;
-  background: @config-color-fade;
+  background: var(--config-color-fade);
   display: block;
   margin: 0;
   padding: 5px;
@@ -727,7 +719,7 @@ input[type=checkbox].switch {
   .func-padding-end(5px);
 
   &:checked {
-    background: @config-color-focus;
+    background: var(--config-color-focus);
     .func-padding-start(5px);
     .func-padding-end(30px);
   }
@@ -761,15 +753,15 @@ input[type=checkbox].switch {
   position: relative;
 
   &.weak {
-    background: @config-color-danger;
+    background: var(--config-color-danger);
   }
 
   &.medium {
-    background: @config-color-warning;
+    background: var(--config-color-success);
   }
 
   &.strong {
-    background: @config-color-success;
+    background: var(--config-color-success);
   }
 }
 
@@ -829,7 +821,7 @@ input[type=checkbox].switch {
 
 hr {
   height: 1px;
-  background: @config-color-background;
+  background: var(--config-border-color);
   border: none;
 }
 
@@ -882,7 +874,7 @@ hr {
   }
 
   .progress {
-    background: @config-color-success;
+    background: var(--config-color-success);
     height: 6px;
     border-radius: 3px;
     .margin-bottom-small;
@@ -907,7 +899,7 @@ hr {
       border: solid 10px #f1f1f1;
 
       &:hover:before {
-        background: @config-color-focus;
+        background: var(--config-color-focus);
       }
 
       &:before {
@@ -983,11 +975,9 @@ ol {
     &::before {
       display: inline-block;
       content: counter(x-counter);
-      color: @config-color-focus;
-      color: #ffffff;
-      background: #ffffff;
-      background: @config-color-focus;
-      border: solid 2px @config-color-focus;
+      color: var(--config-color-background-fade);
+      background: var(--config-color-focus);
+      border: solid 2px var(--config-color-focus);
       .func-margin-end(15px);
       .func-margin-start(-45px);
       width: 26px;
@@ -1000,7 +990,7 @@ ol {
 }
 
 .required {
-  color: @config-color-danger;
+  color: var(--config-color-danger);
   font-size: 8px;
   position: relative;
   top: -8px;
@@ -1041,7 +1031,7 @@ ol {
     }
 
     li {
-      border-bottom: solid 1px @config-color-fade-super;
+      border-bottom: solid 1px var(--config-color-fade-super);
       margin: 0;
       padding: 0;
       .clear;
@@ -1060,7 +1050,7 @@ ol {
         cursor: pointer;
 
         &:hover {
-          background: @config-color-fade-super;
+          background: var(--config-color-fade-super);
           border-color: transparent;
         }
       }
@@ -1114,7 +1104,7 @@ ol {
 
 .tags {
   .input;
-  background: #ffffff;
+  background: var(--config-color-background-input);
   min-height: 42px;
   height: auto;
 
@@ -1128,6 +1118,7 @@ ol {
 
   ul.tags-list {
     display: inline;
+    white-space: pre-line;
 
     li {
       display: inline-block!important;
@@ -1159,6 +1150,42 @@ ol {
         .func-margin-start(6px);
         .func-margin-end(0);
       }
+    }
+  }
+}
+
+.switch-theme {
+  background: var(--config-switch-background);
+  border-radius: 19px;
+  height: 26px;
+  width: 44px;
+  margin: 9px 0;
+  
+  button {
+    padding: 3px;
+    display: block;
+    background: transparent;
+    height: 26px;
+    width: 100%;
+  }
+
+  i {
+    background: var(--config-color-background-fade);
+    border-radius: 50%;
+    height: 18px;
+    width: 18px;
+    line-height: 18px;
+    font-size: 12px;
+    padding: 0;
+    margin: 0;
+    color: var(--config-color-fade);
+
+    &.force-light {
+      .pull-end;
+    }
+    
+    &.force-dark {
+      .pull-start;
     }
   }
 }

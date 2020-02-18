@@ -3,22 +3,25 @@
         Password Recovery
     </h1>
 
-    <small class="pull-end">* All fields are required</small>
+    <small class="pull-end text-size-small">* All fields are required</small>
 
-    <form name="recovery"
-          data-service="auth.recovery"
-          data-scope="console"
-          data-event="submit"
-          data-success="alert"
-          data-success-alert="We have sent you a mail with a password reset link"
-          data-failure="alert"
-          data-failure-param-alert-text="Password recovery failed"
-          data-failure-param-alert-classname="error">
+    <form name="account.createRecovery"
+        data-analytics-event="submit"
+        data-analytics-category="home"
+        data-analytics-label="Create Account Recovery"
+        data-service="account.createRecovery"
+        data-scope="console"
+        data-event="submit"
+        data-success="alert"
+        data-success-param-alert-text="We have sent you a mail with a password reset link"
+        data-failure="alert"
+        data-failure-param-alert-text="Password recovery failed"
+        data-failure-param-alert-classname="error">
 
         <label>Email</label>
         <input name="email" type="email" class="full-width" autocomplete="email" placeholder="me@example.com" required>
 
-        <input name="confirm" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/recovery/reset" />
+        <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/auth/recovery/reset" />
 
         <button type="submit" class="btn btn-primary"><i class="fa fa-sign-in"></i> Recover</button>
     </form>

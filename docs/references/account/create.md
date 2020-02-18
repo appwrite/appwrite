@@ -1,0 +1,1 @@
+Use this endpoint to allow a new user to register a new account in your project. After the user registration completes successfully, you can use the [/account/verfication](/docs/account#createVerification) route to start verifying the user email address. To allow your new user to login to his new account, you need to create a new [account session](/docs/account#createSession).

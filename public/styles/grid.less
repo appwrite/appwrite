@@ -6,11 +6,11 @@
  */
 
 .zone {
-  max-width: @config-width-xl;
+  max-width: var(--config-width-xl);
   margin: 0 auto 40px auto;
 
   &.xxxl {
-    max-width: ~"calc(100% - 100px)";
+    max-width: ~"calc(1400px - 100px)";
 
     @media @phones, @tablets {
       max-width: 100%;
@@ -18,23 +18,23 @@
   }
 
   &.xxl {
-    max-width: @config-width-xxl;
+    max-width: var(--config-width-xxl);
   }
 
   &.xl {
-    max-width: @config-width-xl;
+    max-width: var(--config-width-xl);
   }
 
   &.large {
-    max-width: @config-width-large;
+    max-width: var(--config-width-large);
   }
 
   &.medium {
-    max-width: @config-width-medium;
+    max-width: var(--config-width-medium);
   }
 
   &.small {
-    max-width: @config-width-small;
+    max-width: var(--config-width-small);
   }
 }
 
@@ -238,23 +238,6 @@
   }
 }
 
-// @media @desktops {
-//   .xxxl {
-//     >.row.responsive {
-//       >.span-1,>.span-2,>.span-3,>.span-4,>.span-5,>.span-6,>.span-7,>.span-8,>.span-9,>.span-10,>.span-11,>.span-12 {
-//         .mixin-span(12, 0px)!important;
-//         width: 100% !important;
-//       }
-
-//       &> {
-//         width: 100%;
-//         padding: 0;
-//         margin: 0;
-//       }
-//     }
-//   }
-// }
-
 .tiles {
   .clear;
   position: relative;
@@ -269,8 +252,8 @@
       height: 15px;
       margin: -15px -15px 10px -15px;
       border-radius: 10px 10px 0 0;
-      background: @config-color-fade-super;
-      border-bottom: solid 1px @config-color-fade-super;
+      background: var(--config-color-fade-super);
+      border-bottom: solid 1px var(--config-color-fade-super);
     }
 
         &:nth-child(3n) {

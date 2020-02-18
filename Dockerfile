@@ -50,6 +50,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_EDITION=community \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
+    _APP_STORAGE_LIMIT=104857600 \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -63,6 +64,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_STATSD_PORT=8125 \
     _APP_SMTP_HOST=smtp \
     _APP_SMTP_PORT=25 \
+    _APP_SETUP=self-hosted \
     _APP_VERSION=$VERSION
 #ENV _APP_SMTP_SECURE ''
 #ENV _APP_SMTP_USERNAME ''
@@ -94,8 +96,9 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-# Set Upload Limit
-RUN echo "upload_max_filesize = 4M" > /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+# Set Upload Limit (default to 100MB)
+RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" > /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" > /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 
 # Nginx Configuration (with self-signed ssl certificates)
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf

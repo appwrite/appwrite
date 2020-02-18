@@ -3,7 +3,7 @@ window.ls.filter
     if (!$value) {
       return "";
     }
-
+    
     // MD5 (Message-Digest Algorithm) by WebToolkit
     let MD5 = function(s) {
       function L(k, d) {
@@ -216,7 +216,7 @@ window.ls.filter
     let email = $value.email || $value || "";
     let name = $value.name || $value || "";
     
-    name = (typeof stringValue !== 'string') ? '' : name;
+    name = (typeof name !== 'string') ? '' : name;
 
     let theme = name
       .split("")

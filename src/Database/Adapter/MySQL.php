@@ -23,7 +23,7 @@ class MySQL extends Adapter
     const OPTIONS_LIMIT_ATTRIBUTES = 1000;
 
     /**
-     * @var PDO
+     * @var Registry
      */
     protected $register;
 
@@ -110,7 +110,7 @@ class MySQL extends Adapter
         $properties = $st->fetchAll();
 
         $output = [
-            '$uid' => null,
+            '$id' => null,
             '$collection' => null,
             '$permissions' => (!empty($document['permissions'])) ? json_decode($document['permissions'], true) : [],
         ];
@@ -153,7 +153,7 @@ class MySQL extends Adapter
     public function createDocument(array $data = [])
     {
         $order = 0;
-        $data = array_merge(['$uid' => null, '$permissions' => []], $data); // Merge data with default params
+        $data = array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
         $signature = md5(json_encode($data, true));
         $revision = uniqid('', true);
 
@@ -161,13 +161,13 @@ class MySQL extends Adapter
          * When updating node, check if there are any changes to update
          *  by comparing data md5 signatures
          */
-        if (null !== $data['$uid']) {
+        if (null !== $data['$id']) {
             $st = $this->getPDO()->prepare('SELECT signature FROM `'.$this->getNamespace().'.database.documents` a
                     WHERE a.uid = :uid AND a.status = 0
                     ORDER BY a.updatedAt DESC LIMIT 1;
                 ');
 
-            $st->bindValue(':uid', $data['$uid'], PDO::PARAM_STR);
+            $st->bindValue(':uid', $data['$id'], PDO::PARAM_STR);
 
             $st->execute();
 
@@ -185,11 +185,11 @@ class MySQL extends Adapter
 		');
 
         // Adding fields properties
-        if (null === $data['$uid'] || !isset($data['$uid'])) { // Get new fields UID
-            $data['$uid'] = $this->getUid();
+        if (null === $data['$id'] || !isset($data['$id'])) { // Get new fields UID
+            $data['$id'] = $this->getId();
         }
 
-        $st1->bindValue(':uid', $data['$uid'], PDO::PARAM_STR);
+        $st1->bindValue(':uid', $data['$id'], PDO::PARAM_STR);
         $st1->bindValue(':revision', $revision, PDO::PARAM_STR);
         $st1->bindValue(':signature', $signature, PDO::PARAM_STR);
         $st1->bindValue(':createdAt', date('Y-m-d H:i:s', time()), PDO::PARAM_STR);
@@ -200,13 +200,13 @@ class MySQL extends Adapter
 
         // Delete old properties
         $rms1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.properties` WHERE documentUid = :documentUid AND documentRevision != :documentRevision');
-        $rms1->bindValue(':documentUid', $data['$uid'], PDO::PARAM_STR);
+        $rms1->bindValue(':documentUid', $data['$id'], PDO::PARAM_STR);
         $rms1->bindValue(':documentRevision', $revision, PDO::PARAM_STR);
         $rms1->execute();
 
         // Delete old relationships
         $rms2 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.relationships` WHERE start = :start AND revision != :revision');
-        $rms2->bindValue(':start', $data['$uid'], PDO::PARAM_STR);
+        $rms2->bindValue(':start', $data['$id'], PDO::PARAM_STR);
         $rms2->bindValue(':revision', $revision, PDO::PARAM_STR);
         $rms2->execute();
 
@@ -243,7 +243,7 @@ class MySQL extends Adapter
 
                     $data[$key][$i] = $this->createDocument($child);
 
-                    $this->createRelationship($revision, $data['$uid'], $data[$key][$i]['$uid'], $key, true, $i);
+                    $this->createRelationship($revision, $data['$id'], $data[$key][$i]['$id'], $key, true, $i);
                 }
 
                 continue;
@@ -252,7 +252,7 @@ class MySQL extends Adapter
             // Handle relation
             if (self::DATA_TYPE_DICTIONARY === $type) {
                 $value = $this->createDocument($value);
-                $this->createRelationship($revision, $data['$uid'], $value['$uid'], $key); //xxx
+                $this->createRelationship($revision, $data['$id'], $value['$id'], $key); //xxx
                 continue;
             }
 
@@ -274,7 +274,7 @@ class MySQL extends Adapter
             if (is_array($prop['value'])) {
                 throw new Exception('Value can\'t be an array: '.json_encode($prop['value']));
             }
-            $st2->bindValue(':documentUid', $data['$uid'], PDO::PARAM_STR);
+            $st2->bindValue(':documentUid', $data['$id'], PDO::PARAM_STR);
             $st2->bindValue(':documentRevision', $revision, PDO::PARAM_STR);
 
             $st2->bindValue(':key', $prop['key'], PDO::PARAM_STR);
@@ -287,8 +287,8 @@ class MySQL extends Adapter
         }
 
         //TODO remove this dependency (check if related to nested documents)
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$uid'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
+        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
 
         return $data;
     }
@@ -468,7 +468,7 @@ class MySQL extends Adapter
         ];
         $orderTypeMap = ['DESC', 'ASC'];
 
-        $options['orderField'] = (empty($options['orderField'])) ? '$uid' : $options['orderField']; // Set default order field
+        $options['orderField'] = (empty($options['orderField'])) ? '$id' : $options['orderField']; // Set default order field
         $options['orderCast'] = (empty($options['orderCast'])) ? 'string' : $options['orderCast']; // Set default order field
 
         if (!array_key_exists($options['orderCast'], $orderCastMap)) {
@@ -570,22 +570,22 @@ class MySQL extends Adapter
 
         // Search
         if (!empty($options['search'])) { // Handle free search
-//            $where[] = "LEFT JOIN `" . $this->getNamespace() . ".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid
-//                    LEFT JOIN
-//                `" . $this->getNamespace() . ".database.relationships` c_search ON c_search.start = a.uid
-//                    LEFT JOIN
-//                `" . $this->getNamespace() . ".database.properties` d_search ON d_search.documentUid = c_search.end
-//                    LEFT JOIN
-//                `" . $this->getNamespace() . ".database.relationships` e_search ON e_search.start = c_search.end
-//                    LEFT JOIN
-//                `" . $this->getNamespace() . ".database.properties` f_search ON f_search.documentUid = e_search.end
-//                \n";
-//            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-//                OR b_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
-//                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-//                OR d_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
-//                OR MATCH (f_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-//                OR f_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)})";
+            //            $where[] = "LEFT JOIN `" . $this->getNamespace() . ".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid
+            //                    LEFT JOIN
+            //                `" . $this->getNamespace() . ".database.relationships` c_search ON c_search.start = a.uid
+            //                    LEFT JOIN
+            //                `" . $this->getNamespace() . ".database.properties` d_search ON d_search.documentUid = c_search.end
+            //                    LEFT JOIN
+            //                `" . $this->getNamespace() . ".database.relationships` e_search ON e_search.start = c_search.end
+            //                    LEFT JOIN
+            //                `" . $this->getNamespace() . ".database.properties` f_search ON f_search.documentUid = e_search.end
+            //                \n";
+            //            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+            //                OR b_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
+            //                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+            //                OR d_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
+            //                OR MATCH (f_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+            //                OR f_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)})";
 
             $where[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid  AND b_search.primitive = 'string'
                     LEFT JOIN
@@ -749,7 +749,7 @@ class MySQL extends Adapter
     /**
      * Get Unique Document ID.
      */
-    public function getUid()
+    public function getId()
     {
         $unique = uniqid();
         $attempts = 5;
@@ -757,7 +757,7 @@ class MySQL extends Adapter
         for ($i = 1; $i <= $attempts; ++$i) {
             $document = $this->getDocument($unique);
 
-            if (empty($document) || $document['$uid'] !== $unique) {
+            if (empty($document) || $document['$id'] !== $unique) {
                 return $unique;
             }
         }

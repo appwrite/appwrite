@@ -6,14 +6,14 @@
 <div class="zone xl"
     data-service="projects.listTasks"
     data-scope="console"
-    data-event="load,task-create,task-update,task-delete"
+    data-event="load,projects.createTask,projects.updateTask,projects.deleteTask"
     data-name="console-tasks"
     data-param-project-id="{{router.params.project}}"
     data-success="trigger"
-    data-success-param-trigger-events="project-load">
+    data-success-param-trigger-events="projects.listTasks">
 
     <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom" style="display: none;">
-        <h3 class="margin-bottom-small">No Tasks Found</h3>
+        <h3 class="margin-bottom-small text-bold-2">No Tasks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any tasks for your project yet.</p>
     </div>
@@ -75,36 +75,39 @@
                             <h1>Update Task</h1>
 
                             <form
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Project Task"
                                 data-service="projects.updateTask"
                                 data-scope="console"
                                 data-event="submit"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Updated task successfully"
-                                data-success-param-trigger-events="task-update,modal-close"
+                                data-success-param-trigger-events="projects.updateTask,modal-close"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update task"
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}" />
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
 
-                                <label data-ls-attrs="for=name-{{task.$uid}}">Name</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$uid}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
+                                <label data-ls-attrs="for=name-{{task.$id}}">Name</label>
+                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$id}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
 
-                                <label data-ls-attrs="for=status-{{task.$uid}}" class="margin-bottom">Status
+                                <label data-ls-attrs="for=status-{{task.$id}}" class="margin-bottom">Status
                                     <div class="margin-top-small">
                                         <input name="status" type="radio" checked="checked" required data-ls-bind="{{task.status}}" value="play" /> &nbsp; <span>Play</span>
                                         <input name="status" type="radio" required data-ls-bind="{{task.status}}" value="pause" /> &nbsp; <span>Pause</span>
                                     </div>
                                 </label>
 
-                                <label data-ls-attrs="for=schedule-{{task.$uid}}">Schedule (CRON Syntax)</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$uid}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" placeholder="* * * * *" />
+                                <label data-ls-attrs="for=schedule-{{task.$id}}">Schedule (CRON Syntax)</label>
+                                <input type="text" class="full-width" data-ls-attrs="id=schedule-{{task.$id}}" name="schedule" required autocomplete="off" data-ls-bind="{{task.schedule}}" placeholder="* * * * *" />
 
                                 <div class="row thin">
                                     <div class="col span-4">
-                                        <label data-ls-attrs="for=httpMethod-{{task.$uid}}">HTTP Method</label>
-                                        <select data-ls-attrs="id=httpMethod-{{task.$uid}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
+                                        <label data-ls-attrs="for=httpMethod-{{task.$id}}">HTTP Method</label>
+                                        <select data-ls-attrs="id=httpMethod-{{task.$id}}" name="httpMethod" required data-ls-bind="{{task.httpMethod}}">
                                             <option value="POST">POST</option>
                                             <option value="GET">GET</option>
                                             <option value="PUT">PUT</option>
@@ -117,8 +120,8 @@
                                         </select>
                                     </div>
                                     <div class="col span-8">
-                                        <label data-ls-attrs="for=httpUrl-{{task.$uid}}">HTTP URL</label>
-                                        <input type="url" class="full-width" data-ls-attrs="id=httpUrl-{{task.$uid}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
+                                        <label data-ls-attrs="for=httpUrl-{{task.$id}}">HTTP URL</label>
+                                        <input type="url" class="full-width" data-ls-attrs="id=httpUrl-{{task.$id}}" name="httpUrl" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{task.httpUrl}}" />
                                     </div>
                                 </div>
 
@@ -131,7 +134,7 @@
                                         <small class="text-size-small">(optional)</small>
                                     </h2>
 
-                                    <label for="httpHeaders">HTTP Headers</label>
+                                    <label for="httpHeaders" class="text-bold">HTTP Headers</label>
 
                                     <input type="hidden" id="httpHeadersInit" name="httpHeaders" data-cast-to="array-empty">
                                     
@@ -163,27 +166,27 @@
                                         </div>
                                     </div>
 
-                                    <label data-ls-attrs="for=security-{{task.$uid}}" class="margin-bottom">
-                                        <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                                    <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom">
+                                        <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
                                         <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="1" /> &nbsp; <span>Enabled</span>
                                         <input name="security" type="radio" required data-ls-bind="{{task.security}}" value="0" /> &nbsp; <span>Disabled</span>
                                     </label>
 
-                                    <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
+                                    <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
                                         <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                                     </p>
 
-                                    <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
+                                    <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                                     <div class="row thin">
                                         <div class="col span-6">
-                                            <label data-ls-attrs="for=httpUser-{{task.$uid}}">User</label>
-                                            <input type="text" class="full-width" data-ls-attrs="id=httpUser-{{task.$uid}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
+                                            <label data-ls-attrs="for=httpUser-{{task.$id}}">User</label>
+                                            <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{task.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{task.httpUser}}" />
                                         </div>
                                         <div class="col span-6">
-                                            <label data-ls-attrs="for=httpPass-{{task.$uid}}">Password</label>
-                                            <input type="password" class="full-width" data-ls-attrs="id=httpPass-{{task.$uid}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
+                                            <label data-ls-attrs="for=httpPass-{{task.$id}}">Password</label>
+                                            <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{task.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{task.httpPass}}" />
                                         </div>
                                     </div>
                                 </div>
@@ -192,19 +195,22 @@
                             </form>
 
                             <form class="margin-top"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Project Task"
                                 data-service="projects.deleteTask"
                                 data-scope="console"
                                 data-event="submit"
                                 data-confirm="Are you sure you want to delete this task?"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Deleted task successfully"
-                                data-success-param-trigger-events="task-delete,modal-close"
+                                data-success-param-trigger-events="projects.deleteTask,modal-close"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to delete task"
                                 data-failure-param-alert-classname="error">
 
                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                <input type="hidden" name="taskId" data-ls-bind="{{task.$uid}}" />
+                                <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
 
                                 <button class="danger fill">Delete</button>
                             </form>
@@ -222,12 +228,15 @@
             <h1>Add Task</h1>
 
             <form
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Project Task"
                 data-service="projects.createTask"
                 data-scope="console"
                 data-event="submit"
                 data-success="alert,trigger,reset"
                 data-success-param-alert-text="Created task successfully"
-                data-success-param-trigger-events="task-create,modal-close"
+                data-success-param-trigger-events="projects.createTask,modal-close"
                 data-failure="alert"
                 data-failure-param-alert-text="Failed to create task"
                 data-failure-param-alert-classname="error">
@@ -277,7 +286,7 @@
                         <small class="text-size-small">(optional)</small>
                     </h2>
 
-                    <label for="httpHeaders">HTTP Headers</label>
+                    <label for="httpHeaders" class="text-bold">HTTP Headers</label>
                     
                     <input type="hidden" id="httpHeadersInitAdd" name="httpHeaders" data-cast-to="array-empty">
 
@@ -297,26 +306,26 @@
                     </div>
 
                     <label for="secure" class="margin-bottom-small">
-                        <div class="margin-bottom-small">SSL / TLS (Certificate verification)</div>
+                        <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                         
                         <input name="security" data-ls-attrs="id=secure-yes" type="radio" value="1" checked="checked" required /> &nbsp; <span>Enabled</span>
                         <input name="security" data-ls-attrs="id=secure-no" type="radio" value="0" required /> &nbsp; <span>Disabled</span>
                     </label>
 
-                    <p class="margin-bottom text-size-small"><span class="tag red">Warning</span> &nbsp; Untrusted or self-signed certificates may not be secure.
+                    <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
                         <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
                     </p>
 
-                    <label>HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
+                    <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
                     <div class="row thin">
                         <div class="col span-6">
                             <label for="httpUser">User</label>
-                            <input type="text" class="full-width" id="httpUser" name="httpUser" autocomplete="off" />
+                            <input type="text" class="full-width margin-bottom-no" id="httpUser" name="httpUser" autocomplete="off" />
                         </div>
                         <div class="col span-6">
                             <label for="httpPass">Password</label>
-                            <input type="password" class="full-width" id="httpPass" name="httpPass" autocomplete="off" />
+                            <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>
