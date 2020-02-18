@@ -358,6 +358,28 @@ $utopia->get('/humans.txt')
         }
     );
 
+$utopia->get('/.well-known/acme-challenge')
+    ->desc('SSL Verification')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->action(
+        function () use ($request, $response) {
+            $base = realpath(__DIR__.'/../certs');
+            $path = str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
+            $absolute = realpath($base.'/'.$path);
+
+            if(!$absolute) {
+                throw new Exception('Unknown Path', 404);
+            }
+
+            if(!substr($absolute, 0, strlen($base)) === $base) {
+                throw new Exception('Invalid Path', 401);
+            }
+
+            $response->text(file_get_contents($absolute));
+        }
+    );
+
 $utopia->get('/v1/info') // This is only visible to gods
     ->label('scope', 'god')
     ->label('docs', false)

@@ -78,9 +78,11 @@ RUN \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests wget curl ca-certificates software-properties-common openssl gnupg && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
+  add-apt-repository universe && \
+  add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests htop supervisor php$PHP_VERSION php$PHP_VERSION-fpm \
-  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp && \
+  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
   # Nginx
   echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
   wget -q http://nginx.org/keys/nginx_signing.key && \
