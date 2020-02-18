@@ -1,7 +1,7 @@
 (function(window) {
   window.ls.container.get("view").add({
     selector: "data-setup",
-    controller: function(element, console, form, alerts) {
+    controller: function(element, console, form, alerts, router) {
       element.addEventListener("submit", function(event) {
         event.preventDefault();
 
@@ -25,8 +25,8 @@
 
             console.projects.create(formData["name"], team).then(
               function(project) {
-                //router.change();
                 alerts.remove(loaderId);
+                //router.change("/console/home?project=" + project["$id"]);
                 window.location.href = "/console/home?project=" + project["$id"];
               },
               function() {
