@@ -367,14 +367,29 @@ $utopia->get('/.well-known/acme-challenge')
             $base = realpath(__DIR__.'/../certs');
             $path = str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
             $absolute = realpath($base.'/'.$path);
-            return $response->json($files1 = scandir($base));
-
+            
             if(!$absolute) {
-                throw new Exception('Unknown Path', 404);
+                //throw new Exception('Unknown Path', 404);
+                $response->json([
+                    'error' => 'unknown path',
+                    'base' => scandir($base),
+                    'base/well' => scandir($base . '/.well-known/'),
+                    'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
+                    'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
+                ]);
+                return;
             }
 
             if(!substr($absolute, 0, strlen($base)) === $base) {
-                throw new Exception('Invalid Path', 401);
+                //throw new Exception('Invalid Path', 401);
+                $response->json([
+                    'error' => 'invalid path',
+                    'base' => scandir($base),
+                    'base/well' => scandir($base . '/.well-known/'),
+                    'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
+                    'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
+                ]);
+                return;
             }
 
             $response->text(file_get_contents($absolute));
