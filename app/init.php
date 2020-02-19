@@ -26,6 +26,9 @@ const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SE
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
 const APP_VERSION_STABLE = '0.5.0';
+const APP_STORAGE_UPLOADS = '/storage/uploads';
+const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 
 $register = new Registry();
 $request = new Request();

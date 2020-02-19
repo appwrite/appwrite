@@ -27,7 +27,7 @@ class S3 extends Device
      */
     public function getRoot()
     {
-        return '/storage/uploads';
+        return '';
     }
 
     /**

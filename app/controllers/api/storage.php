@@ -25,7 +25,7 @@ use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
-Storage::addDevice('local', new Local('/storage/uploads/app-'.$project->getId()));
+Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
     'default' => 'default.gif',
@@ -357,7 +357,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 throw new Exception('File not found in '.$path, 404);
             }
 
-            $cache = new Cache(new Filesystem('/storage/cache/app-'.$project->getId())); // Limit file number or size
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
             $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
             if ($data) {

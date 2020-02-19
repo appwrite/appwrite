@@ -321,7 +321,7 @@ $utopia->get('/v1/mock/tests/general/oauth2/failure')
 $utopia->shutdown(function() use ($response, $request, &$result, $utopia) {
     
     $route  = $utopia->match($request);
-    $path   = '/storage/cache/tests.json';
+    $path   = APP_STORAGE_CACHE.'/tests.json';
     $tests  = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     
     if(!is_array($tests)) {

@@ -119,7 +119,7 @@ $utopia->get('/v1/health/storage/local')
     ->label('docs', false)
     ->action(
         function () use ($response) {
-            $device = new Local('/storage/uploads/');
+            $device = new Local(APP_STORAGE_UPLOADS.'/');
 
             if (!is_readable($device->getRoot().'/..')) {
                 throw new Exception('Device is not readable');
