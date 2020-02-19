@@ -367,6 +367,7 @@ $utopia->get('/.well-known/acme-challenge')
             $base = realpath(__DIR__.'/../certs');
             $path = str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
             $absolute = realpath($base.'/'.$path);
+            return $response->json($files1 = scandir($base));
 
             if(!$absolute) {
                 throw new Exception('Unknown Path', 404);
