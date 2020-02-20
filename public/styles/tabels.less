@@ -106,6 +106,10 @@ table {
       overflow: hidden;
       padding-top: 12px;
 
+      .pull-end, .pull-start {
+        float: none;
+      }
+
       .hide {
         display: none;
       }
@@ -145,10 +149,12 @@ table {
         }
       }
 
-      td:before {
-        content: attr(data-title);
-        margin-right: 4px;
-        font-weight: 400;
+      td:not([data-title=""]) {
+        &:before {
+          content: attr(data-title);
+          margin-right: 4px;
+          font-weight: 400;
+        }
       }
 
       thead {

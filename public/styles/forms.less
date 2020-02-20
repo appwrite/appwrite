@@ -39,6 +39,12 @@ button,
     border-bottom: none;
   }
 
+  &.small {
+    height: 30px;
+    width: 30px;
+    line-height: 30px;
+  }
+
   &.fly {
     position: fixed;
     z-index: 2;
@@ -242,6 +248,7 @@ select {
   &:disabled {
     color: var(--config-color-normal);
     background: var(--config-color-fade-super);
+    opacity: 1!important;
   }
 
   &.strip {
@@ -483,7 +490,7 @@ fieldset {
   }
 
   &.blue {
-    background: #4abde8;
+    background: #386fd2;
     color: #fff;
   }
 

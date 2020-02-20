@@ -7,6 +7,7 @@
   --config-width-small: 320px;
   --config-color-link: #1e849e;
   --config-color-background: #eceff1;
+  --config-color-background-dark: #dfe2e4;
   --config-color-background-fade: #ffffff;
   --config-color-background-focus: #f5f5f5;
   --config-color-background-input: #ffffff;
@@ -14,7 +15,7 @@
   --config-color-tooltip-text: #dce8f5;
   --config-color-tooltip-background: #333333;
   --config-color-focus: #f02e65;
-  --config-color-focus-fade: #fef8fb;
+  --config-color-focus-fade: #fef8fa;
   --config-color-focus-hover: #ff729b;
   --config-color-focus-glow: #fce5ec;
   --config-color-focus-dark: #c52653;
@@ -72,21 +73,22 @@
 
   .theme-dark {
       --config-color-background: #061F2F;
+      --config-color-background-dark: #262d50;
       --config-color-background-fade: #1c223a;
       --config-color-background-focus: #1a1f35;
       --config-color-background-input: #dce8f5;
       --config-color-tooltip-text: #061F2F;
       --config-color-tooltip-background: #dce8f5;
-      --config-color-link: rgb(76, 174, 219);
+      --config-color-link: #4caedb;
       --config-color-placeholder: #9ea1af;
-      --config-color-focus: rgb(199, 216, 235);
+      --config-color-focus: #c7d8eb;
       --config-color-focus-fade: #1e233e;
       --config-color-focus-hover: #d3deea;
       --config-color-focus-glow: #d3deea;
       --config-color-focus-dark: #657586;
-      --config-color-normal: rgb(199, 216, 235);
+      --config-color-normal: #c7d8eb;
       --config-color-fade: #bec3e0;
-      --config-color-fade-light: rgb(24, 24, 24);
+      --config-color-fade-light: #181818;
       --config-color-fade-super: #262D50;
       --config-color-danger: #d84a4a;
       --config-color-success: #34b86d;
@@ -161,7 +163,6 @@
 @tablets: ~"only screen and (min-width: 551px) and (max-width: 1200px)";
 @desktops: ~"only screen and (min-width: 1201px) and (max-width: 1300px)";
 @big-screens: ~"only screen and (min-width: 1200px)";
-@dark: ~"(prefers-color-scheme: dark)";
 
 img[src=""] {
   visibility: hidden;
@@ -202,7 +203,7 @@ body {
 }
 
 main {
-  min-height: 100%;
+  //min-height: 100%;
 }
 
 ul {

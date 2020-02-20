@@ -256,13 +256,23 @@
       border-bottom: solid 1px var(--config-color-fade-super);
     }
 
-        &:nth-child(3n) {
-          .func-margin-end(0)!important;
+    &:nth-child(3n) {
+      .func-margin-end(0)!important;
     }
   }
 
   @media @tablets {
+    li {
+      width: ~"calc(50% - 25px)";
 
+      &:nth-child(3n) {
+        .margin-end-large!important;
+      }
+      
+      &:nth-child(2n) {
+        .func-margin-end(0)!important;
+      }
+    }
   }
 
   @media @phones {

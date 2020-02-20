@@ -110,6 +110,20 @@
     color: var(--config-modal-note-color);
     border-top: solid 1px var(--config-modal-note-border);
     border-bottom: solid 1px var(--config-modal-note-border);
+
+    ol {
+      .func-padding-start(40px);
+
+      p {
+        display: inline-block;
+      }
+
+      li {
+        &:before {
+          position: absolute;
+        }
+      }
+    }
   }
 
   button.close {
