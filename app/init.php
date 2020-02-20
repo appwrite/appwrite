@@ -29,6 +29,13 @@ const APP_VERSION_STABLE = '0.5.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
+const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite_io';
+const APP_SOCIAL_TWITTER_HANDLE = 'appwrite_io';
+const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
+const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
+const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
+const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
+const APP_SOCIAL_DISCORD = 'https://discord.gg/GSeTUeA';
 
 $register = new Registry();
 $request = new Request();
