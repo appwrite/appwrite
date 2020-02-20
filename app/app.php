@@ -369,27 +369,19 @@ $utopia->get('/.well-known/acme-challenge')
             $absolute = realpath($base.'/'.$path);
             
             if(!$absolute) {
-                //throw new Exception('Unknown Path', 404);
-                $response->json([
-                    'error' => 'unknown path',
-                    'base' => scandir($base),
-                    'base/well' => scandir($base . '/.well-known/'),
-                    'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
-                    'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
-                ]);
-                return;
+                throw new Exception('Unknown Path', 404);
+                // $response->json([
+                //     'error' => 'unknown path',
+                //     'base' => scandir($base),
+                //     'base/well' => scandir($base . '/.well-known/'),
+                //     'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
+                //     'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
+                // ]);
+                // return;
             }
 
             if(!substr($absolute, 0, strlen($base)) === $base) {
-                //throw new Exception('Invalid Path', 401);
-                $response->json([
-                    'error' => 'invalid path',
-                    'base' => scandir($base),
-                    'base/well' => scandir($base . '/.well-known/'),
-                    'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
-                    'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
-                ]);
-                return;
+                throw new Exception('Invalid Path', 401);
             }
 
             $response->text(file_get_contents($absolute));
