@@ -949,15 +949,6 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Status',
-                'key' => 'status',
-                'type' => 'text',
-                'default' => '',
-                'required' => true,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Updated',
                 'key' => 'updated',
                 'type' => 'numeric',
