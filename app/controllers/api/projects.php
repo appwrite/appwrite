@@ -16,6 +16,7 @@ use Database\Document;
 use Database\Validator\UID;
 use OpenSSL\OpenSSL;
 use Cron\CronExpression;
+use Network\Validators\CNAME;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -1187,3 +1188,172 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
             $response->noContent();
         }
     );
+
+// Domains
+
+$utopia->post('/v1/projects/:projectId/domains')
+    ->desc('Create Domain')
+    ->label('scope', 'projects.write')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createDomain')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('domain', null, function () { return new Text(256); }, 'Domain name.')
+    ->action(
+        function ($projectId, $domain) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $domain = $consoleDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_TASKS,
+                '$permissions' => [
+                    'read' => ['team:'.$project->getAttribute('teamId', null)],
+                    'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
+                ],
+                'domain' => $domain,
+                'updated' => time(),
+                'verification' => false,
+                'certificateId' => null,
+            ]);
+
+            if (false === $domain) {
+                throw new Exception('Failed saving domains to DB', 500);
+            }
+
+            $project->setAttribute('domains', $domain, Document::SET_TYPE_APPEND);
+
+            $project = $consoleDB->updateDocument($project->getArrayCopy());
+
+            if (false === $project) {
+                throw new Exception('Failed saving project to DB', 500);
+            }
+
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->json($domain->getArrayCopy())
+            ;
+        }
+    );
+
+$utopia->get('/v1/projects/:projectId/domains')
+    ->desc('List Domains')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listDomains')
+    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->action(
+        function ($projectId) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $domains = $project->getAttribute('domains', []);
+
+            $response->json($domains);
+        }
+    );
+
+$utopia->get('/v1/projects/:projectId/domains/:domainId')
+    ->desc('Get Domain')
+    ->label('scope', 'projects.read')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getDomain')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
+    ->action(
+        function ($projectId, $domainId) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
+
+            if (empty($domain) && $domain instanceof Document) {
+                throw new Exception('Domain not found', 404);
+            }
+
+            $response->json($domain->getArrayCopy());
+        }
+    );
+
+$utopia->put('/v1/projects/:projectId/domains/:domainId/verification')
+    ->desc('Update Domain Verification Status')
+    ->label('scope', 'projects.write')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateDomain')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
+    ->action(
+        function ($projectId, $domainId) use ($request, $response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
+
+            if (empty($domain) && $domain instanceof Document) {
+                throw new Exception('Domain not found', 404);
+            }
+
+            // Verify Domain with DNS records
+            $validator = new CNAME($request->getServer('_APP_DOMAINS_TARGET',
+                $request->getServer('HTTP_HOST', '')));
+
+            if(!$validator->isValid($domain->getAttribute('domain', ''))) {
+                throw new Exception('Failed to verify domain', 401);
+            }
+
+            $domain
+                ->setAttribute('verification', true)
+            ;
+
+            if (false === $consoleDB->updateDocument($domain->getArrayCopy())) {
+                throw new Exception('Failed saving domains to DB', 500);
+            }
+
+            // Issue a TLS certificate when domain is verified
+            // if ($next) {
+            //     ResqueScheduler::enqueueAt($next, 'v1-domains', 'DomainsV1', $domain->getArrayCopy());
+            // }
+
+            $response->json($domain->getArrayCopy());
+        }
+    );
+
+$utopia->delete('/v1/projects/:projectId/domains/:domainId')
+    ->desc('Delete Domain')
+    ->label('scope', 'projects.write')
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'deleteDomain')
+    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
+    ->action(
+        function ($projectId, $domainId) use ($response, $consoleDB) {
+            $project = $consoleDB->getDocument($projectId);
+
+            if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+                throw new Exception('Project not found', 404);
+            }
+
+            $domain = $project->search('$id', $domainId, $project->getAttribute('domains', []));
+
+            if (empty($domain) && $domain instanceof Document) {
+                throw new Exception('Domain not found', 404);
+            }
+
+            if (!$consoleDB->deleteDocument($domain->getId())) {
+                throw new Exception('Failed to remove domains from DB', 500);
+            }
+
+            $response->noContent();
+        }
+    );
+
