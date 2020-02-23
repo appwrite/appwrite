@@ -1193,8 +1193,7 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
 
 // Domains
 
-// $utopia->post('/v1/projects/:projectId/domains')
-$utopia->get('/v1/projects/:projectId/xxx')
+$utopia->post('/v1/projects/:projectId/domains')
     ->desc('Create Domain')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
@@ -1301,8 +1300,7 @@ $utopia->get('/v1/projects/:projectId/domains/:domainId')
         }
     );
 
-//$utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
-$utopia->get('/v1/projects/:projectId/domains/:domainId/verification')
+$utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
