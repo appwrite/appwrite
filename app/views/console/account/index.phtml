@@ -36,17 +36,14 @@
 
                                     <label for="name">Name</label>
 
-                                    <div class="row">
-                                        <div class="col span-8">
+                                    <div class="row responsive">
+                                        <div class="col span-8 margin-bottom-small">
                                             <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{account.name}}" required class="margin-bottom-no">
                                         </div>
                                         <div class="col span-4">
-                                            <button type="submit" class="fill reverse">Update Name</button>
+                                            <button type="submit" class="fill reverse margin-bottom-no">Update Name</button>
                                         </div>
                                     </div>
-
-                                    <footer class="clear">
-                                    </footer>
                                 </form>
                             </div>
 
@@ -67,8 +64,8 @@
                                 data-failure-param-alert-classname="error">
 
                                 <label>Email</label>
-                                <div class="row">
-                                    <div class="col span-8">
+                                <div class="row responsive">
+                                    <div class="col span-8 margin-bottom-small">
                                         <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="me@example.com" data-ls-bind="{{account.email}}" required>
                                     </div>
                                     <div class="col span-4">
@@ -76,9 +73,7 @@
                                             <label>Password</label>
                                             <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
 
-                                            <footer>
-                                                <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                            </footer>
+                                            <button type="submit" class="margin-bottom-no">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                         </div>
                                     </div>
                                 </div>

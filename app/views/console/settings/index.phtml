@@ -1,5 +1,10 @@
+<?php
+
+$customDomains = $this->getParam('customDomains', false);
+
+?>
 <div class="cover">
-    <h1 class="zone xl margin-bottom-large margin-top">
+    <h1 class="zone xl margin-bottom-xl margin-top">
         Settings
     </h1>
 </div>
@@ -127,127 +132,142 @@
                 </form>
             </li> -->
             <li data-state="/console/settings/domains?project={{router.params.project}}">
-                <h2>Custom Domains</h2>
+                
+                <?php if(!$customDomains): ?>
+                    <h2 style="display: none;">Custom Domains</h2>
 
-                <div class="zone xl"
-                    data-service="teams.getMemberships"
-                    data-scope="console"
-                    data-event="load,teams.createMembership,teams.deleteMembership"
-                    data-name="members"
-                    data-param-team-id="{{console-project.teamId}}"
-                    data-success="trigger"
-                    data-success-param-trigger-events="teams.getMemberships">
-
-                    <div class="box margin-bottom">
-                        <table class="vertical">
-                            <thead>
-                                <tr>
-                                    <th width="140"></th>
-                                    <th width="220">Domain Name</th>
-                                    <th width="160">TLS</th>
-                                    <th></th>
-                                    <th width="60"></th>
-                                </tr>
-                            </thead>
-                            <tbody data-ls-loop="members" data-ls-as="team">
-                                <tr>
-                                    <td data-title="Status">
-                                        <span class="tag blue"><i class="icon-ok-circled"></i>Verified&nbsp;</span> &nbsp;
-                                    </td>
-                                    <td data-title="Domain: ">
-                                    <span xdata-ls-bind="{{member.name}}" class="text-size-small text-bold">appwrite.example.com</span>
-                                    </td>
-                                    <td data-title="TLS: ">
-                                        <!-- <span class="tag yellow"><i class="icon-ok-circled"></i> Pending&nbsp;</span> &nbsp; -->
-                                        <span class="tag green"><i class="icon-ok-circled"></i> Enabled&nbsp;</span> &nbsp;
-                                    </td>
-                                    <td data-title="">
-                                        <a href="" class="text-size-small">DNS Settings</a>
-                                    </td>
-                                    <td data-title="">
-                                        <form class="pull-end"
-                                            data-analytics-event="submit"
-                                            data-analytics-category="console"
-                                            data-analytics-label="Delete Project Task"
-                                            data-service="projects.deleteTask"
-                                            data-scope="console"
-                                            data-event="submit"
-                                            data-confirm="Are you sure you want to delete this task?"
-                                            data-success="alert,trigger"
-                                            data-success-param-alert-text="Deleted task successfully"
-                                            data-success-param-trigger-events="projects.deleteTask,modal-close"
-                                            data-failure="alert"
-                                            data-failure-param-alert-text="Failed to delete task"
-                                            data-failure-param-alert-classname="error">
-
-                                            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                            <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
-
-                                            <button class="danger round reverse small"><i class="icon-trash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="box line margin-bottom">
+                        <h3>Enable Custom Domains</h3>
+                        
+                        <p>To enable <?php echo APP_NAME; ?>'s custom domain feature, you have to start your server instance with a public accessable domain name.</p>
+                        
+                        <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAINS_TARGET</b> enviornment variable set with a public accessable domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
+                        <p class="margin-bottom-no">The <?php echo APP_NAME; ?> server will use your target domain to validate new custom domains and will automatically generate SSL certificates for your new domains using letsencrypt certbot.</p>
                     </div>
+                <?php endif; ?>
 
-                    <div class="clear">
-                        <div data-ui-modal class="modal box close" data-button-text="Add Domain">
-                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                <?php if($customDomains): ?>
+                    <h2>Custom Domains</h2>
 
-                            <h1>Add Domain</h1>
+                    <div class="zone xl"
+                        data-service="teams.getMemberships"
+                        data-scope="console"
+                        data-event="load,teams.createMembership,teams.deleteMembership"
+                        data-name="members"
+                        data-param-team-id="{{console-project.teamId}}"
+                        data-success="trigger"
+                        data-success-param-trigger-events="teams.getMemberships">
 
-                            <form
-                                data-analytics-event="submit"
-                                data-analytics-category="console"
-                                data-analytics-label="Create Project Task"
-                                data-service="projects.createTask"
-                                data-scope="console"
-                                data-event="submit"
-                                data-success="alert,trigger,reset"
-                                data-success-param-alert-text="Created task successfully"
-                                data-success-param-trigger-events="projects.createTask,modal-close"
-                                data-failure="alert"
-                                data-failure-param-alert-text="Failed to create task"
-                                data-failure-param-alert-classname="error">
+                        <div class="box margin-bottom">
+                            <table class="vertical">
+                                <thead>
+                                    <tr>
+                                        <th width="140"></th>
+                                        <th width="220">Domain Name</th>
+                                        <th width="160">TLS</th>
+                                        <th></th>
+                                        <th width="60"></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-ls-loop="members" data-ls-as="team">
+                                    <tr>
+                                        <td data-title="Status">
+                                            <span class="tag blue"><i class="icon-ok-circled"></i>Verified&nbsp;</span> &nbsp;
+                                        </td>
+                                        <td data-title="Domain: ">
+                                        <span xdata-ls-bind="{{member.name}}" class="text-size-small text-bold">appwrite.example.com</span>
+                                        </td>
+                                        <td data-title="TLS: ">
+                                            <!-- <span class="tag yellow"><i class="icon-ok-circled"></i> Pending&nbsp;</span> &nbsp; -->
+                                            <span class="tag green"><i class="icon-ok-circled"></i> Enabled&nbsp;</span> &nbsp;
+                                        </td>
+                                        <td data-title="">
+                                            <a href="" class="text-size-small">DNS Settings</a>
+                                        </td>
+                                        <td data-title="">
+                                            <form class="pull-end"
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Delete Project Task"
+                                                data-service="projects.deleteTask"
+                                                data-scope="console"
+                                                data-event="submit"
+                                                data-confirm="Are you sure you want to delete this task?"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Deleted task successfully"
+                                                data-success-param-trigger-events="projects.deleteTask,modal-close"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to delete task"
+                                                data-failure-param-alert-classname="error">
 
-                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                                <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
 
-                                <label for="name">Domain Name</label>
-                                <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" />
+                                                <button class="danger round reverse small"><i class="icon-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
-                                <div class="info margin-top margin-bottom">
-                                    <div class="text-bold margin-bottom-small">Setup & Verify your Domain</div>
-                                    <p>Add the following DNS records to your DNS provider settings to setup and verify your new custom domain.</p>
-                                    
-                                    <ol>
-                                        <li>
-                                            <p>Add a CNAME record to point your subdomain to <?php echo APP_NAME; ?> with the following value:</p>
-                                            
-                                            <div class="ide margin-bottom-small">
-                                                <pre class="line-numbers"><code class="prism language-javascript" data-prism>custom.appwrite.io</code></pre>
-                                            </div>
+                        <div class="clear">
+                            <div data-ui-modal class="modal box close" data-button-text="Add Domain">
+                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                            <p>For example:</p>
+                                <h1>Add Domain</h1>
 
-                                            <div class="ide margin-bottom-small">
-                                                <pre class="line-numbers"><code class="prism language-javascript" data-prism>appwrite.myapp.com   CNAME   custom.appwrite.io</code></pre>
-                                            </div>
-                                        </li>
+                                <form
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Create Project Task"
+                                    data-service="projects.createTask"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-success="alert,trigger,reset"
+                                    data-success-param-alert-text="Created task successfully"
+                                    data-success-param-trigger-events="projects.createTask,modal-close"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to create task"
+                                    data-failure-param-alert-classname="error">
 
-                                        <li>Add a CNAME record to point your subdomain to <?php echo APP_NAME; ?> API
-                              
-                                        </li>
-                                    </ol>
-                                </div>
+                                    <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+
+                                    <label for="name">Domain Name</label>
+                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" />
+
+                                    <div class="info margin-top margin-bottom">
+                                        <div class="text-bold margin-bottom-small">Setup & Verify your Domain</div>
+                                        <p>Add the following DNS records to your DNS provider settings to setup and verify your new custom domain.</p>
+                                        
+                                        <ol>
+                                            <li>
+                                                <p>Add a CNAME record to point your subdomain to <?php echo APP_NAME; ?> with the following value:</p>
+                                                
+                                                <div class="ide margin-bottom-small">
+                                                    <pre class="line-numbers"><code class="prism language-javascript" data-prism>custom.appwrite.io</code></pre>
+                                                </div>
+
+                                                <p>For example:</p>
+
+                                                <div class="ide margin-bottom-small">
+                                                    <pre class="line-numbers"><code class="prism language-javascript" data-prism>appwrite.myapp.com   CNAME   custom.appwrite.io</code></pre>
+                                                </div>
+                                            </li>
+
+                                            <li>Add a CNAME record to point your subdomain to <?php echo APP_NAME; ?> API
                                 
+                                            </li>
+                                        </ol>
+                                    </div>
+                                    
 
-                                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                            </form>
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-
-                </div>
+                <?php endif; ?>
             </li>
             <li data-state="/console/settings/members?project={{router.params.project}}">
                 <h2>Members</h2>

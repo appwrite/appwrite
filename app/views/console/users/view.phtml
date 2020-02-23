@@ -20,7 +20,7 @@
             <li data-state="/console/users/view?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>General</h2>
 
-                <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl">
+                <div data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
                     This user account is blocked.
                 </div>
 
