@@ -364,27 +364,29 @@ $utopia->get('/.well-known/acme-challenge')
     ->label('docs', false)
     ->action(
         function () use ($request, $response) {
-            $base = realpath(__DIR__.'/../certs');
+            $base = realpath(APP_STORAGE_CERTIFICATES);
             $path = str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
-            $absolute = realpath($base.'/'.$path);
-            
+            $absolute = realpath($base.'/.well-known/acme-challenge/'.$path);
+
+            if(!$base) {
+                throw new Exception('Storage error', 500);
+            }
+
             if(!$absolute) {
-                throw new Exception('Unknown Path', 404);
-                // $response->json([
-                //     'error' => 'unknown path',
-                //     'base' => scandir($base),
-                //     'base/well' => scandir($base . '/.well-known/'),
-                //     'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
-                //     'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
-                // ]);
-                // return;
+                throw new Exception('Unknown path', 404);
             }
 
             if(!substr($absolute, 0, strlen($base)) === $base) {
-                throw new Exception('Invalid Path', 401);
+                throw new Exception('Invalid path', 401);
             }
 
-            $response->text(file_get_contents($absolute));
+            $content = @file_get_contents($absolute);
+
+            if(!$content) {
+                throw new Exception('Failed to get contents', 500);
+            }
+
+            $response->text($content);
         }
     );
 
