@@ -1270,24 +1270,6 @@ $utopia->get('/v1/projects/:projectId/domains')
         }
     );
 
-// $utopia->get('/v1/projects/x/certs')
-//     ->desc('List Domains')
-//     ->label('scope', 'public')
-//     ->action(
-//         function () use ($response, $consoleDB) {
-//             \Database\Validator\Authorization::disable();
-//             $results = $consoleDB->getCollection([
-//                 'limit' => 50,
-//                 'offset' => 0,
-//                 'filters' => [
-//                     '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
-//                 ],
-//             ]);
-//             \Database\Validator\Authorization::reset();
-//             $response->json($results);
-//         }
-//     );
-
 $utopia->get('/v1/projects/:projectId/domains/:domainId')
     ->desc('Get Domain')
     ->label('scope', 'projects.read')
@@ -1341,11 +1323,15 @@ $utopia->get('/v1/projects/:projectId/domains/:domainId/verification')
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
             }
 
+            if($domain->getAttribute('verification') === true) {
+                return $response->json($domain->getArrayCopy());
+            }
+
             // Verify Domain with DNS records
             $validator = new CNAME($target->get());
 
             if(!$validator->isValid($domain->getAttribute('domain', ''))) {
-                //throw new Exception('Failed to verify domain', 401);
+                throw new Exception('Failed to verify domain', 401);
             }
 
             $domain
@@ -1392,3 +1378,21 @@ $utopia->delete('/v1/projects/:projectId/domains/:domainId')
         }
     );
 
+
+// $utopia->get('/v1/projects/x/certs')
+//     ->desc('List Domains')
+//     ->label('scope', 'public')
+//     ->action(
+//         function () use ($response, $consoleDB) {
+//             \Database\Validator\Authorization::disable();
+//             $results = $consoleDB->getCollection([
+//                 'limit' => 50,
+//                 'offset' => 0,
+//                 'filters' => [
+//                     '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
+//                 ],
+//             ]);
+//             \Database\Validator\Authorization::reset();
+//             $response->json($results);
+//         }
+//     );
