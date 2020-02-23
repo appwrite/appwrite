@@ -11,6 +11,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 use Utopia\Validator\URL;
+use Utopia\Domains\Domain;
 use Task\Validator\Cron;
 use Database\Database;
 use Database\Document;
@@ -18,7 +19,6 @@ use Database\Validator\UID;
 use OpenSSL\OpenSSL;
 use Cron\CronExpression;
 use Network\Validators\CNAME;
-use Utopia\Domains\Domain;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -1215,6 +1215,12 @@ $utopia->get('/v1/projects/:projectId/xxx')
                 throw new Exception('Domain already exists', 409);
             }
 
+            $target = new Domain($request->getServer('_APP_DOMAINS_TARGET', ''));
+
+            if(!$target->isKnown() || $target->isTest()) {
+                throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
+            }
+
             $domain = new Domain($domain);
 
             $domain = $consoleDB->createDocument([
@@ -1257,7 +1263,7 @@ $utopia->get('/v1/projects/:projectId/domains')
     ->label('sdk.method', 'listDomains')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
+        function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {

@@ -25,9 +25,9 @@ class CertificatesV1
         global $request, $consoleDB;
 
         /**
-         * 1. Get new domain document
-         *  1.1. Validate domain is valid, public suffix is known and CNAME records are verified
-         * 2. Check if a certificate already exists
+         * 1. Get new domain document - DONE
+         *  1.1. Validate domain is valid, public suffix is known and CNAME records are verified - DONE
+         * 2. Check if a certificate already exists - DONE
          * 3. Check if certificate is not about to expire skip
          *  3.1. Create / renew certificate
          *  3.2. Update loadblancer
@@ -90,8 +90,10 @@ class CertificatesV1
         if(!$response) {
             throw new Exception('Failed to issue a certificate');
         }
-
-        rename('/etc/letsencrypt/live/'.$domain->get(), APP_STORAGE_CERTIFICATES.'/'.$domain->get());
+        
+        if(!rename('/etc/letsencrypt/live/'.$domain->get(), APP_STORAGE_CERTIFICATES.'/'.$domain->get())) {
+            throw new Exception('Failed to copy certificate');
+        }
 
         $certificate = array_merge($certificate, [
             '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
