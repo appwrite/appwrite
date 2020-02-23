@@ -1385,20 +1385,21 @@ $utopia->delete('/v1/projects/:projectId/domains/:domainId')
     );
 
 
-// $utopia->get('/v1/projects/x/certs')
-//     ->desc('List Domains')
-//     ->label('scope', 'public')
-//     ->action(
-//         function () use ($response, $consoleDB) {
-//             \Database\Validator\Authorization::disable();
-//             $results = $consoleDB->getCollection([
-//                 'limit' => 50,
-//                 'offset' => 0,
-//                 'filters' => [
-//                     '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
-//                 ],
-//             ]);
-//             \Database\Validator\Authorization::reset();
-//             $response->json($results);
-//         }
-//     );
+
+$utopia->get('/v1/projects/x/certs')
+    ->desc('List Domains')
+    ->label('scope', 'public')
+    ->action(
+        function () use ($response, $consoleDB) {
+            \Database\Validator\Authorization::disable();
+            $results = $consoleDB->getCollection([
+                'limit' => 50,
+                'offset' => 0,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
+                ],
+            ]);
+            \Database\Validator\Authorization::reset();
+            $response->json($results);
+        }
+    );

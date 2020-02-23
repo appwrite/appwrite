@@ -380,6 +380,10 @@ $utopia->get('/.well-known/acme-challenge')
                 throw new Exception('Invalid path', 401);
             }
 
+            if(!file_exists($absolute)) {
+                throw new Exception('Unknown path', 404);
+            }
+
             $content = @file_get_contents($absolute);
 
             if(!$content) {

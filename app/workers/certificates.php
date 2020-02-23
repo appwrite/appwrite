@@ -4,6 +4,7 @@ use Database\Database;
 use Database\Document;
 use Database\Validator\Authorization;
 use Network\Validators\CNAME;
+use Utopia\App;
 use Utopia\Domains\Domain;
 
 require_once __DIR__.'/../init.php';
@@ -22,7 +23,7 @@ class CertificatesV1
 
     public function perform()
     {
-        global $request, $consoleDB;
+        global $request, $consoleDB, $env;
 
         /**
          * 1. Get new domain document - DONE
@@ -83,7 +84,9 @@ class CertificatesV1
                 throw new Exception('Renew isn\'t required. Domain issued at '.date('d.m.Y H:i', (isset($certificate['issueDate']) ? $certificate['issueDate'] : 0)));
         }
 
-        $response = shell_exec("certbot certonly --webroot --noninteractive --agree-tos --email security@appwrite.io \
+        $staging = ($env === App::ENV_TYPE_PRODUCTION) ? '' : ' --dry-run';
+
+        $response = shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} --email security@appwrite.io \
             -w ".APP_STORAGE_CERTIFICATES." \
             -d {$domain->get()} 2>&1"); // cert2.tests.appwrite.org
 
@@ -92,7 +95,7 @@ class CertificatesV1
         }
         
         if(!rename('/etc/letsencrypt/live/'.$domain->get(), APP_STORAGE_CERTIFICATES.'/'.$domain->get())) {
-            throw new Exception('Failed to copy certificate');
+            throw new Exception('Failed to copy certificate: '.$staging.json_encode($response));
         }
 
         $certificate = array_merge($certificate, [
@@ -104,7 +107,7 @@ class CertificatesV1
             'domain' => $domain->get(),
             'issueDate' => time(),
             'attempts' => 0,
-            'log' => json_encode($response),
+            'log' => $staging.json_encode($response),
         ]);
 
         $certificate = $consoleDB->createDocument($certificate);
