@@ -55,15 +55,13 @@ if(success===undefined){throw new Error('Missing required parameter: "success"')
 if(failure===undefined){throw new Error('Missing required parameter: "failure"');}
 let path='/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}','g'),provider);let payload={};if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
-return http.get(path,{'content-type':'application/json',},payload);},deleteSession:function(sessionId){if(sessionId===undefined){throw new Error('Missing required parameter: "id"');}
+payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');},deleteSession:function(sessionId){if(sessionId===undefined){throw new Error('Missing required parameter: "sessionId"');}
 let path='/account/sessions/{sessionId}'.replace(new RegExp('{sessionId}','g'),sessionId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createVerification:function(url){if(url===undefined){throw new Error('Missing required parameter: "url"');}
 let path='/account/verification';let payload={};if(url){payload['url']=url;}
-return http.post(path,{'content-type':'application/json',},payload);},updateVerification:function(userId,secret,passwordB){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+return http.post(path,{'content-type':'application/json',},payload);},updateVerification:function(userId,secret){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(secret===undefined){throw new Error('Missing required parameter: "secret"');}
-if(passwordB===undefined){throw new Error('Missing required parameter: "passwordB"');}
 let path='/account/verification';let payload={};if(userId){payload['userId']=userId;}
 if(secret){payload['secret']=secret;}
-if(passwordB){payload['password-b']=passwordB;}
 return http.put(path,{'content-type':'application/json',},payload);}};let avatars={getBrowser:function(code,width=100,height=100,quality=100){if(code===undefined){throw new Error('Missing required parameter: "code"');}
 let path='/avatars/browsers/{code}'.replace(new RegExp('{code}','g'),code);let payload={};if(width){payload['width']=width;}
 if(height){payload['height']=height;}
@@ -170,7 +168,17 @@ if(legalTaxId){payload['legalTaxId']=legalTaxId;}
 return http.patch(path,{'content-type':'application/json',},payload);},delete:function(projectId,password){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(password){payload['password']=password;}
-return http.delete(path,{'content-type':'application/json',},payload);},listKeys:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+return http.delete(path,{'content-type':'application/json',},payload);},listDomains:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/domains'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createDomain:function(projectId,domain){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domain===undefined){throw new Error('Missing required parameter: "domain"');}
+let path='/projects/{projectId}/domains'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(domain){payload['domain']=domain;}
+return http.post(path,{'content-type':'application/json',},payload);},getDomain:function(projectId,domainId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domainId===undefined){throw new Error('Missing required parameter: "domainId"');}
+let path='/projects/{projectId}/domains/{domainId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{domainId}','g'),domainId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},deleteDomain:function(projectId,domainId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domainId===undefined){throw new Error('Missing required parameter: "domainId"');}
+let path='/projects/{projectId}/domains/{domainId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{domainId}','g'),domainId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},updateDomainVerification:function(projectId,domainId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domainId===undefined){throw new Error('Missing required parameter: "domainId"');}
+let path='/projects/{projectId}/domains/{domainId}/verification'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{domainId}','g'),domainId);let payload={};return http.patch(path,{'content-type':'application/json',},payload);},listKeys:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/keys'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createKey:function(projectId,name,scopes){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(name===undefined){throw new Error('Missing required parameter: "name"');}
 if(scopes===undefined){throw new Error('Missing required parameter: "scopes"');}
@@ -296,15 +304,15 @@ let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);le
 if(write){payload['write']=write;}
 return http.put(path,{'content-type':'application/json',},payload);},deleteFile:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getFileDownload:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getFilePreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');},getFilePreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(width){payload['width']=width;}
 if(height){payload['height']=height;}
 if(quality){payload['quality']=quality;}
 if(background){payload['background']=background;}
 if(output){payload['output']=output;}
-return http.get(path,{'content-type':'application/json',},payload);},getFileView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');},getFileView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/view'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(as){payload['as']=as;}
-return http.get(path,{'content-type':'application/json',},payload);}};let teams={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/teams';let payload={};if(search){payload['search']=search;}
+payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');}};let teams={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/teams';let payload={};if(search){payload['search']=search;}
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}
