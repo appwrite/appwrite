@@ -390,7 +390,7 @@ $utopia->get('/.well-known/acme-challenge')
         }
     );
 
-$utopia->get('/v1/info') // This is only visible to gods
+$utopia->get('/v1/info') // This is only visible to the gods
     ->label('scope', 'god')
     ->label('docs', false)
     ->action(
