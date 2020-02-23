@@ -51,6 +51,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
     _APP_STORAGE_LIMIT=104857600 \
+    _APP_DOMAINS_TARGET=localhost \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \

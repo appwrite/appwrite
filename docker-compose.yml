@@ -14,6 +14,7 @@ services:
     volumes:
     - appwrite-uploads:/storage/uploads:rw
     - appwrite-cache:/storage/cache:rw
+    - appwrite-certificates:/storage/certificates:rw
     - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
     - ./tests:/usr/share/nginx/html/tests
     - ./app:/usr/share/nginx/html/app
@@ -37,6 +38,7 @@ services:
     - _APP_ENV=development
     - _APP_OPTIONS_ABUSE=disabled
     - _APP_OPENSSL_KEY_V1=your-secret-key
+    - _APP_DOMAINS_TARGET=new.appwrite.io
     - _APP_REDIS_HOST=redis
     - _APP_REDIS_PORT=6379
     - _APP_DB_HOST=mariadb
@@ -132,4 +134,5 @@ volumes:
   appwrite-db:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-certificates:
   appwrite-influxdb:
