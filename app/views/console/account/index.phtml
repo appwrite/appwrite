@@ -192,7 +192,7 @@
 
                 <ul data-ls-loop="sessions" data-ls-as="session" class="list">
                     <li class="clear">
-                        <span data-ls-if="true != {{session.current}}" style="display: none;">
+                        <span data-ls-if="true != {{session.current}}">
                             <!-- From remote session (-logout event) -->
                             <form class="pull-end"
                                 data-analytics-event="submit"
@@ -213,7 +213,7 @@
                             </form>
                         </span>
 
-                        <span data-ls-if="true == {{session.current}}" style="display: none;">
+                        <span data-ls-if="true == {{session.current}}">
                             <!-- From current session (+logout event) -->
                             <form class="pull-end"
                                 data-analytics-event="submit"
@@ -238,7 +238,7 @@
 
                         <span data-ls-bind="{{session.client.name}}"></span> <span data-ls-bind="{{session.client.version}}"></span> on <span data-ls-bind="{{session.model}}"></span> <span data-ls-bind="{{session.OS.name}}"></span> <span data-ls-bind="{{session.OS.version}}"></span>
                         &nbsp;
-                        <span data-ls-if="true == {{session.current}}" style="display: none;">
+                        <span data-ls-if="true == {{session.current}}">
                             <span class="tag green">Current Session</span>
                         </span>
 

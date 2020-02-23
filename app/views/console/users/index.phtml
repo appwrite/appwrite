@@ -84,7 +84,7 @@ $providers = $this->getParam('providers', []);
                     <p class="margin-bottom-no">Create your first user to get started</p>
                 </div>
 
-                <div data-ls-if="0 != {{project-users.sum}}" style="display: none;">
+                <div data-ls-if="0 != {{project-users.sum}}">
                     <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-users.sum}}"></span> users found</div>
 
                     <div class="box margin-bottom">
@@ -223,13 +223,13 @@ $providers = $this->getParam('providers', []);
                 data-scope="sdk"
                 data-name="project-teams">
 
-                <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom" style="display: none;">
+                <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom">
                     <h3 class="margin-bottom-small text-bold-2">No Teams Found</h3>
 
                     <p class="margin-bottom-no">Create your first team to get started</p>
                 </div>
 
-                <div data-ls-if="0 != {{project-teams.sum}}" style="display: none;">
+                <div data-ls-if="0 != {{project-teams.sum}}">
                 <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
 
                     <div class="box margin-bottom">

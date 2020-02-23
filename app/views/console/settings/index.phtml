@@ -150,15 +150,21 @@ $customDomains = $this->getParam('customDomains', false);
                     <h2>Custom Domains</h2>
 
                     <div class="zone xl"
-                        data-service="teams.getMemberships"
+                        data-service="projects.listDomains"
                         data-scope="console"
-                        data-event="load,teams.createMembership,teams.deleteMembership"
-                        data-name="members"
-                        data-param-team-id="{{console-project.teamId}}"
+                        data-event="load,projects.createDomain,projects.updateDomain,projects.deleteDomain"
+                        data-name="console-domains"
+                        data-param-project-id="{{router.params.project}}"
                         data-success="trigger"
-                        data-success-param-trigger-events="teams.getMemberships">
+                        data-success-param-trigger-events="projects.listDomains">
 
-                        <div class="box margin-bottom">
+                        <div data-ls-if="0 == {{console-domains.length}} || undefined == {{console-domains.length}}" class="box margin-top margin-bottom">
+                            <h3 class="margin-bottom-small text-bold-2">No Custom Domains Found</h3>
+
+                            <p class="margin-bottom-no">You haven't created any custom domains for your project yet.</p>
+                        </div>
+
+                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.length}}">
                             <table class="vertical">
                                 <thead>
                                     <tr>
@@ -169,17 +175,17 @@ $customDomains = $this->getParam('customDomains', false);
                                         <th width="60"></th>
                                     </tr>
                                 </thead>
-                                <tbody data-ls-loop="members" data-ls-as="team">
+                                <tbody data-ls-loop="console-domains" data-ls-as="domain">
                                     <tr>
                                         <td data-title="Status">
-                                            <span class="tag blue"><i class="icon-ok-circled"></i>Verified&nbsp;</span> &nbsp;
+                                            <span class="tag blue" data-ls-if="true == {{domain.verification}}"><i class="icon-ok-circled"></i>Verified&nbsp;</span> &nbsp;
                                         </td>
                                         <td data-title="Domain: ">
-                                        <span xdata-ls-bind="{{member.name}}" class="text-size-small text-bold">appwrite.example.com</span>
+                                        <span data-ls-bind="{{domain.domain}}" class="text-size-small text-bold"></span>
                                         </td>
                                         <td data-title="TLS: ">
-                                            <!-- <span class="tag yellow"><i class="icon-ok-circled"></i> Pending&nbsp;</span> &nbsp; -->
-                                            <span class="tag green"><i class="icon-ok-circled"></i> Enabled&nbsp;</span> &nbsp;
+                                            <span class="tag yellow" data-ls-if="!{{domain.certificateId}}"><i class="icon-ok-circled"></i> Pending&nbsp;</span>
+                                            <span class="tag green" data-ls-if="{{domain.certificateId}}"><i class="icon-ok-circled"></i> Enabled&nbsp;</span>
                                         </td>
                                         <td data-title="">
                                             <a href="" class="text-size-small">DNS Settings</a>
@@ -304,7 +310,7 @@ $customDomains = $this->getParam('customDomains', false);
                                     <button class="danger">Leave</button>
                                 </form>
                                 
-                                <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
+                                <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end">
                                     <form class="pull-end"
                                         data-analytics-event="submit"
                                         data-analytics-category="console"
@@ -346,7 +352,7 @@ $customDomains = $this->getParam('customDomains', false);
                                 <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                 <div class="margin-bottom-tiny">
-                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;">Pending Approval</span>
+                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
                                 </div>
                                 <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small>
                             </li>

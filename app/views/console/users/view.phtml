@@ -32,10 +32,10 @@
 
                                 <div class="margin-top-small" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
-                                    <span data-ls-if="{{user.emailVerification}} === true" style="display: none;">
+                                    <span data-ls-if="{{user.emailVerification}} === true">
                                         <span class="tag green">Verified</span>
                                     </span>
-                                    <span data-ls-if="{{user.emailVerification}} !== true" style="display: none;">
+                                    <span data-ls-if="{{user.emailVerification}} !== true">
                                         <span class="tag">Unverified</span>
                                     </span>
                                 </div>
@@ -53,7 +53,7 @@
                             data-success="trigger"
                             data-success-param-trigger-events="users.getPrefs">
 
-                            <div data-ls-if="!{{user-prefs|isEmptyObject}}" style="display: none;">
+                            <div data-ls-if="!{{user-prefs|isEmptyObject}}">
                                 <table class="vertical">
                                     <thead>
                                         <tr>
@@ -74,7 +74,7 @@
                                 </table>
                             </div>
 
-                            <div data-ls-if="{{user-prefs|isEmptyObject}}" style="display: none;">
+                            <div data-ls-if="{{user-prefs|isEmptyObject}}">
                                 No user preferences found
                             </div>
                         </div>

@@ -38,13 +38,13 @@ $events = [
     data-success="trigger"
     data-success-param-trigger-events="projects.listWebhooks">
 
-    <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom" style="display: none;">
+    <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold-2">No Webhooks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
     </div>
 
-    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.length}}" style="display: none;">
+    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.length}}">
         <ul data-ls-loop="console-webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
@@ -150,7 +150,7 @@ $events = [
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
-                <span data-ls-if="0 == {{webhook.security}}" style="display: none;">
+                <span data-ls-if="0 == {{webhook.security}}">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
                 <div class="margin-top-tiny">

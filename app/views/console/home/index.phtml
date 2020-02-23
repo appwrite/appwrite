@@ -83,7 +83,7 @@ $graph = $this->getParam('graph', false);
 <div class="zone xl margin-top-xl clear" data-ls-if="({{console-project}})">
     <h2 class="margin-bottom">Platforms</h2>
 
-    <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}" style="display: none;">
+    <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}">
         <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
             <li class="clear">
 
@@ -125,7 +125,7 @@ $graph = $this->getParam('graph', false);
         </ul>
     </div>
 
-    <div data-ls-if="(!{{console-project.platforms.length}})" class="box dashboard margin-bottom" style="display: none;">
+    <div data-ls-if="(!{{console-project.platforms.length}})" class="box dashboard margin-bottom">
         <div class="margin-bottom-small margin-top-small margin-end margin-start">
             <h3 class="margin-bottom-small text-bold-2">No Platforms Added to Your Project</h3>
 

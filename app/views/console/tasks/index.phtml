@@ -12,13 +12,13 @@
     data-success="trigger"
     data-success-param-trigger-events="projects.listTasks">
 
-    <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom" style="display: none;">
+    <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold-2">No Tasks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any tasks for your project yet.</p>
     </div>
 
-    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.length}}" style="display: none;">
+    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.length}}">
         <table class="full">
             <thead>
                 <tr>
@@ -35,10 +35,10 @@
                         <div class="margin-bottom-tiny text-one-liner">
                             <span data-ls-bind="{{task.name}}"></span>
 
-                            <span data-ls-if="0 === {{task.security}}" style="display: none;">
+                            <span data-ls-if="0 === {{task.security}}">
                                 &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
                             </span>
-                            <span data-ls-if="0 !== {{task.failures}}" style="display: none;">
+                            <span data-ls-if="0 !== {{task.failures}}">
                                 &nbsp; <span class="text-danger" data-ls-bind="({{task.failures}} errors)"></span>
                             </span>
                         </div>
@@ -46,10 +46,10 @@
                         <a data-ls-attrs="href={{task.httpUrl}}" data-ls-bind="{{task.httpUrl}}" target="_blank" class="text-one-liner"></a>
                     </td>
                     <td style="vertical-align: middle">
-                        <span data-ls-if="'play' === {{task.status}}" style="display: none;">
+                        <span data-ls-if="'play' === {{task.status}}">
                             <span class="tag green"><i class="icon-play"></i> Running &nbsp;</span>
                         </span>
-                        <span data-ls-if="'play' !== {{task.status}}" style="display: none;">
+                        <span data-ls-if="'play' !== {{task.status}}">
                             <span class="tag red"><i class="icon-pause"></i> Paused &nbsp;</span>
                         </span>
                     </td>

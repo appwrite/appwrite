@@ -128,7 +128,7 @@ if(!empty($platforms)) {
                     <i class="icon-cancel" data-ls-ui-alerts-delete data-message="{{alert.id}}"></i>
                     <span data-ls-bind="{{alert.text}}"></span>
 
-                    <span data-ls-if="undefined !== {{alert.link}}" style="display: none;">
+                    <span data-ls-if="undefined !== {{alert.link}}">
                         <a data-ls-attrs="href={{alert.link}}" data-ls-ui-alerts-delete data-message="{{alert.id}}">Learn More</a>
                     </span>
                 </div>
