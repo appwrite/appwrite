@@ -14,7 +14,7 @@ class CNAMETest extends TestCase
 
     public function setUp()
     {
-        $this->object = new CNAME('new.appwrite.io');
+        $this->object = new CNAME('appwrite.io');
     }
 
     public function tearDown()
@@ -26,9 +26,9 @@ class CNAMETest extends TestCase
         $this->assertEquals($this->object->isValid(''), false);
         $this->assertEquals($this->object->isValid(null), false);
         $this->assertEquals($this->object->isValid(false), false);
-        $this->assertEquals($this->object->isValid('cert1.tests.appwrite.io'), true);
-        $this->assertEquals($this->object->isValid('cert2.tests.appwrite.io'), true);
-        $this->assertEquals($this->object->isValid('cert1.tests.appwrite.com'), false);
-        $this->assertEquals($this->object->isValid('cert1.tests.appwrite.com'), false);
+        $this->assertEquals($this->object->isValid('test1.appwrite.io'), true);
+        $this->assertEquals($this->object->isValid('test1.appwrite.io'), true);
+        $this->assertEquals($this->object->isValid('test1.appwrite.com'), false);
+        $this->assertEquals($this->object->isValid('test1.appwrite.com'), false);
     }
 }
