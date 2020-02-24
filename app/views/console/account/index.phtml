@@ -29,7 +29,7 @@
                                     data-event="submit"
                                     data-success="trigger,alert"
                                     data-success-param-alert-text="Your name was updated successfully"
-                                    data-success-param-trigger-events="account.update,modal-close"
+                                    data-success-param-trigger-events="account.update"
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to update your name"
                                     data-failure-param-alert-classname="error">
@@ -58,7 +58,7 @@
                                 data-event="submit"
                                 data-success="trigger,alert"
                                 data-success-param-alert-text="Email address updated successfully"
-                                data-success-param-trigger-events="account-update,modal-close" 
+                                data-success-param-trigger-events="account-update" 
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed updating email address"
                                 data-failure-param-alert-classname="error">
@@ -91,8 +91,8 @@
                                     data-service="account.updatePassword"
                                     data-scope="console"
                                     data-event="submit"
-                                    data-success="trigger,alert"
-                                    data-success-param-trigger-events="account-update,modal-close"
+                                    data-success="trigger,alert,reset"
+                                    data-success-param-trigger-events="account-update"
                                     data-success-param-alert-text="Password updated successfully"
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed updating password"

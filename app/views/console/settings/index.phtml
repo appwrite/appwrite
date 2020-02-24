@@ -1,6 +1,7 @@
 <?php
 
-$customDomains = $this->getParam('customDomains', false);
+$customDomainsEnabled = $this->getParam('customDomainsEnabled', false);
+$customDomainsTarget = $this->getParam('customDomainsTarget', false);
 
 ?>
 <div class="cover">
@@ -133,7 +134,7 @@ $customDomains = $this->getParam('customDomains', false);
             </li> -->
             <li data-state="/console/settings/domains?project={{router.params.project}}">
                 
-                <?php if(!$customDomains): ?>
+                <?php if(!$customDomainsEnabled): ?>
                     <h2 style="display: none;">Custom Domains</h2>
 
                     <div class="box line margin-bottom">
@@ -146,13 +147,13 @@ $customDomains = $this->getParam('customDomains', false);
                     </div>
                 <?php endif; ?>
 
-                <?php if($customDomains): ?>
+                <?php if($customDomainsEnabled): ?>
                     <h2>Custom Domains</h2>
 
                     <div class="zone xl"
                         data-service="projects.listDomains"
                         data-scope="console"
-                        data-event="load,projects.createDomain,projects.updateDomain,projects.deleteDomain"
+                        data-event="load,projects.createDomain,projects.updateDomainVerification,projects.deleteDomain"
                         data-name="console-domains"
                         data-param-project-id="{{router.params.project}}"
                         data-success="trigger"
@@ -168,7 +169,7 @@ $customDomains = $this->getParam('customDomains', false);
                             <table class="vertical">
                                 <thead>
                                     <tr>
-                                        <th width="140"></th>
+                                        <th width="160"></th>
                                         <th width="220">Domain Name</th>
                                         <th width="160">TLS</th>
                                         <th></th>
@@ -178,36 +179,88 @@ $customDomains = $this->getParam('customDomains', false);
                                 <tbody data-ls-loop="console-domains" data-ls-as="domain">
                                     <tr>
                                         <td data-title="Status">
-                                            <span class="tag blue" data-ls-if="true == {{domain.verification}}"><i class="icon-ok-circled"></i>Verified&nbsp;</span> &nbsp;
+                                            <span class="tag" data-ls-if="true !== {{domain.verification}}"><i class="icon-cancel-circled"></i> Unverified&nbsp;</span>
+                                            <span class="tag blue" data-ls-if="true === {{domain.verification}}"><i class="icon-ok-circled"></i> Verified&nbsp;</span>
                                         </td>
                                         <td data-title="Domain: ">
-                                        <span data-ls-bind="{{domain.domain}}" class="text-size-small text-bold"></span>
+                                        <span data-ls-bind="{{domain.domain}}"></span>
                                         </td>
                                         <td data-title="TLS: ">
                                             <span class="tag yellow" data-ls-if="!{{domain.certificateId}}"><i class="icon-ok-circled"></i> Pending&nbsp;</span>
                                             <span class="tag green" data-ls-if="{{domain.certificateId}}"><i class="icon-ok-circled"></i> Enabled&nbsp;</span>
                                         </td>
                                         <td data-title="">
-                                            <a href="" class="text-size-small">DNS Settings</a>
+                                            <button class="link text-size-small" data-ls-if="true === {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">DNS Settings</button>
+                                            <button class="link text-size-small" data-ls-if="true !== {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">Verify Domain</button>
+                                            
+                                            <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="dns-settings-{{domain.$id}}" data-close-event="dns-settings-close-{{domain.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h3 class="margin-bottom" data-ls-if="true === {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">DNS Settings</h3>
+                                                <h3 class="margin-bottom" data-ls-if="true !== {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">Verify Domain</h3>
+
+                                                <form
+                                                    data-analytics-event="submit"
+                                                    data-analytics-category="console"
+                                                    data-analytics-label="Update Domain Verification"
+                                                    data-service="projects.updateDomainVerification"
+                                                    data-scope="console"
+                                                    data-event="submit"
+                                                    data-success="alert,trigger"
+                                                    data-success-param-alert-text="Verified domain successfully"
+                                                    data-success-param-trigger-events="projects.updateDomainVerification"
+                                                    data-failure="alert"
+                                                    data-failure-param-alert-text="Failed to verify domain"
+                                                    data-failure-param-alert-classname="error">
+
+                                                    <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                                    <input type="hidden" name="domainId" data-ls-bind="{{domain.$id}}" />
+
+                                                    <p>Add the following DNS records to your DNS provider settings to setup and verify your new custom domain.</p>
+
+                                                    <ol>
+                                                        <li>
+                                                            <p>Add a new CNAME record in your DNS providers settings to point your new subdomain to your <?php echo APP_NAME; ?> server with the following value:</p>
+                                                            
+                                                            <div class="ide margin-bottom-small">
+                                                                <pre class="line-numbers"><code class="prism language-javascript" data-prism><?php echo $this->print($customDomainsTarget, 'escape'); ?></code></pre>
+                                                            </div>
+
+                                                            <p>For example:</p>
+
+                                                            <div class="ide margin-bottom-small">
+                                                                <pre class="line-numbers"><code class="prism language-javascript" data-prism><?php echo strtolower(APP_NAME); ?>.myapp.com   CNAME   <?php echo $this->print($customDomainsTarget, 'escape'); ?></code></pre>
+                                                            </div>
+                                                        </li>
+
+                                                        <li>Confirm and verify your CNAME record values:
+
+                                                            <button class="margin-top-small">Confirm & Verify</button>
+                                                        </li>
+
+                                                        <li>After verification completes, <?php echo APP_NAME; ?> will automatically generate your new domain a secure SSL certificate. This process may take a few seconds. </li>
+                                                    </ol>
+                                                </form>
+                                            </div>
                                         </td>
                                         <td data-title="">
                                             <form class="pull-end"
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
-                                                data-analytics-label="Delete Project Task"
-                                                data-service="projects.deleteTask"
+                                                data-analytics-label="Delete Project Domain"
+                                                data-service="projects.deleteDomain"
                                                 data-scope="console"
                                                 data-event="submit"
-                                                data-confirm="Are you sure you want to delete this task?"
+                                                data-confirm="Are you sure you want to delete this domain?"
                                                 data-success="alert,trigger"
-                                                data-success-param-alert-text="Deleted task successfully"
-                                                data-success-param-trigger-events="projects.deleteTask,modal-close"
+                                                data-success-param-alert-text="Deleted domain successfully"
+                                                data-success-param-trigger-events="projects.deleteDomain"
                                                 data-failure="alert"
-                                                data-failure-param-alert-text="Failed to delete task"
+                                                data-failure-param-alert-text="Failed to delete domain"
                                                 data-failure-param-alert-classname="error">
 
                                                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                                <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
+                                                <input type="hidden" name="domainId" data-ls-bind="{{domain.$id}}" />
 
                                                 <button class="danger round reverse small"><i class="icon-trash"></i></button>
                                             </form>
@@ -226,47 +279,21 @@ $customDomains = $this->getParam('customDomains', false);
                                 <form
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
-                                    data-analytics-label="Create Project Task"
-                                    data-service="projects.createTask"
+                                    data-analytics-label="Create Project Domain"
+                                    data-service="projects.createDomain"
                                     data-scope="console"
                                     data-event="submit"
                                     data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Created task successfully"
-                                    data-success-param-trigger-events="projects.createTask,modal-close"
+                                    data-success-param-alert-text="Created domain successfully"
+                                    data-success-param-trigger-events="projects.createDomain"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create task"
+                                    data-failure-param-alert-text="Failed to create domain"
                                     data-failure-param-alert-classname="error">
 
                                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                                     <label for="name">Domain Name</label>
-                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" />
-
-                                    <div class="info margin-top margin-bottom">
-                                        <div class="text-bold margin-bottom-small">Setup & Verify your Domain</div>
-                                        <p>Add the following DNS records to your DNS provider settings to setup and verify your new custom domain.</p>
-                                        
-                                        <ol>
-                                            <li>
-                                                <p>Add a CNAME record to point your subdomain to <?php echo APP_NAME; ?> with the following value:</p>
-                                                
-                                                <div class="ide margin-bottom-small">
-                                                    <pre class="line-numbers"><code class="prism language-javascript" data-prism>custom.appwrite.io</code></pre>
-                                                </div>
-
-                                                <p>For example:</p>
-
-                                                <div class="ide margin-bottom-small">
-                                                    <pre class="line-numbers"><code class="prism language-javascript" data-prism>appwrite.myapp.com   CNAME   custom.appwrite.io</code></pre>
-                                                </div>
-                                            </li>
-
-                                            <li>Add a CNAME record to point your subdomain to <?php echo APP_NAME; ?> API
-                                
-                                            </li>
-                                        </ol>
-                                    </div>
-                                    
+                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" title="Enter a valid domain name" pattern="^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$" />
 
                                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </form>
@@ -374,7 +401,7 @@ $customDomains = $this->getParam('customDomains', false);
                             data-loading="Sending invitation, please wait..."
                             data-success="alert,trigger,reset"
                             data-success-param-alert-text="Invitation Sent Successfully"
-                            data-success-param-trigger-events="teams.createMembership,modal-close"
+                            data-success-param-trigger-events="teams.createMembership"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to Send Invite"
                             data-failure-param-alert-classname="error">
