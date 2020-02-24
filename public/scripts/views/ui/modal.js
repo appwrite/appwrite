@@ -2,16 +2,17 @@
   window.ls.container.get("view").add({
     selector: "data-ui-modal",
     controller: function(document, element, expression) {
-      let name = element.dataset["name"] || null;
+      let name = expression.parse(element.dataset["name"] || '');
       let buttonText = expression.parse(element.dataset["buttonText"] || "");
-      let buttonClass = element.dataset["buttonClass"] || "button-class";
-      let buttonIcon = element.dataset["buttonIcon"] || null;
-      let buttonEvent = element.dataset["buttonEvent"] || "";
-      let buttonAlias = element.dataset["buttonAlias"] || "";
+      let buttonClass = expression.parse(element.dataset["buttonClass"] || "button-class");
+      let buttonIcon = expression.parse(element.dataset["buttonIcon"] || '');
+      let buttonEvent = expression.parse(element.dataset["buttonEvent"] || "");
+      let buttonAlias = expression.parse(element.dataset["buttonAlias"] || "");
       let buttonElements = !buttonAlias
         ? [document.createElement("button")]
         : document.querySelectorAll(buttonAlias);
-      let openEvent = element.dataset["openEvent"] || null; // When event triggers modal will open
+      let openEvent = expression.parse(element.dataset["openEvent"] || ''); // When event triggers modal will open
+      let closeEvent = expression.parse(element.dataset["closeEvent"] || 'submit'); // When event triggers modal will close
       let background = document.getElementById("modal-bg");
 
       if (!background) {
@@ -82,7 +83,7 @@
         element.classList.remove("close");
       };
 
-      let close = function() {
+      let close = function(event) {
         document.documentElement.classList.remove("modal-open");
 
         element.classList.add("close");
@@ -120,7 +121,7 @@
       }
 
       document.addEventListener("modal-close", close);
-      element.addEventListener("submit", close);
+      element.addEventListener(closeEvent, close);
     }
   });
 })(window);

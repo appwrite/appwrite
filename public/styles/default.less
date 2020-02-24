@@ -9,6 +9,7 @@
   --config-color-background: #eceff1;
   --config-color-background-dark: #dfe2e4;
   --config-color-background-fade: #ffffff;
+  --config-color-background-fade-super: #fdfdfd;
   --config-color-background-focus: #f5f5f5;
   --config-color-background-input: #ffffff;
   --config-color-placeholder: #868686;
@@ -75,6 +76,7 @@
       --config-color-background: #061F2F;
       --config-color-background-dark: #262d50;
       --config-color-background-fade: #1c223a;
+      --config-color-background-fade-super: #1a1f35;
       --config-color-background-focus: #1a1f35;
       --config-color-background-input: #dce8f5;
       --config-color-tooltip-text: #061F2F;
@@ -160,8 +162,8 @@
 
 @watch: ~"only screen and (max-width: 260px)";
 @phones: ~"only screen and (max-width: 550px)";
-@tablets: ~"only screen and (min-width: 551px) and (max-width: 1200px)";
-@desktops: ~"only screen and (min-width: 1201px) and (max-width: 1300px)";
+@tablets: ~"only screen and (min-width: 551px) and (max-width: 1199)";
+@desktops: ~"only screen and (min-width: 1199) and (max-width: 1300px)";
 @big-screens: ~"only screen and (min-width: 1200px)";
 
 img[src=""] {

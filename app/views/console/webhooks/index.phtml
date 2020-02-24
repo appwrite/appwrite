@@ -74,14 +74,14 @@ $events = [
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
 
                         <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
-                        <div class="row thin margin-bottom">
+                        <div class="row responsive thin">
                             <?php foreach ($events as $i => $event) : ?>
-                                <div class="col span-6">
+                                <div class="col span-6 text-one-liner margin-bottom text-height-large">
                                     <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
-                                <div class="row thin margin-bottom">
+                                <div class="row responsive thin">
                                 <?php endif; ?>
 
                             <?php endforeach; ?>
@@ -112,12 +112,12 @@ $events = [
 
                             <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
-                            <div class="row thin">
-                                <div class="col span-6">
+                            <div class="row responsive thin">
+                                <div class="col span-6 margin-bottom">
                                     <label data-ls-attrs="for=httpUser-{{webhook.$id}}">User</label>
                                     <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{webhook.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                 </div>
-                                <div class="col span-6">
+                                <div class="col span-6 margin-bottom">
                                     <label data-ls-attrs="for=httpPass-{{webhook.$id}}">Password</label>
                                     <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
@@ -186,14 +186,14 @@ $events = [
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
 
                 <label for="events">Events</label>
-                <div class="row thin margin-bottom">
+                <div class="row responsive thin">
                     <?php foreach ($events as $i => $event) : ?>
-                        <div class="col span-6">
+                        <div class="col span-6 text-one-liner margin-bottom text-height-large">
                             <input type="checkbox" name="events" value="<?php echo $event; ?>" /> <?php echo $event; ?>
                         </div>
                         <?php if (($i + 1) % 2 === 0) : ?>
                         </div>
-                        <div class="row thin margin-bottom">
+                        <div class="row responsive thin">
                         <?php endif; ?>
 
                     <?php endforeach; ?>
@@ -224,12 +224,12 @@ $events = [
 
                     <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
-                    <div class="row thin">
-                        <div class="col span-6">
+                    <div class="row responsive thin">
+                        <div class="col span-6 margin-bottom">
                             <label for="httpUser">User</label>
                             <input type="text" class="full-width margin-bottom-no" id="httpUser" name="httpUser" autocomplete="off" />
                         </div>
-                        <div class="col span-6">
+                        <div class="col span-6 margin-bottom">
                             <label for="httpPass">Password</label>
                             <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>

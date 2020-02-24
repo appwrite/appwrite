@@ -33,6 +33,7 @@
   border-radius: 10px;
   box-sizing: border-box;
   text-align: @config-start;
+  white-space: initial;
 
   @media @phones, @tablets {
     width: ~"calc(100% - 20px)";
@@ -97,10 +98,27 @@
     border-top: solid 1px var(--config-border-color);
     padding: 30px 30px 0 30px;
     margin: 0 -30px;
+
+    &.strip {
+      border: none;
+      padding: 0;
+      margin: 0;
+    }
   }
 
   .separator {
     margin: 20px -30px;
+  }
+
+  ol, ul {
+    .func-padding-start(40px);
+    
+    li {
+      .margin-bottom;
+      &:before {
+        position: absolute;
+      }
+    }
   }
 
   .info {
@@ -110,20 +128,6 @@
     color: var(--config-modal-note-color);
     border-top: solid 1px var(--config-modal-note-border);
     border-bottom: solid 1px var(--config-modal-note-border);
-
-    ol {
-      .func-padding-start(40px);
-
-      p {
-        display: inline-block;
-      }
-
-      li {
-        &:before {
-          position: absolute;
-        }
-      }
-    }
   }
 
   button.close {
