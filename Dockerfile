@@ -129,6 +129,9 @@ COPY ./docker/supervisord.conf /etc/supervisord.conf
 COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod 775 /entrypoint.sh
 
+# Letsencrypt Permissions
+RUN chmod 755 /etc/letsencrypt/live/
+
 EXPOSE 80
 
 WORKDIR /usr/share/nginx/html
