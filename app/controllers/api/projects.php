@@ -1391,10 +1391,10 @@ $utopia->get('/v1/projects/x/certs')
         function () use ($response, $consoleDB) {
             \Database\Validator\Authorization::disable();
             $results = $consoleDB->getCollection([
-                'limit' => 50,
+                'limit' => 2000,
                 'offset' => 0,
                 'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
+                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
                 ],
             ]);
             \Database\Validator\Authorization::reset();
