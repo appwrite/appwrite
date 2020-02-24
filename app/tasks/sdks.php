@@ -151,6 +151,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 $gitUrl = $language['gitUrl'];
+
+                if(empty($gitUrl)) {
+                    continue;
+                }
+
                 $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
 
                 exec('rm -rf '.$target.' && \

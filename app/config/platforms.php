@@ -145,6 +145,7 @@ return [
     ],
 
     APP_PLATFORM_CONSOLE => [
+        'key' => APP_PLATFORM_CONSOLE,
         'name' => 'Console',
         'enabled' => false,
         'beta' => false,
@@ -159,7 +160,7 @@ return [
                 'family' => APP_PLATFORM_CONSOLE,
                 'prism' => 'console',
                 'source' => realpath(__DIR__ . '/../sdks/console-javascript'),
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-console.git',
+                'gitUrl' => null,
                 'gitRepoName' => 'sdk-for-console',
                 'gitUserName' => 'appwrite',
             ],
