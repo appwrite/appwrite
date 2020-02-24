@@ -95,7 +95,7 @@ class CertificatesV1
         }
         
         if(!rename('/etc/letsencrypt/live/'.$domain->get(), APP_STORAGE_CERTIFICATES.'/'.$domain->get())) {
-            throw new Exception('Failed to copy certificate: '.$staging.json_encode($response));
+            throw new Exception('Failed to copy certificate: '.json_encode($response));
         }
 
         $certificate = array_merge($certificate, [
@@ -107,7 +107,7 @@ class CertificatesV1
             'domain' => $domain->get(),
             'issueDate' => time(),
             'attempts' => 0,
-            'log' => $staging.json_encode($response),
+            'log' => json_encode($response),
         ]);
 
         $certificate = $consoleDB->createDocument($certificate);
