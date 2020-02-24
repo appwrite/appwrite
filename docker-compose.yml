@@ -38,7 +38,7 @@ services:
     - _APP_ENV=development
     - _APP_OPTIONS_ABUSE=disabled
     - _APP_OPENSSL_KEY_V1=your-secret-key
-    - _APP_DOMAINS_TARGET=new.appwrite.io
+    - _APP_DOMAINS_TARGET=custom.appwrite.io
     - _APP_REDIS_HOST=redis
     - _APP_REDIS_PORT=6379
     - _APP_DB_HOST=mariadb
@@ -78,6 +78,12 @@ services:
     - MAILNAME=appwrite
     - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
 
+  redis:
+    image: redis:5.0
+    restart: unless-stopped
+    networks:
+    - appwrite
+
   clamav:
     image: appwrite/clamav:1.0.7
     restart: unless-stopped
@@ -85,12 +91,6 @@ services:
     - appwrite
     volumes:
     - appwrite-uploads:/storage/uploads
-
-  redis:
-    image: redis:5.0
-    restart: unless-stopped
-    networks:
-    - appwrite
 
   influxdb:
     image: influxdb:1.6
