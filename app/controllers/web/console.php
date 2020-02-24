@@ -123,7 +123,8 @@ $utopia->get('/console/settings')
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 
         $page
-            ->setParam('customDomains', ($target->isKnown() && !$target->isTest()))
+            ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
+            ->setParam('customDomainsTarget', $target->get())
         ;
 
         $layout
