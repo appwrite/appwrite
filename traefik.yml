@@ -2,7 +2,7 @@ tls:
     certificates:
       - certFile: /certs/default.crt
         keyFile: /certs/default.key
-      - certFile: /storage/certificates/cert.pem
+      - certFile: /storage/certificates/fullchain.pem
         keyFile: /storage/certificates/privkey.pem
 
 # tls:
