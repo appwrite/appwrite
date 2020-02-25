@@ -11,6 +11,8 @@ tls:
     certificates:
       - certFile: /certs/default.crt
         keyFile: /certs/default.key
+      - certFile: /storage/certificates/cert.pem
+        keyFile: /storage/certificates/privkey.pem
 
 # tls:
 #     certificates:
