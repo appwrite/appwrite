@@ -22,6 +22,7 @@ services:
     - ./docker/ssl/cert.pem:/certs/default.crt:ro
     - ./docker/ssl/key.pem:/certs/default.key:ro
     - appwrite-traefik:/traefik
+    - appwrite-certificates:/storage/certificates:rw
     networks:
     - gateway
     - appwrite
