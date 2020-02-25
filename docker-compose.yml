@@ -37,10 +37,7 @@ services:
     networks:
       - appwrite
     labels:
-      - traefik.http.routers.appwrite.entrypoints=web
       - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
-      #- traefik.http.routers.appwrite.middlewares=demoHeader
-      - traefik.http.routers.appwrite-secure.entrypoints=websecure
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
     volumes:
