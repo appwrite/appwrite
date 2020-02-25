@@ -93,6 +93,14 @@ class CertificatesV1
         if(!$response) {
             throw new Exception('Failed to issue a certificate');
         }
+
+        $path = APP_STORAGE_CERTIFICATES.'/'.$domain->get();
+
+        if(!is_readable($path)) {
+            if (!mkdir($path, 0755, true)) {
+                throw new Exception('Failed to create path...');
+            }
+        }
         
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
             throw new Exception('Failed to rename certificate cert.pem: '.json_encode($response));
