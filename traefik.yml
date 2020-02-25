@@ -1,12 +1,3 @@
-xhttp:
-    middlewares:
-      demoHeader:
-        headers:
-          customRequestHeaders:
-            X-Script-Name: "test2"
-          customResponseHeaders:
-            X-Custom-Response-Header: "value2"
-
 tls:
     certificates:
       - certFile: /certs/default.crt
