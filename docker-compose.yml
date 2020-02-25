@@ -1,6 +1,31 @@
 version: '3'
 
 services:
+  traefik:
+    image: traefik:v2.1.4
+    command:
+    - --log.level=DEBUG
+    - --api.insecure=true
+    - --providers.file.directory=/etc/traefik/dynamic_conf
+    - --providers.file.watch=true
+    - --providers.docker=true
+    - --entrypoints.web.address=:80
+    - --entrypoints.websecure.address=:443
+    - --accesslog=true
+    ports:
+    - 80:80
+    - 443:443
+    - 8080:8080
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./traefik.yml:/etc/traefik/dynamic_conf/conf.yml:ro
+    - ./docker/ssl/cert.pem:/certs/default.crt:ro
+    - ./docker/ssl/key.pem:/certs/default.key:ro
+    - appwrite-traefik:/traefik
+    networks:
+    - gateway
+    - appwrite
+  
   appwrite:
     container_name: appwrite
     build:
@@ -10,7 +35,14 @@ services:
         - VERSION=dev
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
+    labels:
+      - traefik.http.routers.appwrite.entrypoints=web
+      - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
+      #- traefik.http.routers.appwrite.middlewares=demoHeader
+      - traefik.http.routers.appwrite-secure.entrypoints=websecure
+      - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite-secure.tls=true
     volumes:
     - appwrite-uploads:/storage/uploads:rw
     - appwrite-cache:/storage/cache:rw
@@ -23,9 +55,6 @@ services:
     - ./public:/usr/share/nginx/html/public
     - ./src:/usr/share/nginx/html/src
     - ./docker/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-    - "80:80"
-    - "443:443"
     depends_on:
     - mariadb
     - redis
@@ -128,6 +157,7 @@ services:
     - appwrite
 
 networks:
+  gateway:
   appwrite:
 
 volumes:
@@ -136,3 +166,4 @@ volumes:
   appwrite-uploads:
   appwrite-certificates:
   appwrite-influxdb:
+  appwrite-traefik:

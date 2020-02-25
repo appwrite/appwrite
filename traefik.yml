@@ -1,0 +1,20 @@
+xhttp:
+    middlewares:
+      demoHeader:
+        headers:
+          customRequestHeaders:
+            X-Script-Name: "test2"
+          customResponseHeaders:
+            X-Custom-Response-Header: "value2"
+
+tls:
+    certificates:
+      - certFile: /certs/default.crt
+        keyFile: /certs/default.key
+
+# tls:
+#     certificates:
+#         - certFile: /path/to/domain.cert
+#         keyFile: /path/to/domain.key
+#         - certFile: /path/to/other-domain.cert
+#         keyFile: /path/to/other-domain.key

@@ -94,19 +94,19 @@ class CertificatesV1
             throw new Exception('Failed to issue a certificate');
         }
         
-        if(!@rename('/etc/letsencrypt/live/test.appwrite.org/cert.pem', APP_STORAGE_CERTIFICATES.'/cert.pem')) {
+        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
             throw new Exception('Failed to copy certificate cert.pem: '.json_encode($response));
         }
 
-        if(!@rename('/etc/letsencrypt/live/test.appwrite.org/chain.pem', APP_STORAGE_CERTIFICATES.'/chain.pem')) {
+        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
             throw new Exception('Failed to copy certificate chain.pem: '.json_encode($response));
         }
 
-        if(!@rename('/etc/letsencrypt/live/test.appwrite.org/fullchain.pem', APP_STORAGE_CERTIFICATES.'/fullchain.pem')) {
+        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
             throw new Exception('Failed to copy certificate fullchain.pem: '.json_encode($response));
         }
 
-        if(!@rename('/etc/letsencrypt/live/test.appwrite.org/privkey.pem', APP_STORAGE_CERTIFICATES.'/privkey.pem')) {
+        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
             throw new Exception('Failed to copy certificate privkey.pem: '.json_encode($response));
         }
 
