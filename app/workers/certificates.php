@@ -95,19 +95,19 @@ class CertificatesV1
         }
         
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            throw new Exception('Failed to copy certificate cert.pem: '.json_encode($response));
+            throw new Exception('Failed to rename certificate cert.pem: '.json_encode($response));
         }
 
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
-            throw new Exception('Failed to copy certificate chain.pem: '.json_encode($response));
+            throw new Exception('Failed to rename certificate chain.pem: '.json_encode($response));
         }
 
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
-            throw new Exception('Failed to copy certificate fullchain.pem: '.json_encode($response));
+            throw new Exception('Failed to rename certificate fullchain.pem: '.json_encode($response));
         }
 
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
-            throw new Exception('Failed to copy certificate privkey.pem: '.json_encode($response));
+            throw new Exception('Failed to rename certificate privkey.pem: '.json_encode($response));
         }
 
         $certificate = array_merge($certificate, [

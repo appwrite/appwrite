@@ -130,7 +130,7 @@ COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod 775 /entrypoint.sh
 
 # Letsencrypt Permissions
-RUN mkdir -p /etc/letsencrypt/live/ && chmod 755 /etc/letsencrypt/live/
+RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 EXPOSE 80
 
