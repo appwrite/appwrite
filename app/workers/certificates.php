@@ -146,6 +146,16 @@ class CertificatesV1
         if(!$document) {
             throw new Exception('Failed saving domain to DB');
         }
+        
+        $config = 
+"tls:
+  certificates:
+    - certFile: /storage/certificates/{$domain->get()}/fullchain.pem
+      keyFile: /storage/certificates/{$domain->get()}/privkey.pem";
+
+        if(!file_put_contents(APP_STORAGE_CONFIG.'/'.$domain->get().'.yml', $config)) {
+            throw new Exception('Failed to save SSL configuration');
+        }
 
         Authorization::reset();
     }

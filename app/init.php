@@ -29,6 +29,7 @@ const APP_VERSION_STABLE = '0.5.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
+const APP_STORAGE_CONFIG = '/storage/config';
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite_io';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite_io';
 const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';

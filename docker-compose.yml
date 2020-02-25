@@ -6,7 +6,7 @@ services:
     command:
       - --log.level=DEBUG
       - --api.insecure=true
-      - --providers.file.directory=/etc/traefik/dynamic_conf
+      - --providers.file.directory=/storage/config
       - --providers.file.watch=true
       - --providers.docker=true
       - --entrypoints.web.address=:80
@@ -18,11 +18,8 @@ services:
       - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik.yml:/etc/traefik/dynamic_conf/conf.yml:ro
-      - ./docker/ssl/cert.pem:/certs/default.crt:ro
-      - ./docker/ssl/key.pem:/certs/default.key:ro
-      - appwrite-traefik:/traefik
-      - appwrite-certificates:/storage/certificates:rw
+      - appwrite-config:/storage/config:ro
+      - appwrite-certificates:/storage/certificates:ro
     depends_on:
      - appwrite
     networks:
@@ -46,6 +43,7 @@ services:
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
+      - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
       - ./tests:/usr/share/nginx/html/tests
@@ -166,4 +164,4 @@ volumes:
   appwrite-uploads:
   appwrite-certificates:
   appwrite-influxdb:
-  appwrite-traefik:
+  appwrite-config:
