@@ -1,28 +1,29 @@
 <header class="clear">
-    <a href="/console" class="logo">
+    <a href="/console" class="logo pull-start">
         <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" />
         <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" />
     </a>
 
-    &nbsp;&nbsp;&nbsp;
-    <div class="list pull-start project-only">
-        <label>
-            <select
-                data-xanalytics-event="change"
-                data-xanalytics-category="console/header"
-                data-xanalytics-label="Project Switch"
-                data-switch
-                data-ls-bind="{{router.params.project}}"
-                data-unsync="1"
-                data-ls-loop="projects" data-ls-as="option">
-                <option data-ls-attrs="value={{option.$id}}" data-ls-bind="{{option.name}}"></option>
-            </select>
-        </label>
+    <div class="change-project pull-start">
+        <div class="list project-only margin-end-small">
+            <label class="margin-bottom-no">
+                <select class="margin-bottom-no"
+                    data-xanalytics-event="change"
+                    data-xanalytics-category="console/header"
+                    data-xanalytics-label="Project Switch"
+                    data-switch
+                    data-ls-bind="{{router.params.project}}"
+                    data-unsync="1"
+                    data-ls-loop="projects" data-ls-as="option">
+                    <option data-ls-attrs="value={{option.$id}}" data-ls-bind="{{option.name}}"></option>
+                </select>
+            </label>
+        </div>
+
+        <button style="overflow: visible;" class="project-only setup-new tooltip round down" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
     </div>
 
-    <button style="overflow: visible;" class="project-only setup-new tooltip round down" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
-
-    <div class="account-box clear pull-end"
+    <div class="account-box pull-end"
         data-service="account.get"
         data-name="account"
         data-scope="console"
@@ -32,7 +33,7 @@
         data-failure="trigger"
         data-failure-param-trigger-events="account.deleteSession">
 
-        <div class="pull-end console-back">
+        <div class="console-back">
             <a href="/console">Back to Console &nbsp;<i class="icon-right-open"></i></a>
         </div>
 

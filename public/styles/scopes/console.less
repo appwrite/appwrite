@@ -724,7 +724,15 @@
 
   @media @phones, @tablets {
     >header {
-      display: none;
+      width: ~"calc(100% - 30px)"!important;
+      margin: 0 -30px;
+      padding: 15px;
+
+      nav {
+        width: 100%;
+        display: none!important;
+        visibility: hidden;
+      }
     }
 
     >footer {
@@ -734,14 +742,52 @@
     }
 
     body {
-      height: 100%!important;
+      height: "calc(100% - 70px)"!important;
       width: ~"calc(100% - 60px)"!important;
-      padding: 0 30px!important;
+      padding: 70px 30px 0 30px!important;
     }
 
     .cover {
       padding: 25px 30px;
       margin: 0 -30px;
+    }
+  }
+
+  @media @phones {
+
+    body {
+      height: "calc(100% - 70px)"!important;
+      width: ~"calc(100% - 40px)"!important;
+      padding: 70px 20px 0 20px!important;
+    }
+
+    .cover {
+      padding: 20px 20px;
+      margin: 0 -20px;
+    }
+
+    >header {
+      margin: 0 -20px;
+
+      .list {
+        width: 175px;
+        font-size: 14px;
+      }
+
+      .switch-theme {
+        display: none;
+      }
+
+      .account {
+        .name {
+          display: none;
+        }
+      }
+    }
+
+    >footer {
+      margin: 50px -20px 0 -20px!important;
+      padding: 0 20px 20px 20px;
     }
   }
 }

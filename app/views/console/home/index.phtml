@@ -133,7 +133,9 @@ $graph = $this->getParam('graph', false);
         </div>
     </div>
 
-    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
+    <div class="pull-end desktops-only tablets-only">
+        <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your API Keys</a>
+    </div>
 
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" data-blur="1" tabindex="1">
         <ul>

@@ -15,8 +15,21 @@
                 data-failure="trigger"
                 data-failure-param-trigger-events="account.deleteSession">
 
-                <h2><span class="number"><i class="icon-user"></i></span>Overview</h2>
-                <div class="row responsive">
+                <h2 class="margin-bottom"><span class="number"><i class="icon-user"></i></span>Overview</h2>
+
+                <div class="row responsive force-reverse">
+                    <div class="col span-3 text-align-center margin-bottom">
+                        <img src="" data-ls-attrs="src={{account|gravatar}}" data-size="200" height="150" alt="User Avatar" class="avatar huge huge margin-bottom-small" />
+
+                        <br />
+
+                        <a href="https://en.gravatar.com/gravatars/new/" rel="noopener" class="button margin-bottom-small" target="_blank"><i class="icon-upload"></i> Upload</a>
+
+                        <br />
+
+                        <small class="text-size-small">(via <a href="https://gravatar.com/" target="_blank" rel="noopener">gravatar.com <i class="icon-link-ext"></i></a>)</small>
+                    </div>
+
                     <div class="col span-9">
                         <div class="box margin-bottom-xl">
                             <div>
@@ -131,18 +144,6 @@
                             </form>
                         </div>
 
-                    </div>
-
-                    <div class="col span-3 text-align-center">
-                        <img src="" data-ls-attrs="src={{account|gravatar}}" data-size="200" height="150" alt="User Avatar" class="avatar huge huge margin-bottom-small" />
-
-                        <br />
-
-                        <a href="https://en.gravatar.com/gravatars/new/" rel="noopener" class="button margin-bottom-small" target="_blank"><i class="icon-upload"></i> Upload</a>
-
-                        <br />
-
-                        <small class="text-size-small">(via <a href="https://gravatar.com/" target="_blank" rel="noopener">gravatar.com <i class="icon-link-ext"></i></a>)</small>
                     </div>
                 </div>
 

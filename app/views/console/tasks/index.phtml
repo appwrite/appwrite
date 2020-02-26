@@ -19,7 +19,7 @@
     </div>
 
     <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.length}}">
-        <table class="full">
+        <table class="full vertical">
             <thead>
                 <tr>
                     <th width="220">Name</th>
@@ -45,7 +45,7 @@
 
                         <a data-ls-attrs="href={{task.httpUrl}}" data-ls-bind="{{task.httpUrl}}" target="_blank" class="text-one-liner"></a>
                     </td>
-                    <td style="vertical-align: middle">
+                    <td data-title="" style="vertical-align: middle">
                         <span data-ls-if="'play' === {{task.status}}">
                             <span class="tag green"><i class="icon-play"></i> Running &nbsp;</span>
                         </span>
@@ -53,17 +53,17 @@
                             <span class="tag red"><i class="icon-pause"></i> Paused &nbsp;</span>
                         </span>
                     </td>
-                    <td style="vertical-align: middle">
+                    <td data-title="Next Run:" style="vertical-align: middle">
                         <small data-ls-bind="{{task.next|date-time}}"></small>
                     </td>
-                    <td style="vertical-align: middle">
-                        <div data-ls-if="undefined !== {{task.previous}}">
+                    <td data-title="Previous Run:" style="vertical-align: middle">
+                        <span data-ls-if="undefined !== {{task.previous}}">
                             <small data-ls-bind="{{task.previous|date-time}}"></small>
 
-                            <div data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
+                            <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
                                 <small data-ls-bind="({{task.delay|ms2hum}} Delay)"></small>
-                            </div>
-                        </div>
+                            </span>
+                        </span>
                         <small data-ls-if="undefined === {{task.previous}}">
                             None.
                         </small>
