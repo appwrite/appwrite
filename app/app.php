@@ -3,7 +3,7 @@
 // Init
 require_once __DIR__.'/init.php';
 
-global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service;
+global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service, $protocol;
 
 use Utopia\App;
 use Utopia\Request;
@@ -76,6 +76,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
         ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version')
+        ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
     ;
@@ -234,7 +235,8 @@ $utopia->options(function () use ($request, $response, $domain, $project) {
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, X-Fallback-Cookies')
+        ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
         ->send();
@@ -451,7 +453,7 @@ $utopia->get('/v1/open-api-2.json')
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
-        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services) {
+        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services, $protocol) {
             function fromCamelCase($input)
             {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -586,7 +588,7 @@ $utopia->get('/v1/open-api-2.json')
                 ],
                 'externalDocs' => [
                     'description' => 'Full API docs, specs and tutorials',
-                    'url' => $request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/docs',
+                    'url' => $protocol.'://'.$domain.'/docs',
                 ],
             ];
 

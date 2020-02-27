@@ -1,7 +1,7 @@
 <?php
 
 global $utopia, $register, $request, $response, $user, $audit,
-    $webhook, $project, $domain, $projectDB, $providers, $clients;
+    $webhook, $project, $domain, $projectDB, $providers, $clients, $protocol;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -150,7 +150,7 @@ $utopia->post('/v1/account/sessions')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->action(
-        function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook) {
+        function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook, $protocol) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -212,8 +212,9 @@ $utopia->post('/v1/account/sessions')
             ;
             
             $response
-                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
+                ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($session->getArrayCopy(['$id', 'type', 'expire']))
             ;
@@ -237,8 +238,8 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
     ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
-        function ($provider, $success, $failure) use ($response, $request, $project) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        function ($provider, $success, $failure) use ($response, $request, $project, $protocol) {
+            $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $appId = $project->getAttribute('usersOauth2'.ucfirst($provider).'Appid', '');
             $appSecret = $project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}');
 
@@ -275,8 +276,8 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
     ->action(
-        function ($projectId, $provider, $code, $state) use ($response, $request, $domain) {
-            $response->redirect($request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+        function ($projectId, $provider, $code, $state) use ($response, $request, $domain, $protocol) {
+            $response->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
                 .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
@@ -293,8 +294,8 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
-        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
-            $callback = $request->getServer('REQUEST_SCHEME', 'https').'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit, $protocol) {
+            $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
 
@@ -443,8 +444,9 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
+                ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ->redirect($state['success'])
             ;
         }
@@ -810,7 +812,7 @@ $utopia->delete('/v1/account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
     ->action(
-        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
+        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'status' => Auth::USER_STATUS_BLOCKED,
             ]));
@@ -842,8 +844,9 @@ $utopia->delete('/v1/account')
             ;
 
             $response
-                ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
+                ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
+                ->addHeader('X-Fallback-Cookies', json_encode([]))
                 ->noContent()
             ;
         }
@@ -860,7 +863,7 @@ $utopia->delete('/v1/account/sessions/:sessionId')
     ->label('abuse-limit', 100)
     ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(
-        function ($sessionId) use ($response, $request, $user, $projectDB, $webhook, $audit) {
+        function ($sessionId) use ($response, $user, $projectDB, $webhook, $audit, $protocol) {
             $sessionId = ($sessionId === 'current')
                     ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
                     : $sessionId;
@@ -888,8 +891,9 @@ $utopia->delete('/v1/account/sessions/:sessionId')
 
                     if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                         $response
-                            ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                            ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                            ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
+                            ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
+                            ->addHeader('X-Fallback-Cookies', json_encode([]))
                         ;
                     }
 
@@ -911,7 +915,7 @@ $utopia->delete('/v1/account/sessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
     ->action(
-        function () use ($response, $request, $user, $projectDB, $audit, $webhook) {
+        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol) {
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
@@ -934,8 +938,9 @@ $utopia->delete('/v1/account/sessions')
 
                 if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $response
-                        ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, null)
-                        ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $request->getServer('REQUEST_SCHEME', 'https')), true, COOKIE_SAMESITE)
+                        ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
+                        ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
+                        ->addHeader('X-Fallback-Cookies', json_encode([]))
                     ;
                 }
             }

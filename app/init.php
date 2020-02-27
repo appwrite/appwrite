@@ -55,8 +55,8 @@ $collections = include __DIR__.'/../app/config/collections.php'; // Collections 
 $redisHost = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort = $request->getServer('_APP_REDIS_PORT', '');
 $utopia = new App('Asia/Tel_Aviv', $env);
-$scheme = $request->getServer('REQUEST_SCHEME', '');
-$port = (string) parse_url($scheme.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT);
+$protocol = $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https'));
+$port = (string) parse_url($protocol.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT);
 
 Resque::setBackend($redisHost.':'.$redisPort);
 
@@ -67,7 +67,7 @@ define('COOKIE_DOMAIN',
         (filter_var($request->getServer('HTTP_HOST', null), FILTER_VALIDATE_IP) !== false)
     )
         ? null
-        : '.'.parse_url($scheme.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
+        : '.'.parse_url($protocol.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
 define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
@@ -240,7 +240,18 @@ if (APP_MODE_ADMIN === $mode) {
 $session = Auth::decodeSession(
     $request->getCookie(Auth::$cookieName, // Get sessions
         $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+                $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+
+// Get fallback session from clients who block 3rd-party cookies
+$response->addHeader('X-Debug-Fallback', 'false');
+
+if(empty($session['id']) && empty($session['secret'])) {
+    $response->addHeader('X-Debug-Fallback', 'true');
+    $fallback = $request->getHeader('X-Fallback-Cookies', null);
+    $fallback = json_decode($fallback, true);
+    $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+}
+
 Auth::$unique = $session['id'];
 Auth::$secret = $session['secret'];
 
