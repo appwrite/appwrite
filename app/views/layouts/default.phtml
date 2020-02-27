@@ -70,7 +70,7 @@ if(!empty($platforms)) {
 
         var APP_ENV = {
             NAME: '<?php echo APP_NAME; ?>',
-            VERSION: '<?php echo $version; ?>',
+            VERSION: '<?php echo $version; ?>/<?php echo $buster; ?>',
             PROTOCOL: '<?php echo $protocol; ?>',
             DOMAIN: '<?php echo $domain; ?>',
             HOME: '<?php echo $this->escape($this->getParam('home')); ?>',
