@@ -28,38 +28,48 @@ include_once __DIR__ . '/../shared/api.php';
 Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
-    'default' => 'default.gif',
+    'default' => __DIR__.'/../../config/files/none.png',
+    
+    // Video Files
+    'video/mp4' => __DIR__.'/../../config/files/video.png',
+    'video/x-flv' => __DIR__.'/../../config/files/video.png',
+    'application/x-mpegURL' => __DIR__.'/../../config/files/video.png',
+    'video/MP2T' => __DIR__.'/../../config/files/video.png',
+    'video/3gpp' => __DIR__.'/../../config/files/video.png',
+    'video/quicktime' => __DIR__.'/../../config/files/video.png',
+    'video/x-msvideo' => __DIR__.'/../../config/files/video.png',
+    'video/x-ms-wmv' => __DIR__.'/../../config/files/video.png',
 
-    // Microsoft Word
-    'application/msword' => 'word.gif',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'word.gif',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.template' => 'word.gif',
-    'application/vnd.ms-word.document.macroEnabled.12' => 'word.gif',
+    // // Microsoft Word
+    // 'application/msword' => 'word.gif',
+    // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'word.gif',
+    // 'application/vnd.openxmlformats-officedocument.wordprocessingml.template' => 'word.gif',
+    // 'application/vnd.ms-word.document.macroEnabled.12' => 'word.gif',
 
-    // Microsoft Excel
-    'application/vnd.ms-excel' => 'excel.gif',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel.gif',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.template' => 'excel.gif',
-    'application/vnd.ms-excel.sheet.macroEnabled.12' => 'excel.gif',
-    'application/vnd.ms-excel.template.macroEnabled.12' => 'excel.gif',
-    'application/vnd.ms-excel.addin.macroEnabled.12' => 'excel.gif',
-    'application/vnd.ms-excel.sheet.binary.macroEnabled.12' => 'excel.gif',
+    // // Microsoft Excel
+    // 'application/vnd.ms-excel' => 'excel.gif',
+    // 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel.gif',
+    // 'application/vnd.openxmlformats-officedocument.spreadsheetml.template' => 'excel.gif',
+    // 'application/vnd.ms-excel.sheet.macroEnabled.12' => 'excel.gif',
+    // 'application/vnd.ms-excel.template.macroEnabled.12' => 'excel.gif',
+    // 'application/vnd.ms-excel.addin.macroEnabled.12' => 'excel.gif',
+    // 'application/vnd.ms-excel.sheet.binary.macroEnabled.12' => 'excel.gif',
 
-    // Microsoft Power Point
-    'application/vnd.ms-powerpoint' => 'powerpoint.gif',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'powerpoint.gif',
-    'application/vnd.openxmlformats-officedocument.presentationml.template' => 'powerpoint.gif',
-    'application/vnd.openxmlformats-officedocument.presentationml.slideshow' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.addin.macroEnabled.12' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.presentation.macroEnabled.12' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.template.macroEnabled.12' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' => 'powerpoint.gif',
+    // // Microsoft Power Point
+    // 'application/vnd.ms-powerpoint' => 'powerpoint.gif',
+    // 'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'powerpoint.gif',
+    // 'application/vnd.openxmlformats-officedocument.presentationml.template' => 'powerpoint.gif',
+    // 'application/vnd.openxmlformats-officedocument.presentationml.slideshow' => 'powerpoint.gif',
+    // 'application/vnd.ms-powerpoint.addin.macroEnabled.12' => 'powerpoint.gif',
+    // 'application/vnd.ms-powerpoint.presentation.macroEnabled.12' => 'powerpoint.gif',
+    // 'application/vnd.ms-powerpoint.template.macroEnabled.12' => 'powerpoint.gif',
+    // 'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' => 'powerpoint.gif',
 
-    // Microsoft Access
-    'application/vnd.ms-access' => 'access.gif',
+    // // Microsoft Access
+    // 'application/vnd.ms-access' => 'access.gif',
 
     // Adobe PDF
-    'application/pdf' => 'pdf.gif',
+    'application/pdf' =>  __DIR__.'/../../config/files/pdf.png',
 ];
 
 $inputs = [
@@ -83,6 +93,17 @@ $mimes = [
     'image/gif',
     'image/png',
     'image/webp',
+
+    // Video Files
+    'video/mp4',
+    'video/x-flv',
+    'application/x-mpegURL',
+    'video/MP2T',
+    'video/3gpp',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/x-ms-wmv',
+    
 
     // Microsoft Word
     'application/msword',
@@ -346,15 +367,25 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             $path = $file->getAttribute('path');
-            $algorithm = $file->getAttribute('algorithm');
             $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $algorithm = $file->getAttribute('algorithm');
             $cipher = $file->getAttribute('fileOpenSSLCipher');
+            $mime = $file->getAttribute('mimeType');
+
+            if(!in_array($mime, $inputs)) {
+                $path = (array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
+                $algorithm = null;
+                $cipher = null;
+                $background = (empty($background)) ? 'f2f3f5' : $background;
+                $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                $key = md5($path.$width.$height.$quality.$background.$storage.$output);
+            }
 
             $compressor = new GZIP();
             $device = Storage::getDevice('local');
 
             if (!file_exists($path)) {
-                throw new Exception('File not found in '.$path, 404);
+                throw new Exception('File not found', 404);
             }
 
             $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
