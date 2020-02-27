@@ -1,6 +1,9 @@
 <div class="cover margin-bottom-large">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        Tasks
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>Tasks</span>
     </h1>
 </div>
 <div class="zone xl"
@@ -22,10 +25,10 @@
         <table class="full vertical">
             <thead>
                 <tr>
-                    <th width="220">Name</th>
-                    <th></th>
-                    <th width="140">Next Run</th>
-                    <th width="140">Prev. Run</th>
+                    <th width="240">Name</th>
+                    <th width="80"></th>
+                    <th width="120">Next Run</th>
+                    <th width="120">Prev. Run</th>
                     <th></th>
                 </tr>
             </thead>
@@ -33,7 +36,7 @@
                 <tr>
                     <td>
                         <div class="margin-bottom-tiny text-one-liner">
-                            <span data-ls-bind="{{task.name}}"></span>
+                            <span data-ls-attrs="title={{task.name}} ({{task.failures}} errors)" data-ls-bind="{{task.name}}"></span>
 
                             <span data-ls-if="0 === {{task.security}}">
                                 &nbsp; <span class="text-danger">SSL/TLS Disabled</span>
@@ -53,12 +56,12 @@
                             <span class="tag red"><i class="icon-pause"></i> Paused &nbsp;</span>
                         </span>
                     </td>
-                    <td data-title="Next Run:" style="vertical-align: middle">
-                        <small data-ls-bind="{{task.next|date-time}}"></small>
+                    <td data-title="Next Run:" style="vertical-align: middle" class="text-size-small text-fade">
+                        <span data-ls-bind="{{task.next|date-time}}"></span>
                     </td>
-                    <td data-title="Previous Run:" style="vertical-align: middle">
+                    <td data-title="Previous Run:" style="vertical-align: middle" class="text-size-small text-fade">
                         <span data-ls-if="undefined !== {{task.previous}}">
-                            <small data-ls-bind="{{task.previous|date-time}}"></small>
+                            <span data-ls-bind="{{task.previous|date-time}}"></span>
 
                             <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
                                 <small data-ls-bind="({{task.delay|ms2hum}} Delay)"></small>
@@ -68,8 +71,8 @@
                             None.
                         </small>
                     </td>
-                    <td>
-                        <div data-ui-modal class="modal box close" data-button-text="" data-button-class="pull-end reverse round" data-button-icon="icon-cog">
+                    <td data-title="">
+                        <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="task-update-{{task.$id}}">
                             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Update Task</h1>
@@ -194,27 +197,32 @@
                                 <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </form>
 
-                            <form class="margin-top"
-                                data-analytics-event="submit"
-                                data-analytics-category="console"
-                                data-analytics-label="Delete Project Task"
-                                data-service="projects.deleteTask"
-                                data-scope="console"
-                                data-event="submit"
-                                data-confirm="Are you sure you want to delete this task?"
-                                data-success="alert,trigger"
-                                data-success-param-alert-text="Deleted task successfully"
-                                data-success-param-trigger-events="projects.deleteTask"
-                                data-failure="alert"
-                                data-failure-param-alert-text="Failed to delete task"
-                                data-failure-param-alert-classname="error">
-
-                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-                                <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
-
-                                <button class="danger fill">Delete</button>
-                            </form>
                         </div>
+
+                        <form
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Delete Project Task"
+                            data-service="projects.deleteTask"
+                            data-scope="console"
+                            data-event="task-delete-{{task.$id}}"
+                            data-confirm="Are you sure you want to delete this task?"
+                            data-success="alert,trigger"
+                            data-success-param-alert-text="Deleted task successfully"
+                            data-success-param-trigger-events="projects.deleteTask"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to delete task"
+                            data-failure-param-alert-classname="error">
+
+                            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                            <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
+                        </form>
+
+                        <button class="pull-end margin-start-small reverse round desktops-only" data-ls-ui-trigger="task-update-{{task.$id}}"><i class="icon-cog"></i></button>
+                        <button class="pull-end reverse danger round desktops-only" data-ls-ui-trigger="task-delete-{{task.$id}}"><i class="icon-trash"></i></button>
+
+                        <button class="link pull-start margin-end-small tablets-only phones-only" data-ls-ui-trigger="task-update-{{task.$id}}">Update</button>
+                        <button class="link pull-start margin-end-small text-danger tablets-only phones-only" data-ls-ui-trigger="task-delete-{{task.$id}}">Delete</button>
                     </td>
                 </tr>
             </tbody>

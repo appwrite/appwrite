@@ -5,8 +5,11 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 
 ?>
 <div class="cover">
-    <h1 class="zone xl margin-bottom-xl margin-top">
-        Settings
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>Settings</span>
     </h1>
 </div>
 
@@ -315,6 +318,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 
                                     <label for="name">Domain Name</label>
                                     <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" title="Enter a valid domain name" pattern="^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$" />
+                                    
+                                    <hr />
 
                                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </form>
@@ -407,7 +412,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                         </ul>
                     </div>
 
-                    <div data-ui-modal class="modal close width-medium" data-button-text="Invite Member" data-button-class="">
+                    <div data-ui-modal class="modal box close width-medium" data-button-text="Invite Member" data-button-class="">
                         <button type="button" class="close pull-end" data-ui-modal-close><i class="icon-cancel"></i></button>
 
                         <h1>Invite Member</h1>
@@ -440,6 +445,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array" style="display: none">
                                 <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
                             </select>
+
+                            <hr />
 
                             <div class="clear">
                                 <button>Send Invite</button>

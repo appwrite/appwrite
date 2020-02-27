@@ -1,6 +1,9 @@
 <div class="cover">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        Account
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>Your Account</span>
     </h1>
 </div>
 
@@ -82,9 +85,15 @@
                                         <input name="email" type="email" class="margin-bottom-no" autocomplete="off" placeholder="me@example.com" data-ls-bind="{{account.email}}" required>
                                     </div>
                                     <div class="col span-4">
-                                        <div data-ui-modal class="modal close width-small height-small" data-button-text="Update Email" data-button-class="fill reverse">
+                                        <div data-ui-modal class="modal box close width-small height-small" data-button-text="Update Email" data-button-class="fill reverse">
+                                            <h3>Confirm Password</h3>
+                                            
+                                            <hr />
+
                                             <label>Password</label>
                                             <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
+                                            
+                                            <hr />
 
                                             <button type="submit" class="margin-bottom-no">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                         </div>
@@ -94,7 +103,7 @@
 
                             <hr />
 
-                            <div data-ui-modal class="modal close width-small" data-button-text="Update Password" data-button-class="reverse">
+                            <div data-ui-modal class="modal box close width-small" data-button-text="Update Password" data-button-class="reverse">
                                 <h1>Update Password</h1>
 
                                 <form name="update-password"
@@ -116,6 +125,8 @@
 
                                     <label>New Password</label>
                                     <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required data-forms-password-meter>
+
+                                    <hr />
 
                                     <footer>
                                         <button type="submit">Update Password</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

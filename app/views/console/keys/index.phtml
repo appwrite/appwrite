@@ -2,8 +2,11 @@
 $scopes = $this->getParam('scopes', []);
 ?>
 <div class="cover margin-bottom-large">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        API Keys
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>API Keys</span>
     </h1>
 </div>
 <div class="zone xl"
@@ -94,7 +97,7 @@ $scopes = $this->getParam('scopes', []);
                 <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</small></div>
 
                 <div class="clear">
-                    <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link pull-start margin-end-small margin-top-tiny">
+                    <div data-ui-modal class="modal box close" data-button-text="Show Secret" data-button-class="link pull-start margin-end-small margin-top-tiny">
                         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                         <h1>API Key Secret</h1>
@@ -103,6 +106,9 @@ $scopes = $this->getParam('scopes', []);
                             <div class="input-copy">
                                 <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-bind="{{key.secret}}"></textarea>
                             </div>
+                            
+                            <hr />
+
                             <div>
                                 <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                             </div>

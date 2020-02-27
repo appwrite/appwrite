@@ -713,7 +713,7 @@ label.switch {
   line-height: 42px;
 }
 
-input[type=checkbox].switch {
+.switch {
   width: 67px;
   height: 42px;
   line-height: 42px;
@@ -722,8 +722,19 @@ input[type=checkbox].switch {
   display: block;
   margin: 0;
   padding: 5px;
-  .func-padding-start(30px);
-  .func-padding-end(5px);
+  .func-padding-start(5px);
+  .func-padding-end(30px);
+
+  &.on {
+    background-color: var(--config-color-success);
+    .func-padding-start(30px);
+    .func-padding-end(5px);
+
+    &:focus,
+    &:hover {
+      background: var(--config-color-success);
+    }  
+  }
 
   &:checked {
     background: var(--config-color-focus);
@@ -733,6 +744,8 @@ input[type=checkbox].switch {
 
   &:focus,
   &:hover {
+    background: var(--config-color-fade);
+
     &:after {
       background: #ffffff;
     }
