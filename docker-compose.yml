@@ -48,7 +48,7 @@ services:
       - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
       - ./tests:/usr/share/nginx/html/tests
       - ./app:/usr/share/nginx/html/app
-      - ./vendor:/usr/share/nginx/html/vendor
+      # - ./vendor:/usr/share/nginx/html/vendor
       - ./docs:/usr/share/nginx/html/docs
       - ./public:/usr/share/nginx/html/public
       - ./src:/usr/share/nginx/html/src
@@ -62,7 +62,7 @@ services:
       - telegraf
       - maildev
     environment:
-      - _APP_ENV=production
+      - _APP_ENV=development
       - _APP_OPTIONS_ABUSE=disabled
       - _APP_OPENSSL_KEY_V1=your-secret-key
       - _APP_DOMAINS_TARGET=demo.appwrite.io
