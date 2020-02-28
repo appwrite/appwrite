@@ -166,9 +166,13 @@
                 if (typeof headers !== 'object') {
                     throw new Error('var headers must be of type object');
                 }
-
+                
                 for (i = 0; i < globalParams.length; i++) { // Add global params to URL
                     path = addParam(path, globalParams[i].key, globalParams[i].value);
+                }
+
+                if(window.localStorage && window.localStorage.getItem('cookieFallback')) {
+                    headers['X-Fallback-Cookies'] = window.localStorage.getItem('cookieFallback');
                 }
 
                 for (let key in globalHeaders) { // Add Global Headers
@@ -231,6 +235,13 @@
                                 case 'application/json':
                                     data = JSON.parse(data);
                                     break;
+                            }
+
+                            let cookieFallback = this.getResponseHeader('X-Fallback-Cookies') || '';
+                            
+                            if(window.localStorage && cookieFallback) {
+                                window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
+                                window.localStorage.setItem('cookieFallback', cookieFallback);
                             }
 
                             resolve(data);

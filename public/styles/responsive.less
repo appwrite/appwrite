@@ -22,3 +22,27 @@
     display: inherit!important;
   }
 }
+
+.phones-only-inline {
+  display: none;
+
+  @media @phones {
+    display: inline-block!important;
+  }
+}
+
+.tablets-only-inline {
+  display: none;
+
+  @media @tablets {
+    display: inline-block!important;
+  }
+}
+
+.desktops-only-inline {
+  display: none;
+
+  @media @desktops {
+    display: inline-block!important;
+  }
+}
