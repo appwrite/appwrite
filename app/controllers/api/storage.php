@@ -41,32 +41,29 @@ $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/229
     'video/x-ms-wmv' => __DIR__.'/../../config/files/video.png',
 
     // // Microsoft Word
-    // 'application/msword' => 'word.gif',
-    // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'word.gif',
-    // 'application/vnd.openxmlformats-officedocument.wordprocessingml.template' => 'word.gif',
-    // 'application/vnd.ms-word.document.macroEnabled.12' => 'word.gif',
+    'application/msword' =>  __DIR__.'/../../config/files/word.png',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' =>  __DIR__.'/../../config/files/word.png',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.template' =>  __DIR__.'/../../config/files/word.png',
+    'application/vnd.ms-word.document.macroEnabled.12' =>  __DIR__.'/../../config/files/word.png',
 
     // // Microsoft Excel
-    // 'application/vnd.ms-excel' => 'excel.gif',
-    // 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel.gif',
-    // 'application/vnd.openxmlformats-officedocument.spreadsheetml.template' => 'excel.gif',
-    // 'application/vnd.ms-excel.sheet.macroEnabled.12' => 'excel.gif',
-    // 'application/vnd.ms-excel.template.macroEnabled.12' => 'excel.gif',
-    // 'application/vnd.ms-excel.addin.macroEnabled.12' => 'excel.gif',
-    // 'application/vnd.ms-excel.sheet.binary.macroEnabled.12' => 'excel.gif',
+    'application/vnd.ms-excel' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.template' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.sheet.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.template.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.addin.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.sheet.binary.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
 
     // // Microsoft Power Point
-    // 'application/vnd.ms-powerpoint' => 'powerpoint.gif',
-    // 'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'powerpoint.gif',
-    // 'application/vnd.openxmlformats-officedocument.presentationml.template' => 'powerpoint.gif',
-    // 'application/vnd.openxmlformats-officedocument.presentationml.slideshow' => 'powerpoint.gif',
-    // 'application/vnd.ms-powerpoint.addin.macroEnabled.12' => 'powerpoint.gif',
-    // 'application/vnd.ms-powerpoint.presentation.macroEnabled.12' => 'powerpoint.gif',
-    // 'application/vnd.ms-powerpoint.template.macroEnabled.12' => 'powerpoint.gif',
-    // 'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' => 'powerpoint.gif',
-
-    // // Microsoft Access
-    // 'application/vnd.ms-access' => 'access.gif',
+    'application/vnd.ms-powerpoint' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.openxmlformats-officedocument.presentationml.template' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.openxmlformats-officedocument.presentationml.slideshow' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.addin.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.presentation.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.template.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
 
     // Adobe PDF
     'application/pdf' =>  __DIR__.'/../../config/files/pdf.png',
@@ -104,7 +101,6 @@ $mimes = [
     'video/x-msvideo',
     'video/x-ms-wmv',
     
-
     // Microsoft Word
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
