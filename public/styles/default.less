@@ -1,8 +1,8 @@
 @watch: ~"only screen and (max-width: 260px)";
 @phones: ~"only screen and (max-width: 550px)";
 @tablets: ~"only screen and (min-width: 551px) and (max-width: 1198px)";
-@desktops: ~"only screen and (min-width: 1199) and (max-width: 1300px)";
-@tvs: ~"only screen and (min-width: 1200px)";
+//@desktops: ~"only screen and (min-width: 1199) and (max-width: 1300px)";
+@desktops: ~"only screen and (min-width: 1199px)";
 
 img[src=""] {
   visibility: hidden;
@@ -42,6 +42,7 @@ html {
 body {
   margin: 0;
   background: var(--config-console-background) no-repeat fixed;
+  min-width: 300px;
 }
 
 ul {

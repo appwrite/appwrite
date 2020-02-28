@@ -4,12 +4,13 @@
     controller: function(document, element, expression) {
       let name = expression.parse(element.dataset["name"] || '');
       let buttonText = expression.parse(element.dataset["buttonText"] || "");
+      let buttonElement = expression.parse(element.dataset["buttonElement"] || "button");
       let buttonClass = expression.parse(element.dataset["buttonClass"] || "button-class");
       let buttonIcon = expression.parse(element.dataset["buttonIcon"] || '');
       let buttonEvent = expression.parse(element.dataset["buttonEvent"] || "");
       let buttonAlias = expression.parse(element.dataset["buttonAlias"] || "");
       let buttonElements = !buttonAlias
-        ? [document.createElement("button")]
+        ? [document.createElement(buttonElement)]
         : document.querySelectorAll(buttonAlias);
       let openEvent = expression.parse(element.dataset["openEvent"] || ''); // When event triggers modal will open
       let closeEvent = expression.parse(element.dataset["closeEvent"] || 'submit'); // When event triggers modal will close
@@ -36,7 +37,7 @@
         buttonElements.forEach(button => {
           button.innerText = buttonText;
           button.className = buttonClass;
-          button.type = "button";
+          button.type = buttonElement;
 
           if (buttonIcon) {
             let iconElement = document.createElement("i");

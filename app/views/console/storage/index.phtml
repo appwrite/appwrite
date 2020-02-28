@@ -108,84 +108,82 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
                             </td>
                             <td data-title="Name: ">
-                                <div class="text-one-liner">
-                                    <div data-ui-modal class="box modal width-large close" data-button-text="{{file.name}}" data-button-class="link">
-                                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                                <div data-ui-modal class="box modal width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
+                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                        <h1>Update File</h1>
+                                    <h1>Update File</h1>
 
-                                        <hr />
+                                    <hr />
 
-                                        <div class="row responsive modalize">
-                                            <div class="col span-8">
-                                                <form class="strip"
-                                                    data-analytics-event="submit"
-                                                    data-analytics-category="console"
-                                                    data-analytics-label="Update Storage File"
-                                                    data-service="storage.updateFile"
-                                                    data-event="file-update-{{file.$id}}"
-                                                    data-scope="sdk"
-                                                    data-success="alert,trigger"
-                                                    data-success-param-alert-text="File updated successfully"
-                                                    data-success-param-trigger-events="storage.updateFile"
-                                                    data-failure="alert"
-                                                    data-failure-param-alert-text="Failed to update file"
-                                                    data-failure-param-alert-classname="error">
+                                    <div class="row responsive modalize">
+                                        <div class="col span-8">
+                                            <form class="strip"
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Update Storage File"
+                                                data-service="storage.updateFile"
+                                                data-event="file-update-{{file.$id}}"
+                                                data-scope="sdk"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="File updated successfully"
+                                                data-success-param-trigger-events="storage.updateFile"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to update file"
+                                                data-failure-param-alert-classname="error">
 
-                                                    <label for="files-fileId">File ID</label>
-                                                    <div class="input-copy">
-                                                        <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$id}}" />
-                                                    </div>
-                                                    <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+                                                <label for="files-fileId">File ID</label>
+                                                <div class="input-copy">
+                                                    <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$id}}" />
+                                                </div>
+                                                <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
-                                                    <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                    <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
-                                                    
-                                                    <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                    <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
-                                                </form>
-
-                                                <form class="strip"
-                                                    data-analytics-event="submit"
-                                                    data-analytics-category="console"
-                                                    data-analytics-label="Delete File"
-                                                    data-service="storage.deleteFile"
-                                                    data-scope="sdk"
-                                                    data-event="file-delete-{{file.$id}}"
-                                                    data-confirm="Are you sure you want to delete this file?"
-                                                    data-success="alert,trigger"
-                                                    data-success-param-alert-text="Deleted file successfully"
-                                                    data-success-param-trigger-events="storage.deleteFile"
-                                                    data-failure="alert"
-                                                    data-failure-param-alert-text="Failed to delete file"
-                                                    data-failure-param-alert-classname="error">
-
-                                                    <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
-                                                </form>
-                                            </div>
-                                            <div class="col span-4">
-                                                <div class="margin-bottom-small">File Preview</div>
+                                                <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
                                                 
-                                                <div class="margin-bottom-small">
-                                                    <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="100%" height="100%" />
-                                                </div>
+                                                <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
+                                            </form>
 
-                                                <div class="margin-bottom-tiny">
-                                                    <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
-                                                </div>
+                                            <form class="strip"
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Delete File"
+                                                data-service="storage.deleteFile"
+                                                data-scope="sdk"
+                                                data-event="file-delete-{{file.$id}}"
+                                                data-confirm="Are you sure you want to delete this file?"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Deleted file successfully"
+                                                data-success-param-trigger-events="storage.deleteFile"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to delete file"
+                                                data-failure-param-alert-classname="error">
 
-                                                <div class="margin-bottom">
-                                                    <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
-                                                </div>
+                                                <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
+                                            </form>
+                                        </div>
+                                        <div class="col span-4">
+                                            <div class="margin-bottom-small">File Preview</div>
+                                            
+                                            <div class="margin-bottom-small">
+                                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="100%" height="100%" />
+                                            </div>
+
+                                            <div class="margin-bottom-tiny">
+                                                <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
+                                            </div>
+
+                                            <div class="margin-bottom">
+                                                <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
                                             </div>
                                         </div>
-
-                                        <hr class="margin-top-no" />
-
-                                        <button class="pull-end reverse danger round" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close"><i class="icon-trash"></i></button>
-
-                                        <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                     </div>
+
+                                    <hr class="margin-top-no" />
+
+                                    <button class="pull-end reverse danger round" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close"><i class="icon-trash"></i></button>
+
+                                    <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                 </div>
                             </td>
                             <td data-title="Type: ">

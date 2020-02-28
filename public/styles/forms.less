@@ -50,6 +50,10 @@ button,
     z-index: 2;
     bottom: 30px;
     .func-end(30px);
+
+    @media @phones {
+      .func-end(15px);
+    }
   }
 
   &.fill {
@@ -837,6 +841,10 @@ label.switch {
   .func-margin-start(-15px);
   margin-top: -25px;
   margin-bottom: 20px;
+
+  @media @phones {
+    .func-margin-start(-5px);
+  }
 }
 
 hr {
@@ -1134,6 +1142,7 @@ ol {
     padding: 0;
     width: auto;
     margin: 0;
+    max-width: 100%;
   }
 
   ul.tags-list {
