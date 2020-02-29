@@ -62,7 +62,8 @@ services:
       - telegraf
       - maildev
     environment:
-      - _APP_ENV=development
+      - _APP_ENV=production
+      # - _APP_ENV=development
       - _APP_OPTIONS_ABUSE=disabled
       - _APP_OPENSSL_KEY_V1=your-secret-key
       - _APP_DOMAINS_TARGET=demo.appwrite.io
