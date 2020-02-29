@@ -116,7 +116,7 @@ $graph = $this->getParam('graph', false);
                 </form>
 
                 <div class="margin-bottom-tiny">
-                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
                     <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 
@@ -140,16 +140,16 @@ $graph = $this->getParam('graph', false);
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" data-blur="1" tabindex="1">
         <ul>
             <li>
-                <div class="link web-new"><img src="/images/clients/web.png" alt="Web Platform Logo" class="avatar xs margin-end" /> New Web App</div>
+                <div class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Web Platform Logo" class="avatar xs margin-end" /> New Web App</div>
             </li>
             <li class="disabled">
-                <div class="link ios-new"><img src="/images/clients/ios.png" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App</div>
+                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App</div>
             </li>
             <li class="disabled">
-                <div class="link android-new"><img src="/images/clients/android.png" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App</div>
+                <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App</div>
             </li>
             <li class="disabled">
-                <div class="link unity-new"><img src="/images/clients/unity.png" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game</div>
+                <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game</div>
             </li>
         </ul>
     </div>
