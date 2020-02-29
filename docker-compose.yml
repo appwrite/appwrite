@@ -86,7 +86,7 @@ services:
     networks:
       - appwrite
     volumes:
-      - appwrite-db:/var/lib/mysql:rw
+      - appwrite-mariadb:/var/lib/mysql:rw
     ports:
       - "3306:3306"
     environment:
@@ -110,6 +110,8 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
+    volumes:
+      - appwrite-redis:/data:rw
 
   clamav:
     image: appwrite/clamav:1.0.7
@@ -159,7 +161,8 @@ networks:
   appwrite:
 
 volumes:
-  appwrite-db:
+  appwrite-mariadb:
+  appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:

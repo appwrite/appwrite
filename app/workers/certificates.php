@@ -38,9 +38,12 @@ class CertificatesV1
 
         Authorization::disable();
 
-        $document = $this->args['document'];
-        $domain = new Domain((isset($document['domain'])) ? $document['domain'] : '');
-        $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
+        $document   = $this->args['document'];
+        $domain     = $this->args['domain'];
+        $domain     = new Domain((!empty($domain)) ? $domain : '');
+        $expiry     = 60 * 60 * 24 * 30 * 2; // 60 days
+        $safety     = 60 * 60; // 1 hour
+        $renew      = (time() + $expiry);
 
         if(empty($domain->get())) {
             throw new Exception('Missing domain');
@@ -80,7 +83,7 @@ class CertificatesV1
         if($certificate
             && $certificate instanceof Document
             && isset($certificate['issueDate'])
-            && ($certificate['issueDate'] + $expiry > time())) { // Check last issue time
+            && (($certificate['issueDate'] + ($expiry)) > time())) { // Check last issue time
                 throw new Exception('Renew isn\'t required. Domain issued at '.date('d.m.Y H:i', (isset($certificate['issueDate']) ? $certificate['issueDate'] : 0)));
         }
 
@@ -88,7 +91,7 @@ class CertificatesV1
 
         $response = shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} --email security@appwrite.io \
             -w ".APP_STORAGE_CERTIFICATES." \
-            -d {$domain->get()} 2>&1"); // cert2.tests.appwrite.org
+            -d {$domain->get()} 2>&1");
 
         if(!$response) {
             throw new Exception('Failed to issue a certificate');
@@ -126,6 +129,7 @@ class CertificatesV1
             ],
             'domain' => $domain->get(),
             'issueDate' => time(),
+            'renewDate' => $renew,
             'attempts' => 0,
             'log' => json_encode($response),
         ]);
@@ -136,15 +140,17 @@ class CertificatesV1
             throw new Exception('Failed saving certificate to DB');
         }
 
-        $document = array_merge($document, [
-            'updated' => time(),
-            'certificateId' => $certificate->getId(),
-        ]);
-
-        $document = $consoleDB->updateDocument($document);
-
-        if(!$document) {
-            throw new Exception('Failed saving domain to DB');
+        if(!empty($document)) {
+            $document = array_merge($document, [
+                'updated' => time(),
+                'certificateId' => $certificate->getId(),
+            ]);
+    
+            $document = $consoleDB->updateDocument($document);
+    
+            if(!$document) {
+                throw new Exception('Failed saving domain to DB');
+            }
         }
         
         $config = 
@@ -156,6 +162,11 @@ class CertificatesV1
         if(!file_put_contents(APP_STORAGE_CONFIG.'/'.$domain->get().'.yml', $config)) {
             throw new Exception('Failed to save SSL configuration');
         }
+
+        ResqueScheduler::enqueueAt($renew + $safety, 'v1-certificates', 'CertificatesV1', [
+            'document' => [],
+            'domain' => $domain->get()
+        ]);  // Async task rescheduale
 
         Authorization::reset();
     }

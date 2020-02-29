@@ -1347,7 +1347,10 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
             }
 
             // Issue a TLS certificate when domain is verified
-            Resque::enqueue('v1-certificates', 'CertificatesV1', ['document' => $domain->getArrayCopy()]);
+            Resque::enqueue('v1-certificates', 'CertificatesV1', [
+                'document' => $domain->getArrayCopy(),
+                'domain' => $domain->getAttribute('domain'),
+            ]);
 
             $response->json($domain->getArrayCopy());
         }

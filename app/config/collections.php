@@ -1031,6 +1031,15 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                'label' => 'Renew Date',
+                'key' => 'renewDate',
+                'type' => 'numeric',
+                'default' => 0,
+                'required' => false,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Attempts',
                 'key' => 'attempts',
                 'type' => 'numeric',

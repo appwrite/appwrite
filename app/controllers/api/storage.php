@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register, $user, $audit, $usage, $project, $projectDB;
+global $utopia, $request, $response, $register, $user, $audit, $usage, $project, $projectDB, $version;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -338,7 +338,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     //->param('storage', 'local', function () {return new WhiteList(array('local'));}, 'Selected storage device. defaults to local')
     //->param('token', '', function () {return new Text(128);}, 'Preview token', true)
     ->action(
-        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
+        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos, $version) {
             $storage = 'local';
 
             if (!extension_loaded('imagick')) {
@@ -354,7 +354,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-            $key = md5($fileId.$width.$height.$quality.$background.$storage.$output);
+            $key = md5($version.$fileId.$width.$height.$quality.$background.$storage.$output);
 
             $file = $projectDB->getDocument($fileId);
 
@@ -372,9 +372,9 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 $path = (array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
                 $algorithm = null;
                 $cipher = null;
-                $background = (empty($background)) ? 'f2f3f5' : $background;
+                $background = (empty($background)) ? 'eceff1' : $background;
                 $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-                $key = md5($path.$width.$height.$quality.$background.$storage.$output);
+                $key = md5($version.$path.$width.$height.$quality.$background.$storage.$output);
             }
 
             $compressor = new GZIP();
