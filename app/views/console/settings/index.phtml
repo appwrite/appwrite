@@ -187,8 +187,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             <table class="vertical">
                                 <thead>
                                     <tr>
-                                        <th width="140"></th>
-                                        <th width="220">Domain Name</th>
+                                        <th width="120"></th>
+                                        <th width="200">Domain Name</th>
                                         <th width="160">TLS</th>
                                         <th></th>
                                         <th width="60"></th>
@@ -197,16 +197,16 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 <tbody data-ls-loop="console-domains" data-ls-as="domain">
                                     <tr>
                                         <td data-title="Status">
-                                            <span class="tag red" data-ls-if="true !== {{domain.verification}}"><i class="icon-cancel-circled"></i> Unverified&nbsp;</span>
-                                            <span class="tag blue" data-ls-if="true === {{domain.verification}}"><i class="icon-ok-circled"></i> Verified&nbsp;</span>
+                                            <span class="text-size-small text-danger" data-ls-if="true !== {{domain.verification}}"><i class="icon-cancel-circled"></i> Unverified&nbsp;</span>
+                                            <span class="text-size-small text-info" data-ls-if="true === {{domain.verification}}"><i class="icon-ok-circled"></i> Verified&nbsp;</span>
                                         </td>
                                         <td data-title="Domain: ">
                                         <span data-ls-bind="{{domain.domain}}"></span>
                                         </td>
                                         <td data-title="TLS: ">
-                                            <span class="tag" data-ls-if="!{{domain.certificateId}} && false === {{domain.verification}}"> &nbsp;Pending Verification&nbsp;</span>
-                                            <span class="tag yellow" data-ls-if="!{{domain.certificateId}} && true === {{domain.verification}}"> &nbsp;In Progress&nbsp;</span>
-                                            <span class="tag green" data-ls-if="{{domain.certificateId}}"><i class="icon-ok-circled"></i> Enabled&nbsp;</span>
+                                            <span class="text-size-small text-fade" data-ls-if="!{{domain.certificateId}} && false === {{domain.verification}}"> &nbsp;Pending Verification&nbsp;</span>
+                                            <span class="text-size-small text-fade" data-ls-if="!{{domain.certificateId}} && true === {{domain.verification}}"> &nbsp;In Progress&nbsp;</span>
+                                            <span class="text-size-small text-success" data-ls-if="{{domain.certificateId}}"><i class="icon-ok-circled"></i> Enabled&nbsp;</span>
                                         </td>
                                         <td data-title="">
                                             <button class="link text-size-small" data-ls-if="true === {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">DNS Settings</button>
