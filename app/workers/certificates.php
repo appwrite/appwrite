@@ -53,12 +53,10 @@ class CertificatesV1
         $renew  = (time() + $expiry);
 
         if(empty($domain->get())) {
-            echo 'Log: Missing domain';
             throw new Exception('Missing domain');
         }
 
         if(!$domain->isKnown() || $domain->isTest()) {
-            echo 'Log: Unkown public suffix for domain';
             throw new Exception('Unkown public suffix for domain');
         }
 
@@ -66,7 +64,6 @@ class CertificatesV1
             $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
     
             if(!$target->isKnown() || $target->isTest()) {
-                echo 'Log: Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.';
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.');
             }
         }
@@ -75,7 +72,6 @@ class CertificatesV1
             $validator = new CNAME($target->get()); // Verify Domain with DNS records
     
             if(!$validator->isValid($domain->get())) {
-                echo 'Log: Failed to verify domain DNS records';
                 throw new Exception('Failed to verify domain DNS records');
             }
         }
@@ -99,7 +95,6 @@ class CertificatesV1
             && $certificate instanceof Document
             && isset($certificate['issueDate'])
             && (($certificate['issueDate'] + ($expiry)) > time())) { // Check last issue time
-                echo 'Log: Renew isn\'t required. Domain issued at '.date('d.m.Y H:i', (isset($certificate['issueDate']) ? $certificate['issueDate'] : 0));
                 throw new Exception('Renew isn\'t required. Domain issued at '.date('d.m.Y H:i', (isset($certificate['issueDate']) ? $certificate['issueDate'] : 0)));
         }
 
@@ -110,7 +105,6 @@ class CertificatesV1
             -d {$domain->get()} 2>&1");
 
         if(!$response) {
-            echo 'Log: Failed to issue a certificate';
             throw new Exception('Failed to issue a certificate');
         }
 
@@ -118,28 +112,23 @@ class CertificatesV1
 
         if(!is_readable($path)) {
             if (!mkdir($path, 0755, true)) {
-                echo 'Log: Failed to create path...';
                 throw new Exception('Failed to create path...');
             }
         }
         
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            echo 'Log: Failed to create path... 1';
             throw new Exception('Failed to rename certificate cert.pem: '.json_encode($response));
         }
 
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
-            echo 'Log: Failed to create path... 2';
             throw new Exception('Failed to rename certificate chain.pem: '.json_encode($response));
         }
 
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
-            echo 'Log: Failed to create path... 3';
             throw new Exception('Failed to rename certificate fullchain.pem: '.json_encode($response));
         }
 
         if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
-            echo 'Log: Failed to create path... 4';
             throw new Exception('Failed to rename certificate privkey.pem: '.json_encode($response));
         }
 
@@ -159,7 +148,6 @@ class CertificatesV1
         $certificate = $consoleDB->createDocument($certificate);
 
         if(!$certificate) {
-            echo 'Log: Failed saving certificate to DB';
             throw new Exception('Failed saving certificate to DB');
         }
 
@@ -172,7 +160,6 @@ class CertificatesV1
             $document = $consoleDB->updateDocument($document);
     
             if(!$document) {
-                echo 'Log: Failed saving domain to DB';
                 throw new Exception('Failed saving domain to DB');
             }
         }
@@ -184,13 +171,14 @@ class CertificatesV1
       keyFile: /storage/certificates/{$domain->get()}/privkey.pem";
 
         if(!file_put_contents(APP_STORAGE_CONFIG.'/'.$domain->get().'.yml', $config)) {
-            echo 'Log: Failed to save SSL configuration';
             throw new Exception('Failed to save SSL configuration');
         }
 
         ResqueScheduler::enqueueAt($renew + $safety, 'v1-certificates', 'CertificatesV1', [
             'document' => [],
-            'domain' => $domain->get()
+            'domain' => $domain->get(),
+            'validateTarget' => $validateTarget,
+            'validateCNAME' => $validateCNAME,
         ]);  // Async task rescheduale
 
         Authorization::reset();

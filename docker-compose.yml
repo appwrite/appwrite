@@ -137,6 +137,16 @@ services:
     networks:
       - appwrite
 
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    restart: unless-stopped
+    networks:
+    - appwrite
+    environment:
+    - REDIS_HOSTS=redis
+    ports:
+    - "8081:8081"
+
   # resque:
   #   image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
   #   restart: unless-stopped
