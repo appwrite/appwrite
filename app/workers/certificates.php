@@ -98,18 +98,17 @@ class CertificatesV1
 
         $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
 
-        if($certificate
-            && $certificate instanceof Document
+        if(!empty($certificate)
             && isset($certificate['issueDate'])
             && (($certificate['issueDate'] + ($expiry)) > time())) { // Check last issue time
-                throw new Exception('Renew isn\'t required. Domain issued at '.date('d.m.Y H:i', (isset($certificate['issueDate']) ? $certificate['issueDate'] : 0)));
+                throw new Exception('Renew isn\'t required');
         }
 
         $staging = ($env === App::ENV_TYPE_PRODUCTION) ? '' : ' --dry-run';
 
         $response = shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} --email security@appwrite.io \
             -w ".APP_STORAGE_CERTIFICATES." \
-            -d {$domain->get()} 2>&1");
+            -d {$domain->get()}");
 
         if(!$response) {
             throw new Exception('Failed to issue a certificate');
