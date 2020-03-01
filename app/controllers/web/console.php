@@ -118,7 +118,7 @@ $utopia->get('/console/settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($request, $layout) {
-        $target = new Domain($request->getServer('_APP_DOMAINS_TARGET', ''));
+        $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 

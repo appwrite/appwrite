@@ -46,12 +46,13 @@ ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
     PHP_VERSION=7.4 \
     _APP_ENV=production \
+    _APP_DOMAIN=localhost \
+    _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
     _APP_STORAGE_LIMIT=104857600 \
-    _APP_DOMAINS_TARGET=localhost \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -100,8 +101,12 @@ RUN \
   rm -rf /var/lib/apt/lists/*
 
 # Set Upload Limit (default to 100MB)
-RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" > /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" > /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+
+# Add logs file
+RUN echo "" >> /var/log/appwrite.log
 
 # Nginx Configuration (with self-signed ssl certificates)
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf

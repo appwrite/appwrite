@@ -96,9 +96,9 @@ $providers = $this->getParam('providers', []);
                                 <tr>
                                     <th width="60"></th>
                                     <th width="180">Name</th>
-                                    <th width="220">Email</th>
-                                    <th>Status</th>
-                                    <th width="100">Joined</th>
+                                    <th>Email</th>
+                                    <th width="120">Status</th>
+                                    <th width="120">Joined</th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-users.users" data-ls-as="user">
@@ -117,15 +117,15 @@ $providers = $this->getParam('providers', []);
                                     </td>
                                     <td data-title="Status: ">
                                         <span data-ls-if="{{user.emailVerification}} === true">
-                                            &nbsp;<span class="tag green">Verified</span>
+                                            <span class="tag green">Verified</span>
                                         </span>
 
                                         <span data-ls-if="{{user.emailVerification}} !== true">
-                                            &nbsp;<span class="tag">Unverified</span>
+                                            <span class="tag">Unverified</span>
                                         </span>
 
                                         <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
-                                            &nbsp;<span class="tag red">Blocked</span>
+                                            <span class="tag red">Blocked</span>
                                         </span>
                                     </td>
                                     <td data-title="Created: "><small data-ls-bind="{{user.registration|date-text}}"></small></td>
@@ -242,8 +242,8 @@ $providers = $this->getParam('providers', []);
                             <thead>
                                 <tr>
                                     <th width="60"></th>
-                                    <th width="180">Name</th>
-                                    <th>Members</th>
+                                    <th>Name</th>
+                                    <th width="150">Members</th>
                                     <th width="150">Created</th>
                                 </tr>
                             </thead>

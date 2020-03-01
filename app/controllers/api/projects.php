@@ -1214,7 +1214,7 @@ $utopia->post('/v1/projects/:projectId/domains')
                 throw new Exception('Domain already exists', 409);
             }
 
-            $target = new Domain($request->getServer('_APP_DOMAINS_TARGET', ''));
+            $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
             if(!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
@@ -1321,7 +1321,7 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
                 throw new Exception('Domain not found', 404);
             }
 
-            $target = new Domain($request->getServer('_APP_DOMAINS_TARGET', ''));
+            $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
             if(!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);

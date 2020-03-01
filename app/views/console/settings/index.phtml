@@ -160,7 +160,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                         
                         <p>To enable <?php echo APP_NAME; ?>'s custom domain feature, you have to start your server instance with a public accessable domain name.</p>
                         
-                        <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAINS_TARGET</b> enviornment variable set with a public accessable domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
+                        <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAIN_TARGET</b> enviornment variable set with a public accessable domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
                         <p class="margin-bottom-no">The <?php echo APP_NAME; ?> server will use your target domain to validate new custom domains and will automatically generate SSL certificates for your new domains using letsencrypt certbot.</p>
                     </div>
                 <?php endif; ?>
@@ -201,7 +201,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                             <span class="text-size-small text-info" data-ls-if="true === {{domain.verification}}"><i class="icon-ok-circled"></i> Verified&nbsp;</span>
                                         </td>
                                         <td data-title="Domain: ">
-                                        <span data-ls-bind="{{domain.domain}}"></span>
+                                            <span class="text-size-small" data-ls-bind="{{domain.domain}}"></span>
                                         </td>
                                         <td data-title="TLS: ">
                                             <span class="text-size-small text-fade" data-ls-if="!{{domain.certificateId}} && false === {{domain.verification}}"> &nbsp;Pending Verification&nbsp;</span>

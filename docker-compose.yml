@@ -66,7 +66,8 @@ services:
       # - _APP_ENV=development
       - _APP_OPTIONS_ABUSE=disabled
       - _APP_OPENSSL_KEY_V1=your-secret-key
-      - _APP_DOMAINS_TARGET=demo.appwrite.io
+      - _APP_DOMAIN=demo.appwrite.io
+      - _APP_DOMAIN_TARGET=demo.appwrite.io
       - _APP_REDIS_HOST=redis
       - _APP_REDIS_PORT=6379
       - _APP_DB_HOST=mariadb
