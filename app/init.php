@@ -20,8 +20,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
-const APP_EMAIL_TEAM = 'team@localhost'; // Default email address
-const APP_EMAIL_SECURITY = 'security@localhost'; // Default security email address
+const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
+const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
