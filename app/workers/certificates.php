@@ -89,6 +89,9 @@ class CertificatesV1
             'first' => true,
         ]);
 
+        $debug = ($certificate) ? $certificate->getArrayCopy() : 'empty';
+        throw new Exception('cert is'.$debug);
+
         $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
 
         if($certificate
