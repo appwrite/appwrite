@@ -46,6 +46,8 @@ ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
     PHP_VERSION=7.4 \
     _APP_ENV=production \
+    _APP_DOMAIN=localhost \
+    _APP_DOMAIN_TARGET=localhost \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
     _APP_OPTIONS_ABUSE=enabled \
@@ -99,8 +101,12 @@ RUN \
   rm -rf /var/lib/apt/lists/*
 
 # Set Upload Limit (default to 100MB)
-RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" > /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" > /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+
+# Add logs file
+RUN echo "" >> /var/log/appwrite.log
 
 # Nginx Configuration (with self-signed ssl certificates)
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf
@@ -127,6 +133,9 @@ RUN mkdir -p /storage/uploads && \
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 COPY ./docker/entrypoint.sh /entrypoint.sh
 RUN chmod 775 /entrypoint.sh
+
+# Letsencrypt Permissions
+RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 EXPOSE 80
 

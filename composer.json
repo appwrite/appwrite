@@ -15,6 +15,7 @@
             "Auth\\": "src/Auth",
             "Database\\": "src/Database",
             "Event\\": "src/Event",
+            "Network\\": "src/Network",
             "OpenSSL\\": "src/OpenSSL",
             "Resize\\": "src/Resize",
             "Storage\\": "src/Storage",
@@ -47,6 +48,7 @@
         "utopia-php/cli": "master",
         "utopia-php/locale": "master",
         "utopia-php/registry": "master",
+        "utopia-php/domains": "master",
 
         "chrisboulton/php-resque": "*",
         "chrisboulton/php-resque-scheduler": "*",

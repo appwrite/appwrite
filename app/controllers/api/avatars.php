@@ -49,7 +49,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
         throw new Exception('File not readable in '.$path, 500);
     }
 
-    $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
+    $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-0')); // Limit file number or size
     $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
     if ($data) {
@@ -146,7 +146,7 @@ $utopia->get('/v1/avatars/image')
             $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
             $key = md5('/v2/avatars/images-'.$url.'-'.$width.'/'.$height.'/'.$quality);
             $type = 'png';
-            $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-0')); // Limit file number or size
             $data = $cache->load($key, 60 * 60 * 24 * 7 /* 1 week */);
 
             if ($data) {
@@ -206,7 +206,7 @@ $utopia->get('/v1/avatars/favicon')
     ->label('sdk.method', 'getFavicon')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
-        function ($url) use ($response, $version) {
+        function ($url) use ($response, $request, $version) {
             $width = 56;
             $height = 56;
             $quality = 80;
@@ -214,7 +214,7 @@ $utopia->get('/v1/avatars/favicon')
             $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
             $key = md5('/v2/avatars/favicon-'.$url);
             $type = 'png';
-            $cache = new Cache(new Filesystem('/storage/cache/app-0')); // Limit file number or size
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-0')); // Limit file number or size
             $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
             if ($data) {
@@ -237,7 +237,10 @@ $utopia->get('/v1/avatars/favicon')
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS => 3,
                 CURLOPT_URL => $url,
-                CURLOPT_USERAGENT => sprintf(APP_USERAGENT, $version),
+                CURLOPT_USERAGENT => sprintf(APP_USERAGENT,
+                    $version,
+                    $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                ),
             ]);
 
             $html = curl_exec($curl);

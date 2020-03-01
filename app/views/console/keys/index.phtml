@@ -2,8 +2,11 @@
 $scopes = $this->getParam('scopes', []);
 ?>
 <div class="cover margin-bottom-large">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        API Keys
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>API Keys</span>
     </h1>
 </div>
 <div class="zone xl"
@@ -15,16 +18,16 @@ $scopes = $this->getParam('scopes', []);
     data-success="trigger"
     data-success-param-trigger-events="projects.listKeys">
 
-    <div data-ls-if="0 == {{console-keys.length}} || undefined == {{console-keys.length}}" class="box margin-top margin-bottom" style="display: none;">
-        <h3 class="margin-bottom-small text-bold-2">No API Keys Found</h3>
+    <div data-ls-if="0 == {{console-keys.length}} || undefined == {{console-keys.length}}" class="box margin-top margin-bottom">
+        <h3 class="margin-bottom-small text-bold">No API Keys Found</h3>
 
         <p class="margin-bottom-no">You haven't created any API keys for your project yet.</p>
     </div>
 
-    <div class="box margin-bottom" data-ls-if="0 != {{console-keys.length}}" style="display: none;">
+    <div class="box margin-bottom" data-ls-if="0 != {{console-keys.length}}">
         <ul data-ls-loop="console-keys" data-ls-as="key" class="list">
             <li class="clear">
-                <div data-ui-modal class="modal box close" data-button-text="Update" data-button-class="pull-end">
+                <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="key-update-{{key.$id}}">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                     <h1>Update API Key</h1>
@@ -38,7 +41,7 @@ $scopes = $this->getParam('scopes', []);
                         data-event="submit"
                         data-success="alert,trigger"
                         data-success-param-alert-text="Updated API key successfully"
-                        data-success-param-trigger-events="projects.updateKey,modal-close"
+                        data-success-param-trigger-events="projects.updateKey"
                         data-failure="alert"
                         data-failure-param-alert-text="Failed to update API key"
                         data-failure-param-alert-classname="error">
@@ -49,21 +52,21 @@ $scopes = $this->getParam('scopes', []);
                         <label data-ls-attrs="for=name-{{key.$id}}">Name</label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
 
-                        <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
-                        <div class="row thin margin-bottom">
+                        <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank">Learn More</a>)</label>
+                        <div class="row responsive thin">
                             <?php foreach ($scopes as $i => $scope) : ?>
-                                <div class="col span-6">
+                                <div class="col span-6 text-one-liner margin-bottom text-height-large">
                                     <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
-                                <div class="row thin margin-bottom">
+                                <div class="row responsive thin">
                                 <?php endif; ?>
 
                             <?php endforeach; ?>
                         </div>
 
-                        <hr />
+                        <hr class="margin-top-no" />
 
                         <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                     </form>
@@ -75,7 +78,7 @@ $scopes = $this->getParam('scopes', []);
                     data-analytics-label="Delete Project Key"
                     data-service="projects.deleteKey"
                     data-scope="console"
-                    data-event="submit"
+                    data-event="key-delete-{{key.$id}}"
                     data-confirm="Are you sure you want to delete this API key?"
                     data-success="alert,trigger"
                     data-success-param-alert-text="Deleted API key successfully"
@@ -86,25 +89,34 @@ $scopes = $this->getParam('scopes', []);
 
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                     <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
-
-                    <button class="reverse danger">Delete</button>
                 </form>
+
+                <button class="pull-end desktops-only margin-start-small" data-ls-ui-trigger="key-update-{{key.$id}}">Update</button>
+                <button class="pull-end reverse desktops-only margin-small" data-ls-ui-trigger="key-delete-{{key.$id}}">Delete</button>
 
                 <div class="margin-bottom-tiny"><span data-ls-bind="{{key.name}}"></span> <small>(<span data-ls-bind="{{key.scopes.length}}"></span> scopes granted)</small></div>
 
-                <div data-ui-modal class="modal close" data-button-text="Show Secret" data-button-class="link">
-                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                <div class="clear">
+                    <div data-ui-modal class="modal box close" data-button-text="Show Secret" data-button-class="link pull-start margin-end-small margin-top-tiny">
+                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                    <h1>API Key Secret</h1>
+                        <h1>API Key Secret</h1>
 
-                    <form>
-                        <div class="input-copy">
-                            <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-bind="{{key.secret}}"></textarea>
-                        </div>
-                        <div>
-                            <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                        </div>
-                    </form>
+                        <form>
+                            <div class="input-copy">
+                                <textarea disabled style="height: 130px; line-height: 26px" data-forms-copy data-ls-bind="{{key.secret}}"></textarea>
+                            </div>
+                            
+                            <hr />
+
+                            <div>
+                                <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <button class="link pull-start tablets-only phones-only margin-end-small margin-top-tiny" data-ls-ui-trigger="key-update-{{key.$id}}">Update</button>
+                    <button class="link pull-start tablets-only phones-only margin-end-small margin-top-tiny text-danger" data-ls-ui-trigger="key-delete-{{key.$id}}">Delete</button>
                 </div>
             </li>
         </ul>
@@ -125,7 +137,7 @@ $scopes = $this->getParam('scopes', []);
                 data-event="submit"
                 data-success="alert,trigger,reset"
                 data-success-param-alert-text="Created API key successfully"
-                data-success-param-trigger-events="projects.createKey,modal-close"
+                data-success-param-trigger-events="projects.createKey"
                 data-failure="alert"
                 data-failure-param-alert-text="Failed to create API key"
                 data-failure-param-alert-classname="error">
@@ -135,21 +147,21 @@ $scopes = $this->getParam('scopes', []);
                 <label for="name">Name</label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
 
-                <label for="scopes">Scopes (<a href="/docs/keys" target="_blank">Learn More</a>)</label>
-                <div class="row thin margin-bottom">
+                <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank">Learn More</a>)</label>
+                <div class="row responsive thin">
                     <?php foreach ($scopes as $i => $scope) : ?>
-                        <div class="col span-6">
+                        <div class="col span-6 text-one-liner margin-bottom text-height-large">
                             <input type="checkbox" name="scopes" value="<?php echo $scope; ?>" /> <?php echo $scope; ?>
                         </div>
                         <?php if (($i + 1) % 2 === 0) : ?>
                         </div>
-                        <div class="row thin margin-bottom">
+                        <div class="row responsive thin">
                         <?php endif; ?>
 
                     <?php endforeach; ?>
                 </div>
 
-                <hr />
+                <hr class="margin-top-no" />
 
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>

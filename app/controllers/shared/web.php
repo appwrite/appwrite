@@ -3,6 +3,8 @@
 use Utopia\View;
 use Utopia\Locale\Locale;
 
+global $protocol;
+
 Locale::$exceptions = false;
 
 $roles = [
@@ -20,7 +22,7 @@ if (!empty($request->getQuery('version', ''))) {
 
 $layout
     ->setParam('title', APP_NAME)
-    ->setParam('protocol', $request->getServer('REQUEST_SCHEME', 'https'))
+    ->setParam('protocol', $protocol)
     ->setParam('domain', $domain)
     ->setParam('home', $request->getServer('_APP_HOME'))
     ->setParam('setup', $request->getServer('_APP_SETUP'))

@@ -21,6 +21,8 @@ class Database
     const SYSTEM_COLLECTION_TASKS = 'tasks';
     const SYSTEM_COLLECTION_PLATFORMS = 'platforms';
     const SYSTEM_COLLECTION_USAGES = 'usages'; //TODO add structure
+    const SYSTEM_COLLECTION_DOMAINS = 'domains';
+    const SYSTEM_COLLECTION_CERTIFICATES = 'certificates';
 
     // Auth, Account and Users (private to user)
     const SYSTEM_COLLECTION_USERS = 'users';

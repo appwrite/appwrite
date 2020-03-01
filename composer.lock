@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7f0595847c8db28a9cbfdc62f9c15c5f",
+    "content-hash": "2974879777e4362ff4e8138a0e12f926",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1382,6 +1382,56 @@
             "time": "2019-12-31T20:42:16+00:00"
         },
         {
+            "name": "utopia-php/domains",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/domains.git",
+                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Domains\\": "src/Domains"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "Utopia Domains library is simple and lite library for parsing web domains. This library is aiming to be as simple and easy to learn and use.",
+            "keywords": [
+                "domains",
+                "framework",
+                "icann",
+                "php",
+                "public suffix",
+                "tld",
+                "tld extract",
+                "upf",
+                "utopia"
+            ],
+            "time": "2020-02-23T07:40:02+00:00"
+        },
+        {
             "name": "utopia-php/framework",
             "version": "dev-master",
             "source": {
@@ -1935,12 +1985,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "edea3e869367921987704325b997a80cdaea6d66"
+                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/edea3e869367921987704325b997a80cdaea6d66",
-                "reference": "edea3e869367921987704325b997a80cdaea6d66",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
+                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
                 "shasum": ""
             },
             "require": {
@@ -1980,7 +2030,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-02-12T20:05:04+00:00"
+            "time": "2020-02-22T12:28:44+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -1988,12 +2038,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "70d7abb1fdad964379676d629923de0dd1918f4f"
+                "reference": "7462d5f123dfc080dfdf26897032a6513644fc95"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/70d7abb1fdad964379676d629923de0dd1918f4f",
-                "reference": "70d7abb1fdad964379676d629923de0dd1918f4f",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/7462d5f123dfc080dfdf26897032a6513644fc95",
+                "reference": "7462d5f123dfc080dfdf26897032a6513644fc95",
                 "shasum": ""
             },
             "require": {
@@ -2026,7 +2076,7 @@
                 }
             ],
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
-            "time": "2020-02-14T12:50:24+00:00"
+            "time": "2020-02-18T18:59:58+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -3156,12 +3206,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d876bc45c9b4cd115585ec5e6fcf522611469f20"
+                "reference": "8a4f8816230de7ffca3c707776007a1c9d175e55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d876bc45c9b4cd115585ec5e6fcf522611469f20",
-                "reference": "d876bc45c9b4cd115585ec5e6fcf522611469f20",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/8a4f8816230de7ffca3c707776007a1c9d175e55",
+                "reference": "8a4f8816230de7ffca3c707776007a1c9d175e55",
                 "shasum": ""
             },
             "require": {
@@ -3213,7 +3263,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-02-14T15:15:54+00:00"
+            "time": "2020-02-21T08:29:15+00:00"
         },
         {
             "name": "webmozart/assert",

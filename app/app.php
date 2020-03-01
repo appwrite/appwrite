@@ -3,7 +3,7 @@
 // Init
 require_once __DIR__.'/init.php';
 
-global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service;
+global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service, $protocol;
 
 use Utopia\App;
 use Utopia\Request;
@@ -76,6 +76,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
         ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version')
+        ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
     ;
@@ -234,7 +235,8 @@ $utopia->options(function () use ($request, $response, $domain, $project) {
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, X-Fallback-Cookies')
+        ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
         ->send();
@@ -364,39 +366,37 @@ $utopia->get('/.well-known/acme-challenge')
     ->label('docs', false)
     ->action(
         function () use ($request, $response) {
-            $base = realpath(__DIR__.'/../certs');
+            $base = realpath(APP_STORAGE_CERTIFICATES);
             $path = str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
-            $absolute = realpath($base.'/'.$path);
-            
+            $absolute = realpath($base.'/.well-known/acme-challenge/'.$path);
+
+            if(!$base) {
+                throw new Exception('Storage error', 500);
+            }
+
             if(!$absolute) {
-                //throw new Exception('Unknown Path', 404);
-                $response->json([
-                    'error' => 'unknown path',
-                    'base' => scandir($base),
-                    'base/well' => scandir($base . '/.well-known/'),
-                    'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
-                    'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
-                ]);
-                return;
+                throw new Exception('Unknown path', 404);
             }
 
             if(!substr($absolute, 0, strlen($base)) === $base) {
-                //throw new Exception('Invalid Path', 401);
-                $response->json([
-                    'error' => 'invalid path',
-                    'base' => scandir($base),
-                    'base/well' => scandir($base . '/.well-known/'),
-                    'base/well/acme' => scandir($base . '/.well-known/acme-challenge/'),
-                    'base/well/acme/query' => ($absolute) ? scandir($absolute) : ['not-a-dir'],
-                ]);
-                return;
+                throw new Exception('Invalid path', 401);
             }
 
-            $response->text(file_get_contents($absolute));
+            if(!file_exists($absolute)) {
+                throw new Exception('Unknown path', 404);
+            }
+
+            $content = @file_get_contents($absolute);
+
+            if(!$content) {
+                throw new Exception('Failed to get contents', 500);
+            }
+
+            $response->text($content);
         }
     );
 
-$utopia->get('/v1/info') // This is only visible to gods
+$utopia->get('/v1/info') // This is only visible to the gods
     ->label('scope', 'god')
     ->label('docs', false)
     ->action(
@@ -453,7 +453,7 @@ $utopia->get('/v1/open-api-2.json')
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
-        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services) {
+        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services, $protocol) {
             function fromCamelCase($input)
             {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
@@ -588,7 +588,7 @@ $utopia->get('/v1/open-api-2.json')
                 ],
                 'externalDocs' => [
                     'description' => 'Full API docs, specs and tutorials',
-                    'url' => $request->getServer('REQUEST_SCHEME', 'https').'://'.$domain.'/docs',
+                    'url' => $protocol.'://'.$domain.'/docs',
                 ],
             ];
 

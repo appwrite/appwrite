@@ -1,6 +1,15 @@
+<?php
+
+$customDomainsEnabled = $this->getParam('customDomainsEnabled', false);
+$customDomainsTarget = $this->getParam('customDomainsTarget', false);
+
+?>
 <div class="cover">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        Settings
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>Settings</span>
     </h1>
 </div>
 
@@ -34,10 +43,11 @@
                     data-failure-param-alert-classname="error">
 
                     <input name="$id" type="hidden" data-ls-bind="{{console-project.$id}}" />
-
-                    <div class="row">
-                        <div class="col span-9">
-                            <div class="box">
+                    
+                    <div class="box">
+                        <div class="row responsive">
+                            <div class="col span-9 margin-bottom">
+                                
                                 <label for="name">Name</label>
                                 <input name="name" id="name" type="text" autocomplete="off" data-ls-bind="{{console-project.name}}" data-forms-text-direction required>
 
@@ -46,29 +56,46 @@
                                     <input data-forms-copy type="text" disabled data-ls-bind="{{console-project.$id}}" />
                                 </div>
 
-                                <label for="name">API Endpoint</label>
+                                <label for="name">Default API Endpoint</label>
                                 <div class="input-copy">
                                     <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}/v1" />
                                 </div>
 
+                                <!-- <div data-ls-if="0 !== {{console-domains|activeDomainsCount}}">
+                                    <label for="name">Custom API Endpoints</label>
+                                    
+                                    <ul data-ls-loop="console-domains" data-ls-as="domain">
+                                        <li>
+                                            <div class="input-copy" data-ls-if="true === {{domain.verification}} && {{domain.certificateId}}">
+                                                <input data-forms-copy type="text" disabled data-ls-bind="{{env.PROTOCOL}}://{{domain.domain}}/v1" />
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div> -->
+                                
+                                <div class="margin-top-negative-small text-size-small">
+                                    <a data-ls-attrs="href=/console/settings/domains?project={{router.params.project}}">Add a custom domain <i class="icon-angle-circled-right"></i></a>
+                                </div>
+    <!-- 
                                 <label for="description">Description &nbsp;<small>(optional)</small></label>
                                 <textarea name="description" id="description" autocomplete="off" placeholder="Help us make the world a better place" data-ls-bind="{{console-project.description}}" data-forms-text-direction data-forms-text-count></textarea>
 
                                 <label for="url">Website &nbsp;<small>(optional)</small></label>
-                                <input name="url" id="url" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-bind="{{console-project.url}}">
+                                <input name="url" id="url" type="url" class="full-width" autocomplete="off" placeholder="https://acme-corp.com" data-ls-bind="{{console-project.url}}"> -->
+                            </div>
 
-                                <hr />
+                            <div class="col span-3 box-aside">
+                                <label for="logo">Project Logo</label>
 
-                                <button class="" type="submit">Save</button>
+                                <div class="text-align-center clear">
+                                    <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-read="<?php echo $this->escape(json_encode(['*'])); ?>" data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>" data-accept="image/*" data-forms-upload="" data-label-button="Upload" data-scope="console" data-default="">
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col span-3 box-aside">
-                            <label for="name">Logo</label>
-                            <div class="text-align-center clear">
-                                <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-read="<?php echo $this->escape(json_encode(['*'])); ?>" data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>" data-accept="image/*" data-forms-upload="" data-scope="console" data-default="">
-                            </div>
-                        </div>
+                        <hr class="margin-top-no" />
+
+                        <button class="" type="submit">Save</button>
                     </div>
                 </form>
             </li>
@@ -123,6 +150,187 @@
                     </div>
                 </form>
             </li> -->
+            <li data-state="/console/settings/domains?project={{router.params.project}}">
+                
+                <?php if(!$customDomainsEnabled): ?>
+                    <h2 style="display: none;">Custom Domains</h2>
+
+                    <div class="box line margin-bottom">
+                        <h3>Enable Custom Domains</h3>
+                        
+                        <p>To enable <?php echo APP_NAME; ?>'s custom domain feature, you have to start your server instance with a public accessable domain name.</p>
+                        
+                        <p>Start your <?php echo APP_NAME; ?> server container with the <b>_APP_DOMAIN_TARGET</b> enviornment variable set with a public accessable domain name that resolves to your <?php echo APP_NAME; ?> server setup.</p>
+                        <p class="margin-bottom-no">The <?php echo APP_NAME; ?> server will use your target domain to validate new custom domains and will automatically generate SSL certificates for your new domains using letsencrypt certbot.</p>
+                    </div>
+                <?php endif; ?>
+
+                <?php if($customDomainsEnabled): ?>
+                    <h2>Custom Domains</h2>
+
+                    <div class="zone xl"
+                        data-service="projects.listDomains"
+                        data-scope="console"
+                        data-event="load,projects.createDomain,projects.updateDomainVerification,projects.deleteDomain"
+                        data-name="console-domains"
+                        data-param-project-id="{{router.params.project}}"
+                        data-success="trigger"
+                        data-success-param-trigger-events="projects.listDomains">
+
+                        <div data-ls-if="0 == {{console-domains.length}} || undefined == {{console-domains.length}}" class="box margin-top margin-bottom">
+                            <h3 class="margin-bottom-small text-bold">No Custom Domains Found</h3>
+
+                            <p class="margin-bottom-no">You haven't created any custom domains for your project yet.</p>
+                        </div>
+
+                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.length}}">
+                            <table class="vertical">
+                                <thead>
+                                    <tr>
+                                        <th width="120"></th>
+                                        <th width="200">Domain Name</th>
+                                        <th width="160">TLS</th>
+                                        <th></th>
+                                        <th width="60"></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-ls-loop="console-domains" data-ls-as="domain">
+                                    <tr>
+                                        <td data-title="Status">
+                                            <span class="text-size-small text-danger" data-ls-if="true !== {{domain.verification}}"><i class="icon-cancel-circled"></i> Unverified&nbsp;</span>
+                                            <span class="text-size-small text-info" data-ls-if="true === {{domain.verification}}"><i class="icon-ok-circled"></i> Verified&nbsp;</span>
+                                        </td>
+                                        <td data-title="Domain: ">
+                                            <span class="text-size-small" data-ls-bind="{{domain.domain}}"></span>
+                                        </td>
+                                        <td data-title="TLS: ">
+                                            <span class="text-size-small text-fade" data-ls-if="!{{domain.certificateId}} && false === {{domain.verification}}"> &nbsp;Pending Verification&nbsp;</span>
+                                            <span class="text-size-small text-fade" data-ls-if="!{{domain.certificateId}} && true === {{domain.verification}}"> &nbsp;In Progress&nbsp;</span>
+                                            <span class="text-size-small text-success" data-ls-if="{{domain.certificateId}}"><i class="icon-ok-circled"></i> Enabled&nbsp;</span>
+                                        </td>
+                                        <td data-title="">
+                                            <button class="link text-size-small" data-ls-if="true === {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">DNS Settings</button>
+                                            <button class="link text-size-small" data-ls-if="true !== {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">Verify Domain</button>
+                                            
+                                            <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="dns-settings-{{domain.$id}}" xdata-close-event="dns-settings-close-{{domain.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h3 class="margin-bottom" data-ls-if="true === {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">DNS Settings</h3>
+                                                <h3 class="margin-bottom" data-ls-if="true !== {{domain.verification}}" data-ls-ui-trigger="dns-settings-{{domain.$id}}">Verify Domain</h3>
+
+                                                <hr />
+
+                                                <p>Add the following DNS records to your DNS provider settings to setup and verify your new custom domain.</p>
+
+                                                <ol class="bullets">
+                                                    <li>
+                                                        <p>Add a new CNAME record in your DNS providers settings to point your new subdomain to your <?php echo APP_NAME; ?> server with the following value:</p>
+                                                        
+                                                        <div class="ide margin-bottom-small">
+                                                            <pre class="line-numbers"><code class="prism language-javascript" data-prism><?php echo $this->print($customDomainsTarget, 'escape'); ?></code></pre>
+                                                        </div>
+
+                                                        <p>For example:</p>
+
+                                                        <div class="ide margin-bottom-small">
+                                                            <pre class="line-numbers"><code class="prism language-javascript" data-prism><?php echo strtolower(APP_NAME); ?>.myapp.com   CNAME   <?php echo $this->print($customDomainsTarget, 'escape'); ?></code></pre>
+                                                        </div>
+                                                    </li>
+
+                                                    <li>
+                                                        Confirm and verify your CNAME record values:
+                                                        <form class="strip"
+                                                            data-analytics-event="submit"
+                                                            data-analytics-category="console"
+                                                            data-analytics-label="Update Domain Verification"
+                                                            data-service="projects.updateDomainVerification"
+                                                            data-scope="console"
+                                                            data-event="submit"
+                                                            data-loading="Verifying DNS records..."
+                                                            data-success="alert,trigger"
+                                                            data-success-param-alert-text="Verified domain successfully"
+                                                            data-success-param-trigger-events="projects.updateDomainVerification"
+                                                            data-failure="alert"
+                                                            data-failure-param-alert-text="Failed to verify domain, check your DNS records"
+                                                            data-failure-param-alert-classname="error">
+
+                                                            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                                            <input type="hidden" name="domainId" data-ls-bind="{{domain.$id}}" />
+                                                            
+                                                            <button class="margin-top-small">Confirm & Verify</button>
+                                                        </form>
+                                                    </li>
+                                                </ol>
+
+                                                <div class="info margin-bottom">
+                                                    <h4 class="margin-bottom-small">SSL Certificate</h4>
+                                                    <p>After verification completes, <?php echo APP_NAME; ?> will automatically generate a secure SSL certificate for your domain. This process may take a few seconds. Certitficate renewals are automatically issued every 60 days.</p>
+                                                </div>
+
+                                                <button data-ui-modal-close="" type="button" class="reverse">Close Settings</button>
+                                            </div>
+                                        </td>
+                                        <td data-title="">
+                                            <form class="pull-end"
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Delete Project Domain"
+                                                data-service="projects.deleteDomain"
+                                                data-scope="console"
+                                                data-event="submit"
+                                                data-confirm="Are you sure you want to delete this domain?"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Deleted domain successfully"
+                                                data-success-param-trigger-events="projects.deleteDomain"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to delete domain"
+                                                data-failure-param-alert-classname="error">
+
+                                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                                <input type="hidden" name="domainId" data-ls-bind="{{domain.$id}}" />
+
+                                                <button class="danger round reverse small"><i class="icon-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="clear">
+                            <div data-ui-modal class="modal box close" data-button-text="Add Domain">
+                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                <h1>Add Domain</h1>
+
+                                <form
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Create Project Domain"
+                                    data-service="projects.createDomain"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-success="alert,trigger,reset"
+                                    data-success-param-alert-text="Created domain successfully"
+                                    data-success-param-trigger-events="projects.createDomain"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to create domain"
+                                    data-failure-param-alert-classname="error">
+
+                                    <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+
+                                    <label for="name">Domain Name</label>
+                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" title="Enter a valid domain name" pattern="^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$" />
+                                    
+                                    <hr />
+
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </li>
             <li data-state="/console/settings/members?project={{router.params.project}}">
                 <h2>Members</h2>
 
@@ -158,7 +366,7 @@
                                     <button class="danger">Leave</button>
                                 </form>
                                 
-                                <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end" style="display: none;">
+                                <div data-ls-if="false === {{member.confirm}}" class="pull-end margin-end">
                                     <form class="pull-end"
                                         data-analytics-event="submit"
                                         data-analytics-category="console"
@@ -199,15 +407,15 @@
 
                                 <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
-                                <div class="margin-bottom-small">
-                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red" style="display: none;">Pending Approval</span>
+                                <div class="margin-bottom-tiny">
+                                    <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
                                 </div>
-                                <small data-ls-bind="{{member.email}}"></small>
+                                <span class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small>
                             </li>
                         </ul>
                     </div>
 
-                    <div data-ui-modal class="modal close width-medium" data-button-text="Invite Member" data-button-class="">
+                    <div data-ui-modal class="modal box close width-medium" data-button-text="Invite Member" data-button-class="">
                         <button type="button" class="close pull-end" data-ui-modal-close><i class="icon-cancel"></i></button>
 
                         <h1>Invite Member</h1>
@@ -222,7 +430,7 @@
                             data-loading="Sending invitation, please wait..."
                             data-success="alert,trigger,reset"
                             data-success-param-alert-text="Invitation Sent Successfully"
-                            data-success-param-trigger-events="teams.createMembership,modal-close"
+                            data-success-param-trigger-events="teams.createMembership"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to Send Invite"
                             data-failure-param-alert-classname="error">
@@ -240,6 +448,8 @@
                             <select id="roles" name="roles" required data-ls-loop="env.ROLES" data-ls-as="role" data-cast-to="array" style="display: none">
                                 <option data-ls-attrs="value={{role.type}}" data-ls-bind="{{role.label}}"></option>
                             </select>
+
+                            <hr />
 
                             <div class="clear">
                                 <button>Send Invite</button>

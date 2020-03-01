@@ -56,7 +56,7 @@ table {
   }
 
   tr:nth-child(even) {
-    background: var(--config-color-background-focus);
+    background: var(--config-color-background-fade-super);
   }
 
   th {
@@ -130,6 +130,7 @@ table {
         white-space: normal;
         height: 40px;
         line-height: 40px;
+        width: ~"calc(100% - 40px)";
 
         &:first-child, &:last-child {
           padding: 0 10px;
@@ -145,10 +146,12 @@ table {
         }
       }
 
-      td:before {
-        content: attr(data-title);
-        margin-right: 4px;
-        font-weight: 400;
+      td:not([data-title=""]) {
+        &:before {
+          content: attr(data-title);
+          margin-right: 4px;
+          font-weight: 400;
+        }
       }
 
       thead {

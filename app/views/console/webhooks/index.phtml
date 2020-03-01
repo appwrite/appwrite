@@ -24,8 +24,11 @@ $events = [
 
 ?>
 <div class="cover margin-bottom-large">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        Webhooks
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>Webhooks</span>
     </h1>
 </div>
 
@@ -38,13 +41,13 @@ $events = [
     data-success="trigger"
     data-success-param-trigger-events="projects.listWebhooks">
 
-    <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom" style="display: none;">
-        <h3 class="margin-bottom-small text-bold-2">No Webhooks Found</h3>
+    <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom">
+        <h3 class="margin-bottom-small text-bold">No Webhooks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
     </div>
 
-    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.length}}" style="display: none;">
+    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.length}}">
         <ul data-ls-loop="console-webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
@@ -62,7 +65,7 @@ $events = [
                         data-event="submit"
                         data-success="alert,trigger,reset"
                         data-success-param-alert-text="Updated webhook successfully"
-                        data-success-param-trigger-events="projects.updateWebhook,modal-close"
+                        data-success-param-trigger-events="projects.updateWebhook"
                         data-failure="alert"
                         data-failure-param-alert-text="Failed to update webhook"
                         data-failure-param-alert-classname="error">
@@ -74,14 +77,14 @@ $events = [
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
 
                         <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
-                        <div class="row thin margin-bottom">
+                        <div class="row responsive thin">
                             <?php foreach ($events as $i => $event) : ?>
-                                <div class="col span-6">
+                                <div class="col span-6 text-one-liner margin-bottom text-height-large">
                                     <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
-                                <div class="row thin margin-bottom">
+                                <div class="row responsive thin">
                                 <?php endif; ?>
 
                             <?php endforeach; ?>
@@ -112,12 +115,12 @@ $events = [
 
                             <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
-                            <div class="row thin">
-                                <div class="col span-6">
+                            <div class="row responsive thin">
+                                <div class="col span-6 margin-bottom">
                                     <label data-ls-attrs="for=httpUser-{{webhook.$id}}">User</label>
                                     <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{webhook.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{webhook.httpUser}}" />
                                 </div>
-                                <div class="col span-6">
+                                <div class="col span-6 margin-bottom">
                                     <label data-ls-attrs="for=httpPass-{{webhook.$id}}">Password</label>
                                     <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{webhook.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{webhook.httpPass}}" />
                                 </div>
@@ -150,7 +153,7 @@ $events = [
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
-                <span data-ls-if="0 == {{webhook.security}}" style="display: none;">
+                <span data-ls-if="0 == {{webhook.security}}">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
                 <div class="margin-top-tiny">
@@ -175,7 +178,7 @@ $events = [
                 data-event="submit"
                 data-success="alert,trigger,reset"
                 data-success-param-alert-text="Created webhook successfully"
-                data-success-param-trigger-events="projects.createWebhook,modal-close"
+                data-success-param-trigger-events="projects.createWebhook"
                 data-failure="alert"
                 data-failure-param-alert-text="Failed to create webhook"
                 data-failure-param-alert-classname="error">
@@ -186,14 +189,14 @@ $events = [
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
 
                 <label for="events">Events</label>
-                <div class="row thin margin-bottom">
+                <div class="row responsive thin">
                     <?php foreach ($events as $i => $event) : ?>
-                        <div class="col span-6">
+                        <div class="col span-6 text-one-liner margin-bottom text-height-large">
                             <input type="checkbox" name="events" value="<?php echo $event; ?>" /> <?php echo $event; ?>
                         </div>
                         <?php if (($i + 1) % 2 === 0) : ?>
                         </div>
-                        <div class="row thin margin-bottom">
+                        <div class="row responsive thin">
                         <?php endif; ?>
 
                     <?php endforeach; ?>
@@ -224,18 +227,18 @@ $events = [
 
                     <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
 
-                    <div class="row thin">
-                        <div class="col span-6">
+                    <div class="row responsive thin">
+                        <div class="col span-6 margin-bottom">
                             <label for="httpUser">User</label>
                             <input type="text" class="full-width margin-bottom-no" id="httpUser" name="httpUser" autocomplete="off" />
                         </div>
-                        <div class="col span-6">
+                        <div class="col span-6 margin-bottom">
                             <label for="httpPass">Password</label>
                             <input type="password" class="full-width margin-bottom-no" id="httpPass" name="httpPass" autocomplete="off" />
                         </div>
                     </div>
                 </div>
-                
+
                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
             </form>
         </div>

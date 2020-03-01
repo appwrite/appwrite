@@ -41,7 +41,7 @@ $cli
         $platforms = include __DIR__ . '/../config/platforms.php';
         $message = Console::confirm('Please enter your commit message:');
 
-        foreach($platforms as $platform) {
+        foreach($platforms as $key => $platform) {
             foreach($platform['languages'] as $language) {
                 if(!$language['enabled']) {
                     Console::warning($language['name'].' for '.$platform['name'] . ' is disabled');
@@ -52,7 +52,7 @@ $cli
                 
                 $spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
 
-                $result = realpath(__DIR__.'/..').'/sdks/'.$language['key'];
+                $result = realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'.md');
                 $readme = ($readme) ? file_get_contents($readme) : '';
@@ -151,6 +151,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 $gitUrl = $language['gitUrl'];
+
+                if(empty($gitUrl)) {
+                    continue;
+                }
+
                 $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
 
                 exec('rm -rf '.$target.' && \

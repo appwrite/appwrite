@@ -3,27 +3,21 @@ $home = $this->getParam('home', '');
 ?>
 <div class="cover">
     <div class="zone xl">
-        <div class="margin-top margin-bottom">
-            <a href="/">
-                <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="force-light" height="30" />
-                <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" height="30" />
-            </a>
-        </div>
 
-        <h1 class="margin-bottom">Welcome to Appwrite Console</h1>
+        <h1 class="margin-bottom margin-top">Your Projects</h1>
 
-        <p class="margin-bottom margin-top-negative-small">Start creating projects and take advantage of Appwrite development tools and APIs.</p>
+        <p class="margin-bottom margin-top-negative-small">Take advantage of the Appwrite APIs and tools.</p>
 
         <ul class="margin-bottom-xl clear">
-            <li class="pull-start margin-end"><a href="<?php echo $home; ?>/" target="_blank"><i class="icon-lamp"></i> &nbsp;Learn More</a></li>
-            <li class="pull-start margin-end"><a href="<?php echo $home; ?>/docs" target="_blank"><i class="icon-book-open"></i> &nbsp;Documentation</a></li>
-            <li class="pull-start margin-end"><a href="<?php echo $home; ?>/support" target="_blank"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/" target="_blank"><i class="icon-lamp"></i> &nbsp;Learn More</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
         </ul>
     </div>
 </div>
 
-<section class="zone xl margin-bottom-large margin-top-negative-large">
-    <div
+<section class="zone xl margin-bottom margin-top-negative-xl">
+    <div class="margin-bottom-xl"
         data-service="projects.list"
         data-scope="console"
         data-event="load,projects.create"
@@ -32,7 +26,7 @@ $home = $this->getParam('home', '');
         data-success-param-trigger-events="projects.list">
 
         <div data-ls-if="0 == {{console-projects.length}}" class="box margin-bottom" style="display: none">
-            <h3 class="margin-bottom-small text-bold-2">Get Started</h3>
+            <h3 class="margin-bottom-small text-bold">Get Started</h3>
 
             <p class="margin-bottom-no">No Projects Found, Create your first project now.</p>
         </div>
@@ -48,5 +42,45 @@ $home = $this->getParam('home', '');
         </ul>
         
         <button data-ls-ui-trigger="create-project">Create Project</button>
+    </div>
+
+    <div class="row responsive">
+        <div class="col span-6 margin-bottom">
+            <div class="box line">
+                <h3 class="margin-bottom-small text-size-normal">Join The Community</h3>
+        
+                <p class="text-fade">Join Appwrite growing developers community channels.</p>
+        
+                <a href="<?php echo APP_SOCIAL_TWITTER; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Twitter"
+                    data-analytics-event="click"
+                    data-analytics-category="console/home"
+                    data-analytics-label="Twitter Link"><i class="icon-twitter"></i></a>
+                <a href="<?php echo APP_SOCIAL_FACEBOOK; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Facebook"
+                    data-analytics-event="click"
+                    data-analytics-category="console/home"
+                    data-analytics-label="Facebook Link"><i class="icon-facebook"></i></a>
+                <a href="<?php echo APP_SOCIAL_LINKEDIN; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Linkedin"
+                    data-analytics-event="click"
+                    data-analytics-category="console/home"
+                    data-analytics-label="Linkedin Link"><i class="icon-linkedin"></i></a>
+                <a href="<?php echo APP_SOCIAL_DISCORD; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> Discord Server"
+                    data-analytics-event="click"
+                    data-analytics-category="console/home"
+                    data-analytics-label="Discord Link"><i class="icon-discord"></i></a>
+                <a href="<?php echo APP_SOCIAL_GITHUB; ?>" target="_blank" rel="noopener" title="<?php echo APP_NAME;?> on Github"
+                    data-analytics-event="click"
+                    data-analytics-category="console/home"
+                    data-analytics-label="GitHub Link"><i class="icon-github-circled"></i></a>
+            </div>
+        </div>
+        <div class="col span-6 margin-bottom">
+            <div class="box line">
+                <h3 class="margin-bottom-small text-size-normal">Read The Docs</h3>
+            
+                <p class="text-fade">Take full advantage of Appwrite APIs and tools for your new project.</p>
+
+                <a data-ls-attrs="href={{env.HOME}}/docs" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Full Documentation</a>
+            </div>
+        </div>
     </div>
 </section>

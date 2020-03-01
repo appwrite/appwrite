@@ -6,15 +6,14 @@
     padding: 0;
     right: 0;
     left: 0;
-    color: var(--config-color-background-fade);
+    color: var(--config-color-normal);
     z-index: 1002;
     margin: 0 auto;
     bottom: 15px;
-    max-width: 650px;
-    opacity: 0.90;
+    max-width: 560px;
 
     li {
-      margin: 1px 0 0 0;
+      margin: 10px 0 0 0;
       padding: 0;
 
       div.message {
@@ -22,17 +21,24 @@
         padding: 12px 35px;
         margin: 0 auto;
         list-style: none;
-        background: var(--config-color-fade);
+        background: var(--config-color-background-dark);
         text-align: center;
-        font-weight: bold;
-        border-radius: 20px;
+        font-size: 14px;
+        border-radius: 10px;
         line-height: 16px;
         min-height: 16px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        opacity: .95;
+
+        span, a {
+          font-weight: 600;
+        }
 
         i {
           cursor: pointer;
           position: absolute;
-          font-size: 22px;
+          font-size: 14px;
+          line-height: 22px;
           top: 8px;
           .func-start(8px);
         }

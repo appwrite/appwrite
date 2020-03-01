@@ -23,6 +23,9 @@
 * Added ENV vars to change system email sender name and address 
 * Usage for requests made by project admin in the console are not counted as API usage
 * Added ENV var to change default file upload size limit. New default value is 100MB
+* Added option to delete file directly from the dashboard
+* Added option to view file preview from the dashboard
+* Added option to add custom domains with auto SSL certificate generator
 
 ## Bug Fixes
 

@@ -9,12 +9,14 @@ return str.join("&");};let addGlobalHeader=function(key,value){globalHeaders[key
 if(typeof path!=='string'){throw new Error('var path must be of type string');}
 if(typeof headers!=='object'){throw new Error('var headers must be of type object');}
 for(i=0;i<globalParams.length;i++){path=addParam(path,globalParams[i].key,globalParams[i].value);}
+if(window.localStorage&&window.localStorage.getItem('cookieFallback')){headers['X-Fallback-Cookies']=window.localStorage.getItem('cookieFallback');}
 for(let key in globalHeaders){if(globalHeaders.hasOwnProperty(key)){if(!headers[globalHeaders[key].key]){headers[globalHeaders[key].key]=globalHeaders[key].value;}}}
 if(method==='GET'){for(let param in params){if(param.hasOwnProperty(key)){path=addParam(path,key+(Array.isArray(param)?'[]':''),params[key]);}}}
 switch(headers['content-type']){case'application/json':params=JSON.stringify(params);break;case'multipart/form-data':let formData=new FormData();Object.keys(params).forEach(function(key){let param=params[key];formData.append(key+(Array.isArray(param)?'[]':''),param);});params=formData;break;}
 return new Promise(function(resolve,reject){let request=new XMLHttpRequest(),key;request.withCredentials=true;request.open(method,path,true);for(key in headers){if(headers.hasOwnProperty(key)){if(key==='content-type'&&headers[key]==='multipart/form-data'){continue;}
 request.setRequestHeader(key,headers[key]);}}
 request.onload=function(){if(4===request.readyState&&399>=request.status){let data=request.response;let contentType=this.getResponseHeader('content-type')||'';contentType=contentType.substring(0,contentType.indexOf(';'));switch(contentType){case'application/json':data=JSON.parse(data);break;}
+let cookieFallback=this.getResponseHeader('X-Fallback-Cookies')||'';if(window.localStorage&&cookieFallback){window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');window.localStorage.setItem('cookieFallback',cookieFallback);}
 resolve(data);}else{reject(new Error(request.statusText));}};if(progress){request.addEventListener('progress',progress);request.upload.addEventListener('progress',progress,false);}
 request.onerror=function(){reject(new Error("Network Error"));};request.send(params);})};return{'get':function(path,headers={},params={}){return call('GET',path+((Object.keys(params).length>0)?'?'+buildQuery(params):''),headers,{});},'post':function(path,headers={},params={},progress=null){return call('POST',path,headers,params,progress);},'put':function(path,headers={},params={},progress=null){return call('PUT',path,headers,params,progress);},'patch':function(path,headers={},params={},progress=null){return call('PATCH',path,headers,params,progress);},'delete':function(path,headers={},params={},progress=null){return call('DELETE',path,headers,params,progress);},'addGlobalParam':addGlobalParam,'addGlobalHeader':addGlobalHeader}}(window.document);let iframe=function(method,url,params){let form=document.createElement('form');form.setAttribute('method',method);form.setAttribute('action',config.endpoint+url);for(let key in params){if(params.hasOwnProperty(key)){let hiddenField=document.createElement("input");hiddenField.setAttribute("type","hidden");hiddenField.setAttribute("name",key);hiddenField.setAttribute("value",params[key]);form.appendChild(hiddenField);}}
 document.body.appendChild(form);return form.submit();};let account={get:function(){let path='/account';let payload={};return http.get(path,{'content-type':'application/json',},payload);},create:function(email,password,name=''){if(email===undefined){throw new Error('Missing required parameter: "email"');}
@@ -55,15 +57,13 @@ if(success===undefined){throw new Error('Missing required parameter: "success"')
 if(failure===undefined){throw new Error('Missing required parameter: "failure"');}
 let path='/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}','g'),provider);let payload={};if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
-return http.get(path,{'content-type':'application/json',},payload);},deleteSession:function(sessionId){if(sessionId===undefined){throw new Error('Missing required parameter: "id"');}
+payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');},deleteSession:function(sessionId){if(sessionId===undefined){throw new Error('Missing required parameter: "sessionId"');}
 let path='/account/sessions/{sessionId}'.replace(new RegExp('{sessionId}','g'),sessionId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createVerification:function(url){if(url===undefined){throw new Error('Missing required parameter: "url"');}
 let path='/account/verification';let payload={};if(url){payload['url']=url;}
-return http.post(path,{'content-type':'application/json',},payload);},updateVerification:function(userId,secret,passwordB){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+return http.post(path,{'content-type':'application/json',},payload);},updateVerification:function(userId,secret){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(secret===undefined){throw new Error('Missing required parameter: "secret"');}
-if(passwordB===undefined){throw new Error('Missing required parameter: "passwordB"');}
 let path='/account/verification';let payload={};if(userId){payload['userId']=userId;}
 if(secret){payload['secret']=secret;}
-if(passwordB){payload['password-b']=passwordB;}
 return http.put(path,{'content-type':'application/json',},payload);}};let avatars={getBrowser:function(code,width=100,height=100,quality=100){if(code===undefined){throw new Error('Missing required parameter: "code"');}
 let path='/avatars/browsers/{code}'.replace(new RegExp('{code}','g'),code);let payload={};if(width){payload['width']=width;}
 if(height){payload['height']=height;}
@@ -170,7 +170,17 @@ if(legalTaxId){payload['legalTaxId']=legalTaxId;}
 return http.patch(path,{'content-type':'application/json',},payload);},delete:function(projectId,password){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/projects/{projectId}'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(password){payload['password']=password;}
-return http.delete(path,{'content-type':'application/json',},payload);},listKeys:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+return http.delete(path,{'content-type':'application/json',},payload);},listDomains:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/domains'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createDomain:function(projectId,domain){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domain===undefined){throw new Error('Missing required parameter: "domain"');}
+let path='/projects/{projectId}/domains'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(domain){payload['domain']=domain;}
+return http.post(path,{'content-type':'application/json',},payload);},getDomain:function(projectId,domainId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domainId===undefined){throw new Error('Missing required parameter: "domainId"');}
+let path='/projects/{projectId}/domains/{domainId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{domainId}','g'),domainId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},deleteDomain:function(projectId,domainId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domainId===undefined){throw new Error('Missing required parameter: "domainId"');}
+let path='/projects/{projectId}/domains/{domainId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{domainId}','g'),domainId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},updateDomainVerification:function(projectId,domainId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+if(domainId===undefined){throw new Error('Missing required parameter: "domainId"');}
+let path='/projects/{projectId}/domains/{domainId}/verification'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{domainId}','g'),domainId);let payload={};return http.patch(path,{'content-type':'application/json',},payload);},listKeys:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/keys'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createKey:function(projectId,name,scopes){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(name===undefined){throw new Error('Missing required parameter: "name"');}
 if(scopes===undefined){throw new Error('Missing required parameter: "scopes"');}
@@ -296,15 +306,15 @@ let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);le
 if(write){payload['write']=write;}
 return http.put(path,{'content-type':'application/json',},payload);},deleteFile:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getFileDownload:function(fileId){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
-let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},getFilePreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+let path='/storage/files/{fileId}/download'.replace(new RegExp('{fileId}','g'),fileId);let payload={};payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');},getFilePreview:function(fileId,width=0,height=0,quality=100,background='',output=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/preview'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(width){payload['width']=width;}
 if(height){payload['height']=height;}
 if(quality){payload['quality']=quality;}
 if(background){payload['background']=background;}
 if(output){payload['output']=output;}
-return http.get(path,{'content-type':'application/json',},payload);},getFileView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
+payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');},getFileView:function(fileId,as=''){if(fileId===undefined){throw new Error('Missing required parameter: "fileId"');}
 let path='/storage/files/{fileId}/view'.replace(new RegExp('{fileId}','g'),fileId);let payload={};if(as){payload['as']=as;}
-return http.get(path,{'content-type':'application/json',},payload);}};let teams={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/teams';let payload={};if(search){payload['search']=search;}
+payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');}};let teams={list:function(search='',limit=25,offset=0,orderType='ASC'){let path='/teams';let payload={};if(search){payload['search']=search;}
 if(limit){payload['limit']=limit;}
 if(offset){payload['offset']=offset;}
 if(orderType){payload['orderType']=orderType;}

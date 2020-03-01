@@ -357,6 +357,19 @@ window.ls.filter
   })
   .add("isEmptyObject", function($value) {
     return ((Object.keys($value).length === 0 && $value.constructor === Object) || $value.length === 0)
+  })
+  .add("activeDomainsCount", function($value) {
+    let result = [];
+    
+    if(Array.isArray($value)) {
+      result = $value.filter(function(node) {
+        return (node.verification && node.certificateId);
+      });
+    }
+
+    console.log(result);
+    
+    return result.length;
   });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

@@ -3,8 +3,11 @@ $providers = $this->getParam('providers', []);
 ?>
 
 <div class="cover">
-    <h1 class="zone xl margin-bottom-large margin-top">
-        Users
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>Users</span>
     </h1>
 </div>
 
@@ -27,7 +30,7 @@ $providers = $this->getParam('providers', []);
                     data-event="submit"
                     data-success="alert,trigger,reset"
                     data-success-param-alert-text="Created user successfully"
-                    data-success-param-trigger-events="users.create,modal-close"
+                    data-success-param-trigger-events="users.create"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to create user"
                     data-failure-param-alert-classname="error">
@@ -62,7 +65,7 @@ $providers = $this->getParam('providers', []);
                     <div class="col span-10">
                         <input name="search" id="searchUsers" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
-                    <div class="col span-2">
+                    <div class="col span-2 desktops-only">
                         <button class="fill" title="Search" aria-label="Search"><i class="icon-search"></i></button>
                     </div>
                 </div>
@@ -79,12 +82,12 @@ $providers = $this->getParam('providers', []);
                 data-name="project-users">
 
                 <div data-ls-if="0 == {{project-users.sum}}" class="box margin-bottom">
-                    <h3 class="margin-bottom-small text-bold-2">No Users Found</h3>
+                    <h3 class="margin-bottom-small text-bold">No Users Found</h3>
 
                     <p class="margin-bottom-no">Create your first user to get started</p>
                 </div>
 
-                <div data-ls-if="0 != {{project-users.sum}}" style="display: none;">
+                <div data-ls-if="0 != {{project-users.sum}}">
                     <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-users.sum}}"></span> users found</div>
 
                     <div class="box margin-bottom">
@@ -93,9 +96,9 @@ $providers = $this->getParam('providers', []);
                                 <tr>
                                     <th width="60"></th>
                                     <th width="180">Name</th>
-                                    <th width="220">Email</th>
-                                    <th>Status</th>
-                                    <th width="100">Joined</th>
+                                    <th>Email</th>
+                                    <th width="120">Status</th>
+                                    <th width="120">Joined</th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-users.users" data-ls-as="user">
@@ -114,15 +117,15 @@ $providers = $this->getParam('providers', []);
                                     </td>
                                     <td data-title="Status: ">
                                         <span data-ls-if="{{user.emailVerification}} === true">
-                                            &nbsp;<span class="tag green">Verified</span>
+                                            <span class="tag green">Verified</span>
                                         </span>
 
                                         <span data-ls-if="{{user.emailVerification}} !== true">
-                                            &nbsp;<span class="tag">Unverified</span>
+                                            <span class="tag">Unverified</span>
                                         </span>
 
                                         <span data-ls-if="{{user.status}} === <?php echo \Auth\Auth::USER_STATUS_BLOCKED; ?>">
-                                            &nbsp;<span class="tag red">Blocked</span>
+                                            <span class="tag red">Blocked</span>
                                         </span>
                                     </td>
                                     <td data-title="Created: "><small data-ls-bind="{{user.registration|date-text}}"></small></td>
@@ -167,7 +170,7 @@ $providers = $this->getParam('providers', []);
         <li data-state="/console/users/teams?project={{router.params.project}}">
             <h2>Teams</h2>
 
-            <div data-ui-modal class="modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
+            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                 <h1>Create Team</h1>
@@ -180,13 +183,15 @@ $providers = $this->getParam('providers', []);
                     data-event="submit"
                     data-success="alert,trigger,reset"
                     data-success-param-alert-text="Created team successfully"
-                    data-success-param-trigger-events="filter-teams-changed,teams.create,modal-close"
+                    data-success-param-trigger-events="filter-teams-changed,teams.create"
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to create team"
                     data-failure-param-alert-classname="error">
 
                     <label for="team-name">Name</label>
                     <input type="text" class="full-width" id="team-name" name="name" required autocomplete="off" />
+                    
+                    <hr />
 
                     <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                 </form>
@@ -207,7 +212,7 @@ $providers = $this->getParam('providers', []);
                     <div class="col span-10">
                         <input name="search" id="searchTeams" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
                     </div>
-                    <div class="col span-2">
+                    <div class="col span-2 desktops-only">
                         <button class="fill" title="Search" aria-label="Search"><i class="icon-search"></i></button>
                     </div>
                 </div>
@@ -223,13 +228,13 @@ $providers = $this->getParam('providers', []);
                 data-scope="sdk"
                 data-name="project-teams">
 
-                <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom" style="display: none;">
-                    <h3 class="margin-bottom-small text-bold-2">No Teams Found</h3>
+                <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom">
+                    <h3 class="margin-bottom-small text-bold">No Teams Found</h3>
 
                     <p class="margin-bottom-no">Create your first team to get started</p>
                 </div>
 
-                <div data-ls-if="0 != {{project-teams.sum}}" style="display: none;">
+                <div data-ls-if="0 != {{project-teams.sum}}">
                 <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
 
                     <div class="box margin-bottom">
@@ -237,8 +242,8 @@ $providers = $this->getParam('providers', []);
                             <thead>
                                 <tr>
                                     <th width="60"></th>
-                                    <th width="180">Name</th>
-                                    <th>Members</th>
+                                    <th>Name</th>
+                                    <th width="150">Members</th>
                                     <th width="150">Created</th>
                                 </tr>
                             </thead>
@@ -248,7 +253,7 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ls-attrs="src={{team.name|gravatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <div data-ui-modal class="modal close" data-button-text="{{team.name}}" data-button-class="link">
+                                        <div data-ui-modal class="box modal close" data-button-text="{{team.name}}" data-button-class="link">
                                             <h1>Update Team</h1>
 
                                             <form
@@ -260,7 +265,7 @@ $providers = $this->getParam('providers', []);
                                                 data-event="submit"
                                                 data-success="alert,trigger"
                                                 data-success-param-alert-text="Updated team successfully"
-                                                data-success-param-trigger-events="teams.update,modal-close"
+                                                data-success-param-trigger-events="teams.update"
                                                 data-failure="alert"
                                                 data-failure-param-alert-text="Failed to update team"
                                                 data-failure-param-alert-classname="error">
@@ -272,6 +277,8 @@ $providers = $this->getParam('providers', []);
 
                                                 <label for="name">Name</label>
                                                 <input name="name" data-ls-attrs="id=name-{{team.$id}}" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
+
+                                                <hr />
 
                                                 <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
                                             </form>
@@ -332,7 +339,7 @@ $providers = $this->getParam('providers', []);
                         if (isset($data['mock']) && $data['mock']) { continue; }
                         ?>
                         <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
-                            <div data-ui-modal class="modal close" data-button-text="Settings" data-button-class="pull-end">
+                            <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                 <h1><?php echo ucfirst($provider); ?> OAuth2 Settings</h1>
@@ -347,7 +354,7 @@ $providers = $this->getParam('providers', []);
                                     data-param-project-id="{{router.params.project}}"
                                     data-success="alert,trigger"
                                     data-success-param-alert-text="Updated project OAuth2 settings successfully"
-                                    data-success-param-trigger-events="projects.update,modal-close"
+                                    data-success-param-trigger-events="projects.update"
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to update project OAuth2 settings"
                                     data-failure-param-alert-classname="error">
@@ -376,14 +383,20 @@ $providers = $this->getParam('providers', []);
                                 </form>
                             </div>
 
+                            <span data-ls-if="
+                                {{console-project.usersOauth2<?php echo ucfirst($provider); ?>Appid}} &&
+                                {{console-project.usersOauth2<?php echo ucfirst($provider); ?>Secret}}">
+                                <button class="switch on pull-end margin-top-small" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
+                            </span>
+                            <span data-ls-if="
+                                !{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Appid}} ||
+                                !{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Secret}}">
+                                <button class="switch pull-end margin-top-small" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
+                            </span>
+
                             <img src="/images/oauth2/<?php echo strtolower($provider); ?>.png" alt="<?php echo ucfirst($provider); ?> Logo" class="pull-start provider margin-end" />
                             <span>
                                 <?php echo ucfirst($provider); ?>
-                                <span data-ls-if="
-                                    !{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Appid}} ||
-                                    !{{console-project.usersOauth2<?php echo ucfirst($provider); ?>Secret}}">
-                                    &nbsp;<span class="tag red">Disabled</span>
-                                </span>
                             </span>
                             <p class="margin-bottom-no margin-top-small text-one-liner">
                                 <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Developer Docs<i class="icon-link-ext"></i></a>

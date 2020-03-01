@@ -1,6 +1,32 @@
 version: '3'
 
 services:
+  traefik:
+    image: traefik:v2.1.4
+    command:
+      - --log.level=DEBUG
+      - --api.insecure=true
+      - --providers.file.directory=/storage/config
+      - --providers.file.watch=true
+      - --providers.docker=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --accesslog=true
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - appwrite-config:/storage/config:ro
+      - appwrite-certificates:/storage/certificates:ro
+    depends_on:
+     - appwrite
+    networks:
+      - gateway
+      - appwrite
+  
   appwrite:
     container_name: appwrite
     build:
@@ -10,126 +36,148 @@ services:
         - VERSION=dev
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
+    labels:
+      - traefik.http.routers.appwrite.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite-secure.tls=true
     volumes:
-    - appwrite-uploads:/storage/uploads:rw
-    - appwrite-cache:/storage/cache:rw
-    - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
-    - ./tests:/usr/share/nginx/html/tests
-    - ./app:/usr/share/nginx/html/app
-    # - ./vendor:/usr/share/nginx/html/vendor
-    - ./docs:/usr/share/nginx/html/docs
-    - ./public:/usr/share/nginx/html/public
-    - ./src:/usr/share/nginx/html/src
-    - ./docker/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-    - "80:80"
-    - "443:443"
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-cache:/storage/cache:rw
+      - appwrite-config:/storage/config:rw
+      - appwrite-certificates:/storage/certificates:rw
+      - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
+      - ./tests:/usr/share/nginx/html/tests
+      - ./app:/usr/share/nginx/html/app
+      # - ./vendor:/usr/share/nginx/html/vendor
+      - ./docs:/usr/share/nginx/html/docs
+      - ./public:/usr/share/nginx/html/public
+      - ./src:/usr/share/nginx/html/src
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
-    - mariadb
-    - redis
-    - smtp
-    - clamav
-    - influxdb
-    - telegraf
-    - maildev
+      - mariadb
+      - redis
+      - smtp
+      - clamav
+      - influxdb
+      - telegraf
+      - maildev
     environment:
-    - _APP_ENV=development
-    - _APP_OPTIONS_ABUSE=disabled
-    - _APP_OPENSSL_KEY_V1=your-secret-key
-    - _APP_REDIS_HOST=redis
-    - _APP_REDIS_PORT=6379
-    - _APP_DB_HOST=mariadb
-    - _APP_DB_PORT=3306
-    - _APP_DB_SCHEMA=appwrite
-    - _APP_DB_USER=user
-    - _APP_DB_PASS=password
-    - _APP_INFLUXDB_HOST=influxdb
-    - _APP_INFLUXDB_PORT=8086
-    - _APP_STATSD_HOST=telegraf
-    - _APP_STATSD_PORT=8125
-    - _APP_SMTP_HOST=maildev
-    - _APP_SMTP_PORT=25
+      - _APP_ENV=production
+      # - _APP_ENV=development
+      - _APP_OPTIONS_ABUSE=disabled
+      - _APP_OPENSSL_KEY_V1=your-secret-key
+      - _APP_DOMAIN=demo.appwrite.io
+      - _APP_DOMAIN_TARGET=demo.appwrite.io
+      - _APP_REDIS_HOST=redis
+      - _APP_REDIS_PORT=6379
+      - _APP_DB_HOST=mariadb
+      - _APP_DB_PORT=3306
+      - _APP_DB_SCHEMA=appwrite
+      - _APP_DB_USER=user
+      - _APP_DB_PASS=password
+      - _APP_INFLUXDB_HOST=influxdb
+      - _APP_INFLUXDB_PORT=8086
+      - _APP_STATSD_HOST=telegraf
+      - _APP_STATSD_PORT=8125
+      - _APP_SMTP_HOST=maildev
+      - _APP_SMTP_PORT=25
 
   mariadb:
     image: appwrite/mariadb:1.0.2 # fix issues when upgrading using: mysql_upgrade -u root -p
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
     volumes:
-    - appwrite-db:/var/lib/mysql:rw
+      - appwrite-mariadb:/var/lib/mysql:rw
     ports:
-    - "3306:3306"
+      - "3306:3306"
     environment:
-    - MYSQL_ROOT_PASSWORD=rootsecretpassword
-    - MYSQL_DATABASE=appwrite
-    - MYSQL_USER=user
-    - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=rootsecretpassword
+      - MYSQL_DATABASE=appwrite
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
     command: 'mysqld --innodb-flush-method=fsync'
 
   smtp:
     image: appwrite/smtp:1.0.1
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
     environment:
-    - MAILNAME=appwrite
-    - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
-
-  clamav:
-    image: appwrite/clamav:1.0.7
-    restart: unless-stopped
-    networks:
-    - appwrite
-    volumes:
-    - appwrite-uploads:/storage/uploads
+      - MAILNAME=appwrite
+      - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
 
   redis:
     image: redis:5.0
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
+    volumes:
+      - appwrite-redis:/data:rw
+
+  clamav:
+    image: appwrite/clamav:1.0.7
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-uploads:/storage/uploads
 
   influxdb:
     image: influxdb:1.6
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
     volumes:
-    - appwrite-influxdb:/var/lib/influxdb:rw
+      - appwrite-influxdb:/var/lib/influxdb:rw
 
   telegraf:
     image: appwrite/telegraf:1.0.0
     restart: unless-stopped
     networks:
-    - appwrite
+      - appwrite
+
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   restart: unless-stopped
+  #   networks:
+  #   - appwrite
+  #   environment:
+  #   - REDIS_HOSTS=redis
+  #   ports:
+  #   - "8081:8081"
 
   # resque:
   #   image: registry.gitlab.com/appwrite/appwrite/resque-web:v1.0.2
   #   restart: unless-stopped
   #   networks:
-  #   - appwrite
+  #     - appwrite
   #   ports:
-  #   - "5678:5678"
+  #     - "5678:5678"
   #   environment:
-  #   - RESQUE_WEB_HOST=redis
-  #   - RESQUE_WEB_PORT=6379
-  #   - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-  #   - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
+  #     - RESQUE_WEB_HOST=redis
+  #     - RESQUE_WEB_PORT=6379
+  #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
+  #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
   maildev:
     image: djfarrelly/maildev
     restart: unless-stopped
     ports:
-    - '1080:80'
+      - '1080:80'
     networks:
-    - appwrite
+      - appwrite
 
 networks:
+  gateway:
   appwrite:
 
 volumes:
-  appwrite-db:
+  appwrite-mariadb:
+  appwrite-redis:
   appwrite-cache:
   appwrite-uploads:
+  appwrite-certificates:
   appwrite-influxdb:
+  appwrite-config:

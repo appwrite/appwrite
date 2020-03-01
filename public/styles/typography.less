@@ -21,6 +21,7 @@ a, .link {
 
   &:hover {
     border-bottom: dotted 1px var(--config-color-link);
+    cursor: pointer;
   }
 
   &.disabled {
@@ -59,6 +60,11 @@ small {
   font-size: 16px;
 }
 
+.text-height-large {
+  height: 30px;
+  line-height: 30px;
+}
+
 .text-one-liner {
   white-space: nowrap;
   overflow: hidden;
@@ -69,16 +75,12 @@ small {
   font-weight: 400!important;
 }
 
-.text-bold-2 {
-  font-weight: 600!important;
-}
-
 .text-danger {
-  color: var(--config-color-danger);
+  color: var(--config-color-danger)!important;
 }
 
 .text-success {
-  color: var(--config-color-success)
+  color: var(--config-color-success)!important;
 }
 
 .text-upper {
@@ -86,7 +88,7 @@ small {
 }
 
 .text-warning {
-  color: var(--config-color-success)
+  color: var(--config-color-warning)
 }
 
 .text-focus {
@@ -103,6 +105,10 @@ small {
 
 &.text-red {
   color: var(--config-color-danger);
+}
+
+&.text-info {
+  color: var(--config-color-info);
 }
 
 &.text-yellow {

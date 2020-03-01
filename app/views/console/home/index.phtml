@@ -3,7 +3,7 @@ $graph = $this->getParam('graph', false);
 ?>
 
 <div class="cover margin-bottom-small">
-    <div class="zone xl margin-bottom-large margin-top-small">
+    <div class="zone xl margin-bottom-xl margin-top-small">
         <h1 class="margin-bottom-small"
             data-service="projects.get"
             data-event="load,project.update,projects.createPlatform,projects.updatePlatform,projects.deletePlatform"
@@ -13,16 +13,16 @@ $graph = $this->getParam('graph', false);
             <span class="title" data-ls-bind="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;
         </h1>
 
-        <ul class="margin-top margin-bottom-large clear">
-            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
+        <ul class="margin-top margin-bottom clear">
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
         </ul>
     </div>
 </div>
 
-<div class="zone xl margin-top-negative-large">
+<div class="zone xl margin-top-negative-xxl">
     <div class="box margin-bottom dashboard">
         <div
             data-service="projects.getUsage"
@@ -83,7 +83,7 @@ $graph = $this->getParam('graph', false);
 <div class="zone xl margin-top-xl clear" data-ls-if="({{console-project}})">
     <h2 class="margin-bottom">Platforms</h2>
 
-    <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}" style="display: none;">
+    <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}">
         <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
             <li class="clear">
 
@@ -116,7 +116,7 @@ $graph = $this->getParam('graph', false);
                 </form>
 
                 <div class="margin-bottom-tiny">
-                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
                     <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 
@@ -125,29 +125,31 @@ $graph = $this->getParam('graph', false);
         </ul>
     </div>
 
-    <div data-ls-if="(!{{console-project.platforms.length}})" class="box dashboard margin-bottom" style="display: none;">
+    <div data-ls-if="(!{{console-project.platforms.length}})" class="box dashboard margin-bottom">
         <div class="margin-bottom-small margin-top-small margin-end margin-start">
-            <h3 class="margin-bottom-small text-bold-2">No Platforms Added to Your Project</h3>
+            <h3 class="margin-bottom-small text-bold">No Platforms Added to Your Project</h3>
 
             <p class="margin-bottom-no">Add your first platform and build your new application.</p>
         </div>
     </div>
 
-    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="pull-end">Manage Your API Keys</a>
+    <div class="pull-end desktops-only tablets-only">
+        <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your API Keys</a>
+    </div>
 
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" data-blur="1" tabindex="1">
         <ul>
             <li>
-                <div class="link web-new"><img src="/images/clients/web.png" alt="Web Platform Logo" class="avatar xs margin-end" /> New Web App</div>
+                <div class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Web Platform Logo" class="avatar xs margin-end" /> New Web App</div>
             </li>
             <li class="disabled">
-                <div class="link ios-new"><img src="/images/clients/ios.png" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App</div>
+                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App</div>
             </li>
             <li class="disabled">
-                <div class="link android-new"><img src="/images/clients/android.png" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App</div>
+                <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App</div>
             </li>
             <li class="disabled">
-                <div class="link unity-new"><img src="/images/clients/unity.png" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game</div>
+                <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game</div>
             </li>
         </ul>
     </div>
@@ -167,7 +169,7 @@ $graph = $this->getParam('graph', false);
         data-event="submit"
         data-success="alert,trigger,reset"
         data-success-param-alert-text="Created new platform successfully"
-        data-success-param-trigger-events="projects.createPlatform,modal-close"
+        data-success-param-trigger-events="projects.createPlatform"
         data-failure="alert"
         data-failure-param-alert-text="Failed to create platform"
         data-failure-param-alert-classname="error">
@@ -205,7 +207,7 @@ $graph = $this->getParam('graph', false);
         data-event="submit"
         data-success="alert,trigger"
         data-success-param-alert-text="Updated platform successfully"
-        data-success-param-trigger-events="projects.updatePlatform,modal-close"
+        data-success-param-trigger-events="projects.updatePlatform"
         data-failure="alert"
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
@@ -221,6 +223,6 @@ $graph = $this->getParam('graph', false);
         
         <hr />
 
-        <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
     </form>
 </script>

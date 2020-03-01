@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register, $user, $audit, $usage, $project, $projectDB;
+global $utopia, $request, $response, $register, $user, $audit, $usage, $project, $projectDB, $version;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -25,41 +25,48 @@ use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
-Storage::addDevice('local', new Local('/storage/uploads/app-'.$project->getId()));
+Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
-    'default' => 'default.gif',
+    'default' => __DIR__.'/../../config/files/none.png',
+    
+    // Video Files
+    'video/mp4' => __DIR__.'/../../config/files/video.png',
+    'video/x-flv' => __DIR__.'/../../config/files/video.png',
+    'application/x-mpegURL' => __DIR__.'/../../config/files/video.png',
+    'video/MP2T' => __DIR__.'/../../config/files/video.png',
+    'video/3gpp' => __DIR__.'/../../config/files/video.png',
+    'video/quicktime' => __DIR__.'/../../config/files/video.png',
+    'video/x-msvideo' => __DIR__.'/../../config/files/video.png',
+    'video/x-ms-wmv' => __DIR__.'/../../config/files/video.png',
 
-    // Microsoft Word
-    'application/msword' => 'word.gif',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'word.gif',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.template' => 'word.gif',
-    'application/vnd.ms-word.document.macroEnabled.12' => 'word.gif',
+    // // Microsoft Word
+    'application/msword' =>  __DIR__.'/../../config/files/word.png',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' =>  __DIR__.'/../../config/files/word.png',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.template' =>  __DIR__.'/../../config/files/word.png',
+    'application/vnd.ms-word.document.macroEnabled.12' =>  __DIR__.'/../../config/files/word.png',
 
-    // Microsoft Excel
-    'application/vnd.ms-excel' => 'excel.gif',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel.gif',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.template' => 'excel.gif',
-    'application/vnd.ms-excel.sheet.macroEnabled.12' => 'excel.gif',
-    'application/vnd.ms-excel.template.macroEnabled.12' => 'excel.gif',
-    'application/vnd.ms-excel.addin.macroEnabled.12' => 'excel.gif',
-    'application/vnd.ms-excel.sheet.binary.macroEnabled.12' => 'excel.gif',
+    // // Microsoft Excel
+    'application/vnd.ms-excel' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.template' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.sheet.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.template.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.addin.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
+    'application/vnd.ms-excel.sheet.binary.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
 
-    // Microsoft Power Point
-    'application/vnd.ms-powerpoint' => 'powerpoint.gif',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'powerpoint.gif',
-    'application/vnd.openxmlformats-officedocument.presentationml.template' => 'powerpoint.gif',
-    'application/vnd.openxmlformats-officedocument.presentationml.slideshow' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.addin.macroEnabled.12' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.presentation.macroEnabled.12' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.template.macroEnabled.12' => 'powerpoint.gif',
-    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' => 'powerpoint.gif',
-
-    // Microsoft Access
-    'application/vnd.ms-access' => 'access.gif',
+    // // Microsoft Power Point
+    'application/vnd.ms-powerpoint' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.openxmlformats-officedocument.presentationml.template' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.openxmlformats-officedocument.presentationml.slideshow' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.addin.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.presentation.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.template.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
+    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
 
     // Adobe PDF
-    'application/pdf' => 'pdf.gif',
+    'application/pdf' =>  __DIR__.'/../../config/files/pdf.png',
 ];
 
 $inputs = [
@@ -84,6 +91,16 @@ $mimes = [
     'image/png',
     'image/webp',
 
+    // Video Files
+    'video/mp4',
+    'video/x-flv',
+    'application/x-mpegURL',
+    'video/MP2T',
+    'video/3gpp',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/x-ms-wmv',
+    
     // Microsoft Word
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -321,7 +338,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     //->param('storage', 'local', function () {return new WhiteList(array('local'));}, 'Selected storage device. defaults to local')
     //->param('token', '', function () {return new Text(128);}, 'Preview token', true)
     ->action(
-        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
+        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos, $version) {
             $storage = 'local';
 
             if (!extension_loaded('imagick')) {
@@ -337,7 +354,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-            $key = md5($fileId.$width.$height.$quality.$background.$storage.$output);
+            $key = md5($version.$fileId.$width.$height.$quality.$background.$storage.$output);
 
             $file = $projectDB->getDocument($fileId);
 
@@ -346,18 +363,28 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             $path = $file->getAttribute('path');
-            $algorithm = $file->getAttribute('algorithm');
             $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $algorithm = $file->getAttribute('algorithm');
             $cipher = $file->getAttribute('fileOpenSSLCipher');
+            $mime = $file->getAttribute('mimeType');
+
+            if(!in_array($mime, $inputs)) {
+                $path = (array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
+                $algorithm = null;
+                $cipher = null;
+                $background = (empty($background)) ? 'eceff1' : $background;
+                $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                $key = md5($version.$path.$width.$height.$quality.$background.$storage.$output);
+            }
 
             $compressor = new GZIP();
             $device = Storage::getDevice('local');
 
             if (!file_exists($path)) {
-                throw new Exception('File not found in '.$path, 404);
+                throw new Exception('File not found', 404);
             }
 
-            $cache = new Cache(new Filesystem('/storage/cache/app-'.$project->getId())); // Limit file number or size
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
             $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
             if ($data) {

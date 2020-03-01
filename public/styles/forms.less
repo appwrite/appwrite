@@ -39,11 +39,21 @@ button,
     border-bottom: none;
   }
 
+  &.small {
+    height: 30px;
+    width: 30px;
+    line-height: 30px;
+  }
+
   &.fly {
     position: fixed;
     z-index: 2;
     bottom: 30px;
     .func-end(30px);
+
+    @media @phones {
+      .func-end(15px);
+    }
   }
 
   &.fill {
@@ -242,6 +252,7 @@ select {
   &:disabled {
     color: var(--config-color-normal);
     background: var(--config-color-fade-super);
+    opacity: 1!important;
   }
 
   &.strip {
@@ -483,7 +494,7 @@ fieldset {
   }
 
   &.blue {
-    background: #4abde8;
+    background: var(--config-color-info);
     color: #fff;
   }
 
@@ -706,7 +717,7 @@ label.switch {
   line-height: 42px;
 }
 
-input[type=checkbox].switch {
+.switch {
   width: 67px;
   height: 42px;
   line-height: 42px;
@@ -715,8 +726,19 @@ input[type=checkbox].switch {
   display: block;
   margin: 0;
   padding: 5px;
-  .func-padding-start(30px);
-  .func-padding-end(5px);
+  .func-padding-start(5px);
+  .func-padding-end(30px);
+
+  &.on {
+    background-color: var(--config-color-success);
+    .func-padding-start(30px);
+    .func-padding-end(5px);
+
+    &:focus,
+    &:hover {
+      background: var(--config-color-success);
+    }  
+  }
 
   &:checked {
     background: var(--config-color-focus);
@@ -726,6 +748,8 @@ input[type=checkbox].switch {
 
   &:focus,
   &:hover {
+    background: var(--config-color-fade);
+
     &:after {
       background: #ffffff;
     }
@@ -817,6 +841,10 @@ input[type=checkbox].switch {
   .func-margin-start(-15px);
   margin-top: -25px;
   margin-bottom: 20px;
+
+  @media @phones {
+    .func-margin-start(-5px);
+  }
 }
 
 hr {
@@ -1114,6 +1142,7 @@ ol {
     padding: 0;
     width: auto;
     margin: 0;
+    max-width: 100%;
   }
 
   ul.tags-list {

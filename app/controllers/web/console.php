@@ -5,6 +5,7 @@ include_once __DIR__ . '/../shared/web.php';
 global $utopia, $response, $request, $layout, $version, $providers, $projectDB;
 
 use Utopia\View;
+use Utopia\Domains\Domain;
 use Database\Database;
 use Database\Validator\UID;
 use Storage\Storage;
@@ -116,8 +117,15 @@ $utopia->get('/console/settings')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout) {
+    ->action(function () use ($request, $layout) {
+        $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
+
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
+
+        $page
+            ->setParam('customDomainsEnabled', ($target->isKnown() && !$target->isTest()))
+            ->setParam('customDomainsTarget', $target->get())
+        ;
 
         $layout
             ->setParam('title', APP_NAME.' - Settings')

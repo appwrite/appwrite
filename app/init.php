@@ -20,12 +20,24 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
-const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
-const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
-const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
+const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
+const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email address
+const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
+const APP_CACHE_BUSTER = 48;
 const APP_VERSION_STABLE = '0.5.0';
+const APP_STORAGE_UPLOADS = '/storage/uploads';
+const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_CERTIFICATES = '/storage/certificates';
+const APP_STORAGE_CONFIG = '/storage/config';
+const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite_io';
+const APP_SOCIAL_TWITTER_HANDLE = 'appwrite_io';
+const APP_SOCIAL_FACEBOOK = 'https://www.facebook.com/appwrite.io';
+const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
+const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
+const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
+const APP_SOCIAL_DISCORD = 'https://discord.gg/GSeTUeA';
 
 $register = new Registry();
 $request = new Request();
@@ -44,8 +56,8 @@ $collections = include __DIR__.'/../app/config/collections.php'; // Collections 
 $redisHost = $request->getServer('_APP_REDIS_HOST', '');
 $redisPort = $request->getServer('_APP_REDIS_PORT', '');
 $utopia = new App('Asia/Tel_Aviv', $env);
-$scheme = $request->getServer('REQUEST_SCHEME', '');
-$port = (string) parse_url($scheme.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT);
+$protocol = $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https'));
+$port = (string) parse_url($protocol.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT);
 
 Resque::setBackend($redisHost.':'.$redisPort);
 
@@ -56,7 +68,7 @@ define('COOKIE_DOMAIN',
         (filter_var($request->getServer('HTTP_HOST', null), FILTER_VALIDATE_IP) !== false)
     )
         ? null
-        : '.'.parse_url($scheme.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
+        : '.'.parse_url($protocol.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
 define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
@@ -197,7 +209,9 @@ if (in_array($locale, $locales)) {
 stream_context_set_default([ // Set global user agent and http settings
     'http' => [
         'method' => 'GET',
-        'user_agent' => sprintf(APP_USERAGENT, $version),
+        'user_agent' => sprintf(APP_USERAGENT,
+            $version,
+            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
     ],
 ]);
@@ -229,7 +243,18 @@ if (APP_MODE_ADMIN === $mode) {
 $session = Auth::decodeSession(
     $request->getCookie(Auth::$cookieName, // Get sessions
         $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+                $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+
+// Get fallback session from clients who block 3rd-party cookies
+$response->addHeader('X-Debug-Fallback', 'false');
+
+if(empty($session['id']) && empty($session['secret'])) {
+    $response->addHeader('X-Debug-Fallback', 'true');
+    $fallback = $request->getHeader('X-Fallback-Cookies', null);
+    $fallback = json_decode($fallback, true);
+    $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+}
+
 Auth::$unique = $session['id'];
 Auth::$secret = $session['secret'];
 

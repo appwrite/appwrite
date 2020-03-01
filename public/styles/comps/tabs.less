@@ -56,11 +56,11 @@
         display: block;
         height: 2px;
         background: var(--config-color-focus);
-        width: ~"calc(100% - 46px)";
+        width: calc(100% + 6px);
+        margin: 0 -3px;
         position: absolute;
         bottom: 0;
         border-radius: 2px;
-        .func-start(-2px);
       }
     }
 
@@ -70,13 +70,17 @@
 
     li {
       .pull-start;
-      .func-padding-end(50px);
+      .func-margin-end(50px);
       color: var(--config-color-focus);
       opacity: .9;
       cursor: pointer;
-
+      
       &:focus {
         outline: none;
+      }
+      
+      @media @phones {
+        .func-margin-end(25px);
       }
     }
   }

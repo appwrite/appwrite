@@ -29,7 +29,7 @@ $collection = $this->getParam('collection', []);
             data-scope="sdk"
             data-success="alert,trigger,reset"
             data-success-param-alert-text="Created document successfully"
-            data-success-param-trigger-events="database.createCollection,modal-close"
+            data-success-param-trigger-events="database.createCollection"
             data-failure="alert"
             data-failure-param-alert-text="Failed to create document"
             data-failure-param-alert-classname="error">
@@ -79,7 +79,7 @@ $collection = $this->getParam('collection', []);
             <p class="margin-bottom-no">Create your first document to get started</p>
         </div>
 
-        <div data-ls-if="0 != {{project-documents.sum}}" style="display: none;">
+        <div data-ls-if="0 != {{project-documents.sum}}">
             <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
 
             <div class="box y-scroll margin-bottom">

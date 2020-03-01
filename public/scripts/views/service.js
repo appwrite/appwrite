@@ -14,7 +14,7 @@
     ) {
       let action = element.dataset["service"];
       let service = element.dataset["name"] || action;
-      let event = element.dataset["event"]; // load, click, change, submit
+      let event = expression.parse(element.dataset["event"]); // load, click, change, submit
       let confirm = element.dataset["confirm"] || ""; // Free text
       let loading = element.dataset["loading"] || ""; // Free text
       let loaderId = null;

@@ -637,6 +637,12 @@
       "css": "sun-inv",
       "code": 59465,
       "src": "iconic"
+    },
+    {
+      "uid": "0f4cae16f34ae243a6144c18a003f2d8",
+      "css": "cancel-circled",
+      "code": 59466,
+      "src": "fontawesome"
     }
   ]
 }
