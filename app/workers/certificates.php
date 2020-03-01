@@ -89,8 +89,7 @@ class CertificatesV1
             'first' => true,
         ]);
 
-        $debug = ($certificate) ? $certificate->getArrayCopy() : ['empty'];
-        throw new Exception('cert is'.json_encode($debug));
+        throw new Exception('cert issued at'.date('d.m.Y H:i', $certificate['issueDate']).' | renew date is: '.date('d.m.Y H:i', ($certificate['issueDate'] + ($expiry))));
 
         $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
 
