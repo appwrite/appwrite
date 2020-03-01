@@ -89,13 +89,13 @@ class CertificatesV1
             'first' => true,
         ]);
 
-        $condition = ($certificate
-            && $certificate instanceof Document
-            && isset($certificate['issueDate'])
-            && (($certificate['issueDate'] + ($expiry)) > time())) ? 'true' : 'false';
+        // $condition = ($certificate
+        //     && $certificate instanceof Document
+        //     && isset($certificate['issueDate'])
+        //     && (($certificate['issueDate'] + ($expiry)) > time())) ? 'true' : 'false';
 
-        throw new Exception('cert issued at'.date('d.m.Y H:i', $certificate['issueDate']).' | renew date is: '.date('d.m.Y H:i', ($certificate['issueDate'] + ($expiry))).' | condition is '.$condition);
-        
+        // throw new Exception('cert issued at'.date('d.m.Y H:i', $certificate['issueDate']).' | renew date is: '.date('d.m.Y H:i', ($certificate['issueDate'] + ($expiry))).' | condition is '.$condition);
+
         $certificate = (!empty($certificate) && $certificate instanceof $certificate) ? $certificate->getArrayCopy() : [];
 
         if($certificate
