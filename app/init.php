@@ -20,9 +20,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
-const APP_EMAIL_TEAM = 'team@'.APP_DOMAIN;
-const APP_EMAIL_SECURITY = 'security@'.APP_DOMAIN;
-const APP_USERAGENT = APP_NAME.'-Server/%s Please report abuse at '.APP_EMAIL_SECURITY;
+const APP_EMAIL_TEAM = 'team@localhost'; // Default email address
+const APP_EMAIL_SECURITY = 'security@localhost'; // Default security email address
+const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
 const APP_CACHE_BUSTER = 48;
@@ -209,7 +209,9 @@ if (in_array($locale, $locales)) {
 stream_context_set_default([ // Set global user agent and http settings
     'http' => [
         'method' => 'GET',
-        'user_agent' => sprintf(APP_USERAGENT, $version),
+        'user_agent' => sprintf(APP_USERAGENT,
+            $version,
+            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
     ],
 ]);

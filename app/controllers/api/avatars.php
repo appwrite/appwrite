@@ -206,7 +206,7 @@ $utopia->get('/v1/avatars/favicon')
     ->label('sdk.method', 'getFavicon')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
-        function ($url) use ($response, $version) {
+        function ($url) use ($response, $request, $version) {
             $width = 56;
             $height = 56;
             $quality = 80;
@@ -237,7 +237,10 @@ $utopia->get('/v1/avatars/favicon')
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_MAXREDIRS => 3,
                 CURLOPT_URL => $url,
-                CURLOPT_USERAGENT => sprintf(APP_USERAGENT, $version),
+                CURLOPT_USERAGENT => sprintf(APP_USERAGENT,
+                    $version,
+                    $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                ),
             ]);
 
             $html = curl_exec($curl);

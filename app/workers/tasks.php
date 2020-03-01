@@ -23,7 +23,7 @@ class TasksV1
 
     public function perform()
     {
-        global $consoleDB, $version;
+        global $consoleDB, $version, $request;
 
         /*
          * 1. Get Original Task
@@ -93,7 +93,10 @@ class TasksV1
         curl_setopt($ch, CURLOPT_POSTFIELDS, '');
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_USERAGENT, sprintf(APP_USERAGENT, $version));
+        curl_setopt($ch, CURLOPT_USERAGENT, sprintf(APP_USERAGENT,
+            $version,
+            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+        ));
         curl_setopt(
             $ch,
             CURLOPT_HTTPHEADER,
