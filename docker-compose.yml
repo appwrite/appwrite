@@ -12,6 +12,7 @@ services:
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --accesslog=true
+    restart: unless-stopped
     ports:
       - 80:80
       - 443:443
