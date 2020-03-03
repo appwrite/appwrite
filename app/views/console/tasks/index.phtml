@@ -25,11 +25,10 @@
         <table class="full vertical">
             <thead>
                 <tr>
-                    <th width="240">Name</th>
-                    <th width="100"></th>
-                    <th width="120">Next Run</th>
-                    <th width="120">Prev. Run</th>
-                    <th></th>
+                    <th>Name</th>
+                    <th width="140">Status</th>
+                    <th width="180">Schedule</th>
+                    <th width="140"></th>
                 </tr>
             </thead>
             <tbody data-ls-loop="console-tasks" data-ls-as="task" class="list">
@@ -56,12 +55,13 @@
                             <span class="tag red"><i class="icon-pause"></i> Paused &nbsp;</span>
                         </span>
                     </td>
-                    <td data-title="Next Run:" style="vertical-align: middle" class="text-size-small text-fade">
-                        <span data-ls-bind="{{task.next|date-time}}"></span>
-                    </td>
-                    <td data-title="Previous Run:" style="vertical-align: middle" class="text-size-small text-fade">
+                    <td data-title="" style="vertical-align: middle" class="text-size-small text-fade">
+                        <span data-ls-bind="Next: {{task.next|date-time}}"></span>
+
+                        <br />
+                    
                         <span data-ls-if="undefined !== {{task.previous}}">
-                            <span data-ls-bind="{{task.previous|date-time}}"></span>
+                            <span data-ls-bind="Prev: {{task.previous|date-time}}"></span>
 
                             <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
                                 <small data-ls-bind="({{task.delay|ms2hum}} Delay)"></small>
@@ -218,7 +218,7 @@
                             <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
                         </form>
 
-                        <button class="pull-end margin-start reverse round desktops-only" data-ls-ui-trigger="task-update-{{task.$id}}"><i class="icon-cog"></i></button>
+                        <button class="pull-end margin-start round desktops-only" data-ls-ui-trigger="task-update-{{task.$id}}"><i class="icon-cog"></i></button>
                         <button class="pull-end reverse danger round desktops-only" data-ls-ui-trigger="task-delete-{{task.$id}}"><i class="icon-trash"></i></button>
 
                         <button class="link pull-start margin-end-small tablets-only phones-only" data-ls-ui-trigger="task-update-{{task.$id}}">Update</button>
