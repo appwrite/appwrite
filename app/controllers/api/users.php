@@ -43,7 +43,7 @@ $utopia->post('/v1/users')
             ]);
 
             if (!empty($profile)) {
-                throw new Exception('User already registered', 400);
+                throw new Exception('User already registered', 409);
             }
 
             $user = $projectDB->createDocument([
