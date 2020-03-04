@@ -1,12 +1,11 @@
 .console {
-  height: 100%;
   width: 100%;
   padding: 0;
   overflow: auto;
+  overscroll-behavior: none;
   
   body {
     position: relative;
-    height: ~"calc(100% - 70px)";
     width: ~"calc(100% - 320px)";
     overflow: auto;
     padding-top: 70px;
@@ -83,7 +82,7 @@
     .logo {
       display: none;
       border: none;
-      
+
       &:hover {
         border: none;
         opacity: .8;
@@ -726,6 +725,14 @@
     display: none;
   }
 
+  @media @desktops {
+    .logo {
+      .top {
+        display: none!important;
+      }
+    }
+  }
+
   @media @phones, @tablets {
     >header {
       width: ~"calc(100% - 30px)"!important;
@@ -734,8 +741,59 @@
 
       nav {
         width: 100%;
-        display: none!important;
-        visibility: hidden;
+        height: 70px;
+        overflow: hidden;
+
+        &.close {
+          background: transparent;
+
+          .logo {
+            .nav {
+              display: none!important;
+            }
+          }
+        }
+
+        &.open {
+          height: 100%;
+
+          .logo {
+            .top {
+              display: none!important;
+            }
+          }
+
+          .bottom {
+            display: block!important;
+          }
+
+          button {
+            color: #87a5b9;
+          }
+        }
+
+        button {
+          margin: 9px;
+          background: transparent;
+          color: var(--config-color-normal);
+  
+          &:hover, &:focus {
+            background: transparent;
+          }
+        }
+
+        .logo {
+          display: block!important;
+          position: absolute;
+          top: 0;
+          left: 50%;
+          margin: auto;
+          transform: translateX(-50%);
+        }
+
+        .bottom {
+          display: none!important;
+        }
       }
     }
 
@@ -776,16 +834,6 @@
       .list {
         width: 175px;
         font-size: 14px;
-      }
-
-      .switch-theme {
-        display: none;
-      }
-
-      .account {
-        .name {
-          display: none;
-        }
       }
     }
 

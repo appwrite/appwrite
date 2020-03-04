@@ -4,7 +4,7 @@
         <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" />
     </a>
 
-    <div class="change-project pull-start">
+    <div class="change-project pull-start desktops-only">
         <div class="list project-only margin-end-small">
             <label class="margin-bottom-no">
                 <select class="margin-bottom-no"
@@ -39,11 +39,11 @@
 
         <a href="/console/account" class="account pull-end clear">
             <img src="" data-ls-attrs="src={{account|gravatar}}" alt="User Avatar" class="avatar margin-start pull-end" />
-            <span class="name pull-end" data-ls-bind="{{account.name}}"></span>
+            <span class="name pull-end desktops-only" data-ls-bind="{{account.name}}"></span>
         </a>
     </div>
     
-    <div class="pull-end margin-end switch-theme">
+    <div class="pull-end margin-end switch-theme desktops-only">
         <button data-general-theme
             data-analytics-event="click"
             data-analytics-category="console/header"
@@ -53,15 +53,18 @@
         </button>
     </div>
 
-    <nav class="project-only">
+    <nav class="project-only" data-ls-ui-open="" data-button-class="round icon-btn phones-only tablets-only" data-button-icon="icon-dot-3">
         <a class="logo" href="/console"
             data-analytics-event="click"
             data-analytics-category="console/navigation"
             data-analytics-label="Logo Link">
-            <img src="/images/appwrite-nav.svg" alt="Appwrite Logo" />
+            <img src="/images/appwrite-nav.svg" alt="Appwrite Logo" class="nav" />
+
+            <img src="/images/appwrite.svg" alt="Appwrite Light Logo" class="top force-light" />
+            <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="top force-dark" />
         </a>
 
-        <div data-ui-highlight class="project-only container">
+        <div data-ui-highlight class="container">
 
             <ul class="links">
                 <li>
@@ -111,12 +114,12 @@
 
             <ul class="links">
                 <li>
-                    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}"
+                    <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
-                        data-analytics-label="API Keys Link">
-                        <i class="icon-key-inv"></i>
-                        API Keys
+                        data-analytics-label="Tasks Link">
+                        <i class="icon-clock"></i>
+                        Tasks
                     </a>
                 </li>
                 <li>
@@ -129,18 +132,18 @@
                     </a>
                 </li>
                 <li>
-                    <a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"
+                    <a data-ls-attrs="href=/console/keys?project={{router.params.project}}"
                         data-analytics-event="click"
                         data-analytics-category="console/navigation"
-                        data-analytics-label="Tasks Link">
-                        <i class="icon-clock"></i>
-                        Tasks
+                        data-analytics-label="API Keys Link">
+                        <i class="icon-key-inv"></i>
+                        API Keys
                     </a>
                 </li>
             </ul>
         </div>
 
-        <ul class="links bottom project-only">
+        <ul class="links bottom">
             <li>
                 <a data-ls-attrs="href=/console/settings?project={{router.params.project}}"
                     data-analytics-event="click"
@@ -152,7 +155,7 @@
     </nav>
 </header>
 
-<div class="list pull-start project-only"
+<div class=""
     data-service="projects.list"
     data-event="load,projects.update"
     data-name="projects"
