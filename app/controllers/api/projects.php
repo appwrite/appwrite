@@ -1033,9 +1033,9 @@ $utopia->post('/v1/projects/:projectId/platforms')
     ->param('name', null, function () { return new Text(256); }, 'Platform name.')
     ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS.', true)
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
-    ->param('url', '', function () { return new URL(); }, 'Platform client URL.', true)
+    ->param('hostname', '', function () { return new Text(256); }, 'Platform client hostname.', true)
     ->action(
-        function ($projectId, $type, $name, $key, $store, $url) use ($response, $consoleDB) {
+        function ($projectId, $type, $name, $key, $store, $hostname) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -1052,7 +1052,7 @@ $utopia->post('/v1/projects/:projectId/platforms')
                 'name' => $name,
                 'key' => $key,
                 'store' => $store,
-                'url' => $url,
+                'hostname' => $hostname,
                 'dateCreated' => time(),
                 'dateUpdated' => time(),
             ]);
@@ -1083,7 +1083,7 @@ $utopia->get('/v1/projects/:projectId/platforms')
     ->label('sdk.method', 'listPlatforms')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
+        function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -1104,7 +1104,7 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->action(
-        function ($projectId, $platformId) use ($request, $response, $consoleDB) {
+        function ($projectId, $platformId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -1131,9 +1131,9 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
     ->param('name', null, function () { return new Text(256); }, 'Platform name.')
     ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS.', true)
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
-    ->param('url', '', function () { return new URL(); }, 'Platform client URL.', true)
+    ->param('hostname', '', function () { return new Text(256); }, 'Platform client URL.', true)
     ->action(
-        function ($projectId, $platformId, $name, $key, $store, $url) use ($response, $consoleDB) {
+        function ($projectId, $platformId, $name, $key, $store, $hostname) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -1151,7 +1151,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
                 ->setAttribute('dateUpdated', time())
                 ->setAttribute('key', $key)
                 ->setAttribute('store', $store)
-                ->setAttribute('url', $url)
+                ->setAttribute('hostname', $hostname)
             ;
 
             if (false === $consoleDB->updateDocument($platform->getArrayCopy())) {

@@ -34,34 +34,34 @@ $usage = new Event('v1-usage', 'UsageV1');
  * + Filter for duplicated entries
  */
 $clientsConsole = array_map(function ($node) {
-    return $node['url'];
-}, array_filter($console->getAttribute('platforms', []), function ($node) {
-    if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
-        return true;
-    }
+        return $node['hostname'];
+    }, array_filter($console->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-    return false;
-}));
+        return false;
+    }));
 
 $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) {
-    return $node['url'];
-}, array_filter($project->getAttribute('platforms', []), function ($node) {
-    if (isset($node['type']) && $node['type'] === 'web' && isset($node['url']) && !empty($node['url'])) {
-        return true;
-    }
+        return $node['hostname'];
+    }, array_filter($project->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-    return false;
-}))));
+        return false;
+    }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients, $protocol) {
     
     $route = $utopia->match($request);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
-    $origin = $request->getServer('HTTP_ORIGIN', parse_url($referrer, PHP_URL_SCHEME).'://'.parse_url($referrer, PHP_URL_HOST));
+    $origin = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
 
-    $refDomain = (in_array($origin, $clients))
-        ? $origin : 'http://localhost';
+    $refDomain = $protocol.'://'.((in_array($origin, $clients))
+        ? $origin : 'localhost');
 
     /*
      * Security Headers
@@ -86,13 +86,14 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      *  Adding Appwrite API domains to allow XDOMAIN communication
      *  Skip this check for non-web platforms which are not requiredto send an origin header
      */
-    $hostValidator = new Host($clients);
-    $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
+    $origin = parse_url($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')), PHP_URL_HOST);
     
-    if (!empty($origin) && !$hostValidator->isValid($origin)
+    if (!empty($origin)
+        && !in_array($origin, $clients)
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
-        && empty($request->getHeader('X-Appwrite-Key', ''))) {
-        throw new Exception('Access from this client host is forbidden. '.$hostValidator->getDescription(), 403);
+        && empty($request->getHeader('X-Appwrite-Key', ''))
+    ) {
+        throw new Exception('Access from this client host is forbidden', 403);
     }
 
     /*

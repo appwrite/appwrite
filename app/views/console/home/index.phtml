@@ -13,7 +13,7 @@ $graph = $this->getParam('graph', false);
             <span class="title" data-ls-bind="{{console-project.name}}">&nbsp;</span>&nbsp;&nbsp;
         </h1>
 
-        <ul class="margin-top margin-bottom clear">
+        <ul class="margin-top-negative-small margin-bottom clear">
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
@@ -120,7 +120,7 @@ $graph = $this->getParam('graph', false);
                     <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 
-                <p class="margin-bottom-no"><small data-ls-bind="{{platform.url}}"></small></p>
+                <p class="margin-bottom-no"><small data-ls-bind="{{platform.hostname}}"></small></p>
             </li>
         </ul>
     </div>
@@ -178,10 +178,10 @@ $graph = $this->getParam('graph', false);
         <input type="hidden" name="type" data-ls-bind="web" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" placeholder="My Web App" />
 
-        <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
-        <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="https://localhost:3000" required>
+        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
+        <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" required>
         
         <div class="info margin-top margin-bottom">
             <div class="text-bold margin-bottom-small">Next Steps</div>
@@ -212,14 +212,14 @@ $graph = $this->getParam('graph', false);
         data-failure-param-alert-text="Failed to update platform"
         data-failure-param-alert-classname="error">
 
-        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}"/ >
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
         <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
 
         <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" />
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" />
 
-        <label for="url">URL <span class="tooltip large" data-tooltip="The URL that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
-        <input name="url" type="url" class="margin-bottom" autocomplete="off" placeholder="example.com" data-ls-bind="{{platform.url}}" required>
+        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
+        <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" data-ls-bind="{{platform.hostname}}" required />
         
         <hr />
 

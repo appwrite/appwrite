@@ -42,11 +42,6 @@ $callbacks = [
             Console::success('Fetched '.$sum.' (offset: '.$offset.' / limit: '.$limit.') documents from a total of '.$projectDB->getSum());
             
             foreach($all as $document) {
-                if(empty($document->getAttribute('$uid', null))) {
-                    Console::info('Skipped document');
-                    continue;
-                }
-                
                 $document = fixDocument($document);
 
                 if(empty($document->getId())) {
@@ -132,12 +127,17 @@ function fixDocument(Document $document) {
         }
     }
 
-    if(empty($document->getAttribute('$uid', null))) {
-        return $document;
+    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_PLATFORMS) {
+        if($document->getAttribute('url', null) !== null) {
+            $document
+                ->setAttribute('hostname', parse_url($document->getAttribute('url', $document->getAttribute('hostname', '')), PHP_URL_HOST))
+                ->removeAttribute('url')
+            ;
+        }
     }
 
     $document
-        ->setAttribute('$id', $document->getAttribute('$uid', null))
+        ->setAttribute('$id', $document->getAttribute('$uid', $document->getAttribute('$id')))
         ->removeAttribute('$uid')
     ;
 
