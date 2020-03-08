@@ -15,6 +15,7 @@
 
       add.type = "text";
       add.className = "add";
+      add.placeholder = element.placeholder;
 
       //add.required = element.required;
 

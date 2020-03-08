@@ -13,6 +13,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 </div>
 
 <div class="zone xl">
+    
+    <h2 class="margin-bottom">Files</h2>
+
     <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
         <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
@@ -39,10 +42,10 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
             <div class="text-fade text-size-small margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
-            <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
+            <label for="file-read">Read Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
             
-            <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
+            <label for="file-write">Write Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
 
             <hr />
@@ -137,10 +140,10 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                 </div>
                                                 <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
-                                                <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                <label for="file-read">Read Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
                                                 <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
                                                 
-                                                <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                <label for="file-write">Write Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
                                                 <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
                                             </form>
 

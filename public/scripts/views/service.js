@@ -260,6 +260,7 @@
 
         if (confirm) {
           if (window.confirm(confirm) !== true) {
+            element.classList.add("load-service-end");
             return false;
           }
         }

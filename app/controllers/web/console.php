@@ -187,19 +187,8 @@ $utopia->get('/console/database/collection')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->param('id', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(function ($id) use ($layout, $projectDB) {
-        $collection = $projectDB->getDocument($id, false);
-
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
-        }
-
+    ->action(function () use ($layout, $projectDB) {
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
-
-        $page
-            ->setParam('collection', $collection->getArrayCopy())
-        ;
 
         $layout
             ->setParam('title', APP_NAME.' - Database')
