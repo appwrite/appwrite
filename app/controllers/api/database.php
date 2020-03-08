@@ -70,6 +70,10 @@ $utopia->post('/v1/database/collections')
                 throw new Exception('Failed saving document to DB', 500);
             }
 
+            if (false === $data) {
+                throw new Exception('Failed saving collection to DB', 500);
+            }
+
             $data = $data->getArrayCopy();
 
             $webhook
@@ -193,16 +197,24 @@ $utopia->put('/v1/database/collections/:collectionId')
                 ], $rule);
             }
 
-            $collection = $projectDB->updateDocument(array_merge($collection->getArrayCopy(), [
-                'name' => $name,
-                'structure' => true,
-                'dateUpdated' => time(),
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-                'rules' => $rules,
-            ]));
+            try {
+                $collection = $projectDB->updateDocument(array_merge($collection->getArrayCopy(), [
+                    'name' => $name,
+                    'structure' => true,
+                    'dateUpdated' => time(),
+                    '$permissions' => [
+                        'read' => $read,
+                        'write' => $write,
+                    ],
+                    'rules' => $parsedRules,
+                ]));
+            } catch (AuthorizationException $exception) {
+                throw new Exception('Unauthorized action', 401);
+            } catch (StructureException $exception) {
+                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+            } catch (\Exception $exception) {
+                throw new Exception('Failed saving document to DB', 500);
+            }
 
             if (false === $collection) {
                 throw new Exception('Failed saving collection to DB', 500);
