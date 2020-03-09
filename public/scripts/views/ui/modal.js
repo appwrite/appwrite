@@ -82,6 +82,22 @@
 
         element.classList.add("open");
         element.classList.remove("close");
+
+        let form = element.querySelector('form');
+        let elements = [...form.elements] || [];
+
+        for (let index = 0; index < elements.length; index++) {
+          let element = elements[index];
+
+          if(element.type !== 'hidden'
+            && element.type !== 'button'
+            && element.type !== 'submit'
+          ) {
+              console.log(element.type);
+            element.focus();
+            break;
+          }
+        }
       };
 
       let close = function(event) {
