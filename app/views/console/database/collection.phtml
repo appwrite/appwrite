@@ -12,7 +12,7 @@
 
             <br />
 
-            <span data-ls-bind="{{project-collection.name}}" data-debug="1">&nbsp;&nbsp;</span>
+            <span data-ls-bind="{{project-collection.name}}">&nbsp;&nbsp;</span>
         </h1>
     </div>
 
@@ -44,7 +44,7 @@
                             <label>&nbsp;</label>
                             <div class="box margin-bottom">
                                 <label for="collection-name">Name</label>
-                                <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" />
+                                <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" data-debug="1" />
                                 
                                 <h3 class="margin-bottom-small">Rules</h3>
 
@@ -59,7 +59,7 @@
                                         <li>
                                             <hr class="margin-bottom-small margin-top-small" />
                                             
-                                            <div class="row">
+                                            <div class="row thin">
                                                 <div class="col span-4 text-bold text-one-liner">
                                                     <span data-ls-bind="{{rule.label}}"></span>
                                                     <br />
@@ -67,21 +67,21 @@
                                                 </div>
  
                                                 <div class="col span-4 text-one-liner">
-                                                    <span class="tag blue" data-ls-bind=" &nbsp; {{rule.type}} &nbsp; "></span>
+                                                    <span class="tag yellow" data-ls-bind="&nbsp;{{rule.type}}&nbsp;"></span>
                                                     
                                                     <span data-ls-if="({{rule.array}})">
-                                                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-fade text-size-small">array</span>
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-size-small text-fade">array</span>
                                                     </span>
                                                 </div>
                                                 
                                                 <div class="col span-2 text-align-center">
                                                     <span data-ls-if="({{rule.required}})">
-                                                        &nbsp;<span class="text-danger text-size-small">required</span>
+                                                        &nbsp;<span class="tag red">required</span>
                                                     </span>
                                                 </div>
 
                                                 <div class="col span-2 text-align-end">
-                                                    <div class="margin-top-small"><i class="icon-cancel"></i></div> &nbsp;
+                                                    <div><i class="icon-cancel"></i></div> &nbsp;
                                                 </div>
                                             </div>
 
@@ -100,7 +100,7 @@
 
                                 <hr class="margin-bottom-small margin-top-small" />
 
-                                <button class="link margin-top-tiny"><i class="icon-plus"></i>Add Rule</button>
+                                <button class="link margin-top-tiny margin-bottom-small"><i class="icon-plus"></i>Add Rule</button>
 
                                 <div class="toggle margin-bottom margin-top" data-ls-ui-open>
                                     <i class="icon-plus pull-end margin-top-tiny"></i>
