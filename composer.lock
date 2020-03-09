@@ -1437,12 +1437,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "ac1bdf5d34432620c5be97249a5e5ab0e49a69c7"
+                "reference": "e3d88b794badbd5ededcf62d708b31009111f860"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ac1bdf5d34432620c5be97249a5e5ab0e49a69c7",
-                "reference": "ac1bdf5d34432620c5be97249a5e5ab0e49a69c7",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e3d88b794badbd5ededcf62d708b31009111f860",
+                "reference": "e3d88b794badbd5ededcf62d708b31009111f860",
                 "shasum": ""
             },
             "require": {
@@ -1473,7 +1473,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-02-15T05:02:58+00:00"
+            "time": "2020-03-08T15:42:21+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -2038,12 +2038,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "5b92e1c931401bfc617ea99977761c7e679c17ac"
+                "reference": "d6b5291650d058fe1162a54fee9d923de19bcda2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/5b92e1c931401bfc617ea99977761c7e679c17ac",
-                "reference": "5b92e1c931401bfc617ea99977761c7e679c17ac",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/d6b5291650d058fe1162a54fee9d923de19bcda2",
+                "reference": "d6b5291650d058fe1162a54fee9d923de19bcda2",
                 "shasum": ""
             },
             "require": {
@@ -2076,7 +2076,7 @@
                 }
             ],
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
-            "time": "2020-03-04T18:52:39+00:00"
+            "time": "2020-03-06T17:11:40+00:00"
         },
         {
             "name": "phpspec/prophecy",
