@@ -20,7 +20,7 @@ while(match=REGEX_PARAMETERS_VALUES.exec(functionAsString)){params.push(match[1]
 return params;}
 let args=getParams(target);return target.apply(target,args.map(function(value){return self.get(value.trim());}));};let path=function(path,value,as,prefix){as=(as)?as:container.get('$as');prefix=(prefix)?prefix:container.get('$prefix');path=((path.indexOf('.')>-1)?path.replace(as+'.',prefix+'.'):path.replace(as,prefix)).split('.');let name=path.shift();let object=this.get(name);let result=null;while(path.length>1){if(!object){return null;}
 object=object[path.shift()];}
-let shift=path.shift();if(value!==null&&value!==undefined&&object&&shift&&object[shift]){object[shift]=value;return true;}
+let shift=path.shift();if(value!==null&&value!==undefined&&object&&shift&&(object[shift]!==undefined||object[shift]!==null)){object[shift]=value;return true;}
 if(!object){return null;}
 if(!shift){result=object;}
 else{return object[shift];}
