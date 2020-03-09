@@ -240,7 +240,7 @@ $utopia->get('/v1/mock/tests/general/oauth2')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
+    ->param('redirect_uri', '', function () { return new Host(['localhost']); }, 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
     ->param('scope', '', function () { return new Text(100); }, 'OAuth2 scope list.')
     ->param('state', '', function () { return new Text(1024); }, 'OAuth2 state.')
     ->action(
@@ -254,7 +254,7 @@ $utopia->get('/v1/mock/tests/general/oauth2/token')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['http://localhost']); }, 'OAuth2 Redirect URI.')
+    ->param('redirect_uri', '', function () { return new Host(['localhost']); }, 'OAuth2 Redirect URI.')
     ->param('client_secret', '', function () { return new Text(100); }, 'OAuth2 scope list.')
     ->param('code', '', function () { return new Text(100); }, 'OAuth2 state.')
     ->action(
