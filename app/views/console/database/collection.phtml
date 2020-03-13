@@ -44,22 +44,86 @@
                             <label>&nbsp;</label>
                             <div class="box margin-bottom">
                                 <label for="collection-name">Name</label>
-                                <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" data-debug="1" />
+                                <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" />
                                 
-                                <h3 class="margin-bottom-small">Rules</h3>
+                                <h3 class="margin-bottom-small">Attributes & Rules</h3>
 
                                 <div data-ls-if="(!{{project-collection.rules.length}})">
-                                    <div class="margin-bottom-xl margin-top-large margin-end margin-start text-align-center">
-                                        <h4 class="text-fade text-size-small">No rules added yet.</h4>
+                                    <hr class="margin-bottom-no margin-top-no" />
+                                    <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
+                                        <h4 class="text-fade text-size-small">No attribute rules added yet.</h4>
                                     </div>
                                 </div>
 
                                 <div data-ls-if="({{project-collection.rules.length}})">
                                     <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
                                         <li>
-                                            <hr class="margin-bottom-small margin-top-small" />
+
+                                            <div class="toggle list" data-ls-ui-open>
+                                                <i class="icon-up-open pull-end margin-top-tiny"></i>
+                                                <i class="icon-down-open pull-end margin-top-tiny"></i>
+                                    
+                                                <h4 class="margin-bottom-large">
+                                                    <span data-ls-bind="{{rule.label}}"></span>
+
+                                                    <span data-ls-if="(!{{rule.array}})">
+                                                        <span class="text-fade text-size-small" data-ls-bind="&nbsp;({{rule.type}})&nbsp;"></span>
+                                                    </span>
+
+                                                    <span data-ls-if="({{rule.array}})">
+                                                        <span class="text-size-small text-fade" data-ls-bind="&nbsp;({{rule.type}} array)&nbsp;"></span>
+                                                    </span>
+                                                </h4>
+
+                                                <fieldset name="rules" data-cast-to="array">
+                                                    <input name="$id" type="hidden" data-ls-bind="{{rule.$id}}" />
+                                                    <input name="$collection" type="hidden" data-ls-bind="{{rule.$collection}}" />
+                                                    
+                                                    <div class="row thin">
+                                                        <div class="col span-6">
+                                                            <label data-ls-attrs="for=rule-label-{{rule.$id}}">Label
+                                                                <span class="tooltip" data-tooltip="Attribute internal display name"><i class="icon-info-circled"></i></span>
+                                                            </label>
+                                                            <input name="label" type="text" data-ls-bind="{{rule.label}}" />
+                                                        </div>
+                                                        <div class="col span-6">
+                                                            <label data-ls-attrs="for=rule-key-{{rule.$id}}">Key
+                                                                <span class="tooltip small" data-tooltip="Attribute key name. Used as the document JSON key in the Database API"><i class="icon-info-circled"></i></span>
+                                                            </label>
+                                                            <div class="input-copy">
+                                                                <input data-forms-copy name="key" type="text" data-ls-bind="{{rule.key}}" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+  
+                                                    <label data-ls-attrs="for=rule-type-{{rule.$id}}">Rule Type</label>
+
+                                                    <select data-ls-attrs="id=rule-type-{{rule.$id}}" name="type" required data-ls-bind="{{rule.type}}">
+                                                        <option value="text">Text</option>
+                                                        <option value="numeric">Numeric</option>
+                                                        <option value="boolean">Boolean</option>
+                                                        <option value="email">Email</option>
+                                                        <option value="url">URL</option>
+                                                        <option value="ip">IP</option>
+                                                        <option value="wildcard">Wildcard (*)</option>
+                                                    </select>
+
+                                                    <!-- <p>text / string / numeric / integer / float / boolean / email / url / ip / wildcard / document / key</p> -->
+                                                    
+                                                    <div class="margin-bottom">
+                                                        <input name="required" type="checkbox" data-ls-bind="{{rule.required}}" data-cast-to="boolean" /> Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+                                                    </div>
+                                                                                                        
+                                                    <div class="margin-bottom">
+                                                        <input name="array" type="checkbox" data-ls-bind="{{rule.array}}" data-cast-to="boolean" /> Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+                                                    </div>
+
+                                                    <input name="array" type="hidden" data-ls-bind="{{rule.array}}" data-cast-to="boolean" />
+                                                    <input name="required" type="hidden" data-ls-bind="{{rule.required}}" data-cast-to="boolean" />
+                                                </fieldset>
+                                            </div>
                                             
-                                            <div class="row thin">
+                                            <!-- <div class="row thin">
                                                 <div class="col span-4 text-bold text-one-liner">
                                                     <span data-ls-bind="{{rule.label}}"></span>
                                                     <br />
@@ -83,24 +147,15 @@
                                                 <div class="col span-2 text-align-end">
                                                     <div><i class="icon-cancel"></i></div> &nbsp;
                                                 </div>
-                                            </div>
+                                            </div> -->
 
-                                            <fieldset name="rules" data-cast-to="array">
-                                                <input name="$id" type="hidden" data-ls-bind="{{rule.$id}}" />
-                                                <input name="$collection" type="hidden" data-ls-bind="{{rule.$collection}}" />
-                                                <input name="label" type="hidden" data-ls-bind="{{rule.label}}" />
-                                                <input name="key" type="hidden" data-ls-bind="{{rule.key}}" />
-                                                <input name="type" type="hidden" data-ls-bind="{{rule.type}}" />
-                                                <input name="array" type="hidden" data-ls-bind="{{rule.array}}" data-cast-to="boolean" />
-                                                <input name="required" type="hidden" data-ls-bind="{{rule.required}}" data-cast-to="boolean" />
-                                            </fieldset>
                                         </li>
                                     </ul>
                                 </div>
 
-                                <hr class="margin-bottom-small margin-top-small" />
+                                <hr class="margin-bottom-no margin-top-no" />
 
-                                <button class="link margin-top-tiny margin-bottom-small"><i class="icon-plus"></i>Add Rule</button>
+                                <button class="reverse margin-top"><i class="icon-plus"></i>Add</button>
 
                                 <div class="toggle margin-bottom margin-top" data-ls-ui-open>
                                     <i class="icon-plus pull-end margin-top-tiny"></i>
@@ -160,8 +215,8 @@
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.dateCreated|date-text}}"></span></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.dateUpdated|date-text}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.dateCreated|date-text}}"></span></li>
                         </ul>
 
                         <form name="database.deleteCollection" class="margin-bottom"

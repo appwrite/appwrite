@@ -88,6 +88,10 @@
     height: 65px;
     overflow: hidden;
 
+    &.list {
+      border-bottom: none;
+    }
+
     button.ls-ui-open {
       position: absolute;
       top: 0;
@@ -99,7 +103,7 @@
       border-radius: 0;
     }
 
-    .icon-minus {
+    .icon-minus, .icon-up-open {
       display: none;
     }
 
@@ -110,11 +114,11 @@
     &.open {
       height: auto;
 
-      .icon-minus {
+      .icon-minus, .icon-up-open {
         display: block;
       }
 
-      .icon-plus {
+      .icon-plus, .icon-down-open {
         display: none;
       }
 
