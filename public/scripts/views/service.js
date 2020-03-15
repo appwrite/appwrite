@@ -268,18 +268,24 @@
         if (loading) {
           loaderId = alerts.add({ text: loading, class: "" }, 0);
         }
-
         let method = container.path(scope + "." + action);
-
+        
         if (!method) {
           throw new Error('Method "' + scope + "." + action + '" not found');
         }
-
+        
         let formData = "FORM" === element.tagName ? form.toJson(element) : {};
+        
         let result = resolve(method, "param", formData);
 
         if (!result) {
           return;
+        }
+
+        if(Promise.resolve(result) != result) {
+          result = new Promise((resolve, reject) => {
+            resolve(result);
+          });
         }
 
         result.then(

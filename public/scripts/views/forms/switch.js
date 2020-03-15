@@ -6,14 +6,14 @@
     controller: function(element) {
       let input = window.document.createElement("input");
       input.type = "checkbox";
-      input.className = "switch";
+      input.className = "button switch";
 
       let syncA = function() {
-        element.value = input.checked ? "on" : "off";
+        element.value = input.checked ? "true" : "false";
       };
 
       let syncB = function() {
-        input.checked = element.value === "on";
+        input.checked = element.value === "true";
       };
 
       input.addEventListener("input", syncA);

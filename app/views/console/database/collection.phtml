@@ -20,6 +20,40 @@
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/database/collection?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Documents</h2>
+
+                <div
+                    data-service="database.listDocuments"
+                    data-event="load,database.createDocument,database.updateDocument,database.deleteDocument"
+                    data-param-search="{{router.params.search}}"
+                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                    data-param-collection-id="{{router.params.id}}"
+                    data-param-offset="{{router.params.offset}}"
+                    data-param-order-type="ASC"
+                    data-scope="sdk"
+                    data-name="project-documents">
+
+                    <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
+                        <h3 class="margin-bottom-small text-bold">No Documnets Found</h3>
+
+                        <p class="margin-bottom-no">Create your first document to get started</p>
+                    </div>
+
+                    <div data-ls-if="({{project-documents.sum}})" class="box">
+                        <table class="vertical full">
+                            <thead>
+                                <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
+                                    <th data-ls-bind="{{rule.label}}"></th>
+                                </tr>
+                            </thead>
+                            <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
+                                <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
+                                    <!-- <td data-ls-attrs="data-title={{rule.label}}:" data-ls-bind="{{node.firstname}} / {{rule.key}}" data-debug="1"></th> -->
+                                    <td><span data-ls-bind="{{node.firstname}}" data-debug="1"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </li>
             <li data-state="/console/database/collection/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>
@@ -55,10 +89,11 @@
                                     </div>
                                 </div>
 
+                                <input type="hidden" id="rulesInit" name="rules" data-cast-to="array-empty">
+
                                 <div data-ls-if="({{project-collection.rules.length}})">
                                     <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
-                                        <li>
-
+                                        <li data-forms-remove>
                                             <div class="toggle list" data-ls-ui-open>
                                                 <i class="icon-up-open pull-end margin-top-tiny"></i>
                                                 <i class="icon-down-open pull-end margin-top-tiny"></i>
@@ -71,11 +106,19 @@
                                                     </span>
 
                                                     <span data-ls-if="({{rule.array}})">
-                                                        <span class="text-size-small text-fade" data-ls-bind="&nbsp;({{rule.type}} array)&nbsp;"></span>
+                                                        <span class="text-size-small text-fade" data-ls-bind="&nbsp;({{rule.type}} / array)&nbsp;"></span>
                                                     </span>
+
+                                                    <div data-ls-if="({{rule.required}})">
+                                                        <span class="text-size-xs text-danger text-fade">required</span>
+                                                    </div>
+
+                                                    <div data-ls-if="(!{{rule.required}})">
+                                                        <span class="text-size-xs text-fade">optional</span>
+                                                    </div>
                                                 </h4>
 
-                                                <fieldset name="rules" data-cast-to="array">
+                                                <fieldset data-ls-attrs="name=rules" data-cast-to="array">
                                                     <input name="$id" type="hidden" data-ls-bind="{{rule.$id}}" />
                                                     <input name="$collection" type="hidden" data-ls-bind="{{rule.$collection}}" />
                                                     
@@ -91,7 +134,7 @@
                                                                 <span class="tooltip small" data-tooltip="Attribute key name. Used as the document JSON key in the Database API"><i class="icon-info-circled"></i></span>
                                                             </label>
                                                             <div class="input-copy">
-                                                                <input data-forms-copy name="key" type="text" data-ls-bind="{{rule.key}}" />
+                                                                <input data-forms-copy name="key" type="text" data-ls-bind="{{rule.key}}" max="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -108,54 +151,24 @@
                                                         <option value="wildcard">Wildcard (*)</option>
                                                     </select>
 
-                                                    <!-- <p>text / string / numeric / integer / float / boolean / email / url / ip / wildcard / document / key</p> -->
-                                                    
                                                     <div class="margin-bottom">
-                                                        <input name="required" type="checkbox" data-ls-bind="{{rule.required}}" data-cast-to="boolean" /> Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+                                                        <input name="required" type="hidden" data-forms-switch data-ls-bind="{{rule.required}}" data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
                                                     </div>
                                                                                                         
                                                     <div class="margin-bottom">
-                                                        <input name="array" type="checkbox" data-ls-bind="{{rule.array}}" data-cast-to="boolean" /> Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+                                                        <input name="array" type="hidden" data-forms-switch data-ls-bind="{{rule.array}}" data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
                                                     </div>
-
-                                                    <input name="array" type="hidden" data-ls-bind="{{rule.array}}" data-cast-to="boolean" />
-                                                    <input name="required" type="hidden" data-ls-bind="{{rule.required}}" data-cast-to="boolean" />
                                                 </fieldset>
+
+                                                <button type="button" data-remove="" class="reverse danger margin-bottom">Remove</button>
                                             </div>
-                                            
-                                            <!-- <div class="row thin">
-                                                <div class="col span-4 text-bold text-one-liner">
-                                                    <span data-ls-bind="{{rule.label}}"></span>
-                                                    <br />
-                                                    <span data-ls-bind="{{rule.key}}" class="text-size-small text-fade"></span>
-                                                </div>
- 
-                                                <div class="col span-4 text-one-liner">
-                                                    <span class="tag yellow" data-ls-bind="&nbsp;{{rule.type}}&nbsp;"></span>
-                                                    
-                                                    <span data-ls-if="({{rule.array}})">
-                                                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-size-small text-fade">array</span>
-                                                    </span>
-                                                </div>
-                                                
-                                                <div class="col span-2 text-align-center">
-                                                    <span data-ls-if="({{rule.required}})">
-                                                        &nbsp;<span class="tag red">required</span>
-                                                    </span>
-                                                </div>
-
-                                                <div class="col span-2 text-align-end">
-                                                    <div><i class="icon-cancel"></i></div> &nbsp;
-                                                </div>
-                                            </div> -->
-
                                         </li>
                                     </ul>
                                 </div>
 
                                 <hr class="margin-bottom-no margin-top-no" />
 
-                                <button class="reverse margin-top"><i class="icon-plus"></i>Add</button>
+                                <button type="button" data-ls-ui-trigger="add-rule" class="reverse margin-top"><i class="icon-plus"></i>Add</button>
 
                                 <div class="toggle margin-bottom margin-top" data-ls-ui-open>
                                     <i class="icon-plus pull-end margin-top-tiny"></i>
@@ -173,40 +186,6 @@
                                 <button>Update</button>
                             </form>
                         </div>
-<!-- 
-                        <div data-ui-modal class="box modal close" data-button-text="Add Rule" data-button-class="" data-button-icon="icon-plus">
-                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
-
-                            <h1>Add Rule</h1>
-
-                            <form
-                                data-analytics-event="submit"
-                                data-analytics-category="console"
-                                data-analytics-label="Create Database Collection"
-                                data-service="database.createCollection"
-                                data-event="submit"
-                                data-scope="sdk"
-                                data-success="alert,reset,redirect,trigger"
-                                data-success-param-alert-text="Collection created successfully"
-                                data-success-param-redirect-url="/console/database/collection/settings?id={{serviceData.$id}}&project={{router.params.project}}"
-                                data-success-param-trigger-events="database.createCollection"
-                                data-failure="alert"
-                                data-failure-param-alert-text="Failed to create collection"
-                                data-failure-param-alert-classname="error">
-
-                                <label for="user-name">Name</label>
-                                <input type="text" class="full-width" id="collection-name" name="name" required autocomplete="off" />
-
-                                <input type="hidden" id="collection-read" name="read" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-                                <input type="hidden" id="collection-write" name="write" required data-cast-to="json" value="<?php echo htmlentities(json_encode([])); ?>" />
-
-                                <hr />
-
-                                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                            </form>
-                        </div> -->
-
-                        <!-- <p>text / string / numeric / integer / float / boolean / email / url / ip / wildcard / document / key</p> -->
                     </div>
                     <div class="col span-4 sticky-top">
                         <label>Collection ID</label>
@@ -239,12 +218,72 @@
                         </form>
                     </div>
                 </div>
-            </li>
-            <!-- <li data-state="/console/database/collection/docs?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Docs</h2>
 
-                <div class="box line"></div>
-            </li> -->
+                <div data-ui-modal class="box modal close" data-button-alias="none" data-open-event="add-rule">
+                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                    <h1>Add Attribute</h1>
+
+                    <form
+                        data-analytics-event="submit"
+                        data-analytics-category="console"
+                        data-analytics-label="Added Collection Rule"
+                        data-service="container.path"
+                        data-event="submit"
+                        data-scope="window.ls"
+                        data-success="reset">
+
+                        <input type="hidden" name="path" value="project-collection.rules" />
+                        <input type="hidden" name="type" value="append" />
+                        
+                        <fieldset name="value" data-cast-to="object">                            
+                            <input name="$collection" type="hidden" value="rules" />
+
+                            <div class="row thin">
+                                <div class="col span-6">
+                                    <label for="rule-label-new">Label
+                                        <span class="tooltip" data-tooltip="Attribute internal display name"><i class="icon-info-circled"></i></span>
+                                    </label>
+                                    <input name="label" type="text" required />
+                                </div>
+                                <div class="col span-6">
+                                    <label for="rule-key-new">Key
+                                        <span class="tooltip small" data-tooltip="Attribute key name. Used as the document JSON key in the Database API"><i class="icon-info-circled"></i></span>
+                                    </label>
+                                    <div class="input-copy">
+                                        <input data-forms-copy name="key" type="text" required max="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <label for="rule-type-new">Rule Type</label>
+
+                            <select name="type" required>
+                                <option value="text">Text</option>
+                                <option value="numeric">Numeric</option>
+                                <option value="boolean">Boolean</option>
+                                <option value="email">Email</option>
+                                <option value="url">URL</option>
+                                <option value="ip">IP</option>
+                                <option value="wildcard">Wildcard (*)</option>
+                            </select>
+
+                            <div class="margin-bottom">
+                                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
+                            </div>
+                                                                                
+                            <div class="margin-bottom">
+                                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
+                            </div>
+
+                        </fieldset>
+
+                        <hr class="margin-top-no" />
+
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </form>
+                </div>
+            </li>
         </ul>
     </div>
 </div>

@@ -92,7 +92,7 @@
                             json[name] = element.value;
                         }
                     }
-
+                    
                     json[name] = cast(json[name], castTo); // Apply casting
                 }
             }

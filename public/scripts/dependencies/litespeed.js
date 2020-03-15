@@ -18,9 +18,12 @@ return instance;};let resolve=function(target){if(!target){return()=>{};}
 let self=this;const REGEX_COMMENTS=/((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;const REGEX_FUNCTION_PARAMS=/(?:\s*(?:function\s*[^(]*)?\s*)((?:[^'"]|(?:(?:(['"])(?:(?:.*?[^\\]\2)|\2))))*?)\s*(?=(?:=>)|{)/m;const REGEX_PARAMETERS_VALUES=/\s*([\w\\$]+)\s*(?:=\s*((?:(?:(['"])(?:\3|(?:.*?[^\\]\3)))((\s*\+\s*)(?:(?:(['"])(?:\6|(?:.*?[^\\]\6)))|(?:[\w$]*)))*)|.*?))?\s*(?:,|$)/gm;function getParams(func){let functionAsString=func.toString();let params=[];let match;functionAsString=functionAsString.replace(REGEX_COMMENTS,'');functionAsString=functionAsString.match(REGEX_FUNCTION_PARAMS)[1];if(functionAsString.charAt(0)==='('){functionAsString=functionAsString.slice(1,-1);}
 while(match=REGEX_PARAMETERS_VALUES.exec(functionAsString)){params.push(match[1]);}
 return params;}
-let args=getParams(target);return target.apply(target,args.map(function(value){return self.get(value.trim());}));};let path=function(path,value,as,prefix){as=(as)?as:container.get('$as');prefix=(prefix)?prefix:container.get('$prefix');path=((path.indexOf('.')>-1)?path.replace(as+'.',prefix+'.'):path.replace(as,prefix)).split('.');let name=path.shift();let object=this.get(name);let result=null;while(path.length>1){if(!object){return null;}
+let args=getParams(target);return target.apply(target,args.map(function(value){return self.get(value.trim());}));};let path=function(path,value,as,prefix,type){type=(type)?type:'assign';as=(as)?as:container.get('$as');prefix=(prefix)?prefix:container.get('$prefix');path=((path.indexOf('.')>-1)?path.replace(as+'.',prefix+'.'):path.replace(as,prefix)).split('.');let name=path.shift();let object=container.get(name);let result=null;while(path.length>1){if(!object){return null;}
 object=object[path.shift()];}
-let shift=path.shift();if(value!==null&&value!==undefined&&object&&shift&&(object[shift]!==undefined||object[shift]!==null)){object[shift]=value;return true;}
+let shift=path.shift();if(value!==null&&value!==undefined&&object&&shift&&(object[shift]!==undefined||object[shift]!==null)){switch(type){case'append':if(!Array.isArray(object[shift])){object[shift]=[];}
+object[shift].push(value);break;case'prepend':if(!Array.isArray(object[shift])){object[shift]=[];}
+object[shift].unshift(value);break;default:object[shift]=value;}
+return true;}
 if(!object){return null;}
 if(!shift){result=object;}
 else{return object[shift];}

@@ -370,6 +370,16 @@ window.ls.filter
     console.log(result);
     
     return result.length;
+  })
+  .add("documentLabel", function(document, rule) {
+
+    console.log(document, rule);
+
+    if(document[rule['key']]) {
+      return document[rule['key']];
+    }
+    
+    return '';
   });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

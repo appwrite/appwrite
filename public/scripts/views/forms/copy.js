@@ -30,6 +30,8 @@
 
         element.disabled = disabled;
 
+        element.blur();
+
         alerts.add({ text: "Copied to clipboard", class: "" }, 3000);
       };
 
