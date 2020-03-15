@@ -371,15 +371,19 @@ window.ls.filter
     
     return result.length;
   })
-  .add("documentLabel", function(document, rule) {
+  .add("documentLabel", function($value, rule, filter) {
+    let value = $value[rule['key']] ? $value[rule['key']] : null;
 
-    console.log(document, rule);
-
-    if(document[rule['key']]) {
-      return document[rule['key']];
-    }
+    switch (rule['type']) {
+      case 'bool':
+      case 'boolean':
+        return (value) ? 'true' : 'false';
+        break;
     
-    return '';
+      default:
+        return value;
+        break;
+    }
   });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
