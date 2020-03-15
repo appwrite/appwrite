@@ -93,7 +93,6 @@
             && element.type !== 'button'
             && element.type !== 'submit'
           ) {
-              console.log(element.type);
             element.focus();
             break;
           }
