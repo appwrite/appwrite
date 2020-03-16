@@ -8,7 +8,6 @@ global $env, $utopia, $request, $response, $register, $consoleDB, $project, $dom
 use Utopia\App;
 use Utopia\Request;
 use Utopia\Response;
-use Utopia\Validator\Host;
 use Utopia\Validator\Range;
 use Utopia\View;
 use Utopia\Exception;
