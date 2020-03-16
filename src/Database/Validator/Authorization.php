@@ -72,10 +72,6 @@ class Authorization extends Validator
             return false;
         }
 
-        if(is_array($permissions[$this->action]) && empty($permissions[$this->action])) {
-            return true;
-        }
-
         $permission = null;
 
         foreach ($permissions[$this->action] as $permission) {
