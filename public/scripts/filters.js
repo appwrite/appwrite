@@ -372,7 +372,7 @@ window.ls.filter
     return result.length;
   })
   .add("documentLabel", function($value, rule, filter) {
-    let value = $value[rule['key']] ? $value[rule['key']] : null;
+    let value = ($value !== null && $value[rule['key']] !== undefined) ? $value[rule['key']] : null;
 
     switch (rule['type']) {
       case 'bool':
@@ -380,10 +380,22 @@ window.ls.filter
         return (value) ? 'true' : 'false';
         break;
     
+      case 'numeric':
+        console.log(value);
+        return (value && value.toString) ? value.toString() : value;
+        break;
+    
       default:
         return value;
         break;
     }
+  })
+  .add("documentRequired", function($value, rule, filter) {
+    if(!$value || $value === 'false') {
+      return '';
+    }
+
+    return 'required';
   });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

@@ -111,6 +111,16 @@ window.ls.router
     scope: "console",
     project: true
   })
+  .add("/console/database/document", {
+    template: "/console/database/document?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/database/document/:tab", {
+    template: "/console/database/document?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
   .add("/console/storage", {
     template: "/console/storage?version=" + APP_ENV.VERSION,
     scope: "console",

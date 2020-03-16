@@ -9,11 +9,18 @@
       input.className = "button switch";
 
       let syncA = function() {
-        element.value = input.checked ? "true" : "false";
+        let value = input.checked ? "true" : "false"
+        let old = element.value;
+
+        element.value = value;
+
+        if(value !== old) {
+          element.dispatchEvent(new Event('change'));
+        }
       };
 
       let syncB = function() {
-        input.checked = element.value === "true";
+        input.checked = (element.value === "true");
       };
 
       input.addEventListener("input", syncA);

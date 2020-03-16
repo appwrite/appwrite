@@ -854,8 +854,12 @@ label.switch {
 
 hr {
   height: 1px;
-  background: var(--config-border-color);
+  background: var(--config-border-color)!important;
   border: none;
+  
+  &.fade {
+    opacity: .7;
+  }
 }
 
 .upload {

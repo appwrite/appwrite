@@ -191,7 +191,19 @@ $utopia->get('/console/database/collection')
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - Database')
+            ->setParam('title', APP_NAME.' - Database Collection')
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/database/document')
+    ->desc('Platform console project settings')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout, $projectDB) {
+        $page = new View(__DIR__.'/../../views/console/database/document.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Database Document')
             ->setParam('body', $page);
     });
 

@@ -79,6 +79,21 @@
     border-bottom: solid 1px #efefef;
   }
 
+  ul {
+    li {
+      &:first-child {
+        [data-move-up] {
+          opacity: 0;
+        }
+      }
+      &:last-child {
+        [data-move-down] {
+          opacity: 0;
+        }
+      }
+    }
+  }
+
   .toggle {
     position: relative;
     border-top: 1px solid var(--config-console-background);
@@ -92,10 +107,16 @@
       border-bottom: none;
     }
 
+    &.sorts {
+      button.ls-ui-open {
+        width: ~"calc(100% - 100px)";
+      }
+    }
+
     button.ls-ui-open {
+      .func-end(0);
       position: absolute;
       top: 0;
-      .func-start(0);
       width: 100%;
       height: 95px;
       background: transparent;

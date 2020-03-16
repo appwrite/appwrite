@@ -268,6 +268,7 @@
         if (loading) {
           loaderId = alerts.add({ text: loading, class: "" }, 0);
         }
+
         let method = container.path(scope + "." + action);
         
         if (!method) {

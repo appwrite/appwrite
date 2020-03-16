@@ -63,7 +63,7 @@
                     <div data-ls-if="({{project-documents.sum}})">
                         <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-documents.sum}}"></span> documents found</div>
                         
-                        <div class="box margin-bottom">
+                        <div class="box margin-bottom y-scroll">
                             <table class="vertical full">
                                 <thead>
                                     <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
@@ -119,7 +119,7 @@
 
                 <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
-                        <form data-debug="1"
+                        <form
                             data-analytics-event="submit"
                             data-analytics-category="console"
                             data-analytics-label="Update Database Collection"
@@ -153,30 +153,37 @@
 
                                 <div data-ls-if="({{project-collection.rules.length}})">
                                     <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
-                                        <li data-forms-remove>
-                                            <div class="toggle list" data-ls-ui-open>
+                                        <li data-forms-remove data-forms-move-up  data-forms-move-down>
+                                            <div class="toggle list sorts" data-ls-ui-open>
                                                 <i class="icon-up-open pull-end margin-top-tiny"></i>
                                                 <i class="icon-down-open pull-end margin-top-tiny"></i>
                                     
-                                                <h4 class="margin-bottom-large">
+                                                <h4 class="margin-bottom">
+                                                    <div class="pull-start margin-end-large margin-bottom-small">
+                                                        <button type="button" class="margin-bottom strip" data-move-down><i class="icon-down-dir"></i></button>
+                                                        <button type="button" class="margin-bottom strip" data-move-up><i class="icon-up-dir"></i></button>
+                                                    </div>
+
                                                     <span data-ls-bind="{{rule.label}}"></span>
 
-                                                    <span data-ls-if="(!{{rule.array}})">
+                                                    <span data-ls-if="({{rule.array}}.toString() == 'false')">
                                                         <span class="text-fade text-size-small" data-ls-bind="&nbsp;({{rule.type}})&nbsp;"></span>
                                                     </span>
 
-                                                    <span data-ls-if="({{rule.array}})">
+                                                    <span data-ls-if="({{rule.array}}.toString() == 'true')">
                                                         <span class="text-size-small text-fade" data-ls-bind="&nbsp;({{rule.type}} / array)&nbsp;"></span>
                                                     </span>
 
-                                                    <div data-ls-if="({{rule.required}})">
+                                                    <div data-ls-if="{{rule.required}}.toString() == 'true'">
                                                         <span class="text-size-xs text-danger text-fade">required</span>
                                                     </div>
 
-                                                    <div data-ls-if="(!{{rule.required}})">
+                                                    <div data-ls-if="({{rule.required}}.toString() == 'false')">
                                                         <span class="text-size-xs text-fade">optional</span>
                                                     </div>
                                                 </h4>
+
+                                                <hr class="margin-top-no fade" />
 
                                                 <fieldset data-ls-attrs="name=rules" data-cast-to="array">
                                                     <input name="$id" type="hidden" data-ls-bind="{{rule.$id}}" />
@@ -202,13 +209,17 @@
                                                     <label data-ls-attrs="for=rule-type-{{rule.$id}}">Rule Type</label>
 
                                                     <select data-ls-attrs="id=rule-type-{{rule.$id}}" name="type" required data-ls-bind="{{rule.type}}">
-                                                        <option value="text">Text</option>
-                                                        <option value="numeric">Numeric</option>
-                                                        <option value="boolean">Boolean</option>
-                                                        <option value="email">Email</option>
-                                                        <option value="url">URL</option>
-                                                        <option value="ip">IP</option>
-                                                        <option value="wildcard">Wildcard (*)</option>
+                                                        <optgroup label="General">
+                                                            <option value="text">Text</option>
+                                                            <option value="numeric">Numeric</option>
+                                                            <option value="boolean">Boolean</option>
+                                                            <option value="wildcard">Wildcard (*)</option>
+                                                        </optgroup>
+                                                        <optgroup label="Advanced">
+                                                            <option value="email">Email</option>
+                                                            <option value="url">URL</option>
+                                                            <option value="ip">IP</option>
+                                                        </optgroup>
                                                     </select>
 
                                                     <div class="margin-bottom">
@@ -320,13 +331,17 @@
                             <label for="rule-type-new">Rule Type</label>
 
                             <select name="type" required>
-                                <option value="text">Text</option>
-                                <option value="numeric">Numeric</option>
-                                <option value="boolean">Boolean</option>
-                                <option value="email">Email</option>
-                                <option value="url">URL</option>
-                                <option value="ip">IP</option>
-                                <option value="wildcard">Wildcard (*)</option>
+                                <optgroup label="General">
+                                    <option value="text">Text</option>
+                                    <option value="numeric">Numeric</option>
+                                    <option value="boolean">Boolean</option>
+                                    <option value="wildcard">Wildcard (*)</option>
+                                </optgroup>
+                                <optgroup label="Advanced">
+                                    <option value="email">Email</option>
+                                    <option value="url">URL</option>
+                                    <option value="ip">IP</option>
+                                </optgroup>
                             </select>
 
                             <div class="margin-bottom">
