@@ -53,15 +53,17 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients, $protocol) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
     
     $route = $utopia->match($request);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
     $origin = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
+    $protocol = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_SCHEME);
+    $port = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_PORT);
 
     $refDomain = $protocol.'://'.((in_array($origin, $clients))
-        ? $origin : 'localhost');
+        ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
     /*
      * Security Headers
@@ -231,7 +233,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     }
 });
 
-$utopia->options(function () use ($request, $response, $domain, $project) {
+$utopia->options(function () use ($request, $response) {
     $origin = $request->getServer('HTTP_ORIGIN');
 
     $response
