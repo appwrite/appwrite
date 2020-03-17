@@ -150,7 +150,7 @@ $utopia->post('/v1/account/sessions')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->action(
-        function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook, $protocol) {
+        function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook, $protocol, $domainVerification) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -210,11 +210,16 @@ $utopia->post('/v1/account/sessions')
                 ->setParam('event', 'account.sessions.create')
                 ->setParam('resource', 'users/'.$profile->getId())
             ;
+
+            if(!$domainVerification) {
+                $response
+                    ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
+                ;
+            }
             
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->json($session->getArrayCopy(['$id', 'type', 'expire']))
             ;
@@ -294,7 +299,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
-        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit, $protocol) {
+        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit, $protocol, $domainVerification) {
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
@@ -443,10 +448,15 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setParam('data', ['provider' => $provider])
             ;
 
+            if(!$domainVerification) {
+                $response
+                    ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+                ;
+            }
+
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ->redirect($state['success'])
             ;
         }
@@ -812,7 +822,7 @@ $utopia->delete('/v1/account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
     ->action(
-        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol) {
+        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol, $domainVerification) {
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'status' => Auth::USER_STATUS_BLOCKED,
             ]));
@@ -843,10 +853,15 @@ $utopia->delete('/v1/account')
                 ])
             ;
 
+            if(!$domainVerification) {
+                $response
+                    ->addHeader('X-Fallback-Cookies', json_encode([]))
+                ;
+            }
+
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                ->addHeader('X-Fallback-Cookies', json_encode([]))
                 ->noContent()
             ;
         }
@@ -863,7 +878,7 @@ $utopia->delete('/v1/account/sessions/:sessionId')
     ->label('abuse-limit', 100)
     ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(
-        function ($sessionId) use ($response, $user, $projectDB, $webhook, $audit, $protocol) {
+        function ($sessionId) use ($response, $user, $projectDB, $webhook, $audit, $protocol, $domainVerification) {
             $sessionId = ($sessionId === 'current')
                     ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
                     : $sessionId;
@@ -889,11 +904,16 @@ $utopia->delete('/v1/account/sessions/:sessionId')
                         ])
                     ;
 
+                    if(!$domainVerification) {
+                        $response
+                            ->addHeader('X-Fallback-Cookies', json_encode([]))
+                        ;
+                    }
+
                     if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                         $response
                             ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                             ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                            ->addHeader('X-Fallback-Cookies', json_encode([]))
                         ;
                     }
 
@@ -915,7 +935,7 @@ $utopia->delete('/v1/account/sessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
     ->action(
-        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol) {
+        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol, $domainVerification) {
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
@@ -936,11 +956,16 @@ $utopia->delete('/v1/account/sessions')
                     ])
                 ;
 
+                if(!$domainVerification) {
+                    $response
+                        ->addHeader('X-Fallback-Cookies', json_encode([]))
+                    ;
+                }
+
                 if ($token->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $response
                         ->addCookie(Auth::$cookieName.'_legacy', '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                         ->addCookie(Auth::$cookieName, '', time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                        ->addHeader('X-Fallback-Cookies', json_encode([]))
                     ;
                 }
             }

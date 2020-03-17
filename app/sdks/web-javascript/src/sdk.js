@@ -171,6 +171,10 @@
                     path = addParam(path, globalParams[i].key, globalParams[i].value);
                 }
 
+                if(window.localStorage && window.localStorage.getItem('cookieFallback')) {
+                    headers['X-Fallback-Cookies'] = window.localStorage.getItem('cookieFallback');
+                }
+
                 for (let key in globalHeaders) { // Add Global Headers
                     if (globalHeaders.hasOwnProperty(key)) {
                         if (!headers[globalHeaders[key].key]) {
@@ -231,6 +235,13 @@
                                 case 'application/json':
                                     data = JSON.parse(data);
                                     break;
+                            }
+
+                            let cookieFallback = this.getResponseHeader('X-Fallback-Cookies') || '';
+                            
+                            if(window.localStorage && cookieFallback) {
+                                window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
+                                window.localStorage.setItem('cookieFallback', cookieFallback);
                             }
 
                             resolve(data);

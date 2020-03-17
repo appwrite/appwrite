@@ -202,23 +202,23 @@ let path='/projects/{projectId}/oauth2'.replace(new RegExp('{projectId}','g'),pr
 if(appId){payload['appId']=appId;}
 if(secret){payload['secret']=secret;}
 return http.patch(path,{'content-type':'application/json',},payload);},listPlatforms:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/platforms'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createPlatform:function(projectId,type,name,key='',store='',url=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/platforms'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createPlatform:function(projectId,type,name,key='',store='',hostname=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(type===undefined){throw new Error('Missing required parameter: "type"');}
 if(name===undefined){throw new Error('Missing required parameter: "name"');}
 let path='/projects/{projectId}/platforms'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(type){payload['type']=type;}
 if(name){payload['name']=name;}
 if(key){payload['key']=key;}
 if(store){payload['store']=store;}
-if(url){payload['url']=url;}
+if(hostname){payload['hostname']=hostname;}
 return http.post(path,{'content-type':'application/json',},payload);},getPlatform:function(projectId,platformId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(platformId===undefined){throw new Error('Missing required parameter: "platformId"');}
-let path='/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{platformId}','g'),platformId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},updatePlatform:function(projectId,platformId,name,key='',store='',url=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{platformId}','g'),platformId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},updatePlatform:function(projectId,platformId,name,key='',store='',hostname=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(platformId===undefined){throw new Error('Missing required parameter: "platformId"');}
 if(name===undefined){throw new Error('Missing required parameter: "name"');}
 let path='/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{platformId}','g'),platformId);let payload={};if(name){payload['name']=name;}
 if(key){payload['key']=key;}
 if(store){payload['store']=store;}
-if(url){payload['url']=url;}
+if(hostname){payload['hostname']=hostname;}
 return http.put(path,{'content-type':'application/json',},payload);},deletePlatform:function(projectId,platformId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(platformId===undefined){throw new Error('Missing required parameter: "platformId"');}
 let path='/projects/{projectId}/platforms/{platformId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{platformId}','g'),platformId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},listTasks:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}

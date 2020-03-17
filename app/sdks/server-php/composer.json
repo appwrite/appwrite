@@ -5,7 +5,7 @@
     "license": "BSD-3-Clause",
     "support": {
         "url": "https://appwrite.io/support",
-        "email": "team@appwrite.io"
+        "email": "team@localhost.test"
     },
     "autoload": {
         "psr-4": {

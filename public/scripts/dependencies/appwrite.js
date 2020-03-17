@@ -166,7 +166,7 @@
                 if (typeof headers !== 'object') {
                     throw new Error('var headers must be of type object');
                 }
-                
+
                 for (i = 0; i < globalParams.length; i++) { // Add global params to URL
                     path = addParam(path, globalParams[i].key, globalParams[i].value);
                 }
@@ -2353,11 +2353,11 @@
              * @param {string} name
              * @param {string} key
              * @param {string} store
-             * @param {string} url
+             * @param {string} hostname
              * @throws {Error}
              * @return {Promise}             
              */
-            createPlatform: function(projectId, type, name, key = '', store = '', url = '') {
+            createPlatform: function(projectId, type, name, key = '', store = '', hostname = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2390,8 +2390,8 @@
                     payload['store'] = store;
                 }
 
-                if(url) {
-                    payload['url'] = url;
+                if(hostname) {
+                    payload['hostname'] = hostname;
                 }
 
                 return http
@@ -2437,11 +2437,11 @@
              * @param {string} name
              * @param {string} key
              * @param {string} store
-             * @param {string} url
+             * @param {string} hostname
              * @throws {Error}
              * @return {Promise}             
              */
-            updatePlatform: function(projectId, platformId, name, key = '', store = '', url = '') {
+            updatePlatform: function(projectId, platformId, name, key = '', store = '', hostname = '') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2470,8 +2470,8 @@
                     payload['store'] = store;
                 }
 
-                if(url) {
-                    payload['url'] = url;
+                if(hostname) {
+                    payload['hostname'] = hostname;
                 }
 
                 return http
