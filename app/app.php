@@ -16,6 +16,7 @@ use Database\Database;
 use Database\Document;
 use Database\Validator\Authorization;
 use Event\Event;
+use Utopia\Domains\Domain;
 use Utopia\Validator\WhiteList;
 
 /*
@@ -52,7 +53,7 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients, &$domainVerification) {
     
     $route = $utopia->match($request);
 
@@ -63,6 +64,11 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
 
     $refDomain = $protocol.'://'.((in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
+
+    $selfDomain = new Domain($domain);
+    $endDomain = new Domain($origin);
+
+    $domainVerification = ($selfDomain->getRegisterable() === $endDomain->getRegisterable());
 
     /*
      * Security Headers

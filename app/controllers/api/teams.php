@@ -426,7 +426,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('secret', '', function () { return new Text(256); }, 'Secret key.')
     ->action(
-        function ($teamId, $inviteId, $userId, $secret) use ($response, $request, $user, $audit, $projectDB, $protocol) {
+        function ($teamId, $inviteId, $userId, $secret) use ($response, $request, $user, $audit, $projectDB, $protocol, $domainVerification) {
             $membership = $projectDB->getDocument($inviteId);
 
             if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
@@ -520,10 +520,15 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ->setParam('resource', 'teams/'.$teamId)
             ;
 
+            if(!$domainVerification) {
+                $response
+                    ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+                ;
+            }
+
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ->json(array_merge($membership->getArrayCopy([
                     '$id',
                     'userId',

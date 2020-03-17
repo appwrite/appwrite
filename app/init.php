@@ -48,6 +48,7 @@ $response = new Response();
  */
 $env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
 $domain = $request->getServer('HTTP_HOST', '');
+$domainVerification = false;
 $version = $request->getServer('_APP_VERSION', 'UNKNOWN');
 $providers = include __DIR__.'/../app/config/providers.php'; // OAuth2 providers list
 $platforms = include __DIR__.'/../app/config/platforms.php';
