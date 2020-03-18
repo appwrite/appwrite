@@ -12,7 +12,7 @@
     data-param-collection-id="{{router.params.collection}}"
     data-param-document-id="{{router.params.id}}"
     data-scope="sdk"
-    data-event="load,database.updateDocument"
+    data-event="load"
     data-name="project-document">
 
     <div class="cover">
@@ -35,40 +35,53 @@
                         <form
                             data-analytics-event="submit"
                             data-analytics-category="console"
-                            data-analytics-label="Update Database Collection"
-                            data-service="database.updateCollection"
+                            data-analytics-label="Update Database Document"
+                            data-service="database.updateDocument"
                             data-scope="sdk"
                             data-event="submit"
-                            data-param-collection-id="{{router.params.id}}"
                             data-success="alert,trigger"
-                            data-success-param-alert-text="Updated collection successfully"
-                            data-success-param-trigger-events="database.updateCollection"
+                            data-success-param-alert-text="Updated document successfully"
+                            data-success-param-trigger-events="database.updateDocument"
                             data-failure="alert"
-                            data-failure-param-alert-text="Failed to update collection"
+                            data-failure-param-alert-text="Failed to update document"
                             data-failure-param-alert-classname="error">
 
                             <label>&nbsp;</label>
 
                             <div class="box">
 
-                                <input name="$id" type="hidden" data-ls-bind="{{project-document.$id}}" />
-                                <input name="$collection" type="hidden" data-ls-bind="{{project-document.$collection}}" />
+                                <input name="documentId" type="hidden" data-ls-bind="{{project-document.$id}}" />
+                                <input name="collectionId" type="hidden" data-ls-bind="{{project-document.$collection}}" />
 
-                                <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
-                                    <li>
-                                        <label data-ls-bind="{{rule.label}}" class="margin-bottom-no"></label>
-                                        
-                                        <div data-ls-if="{{rule.required}}.toString() == 'true'" class="margin-bottom-small">
-                                            <span class="text-size-xs text-danger text-fade">required</span>
-                                        </div>
+                                <fieldset name="data" data-cast-to="object">
+                                    <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
+                                        <li>
+                                            <label class="margin-bottom-no">
+                                                <span data-ls-bind="{{rule.label}}"></span>
+                                                <span data-ls-if="{{rule.array}}.toString() == 'true'">
+                                                    <span class="text-size-small text-fade">&nbsp;&nbsp;(Array)</span>
+                                                </span>
+                                            </label>
+                                            
 
-                                        <div data-ls-if="({{rule.required}}.toString() == 'false')" class="margin-bottom-small">
-                                            <span class="text-size-xs text-fade">optional</span>
-                                        </div>
+                                            <div data-ls-if="{{rule.required}}.toString() == 'true'" class="margin-bottom-small">
+                                                <span class="text-size-xs text-danger text-fade">required</span>
+                                            </div>
 
-                                        <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
-                                    </li>
-                                </ul>
+                                            <div data-ls-if="({{rule.required}}.toString() == 'false')" class="margin-bottom-small">
+                                                <span class="text-size-xs text-fade">optional</span>
+                                            </div>
+
+                                            <div data-ls-if="({{rule.array}}.toString() == 'false')">
+                                                <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
+                                            </div>
+
+                                            <div data-ls-if="({{rule.array}}.toString() == 'true')">
+                                                <div data-ls-template="template-array-form" data-type="script" class="margin-bottom"></div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </fieldset>
                                 
                                 <div class="toggle margin-bottom margin-top" data-ls-ui-open>
                                     <i class="icon-plus pull-end margin-top-tiny"></i>
@@ -159,4 +172,32 @@
 
 <script type="text/html" id="template-boolean-form">
     <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="hidden" data-forms-switch data-ls-bind="{{project-document|documentLabel}}" data-cast-to="boolean" />
+</script>
+
+<script type="text/html" id="template-array-form">
+    <input type="hidden" data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" data-cast-to="array-empty">
+
+    <!-- <div data-forms-remove data-forms-move-up data-forms-move-down class="row thin margin-bottom-small">
+        <div class="col span-3">
+            <button type="button" data-remove class="strip"><i class="icon-cancel"></i></button>
+            <button type="button" data-move-up class="strip"><i class="icon-up-dir"></i></button>
+            <button type="button" data-move-down class="strip"><i class="icon-down-dir"></i></button>
+        </div>
+        <div class="col span-9">
+            <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
+        </div>
+    </div> -->
+
+<!--     
+    
+    <div data-forms-clone="" data-label="Add" data-first="1" data-forms-remove data-forms-move-up data-forms-move-down class="row thin margin-bottom-small">
+        <div class="col span-3">
+            <button type="button" data-remove class="strip"><i class="icon-cancel"></i></button>
+            <button type="button" data-move-up class="strip"><i class="icon-up-dir"></i></button>
+            <button type="button" data-move-down class="strip"><i class="icon-down-dir"></i></button>
+        </div>
+        <div class="col span-9">
+            <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
+        </div>
+    </div> -->
 </script>
