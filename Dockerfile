@@ -1,4 +1,4 @@
-FROM ubuntu:19.04 AS builder
+FROM ubuntu:19.10 AS builder
 
 LABEL maintainer="team@appwrite.io"
 
