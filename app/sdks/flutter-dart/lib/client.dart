@@ -12,7 +12,7 @@ class Client {
         this.endPoint = 'https://appwrite.io/v1';
         this.headers = {
             'content-type': 'application/json',
-            'x-sdk-version': 'appwrite:dart:0.0.6',
+            'x-sdk-version': 'appwrite:dart:0.0.7',
         };
         this.selfSigned = false;
 

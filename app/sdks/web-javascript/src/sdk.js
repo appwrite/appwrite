@@ -139,7 +139,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.28');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.29');
             addGlobalHeader('content-type', '');
 
             /**
