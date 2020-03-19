@@ -3,7 +3,7 @@
 // Init
 require_once __DIR__.'/init.php';
 
-global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service, $protocol;
+global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service, $protocol, $domainVerification;
 
 use Utopia\App;
 use Utopia\Request;

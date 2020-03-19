@@ -50,7 +50,8 @@ $cli
 
                 Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name']);
                 
-                $spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
+                //$spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
+                $spec = getSSLPage('http://stage.appwrite.io/v1/open-api-2.json?extensions=1&platform='.$language['family']);
 
                 $result = realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
@@ -156,7 +157,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     continue;
                 }
 
-                $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
+                #$gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
 
                 exec('rm -rf '.$target.' && \
                     mkdir -p '.$target.' && \
