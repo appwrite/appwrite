@@ -3,7 +3,7 @@
 
 require_once __DIR__.'/../init.php';
 
-global $register, $projectDB, $console, $providers;
+global $register, $projectDB, $console, $providers, $request;
 
 use Database\Database;
 use Database\Document;
@@ -18,7 +18,7 @@ $callbacks = [
     '0.4.0' => function() {
         Console::log('I got nothing to do.');
     },
-    '0.5.0' => function($project) use ($db, $projectDB) {
+    '0.5.0' => function($project) use ($db, $projectDB, $requset) {
 
         Console::info('Upgrading project: '.$project->getId());
 
@@ -64,11 +64,13 @@ $callbacks = [
             $offset = $offset + $limit;
         }
 
+        $schema = $requset->getServer('_APP_DB_SCHEMA');
+        
         try {
             $statement = $db->prepare("
-                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
-                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` DROP INDEX IF EXISTS `index_1`;
-                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` ADD INDEX IF NOT EXISTS `index_1` (`userId` ASC);
+                ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
+                ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` DROP INDEX IF EXISTS `index_1`;
+                ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` ADD INDEX IF NOT EXISTS `index_1` (`userId` ASC);
             ");
 
             $statement->closeCursor();
