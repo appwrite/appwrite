@@ -517,7 +517,7 @@ $utopia->get('/v1/open-api-2.json')
                     'contact' => [
                         'name' => 'Appwrite Team',
                         'url' => 'https://appwrite.io/support',
-                        'email' => APP_EMAIL_TEAM,
+                        'email' => $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
                     ],
                     'license' => [
                         'name' => 'BSD-3-Clause',
