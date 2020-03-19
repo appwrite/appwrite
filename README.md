@@ -52,7 +52,6 @@ docker run -it --rm \
     appwrite/install
 ```
 
-
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 
 
