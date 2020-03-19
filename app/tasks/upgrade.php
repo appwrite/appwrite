@@ -64,8 +64,8 @@ $callbacks = [
             $offset = $offset + $limit;
         }
 
-        $schema = $requset->getServer('_APP_DB_SCHEMA');
-        
+        $schema = (isset($_SERVER['_APP_DB_SCHEMA'])) ? $_SERVER['_APP_DB_SCHEMA'] : '';
+
         try {
             $statement = $db->prepare("
                 ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
