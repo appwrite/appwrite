@@ -22,7 +22,7 @@ services:
       - appwrite-config:/storage/config:ro
       - appwrite-certificates:/storage/certificates:ro
     depends_on:
-     - appwrite
+      - appwrite
     networks:
       - gateway
       - appwrite
