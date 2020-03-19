@@ -64,7 +64,7 @@ $callbacks = [
             $offset = $offset + $limit;
         }
 
-        $schema = (isset($_SERVER['_APP_DB_SCHEMA'])) ? $_SERVER['_APP_DB_SCHEMA'] : '';
+        $schema = $projectDB->getNamespace();
 
         try {
             $statement = $db->prepare("
