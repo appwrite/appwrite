@@ -461,7 +461,7 @@ $utopia->get('/v1/open-api-2.json')
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
-        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services, $protocol) {
+        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $domain, $services, $protocol, $domainVerification) {
             function fromCamelCase($input)
             {
                 preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
