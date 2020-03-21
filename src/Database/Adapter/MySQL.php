@@ -7,6 +7,7 @@ use Exception;
 use PDO;
 use Redis as Client;
 use Database\Adapter;
+use Database\Exception\Duplicate;
 use Database\Validator\Authorization;
 
 class MySQL extends Adapter
@@ -150,7 +151,7 @@ class MySQL extends Adapter
      *
      * @return array
      */
-    public function createDocument(array $data = [])
+    public function createDocument(array $data = [], array $unique = [])
     {
         $order = 0;
         $data = array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
@@ -178,6 +179,21 @@ class MySQL extends Adapter
             }
         }
 
+        /**
+         * Check Unique Keys
+         */
+        foreach($unique as $key => $value) {
+            $st = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.unique`
+                SET `key` = :key;
+            ');
+            
+            $st->bindValue(':key', md5($data['$collection'].':'.$key.'='.$value), PDO::PARAM_STR);
+
+            if(!$st->execute()) {
+                throw new Duplicate('Duplicated Property: '.$key.'='.$value);
+            }
+        }
+        
         // Add or update fields abstraction level
         $st1 = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.documents`
             SET uid = :uid, createdAt = :createdAt, updatedAt = :updatedAt, signature = :signature, revision = :revision, permissions = :permissions, status = 0
@@ -397,6 +413,7 @@ class MySQL extends Adapter
         $documents = 'app_'.$namespace.'.database.documents';
         $properties = 'app_'.$namespace.'.database.properties';
         $relationships = 'app_'.$namespace.'.database.relationships';
+        $unique = 'app_'.$namespace.'.database.unique';
         $audit = 'app_'.$namespace.'.audit.audit';
         $abuse = 'app_'.$namespace.'.abuse.abuse';
 
@@ -404,6 +421,7 @@ class MySQL extends Adapter
             $this->getPDO()->prepare('CREATE TABLE `'.$documents.'` LIKE `template.database.documents`;')->execute();
             $this->getPDO()->prepare('CREATE TABLE `'.$properties.'` LIKE `template.database.properties`;')->execute();
             $this->getPDO()->prepare('CREATE TABLE `'.$relationships.'` LIKE `template.database.relationships`;')->execute();
+            $this->getPDO()->prepare('CREATE TABLE `'.$unique.'` LIKE `template.database.unique`;')->execute();
             $this->getPDO()->prepare('CREATE TABLE `'.$audit.'` LIKE `template.audit.audit`;')->execute();
             $this->getPDO()->prepare('CREATE TABLE `'.$abuse.'` LIKE `template.abuse.abuse`;')->execute();
         } catch (Exception $e) {

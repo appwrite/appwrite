@@ -15,6 +15,7 @@ use Database\Database;
 use Database\Document;
 use Database\Validator\UID;
 use Database\Validator\Authorization;
+use Database\Exception\Duplicate;
 use Template\Template;
 use Auth\Auth;
 
@@ -243,22 +244,26 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
                 Authorization::disable();
 
-                $invitee = $projectDB->createDocument([
-                    '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                    '$permissions' => [
-                        'read' => ['user:{self}', '*'],
-                        'write' => ['user:{self}'],
-                    ],
-                    'email' => $email,
-                    'emailVerification' => false,
-                    'status' => Auth::USER_STATUS_UNACTIVATED,
-                    'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'password-update' => time(),
-                    'registration' => time(),
-                    'reset' => false,
-                    'name' => $name,
-                    'tokens' => [],
-                ]);
+                try {
+                    $invitee = $projectDB->createDocument([
+                        '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                        '$permissions' => [
+                            'read' => ['user:{self}', '*'],
+                            'write' => ['user:{self}'],
+                        ],
+                        'email' => $email,
+                        'emailVerification' => false,
+                        'status' => Auth::USER_STATUS_UNACTIVATED,
+                        'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                        'password-update' => time(),
+                        'registration' => time(),
+                        'reset' => false,
+                        'name' => $name,
+                        'tokens' => [],
+                    ], ['email' => $email]);
+                } catch (Duplicate $th) {
+                    throw new Exception('Account already exists', 409);
+                }
 
                 Authorization::reset();
 

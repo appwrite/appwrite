@@ -182,7 +182,7 @@ class Database
      * @throws AuthorizationException
      * @throws StructureException
      */
-    public function createDocument(array $data)
+    public function createDocument(array $data, array $unique = [])
     {
         $document = new Document($data);
 
@@ -198,7 +198,7 @@ class Database
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        return new Document($this->adapter->createDocument($data));
+        return new Document($this->adapter->createDocument($data, $unique));
     }
 
     /**

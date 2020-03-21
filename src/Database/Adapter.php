@@ -68,7 +68,7 @@ abstract class Adapter
      *
      * @return array
      */
-    abstract public function createDocument(array $data);
+    abstract public function createDocument(array $data, array $unique);
 
     /**
      * Update Document.

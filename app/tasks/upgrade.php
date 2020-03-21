@@ -68,6 +68,15 @@ $callbacks = [
 
         try {
             $statement = $db->prepare("
+
+                CREATE TABLE IF NOT EXISTS `template.database.unique` (
+                    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                    `key` varchar(128) DEFAULT NULL,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `index1` (`key`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+                CREATE TABLE IF NOT EXISTS `{$schema}`.`app_{$project->getId()}.database.unique` LIKE `template.database.unique`;
                 ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
                 ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` DROP INDEX IF EXISTS `index_1`;
                 ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` ADD INDEX IF NOT EXISTS `index_1` (`userId` ASC);

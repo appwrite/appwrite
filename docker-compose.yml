@@ -84,7 +84,7 @@ services:
       - _APP_SMTP_PORT=25
 
   mariadb:
-    image: appwrite/mariadb:1.0.2 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
     restart: unless-stopped
     networks:
       - appwrite

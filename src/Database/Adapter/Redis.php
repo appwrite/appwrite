@@ -105,9 +105,9 @@ class Redis extends Adapter
      *
      * @throws Exception
      */
-    public function createDocument(array $data = [])
+    public function createDocument(array $data = [], array $unique = [])
     {
-        $data = $this->adapter->createDocument($data);
+        $data = $this->adapter->createDocument($data, $unique);
 
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);

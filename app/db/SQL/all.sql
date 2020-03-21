@@ -5,7 +5,7 @@ USE `appwrite`;
 CREATE TABLE IF NOT EXISTS `template.abuse.abuse` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `_key` varchar(255) NOT NULL,
-  `_time` varchar(45) NOT NULL,
+  `_time` int(11) NOT NULL,
   `_count` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique1` (`_key`,`_time`),
@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS `template.abuse.abuse` (
 CREATE TABLE IF NOT EXISTS `template.audit.audit` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userId` varchar(45) NOT NULL,
-  `userType` int(11) NOT NULL,
   `event` varchar(45) NOT NULL,
   `resource` varchar(45) DEFAULT NULL,
   `userAgent` text NOT NULL,
@@ -25,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `template.audit.audit` (
   `data` longtext DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
-  KEY `index_1` (`userId`,`userType`),
+  KEY `index_1` (`userId`),
   KEY `index_2` (`event`),
   KEY `index_3` (`resource`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -74,10 +73,18 @@ CREATE TABLE IF NOT EXISTS `template.database.relationships` (
   KEY `relationships_end_nodes_id_idx` (`end`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `template.database.unique` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(128) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `index1` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 /* Default App */
 
 CREATE TABLE IF NOT EXISTS `app_console.database.documents` LIKE `template.database.documents`;
 CREATE TABLE IF NOT EXISTS `app_console.database.properties` LIKE `template.database.properties`;
 CREATE TABLE IF NOT EXISTS `app_console.database.relationships` LIKE `template.database.relationships`;
+CREATE TABLE IF NOT EXISTS `app_console.database.unique` LIKE `template.database.unique`;
 CREATE TABLE IF NOT EXISTS `app_console.audit.audit` LIKE `template.audit.audit`;
 CREATE TABLE IF NOT EXISTS `app_console.abuse.abuse` LIKE `template.abuse.abuse`;

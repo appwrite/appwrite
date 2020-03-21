@@ -18,6 +18,7 @@ use Auth\Auth;
 use Auth\Validator\Password;
 use Database\Database;
 use Database\Document;
+use Database\Exception\Duplicate;
 use Database\Validator\UID;
 use Database\Validator\Authorization;
 use DeviceDetector\DeviceDetector;
@@ -88,21 +89,25 @@ $utopia->post('/v1/account')
 
             Authorization::disable();
 
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['user:{self}'],
-                ],
-                'email' => $email,
-                'emailVerification' => false,
-                'status' => Auth::USER_STATUS_UNACTIVATED,
-                'password' => Auth::passwordHash($password),
-                'password-update' => time(),
-                'registration' => time(),
-                'reset' => false,
-                'name' => $name,
-            ]);
+            try {
+                $user = $projectDB->createDocument([
+                    '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                    '$permissions' => [
+                        'read' => ['*'],
+                        'write' => ['user:{self}'],
+                    ],
+                    'email' => $email,
+                    'emailVerification' => false,
+                    'status' => Auth::USER_STATUS_UNACTIVATED,
+                    'password' => Auth::passwordHash($password),
+                    'password-update' => time(),
+                    'registration' => time(),
+                    'reset' => false,
+                    'name' => $name,
+                ], ['email' => $email]);
+            } catch (Duplicate $th) {
+                throw new Exception('Account already exists', 409);
+            }
 
             Authorization::enable();
 
@@ -391,18 +396,22 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 if (!$user || empty($user->getId())) { // Last option -> create user alone, generate random password
                     Authorization::disable();
 
-                    $user = $projectDB->createDocument([
-                        '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                        '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
-                        'email' => $email,
-                        'emailVerification' => true,
-                        'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
-                        'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'password-update' => time(),
-                        'registration' => time(),
-                        'reset' => false,
-                        'name' => $name,
-                    ]);
+                    try {
+                        $user = $projectDB->createDocument([
+                            '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                            '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
+                            'email' => $email,
+                            'emailVerification' => true,
+                            'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
+                            'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                            'password-update' => time(),
+                            'registration' => time(),
+                            'reset' => false,
+                            'name' => $name,
+                        ], ['email' => $email]);
+                    } catch (Duplicate $th) {
+                        throw new Exception('Account already exists', 409);
+                    }
 
                     Authorization::enable();
 

@@ -1,3 +1,10 @@
+# Version 0.5.3 (PRE-RELEASE)
+
+## Bug Fixes
+
+* Fixed bug where multiple unique attribute were allowed
+* Blocked forms from being submitted unlimited times
+  
 # Version 0.5.2 (PRE-RELEASE)
 
 ## Bug Fixes
