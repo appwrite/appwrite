@@ -18,10 +18,12 @@
       let confirm = element.dataset["confirm"] || ""; // Free text
       let loading = element.dataset["loading"] || ""; // Free text
       let loaderId = null;
+      let fade = (element.dataset["fade"] || false);
       let scope = element.dataset["scope"] || "sdk"; // Free text
       let debug = !!element.dataset["debug"]; // Free text
       let success = element.dataset["success"] || "";
       let failure = element.dataset["failure"] || "";
+      let running = false;
 
       success =
         success && success != ""
@@ -39,6 +41,12 @@
         );
 
       let callbacks = {
+        hide: function() {
+          return function() {
+            return element.style.display = 'none';
+          };
+        },
+
         reset: function() {
           return function() {
             if ("FORM" === element.tagName) {
@@ -236,6 +244,7 @@
       };
 
       let exec = function(event) {
+
         element.$lsSkip = true;
 
         element.classList.add("load-service-start");
@@ -257,6 +266,14 @@
         if (event) {
           event.preventDefault();
         }
+
+        if(running) {
+          console.log('blocked');
+          return false;
+        }
+
+        running = true;
+        element.style.backgroud = 'red';
 
         if (confirm) {
           if (window.confirm(confirm) !== true) {
@@ -292,6 +309,8 @@
               return;
             }
 
+            running = false;
+            element.style.backgroud = 'transparent';
             element.classList.add("load-service-end");
 
             container.set(service.replace(".", "-"), data, true, true);
@@ -340,6 +359,8 @@
               return;
             }
 
+            running = false;
+            element.style.backgroud = 'transparent';
             element.classList.add("load-service-end");
 
             for (let i = 0; i < failure.length; i++) {
