@@ -1,3 +1,9 @@
+# Version 0.5.2 (PRE-RELEASE)
+
+## Bug Fixes
+
+* Fixed missing attributes in user account
+
 # Version 0.5.1 (PRE-RELEASE)
 
 ## Bug Fixes
