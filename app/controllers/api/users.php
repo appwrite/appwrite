@@ -53,11 +53,11 @@ $utopia->post('/v1/users')
                     'write' => ['user:{self}'],
                 ],
                 'email' => $email,
+                'emailVerification' => false,
                 'status' => Auth::USER_STATUS_UNACTIVATED,
                 'password' => Auth::passwordHash($password),
                 'password-update' => time(),
                 'registration' => time(),
-                'emailVerification' => false,
                 'reset' => false,
                 'name' => $name,
             ]);

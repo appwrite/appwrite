@@ -476,6 +476,7 @@ $utopia->get('/v1/account')
                 [
                     '$id',
                     'email',
+                    'emailVerification',
                     'registration',
                     'name',
                 ],
