@@ -43,7 +43,7 @@
       let callbacks = {
         hide: function() {
           return function() {
-            return element.style.display = 'none';
+            return element.style.opacity = '0';
           };
         },
 
