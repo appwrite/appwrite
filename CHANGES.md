@@ -1,3 +1,10 @@
+# Version 0.5.1 (PRE-RELEASE)
+
+## Bug Fixes
+
+* Delayed SSL init when server startup for traefik to be ready for HTTP challenge
+* Enabled easy access to the upgrade tool from the terminal
+
 # Version 0.5.0 (PRE-RELEASE)
 
 ## Features
