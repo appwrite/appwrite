@@ -32,14 +32,14 @@
 
         "appwrite/php-clamav": "master",
 
-        "utopia-php/framework": "master",
-        "utopia-php/abuse": "master",
-        "utopia-php/audit": "master",
-        "utopia-php/cache": "master",
-        "utopia-php/cli": "master",
-        "utopia-php/locale": "master",
-        "utopia-php/registry": "master",
-        "utopia-php/domains": "master",
+        "utopia-php/framework": "0.2.0",
+        "utopia-php/abuse": "0.2.0",
+        "utopia-php/audit": "0.2.0",
+        "utopia-php/cache": "0.2.0",
+        "utopia-php/cli": "0.3.0",
+        "utopia-php/locale": "0.2.0",
+        "utopia-php/registry": "0.2.0",
+        "utopia-php/domains": "0.2.0",
 
         "chrisboulton/php-resque": "*",
         "chrisboulton/php-resque-scheduler": "*",
