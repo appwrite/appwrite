@@ -5,11 +5,11 @@ require_once __DIR__.'/../init.php';
 
 global $register, $projectDB, $console, $providers, $request;
 
-use Database\Database;
-use Database\Document;
-use Database\Validator\Authorization;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 
 $cli = new CLI();
 $db = $register->get('db');

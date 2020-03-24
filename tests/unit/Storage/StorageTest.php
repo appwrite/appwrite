@@ -3,8 +3,8 @@
 namespace Appwrite\Tests;
 
 use Exception;
-use Storage\Storage;
-use Storage\Devices\Local;
+use Appwrite\Storage\Storage;
+use Appwrite\Storage\Devices\Local;
 use PHPUnit\Framework\TestCase;
 
 Storage::addDevice('disk-a', new Local(__DIR__ . '/../../resources/disk-a'));
@@ -22,8 +22,8 @@ class StorageTest extends TestCase
 
     public function testGetters()
     {
-        $this->assertEquals(get_class(Storage::getDevice('disk-a')), 'Storage\Devices\Local');
-        $this->assertEquals(get_class(Storage::getDevice('disk-b')), 'Storage\Devices\Local');
+        $this->assertEquals(get_class(Storage::getDevice('disk-a')), 'Appwrite\Storage\Devices\Local');
+        $this->assertEquals(get_class(Storage::getDevice('disk-b')), 'Appwrite\Storage\Devices\Local');
 
         try {
             get_class(Storage::getDevice('disk-c'));

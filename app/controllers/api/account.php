@@ -14,17 +14,17 @@ use Utopia\Validator\URL;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Locale\Locale;
-use Auth\Auth;
-use Auth\Validator\Password;
-use Database\Database;
-use Database\Document;
-use Database\Exception\Duplicate;
-use Database\Validator\UID;
-use Database\Validator\Authorization;
+use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Exception\Duplicate;
+use Appwrite\Database\Validator\UID;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Template\Template;
+use Appwrite\OpenSSL\OpenSSL;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
-use Template\Template;
-use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -264,7 +264,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
                 throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
             }
 
-            $classname = 'Auth\\OAuth2\\'.ucfirst($provider);
+            $classname = 'Appwrite\\Auth\\OAuth2\\'.ucfirst($provider);
 
             if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);
@@ -319,7 +319,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
             }
 
-            $classname = 'Auth\\OAuth2\\'.ucfirst($provider);
+            $classname = 'Appwrite\\Auth\\OAuth2\\'.ucfirst($provider);
 
             if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);

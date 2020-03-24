@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Template\Template;
+use Appwrite\Template\Template;
 use PHPUnit\Framework\TestCase;
 
 class TemplateTest extends TestCase

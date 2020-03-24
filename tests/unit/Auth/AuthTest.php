@@ -2,8 +2,8 @@
 
 namespace Appwrite\Tests;
 
-use Auth\Auth;
-use Database\Document;
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Document;
 use PHPUnit\Framework\TestCase;
 
 class AuthTest extends TestCase

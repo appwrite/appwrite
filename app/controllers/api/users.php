@@ -2,8 +2,6 @@
 
 global $utopia, $response, $projectDB, $providers;
 
-use Auth\Auth;
-use Auth\Validator\Password;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\Assoc;
@@ -14,9 +12,11 @@ use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Locale\Locale;
-use Database\Database;
-use Database\Exception\Duplicate;
-use Database\Validator\UID;
+use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
+use Appwrite\Database\Database;
+use Appwrite\Database\Exception\Duplicate;
+use Appwrite\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 

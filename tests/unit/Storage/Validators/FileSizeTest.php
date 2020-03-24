@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Storage\Validators\FileSize;
+use Appwrite\Storage\Validators\FileSize;
 use PHPUnit\Framework\TestCase;
 
 class FileSizeTest extends TestCase

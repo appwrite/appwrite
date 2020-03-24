@@ -5,9 +5,9 @@ global $utopia, $request, $response;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
-use Storage\Validators\File;
 use Utopia\Response;
 use Utopia\Validator\Host;
+use Appwrite\Storage\Validators\File;
 
 $result = [];
 

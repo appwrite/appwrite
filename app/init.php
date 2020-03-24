@@ -8,14 +8,14 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
 use Utopia\App;
 use Utopia\Request;
 use Utopia\Response;
-use Auth\Auth;
-use Database\Database;
-use Database\Document;
-use Database\Validator\Authorization;
-use Database\Adapter\MySQL as MySQLAdapter;
-use Database\Adapter\Redis as RedisAdapter;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';

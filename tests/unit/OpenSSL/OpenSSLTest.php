@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use OpenSSL\OpenSSL;
+use Appwrite\OpenSSL\OpenSSL;
 use PHPUnit\Framework\TestCase;
 
 class OpenSSLTest extends TestCase

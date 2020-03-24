@@ -2,8 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Exception;
-use Storage\Compression\Algorithms\GZIP;
+use Appwrite\Storage\Compression\Algorithms\GZIP;
 use PHPUnit\Framework\TestCase;
 
 class GZIPTest extends TestCase

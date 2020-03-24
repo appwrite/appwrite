@@ -2,7 +2,6 @@
 
 global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $providers;
 
-use Auth\Auth;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
@@ -12,13 +11,14 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Domains\Domain;
-use Task\Validator\Cron;
-use Database\Database;
-use Database\Document;
-use Database\Validator\UID;
-use OpenSSL\OpenSSL;
+use Appwrite\Auth\Auth;
+use Appwrite\Task\Validator\Cron;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\UID;
+use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Network\Validators\CNAME;
 use Cron\CronExpression;
-use Network\Validators\CNAME;
 
 include_once __DIR__ . '/../shared/api.php';
 

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Task\Validator\Cron;
+use Appwrite\Task\Validator\Cron;
 use PHPUnit\Framework\TestCase;
 
 class CronTest extends TestCase

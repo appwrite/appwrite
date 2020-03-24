@@ -11,13 +11,12 @@ use Utopia\Response;
 use Utopia\Validator\Range;
 use Utopia\View;
 use Utopia\Exception;
-use Auth\Auth;
-use Database\Database;
-use Database\Document;
-use Database\Validator\Authorization;
-use Event\Event;
 use Utopia\Domains\Domain;
-use Utopia\Validator\WhiteList;
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Event\Event;
 
 /*
  * Configuration files

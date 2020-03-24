@@ -2,8 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Exception;
-use Storage\Devices\Local;
+use Appwrite\Storage\Devices\Local;
 use PHPUnit\Framework\TestCase;
 
 class LocalTest extends TestCase

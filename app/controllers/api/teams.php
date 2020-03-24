@@ -11,13 +11,13 @@ use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Locale\Locale;
-use Database\Database;
-use Database\Document;
-use Database\Validator\UID;
-use Database\Validator\Authorization;
-use Database\Exception\Duplicate;
-use Template\Template;
-use Auth\Auth;
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\UID;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Exception\Duplicate;
+use Appwrite\Template\Template;
 
 include_once __DIR__ . '/../shared/api.php';
 

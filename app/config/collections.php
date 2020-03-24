@@ -2,7 +2,7 @@
 
 global $providers, $request;
 
-use Database\Database;
+use Appwrite\Database\Database;
 
 $collections = [
     'console' => [

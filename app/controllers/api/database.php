@@ -9,15 +9,15 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
-use Database\Database;
-use Database\Document;
-use Database\Validator\UID;
-use Database\Validator\Key;
-use Database\Validator\Structure;
-use Database\Validator\Collection;
-use Database\Validator\Authorization;
-use Database\Exception\Authorization as AuthorizationException;
-use Database\Exception\Structure as StructureException;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\UID;
+use Appwrite\Database\Validator\Key;
+use Appwrite\Database\Validator\Structure;
+use Appwrite\Database\Validator\Collection;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Exception\Authorization as AuthorizationException;
+use Appwrite\Database\Exception\Structure as StructureException;
 
 include_once __DIR__ . '/../shared/api.php';
 

@@ -6,9 +6,9 @@ global $utopia, $response, $request, $layout, $version, $providers, $projectDB;
 
 use Utopia\View;
 use Utopia\Domains\Domain;
-use Database\Database;
-use Database\Validator\UID;
-use Storage\Storage;
+use Appwrite\Database\Database;
+use Appwrite\Database\Validator\UID;
+use Appwrite\Storage\Storage;
 
 $utopia->init(function () use ($layout, $utopia) {
     $layout
