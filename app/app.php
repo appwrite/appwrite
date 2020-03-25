@@ -7,8 +7,6 @@ global $env, $utopia, $request, $response, $register, $consoleDB, $project, $dom
 
 use Utopia\App;
 use Utopia\Request;
-use Utopia\Response;
-use Utopia\Validator\Range;
 use Utopia\View;
 use Utopia\Exception;
 use Utopia\Domains\Domain;
@@ -407,23 +405,7 @@ $utopia->get('/.well-known/acme-challenge')
 
 
 
-$utopia->get('/v1/proxy')
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->action(
-        function () use ($response, $console, $clients) {
-            $view = new View(__DIR__.'/views/proxy.phtml');
-            $view
-                ->setParam('routes', '')
-                ->setParam('clients', array_merge($clients, $console->getAttribute('clients', [])))
-            ;
 
-            $response
-                ->setContentType(Response::CONTENT_TYPE_HTML)
-                ->removeHeader('X-Frame-Options')
-                ->send($view->render());
-        }
-    );
 
 $name = APP_NAME;
 
