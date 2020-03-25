@@ -1,3 +1,9 @@
+# Version 0.6.0 (PRE-RELEASE)
+
+## Breaking Changes
+
+* Updated all the REST API query params to be in camelCase
+
 # Version 0.5.3 (PRE-RELEASE)
 
 ## Bug Fixes

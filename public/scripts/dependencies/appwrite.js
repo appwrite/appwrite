@@ -516,7 +516,7 @@
                 }
 
                 if(oldPassword) {
-                    payload['old-password'] = oldPassword;
+                    payload['oldPassword'] = oldPassword;
                 }
 
                 return http
@@ -665,11 +665,11 @@
                 }
 
                 if(passwordA) {
-                    payload['password-a'] = passwordA;
+                    payload['password'] = passwordA;
                 }
 
                 if(passwordB) {
-                    payload['password-b'] = passwordB;
+                    payload['passwordAgain'] = passwordB;
                 }
 
                 return http
@@ -1401,15 +1401,15 @@
                 }
 
                 if(orderField) {
-                    payload['order-field'] = orderField;
+                    payload['orderField'] = orderField;
                 }
 
                 if(orderType) {
-                    payload['order-type'] = orderType;
+                    payload['orderType'] = orderType;
                 }
 
                 if(orderCast) {
-                    payload['order-cast'] = orderCast;
+                    payload['orderCast'] = orderCast;
                 }
 
                 if(search) {
