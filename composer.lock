@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2974879777e4362ff4e8138a0e12f926",
+    "content-hash": "54701e5067d9b94ae765f3f0e560b531",
     "packages": [
         {
             "name": "appwrite/php-clamav",
-            "version": "dev-master",
+            "version": "v1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/php-clamav.git",
@@ -1194,7 +1194,7 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
@@ -1241,7 +1241,7 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
@@ -1288,7 +1288,7 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
@@ -1335,21 +1335,21 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "dev-master",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "0d232917ec9afefdcb5d0fa486c6005e928e561a"
+                "reference": "a3e893c49546fa7d8254a63ec6f919653d292af8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/0d232917ec9afefdcb5d0fa486c6005e928e561a",
-                "reference": "0d232917ec9afefdcb5d0fa486c6005e928e561a",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/a3e893c49546fa7d8254a63ec6f919653d292af8",
+                "reference": "a3e893c49546fa7d8254a63ec6f919653d292af8",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.1",
-                "utopia-php/framework": "master"
+                "utopia-php/framework": "0.2.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
@@ -1379,11 +1379,11 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-31T20:42:16+00:00"
+            "time": "2020-03-25T04:46:43+00:00"
         },
         {
             "name": "utopia-php/domains",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
@@ -1433,7 +1433,7 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
@@ -1477,7 +1477,7 @@
         },
         {
             "name": "utopia-php/locale",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
@@ -1523,7 +1523,7 @@
         },
         {
             "name": "utopia-php/registry",
-            "version": "dev-master",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
