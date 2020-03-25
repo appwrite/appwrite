@@ -9,7 +9,7 @@
     "gulp-concat": "^2.6.1",
     "gulp-jsmin": "^0.1.5",
     "gulp-less": "^4.0.1",
-    "jest": "^24.9.0",
+    "jest": "^25.1.0",
     "ls-service-form2json": "^1.0.0"
   }
 }
