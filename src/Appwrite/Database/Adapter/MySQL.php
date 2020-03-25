@@ -588,23 +588,6 @@ class MySQL extends Adapter
 
         // Search
         if (!empty($options['search'])) { // Handle free search
-            //            $where[] = "LEFT JOIN `" . $this->getNamespace() . ".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid
-            //                    LEFT JOIN
-            //                `" . $this->getNamespace() . ".database.relationships` c_search ON c_search.start = a.uid
-            //                    LEFT JOIN
-            //                `" . $this->getNamespace() . ".database.properties` d_search ON d_search.documentUid = c_search.end
-            //                    LEFT JOIN
-            //                `" . $this->getNamespace() . ".database.relationships` e_search ON e_search.start = c_search.end
-            //                    LEFT JOIN
-            //                `" . $this->getNamespace() . ".database.properties` f_search ON f_search.documentUid = e_search.end
-            //                \n";
-            //            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-            //                OR b_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
-            //                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-            //                OR d_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)}
-            //                OR MATCH (f_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-            //                OR f_search.value LIKE {$this->getPDO()->quote('%%' . $options['search'] . '%%', PDO::PARAM_STR)})";
-
             $where[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid  AND b_search.primitive = 'string'
                     LEFT JOIN
                 `".$this->getNamespace().'.database.relationships` c_search ON c_search.start = b_search.documentUid
