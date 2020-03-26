@@ -6,8 +6,8 @@ cli_set_process_title('Webhooks V1 Worker');
 
 echo APP_NAME.' webhooks worker v1 has started';
 
-use Database\Database;
-use Database\Validator\Authorization;
+use Appwrite\Database\Database;
+use Appwrite\Database\Validator\Authorization;
 
 class WebhooksV1
 {

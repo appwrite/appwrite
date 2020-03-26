@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 AS builder
+FROM ubuntu:19.10 AS builder
 
 LABEL maintainer="team@appwrite.io"
 
@@ -131,8 +131,14 @@ RUN mkdir -p /storage/uploads && \
 
 # Supervisord Conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
-COPY ./docker/entrypoint.sh /entrypoint.sh
-RUN chmod 775 /entrypoint.sh
+
+# Start
+COPY ./docker/bin/start /start
+RUN chmod 775 /start
+
+# Upgrade
+COPY ./docker/bin/upgrade /upgrade
+RUN chmod 775 /upgrade
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
@@ -141,4 +147,4 @@ EXPOSE 80
 
 WORKDIR /usr/share/nginx/html
 
-CMD ["/bin/bash", "/entrypoint.sh"]
+CMD ["/bin/bash", "/start"]

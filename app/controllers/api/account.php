@@ -14,16 +14,17 @@ use Utopia\Validator\URL;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Locale\Locale;
-use Auth\Auth;
-use Auth\Validator\Password;
-use Database\Database;
-use Database\Document;
-use Database\Validator\UID;
-use Database\Validator\Authorization;
+use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Exception\Duplicate;
+use Appwrite\Database\Validator\UID;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Template\Template;
+use Appwrite\OpenSSL\OpenSSL;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
-use Template\Template;
-use OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -88,21 +89,25 @@ $utopia->post('/v1/account')
 
             Authorization::disable();
 
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['user:{self}'],
-                ],
-                'email' => $email,
-                'emailVerification' => false,
-                'status' => Auth::USER_STATUS_UNACTIVATED,
-                'password' => Auth::passwordHash($password),
-                'password-update' => time(),
-                'registration' => time(),
-                'reset' => false,
-                'name' => $name,
-            ]);
+            try {
+                $user = $projectDB->createDocument([
+                    '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                    '$permissions' => [
+                        'read' => ['*'],
+                        'write' => ['user:{self}'],
+                    ],
+                    'email' => $email,
+                    'emailVerification' => false,
+                    'status' => Auth::USER_STATUS_UNACTIVATED,
+                    'password' => Auth::passwordHash($password),
+                    'password-update' => time(),
+                    'registration' => time(),
+                    'reset' => false,
+                    'name' => $name,
+                ], ['email' => $email]);
+            } catch (Duplicate $th) {
+                throw new Exception('Account already exists', 409);
+            }
 
             Authorization::enable();
 
@@ -259,7 +264,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
                 throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
             }
 
-            $classname = 'Auth\\OAuth2\\'.ucfirst($provider);
+            $classname = 'Appwrite\\Auth\\OAuth2\\'.ucfirst($provider);
 
             if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);
@@ -314,7 +319,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, hex2bin($appSecret['iv']), hex2bin($appSecret['tag']));
             }
 
-            $classname = 'Auth\\OAuth2\\'.ucfirst($provider);
+            $classname = 'Appwrite\\Auth\\OAuth2\\'.ucfirst($provider);
 
             if (!class_exists($classname)) {
                 throw new Exception('Provider is not supported', 501);
@@ -391,18 +396,22 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 if (!$user || empty($user->getId())) { // Last option -> create user alone, generate random password
                     Authorization::disable();
 
-                    $user = $projectDB->createDocument([
-                        '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                        '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
-                        'email' => $email,
-                        'emailVerification' => true,
-                        'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
-                        'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'password-update' => time(),
-                        'registration' => time(),
-                        'reset' => false,
-                        'name' => $name,
-                    ]);
+                    try {
+                        $user = $projectDB->createDocument([
+                            '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                            '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
+                            'email' => $email,
+                            'emailVerification' => true,
+                            'status' => Auth::USER_STATUS_ACTIVATED, // Email should already be authenticated by OAuth2 provider
+                            'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                            'password-update' => time(),
+                            'registration' => time(),
+                            'reset' => false,
+                            'name' => $name,
+                        ], ['email' => $email]);
+                    } catch (Duplicate $th) {
+                        throw new Exception('Account already exists', 409);
+                    }
 
                     Authorization::enable();
 
@@ -476,6 +485,7 @@ $utopia->get('/v1/account')
                 [
                     '$id',
                     'email',
+                    'emailVerification',
                     'registration',
                     'name',
                 ],

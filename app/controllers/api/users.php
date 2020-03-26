@@ -2,8 +2,6 @@
 
 global $utopia, $response, $projectDB, $providers;
 
-use Auth\Auth;
-use Auth\Validator\Password;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\Assoc;
@@ -14,8 +12,11 @@ use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Utopia\Locale\Locale;
-use Database\Database;
-use Database\Validator\UID;
+use Appwrite\Auth\Auth;
+use Appwrite\Auth\Validator\Password;
+use Appwrite\Database\Database;
+use Appwrite\Database\Exception\Duplicate;
+use Appwrite\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
@@ -46,21 +47,25 @@ $utopia->post('/v1/users')
                 throw new Exception('User already registered', 409);
             }
 
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['user:{self}'],
-                ],
-                'email' => $email,
-                'status' => Auth::USER_STATUS_UNACTIVATED,
-                'password' => Auth::passwordHash($password),
-                'password-update' => time(),
-                'registration' => time(),
-                'emailVerification' => false,
-                'reset' => false,
-                'name' => $name,
-            ]);
+            try {
+                $user = $projectDB->createDocument([
+                    '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                    '$permissions' => [
+                        'read' => ['*'],
+                        'write' => ['user:{self}'],
+                    ],
+                    'email' => $email,
+                    'emailVerification' => false,
+                    'status' => Auth::USER_STATUS_UNACTIVATED,
+                    'password' => Auth::passwordHash($password),
+                    'password-update' => time(),
+                    'registration' => time(),
+                    'reset' => false,
+                    'name' => $name,
+                ], ['email' => $email]);
+            } catch (Duplicate $th) {
+                throw new Exception('Account already exists', 409);
+            }
 
             $oauth2Keys = [];
 

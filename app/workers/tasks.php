@@ -2,8 +2,8 @@
 
 require_once __DIR__.'/../init.php';
 
-use Database\Database;
-use Database\Validator\Authorization;
+use Appwrite\Database\Database;
+use Appwrite\Database\Validator\Authorization;
 use Cron\CronExpression;
 
 cli_set_process_title('Tasks V1 Worker');

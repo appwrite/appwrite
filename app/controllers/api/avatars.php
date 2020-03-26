@@ -9,7 +9,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
-use Resize\Resize;
+use Appwrite\Resize\Resize;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;

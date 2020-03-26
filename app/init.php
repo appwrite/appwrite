@@ -1,6 +1,12 @@
 <?php
 
-// Init
+/**
+ * Init
+ * 
+ * Inializes both Appwrite API entry point, queue workers, and CLI tasks.
+ * Set configuration, framework resources, app constants
+ * 
+ */
 if (file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
@@ -8,14 +14,14 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
 use Utopia\App;
 use Utopia\Request;
 use Utopia\Response;
-use Auth\Auth;
-use Database\Database;
-use Database\Document;
-use Database\Validator\Authorization;
-use Database\Adapter\MySQL as MySQLAdapter;
-use Database\Adapter\Redis as RedisAdapter;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';
@@ -26,7 +32,7 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
 const APP_CACHE_BUSTER = 69;
-const APP_VERSION_STABLE = '0.5.0';
+const APP_VERSION_STABLE = '0.5.3';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';

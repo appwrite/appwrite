@@ -3,7 +3,7 @@
 namespace Appwrite\Tests;
 
 use Utopia\Request;
-use Event\Event;
+use Appwrite\Event\Event;
 use PHPUnit\Framework\TestCase;
 
 class EventTest extends TestCase

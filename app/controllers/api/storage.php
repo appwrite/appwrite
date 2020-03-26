@@ -12,16 +12,16 @@ use Utopia\Validator\HexColor;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
-use Database\Database;
-use Database\Validator\UID;
-use Storage\Storage;
-use Storage\Devices\Local;
-use Storage\Validators\File;
-use Storage\Validators\FileSize;
-use Storage\Validators\Upload;
-use Storage\Compression\Algorithms\GZIP;
-use Resize\Resize;
-use OpenSSL\OpenSSL;
+use Appwrite\Database\Database;
+use Appwrite\Database\Validator\UID;
+use Appwrite\Storage\Storage;
+use Appwrite\Storage\Devices\Local;
+use Appwrite\Storage\Validators\File;
+use Appwrite\Storage\Validators\FileSize;
+use Appwrite\Storage\Validators\Upload;
+use Appwrite\Storage\Compression\Algorithms\GZIP;
+use Appwrite\Resize\Resize;
+use Appwrite\OpenSSL\OpenSSL;
 
 include_once __DIR__ . '/../shared/api.php';
 

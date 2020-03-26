@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Storage\Validators\FileName;
+use Appwrite\Storage\Validators\FileName;
 use PHPUnit\Framework\TestCase;
 
 class FileNameTest extends TestCase

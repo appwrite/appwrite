@@ -18,7 +18,7 @@ $cli
 
         Console::log('Issue a TLS certificate for master domain ('.$domain.')');
 
-        Resque::enqueue('v1-certificates', 'CertificatesV1', [
+        ResqueScheduler::enqueueAt(time() + 30, 'v1-certificates', 'CertificatesV1', [
             'document' => [],
             'domain' => $domain,
             'validateTarget' => false,

@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Resize\Resize;
+use Appwrite\Resize\Resize;
 use PHPUnit\Framework\TestCase;
 
 class ResizeTest extends TestCase

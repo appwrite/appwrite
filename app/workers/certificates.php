@@ -1,11 +1,10 @@
 <?php
 
-use Database\Database;
-use Database\Document;
-use Database\Validator\Authorization;
-use Network\Validators\CNAME;
 use Utopia\App;
 use Utopia\Domains\Domain;
+use Appwrite\Database\Database;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Network\Validators\CNAME;
 
 require_once __DIR__.'/../init.php';
 

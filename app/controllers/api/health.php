@@ -3,8 +3,8 @@
 global $utopia, $request, $response, $register, $project;
 
 use Utopia\Exception;
-use Storage\Devices\Local;
-use Storage\Storage;
+use Appwrite\Storage\Devices\Local;
+use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
 
 $utopia->get('/v1/health')

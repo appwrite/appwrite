@@ -8,7 +8,7 @@
 </p>
 
 
-[![Discord](https://img.shields.io/discord/564160730845151244)](https://discord.gg/GSeTUeA)
+[![Discord](https://badgen.net/badge/discord/chat/green)](https://discord.gg/GSeTUeA)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://travis-ci.org/appwrite/appwrite)
 [![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.org/appwrite/appwrite)
 [![Twitter Account](https://badgen.net/twitter/follow/appwrite_io?label=twitter)](https://twitter.com/appwrite_io)
@@ -46,12 +46,12 @@ Appwrite backend server is designed to run in a container environment. Running y
 The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
 
 ```bash
-mkdir appwrite-ce && \
-cd appwrite-ce && \
-curl -o docker-compose.yml https://appwrite.io/docker-compose.yml?version=0.4.0&port=80 && \
-docker-compose up -d --remove-orphans
+docker run -it --rm \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume "$(pwd)"/appwrite:/install/appwrite:rw \
+    -e version=0.5.3 \
+    appwrite/install
 ```
-
 
 Once the Docker installation completes, go to http://localhost to access the Appwrite console from your browser. Please note that on non-linux native hosts, the server might take a few minutes to start after installation completes.
 

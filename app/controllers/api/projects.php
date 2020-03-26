@@ -2,7 +2,6 @@
 
 global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $providers;
 
-use Auth\Auth;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
@@ -12,13 +11,14 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Domains\Domain;
-use Task\Validator\Cron;
-use Database\Database;
-use Database\Document;
-use Database\Validator\UID;
-use OpenSSL\OpenSSL;
+use Appwrite\Auth\Auth;
+use Appwrite\Task\Validator\Cron;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\UID;
+use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Network\Validators\CNAME;
 use Cron\CronExpression;
-use Network\Validators\CNAME;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -1382,25 +1382,5 @@ $utopia->delete('/v1/projects/:projectId/domains/:domainId')
             }
 
             $response->noContent();
-        }
-    );
-
-
-
-$utopia->get('/v1/projects/x/certs')
-    ->desc('List Domains')
-    ->label('scope', 'public')
-    ->action(
-        function () use ($response, $consoleDB) {
-            \Database\Validator\Authorization::disable();
-            $results = $consoleDB->getCollection([
-                'limit' => 2000,
-                'offset' => 0,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
-                ],
-            ]);
-            \Database\Validator\Authorization::reset();
-            $response->json($results);
         }
     );

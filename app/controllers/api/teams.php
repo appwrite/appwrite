@@ -11,12 +11,13 @@ use Utopia\Validator\Range;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Locale\Locale;
-use Database\Database;
-use Database\Document;
-use Database\Validator\UID;
-use Database\Validator\Authorization;
-use Template\Template;
-use Auth\Auth;
+use Appwrite\Auth\Auth;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\UID;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Exception\Duplicate;
+use Appwrite\Template\Template;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -243,22 +244,26 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
                 Authorization::disable();
 
-                $invitee = $projectDB->createDocument([
-                    '$collection' => Database::SYSTEM_COLLECTION_USERS,
-                    '$permissions' => [
-                        'read' => ['user:{self}', '*'],
-                        'write' => ['user:{self}'],
-                    ],
-                    'email' => $email,
-                    'emailVerification' => false,
-                    'status' => Auth::USER_STATUS_UNACTIVATED,
-                    'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                    'password-update' => time(),
-                    'registration' => time(),
-                    'reset' => false,
-                    'name' => $name,
-                    'tokens' => [],
-                ]);
+                try {
+                    $invitee = $projectDB->createDocument([
+                        '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                        '$permissions' => [
+                            'read' => ['user:{self}', '*'],
+                            'write' => ['user:{self}'],
+                        ],
+                        'email' => $email,
+                        'emailVerification' => false,
+                        'status' => Auth::USER_STATUS_UNACTIVATED,
+                        'password' => Auth::passwordHash(Auth::passwordGenerator()),
+                        'password-update' => time(),
+                        'registration' => time(),
+                        'reset' => false,
+                        'name' => $name,
+                        'tokens' => [],
+                    ], ['email' => $email]);
+                } catch (Duplicate $th) {
+                    throw new Exception('Account already exists', 409);
+                }
 
                 Authorization::reset();
 

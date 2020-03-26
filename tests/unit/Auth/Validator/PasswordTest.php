@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Auth\Validator\Password;
+use Appwrite\Auth\Validator\Password;
 use PHPUnit\Framework\TestCase;
 
 class PasswordTestTest extends TestCase

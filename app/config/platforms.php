@@ -21,7 +21,7 @@ return [
             [
                 'key' => 'javascript',
                 'name' => 'JavaScript',
-                'version' => '1.0.28',
+                'version' => '1.0.29',
                 'url' => 'https://github.com/appwrite/sdk-for-js',
                 'enabled' => true,
                 'beta' => false,
@@ -130,7 +130,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '0.0.6',
+                'version' => '0.0.7',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'enabled' => true,
                 'beta' => true,
@@ -177,7 +177,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '1.0.31',
+                'version' => '1.0.32',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'enabled' => true,
                 'beta' => false,
@@ -191,7 +191,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '1.0.16',
+                'version' => '1.0.17',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'enabled' => true,
                 'beta' => false,
@@ -205,7 +205,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '0.0.3',
+                'version' => '0.0.4',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'enabled' => true,
                 'beta' => true,
@@ -219,7 +219,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '1.0.8',
+                'version' => '1.0.9',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'enabled' => true,
                 'beta' => true,
@@ -233,7 +233,7 @@ return [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => '0.0.5',
+                'version' => '0.0.6',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => true,
                 'beta' => true,

@@ -3,13 +3,13 @@
 
 require_once __DIR__.'/../init.php';
 
-global $register, $projectDB, $console, $providers;
+global $register, $projectDB, $console, $providers, $request;
 
-use Database\Database;
-use Database\Document;
-use Database\Validator\Authorization;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
+use Appwrite\Database\Database;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 
 $cli = new CLI();
 $db = $register->get('db');
@@ -18,7 +18,7 @@ $callbacks = [
     '0.4.0' => function() {
         Console::log('I got nothing to do.');
     },
-    '0.5.0' => function($project) use ($db, $projectDB) {
+    '0.5.0' => function($project) use ($db, $projectDB, $requset) {
 
         Console::info('Upgrading project: '.$project->getId());
 
@@ -64,11 +64,22 @@ $callbacks = [
             $offset = $offset + $limit;
         }
 
+        $schema = (isset($_SERVER['_APP_DB_SCHEMA'])) ? $_SERVER['_APP_DB_SCHEMA'] : '';
+
         try {
             $statement = $db->prepare("
-                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
-                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` DROP INDEX IF EXISTS `index_1`;
-                ALTER TABLE `appwrite`.`app_{$project->getId()}.audit.audit` ADD INDEX IF NOT EXISTS `index_1` (`userId` ASC);
+
+                CREATE TABLE IF NOT EXISTS `template.database.unique` (
+                    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                    `key` varchar(128) DEFAULT NULL,
+                    PRIMARY KEY (`id`),
+                    UNIQUE KEY `index1` (`key`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+                CREATE TABLE IF NOT EXISTS `{$schema}`.`app_{$project->getId()}.database.unique` LIKE `template.database.unique`;
+                ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` DROP COLUMN IF EXISTS `userType`;
+                ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` DROP INDEX IF EXISTS `index_1`;
+                ALTER TABLE `{$schema}`.`app_{$project->getId()}.audit.audit` ADD INDEX IF NOT EXISTS `index_1` (`userId` ASC);
             ");
 
             $statement->closeCursor();
@@ -140,6 +151,8 @@ function fixDocument(Document $document) {
         ->setAttribute('$id', $document->getAttribute('$uid', $document->getAttribute('$id')))
         ->removeAttribute('$uid')
     ;
+
+    Console::log('Switched from $uid to $id: '.$document->getCollection().'/'.$document->getId());
 
     foreach($document as &$attr) {
         if($attr instanceof Document) {

@@ -116,7 +116,7 @@ POST https://appwrite.io/v1/database/collections/{collectionId}/documents
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
-| data | object | Document data as JSON string. |  |
+| data | object | Document data as JSON object. |  |
 | read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | parentDocument | string | Parent document unique ID. Use when you want your new document to be a child of a parent document. |  |
@@ -150,7 +150,7 @@ PATCH https://appwrite.io/v1/database/collections/{collectionId}/documents/{docu
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
 | documentId | string | **Required** Document unique ID. |  |
-| data | object | Document data as JSON string. |  |
+| data | object | Document data as JSON object. |  |
 | read | array | An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 | write | array | An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions. |  |
 
