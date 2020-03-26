@@ -1,6 +1,11 @@
+import 'dart:html';
+
 import "package:appwrite/service.dart";
 import "package:appwrite/client.dart";
 import 'package:dio/dio.dart';
+import 'package:meta/meta.dart';
+
+import '../enums.dart';
 
 class Account extends Service {
      
@@ -13,7 +18,7 @@ class Account extends Service {
        Map<String, dynamic> params = {
        };
 
-       return await this.client.call('get', path: path, params: params);
+       return await this.client.call(HttpMethod.get, path: path, params: params);
     }
      /// Use this endpoint to allow a new user to register a new account in your
      /// project. After the user registration completes successfully, you can use
@@ -21,7 +26,7 @@ class Account extends Service {
      /// verifying the user email address. To allow your new user to login to his
      /// new account, you need to create a new [account
      /// session](/docs/account#createSession).
-    Future<Response> create({email, password, name = null}) async {
+    Future<Response> create({@required String email, @required String password, String name = null}) async {
        String path = '/account';
 
        Map<String, dynamic> params = {
@@ -30,7 +35,7 @@ class Account extends Service {
          'name': name,
        };
 
-       return await this.client.call('post', path: path, params: params);
+       return await this.client.call(HttpMethod.post, path: path, params: params);
     }
      /// Delete a currently logged in user account. Behind the scene, the user
      /// record is not deleted but permanently blocked from any access. This is done
@@ -43,13 +48,13 @@ class Account extends Service {
        Map<String, dynamic> params = {
        };
 
-       return await this.client.call('delete', path: path, params: params);
+       return await this.client.call(HttpMethod.delete, path: path, params: params);
     }
      /// Update currently logged in user account email address. After changing user
      /// address, user confirmation status is being reset and a new confirmation
      /// mail is sent. For security measures, user password is required to complete
      /// this request.
-    Future<Response> updateEmail({email, password}) async {
+    Future<Response> updateEmail({@required String email, @required String password}) async {
        String path = '/account/email';
 
        Map<String, dynamic> params = {
@@ -57,7 +62,7 @@ class Account extends Service {
          'password': password,
        };
 
-       return await this.client.call('patch', path: path, params: params);
+       return await this.client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Get currently logged in user list of latest security activity logs. Each
      /// log returns user IP address, location and date and time of log.
@@ -67,21 +72,21 @@ class Account extends Service {
        Map<String, dynamic> params = {
        };
 
-       return await this.client.call('get', path: path, params: params);
+       return await this.client.call(HttpMethod.get, path: path, params: params);
     }
      /// Update currently logged in user account name.
-    Future<Response> updateName({name}) async {
+    Future<Response> updateName({@required String name}) async {
        String path = '/account/name';
 
        Map<String, dynamic> params = {
          'name': name,
        };
 
-       return await this.client.call('patch', path: path, params: params);
+       return await this.client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Update currently logged in user password. For validation, user is required
      /// to pass the password twice.
-    Future<Response> updatePassword({password, oldPassword}) async {
+    Future<Response> updatePassword({@required String password, @required String oldPassword}) async {
        String path = '/account/password';
 
        Map<String, dynamic> params = {
@@ -89,7 +94,7 @@ class Account extends Service {
          'old-password': oldPassword,
        };
 
-       return await this.client.call('patch', path: path, params: params);
+       return await this.client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Get currently logged in user preferences as a key-value object.
     Future<Response> getPrefs() async {
@@ -98,18 +103,18 @@ class Account extends Service {
        Map<String, dynamic> params = {
        };
 
-       return await this.client.call('get', path: path, params: params);
+       return await this.client.call(HttpMethod.get, path: path, params: params);
     }
      /// Update currently logged in user account preferences. You can pass only the
      /// specific settings you wish to update.
-    Future<Response> updatePrefs({prefs}) async {
+    Future<Response> updatePrefs({@required dynamic prefs}) async {
        String path = '/account/prefs';
 
        Map<String, dynamic> params = {
          'prefs': prefs,
        };
 
-       return await this.client.call('patch', path: path, params: params);
+       return await this.client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Sends the user an email with a temporary secret key for password reset.
      /// When the user clicks the confirmation link he is redirected back to your
@@ -117,7 +122,7 @@ class Account extends Service {
      /// attached to the URL query string. Use the query string params to submit a
      /// request to the [PUT /account/recovery](/docs/account#updateRecovery)
      /// endpoint to complete the process.
-    Future<Response> createRecovery({email, url}) async {
+    Future<Response> createRecovery({@required String email, @required String url}) async {
        String path = '/account/recovery';
 
        Map<String, dynamic> params = {
@@ -125,7 +130,7 @@ class Account extends Service {
          'url': url,
        };
 
-       return await this.client.call('post', path: path, params: params);
+       return await this.client.call(HttpMethod.post, path: path, params: params);
     }
      /// Use this endpoint to complete the user account password reset. Both the
      /// **userId** and **secret** arguments will be passed as query parameters to
@@ -136,7 +141,7 @@ class Account extends Service {
      /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      /// the only valid redirect URLs are the ones from domains you have set when
      /// adding your platforms in the console interface.
-    Future<Response> updateRecovery({userId, secret, passwordA, passwordB}) async {
+    Future<Response> updateRecovery({@required String userId, @required String secret, @required String passwordA, @required String passwordB}) async {
        String path = '/account/recovery';
 
        Map<String, dynamic> params = {
@@ -146,7 +151,7 @@ class Account extends Service {
          'password-b': passwordB,
        };
 
-       return await this.client.call('put', path: path, params: params);
+       return await this.client.call(HttpMethod.put, path: path, params: params);
     }
      /// Get currently logged in user list of active sessions across different
      /// devices.
@@ -156,11 +161,11 @@ class Account extends Service {
        Map<String, dynamic> params = {
        };
 
-       return await this.client.call('get', path: path, params: params);
+       return await this.client.call(HttpMethod.get, path: path, params: params);
     }
      /// Allow the user to login into his account by providing a valid email and
      /// password combination. This route will create a new session for the user.
-    Future<Response> createSession({email, password}) async {
+    Future<Response> createSession({@required String email, @required String password}) async {
        String path = '/account/sessions';
 
        Map<String, dynamic> params = {
@@ -168,7 +173,7 @@ class Account extends Service {
          'password': password,
        };
 
-       return await this.client.call('post', path: path, params: params);
+       return await this.client.call(HttpMethod.post, path: path, params: params);
     }
      /// Delete all sessions from the user account and remove any sessions cookies
      /// from the end client.
@@ -178,13 +183,13 @@ class Account extends Service {
        Map<String, dynamic> params = {
        };
 
-       return await this.client.call('delete', path: path, params: params);
+       return await this.client.call(HttpMethod.delete, path: path, params: params);
     }
      /// Allow the user to login to his account using the OAuth2 provider of his
      /// choice. Each OAuth2 provider should be enabled from the Appwrite console
      /// first. Use the success and failure arguments to provide a redirect URL's
      /// back to your app when login is completed.
-    Future<Response> createOAuth2Session({provider, success, failure}) async {
+    Future<Response> createOAuth2Session({@required String provider, @required String success, @required String failure}) async {
        String path = '/account/sessions/oauth2/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
        Map<String, dynamic> params = {
@@ -192,18 +197,18 @@ class Account extends Service {
          'failure': failure,
        };
 
-       return await this.client.call('get', path: path, params: params);
+       return await this.client.call(HttpMethod.get, path: path, params: params);
     }
      /// Use this endpoint to log out the currently logged in user from all his
      /// account sessions across all his different devices. When using the option id
      /// argument, only the session unique ID provider will be deleted.
-    Future<Response> deleteSession({sessionId}) async {
+    Future<Response> deleteSession({@required String sessionId}) async {
        String path = '/account/sessions/{sessionId}'.replaceAll(RegExp('{sessionId}'), sessionId);
 
        Map<String, dynamic> params = {
        };
 
-       return await this.client.call('delete', path: path, params: params);
+       return await this.client.call(HttpMethod.delete, path: path, params: params);
     }
      /// Use this endpoint to send a verification message to your user email address
      /// to confirm they are the valid owners of that address. Both the **userId**
@@ -218,20 +223,20 @@ class Account extends Service {
      /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
      /// the only valid redirect URLs are the ones from domains you have set when
      /// adding your platforms in the console interface.
-    Future<Response> createVerification({url}) async {
+    Future<Response> createVerification({@required String url}) async {
        String path = '/account/verification';
 
        Map<String, dynamic> params = {
          'url': url,
        };
 
-       return await this.client.call('post', path: path, params: params);
+       return await this.client.call(HttpMethod.post, path: path, params: params);
     }
      /// Use this endpoint to complete the user email verification process. Use both
      /// the **userId** and **secret** parameters that were attached to your app URL
      /// to verify the user email ownership. If confirmed this route will return a
      /// 200 status code.
-    Future<Response> updateVerification({userId, secret}) async {
+    Future<Response> updateVerification({@required String userId, @required String secret}) async {
        String path = '/account/verification';
 
        Map<String, dynamic> params = {
@@ -239,6 +244,6 @@ class Account extends Service {
          'secret': secret,
        };
 
-       return await this.client.call('put', path: path, params: params);
+       return await this.client.call(HttpMethod.put, path: path, params: params);
     }
 }

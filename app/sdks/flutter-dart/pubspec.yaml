@@ -4,7 +4,7 @@ description: Appwrite backend as a service cuts up to 70% of the time and costs 
 author: Appwrite Team <team@appwrite.io> 
 homepage: https://github.com/appwrite/sdk-for-dart
 environment:
-  sdk: '>=2.2.2 <3.0.0'
+  sdk: '>=2.6.0 <3.0.0'
 dependencies:
   dio: ^3.0.0
   cookie_jar: ^1.0.0
