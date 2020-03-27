@@ -2612,12 +2612,8 @@ let args=getParams(target);if(debug)console.log("%c[form data]: ","color:green",
 console.log("[param resolved]: ("+service+") "+value+"=",result);return result;}));};let exec=function(event){element.$lsSkip=true;element.classList.add("load-service-start");if(debug)
 console.log("%c[executed]: "+scope+"."+action,"color:yellow",event,element,document.body.contains(element));if(!document.body.contains(element)){element=undefined;return false;}
 if(event){event.preventDefault();}
-<<<<<<< HEAD
-if(confirm){if(window.confirm(confirm)!==true){element.classList.add("load-service-end");return false;}}
-=======
 if(running){console.log('blocked');return false;}
-running=true;element.style.backgroud='red';if(confirm){if(window.confirm(confirm)!==true){return false;}}
->>>>>>> 677b609f371682824639847680f17f5261fd11de
+running=true;element.style.backgroud='red';if(confirm){if(window.confirm(confirm)!==true){element.classList.add("load-service-end");return false;}}
 if(loading){loaderId=alerts.add({text:loading,class:""},0);}
 let method=container.path(scope+"."+action);if(!method){throw new Error('Method "'+scope+"."+action+'" not found');}
 let formData="FORM"===element.tagName?form.toJson(element):{};let result=resolve(method,"param",formData);if(!result){return;}

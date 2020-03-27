@@ -1111,21 +1111,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log.git",
-<<<<<<< HEAD
-                "reference": "e1cb6eca27ccfd46567a2837eeba62bc5fecdee2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/e1cb6eca27ccfd46567a2837eeba62bc5fecdee2",
-                "reference": "e1cb6eca27ccfd46567a2837eeba62bc5fecdee2",
-=======
                 "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/php-fig/log/zipball/0f73288fd15629204f9d42b7055f72dacbe811fc",
                 "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc",
->>>>>>> 677b609f371682824639847680f17f5261fd11de
                 "shasum": ""
             },
             "require": {
@@ -1159,11 +1150,7 @@
                 "psr",
                 "psr-3"
             ],
-<<<<<<< HEAD
-            "time": "2020-02-28T08:38:25+00:00"
-=======
             "time": "2020-03-23T09:12:05+00:00"
->>>>>>> 677b609f371682824639847680f17f5261fd11de
         },
         {
             "name": "ralouphie/getallheaders",
@@ -1589,7 +1576,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "7a43413e650705843672ebe930fe6ecd77693393"
+                "reference": "dccb6830aca1681dc4c3730652c1b7636e25fe9e"
             },
             "require": {
                 "ext-curl": "*",
@@ -1619,7 +1606,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-03-01T12:19:20+00:00"
+            "time": "2020-03-26T07:14:16+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -2408,16 +2395,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.5.20",
+            "version": "7.5.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "9467db479d1b0487c99733bb1e7944d32deded2c"
+                "reference": "6ef9ac810e494e7793013f8f5004d5d268852412"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/9467db479d1b0487c99733bb1e7944d32deded2c",
-                "reference": "9467db479d1b0487c99733bb1e7944d32deded2c",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/6ef9ac810e494e7793013f8f5004d5d268852412",
+                "reference": "6ef9ac810e494e7793013f8f5004d5d268852412",
                 "shasum": ""
             },
             "require": {
@@ -2488,7 +2475,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2020-01-08T08:45:45+00:00"
+            "time": "2019-11-27T08:45:03+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -3120,21 +3107,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-<<<<<<< HEAD
-                "reference": "766ee47e656529b352da69c0ff29da928a9629e7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/766ee47e656529b352da69c0ff29da928a9629e7",
-                "reference": "766ee47e656529b352da69c0ff29da928a9629e7",
-=======
                 "reference": "81ffd3a9c6d707be22e3012b827de1c9775fc5ac"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/81ffd3a9c6d707be22e3012b827de1c9775fc5ac",
                 "reference": "81ffd3a9c6d707be22e3012b827de1c9775fc5ac",
->>>>>>> 677b609f371682824639847680f17f5261fd11de
                 "shasum": ""
             },
             "require": {
@@ -3180,11 +3158,7 @@
                 "portable",
                 "shim"
             ],
-<<<<<<< HEAD
-            "time": "2020-02-27T09:26:54+00:00"
-=======
             "time": "2020-03-09T19:04:49+00:00"
->>>>>>> 677b609f371682824639847680f17f5261fd11de
         },
         {
             "name": "theseer/tokenizer",
@@ -3232,21 +3206,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-<<<<<<< HEAD
-                "reference": "0da153eb3b843d1117e52c882df6f40aefb954ab"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/0da153eb3b843d1117e52c882df6f40aefb954ab",
-                "reference": "0da153eb3b843d1117e52c882df6f40aefb954ab",
-=======
                 "reference": "27af7d9cd1b77fcb13b4ed452c291d9defad088b"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/twigphp/Twig/zipball/27af7d9cd1b77fcb13b4ed452c291d9defad088b",
                 "reference": "27af7d9cd1b77fcb13b4ed452c291d9defad088b",
->>>>>>> 677b609f371682824639847680f17f5261fd11de
                 "shasum": ""
             },
             "require": {
@@ -3298,11 +3263,7 @@
             "keywords": [
                 "templating"
             ],
-<<<<<<< HEAD
-            "time": "2020-02-23T08:42:25+00:00"
-=======
             "time": "2020-03-24T12:35:30+00:00"
->>>>>>> 677b609f371682824639847680f17f5261fd11de
         },
         {
             "name": "webmozart/assert",
