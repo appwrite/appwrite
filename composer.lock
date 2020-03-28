@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "54701e5067d9b94ae765f3f0e560b531",
+    "content-hash": "d19ba7d1c39970839f6f191664e9498d",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1382,6 +1382,52 @@
             "time": "2020-03-25T04:46:43+00:00"
         },
         {
+            "name": "utopia-php/config",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/config.git",
+                "reference": "f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/config/zipball/f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d",
+                "reference": "f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Config\\": "src/Config"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                }
+            ],
+            "description": "A simple Config library to managing application config variables",
+            "keywords": [
+                "config",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "time": "2020-03-28T10:24:18+00:00"
+        },
+        {
             "name": "utopia-php/domains",
             "version": "0.2.0",
             "source": {
@@ -1576,7 +1622,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "dccb6830aca1681dc4c3730652c1b7636e25fe9e"
+                "reference": "97cb12c9c187a42a545060c324b0960c99582893"
             },
             "require": {
                 "ext-curl": "*",
@@ -1606,7 +1652,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-03-26T07:14:16+00:00"
+            "time": "2020-03-27T15:12:28+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -3206,12 +3252,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "27af7d9cd1b77fcb13b4ed452c291d9defad088b"
+                "reference": "6df2e2c3181e6d0b961fc341fbe8269fefc933c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/27af7d9cd1b77fcb13b4ed452c291d9defad088b",
-                "reference": "27af7d9cd1b77fcb13b4ed452c291d9defad088b",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/6df2e2c3181e6d0b961fc341fbe8269fefc933c6",
+                "reference": "6df2e2c3181e6d0b961fc341fbe8269fefc933c6",
                 "shasum": ""
             },
             "require": {
@@ -3263,7 +3309,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-03-24T12:35:30+00:00"
+            "time": "2020-03-27T16:41:01+00:00"
         },
         {
             "name": "webmozart/assert",

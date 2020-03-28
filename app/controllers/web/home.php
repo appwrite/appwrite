@@ -2,22 +2,23 @@
 
 include_once __DIR__ . '/../shared/web.php';
 
-global $utopia, $response, $request, $layout, $version, $providers, $platforms;
+global $utopia, $response, $request, $layout;
 
 use Utopia\View;
+use Utopia\Config\Config;
 
 $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
 $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
 $footer
-    ->setParam('version', $version)
+    ->setParam('version', Config::getParam('version'))
 ;
 
 $layout
     ->setParam('title', APP_NAME)
     ->setParam('description', '')
     ->setParam('class', 'home')
-    ->setParam('platforms', $platforms)
+    ->setParam('platforms', Config::getParam('platforms'))
     ->setParam('header', [$header])
     ->setParam('footer', [$footer])
 ;

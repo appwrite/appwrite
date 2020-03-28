@@ -4,6 +4,7 @@
 require_once __DIR__.'/../../vendor/autoload.php';
 require_once __DIR__.'/../../app/init.php';
 
+use Utopia\Config\Config;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
@@ -15,6 +16,7 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Go;
+use Appwrite\SDK\Language\Typescript;
 
 $cli = new CLI();
 
@@ -38,7 +40,7 @@ $cli
             return $result;
         }
 
-        $platforms = include __DIR__ . '/../config/platforms.php';
+        $platforms = Config::getParam('platforms');
         $message = Console::confirm('Please enter your commit message:');
         $production = (Console::confirm('Type "Appwrite" to deploy for production') == 'Appwrite');
 
@@ -83,6 +85,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'javascript':
                         $config = new JS();
+                        $config
+                            ->setNPMPackage('appwrite')
+                            ->setBowerPackage('appwrite')
+                        ;
+                        break;
+                    case 'typescript':
+                        $config = new Typescript();
                         $config
                             ->setNPMPackage('appwrite')
                             ->setBowerPackage('appwrite')

@@ -1,6 +1,7 @@
 <?php
 
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
@@ -22,7 +23,7 @@ class CertificatesV1
 
     public function perform()
     {
-        global $request, $consoleDB, $env;
+        global $request, $consoleDB;
 
         /**
          * 1. Get new domain document - DONE
@@ -103,7 +104,7 @@ class CertificatesV1
                 throw new Exception('Renew isn\'t required');
         }
 
-        $staging = ($env === App::ENV_TYPE_PRODUCTION) ? '' : ' --dry-run';
+        $staging = (Config::getParam('env') === App::ENV_TYPE_PRODUCTION) ? '' : ' --dry-run';
 
         $response = shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} --email security@appwrite.io \
             -w ".APP_STORAGE_CERTIFICATES." \

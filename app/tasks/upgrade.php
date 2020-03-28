@@ -3,8 +3,9 @@
 
 require_once __DIR__.'/../init.php';
 
-global $register, $projectDB, $console, $providers, $request;
+global $register, $projectDB, $console, $request;
 
+use Utopia\Config\Config;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Appwrite\Database\Database;
@@ -93,7 +94,7 @@ $callbacks = [
 ];
 
 function fixDocument(Document $document) {
-    global $providers;
+    $providers = Config::getParam('providers');
 
     if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_PROJECTS){
         foreach($providers as $key => $provider) {

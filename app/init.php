@@ -14,6 +14,7 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
 use Utopia\App;
 use Utopia\Request;
 use Utopia\Response;
+use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
 use Appwrite\Auth\Auth;
@@ -52,30 +53,31 @@ $response = new Response();
 /*
  * ENV vars
  */
-$env = $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION);
-$domain = $request->getServer('HTTP_HOST', '');
-$domainVerification = false;
-$version = $request->getServer('_APP_VERSION', 'UNKNOWN');
-$providers = include __DIR__.'/../app/config/providers.php'; // OAuth2 providers list
-$platforms = include __DIR__.'/../app/config/platforms.php';
-$locales = include __DIR__.'/../app/config/locales.php'; // Locales list
-$collections = include __DIR__.'/../app/config/collections.php'; // Collections list
-$redisHost = $request->getServer('_APP_REDIS_HOST', '');
-$redisPort = $request->getServer('_APP_REDIS_PORT', '');
-$utopia = new App('Asia/Tel_Aviv', $env);
-$protocol = $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https'));
-$port = (string) parse_url($protocol.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT);
+Config::load('providers', __DIR__.'/../app/config/providers.php');
+Config::load('platforms', __DIR__.'/../app/config/platforms.php');
+Config::load('locales', __DIR__.'/../app/config/locales.php');
+Config::load('collections', __DIR__.'/../app/config/collections.php');
 
-Resque::setBackend($redisHost.':'.$redisPort);
+Config::setParam('env', $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION));
+Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
+Config::setParam('domainVerification', false);
+Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
+Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
+Config::setParam('port', (string) parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
+
+$utopia = new App('Asia/Tel_Aviv', Config::getParam('env'));
+
+Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
+    .':'.$request->getServer('_APP_REDIS_PORT', ''));
 
 define('COOKIE_DOMAIN', 
     (
         $request->getServer('HTTP_HOST', null) === 'localhost' ||
-        $request->getServer('HTTP_HOST', null) === 'localhost:'.$port ||
+        $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
         (filter_var($request->getServer('HTTP_HOST', null), FILTER_VALIDATE_IP) !== false)
     )
         ? null
-        : '.'.parse_url($protocol.'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
+        : '.'.parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
 define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
@@ -119,10 +121,11 @@ $register->set('statsd', function () use ($request) { // Register DB connection
 
     return $statsd;
 });
-$register->set('cache', function () use ($redisHost, $redisPort) { // Register cache connection
+$register->set('cache', function () use ($request) { // Register cache connection
     $redis = new Redis();
 
-    $redis->connect($redisHost, $redisPort);
+    $redis->connect($request->getServer('_APP_REDIS_HOST', ''),
+        $request->getServer('_APP_REDIS_PORT', ''));
 
     return $redis;
 });
@@ -209,7 +212,7 @@ Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
 
 Locale::setDefault('en');
 
-if (in_array($locale, $locales)) {
+if (in_array($locale, Config::getParam('locales'))) {
     Locale::setDefault($locale);
 }
 
@@ -217,7 +220,7 @@ stream_context_set_default([ // Set global user agent and http settings
     'http' => [
         'method' => 'GET',
         'user_agent' => sprintf(APP_USERAGENT,
-            $version,
+            Config::getParam('version'),
             $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
     ],
@@ -229,8 +232,8 @@ stream_context_set_default([ // Set global user agent and http settings
 $consoleDB = new Database();
 $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
 $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-$consoleDB->setMocks($collections);
 
+$consoleDB->setMocks(Config::getParam('collections', []));
 Authorization::disable();
 
 $project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', null)));
@@ -268,7 +271,7 @@ Auth::$secret = $session['secret'];
 $projectDB = new Database();
 $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
 $projectDB->setNamespace('app_'.$project->getId());
-$projectDB->setMocks($collections);
+$projectDB->setMocks(Config::getParam('collections', []));
 
 $user = $projectDB->getDocument(Auth::$unique);
 

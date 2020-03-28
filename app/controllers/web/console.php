@@ -2,9 +2,10 @@
 
 include_once __DIR__ . '/../shared/web.php';
 
-global $utopia, $response, $request, $layout, $version, $providers, $projectDB;
+global $utopia, $response, $request, $layout, $projectDB;
 
 use Utopia\View;
+use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\UID;
@@ -16,25 +17,18 @@ $utopia->init(function () use ($layout, $utopia) {
     ;
 });
 
-$utopia->shutdown(function () use ($utopia, $response, $request, $layout, $version) {
+$utopia->shutdown(function () use ($response, $request, $layout) {
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
 
     $footer
         ->setParam('home', $request->getServer('_APP_HOME', ''))
-        ->setParam('version', $version)
+        ->setParam('version', Config::getParam('version'))
     ;
 
     $layout
         ->setParam('header', [$header])
         ->setParam('footer', [$footer])
-        ->setParam('prefetch', [
-            //'/console/database?version=' . $version,
-            //'/console/storage?version=' . $version,
-            //'/console/users?version=' . $version,
-            //'/console/settings?version=' . $version,
-            //'/console/account?version=' . $version,
-        ])
     ;
 
     $response->send($layout->render());
@@ -229,10 +223,10 @@ $utopia->get('/console/users')
     ->desc('Platform console project settings')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout, $providers) {
+    ->action(function () use ($layout) {
         $page = new View(__DIR__.'/../../views/console/users/index.phtml');
 
-        $page->setParam('providers', $providers);
+        $page->setParam('providers', Config::getParam('providers'));
 
         $layout
             ->setParam('title', APP_NAME.' - Users')
@@ -243,7 +237,7 @@ $utopia->get('/console/users/view')
     ->desc('Platform console project user')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout, $providers) {
+    ->action(function () use ($layout) {
         $page = new View(__DIR__.'/../../views/console/users/view.phtml');
 
         $layout
