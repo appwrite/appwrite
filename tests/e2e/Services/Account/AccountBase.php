@@ -449,7 +449,7 @@ trait AccountBase
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'password' => 'new-password',
-            'old-password' => $password,
+            'oldPassword' => $password,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -1019,8 +1019,8 @@ trait AccountBase
         ]), [
             'userId' => $id,
             'secret' => $recovery,
-            'password-a' => $newPassowrd,
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd,
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1035,8 +1035,8 @@ trait AccountBase
         ]), [
             'userId' => 'ewewe',
             'secret' => $recovery,
-            'password-a' => $newPassowrd,
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd,
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -1048,8 +1048,8 @@ trait AccountBase
         ]), [
             'userId' => $id,
             'secret' => 'sdasdasdasd',
-            'password-a' => $newPassowrd,
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd,
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -1061,8 +1061,8 @@ trait AccountBase
         ]), [
             'userId' => $id,
             'secret' => $recovery,
-            'password-a' => $newPassowrd.'x',
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd.'x',
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

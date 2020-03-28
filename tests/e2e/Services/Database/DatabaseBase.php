@@ -254,9 +254,9 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'order-field' => 'releaseYear',
-            'order-type' => 'ASC',
-            'order-cast' => 'int',
+            'orderField' => 'releaseYear',
+            'orderType' => 'ASC',
+            'orderCast' => 'int',
         ]);
 
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
@@ -268,9 +268,9 @@ trait DatabaseBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'order-field' => 'releaseYear',
-            'order-type' => 'DESC',
-            'order-cast' => 'int',
+            'orderField' => 'releaseYear',
+            'orderType' => 'DESC',
+            'orderCast' => 'int',
         ]);
 
         $this->assertEquals(1944, $documents['body']['documents'][2]['releaseYear']);
@@ -291,9 +291,9 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
-            'order-field' => 'releaseYear',
-            'order-type' => 'ASC',
-            'order-cast' => 'int',
+            'orderField' => 'releaseYear',
+            'orderType' => 'ASC',
+            'orderCast' => 'int',
         ]);
 
         $this->assertEquals(1944, $documents['body']['documents'][0]['releaseYear']);
@@ -305,9 +305,9 @@ trait DatabaseBase
         ], $this->getHeaders()), [
             'limit' => 2,
             'offset' => 1,
-            'order-field' => 'releaseYear',
-            'order-type' => 'ASC',
-            'order-cast' => 'int',
+            'orderField' => 'releaseYear',
+            'orderType' => 'ASC',
+            'orderCast' => 'int',
         ]);
 
         $this->assertEquals(2017, $documents['body']['documents'][0]['releaseYear']);
@@ -327,9 +327,9 @@ trait DatabaseBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'limit' => 1,
-            'order-field' => 'releaseYear',
-            'order-type' => 'ASC',
-            'order-cast' => 'int',
+            'orderField' => 'releaseYear',
+            'orderType' => 'ASC',
+            'orderCast' => 'int',
             'first' => true,
         ]);
 
@@ -341,9 +341,9 @@ trait DatabaseBase
         ], $this->getHeaders()), [
             'limit' => 2,
             'offset' => 1,
-            'order-field' => 'releaseYear',
-            'order-type' => 'ASC',
-            'order-cast' => 'int',
+            'orderField' => 'releaseYear',
+            'orderType' => 'ASC',
+            'orderCast' => 'int',
             'last' => true,
         ]);
 
