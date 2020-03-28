@@ -1,10 +1,11 @@
 <?php
 
 global $utopia, $register, $request, $response, $user, $audit,
-    $webhook, $project, $domain, $projectDB, $providers, $clients, $protocol;
+    $webhook, $project, $projectDB, $clients;
 
 use Utopia\Exception;
 use Utopia\Response;
+use Utopia\Config\Config;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Email;
@@ -30,8 +31,8 @@ include_once __DIR__ . '/../shared/api.php';
 
 $oauth2Keys = [];
 
-$utopia->init(function() use ($providers, &$oauth2Keys) {
-    foreach ($providers as $key => $provider) {
+$utopia->init(function() use (&$oauth2Keys) {
+    foreach (Config::getParam('providers') as $key => $provider) {
         if (!$provider['enabled']) {
             continue;
         }
@@ -155,7 +156,8 @@ $utopia->post('/v1/account/sessions')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->action(
-        function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook, $protocol, $domainVerification) {
+        function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook) {
+            $protocol = Config::getParam('protocol');
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -216,7 +218,7 @@ $utopia->post('/v1/account/sessions')
                 ->setParam('resource', 'users/'.$profile->getId())
             ;
 
-            if(!$domainVerification) {
+            if(!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
                 ;
@@ -244,11 +246,12 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.location', true)
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter($providers, function($node) {return (!$node['mock']);}))).'.')
+    ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
     ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
     ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
     ->action(
-        function ($provider, $success, $failure) use ($response, $request, $project, $protocol) {
+        function ($provider, $success, $failure) use ($response, $request, $project) {
+            $protocol = Config::getParam('protocol');
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $appId = $project->getAttribute('usersOauth2'.ucfirst($provider).'Appid', '');
             $appSecret = $project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}');
@@ -282,11 +285,13 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID.')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth2 provider.')
+    ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
     ->action(
-        function ($projectId, $provider, $code, $state) use ($response, $request, $domain, $protocol) {
+        function ($projectId, $provider, $code, $state) use ($response) {
+            $domain = Config::getParam('domain');
+            $protocol = Config::getParam('protocol');
             $response->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
                 .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
@@ -300,11 +305,12 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'OAuth2 provider.')
+    ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
-        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit, $protocol, $domainVerification) {
+        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
+            $protocol = Config::getParam('protocol');
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
             $validateURL = new URL();
@@ -457,7 +463,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setParam('data', ['provider' => $provider])
             ;
 
-            if(!$domainVerification) {
+            if(!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
@@ -832,7 +838,8 @@ $utopia->delete('/v1/account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
     ->action(
-        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol, $domainVerification) {
+        function () use ($response, $user, $projectDB, $audit, $webhook) {
+            $protocol = Config::getParam('protocol');
             $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
                 'status' => Auth::USER_STATUS_BLOCKED,
             ]));
@@ -863,7 +870,7 @@ $utopia->delete('/v1/account')
                 ])
             ;
 
-            if(!$domainVerification) {
+            if(!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', json_encode([]))
                 ;
@@ -888,7 +895,8 @@ $utopia->delete('/v1/account/sessions/:sessionId')
     ->label('abuse-limit', 100)
     ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(
-        function ($sessionId) use ($response, $user, $projectDB, $webhook, $audit, $protocol, $domainVerification) {
+        function ($sessionId) use ($response, $user, $projectDB, $webhook, $audit) {
+            $protocol = Config::getParam('protocol');
             $sessionId = ($sessionId === 'current')
                     ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
                     : $sessionId;
@@ -914,7 +922,7 @@ $utopia->delete('/v1/account/sessions/:sessionId')
                         ])
                     ;
 
-                    if(!$domainVerification) {
+                    if(!Config::getParam('domainVerification')) {
                         $response
                             ->addHeader('X-Fallback-Cookies', json_encode([]))
                         ;
@@ -945,7 +953,8 @@ $utopia->delete('/v1/account/sessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
     ->action(
-        function () use ($response, $user, $projectDB, $audit, $webhook, $protocol, $domainVerification) {
+        function () use ($response, $user, $projectDB, $audit, $webhook) {
+            $protocol = Config::getParam('protocol');
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) { /* @var $token Document */
@@ -966,7 +975,7 @@ $utopia->delete('/v1/account/sessions')
                     ])
                 ;
 
-                if(!$domainVerification) {
+                if(!Config::getParam('domainVerification')) {
                     $response
                         ->addHeader('X-Fallback-Cookies', json_encode([]))
                     ;

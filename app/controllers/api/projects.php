@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $providers;
+global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -10,6 +10,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 use Utopia\Validator\URL;
+use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Task\Validator\Cron;
@@ -92,7 +93,7 @@ $utopia->get('/v1/projects')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'list')
     ->action(
-        function () use ($request, $response, $providers, $consoleDB) {
+        function () use ($request, $response, $consoleDB) {
             $results = $consoleDB->getCollection([
                 'limit' => 20,
                 'offset' => 0,
@@ -105,7 +106,7 @@ $utopia->get('/v1/projects')
             ]);
 
             foreach ($results as $project) {
-                foreach ($providers as $provider => $node) {
+                foreach (Config::getParam('providers') as $provider => $node) {
                     $secret = json_decode($project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}'), true);
 
                     if (!empty($secret) && isset($secret['version'])) {
@@ -126,14 +127,14 @@ $utopia->get('/v1/projects/:projectId')
     ->label('sdk.method', 'get')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $providers, $consoleDB) {
+        function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            foreach ($providers as $provider => $node) {
+            foreach (Config::getParam('providers') as $provider => $node) {
                 $secret = json_decode($project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}'), true);
 
                 if (!empty($secret) && isset($secret['version'])) {
@@ -331,7 +332,7 @@ $utopia->patch('/v1/projects/:projectId/oauth2')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateOAuth2')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('provider', '', function () use ($providers) { return new WhiteList(array_keys($providers)); }, 'Provider Name', false)
+    ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'Provider Name', false)
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
     ->param('secret', '', function () { return new text(256); }, 'Provider secret key.', true)
     ->action(
@@ -1201,8 +1202,9 @@ $utopia->post('/v1/projects/:projectId/domains')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domain', null, function () { return new DomainValidator(); }, 'Domain name.')
     ->action(
-        function ($projectId, $domain) use ($request, $response, $consoleDB) {
+        function ($projectId) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
+            $domain = Config::getParam('domain');
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
@@ -1283,7 +1285,7 @@ $utopia->get('/v1/projects/:projectId/domains/:domainId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(
-        function ($projectId, $domainId) use ($request, $response, $consoleDB) {
+        function ($projectId, $domainId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {

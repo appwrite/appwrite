@@ -1,9 +1,8 @@
 <?php
 
 use Utopia\View;
+use Utopia\Config\Config;
 use Utopia\Locale\Locale;
-
-global $protocol;
 
 Locale::$exceptions = false;
 
@@ -22,7 +21,7 @@ if (!empty($request->getQuery('version', ''))) {
 
 $layout
     ->setParam('title', APP_NAME)
-    ->setParam('protocol', $protocol)
+    ->setParam('protocol', Config::getParam('protocol'))
     ->setParam('domain', $domain)
     ->setParam('home', $request->getServer('_APP_HOME'))
     ->setParam('setup', $request->getServer('_APP_SETUP'))
@@ -32,9 +31,9 @@ $layout
     ->setParam('env', $utopia->getEnv())
 ;
 
-$utopia->shutdown(function () use ($utopia, $response, $request, $layout, $version, $env) {
+$utopia->shutdown(function () use ($utopia, $response, $request, $layout) {
     $time = (60 * 60 * 24 * 45); // 45 days cache
-    $isDev = (\Utopia\App::ENV_TYPE_DEVELOPMENT == $env);
+    $isDev = (\Utopia\App::ENV_TYPE_DEVELOPMENT == Config::getParam('env'));
 
     $response
         ->addHeader('Cache-Control', 'public, max-age='.$time)
@@ -44,7 +43,7 @@ $utopia->shutdown(function () use ($utopia, $response, $request, $layout, $versi
     $route = $utopia->match($request);
     $scope = $route->getLabel('scope', '');
     $layout
-        ->setParam('version', $version)
+        ->setParam('version', Config::getParam('version'))
         ->setParam('isDev', $isDev)
         ->setParam('class', $scope)
     ;
