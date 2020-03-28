@@ -1,5 +1,7 @@
 <?php
 
+use Utopia\Config\Config;
+
 require_once __DIR__.'/../init.php';
 
 cli_set_process_title('Usage V1 Worker');
@@ -19,7 +21,7 @@ class UsageV1
 
     public function perform()
     {
-        global $register, $version;
+        global $register;
 
         $projectId = $this->args['projectId'];
         $method = $this->args['method'];
@@ -29,7 +31,7 @@ class UsageV1
 
         $statsd = $register->get('statsd', true);
 
-        $tags = ",project={$projectId},version=".$version.'';
+        $tags = ",project={$projectId},version=".Config::getParam('version').'';
 
         // the global namespace is prepended to every key (optional)
         $statsd->setNamespace('appwrite.usage');

@@ -4,6 +4,7 @@ global $utopia, $register, $request, $response, $projectDB, $project, $user, $au
 
 use Utopia\Exception;
 use Utopia\Response;
+use Utopia\Config\Config;
 use Utopia\Validator\Email;
 use Utopia\Validator\Text;
 use Utopia\Validator\Host;
@@ -431,7 +432,8 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('secret', '', function () { return new Text(256); }, 'Secret key.')
     ->action(
-        function ($teamId, $inviteId, $userId, $secret) use ($response, $request, $user, $audit, $projectDB, $protocol, $domainVerification) {
+        function ($teamId, $inviteId, $userId, $secret) use ($response, $request, $user, $audit, $projectDB) {
+            $protocol = Config::getParam('protocol');
             $membership = $projectDB->getDocument($inviteId);
 
             if (empty($membership->getId()) || Database::SYSTEM_COLLECTION_MEMBERSHIPS != $membership->getCollection()) {
@@ -525,7 +527,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ->setParam('resource', 'teams/'.$teamId)
             ;
 
-            if(!$domainVerification) {
+            if(!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;

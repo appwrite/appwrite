@@ -1,8 +1,11 @@
 <?php
 
-global $providers, $request;
+global $request;
 
+use Utopia\Config\Config;
 use Appwrite\Database\Database;
+
+$providers = Config::getParam('providers');
 
 $collections = [
     'console' => [
@@ -1189,15 +1192,15 @@ $collections = [
 /*
  * Add enabled OAuth2 providers to default data rules
  */
-foreach ($providers as $key => $provider) {
+foreach ($providers as $index => $provider) {
     if (!$provider['enabled']) {
         continue;
     }
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($key).' ID',
-        'key' => 'usersOauth2'.ucfirst($key).'Appid',
+        'label' => 'OAuth2 '.ucfirst($index).' ID',
+        'key' => 'usersOauth2'.ucfirst($index).'Appid',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1206,8 +1209,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($key).' Secret',
-        'key' => 'usersOauth2'.ucfirst($key).'Secret',
+        'label' => 'OAuth2 '.ucfirst($index).' Secret',
+        'key' => 'usersOauth2'.ucfirst($index).'Secret',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1216,8 +1219,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($key).' ID',
-        'key' => 'oauth2'.ucfirst($key),
+        'label' => 'OAuth2 '.ucfirst($index).' ID',
+        'key' => 'oauth2'.ucfirst($index),
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1226,8 +1229,8 @@ foreach ($providers as $key => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($key).' Access Token',
-        'key' => 'oauth2'.ucfirst($key).'AccessToken',
+        'label' => 'OAuth2 '.ucfirst($index).' Access Token',
+        'key' => 'oauth2'.ucfirst($index).'AccessToken',
         'type' => 'text',
         'default' => '',
         'required' => false,

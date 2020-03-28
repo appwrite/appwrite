@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $response, $projectDB, $providers;
+global $utopia, $response, $projectDB;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -11,6 +11,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
@@ -33,7 +34,7 @@ $utopia->post('/v1/users')
     ->param('password', '', function () { return new Password(); }, 'User password.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
-        function ($email, $password, $name) use ($response, $register, $projectDB, $providers) {
+        function ($email, $password, $name) use ($response, $projectDB) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -69,7 +70,7 @@ $utopia->post('/v1/users')
 
             $oauth2Keys = [];
 
-            foreach ($providers as $key => $provider) {
+            foreach (Config::getParam('providers') as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
@@ -103,7 +104,7 @@ $utopia->get('/v1/users')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
-        function ($search, $limit, $offset, $orderType) use ($response, $projectDB, $providers) {
+        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
             $results = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
@@ -118,7 +119,7 @@ $utopia->get('/v1/users')
 
             $oauth2Keys = [];
 
-            foreach ($providers as $key => $provider) {
+            foreach (Config::getParam('providers') as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
@@ -154,7 +155,7 @@ $utopia->get('/v1/users/:userId')
     ->label('sdk.description', '/docs/references/users/get-user.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(
-        function ($userId) use ($response, $projectDB, $providers) {
+        function ($userId) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
             if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
@@ -163,7 +164,7 @@ $utopia->get('/v1/users/:userId')
 
             $oauth2Keys = [];
 
-            foreach ($providers as $key => $provider) {
+            foreach (Config::getParam('providers') as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
@@ -352,7 +353,7 @@ $utopia->patch('/v1/users/:userId/status')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('status', '', function () { return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]); }, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->action(
-        function ($userId, $status) use ($response, $projectDB, $providers) {
+        function ($userId, $status) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
             if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
@@ -369,7 +370,7 @@ $utopia->patch('/v1/users/:userId/status')
             
             $oauth2Keys = [];
 
-            foreach ($providers as $key => $provider) {
+            foreach (Config::getParam('providers') as $key => $provider) {
                 if (!$provider['enabled']) {
                     continue;
                 }
@@ -400,7 +401,7 @@ $utopia->patch('/v1/users/:userId/prefs')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
     ->action(
-        function ($userId, $prefs) use ($response, $projectDB, $providers) {
+        function ($userId, $prefs) use ($response, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
             if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {

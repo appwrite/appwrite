@@ -3,12 +3,13 @@
 // Init
 require_once __DIR__.'/init.php';
 
-global $env, $utopia, $request, $response, $register, $consoleDB, $project, $domain, $version, $service, $protocol, $domainVerification;
+global $utopia, $request, $response, $register, $consoleDB, $project, $service;
 
 use Utopia\App;
 use Utopia\Request;
 use Utopia\View;
 use Utopia\Exception;
+use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
@@ -50,7 +51,7 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $domain, $clients, &$domainVerification) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 
@@ -62,10 +63,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     $refDomain = $protocol.'://'.((in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
-    $selfDomain = new Domain($domain);
+    $selfDomain = new Domain(Config::getParam('domain'));
     $endDomain = new Domain($origin);
 
-    $domainVerification = ($selfDomain->getRegisterable() === $endDomain->getRegisterable());
+    Config::setParam('domainVerification', ($selfDomain->getRegisterable() === $endDomain->getRegisterable()));
 
     /*
      * Security Headers
@@ -138,7 +139,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         $user = new Document([
             '$id' => 0,
             'status' => Auth::USER_STATUS_ACTIVATED,
-            'email' => 'app.'.$project->getId().'@service.'.$domain,
+            'email' => 'app.'.$project->getId().'@service.'.Config::getParam('domain'),
             'password' => '',
             'name' => $project->getAttribute('name', 'Untitled'),
         ]);
@@ -247,7 +248,10 @@ $utopia->options(function () use ($request, $response) {
         ->send();
 });
 
-$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project, $env, $version) {
+$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
+    $env = Config::getParam('env');
+    $version = Config::getParam('version');
+
     switch ($error->getCode()) {
         case 400: // Error allowed publicly
         case 401: // Error allowed publicly
