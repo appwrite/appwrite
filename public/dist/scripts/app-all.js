@@ -40,14 +40,14 @@ return http.patch(path,{'content-type':'application/json',},payload);},createRec
 if(url===undefined){throw new Error('Missing required parameter: "url"');}
 let path='/account/recovery';let payload={};if(email){payload['email']=email;}
 if(url){payload['url']=url;}
-return http.post(path,{'content-type':'application/json',},payload);},updateRecovery:function(userId,secret,passwordA,passwordB){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+return http.post(path,{'content-type':'application/json',},payload);},updateRecovery:function(userId,secret,password,passwordAgain){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(secret===undefined){throw new Error('Missing required parameter: "secret"');}
-if(passwordA===undefined){throw new Error('Missing required parameter: "passwordA"');}
-if(passwordB===undefined){throw new Error('Missing required parameter: "passwordB"');}
+if(password===undefined){throw new Error('Missing required parameter: "password"');}
+if(passwordAgain===undefined){throw new Error('Missing required parameter: "passwordAgain"');}
 let path='/account/recovery';let payload={};if(userId){payload['userId']=userId;}
 if(secret){payload['secret']=secret;}
-if(passwordA){payload['password']=passwordA;}
-if(passwordB){payload['passwordAgain']=passwordB;}
+if(password){payload['password']=password;}
+if(passwordAgain){payload['passwordAgain']=passwordAgain;}
 return http.put(path,{'content-type':'application/json',},payload);},getSessions:function(){let path='/account/sessions';let payload={};return http.get(path,{'content-type':'application/json',},payload);},createSession:function(email,password){if(email===undefined){throw new Error('Missing required parameter: "email"');}
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/account/sessions';let payload={};if(email){payload['email']=email;}

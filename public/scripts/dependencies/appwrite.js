@@ -630,12 +630,12 @@
              *
              * @param {string} userId
              * @param {string} secret
-             * @param {string} passwordA
-             * @param {string} passwordB
+             * @param {string} password
+             * @param {string} passwordAgain
              * @throws {Error}
              * @return {Promise}             
              */
-            updateRecovery: function(userId, secret, passwordA, passwordB) {
+            updateRecovery: function(userId, secret, password, passwordAgain) {
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
@@ -644,12 +644,12 @@
                     throw new Error('Missing required parameter: "secret"');
                 }
                 
-                if(passwordA === undefined) {
-                    throw new Error('Missing required parameter: "passwordA"');
+                if(password === undefined) {
+                    throw new Error('Missing required parameter: "password"');
                 }
                 
-                if(passwordB === undefined) {
-                    throw new Error('Missing required parameter: "passwordB"');
+                if(passwordAgain === undefined) {
+                    throw new Error('Missing required parameter: "passwordAgain"');
                 }
                 
                 let path = '/account/recovery';
@@ -664,12 +664,12 @@
                     payload['secret'] = secret;
                 }
 
-                if(passwordA) {
-                    payload['password'] = passwordA;
+                if(password) {
+                    payload['password'] = password;
                 }
 
-                if(passwordB) {
-                    payload['passwordAgain'] = passwordB;
+                if(passwordAgain) {
+                    payload['passwordAgain'] = passwordAgain;
                 }
 
                 return http
