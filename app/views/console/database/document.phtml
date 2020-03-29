@@ -5,155 +5,156 @@
     data-scope="sdk"
     data-event="load,database.updateCollection"
     data-name="project-collection">
-</div>
 
-<div
-    data-service="database.getDocument"
-    data-param-collection-id="{{router.params.collection}}"
-    data-param-document-id="{{router.params.id}}"
-    data-scope="sdk"
-    data-event="load"
-    data-name="project-document">
+    <div
+        data-service="database.getDocument"
+        data-param-collection-id="{{router.params.collection}}"
+        data-param-document-id="{{router.params.id}}"
+        data-scope="sdk"
+        data-event="load"
+        data-name="project-document"
+        data-success="default">
 
-    <div class="cover">
-        <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/database/collection?id={{router.params.collection}}&project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Collection</a>
+        <div class="cover">
+            <h1 class="zone xl margin-bottom-large">
+                <a data-ls-attrs="href=/console/database/collection?id={{router.params.collection}}&project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Collection</a>
 
-            <br />
+                <br />
 
-            <span data-ls-bind="{{project-collection.name}} Document">&nbsp;&nbsp;</span>
-        </h1>
-    </div>
+                <span data-ls-bind="{{project-collection.name}} Document">&nbsp;&nbsp;</span>
+            </h1>
+        </div>
 
-    <div class="zone xl">
-        <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
-            <li data-state="/console/database/document?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
-                <h2>Update</h2>
+        <div class="zone xl">
+            <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
+                <li data-state="/console/database/document?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
+                    <h2>Update</h2>
 
-                <div class="row responsive margin-top-negative">
-                    <div class="col span-8 margin-bottom">
-                        <form
-                            data-analytics-event="submit"
-                            data-analytics-category="console"
-                            data-analytics-label="Update Database Document"
-                            data-service="database.updateDocument"
-                            data-scope="sdk"
-                            data-event="submit"
-                            data-success="alert,trigger"
-                            data-success-param-alert-text="Updated document successfully"
-                            data-success-param-trigger-events="database.updateDocument"
-                            data-failure="alert"
-                            data-failure-param-alert-text="Failed to update document"
-                            data-failure-param-alert-classname="error">
+                    <div class="row responsive margin-top-negative">
+                        <div class="col span-8 margin-bottom">
+                            <form
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Update Database Document"
+                                data-service="database.updateDocument"
+                                data-scope="sdk"
+                                data-event="submit"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Updated document successfully"
+                                data-success-param-trigger-events="database.updateDocument"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to update document"
+                                data-failure-param-alert-classname="error">
 
-                            <label>&nbsp;</label>
+                                <label>&nbsp;</label>
 
-                            <div class="box">
+                                <div class="box">
 
-                                <input name="documentId" type="hidden" data-ls-bind="{{project-document.$id}}" />
-                                <input name="collectionId" type="hidden" data-ls-bind="{{project-document.$collection}}" />
+                                    <input name="documentId" type="hidden" data-ls-bind="{{project-document.$id}}" />
+                                    <input name="collectionId" type="hidden" data-ls-bind="{{project-document.$collection}}" />
 
-                                <fieldset name="data" data-cast-to="object">
-                                    <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
-                                        <li>
-                                            <label class="margin-bottom-no">
-                                                <span data-ls-bind="{{rule.label}}"></span>
-                                                <span data-ls-if="{{rule.array}}.toString() == 'true'">
-                                                    <span class="text-size-small text-fade">&nbsp;&nbsp;(Array)</span>
-                                                </span>
-                                            </label>
-                                            
+                                    <fieldset name="data" data-cast-to="object">
+                                        <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
+                                            <li>
+                                                <label class="margin-bottom-no">
+                                                    <span data-ls-bind="{{rule.label}}"></span>
+                                                    <span data-ls-if="{{rule.array}}.toString() == 'true'">
+                                                        <span class="text-size-small text-fade">&nbsp;&nbsp;(Array)</span>
+                                                    </span>
+                                                </label>
+                                                
 
-                                            <div data-ls-if="{{rule.required}}.toString() == 'true'" class="margin-bottom-small">
-                                                <span class="text-size-xs text-danger text-fade">required</span>
-                                            </div>
+                                                <div data-ls-if="{{rule.required}}.toString() == 'true'" class="margin-bottom-small">
+                                                    <span class="text-size-xs text-danger text-fade">required</span>
+                                                </div>
 
-                                            <div data-ls-if="({{rule.required}}.toString() == 'false')" class="margin-bottom-small">
-                                                <span class="text-size-xs text-fade">optional</span>
-                                            </div>
+                                                <div data-ls-if="({{rule.required}}.toString() == 'false')" class="margin-bottom-small">
+                                                    <span class="text-size-xs text-fade">optional</span>
+                                                </div>
 
-                                            <div data-ls-if="({{rule.array}}.toString() == 'false')">
-                                                <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
-                                            </div>
+                                                <div data-ls-if="({{rule.array}}.toString() == 'false')">
+                                                    <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
+                                                </div>
 
-                                            <div data-ls-if="({{rule.array}}.toString() == 'true')">
-                                                <div data-ls-template="template-array-form" data-type="script" class="margin-bottom"></div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </fieldset>
-                                
-                                <div class="toggle margin-bottom margin-top" data-ls-ui-open>
-                                    <i class="icon-plus pull-end margin-top-tiny"></i>
-                                    <i class="icon-minus pull-end margin-top-tiny"></i>
+                                                <div data-ls-if="({{rule.array}}.toString() == 'true')">
+                                                    <div data-ls-template="template-array-form" data-type="script" class="margin-bottom"></div>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </fieldset>
                                     
-                                    <h3 class="margin-bottom-large">Permissions</h3>
-                                    
-                                    <label for="collection-read">Read Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
-                                    <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                                    
-                                    <label for="collection-write">Write Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                                    <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="toggle margin-bottom margin-top" data-ls-ui-open>
+                                        <i class="icon-plus pull-end margin-top-tiny"></i>
+                                        <i class="icon-minus pull-end margin-top-tiny"></i>
+                                        
+                                        <h3 class="margin-bottom-large">Permissions</h3>
+                                        
+                                        <label for="collection-read">Read Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
+                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                                        
+                                        <label for="collection-write">Write Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                    </div>
+
+                                    <button>Update</button>
                                 </div>
 
-                                <button>Update</button>
+                            </form>
+                        </div>
+                        <div class="col span-4 sticky-top">
+                            
+                            <div data-ls-if="({{router.params.id}})">
+                                <label>Document ID</label>
+                                <div class="input-copy margin-bottom">
+                                    <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-document.$id}}" disabled data-forms-copy class="margin-bottom-no" />
+                                </div>
                             </div>
 
-                        </form>
-                    </div>
-                    <div class="col span-4 sticky-top">
-                        
-                        <div data-ls-if="({{router.params.id}})">
-                            <label>Document ID</label>
+                            <label>Collection ID</label>
                             <div class="input-copy margin-bottom">
-                                <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-document.$id}}" disabled data-forms-copy class="margin-bottom-no" />
+                                <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-collection.$id}}" disabled data-forms-copy class="margin-bottom-no" />
                             </div>
+
+                            <form name="database.deleteDocument" class="margin-bottom"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Collection Document"
+                                data-service="database.deleteDocument"
+                                data-event="submit"
+                                data-param-collection-id="{{router.params.id}}"
+                                data-confirm="Are you sure you want to delete this collection?"
+                                data-success="alert,trigger,redirect"
+                                data-success-param-alert-text="Document deleted successfully"
+                                data-success-param-trigger-events="database.deleteDocument"
+                                data-success-param-redirect-url="/console/database?project={{router.params.project}}"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to delete collection"
+                                data-failure-param-alert-classname="error">
+
+                                <button type="submit" class="danger fill">Delete Document</button>
+                            </form>
                         </div>
+                    </div>
+                </li>
+                <li data-state="/console/database/document/api?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
+                    <h2>API</h2>
 
-                        <label>Collection ID</label>
-                        <div class="input-copy margin-bottom">
-                            <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-collection.$id}}" disabled data-forms-copy class="margin-bottom-no" />
+                    <div class="row responsive">
+                        <div class="col span-3">
+                            <ul>
+                                <li>
+                                    <a data-ls-attrs="href=/console/database/document/api?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}#api-response"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Response</a>
+                                </li>
+                            </ul>
                         </div>
-
-                        <form name="database.deleteDocument" class="margin-bottom"
-                            data-analytics-event="submit"
-                            data-analytics-category="console"
-                            data-analytics-label="Delete Collection Document"
-                            data-service="database.deleteDocument"
-                            data-event="submit"
-                            data-param-collection-id="{{router.params.id}}"
-                            data-confirm="Are you sure you want to delete this collection?"
-                            data-success="alert,trigger,redirect"
-                            data-success-param-alert-text="Document deleted successfully"
-                            data-success-param-trigger-events="database.deleteDocument"
-                            data-success-param-redirect-url="/console/database?project={{router.params.project}}"
-                            data-failure="alert"
-                            data-failure-param-alert-text="Failed to delete collection"
-                            data-failure-param-alert-classname="error">
-
-                            <button type="submit" class="danger fill">Delete Document</button>
-                        </form>
+                        <div class="col span-9">
+                            <h3 id="api-response">Response</h3>
+                            <input type="hidden" data-ls-bind="{{project-document}}" data-forms-code />
+                        </div>
                     </div>
-                </div>
-            </li>
-            <li data-state="/console/database/document/api?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
-                <h2>API</h2>
-
-                <div class="row responsive">
-                    <div class="col span-3">
-                        <ul>
-                            <li>
-                                <a data-ls-attrs="href=/console/database/document/api?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}#api-response"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Response</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col span-9">
-                        <h3 id="api-response">Response</h3>
-                        <input type="hidden" data-ls-bind="{{project-document}}" data-forms-code />
-                    </div>
-                </div>
-            </li>
-        </ul>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -164,6 +165,10 @@
 
 <script type="text/html" id="template-text-form">
     <textarea data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="text" autocomplete="off" data-ls-bind="{{project-document|documentLabel}}" data-forms-text-direction data-forms-text-count></textarea>
+</script>
+
+<script type="text/html" id="template-text-form-array">
+    <textarea data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="text" autocomplete="off" data-ls-bind="{{node}}" data-forms-text-direction data-forms-text-count></textarea>
 </script>
 
 <script type="text/html" id="template-numeric-form">
@@ -177,27 +182,20 @@
 <script type="text/html" id="template-array-form">
     <input type="hidden" data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" data-cast-to="array-empty">
 
-    <!-- <div data-forms-remove data-forms-move-up data-forms-move-down class="row thin margin-bottom-small">
-        <div class="col span-3">
-            <button type="button" data-remove class="strip"><i class="icon-cancel"></i></button>
-            <button type="button" data-move-up class="strip"><i class="icon-up-dir"></i></button>
-            <button type="button" data-move-down class="strip"><i class="icon-down-dir"></i></button>
-        </div>
-        <div class="col span-9">
-            <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
-        </div>
-    </div> -->
-
-<!--     
-    
-    <div data-forms-clone="" data-label="Add" data-first="1" data-forms-remove data-forms-move-up data-forms-move-down class="row thin margin-bottom-small">
-        <div class="col span-3">
-            <button type="button" data-remove class="strip"><i class="icon-cancel"></i></button>
-            <button type="button" data-move-up class="strip"><i class="icon-up-dir"></i></button>
-            <button type="button" data-move-down class="strip"><i class="icon-down-dir"></i></button>
-        </div>
-        <div class="col span-9">
-            <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
-        </div>
-    </div> -->
+    <ul data-ls-loop="project-document.{{rule.key}}" data-ls-as="node" class="sortable">
+        <li data-forms-remove data-forms-move-up  data-forms-move-down>
+            <div class="row responsive margin-bottom-small">
+                <div class="col span-3">
+                    <button type="button" class="margin-bottom strip round" data-remove><i class="icon-cancel"></i></button>
+                    <button type="button" class="margin-bottom strip round" data-move-down><i class="icon-down-dir"></i></button>
+                    <button type="button" class="margin-bottom strip round" data-move-up><i class="icon-up-dir"></i></button>
+                </div>
+                <div class="col span-9">
+                    <div data-ls-template="template-{{rule.type}}-form-array" data-type="script" class="margin-bottom"></div>
+                </div>
+                <div class="col span-1">
+                </div>
+            </div>
+        </li>
+    </ul>
 </script>

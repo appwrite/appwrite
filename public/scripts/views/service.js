@@ -143,6 +143,52 @@
               document.dispatchEvent(new CustomEvent(events[i]));
             }
           };
+        },
+
+        default: function() {
+          let collection = container.get('project-collection');
+          let document = container.get('project-document');
+          console.log(collection);
+          console.log(document);
+          
+          if(collection && document && collection.$id === document.$id) {
+            for (const [key, value] of Object.entries(document)) {
+              delete document[key];
+            }
+
+            if(collection.rules) {
+              for (let index = 0; index < collection.rules.length; index++) {
+                const element = collection.rules[index];
+
+                switch (element.type) {
+                  case 'text':
+                  case 'email':
+                  case 'url':
+                  case 'ip':
+                    document[element.key] = element.default || '';
+                    break;
+
+                  case 'numeric':
+                    document[element.key] = element.default || 0;
+                    break;
+
+                  case 'boolean':
+                    document[element.key] = element.default || false;
+                    break;
+                
+                  default:
+                    document[element.key] = null;
+                    break;
+                  }
+                  
+                  if(element.array) {
+                    document[element.key] = [];
+                }
+              }
+            }
+
+            console.log(document);
+          }
         }
       };
 

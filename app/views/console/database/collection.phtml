@@ -152,7 +152,7 @@
                                 <input type="hidden" id="rulesInit" name="rules" data-cast-to="array-empty">
 
                                 <div data-ls-if="({{project-collection.rules.length}})">
-                                    <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
+                                    <ul data-ls-loop="project-collection.rules" data-ls-as="rule" class="sortable">
                                         <li data-forms-remove data-forms-move-up  data-forms-move-down>
                                             <div class="toggle list sorts" data-ls-ui-open>
                                                 <i class="icon-up-open pull-end margin-top-tiny"></i>
@@ -160,18 +160,18 @@
                                     
                                                 <h4 class="margin-bottom">
                                                     <div class="pull-start margin-end-large margin-bottom-small">
-                                                        <button type="button" class="margin-bottom strip" data-move-down><i class="icon-down-dir"></i></button>
-                                                        <button type="button" class="margin-bottom strip" data-move-up><i class="icon-up-dir"></i></button>
+                                                        <button type="button" class="margin-bottom strip round" data-move-down><i class="icon-down-dir"></i></button>
+                                                        <button type="button" class="margin-bottom strip round" data-move-up><i class="icon-up-dir"></i></button>
                                                     </div>
 
                                                     <span data-ls-bind="{{rule.label}}"></span>
 
                                                     <span data-ls-if="({{rule.array}}.toString() == 'false')">
-                                                        <span class="text-fade text-size-small" data-ls-bind="&nbsp;({{rule.type}})&nbsp;"></span>
+                                                        <span class="text-fade text-size-small" data-ls-bind="&nbsp;{{rule.type}}&nbsp;"></span>
                                                     </span>
 
                                                     <span data-ls-if="({{rule.array}}.toString() == 'true')">
-                                                        <span class="text-size-small text-fade" data-ls-bind="&nbsp;({{rule.type}} / array)&nbsp;"></span>
+                                                        <span class="text-size-small text-fade" data-ls-bind="&nbsp;{{rule.type}}[]&nbsp;"></span>
                                                     </span>
 
                                                     <div data-ls-if="{{rule.required}}.toString() == 'true'">

@@ -79,8 +79,20 @@
     border-bottom: solid 1px #efefef;
   }
 
-  ul {
-    li {
+  ul.sortable {
+    > li {
+      [data-move-up].round, [data-move-down].round, [data-remove].round {
+        background: var(--config-color-focus);
+        color: var(--config-color-background-fade);
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        display: inline-block;
+        text-align: center;
+        padding: 0;
+        .func-margin-end(5px);
+      }
+
       &:first-child {
         [data-move-up] {
           opacity: 0;

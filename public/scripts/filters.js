@@ -367,8 +367,6 @@ window.ls.filter
       });
     }
 
-    console.log(result);
-    
     return result.length;
   })
   .add("documentLabel", function($value, rule, filter) {
@@ -381,7 +379,6 @@ window.ls.filter
         break;
     
       case 'numeric':
-        console.log(value);
         return (value && value.toString) ? value.toString() : value;
         break;
     
@@ -396,7 +393,8 @@ window.ls.filter
     }
 
     return 'required';
-  });
+  })
+;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
   number = Number(number);
