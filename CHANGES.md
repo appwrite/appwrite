@@ -1,8 +1,13 @@
 # Version 0.6.0 (PRE-RELEASE)
 
+## Features
+
+* New locale for Khmer
+
 ## Breaking Changes
 
 * Updated all the REST API query params to be in camelCase
+* Normalized locale phone codes response body
 
 # Version 0.5.3 (PRE-RELEASE)
 
