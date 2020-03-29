@@ -115,8 +115,8 @@ trait LocaleBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
         $this->assertCount(194, $response['body']);
-        $this->assertEquals($response['body']['US'], 'United States +1');
-        $this->assertEquals($response['body']['IL'], 'Israel +972');
+        $this->assertEquals($response['body']['US'], '+1');
+        $this->assertEquals($response['body']['IL'], '+972');
         
         /**
          * Test for FAILURE

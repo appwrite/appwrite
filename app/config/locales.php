@@ -22,7 +22,7 @@ return [
     'it', // Italian
     'ja', // Japanese
     'jv', // Javanese
-    'km',
+    'km', // Khmer
     'ko', // Korean
     'lt', // Lithuanian
     'ml', // Malayalam
