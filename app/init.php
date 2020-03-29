@@ -185,6 +185,7 @@ Locale::setLanguage('is', include __DIR__.'/config/locales/is.php');
 Locale::setLanguage('it', include __DIR__.'/config/locales/it.php');
 Locale::setLanguage('ja', include __DIR__.'/config/locales/ja.php');
 Locale::setLanguage('jv', include __DIR__.'/config/locales/jv.php');
+Locale::setLanguage('km', include __DIR__.'/config/locales/km.php');
 Locale::setLanguage('ko', include __DIR__.'/config/locales/ko.php');
 Locale::setLanguage('lt', include __DIR__.'/config/locales/lt.php');
 Locale::setLanguage('ml', include __DIR__.'/config/locales/ml.php');

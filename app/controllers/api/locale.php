@@ -123,7 +123,7 @@ $utopia->get('/v1/locale/countries/phones')
 
             foreach ($list as $code => $name) {
                 if (array_key_exists($code, $countries)) {
-                    $list[$code] = $countries[$code].' +'.$list[$code];
+                    $list[$code] = '+'.$list[$code];
                 }
             }
 
