@@ -35,6 +35,7 @@ const configApp  = {
         'public/scripts/views/analytics/pageview.js',
 
         'public/scripts/views/forms/clone.js',
+        'public/scripts/views/forms/add.js',
         'public/scripts/views/forms/code.js',
         'public/scripts/views/forms/color.js',
         'public/scripts/views/forms/copy.js',

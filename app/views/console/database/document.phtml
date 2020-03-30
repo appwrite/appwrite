@@ -172,7 +172,7 @@
 </script>
 
 <script type="text/html" id="template-numeric-form">
-    <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="number" autocomplete="off" data-ls-bind="{{project-document|documentLabel}}" />
+    <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="number" autocomplete="off" data-ls-bind="{{project-document|documentLabel}}" data-cast-to="integer" />
 </script>
 
 <script type="text/html" id="template-boolean-form">
@@ -182,11 +182,11 @@
 <script type="text/html" id="template-array-form">
     <input type="hidden" data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" data-cast-to="array-empty">
 
-    <ul data-ls-loop="project-document.{{rule.key}}" data-ls-as="node" class="sortable">
+    <ul data-forms-add="New" data-ls-loop="project-document.{{rule.key}}" data-ls-as="node" class="sortable">
         <li data-forms-remove data-forms-move-up  data-forms-move-down>
-            <div class="row responsive margin-bottom-small">
+            <div class="row thin responsive margin-bottom-small">
                 <div class="col span-3">
-                    <button type="button" class="margin-bottom strip round" data-remove><i class="icon-cancel"></i></button>
+                    <button type="button" class="margin-bottom strip round margin-end" data-remove><i class="icon-cancel"></i></button>
                     <button type="button" class="margin-bottom strip round" data-move-down><i class="icon-down-dir"></i></button>
                     <button type="button" class="margin-bottom strip round" data-move-up><i class="icon-up-dir"></i></button>
                 </div>
@@ -198,4 +198,5 @@
             </div>
         </li>
     </ul>
+
 </script>
