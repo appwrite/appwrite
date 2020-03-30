@@ -91,16 +91,33 @@
         text-align: center;
         padding: 0;
         .func-margin-end(5px);
+
+
+        &:disabled {
+          display: none;
+        }
       }
 
       &:first-child {
         [data-move-up] {
-          opacity: 0;
+          display: none;
+
+          &:disabled {
+            display: inline-block;
+            opacity: .8;
+            background: var(--config-color-background);
+          }
         }
       }
       &:last-child {
         [data-move-down] {
-          opacity: 0;
+          display: none;
+
+          &:disabled {
+            display: inline-block;
+            opacity: .8;
+            background: var(--config-color-background);
+          }
         }
       }
     }

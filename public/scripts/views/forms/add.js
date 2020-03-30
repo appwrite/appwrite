@@ -21,6 +21,8 @@
         element.appendChild(child);
 
         view.render(child);
+
+        element.style.visibility = 'visible';
       });
 
       element.after(button);
