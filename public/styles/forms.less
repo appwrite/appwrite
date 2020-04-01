@@ -1074,17 +1074,20 @@ ol {
       .clear;
 
       a,
-      .link {
-        vertical-align: middle;
-        height: 30px;
-        line-height: 30px;
+      .link, button.link {
         display: block;
+        vertical-align: middle;
+        height: auto;
+        line-height: 30px;
+        display: inline-block;
         padding: 10px 25px;
         color: inherit;
         font-size: 14px;
         border: none;
         max-width: 260px;
         cursor: pointer;
+        width: 100%;
+        text-align: @config-start;
 
         &:hover {
           background: var(--config-color-fade-super);
@@ -1119,6 +1122,13 @@ ol {
         top: -8px;
         border-width: 0 8px 8px 8px;
       }
+    }
+  }
+
+  &.end {
+    ul {
+      .func-end(-10px);
+      .func-start(auto);
     }
   }
 }

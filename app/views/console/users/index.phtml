@@ -272,11 +272,11 @@ $providers = $this->getParam('providers', []);
 
                                                 <label for="name">ID</label>
                                                 <div class="input-copy">
-                                                    <input name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$id}}" />
+                                                    <input data-ls-attrs="id=team-id-{{team.$id}}" name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$id}}" />
                                                 </div>
 
                                                 <label for="name">Name</label>
-                                                <input name="name" data-ls-attrs="id=name-{{team.$id}}" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
+                                                <input data-ls-attrs="id=team-name-{{team.$id}}" name="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
 
                                                 <hr />
 

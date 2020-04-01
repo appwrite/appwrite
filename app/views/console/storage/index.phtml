@@ -136,15 +136,15 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
                                                 <label for="files-fileId">File ID</label>
                                                 <div class="input-copy">
-                                                    <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$id}}" />
+                                                    <input data-forms-copy type="text" data-ls-attrs="id=file-id-{{file.$id}}" name="fileId" disabled data-ls-bind="{{file.$id}}" />
                                                 </div>
-                                                <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+                                                <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="int" value="1">
 
                                                 <label for="file-read">Read Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
+                                                <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
                                                 
                                                 <label for="file-write">Write Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
+                                                <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
                                             </form>
 
                                             <form class="strip"

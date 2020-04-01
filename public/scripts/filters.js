@@ -394,6 +394,16 @@ window.ls.filter
 
     return 'required';
   })
+  .add("documentAction", function(container) {
+    let collection = container.get('project-collection');
+    let document = container.get('project-document');
+
+    if(collection && document && !document.$id) {
+      return 'database.createDocument';
+    }
+
+    return 'database.updateDocument';
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

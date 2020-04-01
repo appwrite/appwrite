@@ -3,24 +3,14 @@
 
   window.ls.view.add({
     selector: "data-service",
-    controller: function(
-      element,
-      view,
-      container,
-      form,
-      alerts,
-      expression,
-      window
-    ) {
+    controller: function(element, view, container, form, alerts, expression, window) {
       let action = element.dataset["service"];
       let service = element.dataset["name"] || action;
       let event = expression.parse(element.dataset["event"]); // load, click, change, submit
       let confirm = element.dataset["confirm"] || ""; // Free text
       let loading = element.dataset["loading"] || ""; // Free text
       let loaderId = null;
-      let fade = (element.dataset["fade"] || false);
       let scope = element.dataset["scope"] || "sdk"; // Free text
-      let debug = !!element.dataset["debug"]; // Free text
       let success = element.dataset["success"] || "";
       let failure = element.dataset["failure"] || "";
       let running = false;
@@ -33,12 +23,6 @@
         failure && failure != ""
           ? failure.split(",").map(element => element.trim())
           : [];
-
-      if (debug)
-        console.log(
-          "%c[service init]: " + action + " (" + service + ")",
-          "color:red"
-        );
 
       let callbacks = {
         hide: function() {
@@ -137,19 +121,20 @@
               if ("" === events[i]) {
                 continue;
               }
-              if (debug)
-                console.log("%c[event triggered]: " + events[i], "color:green");
 
               document.dispatchEvent(new CustomEvent(events[i]));
             }
           };
         },
 
+        setId: function name(params) {
+          
+        },
+
         default: function() {
+          console.log('start-default');
           let collection = container.get('project-collection');
           let document = container.get('project-document');
-          console.log(collection);
-          console.log(document);
           
           if(collection && document && collection.$id === document.$id) {
             for (const [key, value] of Object.entries(document)) {
@@ -186,9 +171,9 @@
                 }
               }
             }
-
-            console.log(document);
           }
+
+          console.log('end-default', document);
         }
       };
 
@@ -273,17 +258,11 @@
 
         let args = getParams(target);
 
-        if (debug) console.log("%c[form data]: ", "color:green", data);
-
         return target.apply(
           target,
           args.map(function(value) {
             let result = getValue(value, prefix, data);
-            if (debug)
-              console.log(
-                "[param resolved]: (" + service + ") " + value + "=",
-                result
-              );
+
             return result;
           })
         );
@@ -291,18 +270,11 @@
 
       let exec = function(event) {
 
+        action = expression.parse(action);
+
         element.$lsSkip = true;
 
         element.classList.add("load-service-start");
-
-        if (debug)
-          console.log(
-            "%c[executed]: " + scope + "." + action,
-            "color:yellow",
-            event,
-            element,
-            document.body.contains(element)
-          );
 
         if (!document.body.contains(element)) {
           element = undefined;
@@ -314,7 +286,6 @@
         }
 
         if(running) {
-          console.log('blocked');
           return false;
         }
 
@@ -367,21 +338,10 @@
             element.style.backgroud = 'transparent';
             element.classList.add("load-service-end");
 
+            console.log('name-of-service', service.replace(".", "-"), data);
             container.set(service.replace(".", "-"), data, true, true);
             container.set("serviceData", data, true, true);
             container.set("serviceForm", formData, true, true);
-
-            if (debug)
-              console.log(
-                '%cservice ready: "' + service.replace(".", "-") + '"',
-                "color:green"
-              );
-            if (debug)
-              console.log(
-                "%cservice:",
-                "color:blue",
-                container.get(service.replace(".", "-"))
-              );
 
             for (let i = 0; i < success.length; i++) {
               // Trigger success callbacks
@@ -462,12 +422,6 @@
           default:
             document.addEventListener(events[y], exec);
         }
-
-        if (debug)
-          console.log(
-            '%cregistered: "' + events[y].trim() + '" (' + service + ")",
-            "color:blue"
-          );
       }
     }
   });

@@ -19,6 +19,10 @@
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/database/collection?id={{router.params.id}}&project={{router.params.project}}">
+                <a data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}" class="button fly round text-align-center">
+                    <i class="icon-plus"></i>
+                </a>
+
                 <h2>Documents</h2>
 
                 <form class="box padding-small margin-bottom search"
@@ -50,7 +54,7 @@
                     data-param-search="{{router.params.search}}"
                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                     data-param-offset="{{router.params.offset}}"
-                    data-param-order-type="ASC"
+                    data-param-order-type="DESC"
                     data-scope="sdk"
                     data-name="project-documents">
 
@@ -140,7 +144,7 @@
                                 <label for="collection-name">Name</label>
                                 <input name="name" id="collection-name" type="text" autocomplete="off" data-ls-bind="{{project-collection.name}}" data-forms-text-direction required placeholder="Collection Name" />
                                 
-                                <h3 class="margin-bottom-small">Attributes & Rules</h3>
+                                <h3 class="margin-bottom-small">Rules</h3>
 
                                 <div data-ls-if="(!{{project-collection.rules.length}})">
                                     <hr class="margin-bottom-no margin-top-no" />
@@ -224,6 +228,11 @@
                                                         </optgroup>
                                                     </select>
 
+                                                    <div class="margin-bottom">
+                                                        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default</label>
+                                                        <input name="default" type="text" data-ls-bind="{{rule.default}}" />
+                                                    </div>
+                                                        
                                                     <div class="margin-bottom">
                                                         <input name="required" type="hidden" data-forms-switch data-ls-bind="{{rule.required}}" data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
                                                     </div>
@@ -345,6 +354,12 @@
                                     <option value="ip">IP</option>
                                 </optgroup>
                             </select>
+
+                            <div class="margin-bottom">
+                                <label data-ls-attrs="for=rule-default-new">Default</label>
+                                <input name="default" type="text" />
+                            </div>
+                                
 
                             <div class="margin-bottom">
                                 <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
