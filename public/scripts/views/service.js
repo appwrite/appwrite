@@ -154,7 +154,7 @@
                     break;
 
                   case 'numeric':
-                    document[element.key] = element.default || 0;
+                    document[element.key] = element.default || '0';
                     break;
 
                   case 'boolean':

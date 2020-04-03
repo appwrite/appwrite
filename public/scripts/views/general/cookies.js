@@ -3,7 +3,7 @@
         selector: "data-cookies",
         controller: function(element, alerts, cookie, env) {
           if (!cookie.get("cookie-alert")) {
-            let text = element.dataset["cookiePolicy"] || "";
+            let text = element.dataset["cookies"] || "";
     
             alerts.add(
               {
