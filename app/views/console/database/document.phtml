@@ -166,29 +166,85 @@ $list = [
     [
         'key' => '',
         'bind' => ' data-ls-bind="{{project-document|documentLabel}}"',
+        'bind' => '{{project-document|documentLabel}}',
     ],
     [
         'key' => '-array',
-        'bind' => ' data-ls-bind="{{node}}"',
+        'bind' => '{{node}}',
     ],
 ];
 ?>
 
 <?php foreach($list as $mode): ?>
-    <script type="text/html" id="template-string-form<?php echo $mode['key']; ?>">
-        <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="text" autocomplete="off"<?php echo $mode['bind']; ?> data-forms-text-direction data-forms-text-count />
+    <script type="text/html" id="template-document-form<?php echo $mode['key']; ?>">
+        <div class="info margin-bottom-small">
+            <div class="">document link here</div>
+        </div>
+
+        <button type="button" class="reverse margin-end-small">Add</button>
+        <button type="button" class="reverse">Search</button>
+
+        
+    </script>
+
+    <script type="text/html" id="xtemplate-document-form<?php echo $mode['key']; ?>">
+    
+        <fieldset data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" data-cast-to="object">
+            
+            <input name="$id" type="hidden" data-ls-bind="{{project-document.$id}}" />
+            <input name="$collection" type="hidden" data-ls-bind="{{project-collection.$id}}" />
+
+            <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
+                <li>
+                    <label class="margin-bottom-no">
+                        <span data-ls-bind="{{rule.label}}"></span>
+                        <span data-ls-if="{{rule.array}}.toString() == 'true'">
+                            <span class="text-size-small text-fade">&nbsp;&nbsp;(Array)</span>
+                        </span>
+                    </label>
+
+                    <div data-ls-if="{{rule.required}}.toString() == 'true'" class="margin-bottom-small">
+                        <span class="text-size-xs text-danger text-fade">required</span>
+                    </div>
+
+                    <div data-ls-if="({{rule.required}}.toString() == 'false')" class="margin-bottom-small">
+                        <span class="text-size-xs text-fade">optional</span>
+                    </div>
+
+                    <div data-ls-if="({{rule.array}}.toString() == 'false')">
+                        <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
+                    </div>
+
+                    <div data-ls-if="({{rule.array}}.toString() == 'true')">
+                        <div data-ls-template="template-array-form" data-type="script" class="margin-bottom"></div>
+                    </div>
+                </li>
+            </ul>
+        </fieldset>
     </script>
 
     <script type="text/html" id="template-text-form<?php echo $mode['key']; ?>">
-        <textarea data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="text" autocomplete="off"<?php echo $mode['bind']; ?> data-forms-text-direction data-forms-text-count></textarea>
+        <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="text" autocomplete="off" data-ls-bind="<?php echo $mode['bind']; ?>" data-forms-text-direction data-forms-text-count />
+    </script>
+
+    <script type="text/html" id="template-string-form<?php echo $mode['key']; ?>">
+        <textarea data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="text" autocomplete="off" data-ls-bind="<?php echo $mode['bind']; ?>" data-forms-text-direction data-forms-text-count></textarea>
     </script>
 
     <script type="text/html" id="template-numeric-form<?php echo $mode['key']; ?>">
-        <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="number" autocomplete="off"<?php echo $mode['bind']; ?> data-cast-to="integer" />
+        <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="number" autocomplete="off" data-ls-bind="<?php echo $mode['bind']; ?>" data-cast-to="integer" />
     </script>
 
     <script type="text/html" id="template-boolean-form<?php echo $mode['key']; ?>">
-        <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="hidden" data-forms-switch<?php echo $mode['bind']; ?> data-cast-to="boolean" />
+        <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="hidden" data-forms-switch data-ls-bind="<?php echo $mode['bind']; ?>" data-cast-to="boolean" />
+    </script>
+
+    <script type="text/html" id="template-url-form<?php echo $mode['key']; ?>">
+        <input data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" type="url" data-ls-bind="<?php echo $mode['bind']; ?>" />
+
+        <div class="preview" data-ls-if="(<?php echo $mode['bind']; ?>.toString() !== '')">
+            
+        </div>
     </script>
 <?php endforeach; ?>
 
@@ -221,3 +277,10 @@ $list = [
     </ul>
 
 </script>
+
+<div class="margin-top"
+    data-service="database.listCollections"
+    data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
+    data-scope="sdk"
+    data-name="project-collections">
+</div>

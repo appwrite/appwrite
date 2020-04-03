@@ -125,7 +125,8 @@ if(!empty($platforms)) {
         <ul data-ls-loop="alerts.list" data-ls-as="alert">
             <li data-forms-remove>
                 <div data-ls-attrs="class={{alert.class}} message">
-                    <i class="icon-cancel" data-remove></i>
+                    <i class="icon-cancel" data-forms-run="alert.remove"></i>
+                    
                     <span data-ls-bind="{{alert.text}}"></span>
 
                     <span data-ls-if="undefined !== {{alert.link}}">

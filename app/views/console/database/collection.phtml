@@ -211,7 +211,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-  
+
                                                     <label data-ls-attrs="for=rule-type-{{rule.$id}}">Rule Type</label>
 
                                                     <select data-ls-attrs="id=rule-type-{{rule.$id}}" name="type" required data-ls-bind="{{rule.type}}">
@@ -225,13 +225,9 @@
                                                             <option value="email">Email</option>
                                                             <option value="url">URL</option>
                                                             <option value="ip">IP</option>
+                                                            <option value="document">Document</option>
                                                         </optgroup>
                                                     </select>
-
-                                                    <div class="margin-bottom">
-                                                        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default</label>
-                                                        <input name="default" type="text" data-ls-bind="{{rule.default}}" />
-                                                    </div>
                                                         
                                                     <div class="margin-bottom">
                                                         <input name="required" type="hidden" data-forms-switch data-ls-bind="{{rule.required}}" data-cast-to="boolean" /> &nbsp; Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
@@ -240,6 +236,8 @@
                                                     <div class="margin-bottom">
                                                         <input name="array" type="hidden" data-forms-switch data-ls-bind="{{rule.array}}" data-cast-to="boolean" />  &nbsp; Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
                                                     </div>
+
+                                                    <div data-ls-template="template-validation-{{rule.type}}" data-type="script" class="margin-bottom"></div>
                                                 </fieldset>
 
                                                 <button type="button" data-remove="" class="reverse danger margin-bottom">Remove</button>
@@ -304,7 +302,7 @@
                 <div data-ui-modal class="box modal close" data-button-alias="none" data-open-event="add-rule">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                    <h1>Add Attribute</h1>
+                    <h1>Add Rule</h1>
 
                     <form
                         data-analytics-event="submit"
@@ -352,9 +350,15 @@
                                     <option value="email">Email</option>
                                     <option value="url">URL</option>
                                     <option value="ip">IP</option>
+                                    <option value="document">Document</option>
                                 </optgroup>
                             </select>
-
+                            
+                            <input name="default" type="hidden" value="" />
+                            <input name="required" type="hidden" value="false" data-cast-to="boolean" />
+                            <input name="array" type="hidden" value="false" data-cast-to="boolean" />
+                            
+                            <!-- 
                             <div class="margin-bottom">
                                 <label data-ls-attrs="for=rule-default-new">Default</label>
                                 <input name="default" type="text" />
@@ -367,7 +371,7 @@
                                                                                 
                             <div class="margin-bottom">
                                 <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
-                            </div>
+                            </div> -->
 
                         </fieldset>
 
@@ -379,4 +383,49 @@
             </li>
         </ul>
     </div>
+</div>
+
+<script type="text/html" id="template-validation-text">
+    <div class="margin-bottom">
+        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
+        <input name="default" type="text" data-ls-bind="{{rule.default}}" />
+    </div>
+</script>
+
+<script type="text/html" id="template-validation-numeric">
+    <div class="margin-bottom">
+        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
+        <input name="default" type="number" data-ls-bind="{{rule.default}}" data-cast-to="integer" placeholder="0" />
+    </div>
+</script>
+
+<script type="text/html" id="template-validation-boolean">
+    <div class="margin-bottom">
+        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
+        <input name="default" data-ls-bind="{{rule.default}}" type="hidden" data-forms-switch data-cast-to="boolean" />
+    </div>
+</script>
+
+<script type="text/html" id="template-validation-text">
+    <div class="margin-bottom">
+        <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
+        <input name="default" type="text" data-ls-bind="{{rule.default}}" />
+    </div>
+</script>
+
+<script type="text/html" id="template-validation-document">
+    <label data-ls-attrs="for=rule-list-{{rule.$id}}" class="margin-bottom">Allowed Collections</label>
+
+    <div data-ls-loop="project-collections.collections" data-ls-as="project" class="tiles cell-3 margin-bottom-negative" style="visibility: hidden">
+        <div class="margin-bottom">
+            <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list}}" /> <span data-ls-bind="{{project.name}}"></span>
+        </div>
+    </div>
+</script>
+
+<div class="margin-top"
+    data-service="database.listCollections"
+    data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
+    data-scope="sdk"
+    data-name="project-collections">
 </div>
