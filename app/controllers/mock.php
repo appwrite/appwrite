@@ -222,6 +222,32 @@ $utopia->get('/v1/mock/tests/general/redirected')
         }
     );
 
+$utopia->get('/v1/mock/tests/general/set-cookie')
+    ->desc('Mock a cookie request for SDK tests')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'setCookie')
+    ->label('sdk.description', 'Mock a set cookie request for SDK tests')
+    ->action(
+        function () use ($response) {
+            $response->addCookie('cookieName', 'cookieValue', time() + 31536000, '/', 'localhost', true, true);
+        }
+    );
+
+$utopia->get('/v1/mock/tests/general/get-cookie')
+    ->desc('Mock a cookie request for SDK tests')
+    ->label('scope', 'public')
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'setCookie')
+    ->label('sdk.description', 'Mock a set cookie request for SDK tests')
+    ->action(
+        function () use ($request) {
+            if($request->getCookie('cookieName', '') !== 'cookieValue') {
+                throw new Exception('Missing cookie value', 400);
+            }
+        }
+    );
+
 $utopia->get('/v1/mock/tests/general/empty')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
