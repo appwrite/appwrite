@@ -238,8 +238,8 @@ $utopia->get('/v1/mock/tests/general/get-cookie')
     ->desc('Mock a cookie request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
-    ->label('sdk.method', 'setCookie')
-    ->label('sdk.description', 'Mock a set cookie request for SDK tests')
+    ->label('sdk.method', 'getCookie')
+    ->label('sdk.description', 'Mock a get cookie request for SDK tests')
     ->action(
         function () use ($request) {
             if($request->getCookie('cookieName', '') !== 'cookieValue') {
