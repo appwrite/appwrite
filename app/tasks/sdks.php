@@ -60,7 +60,7 @@ $cli
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'.md');
                 $readme = ($readme) ? file_get_contents($readme) : '';
-                $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
+                $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . Config::getParam('version') . '. For older versions, please check previous releases.**' : '';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
@@ -119,9 +119,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'dart':
                         $config = new Dart();
-                        $config
-                            ->setPackageName('appwrite')
-                        ;
                         break;
                     case 'go':
                         $config = new Go();
