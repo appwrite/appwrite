@@ -1,9 +1,7 @@
-import 'package:appwrite/client.dart';
+import 'client.dart';
 
 class Service {
-    Client client;
+    final Client client;
 
-    Service(Client client) {
-        this.client = client;
-    }
+    const Service(this.client);
 }

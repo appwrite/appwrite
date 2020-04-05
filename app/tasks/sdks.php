@@ -25,7 +25,7 @@ $warning = '**This SDK is compatible with Appwrite server version ' . $version .
 
 $cli
     ->task('generate')
-    ->action(function () use ($warning) {
+    ->action(function () use ($warning, $version) {
         function getSSLPage($url)
         {
             $ch = curl_init();
@@ -60,7 +60,7 @@ $cli
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'.md');
                 $readme = ($readme) ? file_get_contents($readme) : '';
-                $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . Config::getParam('version') . '. For older versions, please check previous releases.**' : '';
+                $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
 All rights reserved.
