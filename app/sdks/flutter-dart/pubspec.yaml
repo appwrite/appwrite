@@ -1,11 +1,11 @@
 name: appwrite
 version: 0.0.7
 description: Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)
-author: Appwrite Team <team@appwrite.io> 
 homepage: https://github.com/appwrite/sdk-for-dart
 environment:
   sdk: '>=2.6.0 <3.0.0'
 dependencies:
+  meta: ^1.1.8
   dio: ^3.0.0
   cookie_jar: ^1.0.0
   dio_cookie_manager: ^1.0.0
