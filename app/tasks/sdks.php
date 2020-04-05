@@ -25,7 +25,7 @@ $warning = '**This SDK is compatible with Appwrite server version ' . $version .
 
 $cli
     ->task('generate')
-    ->action(function () use ($warning) {
+    ->action(function () use ($warning, $version) {
         function getSSLPage($url)
         {
             $ch = curl_init();
@@ -119,9 +119,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'dart':
                         $config = new Dart();
-                        $config
-                            ->setPackageName('appwrite')
-                        ;
                         break;
                     case 'go':
                         $config = new Go();
