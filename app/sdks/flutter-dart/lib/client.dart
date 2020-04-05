@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
@@ -13,7 +16,7 @@ class Client {
     Client({this.endPoint: 'https://appwrite.io/v1', this.selfSigned: false, Dio http}) : this.http = http ?? Dio() {
         this.headers = {
             'content-type': 'application/json',
-            'x-sdk-version': 'appwrite:dart:0.0.7',
+            'x-sdk-version': 'appwrite:dart:0.0.8',
         };
 
         assert(endPoint.startsWith(RegExp("http://|https://")), "endPoint $endPoint must start with 'http'");
@@ -58,7 +61,14 @@ class Client {
     }
 
     Future<Response> call(HttpMethod method, {String path = '', Map<String, String> headers = const {}, Map<String, dynamic> params = const {}}) {
-        
+        if(this.selfSigned) {
+            // Allow self signed requests
+            (http.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
+                client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+                return client;
+            };
+        }
+
         // Origin is hardcoded for testing
         Options options = Options(
             headers: {...this.headers, ...headers, "Origin": "http://localhost"},

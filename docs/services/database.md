@@ -1,5 +1,7 @@
-The database service allows you to create structured document collections, query and filter lists of documents, and manage an advanced set of read and write access.
+The database service allows you to create structured collections of documents, query and filter lists of documents, and manage an advanced set of read and write access.
 
-All the data in the database service is stored in JSON format. The service also allows you to nest child documents and use advanced filters to search and query the database just like you would with a classic graph database.
+All the data in the database service is stored in structured JSON documents. The Appwrite database service also allows you to nest child documents in documents and use advanced filters to both search and query the database just like you would with a classic graph database.
 
-By leveraging the database permission management, you can assign read or write access to the database documents for a specific user, team, user role, or even grant public access to all visitors to your project. You can learn more about [how Appwrite handles permissions and role access control](/docs/permissions).
+Each database document structure in your project is defined using the Appwrite [collection rules](/docs/rules). The collections rules help you ensure all your user-submitted data is validated and stored according to the collection structure.
+
+Using Appwrite permissions architecture, you can assign read or write access to each document in your project for either a specific user, team, user role, or even grant it with public access. You can learn more about [how Appwrite handles permissions and access control](/docs/permissions).

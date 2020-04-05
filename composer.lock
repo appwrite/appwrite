@@ -1622,7 +1622,11 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
+<<<<<<< HEAD
                 "reference": "ea7291f4419ad52f4565f57f1b61eace0bf3bba4"
+=======
+                "reference": "3b7389388f29c6e0cf53cf2233ee516fb20ad9f7"
+>>>>>>> 02c7f4a6119d1e53543293d97bff66ebc9da7ebd
             },
             "require": {
                 "ext-curl": "*",
