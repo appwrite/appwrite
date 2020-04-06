@@ -130,7 +130,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '0.0.8',
+                'version' => '0.0.10',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'enabled' => true,
                 'beta' => true,

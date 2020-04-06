@@ -1,7 +1,7 @@
 import 'client.dart';
 
 class Service {
-    final Client client;
+  final Client client;
 
-    const Service(this.client);
+  const Service(this.client);
 }

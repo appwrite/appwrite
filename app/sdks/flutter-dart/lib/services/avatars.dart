@@ -7,7 +7,6 @@ import '../enums.dart';
 import "../service.dart";
 
 class Avatars extends Service {
-     
     Avatars(Client client): super(client);
 
      /// You can use this endpoint to show different browser icons to your users.
@@ -23,7 +22,7 @@ class Avatars extends Service {
             'quality': quality,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Need to display your users with your billing method or their payment
      /// methods? The credit card endpoint will return you the icon of the credit
@@ -38,7 +37,7 @@ class Avatars extends Service {
             'quality': quality,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Use this endpoint to fetch the favorite icon (AKA favicon) of a  any remote
      /// website URL.
@@ -49,7 +48,7 @@ class Avatars extends Service {
             'url': url,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// You can use this endpoint to show different country flags icons to your
      /// users. The code argument receives the 2 letter country code. Use width,
@@ -63,7 +62,7 @@ class Avatars extends Service {
             'quality': quality,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Use this endpoint to fetch a remote image URL and crop it to any image size
      /// you want. This endpoint is very useful if you need to crop and display
@@ -78,11 +77,11 @@ class Avatars extends Service {
             'height': height,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Converts a given plain text to a QR code image. You can use the query
      /// parameters to change the size and style of the resulting image.
-    Future<Response> getQR({@required String text, int size = 400, int margin = 1, int download = null}) {
+    Future<Response> getQR({@required String text, int size = 400, int margin = 1, int download = 0}) {
         final String path = '/avatars/qr';
 
         final Map<String, dynamic> params = {
@@ -92,6 +91,6 @@ class Avatars extends Service {
             'download': download,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
 }

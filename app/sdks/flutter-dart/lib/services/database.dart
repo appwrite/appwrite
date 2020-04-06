@@ -7,14 +7,13 @@ import '../enums.dart';
 import "../service.dart";
 
 class Database extends Service {
-     
     Database(Client client): super(client);
 
      /// Get a list of all the user documents. You can use the query params to
      /// filter your results. On admin mode, this endpoint will return a list of all
      /// of the project documents. [Learn more about different API
      /// modes](/docs/admin).
-    Future<Response> listDocuments({@required String collectionId, List filters = const [], int offset = null, int limit = 50, String orderField = '\$id', String orderType = 'ASC', String orderCast = 'string', String search = null, int first = null, int last = null}) {
+    Future<Response> listDocuments({@required String collectionId, List filters = const [], int offset = 0, int limit = 50, String orderField = '\$id', String orderType = 'ASC', String orderCast = 'string', String search = '', int first = 0, int last = 0}) {
         final String path = '/database/collections/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
         final Map<String, dynamic> params = {
@@ -29,10 +28,10 @@ class Database extends Service {
             'last': last,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Create a new Document.
-    Future<Response> createDocument({@required String collectionId, @required dynamic data, @required List read, @required List write, String parentDocument = null, String parentProperty = null, String parentPropertyType = 'assign'}) {
+    Future<Response> createDocument({@required String collectionId, @required dynamic data, @required List read, @required List write, String parentDocument = '', String parentProperty = '', String parentPropertyType = 'assign'}) {
         final String path = '/database/collections/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
         final Map<String, dynamic> params = {
@@ -44,7 +43,7 @@ class Database extends Service {
             'parentPropertyType': parentPropertyType,
         };
 
-        return this.client.call(HttpMethod.post, path: path, params: params);
+        return client.call(HttpMethod.post, path: path, params: params);
     }
      /// Get document by its unique ID. This endpoint response returns a JSON object
      /// with the document data.
@@ -54,7 +53,7 @@ class Database extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
     Future<Response> updateDocument({@required String collectionId, @required String documentId, @required dynamic data, @required List read, @required List write}) {
         final String path = '/database/collections/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
@@ -65,7 +64,7 @@ class Database extends Service {
             'write': write,
         };
 
-        return this.client.call(HttpMethod.patch, path: path, params: params);
+        return client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Delete document by its unique ID. This endpoint deletes only the parent
      /// documents, his attributes and relations to other documents. Child documents
@@ -76,6 +75,6 @@ class Database extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.delete, path: path, params: params);
+        return client.call(HttpMethod.delete, path: path, params: params);
     }
 }

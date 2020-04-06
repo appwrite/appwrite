@@ -135,6 +135,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK($config, new Swagger2($spec));
 
                 $sdk
+                    ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
+                        Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
+                        For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
+                    ->setShortDescription('Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API')
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
                     ->setVersion($language['version'])

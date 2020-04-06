@@ -7,7 +7,6 @@ import '../enums.dart';
 import "../service.dart";
 
 class Account extends Service {
-     
     Account(Client client): super(client);
 
      /// Get currently logged in user data as JSON object.
@@ -17,7 +16,7 @@ class Account extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Use this endpoint to allow a new user to register a new account in your
      /// project. After the user registration completes successfully, you can use
@@ -25,7 +24,7 @@ class Account extends Service {
      /// verifying the user email address. To allow your new user to login to his
      /// new account, you need to create a new [account
      /// session](/docs/account#createSession).
-    Future<Response> create({@required String email, @required String password, String name = null}) {
+    Future<Response> create({@required String email, @required String password, String name = ''}) {
         final String path = '/account';
 
         final Map<String, dynamic> params = {
@@ -34,7 +33,7 @@ class Account extends Service {
             'name': name,
         };
 
-        return this.client.call(HttpMethod.post, path: path, params: params);
+        return client.call(HttpMethod.post, path: path, params: params);
     }
      /// Delete a currently logged in user account. Behind the scene, the user
      /// record is not deleted but permanently blocked from any access. This is done
@@ -47,7 +46,7 @@ class Account extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.delete, path: path, params: params);
+        return client.call(HttpMethod.delete, path: path, params: params);
     }
      /// Update currently logged in user account email address. After changing user
      /// address, user confirmation status is being reset and a new confirmation
@@ -61,7 +60,7 @@ class Account extends Service {
             'password': password,
         };
 
-        return this.client.call(HttpMethod.patch, path: path, params: params);
+        return client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Get currently logged in user list of latest security activity logs. Each
      /// log returns user IP address, location and date and time of log.
@@ -71,7 +70,7 @@ class Account extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Update currently logged in user account name.
     Future<Response> updateName({@required String name}) {
@@ -81,7 +80,7 @@ class Account extends Service {
             'name': name,
         };
 
-        return this.client.call(HttpMethod.patch, path: path, params: params);
+        return client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Update currently logged in user password. For validation, user is required
      /// to pass the password twice.
@@ -93,7 +92,7 @@ class Account extends Service {
             'old-password': oldPassword,
         };
 
-        return this.client.call(HttpMethod.patch, path: path, params: params);
+        return client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Get currently logged in user preferences as a key-value object.
     Future<Response> getPrefs() {
@@ -102,7 +101,7 @@ class Account extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Update currently logged in user account preferences. You can pass only the
      /// specific settings you wish to update.
@@ -113,7 +112,7 @@ class Account extends Service {
             'prefs': prefs,
         };
 
-        return this.client.call(HttpMethod.patch, path: path, params: params);
+        return client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Sends the user an email with a temporary secret key for password reset.
      /// When the user clicks the confirmation link he is redirected back to your
@@ -129,7 +128,7 @@ class Account extends Service {
             'url': url,
         };
 
-        return this.client.call(HttpMethod.post, path: path, params: params);
+        return client.call(HttpMethod.post, path: path, params: params);
     }
      /// Use this endpoint to complete the user account password reset. Both the
      /// **userId** and **secret** arguments will be passed as query parameters to
@@ -150,7 +149,7 @@ class Account extends Service {
             'password-b': passwordB,
         };
 
-        return this.client.call(HttpMethod.put, path: path, params: params);
+        return client.call(HttpMethod.put, path: path, params: params);
     }
      /// Get currently logged in user list of active sessions across different
      /// devices.
@@ -160,7 +159,7 @@ class Account extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Allow the user to login into his account by providing a valid email and
      /// password combination. This route will create a new session for the user.
@@ -172,7 +171,7 @@ class Account extends Service {
             'password': password,
         };
 
-        return this.client.call(HttpMethod.post, path: path, params: params);
+        return client.call(HttpMethod.post, path: path, params: params);
     }
      /// Delete all sessions from the user account and remove any sessions cookies
      /// from the end client.
@@ -182,7 +181,7 @@ class Account extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.delete, path: path, params: params);
+        return client.call(HttpMethod.delete, path: path, params: params);
     }
      /// Allow the user to login to his account using the OAuth2 provider of his
      /// choice. Each OAuth2 provider should be enabled from the Appwrite console
@@ -196,7 +195,7 @@ class Account extends Service {
             'failure': failure,
         };
 
-        return this.client.call(HttpMethod.get, path: path, params: params);
+        return client.call(HttpMethod.get, path: path, params: params);
     }
      /// Use this endpoint to log out the currently logged in user from all his
      /// account sessions across all his different devices. When using the option id
@@ -207,7 +206,7 @@ class Account extends Service {
         final Map<String, dynamic> params = {
         };
 
-        return this.client.call(HttpMethod.delete, path: path, params: params);
+        return client.call(HttpMethod.delete, path: path, params: params);
     }
      /// Use this endpoint to send a verification message to your user email address
      /// to confirm they are the valid owners of that address. Both the **userId**
@@ -229,7 +228,7 @@ class Account extends Service {
             'url': url,
         };
 
-        return this.client.call(HttpMethod.post, path: path, params: params);
+        return client.call(HttpMethod.post, path: path, params: params);
     }
      /// Use this endpoint to complete the user email verification process. Use both
      /// the **userId** and **secret** parameters that were attached to your app URL
@@ -243,6 +242,6 @@ class Account extends Service {
             'secret': secret,
         };
 
-        return this.client.call(HttpMethod.put, path: path, params: params);
+        return client.call(HttpMethod.put, path: path, params: params);
     }
 }

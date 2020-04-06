@@ -1,7 +1,10 @@
 name: appwrite
-version: 0.0.8
-description: Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)
-homepage: https://github.com/appwrite/sdk-for-dart
+version: 0.0.9
+description: Appwrite is an open-source backend as a service server that allows you to accelerate your app development by leveraging Appwrite ready to use API and tools
+homepage: https://appwrite.io
+repository: https://github.com/appwrite/sdk-for-dart
+issue_tracker: https://github.com/appwrite/sdk-generator/issues
+documentation: https://appwrite.io/support
 environment:
   sdk: '>=2.6.0 <3.0.0'
 dependencies:
