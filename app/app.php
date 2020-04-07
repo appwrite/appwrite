@@ -55,6 +55,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     
     $route = $utopia->match($request);
 
+    if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId())) {
+        throw new Exception('Missing project ID', 400);
+    }
+
     $referrer = $request->getServer('HTTP_REFERER', '');
     $origin = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
     $protocol = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_SCHEME);
@@ -66,8 +70,9 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     $selfDomain = new Domain(Config::getParam('domain'));
     $endDomain = new Domain($origin);
 
-    Config::setParam('domainVerification', ($selfDomain->getRegisterable() === $endDomain->getRegisterable()));
-
+    Config::setParam('domainVerification',
+        ($selfDomain->getRegisterable() === $endDomain->getRegisterable()));
+        
     /*
      * Security Headers
      *
