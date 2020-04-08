@@ -10,6 +10,7 @@ use Utopia\Validator\URL;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\Resize\Resize;
+use Appwrite\URL\URL as URLParse;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -265,7 +266,7 @@ $utopia->get('/v1/avatars/favicon')
                 $href = $link->getAttribute('href');
                 $rel = $link->getAttribute('rel');
                 $sizes = $link->getAttribute('sizes');
-                $absolute = unparse_url(array_merge(parse_url($url), parse_url($href)));
+                $absolute = URLParse::unparse(array_merge(parse_url($url), parse_url($href)));
 
                 switch (strtolower($rel)) {
                     case 'icon':
@@ -382,40 +383,3 @@ $utopia->get('/v1/avatars/qr')
             ;
         }
     );
-
-function unparse_url($parsed_url, $ommit = array())
-{
-    if (isset($parsed_url['path']) && mb_substr($parsed_url['path'], 0, 1) !== '/') {
-        $parsed_url['path'] = '/'.$parsed_url['path'];
-    }
-
-    $p = array();
-
-    $p['scheme'] = isset($parsed_url['scheme']) ? $parsed_url['scheme'].'://' : '';
-
-    $p['host'] = isset($parsed_url['host']) ? $parsed_url['host'] : '';
-
-    $p['port'] = isset($parsed_url['port']) ? ':'.$parsed_url['port'] : '';
-
-    $p['user'] = isset($parsed_url['user']) ? $parsed_url['user'] : '';
-
-    $p['pass'] = isset($parsed_url['pass']) ? ':'.$parsed_url['pass']  : '';
-
-    $p['pass'] = ($p['user'] || $p['pass']) ? $p['pass'].'@' : '';
-
-    $p['path'] = isset($parsed_url['path']) ? $parsed_url['path'] : '';
-
-    $p['query'] = isset($parsed_url['query']) ? '?'.$parsed_url['query'] : '';
-
-    $p['fragment'] = isset($parsed_url['fragment']) ? '#'.$parsed_url['fragment'] : '';
-
-    if ($ommit) {
-        foreach ($ommit as $key) {
-            if (isset($p[ $key ])) {
-                $p[ $key ] = '';
-            }
-        }
-    }
-
-    return $p['scheme'].$p['user'].$p['pass'].$p['host'].$p['port'].$p['path'].$p['query'].$p['fragment'];
-}
