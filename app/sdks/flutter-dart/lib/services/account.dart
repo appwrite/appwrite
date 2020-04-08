@@ -1,6 +1,9 @@
 
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:flutter_web_auth/flutter_web_auth.dart';
 
 import "../client.dart";
 import '../enums.dart';
@@ -187,15 +190,32 @@ class Account extends Service {
      /// choice. Each OAuth2 provider should be enabled from the Appwrite console
      /// first. Use the success and failure arguments to provide a redirect URL's
      /// back to your app when login is completed.
-    Future<Response> createOAuth2Session({@required String provider, @required String success, @required String failure}) {
+    Future createOAuth2Session({@required String provider, @required String success, @required String failure}) {
         final String path = '/account/sessions/oauth2/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
         final Map<String, dynamic> params = {
             'success': success,
             'failure': failure,
+            'project': client.config['project'],
         };
 
-        return client.call(HttpMethod.get, path: path, params: params);
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
+
+        return FlutterWebAuth.authenticate(
+          url: url.toString(),
+          callbackUrlScheme: "appwrite-callback"
+          ).then((value) {
+              Uri url = Uri.parse(value);
+                List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
+                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+          }).catchError((error) {
+        });
     }
      /// Use this endpoint to log out the currently logged in user from all his
      /// account sessions across all his different devices. When using the option id

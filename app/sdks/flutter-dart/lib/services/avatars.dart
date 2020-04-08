@@ -1,6 +1,9 @@
 
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:flutter_web_auth/flutter_web_auth.dart';
 
 import "../client.dart";
 import '../enums.dart';

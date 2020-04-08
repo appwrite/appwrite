@@ -1,6 +1,9 @@
 
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:flutter_web_auth/flutter_web_auth.dart';
 
 import "../client.dart";
 import '../enums.dart';
@@ -73,19 +76,36 @@ class Storage extends Service {
      /// Get file content by its unique ID. The endpoint response return with a
      /// 'Content-Disposition: attachment' header that tells the browser to start
      /// downloading the file to user downloads directory.
-    Future<Response> getFileDownload({@required String fileId}) {
+    Future getFileDownload({@required String fileId}) {
         final String path = '/storage/files/{fileId}/download'.replaceAll(RegExp('{fileId}'), fileId);
 
         final Map<String, dynamic> params = {
+            'project': client.config['project'],
         };
 
-        return client.call(HttpMethod.get, path: path, params: params);
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
+
+        return FlutterWebAuth.authenticate(
+          url: url.toString(),
+          callbackUrlScheme: "appwrite-callback"
+          ).then((value) {
+              Uri url = Uri.parse(value);
+                List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
+                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+          }).catchError((error) {
+        });
     }
      /// Get a file preview image. Currently, this method supports preview for image
      /// files (jpg, png, and gif), other supported formats, like pdf, docs, slides,
      /// and spreadsheets, will return the file icon image. You can also pass query
      /// string arguments for cutting and resizing your preview image.
-    Future<Response> getFilePreview({@required String fileId, int width = 0, int height = 0, int quality = 100, String background = '', String output = ''}) {
+    Future getFilePreview({@required String fileId, int width = 0, int height = 0, int quality = 100, String background = '', String output = ''}) {
         final String path = '/storage/files/{fileId}/preview'.replaceAll(RegExp('{fileId}'), fileId);
 
         final Map<String, dynamic> params = {
@@ -94,19 +114,53 @@ class Storage extends Service {
             'quality': quality,
             'background': background,
             'output': output,
+            'project': client.config['project'],
         };
 
-        return client.call(HttpMethod.get, path: path, params: params);
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
+
+        return FlutterWebAuth.authenticate(
+          url: url.toString(),
+          callbackUrlScheme: "appwrite-callback"
+          ).then((value) {
+              Uri url = Uri.parse(value);
+                List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
+                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+          }).catchError((error) {
+        });
     }
      /// Get file content by its unique ID. This endpoint is similar to the download
      /// method but returns with no  'Content-Disposition: attachment' header.
-    Future<Response> getFileView({@required String fileId, String as = ''}) {
+    Future getFileView({@required String fileId, String as = ''}) {
         final String path = '/storage/files/{fileId}/view'.replaceAll(RegExp('{fileId}'), fileId);
 
         final Map<String, dynamic> params = {
             'as': as,
+            'project': client.config['project'],
         };
 
-        return client.call(HttpMethod.get, path: path, params: params);
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
+
+        return FlutterWebAuth.authenticate(
+          url: url.toString(),
+          callbackUrlScheme: "appwrite-callback"
+          ).then((value) {
+              Uri url = Uri.parse(value);
+                List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
+                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+          }).catchError((error) {
+        });
     }
 }
