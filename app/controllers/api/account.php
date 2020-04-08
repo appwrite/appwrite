@@ -29,6 +29,9 @@ use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
+$oauthDefaultSuccess = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/success';
+$oauthDefaultFailure = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/failure';
+
 $oauth2Keys = [];
 
 $utopia->init(function() use (&$oauth2Keys) {
@@ -247,8 +250,8 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
-    ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
-    ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
+    ->param('success', $oauthDefaultSuccess, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.', true)
+    ->param('failure', $oauthDefaultFailure, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.', true)
     ->action(
         function ($provider, $success, $failure) use ($response, $request, $project) {
             $protocol = Config::getParam('protocol');
@@ -316,7 +319,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
-        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
+        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit, $oauthDefaultSuccess) {
             $protocol = Config::getParam('protocol');
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -474,6 +477,10 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 $response
                     ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
+            }
+
+            if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
+                $state['success'] = $state['success'].'/?end=true';
             }
 
             $response
