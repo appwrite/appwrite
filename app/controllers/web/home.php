@@ -108,6 +108,37 @@ $utopia->get('/auth/recovery/reset')
             ->setParam('body', $page);
     });
 
+
+$utopia->get('/auth/success')
+    ->desc('Registration page')
+    ->label('permission', 'public')
+    ->label('scope', 'home')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__.'/../../views/home/auth/success.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME)
+            ->setParam('body', $page)
+            ->setParam('header', [])
+            ->setParam('footer', [])
+        ;
+    });
+
+$utopia->get('/auth/failure')
+    ->desc('Registration page')
+    ->label('permission', 'public')
+    ->label('scope', 'home')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__.'/../../views/home/auth/failure.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME)
+            ->setParam('body', $page)
+            ->setParam('header', [])
+            ->setParam('footer', [])
+        ;
+    });
+
 $utopia->get('/error/:code')
     ->desc('Error page')
     ->label('permission', 'public')
