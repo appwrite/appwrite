@@ -24,6 +24,7 @@ use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\URL\URL as URLParser;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
@@ -480,7 +481,13 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
-                $state['success'] = $state['success'].'/?end=true';
+                $state['success'] = URLParser::parse($state['success']);
+                $query = URLParser::parseQuery($state['success']['query']);
+                $query['domain'] = COOKIE_DOMAIN;
+                $query['key'] = Auth::$cookieName;
+                $query['secret'] = Auth::encodeSession($user->getId(), $secret);
+                $state['success']['query'] = URLParser::unparseQuery($query);
+                $state['success'] = URLParser::unparse($state['success']);
             }
 
             $response
@@ -502,7 +509,7 @@ $utopia->get('/v1/account')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
-        function () use ($response, &$user, $oauth2Keys) {            
+        function () use ($response, &$user, $oauth2Keys) {
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
                     '$id',

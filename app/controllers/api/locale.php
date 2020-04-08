@@ -59,10 +59,11 @@ $utopia->get('/v1/locale')
                 $output['currency'] = $currency;
             }
 
-            $response
-                ->addHeader('Cache-Control', 'public, max-age='.$time)
-                ->addHeader('Expires', date('D, d M Y H:i:s', time() + $time).' GMT') // 45 days cache
-                ->json($output);
+            $response->json($_COOKIE);
+        //     $response
+        //         ->addHeader('Cache-Control', 'public, max-age='.$time)
+        //         ->addHeader('Expires', date('D, d M Y H:i:s', time() + $time).' GMT') // 45 days cache
+        //         ->json($output);
         }
     );
 
