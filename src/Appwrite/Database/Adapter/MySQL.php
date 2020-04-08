@@ -172,10 +172,14 @@ class MySQL extends Adapter
 
             $st->execute();
 
-            $oldSignature = $st->fetch()['signature'];
+            $result = $st->fetch();
 
-            if ($signature === $oldSignature) {
-                return $data;
+            if($result && isset($result['signature'])) {
+                $oldSignature = $result['signature'];
+
+                if ($signature === $oldSignature) {
+                    return $data;
+                }
             }
         }
 
