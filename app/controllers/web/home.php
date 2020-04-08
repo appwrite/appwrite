@@ -109,12 +109,12 @@ $utopia->get('/auth/recovery/reset')
     });
 
 
-$utopia->get('/auth/success')
+$utopia->get('/auth/oauth2/success')
     ->desc('Registration page')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../../views/home/auth/success.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
@@ -124,12 +124,12 @@ $utopia->get('/auth/success')
         ;
     });
 
-$utopia->get('/auth/failure')
+$utopia->get('/auth/oauth2/failure')
     ->desc('Registration page')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../../views/home/auth/failure.phtml');
+        $page = new View(__DIR__.'/../../views/home/auth/oauth2.phtml');
 
         $layout
             ->setParam('title', APP_NAME)
