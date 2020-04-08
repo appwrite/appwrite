@@ -275,7 +275,10 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
 
             $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
 
-            $response->redirect($oauth2->getLoginURL());
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($oauth2->getLoginURL());
         }
     );
 
@@ -292,8 +295,12 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         function ($projectId, $provider, $code, $state) use ($response) {
             $domain = Config::getParam('domain');
             $protocol = Config::getParam('protocol');
-            $response->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
-                .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+            
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                    .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
 
@@ -470,6 +477,8 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
                 ->redirect($state['success'])

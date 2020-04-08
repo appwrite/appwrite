@@ -56,7 +56,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     $route = $utopia->match($request);
 
     if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId())) {
-        throw new Exception('Missing project ID', 400);
+        throw new Exception('Missing or unknown project ID', 400);
     }
 
     $referrer = $request->getServer('HTTP_REFERER', '');
