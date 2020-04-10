@@ -268,7 +268,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
             }
 
             if (empty($appId) || empty($appSecret)) {
-                throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
+                throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.', 412);
             }
 
             $classname = 'Appwrite\\Auth\\OAuth2\\'.ucfirst($provider);
