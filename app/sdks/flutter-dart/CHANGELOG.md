@@ -1,3 +1,7 @@
+## 0.0.11
+
+- Added integration with web auth plugin to support Appwrite OAuth API
+
 ## 0.0.9
 
 - Updated deafult params

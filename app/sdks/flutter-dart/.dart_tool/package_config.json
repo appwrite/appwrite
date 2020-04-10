@@ -116,6 +116,12 @@
       "languageVersion": "1.12"
     },
     {
+      "name": "package_info",
+      "rootUri": "file:///Users/eldadfux/.pub-cache/hosted/pub.dartlang.org/package_info-0.4.0+16",
+      "packageUri": "lib/",
+      "languageVersion": "2.0"
+    },
+    {
       "name": "path",
       "rootUri": "file:///Users/eldadfux/.pub-cache/hosted/pub.dartlang.org/path-1.6.4",
       "packageUri": "lib/",
@@ -236,7 +242,7 @@
       "languageVersion": "2.6"
     }
   ],
-  "generated": "2020-04-09T12:09:58.816826Z",
+  "generated": "2020-04-10T08:30:47.526846Z",
   "generator": "pub",
   "generatorVersion": "2.7.2"
 }

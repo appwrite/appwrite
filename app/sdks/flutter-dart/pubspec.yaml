@@ -10,6 +10,7 @@ environment:
 dependencies:
   meta: ^1.1.8
   path_provider: ^1.6.5
+  package_info: ^0.4.0+16
   dio: ^3.0.0
   cookie_jar: ^1.0.0
   dio_cookie_manager: ^1.0.0
