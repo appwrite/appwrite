@@ -24,6 +24,7 @@ use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\URL\URL as URLParser;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
@@ -246,7 +247,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.description', '/docs/references/account/create-session-oauth2.md')
     ->label('sdk.response.code', 301)
     ->label('sdk.response.type', 'text/html')
-    ->label('sdk.location', true)
+    ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
@@ -267,7 +268,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
             }
 
             if (empty($appId) || empty($appSecret)) {
-                throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
+                throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.', 412);
             }
 
             $classname = 'Appwrite\\Auth\\OAuth2\\'.ucfirst($provider);
@@ -480,7 +481,13 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
-                $state['success'] = $state['success'].'/?end=true';
+                $state['success'] = URLParser::parse($state['success']);
+                $query = URLParser::parseQuery($state['success']['query']);
+                $query['domain'] = COOKIE_DOMAIN;
+                $query['key'] = Auth::$cookieName;
+                $query['secret'] = Auth::encodeSession($user->getId(), $secret);
+                $state['success']['query'] = URLParser::unparseQuery($query);
+                $state['success'] = URLParser::unparse($state['success']);
             }
 
             $response
@@ -502,7 +509,7 @@ $utopia->get('/v1/account')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
-        function () use ($response, &$user, $oauth2Keys) {            
+        function () use ($response, &$user, $oauth2Keys) {
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
                     '$id',
