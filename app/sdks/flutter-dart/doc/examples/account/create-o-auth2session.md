@@ -10,8 +10,6 @@ client
 
 Future result = account.createOAuth2Session(
     provider: 'bitbucket',
-    success: 'https://example.com',
-    failure: 'https://example.com',
 );
 
 result

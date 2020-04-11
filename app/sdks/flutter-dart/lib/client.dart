@@ -120,6 +120,10 @@ class Client {
             method: method.name(),
         );
 
+        if(headers['content-type'] == 'multipart/form-data') {
+            FormData data = FormData.fromMap(params);
+        }
+
         if (method == HttpMethod.get) {
             return http.get(path, queryParameters: params, options: options);
         } else {

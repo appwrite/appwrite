@@ -286,28 +286,6 @@
             }
         }(window.document);
 
-        let iframe = function(method, url, params) {
-            let form = document.createElement('form');
-
-            form.setAttribute('method', method);
-            form.setAttribute('action', config.endpoint + url);
-
-            for(let key in params) {
-                if(params.hasOwnProperty(key)) {
-                    let hiddenField = document.createElement("input");
-                    hiddenField.setAttribute("type", "hidden");
-                    hiddenField.setAttribute("name", key);
-                    hiddenField.setAttribute("value", params[key]);
-
-                    form.appendChild(hiddenField);
-                }
-            }
-
-            document.body.appendChild(form);
-
-            return form.submit();
-        };
-
         let account = {
 
             /**
@@ -768,19 +746,11 @@
              * @param {string} success
              * @param {string} failure
              * @throws {Error}
-             * @return {string}             
+             * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success, failure) {
+            createOAuth2Session: function(provider, success = 'https://localhost:2444/auth/oauth2/success', failure = 'https://localhost:2444/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
-                }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
@@ -800,8 +770,8 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
-                return config.endpoint + path + ((query) ? '?' + query : '');
+                
+                window.location = config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -3231,7 +3201,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -3286,7 +3256,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -3319,7 +3289,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             }
         };

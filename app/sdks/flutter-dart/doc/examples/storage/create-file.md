@@ -10,7 +10,7 @@ client
 ;
 
 Future result = storage.createFile(
-    file: null,
+    file: new File('./image.jpg'),
     read: [],
     write: [],
 );
