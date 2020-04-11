@@ -10,7 +10,7 @@ client
 ;
 
 Future result = storage.createFile(
-    file: new File('./image.jpg'),
+    file: await MultipartFile.fromFile('./path-to-files/image.jpg', 'image.jpg'),
     read: [],
     write: [],
 );
