@@ -133,7 +133,7 @@ class Storage extends Service {
           queryParameters:params,
         );
 
-        return Uri.toString();
+        return url.toString();
     }
 
      /// Get File Preview
@@ -163,7 +163,7 @@ class Storage extends Service {
           queryParameters:params,
         );
 
-        return Uri.toString();
+        return url.toString();
     }
 
      /// Get File for View
@@ -187,6 +187,6 @@ class Storage extends Service {
           queryParameters:params,
         );
 
-        return Uri.toString();
+        return url.toString();
     }
 }

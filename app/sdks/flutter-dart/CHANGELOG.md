@@ -1,3 +1,7 @@
+## 0.0.12
+
+- Added file upload support for storage service
+
 ## 0.0.11
 
 - Added integration with web auth plugin to support Appwrite OAuth API

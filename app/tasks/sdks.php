@@ -55,6 +55,7 @@ $cli
                 
                 //$spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
                 $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$language['family']);
+                $spec = getSSLPage('https://localhost:2444/v1/open-api-2.json?extensions=1&platform='.$language['family']);
 
                 $result = realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
