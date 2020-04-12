@@ -4,6 +4,10 @@ sdk
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-let result = sdk.storage.getFilePreview('[FILE_ID]');
+let promise = sdk.storage.getFilePreview('[FILE_ID]');
 
-console.log(result); // Resource URL
+promise.then(function (response) {
+    console.log(response); // Success
+}, function (error) {
+    console.log(error); // Failure
+});

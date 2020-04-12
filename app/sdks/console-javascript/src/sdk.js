@@ -765,13 +765,10 @@
                     payload['failure'] = failure;
                 }
 
-                payload['project'] = config.project;
-
-                payload['key'] = config.key;
-
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-                
-                window.location = config.endpoint + path + ((query) ? '?' + query : '');
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3185,7 +3182,7 @@
              *
              * @param {string} fileId
              * @throws {Error}
-             * @return {string}             
+             * @return {Promise}             
              */
             getFileDownload: function(fileId) {
                 if(fileId === undefined) {
@@ -3196,13 +3193,10 @@
 
                 let payload = {};
 
-                payload['project'] = config.project;
-
-                payload['key'] = config.key;
-
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-                
-                return config.endpoint + path + ((query) ? '?' + query : '');
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3220,7 +3214,7 @@
              * @param {string} background
              * @param {string} output
              * @throws {Error}
-             * @return {string}             
+             * @return {Promise}             
              */
             getFilePreview: function(fileId, width = 0, height = 0, quality = 100, background = '', output = '') {
                 if(fileId === undefined) {
@@ -3251,13 +3245,10 @@
                     payload['output'] = output;
                 }
 
-                payload['project'] = config.project;
-
-                payload['key'] = config.key;
-
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-                
-                return config.endpoint + path + ((query) ? '?' + query : '');
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             },
 
             /**
@@ -3269,7 +3260,7 @@
              * @param {string} fileId
              * @param {string} as
              * @throws {Error}
-             * @return {string}             
+             * @return {Promise}             
              */
             getFileView: function(fileId, as = '') {
                 if(fileId === undefined) {
@@ -3284,13 +3275,10 @@
                     payload['as'] = as;
                 }
 
-                payload['project'] = config.project;
-
-                payload['key'] = config.key;
-
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-                
-                return config.endpoint + path + ((query) ? '?' + query : '');
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 

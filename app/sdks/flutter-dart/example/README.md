@@ -16,11 +16,11 @@ Init your Appwrite client:
 Create a new user and session:
 
 ```dart
-  Account account = Account(client);
+Account account = Account(client);
 
- Response user = await account.create(email: 'me@appwrite.io', password: 'password', name: 'My Name');
+Response user = await account.create(email: 'me@appwrite.io', password: 'password', name: 'My Name');
  
- Response session = await account.createSession(email: 'me@appwrite.io', password: 'password');
+Response session = await account.createSession(email: 'me@appwrite.io', password: 'password');
 
 ```
 

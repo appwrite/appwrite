@@ -8,8 +8,13 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-String result = storage.getFileView(
+Future result = storage.getFileDownload(
     fileId: '[FILE_ID]',
 );
 
-print(result); // Resource URL string
+result
+  .then((response) {
+    print(response);
+  }).catchError((error) {
+    print(error);
+  });
