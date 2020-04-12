@@ -8,7 +8,7 @@ Init your Appwrite client:
   client
       .setEndpoint('https://localhost/v1') // Your Appwrite Endpoint
       .setProject('5e8cf4f46b5e8') // Your project ID
-      .setSelfSigned()
+      .setSelfSigned() // Remove in production
   ;
 
 ```

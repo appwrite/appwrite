@@ -1,3 +1,8 @@
+## 0.1.0
+
+- Added examples file
+- Some minor style fixes
+
 ## 0.0.14
 
 - Using MultipartFile for file uploads
