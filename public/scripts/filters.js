@@ -367,9 +367,14 @@ window.ls.filter
       });
     }
 
-    console.log(result);
-    
     return result.length;
+  })
+  .add("platformsLimit", function($value) {
+
+    console.log('test console');
+    console.log($value);
+    
+    return $value;
   });
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

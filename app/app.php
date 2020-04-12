@@ -103,7 +103,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && empty($request->getHeader('X-Appwrite-Key', ''))
     ) {
-        //throw new Exception('Access from this client host is forbidden', 403);
+        throw new Exception('Access from this client host is forbidden', 403);
     }
 
     /*
