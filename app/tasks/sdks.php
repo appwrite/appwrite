@@ -61,6 +61,8 @@ $cli
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
                 $readme = ($readme) ? file_get_contents($readme) : '';
+                $examples = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/EXAMPLES.md');
+                $examples = ($examples) ? file_get_contents($examples) : '';
                 $changelog = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
                 $changelog = ($changelog) ? file_get_contents($changelog) : '# Change Log';
                 $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
@@ -156,6 +158,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setWarning($warning)
                     ->setReadme($readme)
                     ->setChangelog($changelog)
+                    ->setExamples($examples)
                 ;
                 
                 try {
