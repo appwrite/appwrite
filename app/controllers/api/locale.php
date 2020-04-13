@@ -134,7 +134,7 @@ $utopia->get('/v1/locale/countries/phones')
     );
 
 $utopia->get('/v1/locale/continents')
-    ->desc('List Countries')
+    ->desc('List Continents')
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
