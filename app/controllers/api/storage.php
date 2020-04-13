@@ -184,7 +184,6 @@ $utopia->post('/v1/storage/files')
             /*
              * Models
              */
-            $list = [];
             $device = Storage::getDevice('local');
 
             if (!$upload->isValid($file['tmp_name'])) {
