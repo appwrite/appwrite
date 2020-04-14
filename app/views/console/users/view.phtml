@@ -132,7 +132,7 @@
                     data-service="users.getSessions"
                     data-name="sessions"
                     data-param-user-id="{{router.params.id}}"
-                    data-event="load,user-update">
+                    data-event="load,users.update">
 
                     <div data-ls-if="{{sessions.length}} === 0" style="display: none" class="margin-top-xl margin-bottom-xl">
                         No sessions available
@@ -156,7 +156,7 @@
                                         data-failure-param-alert-classname="error">
 
                                         <input type="hidden" name="userId" data-ls-bind="{{router.params.id}}">
-                                        <input type="hidden" name="sessionId" data-ls-bind="{{session.id}}">
+                                        <input type="hidden" name="sessionId" data-ls-bind="{{session.$id}}">
                                         <button class="danger">Logout</button>
                                     </form>
 

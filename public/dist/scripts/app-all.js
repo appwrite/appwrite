@@ -362,7 +362,7 @@ return http.patch(path,{'content-type':'application/json',},payload);},getSessio
 let path='/users/{userId}/sessions'.replace(new RegExp('{userId}','g'),userId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},deleteSessions:function(userId){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 let path='/users/{userId}/sessions'.replace(new RegExp('{userId}','g'),userId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},deleteSession:function(userId,sessionId){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(sessionId===undefined){throw new Error('Missing required parameter: "sessionId"');}
-let path='/users/{userId}/sessions/:session'.replace(new RegExp('{userId}','g'),userId);let payload={};if(sessionId){payload['sessionId']=sessionId;}
+let path='/users/{userId}/sessions/{sessionId}'.replace(new RegExp('{userId}','g'),userId).replace(new RegExp('{sessionId}','g'),sessionId);let payload={};if(sessionId){payload['sessionId']=sessionId;}
 return http.delete(path,{'content-type':'application/json',},payload);},updateStatus:function(userId,status){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(status===undefined){throw new Error('Missing required parameter: "status"');}
 let path='/users/{userId}/status'.replace(new RegExp('{userId}','g'),userId);let payload={};if(status){payload['status']=status;}
