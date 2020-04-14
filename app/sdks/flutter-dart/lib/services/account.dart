@@ -1,7 +1,9 @@
 
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:flutter_web_auth/flutter_web_auth.dart';
 
 import "../client.dart";
 import '../enums.dart';
@@ -303,19 +305,31 @@ class Account extends Service {
      /// first. Use the success and failure arguments to provide a redirect URL's
      /// back to your app when login is completed.
      ///
-    Future<Response> createOAuth2Session({@required String provider, String success = 'https://localhost:2444/auth/oauth2/success', String failure = 'https://localhost:2444/auth/oauth2/failure'}) {
+    Future createOAuth2Session({@required String provider, String success = 'https://localhost:2444/auth/oauth2/success', String failure = 'https://localhost:2444/auth/oauth2/failure'}) {
         final String path = '/account/sessions/oauth2/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
         final Map<String, dynamic> params = {
             'success': success,
             'failure': failure,
+            'project': client.config['project'],
         };
 
-        final Map<String, String> headers = {
-            'content-type': 'application/json',
-        };
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
 
-        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+        return FlutterWebAuth.authenticate(
+          url: url.toString(),
+          callbackUrlScheme: "appwrite-callback"
+          ).then((value) {
+              Uri url = Uri.parse(value);
+                List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
+                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+          });
     }
 
      /// Delete Account Session

@@ -5,10 +5,6 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.storage.getFileDownload('[FILE_ID]');
+let result = sdk.storage.getFileDownload('[FILE_ID]');
 
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(result); // Resource URL
