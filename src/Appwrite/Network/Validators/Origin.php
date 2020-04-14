@@ -39,9 +39,6 @@ class Origin extends Validator
      * @var array
      */
     protected $clients = [
-        APP_DOMAIN,
-        'localhost',
-        'appwrite.test',
     ];
 
     /**
@@ -89,7 +86,7 @@ class Origin extends Validator
         }
 
         return 'Inavlid Origin. Register your new client ('.$this->host.') as a new '
-            .$this->platforms[$this->client].' platform on your '.APP_NAME.' console';
+            .$this->platforms[$this->client].' platform on your project console';
     }
 
     /**

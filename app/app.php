@@ -52,7 +52,7 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $clients) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $roles, $webhook, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 
@@ -98,7 +98,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      *  Skip this check for non-web platforms which are not requiredto send an origin header
      */
     $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
-    $originValidator = new Origin($project->getAttribute('platforms', []));
+    $originValidator = new Origin(array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
     if(!$originValidator->isValid($origin)
         && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
