@@ -1,3 +1,13 @@
+# Version 0.6.0 (PLANNED)
+
+## Features
+
+* Added support for Flutter iOS & Android apps
+
+## Bug Fixes
+
+* Fixed project users logout button
+
 # Version 0.5.3 (PRE-RELEASE)
 
 ## Bug Fixes
