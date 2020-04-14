@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Updated flutter_web_auth version
+
 ## 0.1.0
 
 - Added examples file
