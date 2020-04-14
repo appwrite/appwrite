@@ -214,7 +214,7 @@ $graph = $this->getParam('graph', false);
     <form
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform"
+        data-analytics-label="Update Project Platform (Web)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"
@@ -252,7 +252,7 @@ $graph = $this->getParam('graph', false);
             <form
                 data-analytics-event="submit"
                 data-analytics-category="console"
-                data-analytics-label="Create Project Platform (Flutter)"
+                data-analytics-label="Create Project Platform (Flutter / iOS)"
                 data-service="projects.createPlatform"
                 data-scope="console"
                 data-event="submit"
@@ -284,7 +284,7 @@ $graph = $this->getParam('graph', false);
             <form
                 data-analytics-event="submit"
                 data-analytics-category="console"
-                data-analytics-label="Create Project Platform (Flutter)"
+                data-analytics-label="Create Project Platform (Flutter / Android)"
                 data-service="projects.createPlatform"
                 data-scope="console"
                 data-event="submit"
@@ -316,7 +316,7 @@ $graph = $this->getParam('graph', false);
     <form
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform"
+        data-analytics-label="Update Project Platform (iOS)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"
@@ -346,7 +346,7 @@ $graph = $this->getParam('graph', false);
     <form
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform"
+        data-analytics-label="Update Project Platform (Android)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"
@@ -382,31 +382,4 @@ $graph = $this->getParam('graph', false);
 
 <script type="text/html" id="template-flutter-macos-update">
     <div data-ls-template="template-macos-update" data-type="script"></div>
-</script>
-
-<script type="text/html" id="template-flutter-update">
-    <form
-        data-analytics-event="submit"
-        data-analytics-category="console"
-        data-analytics-label="Update Project Platform"
-        data-service="projects.updatePlatform"
-        data-scope="console"
-        data-event="submit"
-        data-success="alert,trigger"
-        data-success-param-alert-text="Updated platform successfully"
-        data-success-param-trigger-events="projects.updatePlatform"
-        data-failure="alert"
-        data-failure-param-alert-text="Failed to update platform"
-        data-failure-param-alert-classname="error">
-
-        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
-        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
-
-        <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" />
-
-        <hr />
-
-        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
-    </form>
 </script>
