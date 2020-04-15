@@ -410,12 +410,6 @@ $utopia->get('/.well-known/acme-challenge')
         }
     );
 
-
-
-
-
-
-
 $name = APP_NAME;
 
 if (array_key_exists($service, $services)) { /** @noinspection PhpIncludeInspection */

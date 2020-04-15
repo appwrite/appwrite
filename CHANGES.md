@@ -1,8 +1,14 @@
-# Version 0.6.0 (PLANNED)
+# Version 0.6.0 (PRE-RELEASE)
 
 ## Features
 
 * Added support for Flutter iOS & Android apps
+* New locale for Khmer
+
+## Breaking Changes
+
+* Updated all the REST API query params to be in camelCase
+* Normalized locale phone codes response body
 
 ## Bug Fixes
 

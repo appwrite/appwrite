@@ -33,21 +33,21 @@ let path='/account/name';let payload={};if(name){payload['name']=name;}
 return http.patch(path,{'content-type':'application/json',},payload);},updatePassword:function(password,oldPassword){if(password===undefined){throw new Error('Missing required parameter: "password"');}
 if(oldPassword===undefined){throw new Error('Missing required parameter: "oldPassword"');}
 let path='/account/password';let payload={};if(password){payload['password']=password;}
-if(oldPassword){payload['old-password']=oldPassword;}
+if(oldPassword){payload['oldPassword']=oldPassword;}
 return http.patch(path,{'content-type':'application/json',},payload);},getPrefs:function(){let path='/account/prefs';let payload={};return http.get(path,{'content-type':'application/json',},payload);},updatePrefs:function(prefs){if(prefs===undefined){throw new Error('Missing required parameter: "prefs"');}
 let path='/account/prefs';let payload={};if(prefs){payload['prefs']=prefs;}
 return http.patch(path,{'content-type':'application/json',},payload);},createRecovery:function(email,url){if(email===undefined){throw new Error('Missing required parameter: "email"');}
 if(url===undefined){throw new Error('Missing required parameter: "url"');}
 let path='/account/recovery';let payload={};if(email){payload['email']=email;}
 if(url){payload['url']=url;}
-return http.post(path,{'content-type':'application/json',},payload);},updateRecovery:function(userId,secret,passwordA,passwordB){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
+return http.post(path,{'content-type':'application/json',},payload);},updateRecovery:function(userId,secret,password,passwordAgain){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
 if(secret===undefined){throw new Error('Missing required parameter: "secret"');}
-if(passwordA===undefined){throw new Error('Missing required parameter: "passwordA"');}
-if(passwordB===undefined){throw new Error('Missing required parameter: "passwordB"');}
+if(password===undefined){throw new Error('Missing required parameter: "password"');}
+if(passwordAgain===undefined){throw new Error('Missing required parameter: "passwordAgain"');}
 let path='/account/recovery';let payload={};if(userId){payload['userId']=userId;}
 if(secret){payload['secret']=secret;}
-if(passwordA){payload['password-a']=passwordA;}
-if(passwordB){payload['password-b']=passwordB;}
+if(password){payload['password']=password;}
+if(passwordAgain){payload['passwordAgain']=passwordAgain;}
 return http.put(path,{'content-type':'application/json',},payload);},getSessions:function(){let path='/account/sessions';let payload={};return http.get(path,{'content-type':'application/json',},payload);},createSession:function(email,password){if(email===undefined){throw new Error('Missing required parameter: "email"');}
 if(password===undefined){throw new Error('Missing required parameter: "password"');}
 let path='/account/sessions';let payload={};if(email){payload['email']=email;}
@@ -113,9 +113,9 @@ let path='/database/collections/{collectionId}'.replace(new RegExp('{collectionI
 let path='/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}','g'),collectionId);let payload={};if(filters){payload['filters']=filters;}
 if(offset){payload['offset']=offset;}
 if(limit){payload['limit']=limit;}
-if(orderField){payload['order-field']=orderField;}
-if(orderType){payload['order-type']=orderType;}
-if(orderCast){payload['order-cast']=orderCast;}
+if(orderField){payload['orderField']=orderField;}
+if(orderType){payload['orderType']=orderType;}
+if(orderCast){payload['orderCast']=orderCast;}
 if(search){payload['search']=search;}
 if(first){payload['first']=first;}
 if(last){payload['last']=last;}
