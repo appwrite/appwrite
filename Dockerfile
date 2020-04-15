@@ -1,4 +1,4 @@
-FROM ubuntu:19.10 AS builder
+FROM ubuntu:18.04 AS builder
 
 LABEL maintainer="team@appwrite.io"
 
@@ -7,7 +7,7 @@ ARG TESTING=false
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
     PHP_VERSION=7.4 \
-    PHP_REDIS_VERSION=3.1.2
+    PHP_REDIS_VERSION=5.2.1
 
 RUN \
   apt-get update && \
@@ -72,7 +72,7 @@ ENV TZ=Asia/Tel_Aviv \
 #ENV _APP_SMTP_USERNAME ''
 #ENV _APP_SMTP_PASSWORD ''
 
-COPY --from=builder /phpredis-3.1.2/modules/redis.so /usr/lib/php/20190902/
+COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

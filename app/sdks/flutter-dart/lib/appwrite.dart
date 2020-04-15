@@ -1,8 +1,9 @@
-export 'package:appwrite/services/account.dart';
-export 'package:appwrite/services/avatars.dart';
-export 'package:appwrite/services/database.dart';
-export 'package:appwrite/services/locale.dart';
-export 'package:appwrite/services/storage.dart';
-export 'package:appwrite/services/teams.dart';
-export 'package:appwrite/client.dart';
+export 'services/account.dart';
+export 'services/avatars.dart';
+export 'services/database.dart';
+export 'services/locale.dart';
+export 'services/storage.dart';
+export 'services/teams.dart';
+export 'client.dart';
+export 'enums.dart';
 export 'package:dio/dio.dart' show Response;
