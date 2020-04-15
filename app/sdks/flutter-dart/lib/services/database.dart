@@ -1,82 +1,81 @@
-import 'dart:html';
 
-import "package:appwrite/service.dart";
-import "package:appwrite/client.dart";
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 
+import "../client.dart";
 import '../enums.dart';
+import "../service.dart";
 
 class Database extends Service {
      
-     Database(Client client): super(client);
+    Database(Client client): super(client);
 
      /// Get a list of all the user documents. You can use the query params to
      /// filter your results. On admin mode, this endpoint will return a list of all
      /// of the project documents. [Learn more about different API
      /// modes](/docs/admin).
-    Future<Response> listDocuments({@required String collectionId, List filters = const [], int offset = null, int limit = 50, String orderField = '\$id', String orderType = 'ASC', String orderCast = 'string', String search = null, int first = null, int last = null}) async {
-       String path = '/database/collections/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
+    Future<Response> listDocuments({@required String collectionId, List filters = const [], int offset = null, int limit = 50, String orderField = '\$id', String orderType = 'ASC', String orderCast = 'string', String search = null, int first = null, int last = null}) {
+        final String path = '/database/collections/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
-       Map<String, dynamic> params = {
-         'filters': filters,
-         'offset': offset,
-         'limit': limit,
-         'order-field': orderField,
-         'order-type': orderType,
-         'order-cast': orderCast,
-         'search': search,
-         'first': first,
-         'last': last,
-       };
+        final Map<String, dynamic> params = {
+            'filters': filters,
+            'offset': offset,
+            'limit': limit,
+            'order-field': orderField,
+            'order-type': orderType,
+            'order-cast': orderCast,
+            'search': search,
+            'first': first,
+            'last': last,
+        };
 
-       return await this.client.call(HttpMethod.get, path: path, params: params);
+        return this.client.call(HttpMethod.get, path: path, params: params);
     }
      /// Create a new Document.
-    Future<Response> createDocument({@required String collectionId, @required dynamic data, @required List read, @required List write, String parentDocument = null, String parentProperty = null, String parentPropertyType = 'assign'}) async {
-       String path = '/database/collections/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
+    Future<Response> createDocument({@required String collectionId, @required dynamic data, @required List read, @required List write, String parentDocument = null, String parentProperty = null, String parentPropertyType = 'assign'}) {
+        final String path = '/database/collections/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);
 
-       Map<String, dynamic> params = {
-         'data': data,
-         'read': read,
-         'write': write,
-         'parentDocument': parentDocument,
-         'parentProperty': parentProperty,
-         'parentPropertyType': parentPropertyType,
-       };
+        final Map<String, dynamic> params = {
+            'data': data,
+            'read': read,
+            'write': write,
+            'parentDocument': parentDocument,
+            'parentProperty': parentProperty,
+            'parentPropertyType': parentPropertyType,
+        };
 
-       return await this.client.call(HttpMethod.post, path: path, params: params);
+        return this.client.call(HttpMethod.post, path: path, params: params);
     }
      /// Get document by its unique ID. This endpoint response returns a JSON object
      /// with the document data.
-    Future<Response> getDocument({@required String collectionId, @required String documentId}) async {
-       String path = '/database/collections/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
+    Future<Response> getDocument({@required String collectionId, @required String documentId}) {
+        final String path = '/database/collections/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 
-       Map<String, dynamic> params = {
-       };
+        final Map<String, dynamic> params = {
+        };
 
-       return await this.client.call(HttpMethod.get, path: path, params: params);
+        return this.client.call(HttpMethod.get, path: path, params: params);
     }
-    Future<Response> updateDocument({@required String collectionId, @required String documentId, @required dynamic data, @required List read, @required List write}) async {
-       String path = '/database/collections/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
+    Future<Response> updateDocument({@required String collectionId, @required String documentId, @required dynamic data, @required List read, @required List write}) {
+        final String path = '/database/collections/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 
-       Map<String, dynamic> params = {
-         'data': data,
-         'read': read,
-         'write': write,
-       };
+        final Map<String, dynamic> params = {
+            'data': data,
+            'read': read,
+            'write': write,
+        };
 
-       return await this.client.call(HttpMethod.patch, path: path, params: params);
+        return this.client.call(HttpMethod.patch, path: path, params: params);
     }
      /// Delete document by its unique ID. This endpoint deletes only the parent
      /// documents, his attributes and relations to other documents. Child documents
      /// **will not** be deleted.
-    Future<Response> deleteDocument({@required String collectionId, @required String documentId}) async {
-       String path = '/database/collections/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
+    Future<Response> deleteDocument({@required String collectionId, @required String documentId}) {
+        final String path = '/database/collections/{collectionId}/documents/{documentId}'.replaceAll(RegExp('{collectionId}'), collectionId).replaceAll(RegExp('{documentId}'), documentId);
 
-       Map<String, dynamic> params = {
-       };
+        final Map<String, dynamic> params = {
+        };
 
-       return await this.client.call(HttpMethod.delete, path: path, params: params);
+        return this.client.call(HttpMethod.delete, path: path, params: params);
     }
 }

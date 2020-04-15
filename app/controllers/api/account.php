@@ -24,10 +24,14 @@ use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\URL\URL as URLParser;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
+
+$oauthDefaultSuccess = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/success';
+$oauthDefaultFailure = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
@@ -243,12 +247,12 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.description', '/docs/references/account/create-session-oauth2.md')
     ->label('sdk.response.code', 301)
     ->label('sdk.response.type', 'text/html')
-    ->label('sdk.location', true)
+    ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
-    ->param('success', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.')
-    ->param('failure', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.')
+    ->param('success', $oauthDefaultSuccess, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.', true)
+    ->param('failure', $oauthDefaultFailure, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.', true)
     ->action(
         function ($provider, $success, $failure) use ($response, $request, $project) {
             $protocol = Config::getParam('protocol');
@@ -264,7 +268,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
             }
 
             if (empty($appId) || empty($appSecret)) {
-                throw new Exception('Provider is undefined, configure provider app ID and app secret key to continue', 412);
+                throw new Exception('This provider is disabled. Please configure the provider app ID and app secret key from your '.APP_NAME.' console to continue.', 412);
             }
 
             $classname = 'Appwrite\\Auth\\OAuth2\\'.ucfirst($provider);
@@ -275,7 +279,10 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
 
             $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
 
-            $response->redirect($oauth2->getLoginURL());
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($oauth2->getLoginURL());
         }
     );
 
@@ -292,8 +299,12 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         function ($projectId, $provider, $code, $state) use ($response) {
             $domain = Config::getParam('domain');
             $protocol = Config::getParam('protocol');
-            $response->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
-                .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+            
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                    .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
         }
     );
 
@@ -309,7 +320,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
-        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit) {
+        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit, $oauthDefaultSuccess) {
             $protocol = Config::getParam('protocol');
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -469,7 +480,19 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 ;
             }
 
+            if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
+                $state['success'] = URLParser::parse($state['success']);
+                $query = URLParser::parseQuery($state['success']['query']);
+                $query['domain'] = COOKIE_DOMAIN;
+                $query['key'] = Auth::$cookieName;
+                $query['secret'] = Auth::encodeSession($user->getId(), $secret);
+                $state['success']['query'] = URLParser::unparseQuery($query);
+                $state['success'] = URLParser::unparse($state['success']);
+            }
+
             $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
                 ->redirect($state['success'])
@@ -486,7 +509,7 @@ $utopia->get('/v1/account')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
-        function () use ($response, &$user, $oauth2Keys) {            
+        function () use ($response, &$user, $oauth2Keys) {
             $response->json(array_merge($user->getArrayCopy(array_merge(
                 [
                     '$id',

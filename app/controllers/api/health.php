@@ -51,7 +51,7 @@ $utopia->get('/v1/health/cache')
     );
 
 $utopia->get('/v1/health/time')
-    ->desc('Check Webhooks Health')
+    ->desc('Check Time Health')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -98,7 +98,7 @@ $utopia->get('/v1/health/time')
     );
 
 $utopia->get('/v1/health/webhooks')
-    ->desc('Check Time Health')
+    ->desc('Check Webhooks Health')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
