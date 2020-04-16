@@ -145,6 +145,17 @@ button,
     }
   }
 
+  &.dark {
+    background: var(--config-color-dark);
+    color: #fff;
+
+    &.reverse {
+      color: var(--config-color-dark);
+      background: var(--config-color-background-fade);
+      border: solid 2px var(--config-color-dark);
+    }
+  }
+
   &.disabled,
   &:disabled,
   .disabled {
@@ -360,6 +371,7 @@ fieldset {
 .counter {
   .text-size-small;
   .pull-end;
+  color: var(--config-color-fade);
   margin-top: -20px;
 }
 

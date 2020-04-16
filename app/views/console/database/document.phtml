@@ -11,7 +11,7 @@
         data-param-collection-id="{{router.params.collection}}"
         data-param-document-id="{{router.params.id}}"
         data-scope="sdk"
-        data-event="load"
+        data-event="load,database.updateDocument"
         data-name="project-document"
         data-success="default">
 
@@ -49,54 +49,7 @@
                                 <label>&nbsp;</label>
 
                                 <div class="box">
-
-                                    <input name="documentId" type="hidden" data-ls-bind="{{project-document.$id}}" />
-                                    <input name="collectionId" type="hidden" data-ls-bind="{{project-collection.$id}}" />
-
-                                    <fieldset name="data" data-cast-to="object">
-                                        <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
-                                            <li>
-                                                <label class="margin-bottom-no">
-                                                    <span data-ls-bind="{{rule.label}}"></span>
-                                                    <span data-ls-if="{{rule.array}}.toString() == 'true'">
-                                                        <span class="text-size-small text-fade">&nbsp;&nbsp;(Array)</span>
-                                                    </span>
-                                                </label>
-                                                
-
-                                                <div data-ls-if="{{rule.required}}.toString() == 'true'" class="margin-bottom-small">
-                                                    <span class="text-size-xs text-danger text-fade">required</span>
-                                                </div>
-
-                                                <div data-ls-if="({{rule.required}}.toString() == 'false')" class="margin-bottom-small">
-                                                    <span class="text-size-xs text-fade">optional</span>
-                                                </div>
-
-                                                <div data-ls-if="({{rule.array}}.toString() == 'false')">
-                                                    <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
-                                                </div>
-
-                                                <div data-ls-if="({{rule.array}}.toString() == 'true')">
-                                                    <div data-ls-template="template-array-form" data-type="script" class="margin-bottom"></div>
-                                                </div>
-                                            </li>
-                                        </ul>
-                                    </fieldset>
-
-                                    <div class="toggle margin-bottom" data-ls-ui-open>
-                                        <i class="icon-plus pull-end margin-top-tiny"></i>
-                                        <i class="icon-minus pull-end margin-top-tiny"></i>
-                                        
-                                        <h3 class="margin-bottom-large">Permissions</h3>
-                                        
-                                        <label for="collection-read">Read Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
-                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                                        
-                                        <label for="collection-write">Write Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
-                                    </div>
-
-                                    <button>Update</button>
+                                    <div data-ls-template="template-main" data-type="script" class="margin-bottom"></div>
                                 </div>
 
                             </form>
@@ -165,26 +118,31 @@
 $list = [
     [
         'key' => '',
-        'bind' => ' data-ls-bind="{{project-document|documentLabel}}"',
         'bind' => '{{project-document|documentLabel}}',
     ],
     [
         'key' => '-array',
         'bind' => '{{node}}',
     ],
+    [
+        'key' => '-child',
+        'bind' => '{{project-document|documentLabel}}.{{rule.key}}{{childRule.key}}',
+    ],
 ];
 ?>
 
 <?php foreach($list as $mode): ?>
-    <script type="text/html" id="template-document-form<?php echo $mode['key']; ?>">
+    <script type="text/html" id="xtemplate-document-form<?php echo $mode['key']; ?>">
         <div class="info margin-bottom-small">
-            <div class="">document link here</div>
+            
+            <fieldset data-ls-attrs="name={{rule.key}},{{rule.required|documentRequired}}" data-cast-to="object">
+                <textarea data-ls-attrs="data-ls-bind=\{\{project-document.{{rule.key}}.$id\}\}" type="text" autocomplete="off" data-ls-bind="<?php echo $mode['bind']; ?>"></textarea>
+                <textarea data-ls-attrs="data-ls-bind=\{\{project-document.{{rule.key}}.name\}\}" type="text" autocomplete="off" data-ls-bind="<?php echo $mode['bind']; ?>"></textarea>
+            </fieldset>
         </div>
 
         <button type="button" class="reverse margin-end-small">Add</button>
         <button type="button" class="reverse">Search</button>
-
-        
     </script>
 
     <script type="text/html" id="xtemplate-document-form<?php echo $mode['key']; ?>">
@@ -255,7 +213,7 @@ $list = [
         <li data-forms-remove data-forms-move-up  data-forms-move-down>
             <div class="row thin responsive margin-bottom-small force-reverse">
                 <div class="col span-1">
-                    <div class="drop-list bottom end" data-ls-ui-open="" data-button-text="" data-button-icon="icon-down-dir" data-button-selector="[data-toggler]" data-button-class="round small margin-bottom-small pull-end" data-blur="1" tabindex="1">
+                    <div class="drop-list bottom end" data-ls-ui-open="" data-button-text="" data-button-icon="icon-cog" data-button-selector="[data-toggler]" data-button-class="round dark small margin-bottom-small margin-top-tiny pull-end" data-blur="1" tabindex="1">
                         <ul>
                             <li data-move-up>
                                 <button type="button" class="link"><i class="icon-up-dir"></i> Move Up</button>
@@ -273,12 +231,65 @@ $list = [
                     <div data-ls-template="template-{{rule.type}}-form-array" data-type="script" class="margin-bottom"></div>
                 </div>
             </div>
+
+            <hr class="margin-top-no" />
         </li>
     </ul>
 
 </script>
 
-<div class="margin-top"
+<script type="text/html" id="template-main">
+        
+    <input name="documentId" type="hidden" data-ls-bind="{{project-document.$id}}" />
+    <input name="collectionId" type="hidden" data-ls-bind="{{project-collection.$id}}" />
+
+    <fieldset name="data" data-cast-to="object">
+        <ul data-ls-loop="project-collection.rules" data-ls-as="rule">
+            <li>
+                <label class="margin-bottom-no">
+                    <span data-ls-bind="{{rule.label}}"></span>
+                    <span data-ls-if="{{rule.array}}.toString() == 'true'">
+                        <span class="text-size-small text-fade">&nbsp;&nbsp;(Array)</span>
+                    </span>
+                </label>
+                
+                <div data-ls-if="{{rule.required}}.toString() == 'true'" class="margin-bottom-small">
+                    <span class="text-size-xs text-danger text-fade">required</span>
+                </div>
+
+                <div data-ls-if="({{rule.required}}.toString() == 'false')" class="margin-bottom-small">
+                    <span class="text-size-xs text-fade">optional</span>
+                </div>
+
+                <div data-ls-if="({{rule.array}}.toString() == 'false')">
+                    <div data-ls-template="template-{{rule.type}}-form" data-type="script" class="margin-bottom"></div>
+                </div>
+
+                <div data-ls-if="({{rule.array}}.toString() == 'true')">
+                    <div data-ls-template="template-array-form" data-type="script" class="margin-bottom"></div>
+                </div>
+            </li>
+        </ul>
+    </fieldset>
+
+    <div class="toggle margin-bottom" data-ls-ui-open>
+        <i class="icon-plus pull-end margin-top-tiny"></i>
+        <i class="icon-minus pull-end margin-top-tiny"></i>
+        
+        <h3 class="margin-bottom-large">Permissions</h3>
+        
+        <label for="collection-read">Read Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
+        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                        
+        <label for="collection-write">Write Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+    </div>
+
+    <button>Update</button>
+
+</script>
+
+<div
     data-service="database.listCollections"
     data-event="load,database.createCollection,database.updateCollection,database.deleteCollection"
     data-scope="sdk"
