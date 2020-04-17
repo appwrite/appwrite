@@ -132,7 +132,6 @@
         },
 
         default: function() {
-          console.log('start-default');
           let collection = container.get('project-collection');
           let document = container.get('project-document');
           
@@ -172,8 +171,6 @@
               }
             }
           }
-
-          console.log('end-default', document);
         }
       };
 
@@ -338,7 +335,6 @@
             element.style.backgroud = 'transparent';
             element.classList.add("load-service-end");
 
-            console.log('name-of-service', service.replace(".", "-"), data);
             container.set(service.replace(".", "-"), data, true, true);
             container.set("serviceData", data, true, true);
             container.set("serviceForm", formData, true, true);

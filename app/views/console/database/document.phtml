@@ -21,7 +21,8 @@
 
                 <br />
 
-                <span data-ls-bind="{{project-collection.name}} Document">&nbsp;&nbsp;</span>
+                <span data-ls-if="({{project-document.$id}})" data-ls-bind="Update Document">&nbsp;&nbsp;</span>
+                <span data-ls-if="(!{{project-document.$id}})" data-ls-bind="New Document">&nbsp;&nbsp;</span>
             </h1>
         </div>
 
@@ -239,6 +240,8 @@ $list = [
 </script>
 
 <script type="text/html" id="template-main">
+
+    <div data-ls-bind="{{project-document}}"></div>
         
     <input name="documentId" type="hidden" data-ls-bind="{{project-document.$id}}" />
     <input name="collectionId" type="hidden" data-ls-bind="{{project-collection.$id}}" />
