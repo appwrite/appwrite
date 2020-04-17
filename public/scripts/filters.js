@@ -398,6 +398,10 @@ window.ls.filter
     let collection = container.get('project-collection');
     let document = container.get('project-document');
 
+    console.log('isnew?');
+    console.log(document);
+    console.log(document.$id);
+
     if(collection && document && !document.$id) {
       return 'database.createDocument';
     }

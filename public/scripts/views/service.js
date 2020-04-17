@@ -5,7 +5,7 @@
     selector: "data-service",
     controller: function(element, view, container, form, alerts, expression, window) {
       let action = element.dataset["service"];
-      let service = element.dataset["name"] || action;
+      let service = element.dataset["name"] || null;
       let event = expression.parse(element.dataset["event"]); // load, click, change, submit
       let confirm = element.dataset["confirm"] || ""; // Free text
       let loading = element.dataset["loading"] || ""; // Free text
@@ -258,17 +258,17 @@
 
       let exec = function(event) {
 
-        action = expression.parse(action);
-        success = expression.parse(success);
-        failure = expression.parse(failure);
-
-        success =
-          success && success != ""
-            ? success.split(",").map(element => element.trim())
+        let parsedSuccess = expression.parse(success);
+        let parsedFailure = expression.parse(failure);
+        let parsedAction = expression.parse(action);
+        
+        parsedSuccess =
+          parsedSuccess && parsedSuccess != ""
+            ? parsedSuccess.split(",").map(element => element.trim())
             : [];
-        failure =
-          failure && failure != ""
-            ? failure.split(",").map(element => element.trim())
+        parsedFailure =
+          parsedFailure && parsedFailure != ""
+            ? parsedFailure.split(",").map(element => element.trim())
             : [];
 
         element.$lsSkip = true;
@@ -302,10 +302,10 @@
           loaderId = alerts.add({ text: loading, class: "" }, 0);
         }
 
-        let method = container.path(scope + "." + action);
+        let method = container.path(scope + "." + parsedAction);
         
         if (!method) {
-          throw new Error('Method "' + scope + "." + action + '" not found');
+          throw new Error('Method "' + scope + "." + parsedAction + '" not found');
         }
         
         let formData = "FORM" === element.tagName ? form.toJson(element) : {};
@@ -337,18 +337,21 @@
             element.style.backgroud = 'transparent';
             element.classList.add("load-service-end");
 
-            container.set(service.replace(".", "-"), data, true, true);
+            if(service) {
+              container.set(service.replace(".", "-"), data, true, true);
+            }
+
             container.set("serviceData", data, true, true);
             container.set("serviceForm", formData, true, true);
 
-            for (let i = 0; i < success.length; i++) {
+            for (let i = 0; i < parsedSuccess.length; i++) {
               // Trigger success callbacks
               container.resolve(
                 resolve(
-                  callbacks[success[i]],
+                  callbacks[parsedSuccess[i]],
                   "successParam" +
-                    success[i].charAt(0).toUpperCase() +
-                    success[i].slice(1),
+                    parsedSuccess[i].charAt(0).toUpperCase() +
+                    parsedSuccess[i].slice(1),
                   {}
                 )
               );
@@ -375,14 +378,14 @@
             element.style.backgroud = 'transparent';
             element.classList.add("load-service-end");
 
-            for (let i = 0; i < failure.length; i++) {
+            for (let i = 0; i < parsedFailure.length; i++) {
               // Trigger failure callbacks
               container.resolve(
                 resolve(
-                  callbacks[failure[i]],
+                  callbacks[parsedFailure[i]],
                   "failureParam" +
-                    failure[i].charAt(0).toUpperCase() +
-                    failure[i].slice(1),
+                    parsedFailure[i].charAt(0).toUpperCase() +
+                    parsedFailure[i].slice(1),
                   {}
                 )
               );

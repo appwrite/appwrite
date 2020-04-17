@@ -11,7 +11,7 @@
         data-param-collection-id="{{router.params.collection}}"
         data-param-document-id="{{router.params.id}}"
         data-scope="sdk"
-        data-event="load,database.updateDocument"
+        data-event="load"
         data-name="project-document"
         data-success="default">
 
@@ -38,11 +38,12 @@
                                 data-analytics-category="console"
                                 data-analytics-label="Update Database Document"
                                 data-service="{{|documentAction}}"
+                                data-name="project-document"
                                 data-scope="sdk"
                                 data-event="submit"
                                 data-success="alert,trigger"
                                 data-success-param-alert-text="Updated document successfully"
-                                data-success-param-trigger-events="database.updateDocument"
+                                data-success-param-trigger-events="database.xupdateDocument"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update document"
                                 data-failure-param-alert-classname="error">
@@ -50,7 +51,7 @@
                                 <label>&nbsp;</label>
 
                                 <div class="box">
-                                    <div data-ls-template="template-main" data-type="script" class="margin-bottom"></div>
+                                    <div data-ls-template="template-main" data-type="script"></div>
                                 </div>
 
                             </form>
@@ -241,8 +242,6 @@ $list = [
 
 <script type="text/html" id="template-main">
 
-    <div data-ls-bind="{{project-document}}"></div>
-        
     <input name="documentId" type="hidden" data-ls-bind="{{project-document.$id}}" />
     <input name="collectionId" type="hidden" data-ls-bind="{{project-collection.$id}}" />
 
@@ -275,7 +274,7 @@ $list = [
         </ul>
     </fieldset>
 
-    <div class="toggle margin-bottom" data-ls-ui-open>
+    <div class="toggle margin-bottom margin-top" data-ls-ui-open>
         <i class="icon-plus pull-end margin-top-tiny"></i>
         <i class="icon-minus pull-end margin-top-tiny"></i>
         
