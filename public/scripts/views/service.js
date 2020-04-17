@@ -15,15 +15,6 @@
       let failure = element.dataset["failure"] || "";
       let running = false;
 
-      success =
-        success && success != ""
-          ? success.split(",").map(element => element.trim())
-          : [];
-      failure =
-        failure && failure != ""
-          ? failure.split(",").map(element => element.trim())
-          : [];
-
       let callbacks = {
         hide: function() {
           return function() {
@@ -268,6 +259,17 @@
       let exec = function(event) {
 
         action = expression.parse(action);
+        success = expression.parse(success);
+        failure = expression.parse(failure);
+
+        success =
+          success && success != ""
+            ? success.split(",").map(element => element.trim())
+            : [];
+        failure =
+          failure && failure != ""
+            ? failure.split(",").map(element => element.trim())
+            : [];
 
         element.$lsSkip = true;
 
@@ -374,7 +376,7 @@
             element.classList.add("load-service-end");
 
             for (let i = 0; i < failure.length; i++) {
-              // Trigger success callbacks
+              // Trigger failure callbacks
               container.resolve(
                 resolve(
                   callbacks[failure[i]],
