@@ -3,6 +3,7 @@
 ## Features
 
 * New locale for Khmer
+* Added TypeScript type hinting to the JS SDK (@zevektor)
 
 ## Breaking Changes
 
