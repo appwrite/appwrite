@@ -232,6 +232,7 @@ $utopia->get('/v1/database/collections/:collectionId/logs')
             $response->json($output);
         }
     );
+
 $utopia->put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->label('scope', 'collections.write')
@@ -414,6 +415,18 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
                     ->setAttribute($parentProperty, $data, $parentPropertyType);
 
                 $data = $parentDocument->getArrayCopy();
+            }
+
+            /**
+             * Set default collection values
+             */
+            foreach ($collection->getAttribute('rules') as $key => $rule) {
+                $key = (isset($rule['key'])) ? $rule['key'] : '';
+                $default = (isset($rule['default'])) ? $rule['default'] : null;
+
+                if(!isset($data[$key])) {
+                    $data[$key] = $default;
+                }
             }
 
             try {
