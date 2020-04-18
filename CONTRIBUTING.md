@@ -125,7 +125,7 @@ This will allow the Appwrite community to have sufficient discussion about the n
 
 This is also important for the Appwrite lead developers to be able to give technical input and different emphasize regarding the feature design and architecture.
 
-## Setup
+## Setup From Source
 
 To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
 
@@ -137,10 +137,6 @@ Please note that these instructions are for setting a functional dev environment
 git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
 
 cd appwrite
-
-composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts
-
-npm install
 
 docker-compose up -d
 ```

@@ -2,4 +2,4 @@ The account service allows you to authenticate and manage a user account. You ca
 
 You can authenticate the user account by using multiple sign-in methods available. Once the user is authenticated, a new session object will be created to allow the user to access his or her private data and settings.
 
-This service also exposes an endpoint to save and read the [user preferences](/docs/account#updatePrefs) as a key-value object. This feature is handy if you want to allow extra customization in your app. Common usage for this feature may include saving the user preferred locale, timezone, or custom app theme. The usage of this feature is only limited only by your imagination.
+This service also exposes an endpoint to save and read the [user preferences](/docs/account#updatePrefs) as a key-value object. This feature is handy if you want to allow extra customization in your app. Common usage for this feature may include saving the user preferred locale, timezone, or custom app theme.
