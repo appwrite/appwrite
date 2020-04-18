@@ -4,6 +4,7 @@
 
 * Added support for Flutter iOS & Android apps
 * New locale for Khmer
+* Added TypeScript type hinting to the JS SDK (@zevektor)
 
 ## Breaking Changes
 
