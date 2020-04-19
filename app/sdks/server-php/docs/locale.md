@@ -10,7 +10,7 @@ GET https://appwrite.io/v1/locale
 
 ([IP Geolocation by DB-IP](https://db-ip.com)) **
 
-## List Countries
+## List Continents
 
 ```http request
 GET https://appwrite.io/v1/locale/continents

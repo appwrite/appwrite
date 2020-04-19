@@ -100,8 +100,8 @@ GET https://appwrite.io/v1/database/collections/{collectionId}/documents
 | order-type | string | Order direction. Possible values are DESC for descending order, or ASC for ascending order. | ASC |
 | order-cast | string | Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string. | string |
 | search | string | Search query. Enter any free text search. The database will try to find a match against all document attributes and children. |  |
-| first | integer | Return only first document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
-| last | integer | Return only last document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
+| first | integer | Return only the first document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
+| last | integer | Return only the last document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
 
 ## Create Document
 

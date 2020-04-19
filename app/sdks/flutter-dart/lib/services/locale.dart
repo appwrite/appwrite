@@ -32,7 +32,7 @@ class Locale extends Service {
         return client.call(HttpMethod.get, path: path, params: params, headers: headers);
     }
 
-     /// List Countries
+     /// List Continents
      ///
      /// List of all continents. You can use the locale header to get the data in a
      /// supported language.

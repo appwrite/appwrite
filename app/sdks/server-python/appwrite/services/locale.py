@@ -17,7 +17,7 @@ class Locale(Service):
         }, params)
 
     def get_continents(self):
-        """List Countries"""
+        """List Continents"""
 
         params = {}
         path = '/locale/continents'

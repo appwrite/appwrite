@@ -1173,9 +1173,9 @@
              * Create a new Collection.
              *
              * @param {string} name
-             * @param {array} read
-             * @param {array} write
-             * @param {array} rules
+             * @param {string[]} read
+             * @param {string[]} write
+             * @param {string[]} rules
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1254,9 +1254,9 @@
              *
              * @param {string} collectionId
              * @param {string} name
-             * @param {array} read
-             * @param {array} write
-             * @param {array} rules
+             * @param {string[]} read
+             * @param {string[]} write
+             * @param {string[]} rules
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1337,7 +1337,7 @@
              * modes](/docs/admin).
              *
              * @param {string} collectionId
-             * @param {array} filters
+             * @param {string[]} filters
              * @param {number} offset
              * @param {number} limit
              * @param {string} orderField
@@ -1407,8 +1407,8 @@
              *
              * @param {string} collectionId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @param {string} parentDocument
              * @param {string} parentProperty
              * @param {string} parentPropertyType
@@ -1503,8 +1503,8 @@
              * @param {string} collectionId
              * @param {string} documentId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1610,7 +1610,7 @@
             },
 
             /**
-             * List Countries
+             * List Continents
              *
              * List of all continents. You can use the locale header to get the data in a
              * supported language.
@@ -2112,7 +2112,7 @@
              *
              * @param {string} projectId
              * @param {string} name
-             * @param {array} scopes
+             * @param {string[]} scopes
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2182,7 +2182,7 @@
              * @param {string} projectId
              * @param {string} keyId
              * @param {string} name
-             * @param {array} scopes
+             * @param {string[]} scopes
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2512,7 +2512,7 @@
              * @param {number} security
              * @param {string} httpMethod
              * @param {string} httpUrl
-             * @param {array} httpHeaders
+             * @param {string[]} httpHeaders
              * @param {string} httpUser
              * @param {string} httpPass
              * @throws {Error}
@@ -2633,7 +2633,7 @@
              * @param {number} security
              * @param {string} httpMethod
              * @param {string} httpUrl
-             * @param {array} httpHeaders
+             * @param {string[]} httpHeaders
              * @param {string} httpUser
              * @param {string} httpPass
              * @throws {Error}
@@ -2798,7 +2798,7 @@
              *
              * @param {string} projectId
              * @param {string} name
-             * @param {array} events
+             * @param {string[]} events
              * @param {string} url
              * @param {number} security
              * @param {string} httpUser
@@ -2896,7 +2896,7 @@
              * @param {string} projectId
              * @param {string} webhookId
              * @param {string} name
-             * @param {array} events
+             * @param {string[]} events
              * @param {string} url
              * @param {number} security
              * @param {string} httpUser
@@ -3043,8 +3043,8 @@
              * read and write arguments.
              *
              * @param {File} file
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3115,8 +3115,8 @@
              * to update this resource.
              *
              * @param {string} fileId
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3346,7 +3346,7 @@
              * project.
              *
              * @param {string} name
-             * @param {array} roles
+             * @param {string[]} roles
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3501,7 +3501,7 @@
              *
              * @param {string} teamId
              * @param {string} email
-             * @param {array} roles
+             * @param {string[]} roles
              * @param {string} url
              * @param {string} name
              * @throws {Error}
