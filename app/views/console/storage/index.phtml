@@ -95,7 +95,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                 <table class="vertical">
                     <thead>
                         <tr>
-                            <th width="60"></th>
+                            <th width="40"></th>
                             <th>Filename</th>
                             <th width="160">Type</th>
                             <th width="100">Size</th>
@@ -107,7 +107,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                             <td class="hide">
                                 <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
                             </td>
-                            <td data-title="Name: ">
+                            <td data-title="Name: " class="text-one-liner">
                                 <div data-ui-modal class="box modal width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
@@ -187,7 +187,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 </div>
                             </td>
                             <td data-title="Type: ">
-                                <span data-ls-bind="{{file.mimeType}}" class="tag"></span>
+                                <span data-ls-bind="{{file.mimeType}}" class="text-fade text-size-small"></span>
                             </td>
                             <td data-title="Size: ">
                                 <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
