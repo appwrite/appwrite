@@ -1,0 +1,75 @@
+<?php
+
+use Utopia\View;
+
+$collection = $this->getParam('collection', null);
+$rules = $collection->getAttribute('rules', []);
+$key = $this->getParam('key', 'data');
+$parent = $this->getParam('parent', true);
+$namespace = $this->getParam('namespace', 'project-document');
+?>
+
+<?php if($parent): ?>
+<input name="documentId" type="hidden" data-ls-bind="{{router.params.id}}" />
+<input name="collectionId" type="hidden" data-ls-bind="{{router.params.collection}}" />
+<?php endif; ?>
+
+<fieldset name="<?php echo $this->escape($key); ?>" data-cast-to="object">
+    <?php if(!$parent): ?>
+    <input name="$id" type="hidden" data-ls-bind="{{<?php echo $this->escape($namespace); ?>.$id}}" />
+    <input name="$collection" type="hidden" data-ls-bind="{{<?php echo $this->escape($namespace); ?>.$collection}}" />
+    <input name="$permissions" type="hidden" data-ls-bind="{{<?php echo $this->escape($namespace); ?>.$permissions}}" data-cast-to="json" />
+    <?php endif; ?>
+    <ul>
+        <?php foreach($rules as $rule):
+            $key = (isset($rule['key'])) ? $rule['key'] : '';
+            $label = (isset($rule['label'])) ? $rule['label'] : '';
+            $type = (isset($rule['type'])) ? $rule['type'] : '';
+            $array = (isset($rule['array'])) ? $rule['array'] : false;
+            $required = (isset($rule['required'])) ? $rule['required'] : false;
+            $comp = new View(__DIR__.'/rules/'.$type.'.phtml');
+            $loop = new View(__DIR__.'/rules/array.phtml');
+
+            $comp
+                ->setParam('key', $key)
+                ->setParam('array', $array)
+                ->setParam('required', $required)
+                ->setParam('namespace', $namespace.'.'.$key)
+                ;
+                
+                $loop
+                ->setParam('key', $key)
+                ->setParam('array', $array)
+                ->setParam('required', $required)
+                ->setParam('namespace', $namespace.'.'.$key)
+                ->setParam('comp', $comp)
+            ;
+            ?>
+        <li>
+            <label class="margin-bottom-no">
+                <?php echo $this->escape($label); ?>
+
+                <?php if($array): ?>
+                    <span class="text-size-small text-fade">&nbsp;&nbsp;(Array)</span>
+                <?php endif; ?>
+            </label>
+            
+            <?php if($required): ?>
+                <div class="text-size-xs text-danger text-fade">required</div>
+            <?php endif; ?>
+            
+            <?php if(!$required): ?>
+                <div class="text-size-xs text-fade">optional</div>
+            <?php endif; ?>
+
+            <div class="margin-top-small margin-bottom">
+                <?php if(!$array): ?>
+                    <?php echo $comp->render(); ?>
+                <?php else: ?>
+                    <?php echo $loop->render(); ?>
+                <?php endif; ?>
+            </div>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+</fieldset>

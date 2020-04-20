@@ -1,0 +1,24 @@
+<?php
+$key = $this->getParam('key', '');
+$array = $this->getParam('array', false);
+$required = $this->getParam('required', '');
+$namespace = $this->getParam('namespace', '');
+?>
+
+<div class="drop-list bottom end" data-ls-ui-open="" data-button-text="" data-button-icon="icon-plus" data-button-selector="[data-toggler]" data-button-class="round dark small margin-top-negative-large pull-end" data-blur="1" tabindex="1">
+    <ul class="margin-top-negative-small">
+        <li data-move-up>
+            <button type="button" class="link"><i class="icon-up-dir"></i> Move Up</button>
+        </li>
+        <li data-move-down>
+            <button type="button" class="link"><i class="icon-down-dir"></i> Move Down</button>
+        </li>
+        <li data-remove>
+            <button type="button" class="link"><i class="icon-cancel"></i> Remove</button>
+        </li>
+    </ul>
+</div>
+
+<div class="info">
+    <div data-ls-template="/console/database/form?collectionId={{<?php echo $this->escape($namespace); ?>.$collection}}&namespace=<?php echo $this->escape($namespace); ?>&key=<?php echo $this->escape($key); ?>&parent=0&project={{router.params.project}}&version={{env.VERSION}}" class="margin-bottom-negative-small"></div>
+</div>

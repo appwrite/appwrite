@@ -8,8 +8,12 @@ use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
+use Utopia\Validator\Numeric;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 
 $utopia->init(function () use ($layout, $utopia) {
     $layout
@@ -79,6 +83,7 @@ $utopia->get('/console/account')
         ;
 
         $layout
+            ->setPath(__DIR__.'/../../views/layouts/strip.phtml')
             ->setParam('title', 'Account - '.APP_NAME)
             ->setParam('body', $page);
     });
@@ -178,7 +183,7 @@ $utopia->get('/console/database')
     });
 
 $utopia->get('/console/database/collection')
-    ->desc('Platform console project settings')
+    ->desc('Platform console project database collection')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout, $projectDB) {
@@ -190,7 +195,7 @@ $utopia->get('/console/database/collection')
     });
 
 $utopia->get('/console/database/document')
-    ->desc('Platform console project settings')
+    ->desc('Platform console project database document')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout, $projectDB) {
@@ -198,6 +203,38 @@ $utopia->get('/console/database/document')
 
         $layout
             ->setParam('title', APP_NAME.' - Database Document')
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/database/form')
+    ->desc('Platform console project database form')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->param('namespace', 'project-document', function () { return new Text(256); }, 'Namespace for vars.', true)
+    ->param('key', 'data', function () { return new Text(256); }, 'Object main key.', true)
+    ->param('parent', 1, function () { return new Range(0, 1); }, 'Is parent?.', true)
+    ->action(function ($collectionId, $namespace, $key, $parent) use ($layout, $projectDB) {
+        
+        Authorization::disable();
+        $collection = $projectDB->getDocument($collectionId, false);
+        Authorization::reset();
+
+        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        $page = new View(__DIR__.'/../../views/console/database/form.phtml');
+
+        $page
+            ->setParam('collection', $collection)
+            ->setParam('namespace', $namespace)
+            ->setParam('key', $key)
+            ->setParam('parent', $parent)
+        ;
+
+        $layout
+            ->setParam('title', APP_NAME.' - Database Form')
             ->setParam('body', $page);
     });
 

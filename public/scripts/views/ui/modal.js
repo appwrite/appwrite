@@ -8,6 +8,7 @@
       let buttonClass = expression.parse(element.dataset["buttonClass"] || "button-class");
       let buttonIcon = expression.parse(element.dataset["buttonIcon"] || '');
       let buttonEvent = expression.parse(element.dataset["buttonEvent"] || "");
+      let buttonHide = expression.parse(element.dataset["buttonHide"] || "");
       let buttonAlias = expression.parse(element.dataset["buttonAlias"] || "");
       let buttonElements = !buttonAlias
         ? [document.createElement(buttonElement)]
@@ -63,7 +64,7 @@
 
       element.classList.add("modal");
 
-      if (!buttonAlias) {
+      if (!buttonAlias && !buttonHide) {
         // Add to DOM when not alias
         buttonElements.forEach(button => {
           element.parentNode.insertBefore(button, element);

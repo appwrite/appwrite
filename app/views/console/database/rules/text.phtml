@@ -1,0 +1,6 @@
+<?php
+$key = $this->getParam('key', '');
+$required = $this->getParam('required', '');
+$namespace = $this->getParam('namespace', '');
+?>
+<input name="<?php echo $this->escape($key); ?>" type="text" autocomplete="off" data-ls-bind="{{<?php echo $this->escape($namespace); ?>}}" data-forms-text-direction data-forms-text-count<?php if($required): ?> required<?php endif; ?> />
