@@ -3,8 +3,12 @@ $key = $this->getParam('key', '');
 $array = $this->getParam('array', false);
 $required = $this->getParam('required', '');
 $namespace = $this->getParam('namespace', '');
+$list = $this->getParam('list', []);
+$list = (is_array($list)) ? $list : [];
+$list = ($array) ? $list : array_shift($list);
 ?>
 
+<?php if($array): ?>
 <div class="drop-list bottom end" data-ls-ui-open="" data-button-text="" data-button-icon="icon-plus" data-button-selector="[data-toggler]" data-button-class="round dark small margin-top-negative-large pull-end" data-blur="1" tabindex="1">
     <ul class="margin-top-negative-small">
         <li data-move-up>
@@ -18,7 +22,10 @@ $namespace = $this->getParam('namespace', '');
         </li>
     </ul>
 </div>
+<?php endif; ?>
 
 <div class="info">
-    <div data-ls-template="/console/database/form?collectionId={{<?php echo $this->escape($namespace); ?>.$collection}}&namespace=<?php echo $this->escape($namespace); ?>&key=<?php echo $this->escape($key); ?>&parent=0&project={{router.params.project}}&version={{env.VERSION}}" class="margin-bottom-negative-small"></div>
+    <?php if(!empty($list)): ?>
+        <div data-ls-template="/console/database/form?collectionId=<?php echo $this->escape($list); ?>&namespace=<?php echo $this->escape($namespace); ?>&key=<?php echo $this->escape($key); ?>&parent=0&project={{router.params.project}}&version={{env.VERSION}}" class="margin-bottom-negative-small"></div>
+    <?php endif; ?>
 </div>
