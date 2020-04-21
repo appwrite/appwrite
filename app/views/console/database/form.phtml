@@ -12,12 +12,21 @@ $namespace = $this->getParam('namespace', 'project-document');
 <?php if($parent): ?>
 <input name="documentId" type="hidden" data-ls-bind="{{router.params.id}}" />
 <input name="collectionId" type="hidden" data-ls-bind="{{router.params.collection}}" />
+<?php else: ?>
+<div class="margin-bottom-small text-size-small" data-ls-if="({{<?php echo $this->escape($namespace); ?>.$id}})">
+    <span data-ls-bind="Document #{{<?php echo $this->escape($namespace); ?>.$id}}"></span> &nbsp;
+    <a data-ls-attrs="href=/console/database/document?id={{<?php echo $this->escape($namespace); ?>.$id}}&collection={{<?php echo $this->escape($namespace); ?>.$collection}}&project={{router.params.project}}" class="pull-end" target="_blank">Edit in a new window <i class="icon-link-ext"></i></a>
+</div>
+<div class="margin-bottom-small text-size-small" data-ls-if="(!{{<?php echo $this->escape($namespace); ?>.$id}})">
+    Create a new child document
+</div>
+<hr class="margin-top-small margin-bottom-small" />
 <?php endif; ?>
 
 <fieldset name="<?php echo $this->escape($key); ?>" data-cast-to="object">
     <?php if(!$parent): ?>
     <input name="$id" type="hidden" data-ls-bind="{{<?php echo $this->escape($namespace); ?>.$id}}" />
-    <input name="$collection" type="hidden" data-ls-bind="{{<?php echo $this->escape($namespace); ?>.$collection}}" />
+    <input name="$collection" type="hidden" data-ls-bind="<?php echo $this->escape($collection->getId()); ?>" />
     <input name="$permissions" type="hidden" data-ls-bind="{{<?php echo $this->escape($namespace); ?>.$permissions}}" data-cast-to="json" />
     <?php endif; ?>
     <ul>
