@@ -71,14 +71,15 @@
                                         
                                         <h3 class="margin-bottom-large">Permissions</h3>
                                         
-                                        <label for="collection-read">Read Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
+                                        <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
                                         <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
                                                         
-                                        <label for="collection-write">Write Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                        <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
                                         <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
                                     </div>
 
-                                    <button>Update</button>
+                                    <button data-ls-if="({{project-document.$id}})">Update</button>
+                                    <button data-ls-if="(!{{project-document.$id}})">Create</button>
                                 </div>
 
                             </form>
