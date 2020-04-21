@@ -577,6 +577,60 @@ input[type=checkbox] {
   }
 }
 
+
+input[type=radio] {
+  width: 26px;
+  height: 16px;
+  position: relative;
+  -webkit-appearance: none;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  vertical-align: middle;
+  text-align: center;
+
+  &:after {
+    content: "";
+    display: block;
+    width: 20px;
+    height: 20px;
+    background: var(--config-color-background-input);
+    top: -5px;
+    border-radius: 50%;
+    position: absolute;
+    border: solid 3px var(--config-color-focus);
+    vertical-align: middle;
+  }
+
+  &:checked:after {
+    text-align: center;
+    font-family: "fontello";
+    content: '\f192';
+    font-size: 20px;
+    line-height: 26px;
+    color: var(--config-color-background-fade);
+    background: var(--config-color-focus);
+    border: 0;
+    width: 26px;
+    height: 26px;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus:after,
+  &:hover:after {
+    outline: none;
+    border-color: #000000;
+  }
+
+  &:checked:focus:after,
+  &:checked:hover:after {
+    border-color: var(--config-color-focus);
+  }
+}
+
 .input-copy {
   position: relative;
 

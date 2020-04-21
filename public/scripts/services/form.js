@@ -16,7 +16,7 @@
                     value = (value) ? JSON.parse(value) : [];
                     break;
                 case 'array':
-                    value = (value.constructor === Array) ? value : [value];
+                    value = (value && value.constructor && value.constructor === Array) ? value : [value];
                     break;
                 case 'array-empty':
                     value = [];

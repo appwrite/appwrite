@@ -408,6 +408,13 @@ window.ls.filter
 
     return 'database.updateDocument';
   })
+  .add("firstElement", function($value) {
+    if($value && $value[0]) {
+      return $value[0];
+    }
+
+    return $value;
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

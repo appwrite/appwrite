@@ -42,10 +42,10 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 
             <div class="text-fade text-size-small margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
-            <label for="file-read">Read Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+            <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
             
-            <label for="file-write">Write Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+            <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
             <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
 
             <hr />

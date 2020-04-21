@@ -85,7 +85,7 @@
         element.classList.remove("close");
 
         let form = element.querySelector('form');
-        let elements = [...form.elements] || [];
+        let elements = (form && form.elements) ? [...form.elements] : [];
 
         for (let index = 0; index < elements.length; index++) {
           let element = elements[index];
