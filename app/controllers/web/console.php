@@ -83,7 +83,6 @@ $utopia->get('/console/account')
         ;
 
         $layout
-            ->setPath(__DIR__.'/../../views/layouts/strip.phtml')
             ->setParam('title', 'Account - '.APP_NAME)
             ->setParam('body', $page);
     });
@@ -234,6 +233,7 @@ $utopia->get('/console/database/form')
         ;
 
         $layout
+            ->setPath(__DIR__.'/../../views/layouts/strip.phtml')
             ->setParam('title', APP_NAME.' - Database Form')
             ->setParam('body', $page);
     });
