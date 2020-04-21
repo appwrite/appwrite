@@ -27,6 +27,7 @@ $namespace = $this->getParam('namespace', 'project-document');
             $type = (isset($rule['type'])) ? $rule['type'] : '';
             $array = (isset($rule['array'])) ? $rule['array'] : false;
             $required = (isset($rule['required'])) ? $rule['required'] : false;
+            $list = (isset($rule['list'])) ? $rule['list'] : false;
             $comp = new View(__DIR__.'/rules/'.$type.'.phtml');
             $loop = new View(__DIR__.'/rules/array.phtml');
 
@@ -34,6 +35,7 @@ $namespace = $this->getParam('namespace', 'project-document');
                 ->setParam('key', $key)
                 ->setParam('array', $array)
                 ->setParam('required', $required)
+                ->setParam('list', $list)
                 ->setParam('namespace', $namespace.'.'.$key)
                 ;
                 
@@ -41,6 +43,7 @@ $namespace = $this->getParam('namespace', 'project-document');
                 ->setParam('key', $key)
                 ->setParam('array', $array)
                 ->setParam('required', $required)
+                ->setParam('list', $list)
                 ->setParam('namespace', $namespace.'.'.$key)
                 ->setParam('comp', $comp)
             ;
