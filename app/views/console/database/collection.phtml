@@ -16,6 +16,18 @@
         </h1>
     </div>
 
+    <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+        
+        <h2>View as JSON</h2>
+
+        <div class="margin-bottom">
+            <input type="hidden" data-ls-bind="{{project-collection}}" data-forms-code />
+        </div>
+
+        <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+    </div>
+
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/database/collection?id={{router.params.id}}&project={{router.params.project}}">
@@ -79,8 +91,8 @@
                                         <td data-ls-attrs="data-title={{rule.label}}:">
                                             <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{project-collection.$id}}&project={{router.params.project}}">
                                                 <span data-ls-if="{{rule.type}} !== 'document'" data-ls-bind="{{node|documentLabel}}"></span>
-                                                <span data-ls-if="{{rule.type}} == 'document' && {{rule.array}} && {{node|documentLabel}}">Linked Documents</span>
-                                                <span data-ls-if="{{rule.type}} == 'document' && !{{rule.array}} && {{node|documentLabel}}" class="tag">Linked Document</span>
+                                                <span data-ls-if="{{rule.type}} == 'document' && {{rule.array}}">Linked Documents</span>
+                                                <span data-ls-if="{{rule.type}} == 'document' && !{{rule.array}}" class="tag">Linked Document</span>
                                             </a>
                                         </th>
                                     </tr>
@@ -260,10 +272,10 @@
                                     
                                     <h3 class="margin-bottom-large">Permissions</h3>
                                     
-                                    <label for="collection-read">Read Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
+                                    <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
                                     <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.read}}" placeholder="User ID, Team ID or Role" />
                                                     
-                                    <label for="collection-write">Write Permissions <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                    <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
                                     <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
                                 </div>
 
@@ -278,6 +290,7 @@
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-collection.dateUpdated|date-text}}"></span></li>
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-collection.dateCreated|date-text}}"></span></li>
                         </ul>
@@ -418,11 +431,29 @@
 </script>
 
 <script type="text/html" id="template-validation-document">
+    <div data-ls-template="template-validation-document-array-{{rule.array}}" data-type="script"></div>
+
+    <div class="margin-bottom text-align-center margin-top-xl margin-bottom-large" data-ls-if="{{project-collections.sum}} == 1">
+        No Collections Found.
+    </div>
+</script>
+
+<script type="text/html" id="template-validation-document-array-true">
     <label data-ls-attrs="for=rule-list-{{rule.$id}}" class="margin-bottom">Allowed Collections</label>
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" class="tiles cell-3 margin-bottom-negative" style="visibility: hidden">
-        <div class="margin-bottom">
+        <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
             <input type="checkbox" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list}}" /> <span data-ls-bind="{{project.name}}"></span>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="template-validation-document-array-false">
+    <label data-ls-attrs="for=rule-list-{{rule.$id}}" class="margin-bottom">Allowed Collection</label>
+
+    <div data-ls-loop="project-collections.collections" data-ls-as="project" class="tiles cell-3 margin-bottom-negative" style="visibility: hidden">
+        <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
+            <input type="radio" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" /> <span data-ls-bind="{{project.name}}"></span>
         </div>
     </div>
 </script>
