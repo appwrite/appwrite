@@ -26,6 +26,6 @@ $list = ($array) ? $list : array_shift($list);
 
 <div class="info">
     <?php if(!empty($list)): ?>
-        <div data-ls-template="/console/database/form?collectionId=<?php echo $this->escape($list); ?>&namespace=<?php echo $this->escape($namespace); ?>&key=<?php echo $this->escape($key); ?>&parent=0&project={{router.params.project}}&version={{env.VERSION}}" class="margin-bottom-negative-small"></div>
+        <div data-ls-template="/console/database/form?collectionId=<?php echo $this->escape($list); ?>&namespace=<?php echo $this->escape($namespace); ?>&key=<?php echo $this->escape($key); ?>&parent=0&project={{router.params.project}}&version={{env.VERSION}}&buster={{project-collection.dateUpdated}}" class="margin-bottom-negative-small"></div>
     <?php endif; ?>
 </div>
