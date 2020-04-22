@@ -1121,7 +1121,6 @@ ol {
     .func-start(-10px);
     max-width: 280px;
     min-width: 240px;
-    overflow: hidden;
 
     &:before {
       border: solid;
@@ -1132,6 +1131,11 @@ ol {
       position: absolute;
       z-index: 99;
       .func-start(30px);
+    }
+
+    &.arrow-end:before {
+      .func-end(30px);
+      .func-start(unset);
     }
 
     li {
@@ -1147,13 +1151,13 @@ ol {
         height: auto;
         line-height: 30px;
         display: inline-block;
-        padding: 10px 25px;
+        padding: 10px 15px;
         color: inherit;
         font-size: 14px;
         border: none;
         max-width: 260px;
         cursor: pointer;
-        width: 100%;
+        width: ~"calc(100% - 30px)";
         text-align: @config-start;
 
         &:hover {

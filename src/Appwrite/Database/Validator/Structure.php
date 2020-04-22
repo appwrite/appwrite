@@ -28,7 +28,7 @@ class Structure extends Validator
             'label' => '$id',
             '$collection' => Database::SYSTEM_COLLECTION_RULES,
             'key' => '$id',
-            'type' => 'uid',
+            'type' => 'id',
             'default' => null,
             'required' => false,
             'array' => false,
@@ -37,7 +37,7 @@ class Structure extends Validator
             'label' => '$collection',
             '$collection' => Database::SYSTEM_COLLECTION_RULES,
             'key' => '$collection',
-            'type' => 'uid',
+            'type' => 'id',
             'default' => null,
             'required' => true,
             'array' => false,
@@ -147,7 +147,7 @@ class Structure extends Validator
             $validator = null;
 
             switch ($ruleType) {
-                case 'uid':
+                case 'id':
                     $validator = new UID();
                     break;
                 case 'text':
@@ -179,8 +179,14 @@ class Structure extends Validator
                     break;
                 case 'document':
                     $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : []);
-                    // $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : [],
-                    //     ['$permissions' => (isset($document['$permissions'])) ? $document['$permissions'] : []]);
+                    $value = $document->getAttribute($key);
+                    break;
+                case 'documentId':
+                    $validator = new DocumentId($this->database, (isset($rule['list'])) ? $rule['list'] : []);
+                    $value = $document->getAttribute($key);
+                    break;
+                case 'fileId':
+                    $validator = new DocumentId($this->database, [Database::SYSTEM_COLLECTION_FILES]);
                     $value = $document->getAttribute($key);
                     break;
             }
