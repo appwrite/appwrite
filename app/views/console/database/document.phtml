@@ -70,8 +70,6 @@ $collection = $this->getParam('collection', null);
 
                                     <?php
 
-                                    echo $collection->getAttribute('name');
-
                                     $comp = new View(__DIR__.'/form.phtml');
                         
                                     $comp
@@ -118,7 +116,7 @@ $collection = $this->getParam('collection', null);
                             </div>
 
                             <ul class="margin-bottom-large text-fade text-size-small">
-                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny link"></i> <button data-ls-ui-trigger="open-json" class="link">View as JSON</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                             </ul>
 
                             <div data-ls-if="({{project-document.$id}})">
