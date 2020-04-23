@@ -1,3 +1,8 @@
+<?php
+use Utopia\View;
+
+$collection = $this->getParam('collection', null);
+?>
 <div
     data-service="database.getCollection"
     data-param-collection-id="{{router.params.collection}}"
@@ -16,7 +21,7 @@
 
         <div class="cover">
             <h1 class="zone xl margin-bottom-large">
-                <a data-ls-attrs="href=/console/database/collection?id={{router.params.collection}}&project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Collection</a>
+                <a data-ls-attrs="href=/console/database/collection?id={{router.params.collection}}&project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> <span data-ls-bind="{{project-collection.name}}">Collection</span></a>
 
                 <br />
 
@@ -63,7 +68,21 @@
 
                                 <div class="box">
 
-                                    <div data-ls-template="/console/database/form?collectionId={{router.params.collection}}&project={{router.params.project}}&version={{env.VERSION}}&buster={{project-collection.dateUpdated}}"></div>
+                                    <?php
+
+                                    echo $collection->getAttribute('name');
+
+                                    $comp = new View(__DIR__.'/form.phtml');
+                        
+                                    $comp
+                                        ->setParam('collection', $collection)
+                                        ->setParam('namespace', 'project-document')
+                                        ->setParam('key', 'data')
+                                        ->setParam('parent', 1)
+                                    ;
+
+                                    echo $comp->render();
+                                    ?>
 
                                     <div class="toggle margin-bottom" data-ls-ui-open>
                                         <i class="icon-plus pull-end margin-top-tiny"></i>

@@ -197,8 +197,19 @@ $utopia->get('/console/database/document')
     ->desc('Platform console project database document')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout, $projectDB) {
+    ->param('collection', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->action(function ($collection) use ($layout, $projectDB) {
+        Authorization::disable();
+        $collection = $projectDB->getDocument($collection, false);
+        Authorization::reset();
+
+        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
+        }
+
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
+
+        $page->setParam('collection', $collection);
 
         $layout
             ->setParam('title', APP_NAME.' - Database Document')
@@ -209,14 +220,14 @@ $utopia->get('/console/database/form')
     ->desc('Platform console project database form')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->param('collection', '', function () { return new UID(); }, 'Collection unique ID.')
     ->param('namespace', 'project-document', function () { return new Text(256); }, 'Namespace for vars.', true)
     ->param('key', 'data', function () { return new Text(256); }, 'Object main key.', true)
     ->param('parent', 1, function () { return new Range(0, 1); }, 'Is parent?.', true)
-    ->action(function ($collectionId, $namespace, $key, $parent) use ($layout, $projectDB) {
+    ->action(function ($collection, $namespace, $key, $parent) use ($layout, $projectDB) {
         
         Authorization::disable();
-        $collection = $projectDB->getDocument($collectionId, false);
+        $collection = $projectDB->getDocument($collection, false);
         Authorization::reset();
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {

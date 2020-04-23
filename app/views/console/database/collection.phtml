@@ -89,7 +89,7 @@
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                                     <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
                                         <td data-ls-attrs="data-title={{rule.label}}:">
-                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{project-collection.$id}}&project={{router.params.project}}">
+                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}">
                                                 <span data-ls-if="{{rule.type}} !== 'document'" data-ls-bind="{{node|documentLabel}}"></span>
                                                 <span data-ls-if="{{rule.type}} == 'document' && {{rule.array}}">Linked Documents</span>
                                                 <span data-ls-if="{{rule.type}} == 'document' && !{{rule.array}}" class="tag">Linked Document</span>

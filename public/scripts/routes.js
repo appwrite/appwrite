@@ -112,17 +112,16 @@ window.ls.router
     project: true
   })
   .add("/console/database/document", {
-    template: "/console/database/document?version=" + APP_ENV.VERSION,
-    scope: "console",
-    project: true
-  })
-  .add("/console/database/form", {
-    template: "/console/database/form?version=" + APP_ENV.VERSION,
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.VERSION;
+    },
     scope: "console",
     project: true
   })
   .add("/console/database/document/:tab", {
-    template: "/console/database/document?version=" + APP_ENV.VERSION,
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.VERSION;
+    },
     scope: "console",
     project: true
   })
