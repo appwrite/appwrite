@@ -57,7 +57,7 @@ services:
     depends_on:
       - mariadb
       - redis
-      - smtp
+      # - smtp
       - clamav
       - influxdb
       - telegraf
@@ -99,14 +99,22 @@ services:
       - MYSQL_PASSWORD=password
     command: 'mysqld --innodb-flush-method=fsync'
 
-  smtp:
-    image: appwrite/smtp:1.0.1
+  maildev:
+    image: djfarrelly/maildev
     restart: unless-stopped
+    ports:
+      - '1080:80'
     networks:
       - appwrite
-    environment:
-      - MAILNAME=appwrite
-      - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
+
+  # smtp:
+  #   image: appwrite/smtp:1.0.1
+  #   restart: unless-stopped
+  #   networks:
+  #     - appwrite
+  #   environment:
+  #     - MAILNAME=appwrite
+  #     - RELAY_NETWORKS=:192.168.0.0/24:10.0.0.0/16
 
   redis:
     image: redis:5.0
@@ -161,13 +169,23 @@ services:
   #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
   #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
-  maildev:
-    image: djfarrelly/maildev
+  chronograf:
+    image: chronograf:1.5
     restart: unless-stopped
-    ports:
-      - '1080:80'
     networks:
-      - appwrite
+    - appwrite
+    volumes:
+    - appwrite-chronograf:/var/lib/chronograf
+    ports:
+    - "8888:8888"
+    environment:
+    - INFLUXDB_URL=http://influxdb:8086
+    - KAPACITOR_URL=http://kapacitor:9092
+    - AUTH_DURATION=48h
+    - TOKEN_SECRET=duperduper5674829!jwt
+    - GH_CLIENT_ID=d86f7145a41eacfc52cc
+    - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
+    - GH_ORGS=appwrite
 
 networks:
   gateway:
@@ -180,4 +198,5 @@ volumes:
   appwrite-uploads:
   appwrite-certificates:
   appwrite-influxdb:
+  appwrite-chronograf:
   appwrite-config:
