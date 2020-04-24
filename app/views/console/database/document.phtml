@@ -2,6 +2,7 @@
 use Utopia\View;
 
 $collection = $this->getParam('collection', null);
+$rules = $collection->getAttribute('rules', []);
 ?>
 <div
     data-service="database.getCollection"
@@ -67,36 +68,41 @@ $collection = $this->getParam('collection', null);
                                 <label>&nbsp;</label>
 
                                 <div class="box">
+                                    <?php if(empty($rules)): ?>
+                                        <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
+                                            <h4 class="text-fade text-size-small">No attribute rules added yet.<br /><br /><a data-ls-attrs="href=/console/database/collection/update?id={{router.params.collection}}&project={{router.params.project}}">Update Collection</a></h4>
+                                        </div>
+                                    <?php else: ?>
+                                        <?php
 
-                                    <?php
+                                        $comp = new View(__DIR__.'/form.phtml');
+                            
+                                        $comp
+                                            ->setParam('collection', $collection)
+                                            ->setParam('namespace', 'project-document')
+                                            ->setParam('key', 'data')
+                                            ->setParam('parent', 1)
+                                        ;
 
-                                    $comp = new View(__DIR__.'/form.phtml');
-                        
-                                    $comp
-                                        ->setParam('collection', $collection)
-                                        ->setParam('namespace', 'project-document')
-                                        ->setParam('key', 'data')
-                                        ->setParam('parent', 1)
-                                    ;
+                                        echo $comp->render();
+                                        ?>
 
-                                    echo $comp->render();
-                                    ?>
+                                        <div class="toggle margin-bottom" data-ls-ui-open>
+                                            <i class="icon-plus pull-end margin-top-tiny"></i>
+                                            <i class="icon-minus pull-end margin-top-tiny"></i>
+                                            
+                                            <h3 class="margin-bottom-large">Permissions</h3>
+                                            
+                                            <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
+                                            <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                                            
+                                            <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                            <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                        </div>
 
-                                    <div class="toggle margin-bottom" data-ls-ui-open>
-                                        <i class="icon-plus pull-end margin-top-tiny"></i>
-                                        <i class="icon-minus pull-end margin-top-tiny"></i>
-                                        
-                                        <h3 class="margin-bottom-large">Permissions</h3>
-                                        
-                                        <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
-                                        <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-document.$permissions.read}}" placeholder="User ID, Team ID or Role" />
-                                                        
-                                        <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                                        <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
-                                    </div>
-
-                                    <button data-ls-if="({{project-document.$id}})">Update</button>
-                                    <button data-ls-if="(!{{project-document.$id}})">Create</button>
+                                        <button data-ls-if="({{project-document.$id}})">Update</button>
+                                        <button data-ls-if="(!{{project-document.$id}})">Create</button>
+                                    <?php endif; ?>
                                 </div>
 
                             </form>

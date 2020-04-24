@@ -29,6 +29,7 @@ $namespace = $this->getParam('namespace', 'project-document');
     <input name="$collection" type="hidden" data-ls-bind="<?php echo $this->escape($collection->getId()); ?>" />
     <input name="$permissions" type="hidden" data-ls-bind="{{<?php echo $this->escape($namespace); ?>.$permissions}}" data-cast-to="json" />
     <?php endif; ?>
+
     <ul>
         <?php foreach($rules as $rule):
             $key = (isset($rule['key'])) ? $rule['key'] : '';

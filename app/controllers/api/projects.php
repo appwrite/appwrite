@@ -153,13 +153,42 @@ $utopia->get('/v1/projects/:projectId/usage')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->param('range', 'monthly', function () { return new WhiteList(['daily', 'monthly', 'last30', 'last90']); }, 'Date range.', true)
     ->action(
-        function ($projectId) use ($response, $consoleDB, $projectDB, $register) {
+        function ($projectId, $range) use ($response, $consoleDB, $projectDB, $register) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
+
+            $period = [
+                'daily' => [
+                    'start' => DateTime::createFromFormat('U', strtotime('today')),
+                    'end' => DateTime::createFromFormat('U', strtotime('tomorrow')),
+                    'group' => '1m',
+                ],
+                'monthly' => [
+                    'start' => DateTime::createFromFormat('U', strtotime('midnight first day of this month')),
+                    'end' => DateTime::createFromFormat('U', strtotime('midnight last day of this month')),
+                    'group' => '1d',
+                ],
+                'last30' => [
+                    'start' => DateTime::createFromFormat('U', strtotime('-30 days')),
+                    'end' => DateTime::createFromFormat('U', strtotime('today')),
+                    'group' => '1d',
+                ],
+                'last90' => [
+                    'start' => DateTime::createFromFormat('U', strtotime('-90 days')),
+                    'end' => DateTime::createFromFormat('U', strtotime('today')),
+                    'group' => '1d',
+                ],
+                // 'yearly' => [
+                //     'start' => DateTime::createFromFormat('U', strtotime('midnight first day of january')),
+                //     'end' => DateTime::createFromFormat('U', strtotime('midnight last day of december')),
+                //     'group' => '4w',
+                // ],
+            ];
 
             $client = $register->get('influxdb');
 
@@ -167,14 +196,12 @@ $utopia->get('/v1/projects/:projectId/usage')
             $network = [];
 
             if ($client) {
-                $start = DateTime::createFromFormat('U', strtotime('last day of last month'));
-                $start = $start->format(DateTime::RFC3339);
-                $end = DateTime::createFromFormat('U', strtotime('last day of this month'));
-                $end = $end->format(DateTime::RFC3339);
+                $start = $period[$range]['start']->format(DateTime::RFC3339);
+                $end = $period[$range]['end']->format(DateTime::RFC3339);
                 $database = $client->selectDB('telegraf');
 
                 // Requests
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time(1d) FILL(null)');
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_requests_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
                 $points = $result->getPoints();
 
                 foreach ($points as $point) {
@@ -185,7 +212,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 }
 
                 // Network
-                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time(1d) FILL(null)');
+                $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_network_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
                 $points = $result->getPoints();
 
                 foreach ($points as $point) {

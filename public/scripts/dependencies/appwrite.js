@@ -2784,7 +2784,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getUsage: function(projectId) {
+            getUsage: function(projectId, range = 'monthly') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2792,6 +2792,10 @@
                 let path = '/projects/{projectId}/usage'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 let payload = {};
+
+                if(range) {
+                    payload['range'] = range;
+                }
 
                 return http
                     .get(path, {

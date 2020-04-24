@@ -57,7 +57,7 @@ if(success===undefined){throw new Error('Missing required parameter: "success"')
 if(failure===undefined){throw new Error('Missing required parameter: "failure"');}
 let path='/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}','g'),provider);let payload={};if(success){payload['success']=success;}
 if(failure){payload['failure']=failure;}
-payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');console.log(config);return config.endpoint+path+((query)?'?'+query:'');},deleteSession:function(sessionId){if(sessionId===undefined){throw new Error('Missing required parameter: "sessionId"');}
+payload['project']=config.project;payload['key']=config.key;let query=Object.keys(payload).map(key=>key+'='+encodeURIComponent(payload[key])).join('&');return config.endpoint+path+((query)?'?'+query:'');},deleteSession:function(sessionId){if(sessionId===undefined){throw new Error('Missing required parameter: "sessionId"');}
 let path='/account/sessions/{sessionId}'.replace(new RegExp('{sessionId}','g'),sessionId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},createVerification:function(url){if(url===undefined){throw new Error('Missing required parameter: "url"');}
 let path='/account/verification';let payload={};if(url){payload['url']=url;}
 return http.post(path,{'content-type':'application/json',},payload);},updateVerification:function(userId,secret){if(userId===undefined){throw new Error('Missing required parameter: "userId"');}
@@ -259,8 +259,9 @@ if(httpUser){payload['httpUser']=httpUser;}
 if(httpPass){payload['httpPass']=httpPass;}
 return http.put(path,{'content-type':'application/json',},payload);},deleteTask:function(projectId,taskId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(taskId===undefined){throw new Error('Missing required parameter: "taskId"');}
-let path='/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{taskId}','g'),taskId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getUsage:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
-let path='/projects/{projectId}/usage'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},listWebhooks:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/tasks/{taskId}'.replace(new RegExp('{projectId}','g'),projectId).replace(new RegExp('{taskId}','g'),taskId);let payload={};return http.delete(path,{'content-type':'application/json',},payload);},getUsage:function(projectId,range='monthly'){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
+let path='/projects/{projectId}/usage'.replace(new RegExp('{projectId}','g'),projectId);let payload={};if(range){payload['range']=range;}
+return http.get(path,{'content-type':'application/json',},payload);},listWebhooks:function(projectId){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 let path='/projects/{projectId}/webhooks'.replace(new RegExp('{projectId}','g'),projectId);let payload={};return http.get(path,{'content-type':'application/json',},payload);},createWebhook:function(projectId,name,events,url,security,httpUser='',httpPass=''){if(projectId===undefined){throw new Error('Missing required parameter: "projectId"');}
 if(name===undefined){throw new Error('Missing required parameter: "name"');}
 if(events===undefined){throw new Error('Missing required parameter: "events"');}

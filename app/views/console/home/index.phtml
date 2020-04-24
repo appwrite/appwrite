@@ -28,7 +28,8 @@ $graph = $this->getParam('graph', false);
             data-service="projects.getUsage"
             data-event="load"
             data-name="usage"
-            data-param-project-id="{{router.params.project}}">
+            data-param-project-id="{{router.params.project}}"
+            data-param-range="monthly">
 
             <?php if (!$graph) : ?>
                 <div class="row responsive">
