@@ -150,6 +150,10 @@
                   case 'boolean':
                     document[element.key] = element.default || false;
                     break;
+
+                  case 'document':
+                    document[element.key] = element.default || {'$id': '', '$collection': '', '$permissions': {}};
+                    break;
                 
                   default:
                     document[element.key] = null;

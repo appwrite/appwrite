@@ -387,26 +387,24 @@ window.ls.filter
         break;
     }
   })
-  .add("documentRequired", function($value, rule, filter) {
-    if(!$value || $value === 'false') {
-      return '';
-    }
-
-    return 'required';
-  })
   .add("documentAction", function(container) {
     let collection = container.get('project-collection');
     let document = container.get('project-document');
-
-    console.log('isnew?');
-    console.log(document);
-    console.log(document.$id);
 
     if(collection && document && !document.$id) {
       return 'database.createDocument';
     }
 
     return 'database.updateDocument';
+  })
+  .add("documentSuccess", function(container) {
+    let document = container.get('project-document');
+
+    if(document && !document.$id) {
+      return ',redirect';
+    }
+
+    return '';
   })
   .add("firstElement", function($value) {
     if($value && $value[0]) {

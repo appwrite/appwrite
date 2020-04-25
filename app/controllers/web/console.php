@@ -209,43 +209,13 @@ $utopia->get('/console/database/document')
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
 
-        $page->setParam('collection', $collection);
-
-        $layout
-            ->setParam('title', APP_NAME.' - Database Document')
-            ->setParam('body', $page);
-    });
-
-$utopia->get('/console/database/form')
-    ->desc('Platform console project database form')
-    ->label('permission', 'public')
-    ->label('scope', 'console')
-    ->param('collection', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->param('namespace', 'project-document', function () { return new Text(256); }, 'Namespace for vars.', true)
-    ->param('key', 'data', function () { return new Text(256); }, 'Object main key.', true)
-    ->param('parent', 1, function () { return new Range(0, 1); }, 'Is parent?.', true)
-    ->action(function ($collection, $namespace, $key, $parent) use ($layout, $projectDB) {
-        
-        Authorization::disable();
-        $collection = $projectDB->getDocument($collection, false);
-        Authorization::reset();
-
-        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            throw new Exception('Collection not found', 404);
-        }
-
-        $page = new View(__DIR__.'/../../views/console/database/form.phtml');
-
         $page
+            ->setParam('db', $projectDB)
             ->setParam('collection', $collection)
-            ->setParam('namespace', $namespace)
-            ->setParam('key', $key)
-            ->setParam('parent', $parent)
         ;
 
         $layout
-            ->setPath(__DIR__.'/../../views/layouts/strip.phtml')
-            ->setParam('title', APP_NAME.' - Database Form')
+            ->setParam('title', APP_NAME.' - Database Document')
             ->setParam('body', $page);
     });
 

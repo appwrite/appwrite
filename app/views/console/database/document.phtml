@@ -1,8 +1,12 @@
 <?php
+
 use Utopia\View;
+use Appwrite\Database\Validator\Authorization;
 
 $collection = $this->getParam('collection', null);
+$db = $this->getParam('db', null);
 $rules = $collection->getAttribute('rules', []);
+$namespace = 'project-document';
 ?>
 <div
     data-service="database.getCollection"
@@ -16,7 +20,7 @@ $rules = $collection->getAttribute('rules', []);
         data-param-collection-id="{{router.params.collection}}"
         data-param-document-id="{{router.params.id}}"
         data-scope="sdk"
-        data-event="load"
+        data-event="load,database.updateDocument"
         data-name="project-document"
         data-success="default">
 
@@ -58,9 +62,10 @@ $rules = $collection->getAttribute('rules', []);
                                 data-name="project-document"
                                 data-scope="sdk"
                                 data-event="submit"
-                                data-success="alert,trigger"
+                                data-success="alert,trigger{{|documentSuccess}}"
                                 data-success-param-alert-text="Updated document successfully"
-                                data-success-param-trigger-events="database.xupdateDocument"
+                                data-success-param-trigger-events="database.updateDocument"
+                                data-success-param-redirect-url="/console/database/document?id={{serviceData.$id}}&collection={{router.params.collection}}&project={{router.params.project}}"
                                 data-failure="alert"
                                 data-failure-param-alert-text="Failed to update document"
                                 data-failure-param-alert-classname="error">
@@ -70,7 +75,7 @@ $rules = $collection->getAttribute('rules', []);
                                 <div class="box">
                                     <?php if(empty($rules)): ?>
                                         <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
-                                            <h4 class="text-fade text-size-small">No attribute rules added yet.<br /><br /><a data-ls-attrs="href=/console/database/collection/update?id={{router.params.collection}}&project={{router.params.project}}">Update Collection</a></h4>
+                                            <h4 class="text-fade text-size-small">No attribute rules added yet.<br /><br /><a data-ls-attrs="href=/console/database/collection/settings?id={{router.params.collection}}&project={{router.params.project}}">Update Collection</a></h4>
                                         </div>
                                     <?php else: ?>
                                         <?php
@@ -79,7 +84,7 @@ $rules = $collection->getAttribute('rules', []);
                             
                                         $comp
                                             ->setParam('collection', $collection)
-                                            ->setParam('namespace', 'project-document')
+                                            ->setParam('namespace', $namespace)
                                             ->setParam('key', 'data')
                                             ->setParam('parent', 1)
                                         ;
@@ -156,3 +161,46 @@ $rules = $collection->getAttribute('rules', []);
         </div>
     </div>
 </div>
+
+<?php foreach($rules as $rule):
+    $key = (isset($rule['key'])) ? $rule['key'] : '';
+    $label = (isset($rule['label'])) ? $rule['label'] : '';
+    $type = (isset($rule['type'])) ? $rule['type'] : '';
+    $list = (isset($rule['list'])) ? $rule['list'] : false;
+    $array = (isset($rule['array'])) ? $rule['array'] : false;
+
+    if($type !== 'document') {
+        continue;
+    }
+?>
+    <?php foreach($list as $item):
+        if($item === $collection->getId()) {
+            continue; // Do not allow rec recrusion
+        }
+
+        Authorization::disable(); //TODO Try and avoid calling the DB from the template
+        $childCollection = $db->getDocument($item, false);
+        Authorization::reset();
+
+        if(!$childCollection->getId()) {
+            continue;
+        }
+    ?>
+        <script type="text/html" id="collection-<?php echo ($array) ? 'array-' : ''; ?><?php echo $this->escape($childCollection->getId()); ?>">
+            <?php 
+
+            $comp = new View(__DIR__.'/form.phtml');
+                                        
+            $comp
+                ->setParam('collection', $childCollection)
+                ->setParam('namespace', ($array) ? 'node' : $namespace.'.'.$key)
+                ->setParam('key', $key)
+                ->setParam('array', $array)
+                ->setParam('parent', 0)
+            ;
+
+            echo $comp->render();
+            ?>
+        </script>
+    <?php endforeach; ?>
+<?php endforeach; ?>

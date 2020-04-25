@@ -1,10 +1,16 @@
 <?php
 $key = $this->getParam('key', '');
+$type = $this->getParam('type', '');
 $required = $this->getParam('required', '');
 $comp = $this->getParam('comp', '');
 $namespace = $this->getParam('namespace', '');
+$list = $this->getParam('list', []);
 
-$comp->setParam('namespace', 'node.');
+$comp->setParam('namespace', 'node');
+
+if($type === 'document') {
+    $comp->setParam('key', null);
+}
 ?>
 
 <input type="hidden" name="<?php echo $this->escape($key); ?>"<?php if($required): ?> required<?php endif; ?> data-cast-to="array-empty">
@@ -31,7 +37,7 @@ $comp->setParam('namespace', 'node.');
                 <?php echo $comp->render(); ?>
             </div>
         </div>
-
+        
         <hr class="margin-top-no" />
     </li>
 </ul>
