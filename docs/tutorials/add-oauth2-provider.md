@@ -4,7 +4,7 @@ OAuth2 providers help users to log into apps and websites without providing pass
 
 ### Adding a new provider
 
-Add a new OAuth2 provider to the list of providers in the config file array located in `./app/config/providers.php`.
+Add a new OAuth2 provider to the list of providers in the config file array located inside `./app/config/providers.php`.
 
 ```php
 Code snippet ...
@@ -24,7 +24,7 @@ Valid name examples: `exampleOne`, `exampleTwo`. Invalid examples: `ExampleOne`,
 
 ### Adding provider logo
 
-Place the logo image of the new provider in this folder: `./public/images/oauth2`. Your logo should be a *.png* 100×100px file with the same name as the provider name specified in the configuration array, but in lowercase. Leave 30px padding around the logo for visual consistency with other providers.
+Place the logo image of the new provider in `./public/images/oauth2` folder. The logo should be a *.png* 100×100px file with the same name as the provider name as specified in the configuration array, but in lowercase. Leave a 30px padding around the logo for visual consistency with other providers.
 
 ### Adding provider class
 
@@ -34,9 +34,9 @@ Create a new class that extends the basic OAuth2 provider abstract class in this
 ./src/Auth/OAuth/ProviderName
 ```
 
-Note that the class name should start with a capital letter as per [PHP FIG standard requirements](https://www.php-fig.org/bylaws/psr-naming-conventions/).
+The class name should start with a capital letter as per [PHP FIG standard requirements](https://www.php-fig.org/bylaws/psr-naming-conventions/).
 
-We recommend implementing the login flow for a new provider by using an existing implementation of another provider as a template. Include references to resources and API docs used to implement the provider's OAuth2 protocol as comments inside the implementation and in the accompanying documentation.
+We recommend implementing login flows for a new provider by using an existing implementation of another provider as a template. Include references to resources and API docs used to implement the provider's OAuth2 protocol as comments inside the implementation and in the accompanying documentation.
 
 ### Testing your provider
 
