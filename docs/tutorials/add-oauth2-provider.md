@@ -1,10 +1,10 @@
 # Adding a New OAuth2 Provider
 
-OAuth2 providers help users to log into apps and websites without providing passwords or any other type of credentials. Appwrite supports **major** OAuth2 providers and some less common providers, where possible. The current architecture limits the number of OAuth2 providers that can be accepted.
+OAuth2 providers help users to log into apps and websites without providing passwords or any other type of credentials. Appwrite supports major OAuth2 providers and some less common providers, where possible.
 
 ### Adding a new provider
 
-Add a new OAuth2 provider to the list of providers in config file array located in `./app/config/providers.php`.
+Add a new OAuth2 provider to the list of providers in the config file array located in `./app/config/providers.php`.
 
 ```php
 Code snippet ...
@@ -17,9 +17,10 @@ Fill all required data fields. The provider array key name must conform to this 
 > better say what exactly is allowed. E.g. ASCII a-z,A-Z,-,_unicode?
 
 The name can be tested with this Regex: `[a-z]+[a-zA-Z0-9]*`.
-> REVIEW AND EDIT THE ABOVE!!!
 
 Valid name examples: `exampleOne`, `exampleTwo`. Invalid examples: `ExampleOne`, `example two`, `example_three`.
+
+> REVIEW AND EDIT THIS SECTION!!!
 
 ### Adding provider logo
 
@@ -39,10 +40,10 @@ We recommend implementing the login flow for a new provider by using an existing
 
 ### Testing your provider
 
-You should be able to see the new provider in your Appwrite console after you finished [REPLACE WITH THE EXACT NAME OF THE STEP. E.g. adding the name to the config array, adding the class or something else]. Navigate to `Project > Users > Providers` and fill in settings form for the new provider .
+You should be able to see the new provider in your Appwrite console after adding the provider configuration and its implementation class under `Project > Users > Providers`. Fill in the new provider settings form to start testing.
 
 Test both, successful and failed login flows. 
-> I don't get this one at all (where the user rejects integration on provider page).
+> I don't get this one at all >>> (where the user rejects integration on provider page).
 
 You can test the new OAuth2 provider inside your test app by using this OAuth2 method: https://appwrite.io/docs/account#createOAuth2Session from Appwrite JS SDK.
 
@@ -50,6 +51,6 @@ Pass your new adapter name as the provider parameter. If the login is successful
 
 ### Submitting a pull request
 
-We welcome pull requests for new OAuth2 providers, but may need more information about the implementation and testing after the initial code review.
+We welcome pull requests for new OAuth2 providers, but may need more information about the implementation and testing after the initial code review. Unfortunately, the current architecture limits the number of OAuth2 providers that can be accepted.
 
-Make sure you read [Code of Conduct](../CODE_OF_CONDUCT.md) and the [Contributor Guide](../CONTRIBUTING.md) before submitting a pull request.
+Make sure you read our [Code of Conduct](../CODE_OF_CONDUCT.md) and [Contributor Guide](../CONTRIBUTING.md) before submitting a pull request.
