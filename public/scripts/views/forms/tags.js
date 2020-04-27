@@ -71,6 +71,10 @@
           let value = array[index];
           let tag = window.document.createElement("li");
 
+          if(!value || value === ' ') {
+            continue;
+          }
+
           tag.className = "tag";
           tag.textContent = value;
 
