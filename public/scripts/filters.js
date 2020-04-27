@@ -355,6 +355,9 @@ window.ls.filter
 
     return $value === "0" ? "N/A" : $value;
   })
+  .add("isEmpty", function($value) {
+    return (!!$value);
+  })
   .add("isEmptyObject", function($value) {
     return ((Object.keys($value).length === 0 && $value.constructor === Object) || $value.length === 0)
   })

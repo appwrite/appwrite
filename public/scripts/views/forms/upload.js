@@ -5,6 +5,7 @@
     selector: "data-forms-upload",
     controller: function(element, container, alerts, expression, env) {
       var scope = element.dataset["scope"];
+      var project = expression.parse(element.dataset["project"] || "console");
       var labelButton = element.dataset["labelButton"] || "Upload";
       var labelLoading = element.dataset["labelLoading"] || "Uploading...";
       var previewWidth = element.dataset["previewWidth"] || 200;
@@ -94,7 +95,8 @@
           previewWidth +
           "&height=" +
           previewHeight +
-          "&project=console";
+          "&project="+project +
+          "&mode=admin";
 
         file.className = "file avatar";
         file.tabIndex = 0;
