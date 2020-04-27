@@ -7,7 +7,98 @@ $collection = $this->getParam('collection', null);
 $db = $this->getParam('db', null);
 $rules = $collection->getAttribute('rules', []);
 $namespace = 'project-document';
+$collections = [];
 ?>
+
+<?php foreach($rules as $rule):
+    $key = (isset($rule['key'])) ? $rule['key'] : '';
+    $label = (isset($rule['label'])) ? $rule['label'] : '';
+    $type = (isset($rule['type'])) ? $rule['type'] : '';
+    $list = (isset($rule['list'])) ? $rule['list'] : false;
+    $array = (isset($rule['array'])) ? $rule['array'] : false;
+
+    if($type !== 'document') {
+        continue;
+    }
+?>
+    <?php foreach($list as $item):
+        if($item === $collection->getId()) {
+            continue; // Do not allow rec recrusion
+        }
+
+        Authorization::disable(); //TODO Try and avoid calling the DB from the template
+        $childCollection = $db->getDocument($item, false);
+        Authorization::reset();
+
+        if(!$childCollection->getId()) {
+            continue;
+        }
+
+        $collections[$childCollection->getId()] = $childCollection->getAttribute('name');
+    ?>
+        <form class="margin-bottom-no"
+            data-analytics-event="submit"
+            data-analytics-category="console"
+            data-analytics-label="Added Child Document"
+            data-service="container.path"
+            data-event="collection-child-<?php echo $this->escape($namespace.'.'.$key); ?>-<?php echo $this->escape($childCollection->getId()); ?>"
+            data-scope="window.ls"
+            data-success="reset">
+
+            <input type="hidden" name="path" value="<?php echo $this->escape($namespace.'.'.$key); ?>" />
+            <input type="hidden" name="type" value="append" />
+            
+            <fieldset name="value" data-cast-to="object">                            
+                <input name="$id" type="hidden" value="" />
+                <input name="$collection" type="hidden" value="<?php echo $this->escape($childCollection->getId()); ?>" />
+            </fieldset>
+        </form>
+
+        <script type="text/html" id="collection-<?php echo ($array) ? 'array-' : ''; ?><?php echo $this->escape($childCollection->getId()); ?>">
+            <?php 
+
+            $comp = new View(__DIR__.'/form.phtml');
+                                        
+            $comp
+                ->setParam('collection', $childCollection)
+                ->setParam('namespace', ($array) ? 'node' : $namespace.'.'.$key)
+                ->setParam('key', $key)
+                ->setParam('array', $array)
+                ->setParam('parent', 0)
+            ;
+
+            echo $comp->render();
+            ?>
+        </script>
+    <?php endforeach; ?>
+<?php endforeach; ?>
+
+<?php foreach($rules as $rule):
+    $key = (isset($rule['key'])) ? $rule['key'] : '';
+    $label = (isset($rule['label'])) ? $rule['label'] : '';
+    $type = (isset($rule['type'])) ? $rule['type'] : '';
+    $list = (isset($rule['list'])) ? $rule['list'] : false;
+    $array = (isset($rule['array'])) ? $rule['array'] : false;
+
+    if(!$array) {
+        continue;
+    }
+?>
+    <ul data-ls-loop="<?php echo $this->escape($namespace.'.'.$key); ?>" data-ls-as="xxx">
+        <li>
+            <form
+                data-service="container.path"
+                data-event="splice-<?php echo $this->escape($namespace.'.'.$key); ?>-{{$index}}"
+                data-scope="window.ls"
+                data-success="reset">
+
+                <input type="hidden" name="path" value="<?php echo $this->escape($namespace.'.'.$key); ?>" />
+                <input type="hidden" name="type" value="splice" />
+                <input type="hidden" name="value" data-ls-bind="{{$index}}" />
+            </form>
+        </li>
+    </ul>
+<?php endforeach; ?>
 <div
     data-service="database.getCollection"
     data-param-collection-id="{{router.params.collection}}"
@@ -47,7 +138,7 @@ $namespace = 'project-document';
             <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
         </div>
 
-        <div class="zone xl">
+        <div class="zone xl margin-bottom-no">
             <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
                 <li data-state="/console/database/document?id={{router.params.id}}&collection={{router.params.collection}}&project={{router.params.project}}">
                     <h2>Update</h2>
@@ -84,6 +175,7 @@ $namespace = 'project-document';
                             
                                         $comp
                                             ->setParam('collection', $collection)
+                                            ->setParam('collections', $collections)
                                             ->setParam('namespace', $namespace)
                                             ->setParam('key', 'data')
                                             ->setParam('parent', 1)
@@ -127,7 +219,7 @@ $namespace = 'project-document';
                             </div>
 
                             <ul class="margin-bottom-large text-fade text-size-small">
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                                <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                             </ul>
 
                             <div data-ls-if="({{project-document.$id}})">
@@ -161,46 +253,3 @@ $namespace = 'project-document';
         </div>
     </div>
 </div>
-
-<?php foreach($rules as $rule):
-    $key = (isset($rule['key'])) ? $rule['key'] : '';
-    $label = (isset($rule['label'])) ? $rule['label'] : '';
-    $type = (isset($rule['type'])) ? $rule['type'] : '';
-    $list = (isset($rule['list'])) ? $rule['list'] : false;
-    $array = (isset($rule['array'])) ? $rule['array'] : false;
-
-    if($type !== 'document') {
-        continue;
-    }
-?>
-    <?php foreach($list as $item):
-        if($item === $collection->getId()) {
-            continue; // Do not allow rec recrusion
-        }
-
-        Authorization::disable(); //TODO Try and avoid calling the DB from the template
-        $childCollection = $db->getDocument($item, false);
-        Authorization::reset();
-
-        if(!$childCollection->getId()) {
-            continue;
-        }
-    ?>
-        <script type="text/html" id="collection-<?php echo ($array) ? 'array-' : ''; ?><?php echo $this->escape($childCollection->getId()); ?>">
-            <?php 
-
-            $comp = new View(__DIR__.'/form.phtml');
-                                        
-            $comp
-                ->setParam('collection', $childCollection)
-                ->setParam('namespace', ($array) ? 'node' : $namespace.'.'.$key)
-                ->setParam('key', $key)
-                ->setParam('array', $array)
-                ->setParam('parent', 0)
-            ;
-
-            echo $comp->render();
-            ?>
-        </script>
-    <?php endforeach; ?>
-<?php endforeach; ?>
