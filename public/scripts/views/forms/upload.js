@@ -11,13 +11,12 @@
       var previewWidth = element.dataset["previewWidth"] || 200;
       var previewHeight = element.dataset["previewHeight"] || 200;
       var accept = element.dataset["accept"] || "";
+      var search = (!!(element.dataset["search"] || 0));
       var required = element.dataset["required"] || false;
       var className = element.dataset["class"] || "upload";
       var max = parseInt(element.dataset["max"] || 4);
-      var sdk =
-        scope === "sdk" ? container.get("sdk") : container.get("console");
+      var sdk = scope === "sdk" ? container.get("sdk") : container.get("console");
       var output = element.value || null;
-      var total = 0;
 
       var wrapper = document.createElement("div");
       var input = document.createElement("input");
@@ -44,27 +43,6 @@
       progress.className = "progress";
       progress.style.width = "0%";
       progress.style.display = "none";
-
-      var humanFileSize = function(bytes, si) {
-        var thresh = si ? 1000 : 1024;
-
-        if (Math.abs(bytes) < thresh) {
-          return bytes + " B";
-        }
-
-        var units = si
-          ? ["KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-          : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
-
-        var u = -1;
-
-        do {
-          bytes /= thresh;
-          ++u;
-        } while (Math.abs(bytes) >= thresh && u < units.length - 1);
-
-        return bytes.toFixed(1) + " " + units[u];
-      };
 
       var onComplete = function(message) {
         alerts.remove(message);
@@ -162,6 +140,17 @@
       upload.appendChild(input);
 
       render(output);
+
+      console.log(search);
+      if(search) {
+        let searchOpen = document.createElement("button");
+
+        searchOpen.type = 'button';
+        searchOpen.innerHTML = '<i class="icon icon-search"></i> Search';
+        searchOpen.classList.add('reverse');
+
+        wrapper.appendChild(searchOpen);
+      }
     }
   });
 })(window);
