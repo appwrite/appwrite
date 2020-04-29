@@ -63,7 +63,7 @@
       let closeDelay = function() {
         window.setTimeout(function() {
           close();
-        }, 150);
+        }, 200);
       };
 
       let findParent = function(tagName, el) {

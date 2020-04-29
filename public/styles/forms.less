@@ -39,12 +39,6 @@ button,
     border-bottom: none;
   }
 
-  &.small {
-    height: 30px;
-    width: 30px;
-    line-height: 30px;
-  }
-
   &.fly {
     position: fixed;
     z-index: 2;
@@ -91,6 +85,13 @@ button,
       color: var(--config-color-focus-hover);
       border-color: var(--config-color-focus-hover);
     }
+  }
+
+  &.small {
+    padding: 0 15px;
+    height: 40px;
+    line-height: 36px;
+    font-size: 13px;
   }
 
   &.round {
@@ -262,7 +263,7 @@ select {
   }
 
   &:disabled {
-    color: var(--config-color-fade);
+    color: var(--config-color-normal);
     background: var(--config-color-fade-super);
     opacity: 1!important;
   }
@@ -538,6 +539,7 @@ input[type=checkbox], input[type=radio] {
   border: none;
   background: transparent;
   vertical-align: middle;
+  margin: 0;
 
   &:after {
     content: "";
@@ -926,7 +928,7 @@ hr {
 
   .button {
     .pull-start;
-    .margin-end;
+    .margin-end-small;
 
     &.disabled,
     &.disabled:hover {

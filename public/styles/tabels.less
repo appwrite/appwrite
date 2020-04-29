@@ -7,14 +7,21 @@ table {
   position: relative;
   table-layout: fixed;
 
+
+  &.y-scroll {
+    overflow-y: auto;
+  }
+
   thead {
     box-shadow: 0 0 2px rgba(0,0,0,.25);
     border-bottom: solid 1px var(--config-color-fade-super);
     font-size: 14px;
 
     th {
+      background: var(--config-color-background-fade);
       position: sticky;
-      top: 0;
+      top: -30px;
+      z-index: 3;
     }
   }
 
@@ -92,12 +99,6 @@ table {
 
     &:last-child {
       .func-padding-end(30px);
-    }
-  }
-
-  td:first-child, th:first-child {
-    @media @phones {
-      width: auto;
     }
   }
 

@@ -55,7 +55,7 @@
   }
 
   &>footer {
-    margin: 30px -30px -30px -30px;
+    margin: 0 -30px -30px -30px;
     padding: 15px 30px;
     background: var(--config-color-background-fade);
     border: solid 1px var(--config-border-color);
@@ -103,6 +103,18 @@
     }
   }
 
+  @media @phones, @tablets {
+    .scroll {
+      margin: 0 -30px;
+      overflow-y: scroll;
+  
+      table {
+        margin: 0;
+      }
+    }
+    
+  }
+  
   ul.sortable {
     counter-reset: section;
 
@@ -249,6 +261,15 @@
 
     hr {
       background: var(--config-modal-note-border)!important;
+    }
+  }
+
+  .table-wrap {
+    margin: 0 -30px;
+    overflow-y: scroll;
+
+    table {
+      margin: 0;
     }
   }
 
