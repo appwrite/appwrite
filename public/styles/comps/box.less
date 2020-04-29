@@ -79,8 +79,35 @@
     border-bottom: solid 1px #efefef;
   }
 
-  ul.sortable {
+  ul.numbers {
     > li {
+      position: relative;
+
+      &::after {
+        display: block;
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 50%;
+        background: var(--config-color-focus);
+        color: var(--config-color-background);
+        counter-increment: section;
+        content: counter(section);
+        text-align: center;
+        position: absolute;
+        top: 2px;
+        .func-start(-45px);
+      }
+    }
+  }
+
+  ul.sortable {
+    counter-reset: section;
+
+    > li {
+
       [data-move-up].round, [data-move-down].round, [data-remove].round {
         background: var(--config-color-focus);
         color: var(--config-color-background-fade);
@@ -91,7 +118,6 @@
         text-align: center;
         padding: 0;
         .func-margin-end(5px);
-
 
         &:disabled {
           display: none;

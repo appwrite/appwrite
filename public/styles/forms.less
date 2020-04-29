@@ -160,7 +160,8 @@ button,
   &:disabled,
   .disabled {
     color: var(--config-color-normal);
-    background: var(--config-color-fade);
+    background: var(--config-color-background-dark);
+    opacity: .6;
     cursor: default;
   }
 
@@ -261,7 +262,7 @@ select {
   }
 
   &:disabled {
-    color: var(--config-color-normal);
+    color: var(--config-color-fade);
     background: var(--config-color-fade-super);
     opacity: 1!important;
   }
@@ -543,7 +544,7 @@ input[type=checkbox], input[type=radio] {
     display: block;
     width: 20px;
     height: 20px;
-    background: var(--config-color-background-input);
+    background: var(--config-color-background-fade);
     top: -5px;
     border-radius: 50%;
     position: absolute;
@@ -559,6 +560,19 @@ input[type=checkbox], input[type=radio] {
     line-height: 20px;
     color: var(--config-color-background-fade);
     background: var(--config-color-focus);
+  }
+  
+  &[type=radio] {
+    &:checked:after {
+      //content: '●';
+      content: '';
+      display: block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--config-color-background-fade);
+      border: solid 8px var(--config-color-focus);
+    }
   }
 
   &:focus {
@@ -941,7 +955,7 @@ hr {
       .pull-start;
       .margin-end;
       .margin-bottom-small;
-      background: #f1f1f1;
+      background: var(--config-color-background-fade-super);
       width: 150px;
       height: 150px;
       line-height: 148px;
@@ -950,7 +964,7 @@ hr {
       overflow: hidden;
       position: relative;
       cursor: pointer;
-      border: solid 10px #f1f1f1;
+      border: solid 2px var(--config-color-background-dark);
 
       &:hover:before {
         background: var(--config-color-focus);
@@ -964,8 +978,8 @@ hr {
         width: 20px;
         height: 20px;
         display: block;
-        top: 5px;
-        .func-end(5px);
+        top: 8px;
+        .func-end(8px);
         text-align: center;
         line-height: 20px;
         vertical-align: middle;
@@ -1094,6 +1108,20 @@ ol {
       padding: 0;
       .clear;
 
+
+      &:first-child {
+        border-radius: 10px 10px 0 0;
+      }
+
+      &:last-child {
+        border-radius: 0 0 10px 10px;
+      }
+
+      &:first-child:hover, &:last-child:hover {
+        background: var(--config-color-fade-super);
+        border-color: transparent;
+      }
+
       a,
       .link, button.link {
         display: block;
@@ -1101,19 +1129,14 @@ ol {
         height: auto;
         line-height: 30px;
         display: inline-block;
-        padding: 10px 15px;
+        padding: 10px 15px!important;
         color: inherit;
         font-size: 14px;
         border: none;
-        max-width: 260px;
         cursor: pointer;
         width: ~"calc(100% - 30px)";
         text-align: @config-start;
-
-        &:hover {
-          background: var(--config-color-fade-super);
-          border-color: transparent;
-        }
+        box-sizing: content-box;
       }
 
       &.disabled a:hover, &.disabled .link:hover {

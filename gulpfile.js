@@ -23,6 +23,7 @@ const configApp  = {
         'public/scripts/services/form.js',
         'public/scripts/services/markdown.js',
         'public/scripts/services/sdk.js',
+        'public/scripts/services/search.js',
         'public/scripts/services/timezone.js',
 
         'public/scripts/routes.js',

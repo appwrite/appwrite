@@ -20,6 +20,7 @@
   overflow: auto;
   display: none;
   position: fixed;
+  transform: translate3d(0,0,0);
   width: 100%;
   max-height: 90%;
   max-width: 640px;
@@ -45,13 +46,13 @@
   }
 
   &.height-tiny {
-    form {
+    > form {
       height: 100px;
     }
   }
 
   &.height-small {
-    form {
+    > form {
       height: 220px;
     }
   }
@@ -94,7 +95,7 @@
     line-height: 35px;
   }
 
-  form, .main {
+  > form, .main {
     position: relative;
     border-top: solid 1px var(--config-border-color);
     padding: 30px 30px 0 30px;
@@ -156,7 +157,19 @@
     }
   }
 
-  .sticky-footer {
-    
+  &.sticky-footer {
+    footer {
+      position: sticky;
+      bottom: -30px;
+      background: var(--config-color-background-fade-super);
+      height: 50px;
+      z-index: 1;
+      padding: 30px;
+      box-shadow: 0 0 1px rgba(0,0,0,.05);
+
+      form {
+        display: inline-block;
+      }
+    }
   }
 }

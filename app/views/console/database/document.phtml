@@ -16,11 +16,27 @@ $collections = [];
     $type = (isset($rule['type'])) ? $rule['type'] : '';
     $list = (isset($rule['list'])) ? $rule['list'] : false;
     $array = (isset($rule['array'])) ? $rule['array'] : false;
-
-    if($type !== 'document') {
-        continue;
-    }
 ?>
+
+    <?php if($type !== 'document' && $array): ?>
+
+        <form class="margin-bottom-no"
+            data-service="container.path"
+            data-event="collection-child-<?php echo $this->escape($namespace.'.'.$key); ?>"
+            data-scope="window.ls"
+            data-success="reset">
+
+            <input type="hidden" name="path" value="<?php echo $this->escape($namespace.'.'.$key); ?>" />
+            <input type="hidden" name="type" value="append" />
+            <input type="hidden" name="value" value="" />
+        </form>
+
+    <?php endif; ?>
+    
+    <?php if($type !== 'document'): ?>
+        <?php continue; ?>
+    <?php endif; ?>
+
     <?php foreach($list as $item):
         if($item === $collection->getId()) {
             continue; // Do not allow rec recrusion
@@ -37,9 +53,6 @@ $collections = [];
         $collections[$childCollection->getId()] = $childCollection->getAttribute('name');
     ?>
         <form class="margin-bottom-no"
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Added Child Document"
             data-service="container.path"
             data-event="collection-child-<?php echo $this->escape($namespace.'.'.$key); ?>-<?php echo $this->escape($childCollection->getId()); ?>"
             data-scope="window.ls"
@@ -254,7 +267,7 @@ $collections = [];
     </div>
 </div>
 
-<div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-file-serach" data-close-event="none">
+<div data-ui-modal class="modal sticky-footer width-large box close" data-button-hide="on" data-open-event="open-file-serach" data-close-event="none">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
     
     <h2>File Search</h2>
@@ -291,23 +304,28 @@ $collections = [];
 
         <div data-ls-if="0 != {{project-files.sum}}">
             <div>
-                <table class="vertical margin-bottom">
+                <table class="vertical">
                     <thead>
                         <tr>
                             <th width="40"></th>
+                            <th width="40"></th>
                             <th>Filename</th>
-                            <th width="160">Type</th>
+                            <th width="100">Type</th>
                             <th width="100">Size</th>
-                            <th width="100">Created</th>
+                            <th width="80">Created</th>
+                            <!-- <th width="30"></th> -->
                         </tr>
                     </thead>
                     <tbody data-ls-loop="project-files.files" data-ls-as="file">
                         <tr>
                             <td class="hide">
+                                <input type="radio" name="selected" data-ls-attrs="value={{file.$id}}" data-ls-bind="{{search.selected}}" />
+                            </td>
+                            <td class="hide">
                                 <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                             </td>
                             <td data-title="Name: " class="text-one-liner">
-                                <span data-ls-bind="{{file.name}}" class="text-fade text-size-small"></span>
+                                <span data-ls-bind="{{file.name}}" data-ls-attrs="title={{file.name}}" class="text-fade text-size-small"></span>
                             </td>
                             <td data-title="Type: ">
                                 <span data-ls-bind="{{file.mimeType}}" class="text-fade text-size-small"></span>
@@ -318,6 +336,9 @@ $collections = [];
                             <td data-title="Created: ">
                                 <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|date-text}}"></span>
                             </td>
+                            <!-- <td class="hide">
+                                <a target="_blank" data-ls-attrs="href="><i class="icon-link-ext"></i></a>
+                            </td> -->
                         </tr>
                     </tbody>
                 </table>
@@ -325,33 +346,53 @@ $collections = [];
         </div>
     </div>
 
-    <div class="clear text-align-center paging">
-        <form
-            data-service="storage.listFiles"
-            data-event="submit"
-            data-param-search="{{router.params.search}}"
-            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-            data-param-order-type="DESC"
-            data-scope="sdk"
-            data-name="project-files"
-            data-success="state"
-            data-success-param-state-keys="search,offset">
-            <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
-        </form>
+    <footer>
+        <div class="clear text-align-center paging pull-end">
+            <form
+                data-service="storage.listFiles"
+                data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-files"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
 
-        <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
 
-        <form
-            data-service="storage.listFiles"
-            data-event="submit"
-            data-param-search="{{router.params.search}}"
-            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-            data-param-order-type="DESC"
-            data-scope="sdk"
-            data-name="project-files"
-            data-success="state"
-            data-success-param-state-keys="search,offset">
-            <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            <form
+                data-service="storage.listFiles"
+                data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-files"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
+        </div>
+
+        <form data-service="container.path"
+            data-param-path="search.selected"
+            data-param-type="assign"
+            data-param-value="{{file.$id}}"
+            data-success="trigger"
+            data-success-param-trigger-events="modal-close"
+            data-event="click"
+            data-scope="window.ls">
+
+            <input type="hidden" name="path" data-ls-bind="{{search.path}}" />
+            <input type="hidden" name="type" value="assign" />
+            <input type="hidden" name="value" data-ls-bind="{{search.selected}}" />
+
+            <button data-ls-if="({{search.selected}})" type="button" class=""> &nbsp; Select &nbsp; </button> &nbsp; 
+            <button data-ls-if="(!{{search.selected}})" type="button" class="" disabled> &nbsp; Select &nbsp; </button> &nbsp; 
         </form>
-    </div>
+        <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+    </footer>
 </div>

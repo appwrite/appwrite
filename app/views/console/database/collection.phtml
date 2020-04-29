@@ -90,7 +90,7 @@
                                     <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
                                         <td data-ls-attrs="data-title={{rule.label}}:" class="text-size-small text-height-small">
                                             <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}">
-                                                <span data-ls-if="{{rule.type}} !== 'document' && {{rule.type}} !== 'fileId'" data-ls-bind="{{node|documentLabel}}"></span>
+                                                <span data-ls-if="{{rule.type}} !== 'document' && {{rule.type}} !== 'fileId'" data-ls-bind="{{node|documentLabel}}" data-ls-attrs="title={{node|documentLabel}}"></span>
                                                 <span data-ls-if="{{rule.type}} == 'document' && {{rule.array}}">[...]</span>
                                                 <span data-ls-if="{{rule.type}} == 'document' && !{{rule.array}}">{...}</span>
                                                 <img data-ls-if="{{rule.type}} == 'fileId' && !{{rule.array}} && {{node|documentLabel|isEmpty}}" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node|documentLabel}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
