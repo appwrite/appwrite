@@ -88,7 +88,7 @@ $graph = $this->getParam('graph', false);
         <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
             <li class="clear">
 
-                <div data-ui-modal class="modal box close" data-button-text="Update" data-button-class="pull-end">
+                <div data-ui-modal data-button-hide="on" data-open-event="platform-update-{{platform.$id}}">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                     <h1>Update Platform</h1>
@@ -102,7 +102,7 @@ $graph = $this->getParam('graph', false);
                     data-analytics-label="Delete Project Platform"
                     data-service="projects.deletePlatform"
                     data-scope="console"
-                    data-event="submit"
+                    data-event="platform-delete-{{platform.$id}}"
                     data-confirm="Are you sure you want to delete this platform?"
                     data-success="alert,trigger"
                     data-success-param-alert-text="Deleted platform successfully"
@@ -112,16 +112,24 @@ $graph = $this->getParam('graph', false);
                     data-failure-param-alert-classname="error">
                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                     <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
-
-                    <button class="reverse danger">Delete</button>
                 </form>
+
+                <div class="pull-end desktops-only">
+                    <button data-ls-ui-trigger="platform-delete-{{platform.$id}}" class="reverse danger margin-end-small">Delete</button>
+                    <button data-ls-ui-trigger="platform-update-{{platform.$id}}">Update</button>
+                </div>
 
                 <div class="margin-bottom-tiny">
                     <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
                     <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 
-                <p class="margin-bottom-no"><small data-ls-bind="{{platform.hostname}}"></small></p>
+                <p class="margin-bottom-no desktops-only"><small data-ls-bind="{{platform.hostname}}"></small></p>
+
+                <div class="phones-only-inline tablets-only-inline margin-top-tiny">
+                    <button class="link" data-ls-ui-trigger="platform-update-{{platform.$id}}">Update</button>
+                    <button class="link danger" data-ls-ui-trigger="platform-delete-{{platform.$id}}">Delete</button>
+                </div>
             </li>
         </ul>
     </div>
