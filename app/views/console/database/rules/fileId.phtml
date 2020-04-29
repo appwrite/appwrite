@@ -12,11 +12,9 @@ $namespace = $this->getParam('namespace', '');
     data-accept=""
     data-forms-upload=""
     data-label-button="Upload"
-    data-search="1"
+    data-search="<?php echo $this->escape($namespace); ?>"
     data-scope="sdk"
     data-default=""
     data-project="{{router.params.project}}"
     <?php if($required): ?> required<?php endif; ?>
     class="margin-bottom-no">
-
-    <button type="button" data-ls-ui-trigger="open-file-serach">Search</button>

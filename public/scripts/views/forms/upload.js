@@ -3,7 +3,7 @@
 
   window.ls.container.get("view").add({
     selector: "data-forms-upload",
-    controller: function(element, container, alerts, expression, env) {
+    controller: function(element, container, alerts, expression, env, search) {
       var scope = element.dataset["scope"];
       var project = expression.parse(element.dataset["project"] || "console");
       var labelButton = element.dataset["labelButton"] || "Upload";
@@ -11,7 +11,7 @@
       var previewWidth = element.dataset["previewWidth"] || 200;
       var previewHeight = element.dataset["previewHeight"] || 200;
       var accept = element.dataset["accept"] || "";
-      var search = (!!(element.dataset["search"] || 0));
+      var searchButton = (element.dataset["search"] || 0);
       var required = element.dataset["required"] || false;
       var className = element.dataset["class"] || "upload";
       var max = parseInt(element.dataset["max"] || 4);
@@ -120,11 +120,12 @@
       });
 
       element.addEventListener("change", function() {
-        console.log('change', element);
         if (!element.value) {
           return;
         }
-        render(output);
+        render(element.value);
+
+        wrapper.scrollIntoView();
       });
 
       upload.addEventListener("keypress", function() {
@@ -141,13 +142,25 @@
 
       render(output);
 
-      console.log(search);
-      if(search) {
+      if(searchButton) {
         let searchOpen = document.createElement("button");
 
         searchOpen.type = 'button';
         searchOpen.innerHTML = '<i class="icon icon-search"></i> Search';
         searchOpen.classList.add('reverse');
+
+        let path = container.scope(searchButton);
+
+        searchOpen.addEventListener('click', function() {
+          search.selected = element.value;
+          search.path = path;
+
+          document.dispatchEvent(
+            new CustomEvent("open-file-serach", {
+              bubbles: false,
+              cancelable: true
+            }));
+        });
 
         wrapper.appendChild(searchOpen);
       }
