@@ -231,7 +231,7 @@ $collections = [];
                                 <input type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-collection.$id}}" disabled data-forms-copy class="margin-bottom-no" />
                             </div>
 
-                            <ul class="margin-bottom-large text-fade text-size-small">
+                            <ul class="margin-bottom-large text-fade text-size-small" data-ls-if="({{project-document.$id}})">
                                 <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                             </ul>
 
