@@ -111,7 +111,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                             </td>
                             <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
-                                <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{file.name}}" data-button-class="link text-size-small" data-button-element="span">
+                                <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                     <h1>Update File</h1>
@@ -189,13 +189,13 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 </div>
                             </td>
                             <td data-title="Type: ">
-                                <span data-ls-bind="{{file.mimeType}}" class="text-fade text-size-small"></span>
+                                <span data-ls-bind="{{file.mimeType}}" class="text-fade"></span>
                             </td>
                             <td data-title="Size: ">
-                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                <span class="text-fade" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
                             </td>
                             <td data-title="Created: ">
-                                <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|date-text}}"></span>
+                                <span class="text-fade" data-ls-bind="{{file.dateCreated|date-text}}"></span>
                             </td>
                         </tr>
                     </tbody>
