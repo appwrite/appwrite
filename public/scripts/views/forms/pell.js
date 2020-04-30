@@ -3,7 +3,7 @@
 
   window.ls.container.get("view").add({
     selector: "data-forms-pell",
-    controller: function(element, window, document, markdown) {
+    controller: function(element, window, document, markdown, rtl) {
       var div = document.createElement("div");
 
       element.className = "pell hide";
@@ -23,6 +23,7 @@
       var editor = window.pell.init({
         element: div,
         onChange: function onChange(html) {
+          alignText();
           element.value = turndownService.turndown(html); // Change HTML to Markdown
         },
         defaultParagraphSeparator: "p",
@@ -54,13 +55,56 @@
         ]
       });
 
+      var clean = function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        var clipboardData = e.clipboardData || window.clipboardData;
+        console.log(clipboardData.getData("Text"));
+        window.pell.exec("insertText", clipboardData.getData("Text"));
+        return true;
+      };
+
+      var alignText = function () {
+
+        let paragraphs = editor.content.querySelectorAll('p,li');
+        let last = '';
+
+        for (let paragraph of paragraphs) {
+          var content = paragraph.textContent;
+
+          if(content.trim() === '') {
+            content = last.textContent;
+          }
+
+          if(rtl.isRTL(content)) {
+            paragraph.style.direction = 'rtl';
+            paragraph.style.textAlign = 'right';
+          }
+          else {
+            paragraph.style.direction = 'ltr';
+            paragraph.style.textAlign = 'left';
+          }
+
+          last = paragraph;
+        }
+      };
+
+      var santize = function (e) {
+        clean(e);
+        alignText(e);
+      };
+
       element.addEventListener("change", function() {
         editor.content.innerHTML = markdown.render(element.value); // Change Markdown to HTML (mainly for editing purpose)
+        alignText();
       });
 
       editor.content.setAttribute("placeholder", element.placeholder);
       editor.content.innerHTML = markdown.render(element.value);
       editor.content.tabIndex = 0;
+
+      alignText();
 
       editor.content.onkeydown = function preventTab(event) {
         if (event.which === 9) {
@@ -101,17 +145,8 @@
         }
       };
 
-      var clean = function(e) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        var clipboardData = e.clipboardData || window.clipboardData;
-        window.pell.exec("insertText", clipboardData.getData("Text"));
-        return true;
-      };
-
-      div.addEventListener("paste", clean);
-      div.addEventListener("drop", clean);
+      div.addEventListener("paste", santize);
+      div.addEventListener("drop", santize);
     }
   });
 })(window);

@@ -34,7 +34,7 @@
 
       count.className = "count";
 
-      upload.className = "button reverse small margin-bottom";
+      upload.className = "button reverse small";
       upload.innerHTML = '<i class="icon icon-upload"></i> ' + labelButton;
       upload.tabIndex = 0;
 
