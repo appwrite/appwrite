@@ -111,7 +111,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
                             </td>
                             <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
-                                <div data-ui-modal class="box modal width-large close" data-button-text="{{file.name}}" data-button-class="link text-size-small" data-button-element="span">
+                                <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{file.name}}" data-button-class="link text-size-small" data-button-element="span">
                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                                     <h1>Update File</h1>
@@ -182,11 +182,10 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         </div>
                                     </div>
 
-                                    <hr class="margin-top-no" />
-
-                                    <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
-
-                                    <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
+                                    <footer>
+                                        <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
+                                        <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
+                                    </footer>
                                 </div>
                             </td>
                             <td data-title="Type: ">
