@@ -82,13 +82,21 @@
   ul.numbers {
     > li {
       position: relative;
+      .func-margin-start(30px);
+      .func-margin-end(50px);
 
+      .settings {
+        position: absolute;
+        top: 3px;
+        .func-end(-50px);
+      }
+      
       &::after {
         display: block;
-        width: 30px;
-        height: 30px;
-        line-height: 30px;
-        font-size: 14px;
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        font-size: 13px;
         font-weight: 500;
         border-radius: 50%;
         background: var(--config-color-focus);
@@ -97,7 +105,7 @@
         content: counter(section);
         text-align: center;
         position: absolute;
-        top: 2px;
+        top: 3px;
         .func-start(-45px);
       }
     }

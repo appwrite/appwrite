@@ -732,24 +732,31 @@ input[type=checkbox], input[type=radio] {
     font-weight: bold;
   }
 
-  ul,
-  ol {
+  ul, ol {
     margin: 0 0 20px 0;
 
     li {
       display: list-item !important;
       list-style: inherit;
-      margin-bottom: 10px;
+      list-style-position: inside!important;
+      margin: 0 20px 2px 20px;
 
       p {
         margin: 0;
+        display: inline;
       }
     }
   }
 
-  ul li {
-    margin: 0 20px;
-    display: list-item;
+  ol {
+    li {
+      list-style: decimal;
+
+      &::before {
+        content: '';
+        display: none;
+      }
+    }
   }
 }
 
@@ -966,7 +973,7 @@ hr {
       overflow: hidden;
       position: relative;
       cursor: pointer;
-      border: solid 2px var(--config-color-background-dark);
+      border: solid 1px var(--config-color-background-dark);
 
       &:hover:before {
         background: var(--config-color-focus);

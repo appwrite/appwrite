@@ -158,6 +158,12 @@
   }
 
   &.sticky-footer {
+    form {
+      footer {
+        margin: -30px;
+      }
+    }
+
     footer {
       position: sticky;
       bottom: -30px;
@@ -165,7 +171,7 @@
       height: 50px;
       z-index: 1;
       padding: 30px;
-      box-shadow: 0 0 1px rgba(0,0,0,.05);
+      box-shadow: 0 0 1px rgba(0,0,0,.15);
 
       form {
         display: inline-block;
