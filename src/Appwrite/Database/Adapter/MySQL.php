@@ -157,6 +157,7 @@ class MySQL extends Adapter
         $data = array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
         $signature = md5(json_encode($data, true));
         $revision = uniqid('', true);
+        $data['$id'] = (empty($data['$id'])) ? null : $data['$id'];
 
         /*
          * When updating node, check if there are any changes to update

@@ -643,6 +643,12 @@
       "css": "cancel-circled",
       "code": 59466,
       "src": "fontawesome"
+    },
+    {
+      "uid": "81bb68665e8e595505272a746db07c7a",
+      "css": "dot-circled",
+      "code": 61842,
+      "src": "fontawesome"
     }
   ]
 }

@@ -15,6 +15,18 @@
         </h1>
     </div>
 
+    <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+        
+        <h2>JSON View</h2>
+
+        <div class="margin-bottom">
+            <input type="hidden" data-ls-bind="{{user}}" data-forms-code />
+        </div>
+
+        <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+    </div>
+
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/view?id={{router.params.id}}&project={{router.params.project}}">
@@ -26,6 +38,8 @@
 
                 <div class="row responsive margin-top-xl">
                     <div class="col span-8">
+                        <label>&nbsp;</label>
+
                         <div class="box margin-bottom-large">
                             <div class="text-align-center">
                                 <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
@@ -79,11 +93,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col span-4">
+                    <div class="col span-4 sticky-top">
                         <label>User ID</label>
-                        <div class="input-copy margin-bottom-large">
+                        <div class="input-copy margin-bottom">
                             <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{user.$id}}" disabled data-forms-copy>
                         </div>
+
+                        <ul class="margin-bottom-large text-fade text-size-small">
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                        </ul>
 
                         <div data-ls-if="{{user.status}} !== <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
@@ -132,10 +150,10 @@
                     data-service="users.getSessions"
                     data-name="sessions"
                     data-param-user-id="{{router.params.id}}"
-                    data-event="load,user-update">
+                    data-event="load,users.update">
 
-                    <div data-ls-if="{{sessions.length}} === 0" style="display: none" class="margin-top-xl margin-bottom-xl">
-                        No sessions available
+                    <div data-ls-if="{{sessions.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        No sessions available.
                     </div>
 
                     <div data-ls-if="{{sessions.length}} !== 0" style="display: none">
@@ -156,7 +174,7 @@
                                         data-failure-param-alert-classname="error">
 
                                         <input type="hidden" name="userId" data-ls-bind="{{router.params.id}}">
-                                        <input type="hidden" name="sessionId" data-ls-bind="{{session.id}}">
+                                        <input type="hidden" name="sessionId" data-ls-bind="{{session.$id}}">
                                         <button class="danger">Logout</button>
                                     </form>
 
@@ -200,8 +218,8 @@
                     data-param-user-id="{{router.params.id}}"
                     data-event="load,logs-load">
 
-                    <div data-ls-if="{{logs.length}} === 0" style="display: none" class="margin-top-xl margin-bottom-xl">
-                        No logs available
+                    <div data-ls-if="{{logs.length}} === 0" style="display: none" class="margin-top-xxl margin-bottom-xxl text-align-center">
+                        No logs available.
                     </div>
 
                     <div class="box" data-ls-if="{{logs.length}} !== 0" style="display: none">

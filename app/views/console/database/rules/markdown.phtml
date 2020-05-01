@@ -1,0 +1,7 @@
+<?php
+$key = $this->getParam('key', '');
+$required = $this->getParam('required', '');
+$namespace = $this->getParam('namespace', '');
+?>
+
+<textarea type="text" name="<?php echo $this->escape($key); ?>" data-forms-pell data-forms-text-direction data-ls-bind="{{<?php echo $this->escape($namespace); ?>}}"<?php if($required): ?> required<?php endif; ?>></textarea>

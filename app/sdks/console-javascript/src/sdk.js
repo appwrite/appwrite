@@ -286,28 +286,6 @@
             }
         }(window.document);
 
-        let iframe = function(method, url, params) {
-            let form = document.createElement('form');
-
-            form.setAttribute('method', method);
-            form.setAttribute('action', config.endpoint + url);
-
-            for(let key in params) {
-                if(params.hasOwnProperty(key)) {
-                    let hiddenField = document.createElement("input");
-                    hiddenField.setAttribute("type", "hidden");
-                    hiddenField.setAttribute("name", key);
-                    hiddenField.setAttribute("value", params[key]);
-
-                    form.appendChild(hiddenField);
-                }
-            }
-
-            document.body.appendChild(form);
-
-            return form.submit();
-        };
-
         let account = {
 
             /**
@@ -768,19 +746,11 @@
              * @param {string} success
              * @param {string} failure
              * @throws {Error}
-             * @return {string}             
+             * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success, failure) {
+            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
-                }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
@@ -800,8 +770,8 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
-                return config.endpoint + path + ((query) ? '?' + query : '');
+                
+                window.location = config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1203,9 +1173,9 @@
              * Create a new Collection.
              *
              * @param {string} name
-             * @param {array} read
-             * @param {array} write
-             * @param {array} rules
+             * @param {string[]} read
+             * @param {string[]} write
+             * @param {string[]} rules
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1284,9 +1254,9 @@
              *
              * @param {string} collectionId
              * @param {string} name
-             * @param {array} read
-             * @param {array} write
-             * @param {array} rules
+             * @param {string[]} read
+             * @param {string[]} write
+             * @param {string[]} rules
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1367,7 +1337,7 @@
              * modes](/docs/admin).
              *
              * @param {string} collectionId
-             * @param {array} filters
+             * @param {string[]} filters
              * @param {number} offset
              * @param {number} limit
              * @param {string} orderField
@@ -1437,8 +1407,8 @@
              *
              * @param {string} collectionId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @param {string} parentDocument
              * @param {string} parentProperty
              * @param {string} parentPropertyType
@@ -1533,8 +1503,8 @@
              * @param {string} collectionId
              * @param {string} documentId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1640,7 +1610,7 @@
             },
 
             /**
-             * List Countries
+             * List Continents
              *
              * List of all continents. You can use the locale header to get the data in a
              * supported language.
@@ -2142,7 +2112,7 @@
              *
              * @param {string} projectId
              * @param {string} name
-             * @param {array} scopes
+             * @param {string[]} scopes
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2212,7 +2182,7 @@
              * @param {string} projectId
              * @param {string} keyId
              * @param {string} name
-             * @param {array} scopes
+             * @param {string[]} scopes
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2542,7 +2512,7 @@
              * @param {number} security
              * @param {string} httpMethod
              * @param {string} httpUrl
-             * @param {array} httpHeaders
+             * @param {string[]} httpHeaders
              * @param {string} httpUser
              * @param {string} httpPass
              * @throws {Error}
@@ -2663,7 +2633,7 @@
              * @param {number} security
              * @param {string} httpMethod
              * @param {string} httpUrl
-             * @param {array} httpHeaders
+             * @param {string[]} httpHeaders
              * @param {string} httpUser
              * @param {string} httpPass
              * @throws {Error}
@@ -2828,7 +2798,7 @@
              *
              * @param {string} projectId
              * @param {string} name
-             * @param {array} events
+             * @param {string[]} events
              * @param {string} url
              * @param {number} security
              * @param {string} httpUser
@@ -2926,7 +2896,7 @@
              * @param {string} projectId
              * @param {string} webhookId
              * @param {string} name
-             * @param {array} events
+             * @param {string[]} events
              * @param {string} url
              * @param {number} security
              * @param {string} httpUser
@@ -3073,8 +3043,8 @@
              * read and write arguments.
              *
              * @param {File} file
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3145,8 +3115,8 @@
              * to update this resource.
              *
              * @param {string} fileId
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3231,7 +3201,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -3286,7 +3256,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -3319,7 +3289,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             }
         };
@@ -3376,7 +3346,7 @@
              * project.
              *
              * @param {string} name
-             * @param {array} roles
+             * @param {string[]} roles
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3531,7 +3501,7 @@
              *
              * @param {string} teamId
              * @param {string} email
-             * @param {array} roles
+             * @param {string[]} roles
              * @param {string} url
              * @param {string} name
              * @throws {Error}

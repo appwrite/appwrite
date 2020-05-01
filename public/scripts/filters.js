@@ -355,6 +355,9 @@ window.ls.filter
 
     return $value === "0" ? "N/A" : $value;
   })
+  .add("isEmpty", function($value) {
+    return (!!$value);
+  })
   .add("isEmptyObject", function($value) {
     return ((Object.keys($value).length === 0 && $value.constructor === Object) || $value.length === 0)
   })
@@ -367,10 +370,53 @@ window.ls.filter
       });
     }
 
-    console.log(result);
-    
     return result.length;
-  });
+  })
+  .add("documentLabel", function($value, rule) {
+    let value = ($value !== null && $value[rule['key']] !== undefined) ? $value[rule['key']] : null;
+
+    switch (rule['type']) {
+      case 'bool':
+      case 'boolean':
+        return (value) ? 'true' : 'false';
+        break;
+    
+      case 'numeric':
+        return (value && value.toString) ? value.toString() : value;
+        break;
+    
+      default:
+        return value;
+        break;
+    }
+  })
+  .add("documentAction", function(container) {
+    let collection = container.get('project-collection');
+    let document = container.get('project-document');
+
+    if(collection && document && !document.$id) {
+      return 'database.createDocument';
+    }
+
+    return 'database.updateDocument';
+  })
+  .add("documentSuccess", function(container) {
+    let document = container.get('project-document');
+
+    if(document && !document.$id) {
+      return ',redirect';
+    }
+
+    return '';
+  })
+  .add("firstElement", function($value) {
+    if($value && $value[0]) {
+      return $value[0];
+    }
+
+    return $value;
+  })
+;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
   number = Number(number);

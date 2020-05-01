@@ -56,7 +56,7 @@ $providers = $this->getParam('providers', []);
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset=""
-                data-param-orderType="DESC"
+                data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-users"
                 data-success="state"
@@ -77,7 +77,7 @@ $providers = $this->getParam('providers', []);
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset="{{router.params.offset}}"
-                data-param-orderType="DESC"
+                data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-users">
 
@@ -97,7 +97,7 @@ $providers = $this->getParam('providers', []);
                                     <th width="40"></th>
                                     <th width="180">Name</th>
                                     <th>Email</th>
-                                    <th width="120">Status</th>
+                                    <th width="140">Status</th>
                                     <th width="120">Joined</th>
                                 </tr>
                             </thead>
@@ -141,7 +141,7 @@ $providers = $this->getParam('providers', []);
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-orderType="DESC"
+                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-users"
                         data-success="state"
@@ -156,7 +156,7 @@ $providers = $this->getParam('providers', []);
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-orderType="DESC"
+                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-users"
                         data-success="state"
@@ -203,7 +203,7 @@ $providers = $this->getParam('providers', []);
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset=""
-                data-param-orderType="DESC"
+                data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-teams"
                 data-success="state"
@@ -224,7 +224,7 @@ $providers = $this->getParam('providers', []);
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-offset="{{router.params.offset}}"
-                data-param-orderType="DESC"
+                data-param-order-type="DESC"
                 data-scope="sdk"
                 data-name="project-teams">
 
@@ -272,11 +272,11 @@ $providers = $this->getParam('providers', []);
 
                                                 <label for="name">ID</label>
                                                 <div class="input-copy">
-                                                    <input name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$id}}" />
+                                                    <input data-ls-attrs="id=team-id-{{team.$id}}" name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$id}}" />
                                                 </div>
 
                                                 <label for="name">Name</label>
-                                                <input name="name" data-ls-attrs="id=name-{{team.$id}}" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
+                                                <input data-ls-attrs="id=team-name-{{team.$id}}" name="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
 
                                                 <hr />
 
@@ -298,7 +298,7 @@ $providers = $this->getParam('providers', []);
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-orderType="DESC"
+                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-teams"
                         data-success="state"
@@ -313,7 +313,7 @@ $providers = $this->getParam('providers', []);
                         data-event="submit"
                         data-param-search="{{router.params.search}}"
                         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                        data-param-orderType="DESC"
+                        data-param-order-type="DESC"
                         data-scope="sdk"
                         data-name="project-teams"
                         data-success="state"
@@ -394,7 +394,7 @@ $providers = $this->getParam('providers', []);
                                 <button class="switch pull-end margin-top-small" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
                             </span>
 
-                            <img src="/images/oauth2/<?php echo strtolower($provider); ?>.png" alt="<?php echo ucfirst($provider); ?> Logo" class="pull-start provider margin-end" />
+                            <img src="/images/oauth2/<?php echo strtolower($provider); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo ucfirst($provider); ?> Logo" class="pull-start provider margin-end" />
                             <span>
                                 <?php echo ucfirst($provider); ?>
                             </span>

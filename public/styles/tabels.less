@@ -7,6 +7,11 @@ table {
   position: relative;
   table-layout: fixed;
 
+
+  &.y-scroll {
+    overflow-y: auto;
+  }
+
   thead {
     box-shadow: 0 0 2px rgba(0,0,0,.25);
     border-bottom: solid 1px var(--config-color-fade-super);
@@ -14,7 +19,8 @@ table {
 
     th {
       position: sticky;
-      top: 0;
+      top: -30px;
+      z-index: 3;
     }
   }
 
@@ -59,6 +65,14 @@ table {
     background: var(--config-color-background-fade-super);
   }
 
+  tr.selected {
+    background: var(--config-note-background);
+    
+    td, td span {
+      font-weight: 500;
+    }
+  }
+
   th {
     text-align: @config-start;
     font-weight: normal;
@@ -87,15 +101,10 @@ table {
     }
   }
 
-  td:first-child, th:first-child {
-    @media @phones {
-      width: auto;
-    }
-  }
-
   td, th {
     //text-overflow: ellipsis;
     overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 

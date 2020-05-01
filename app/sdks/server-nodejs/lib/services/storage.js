@@ -38,8 +38,8 @@ class Storage extends Service {
      * read and write arguments.
      *
      * @param File file
-     * @param array read
-     * @param array write
+     * @param string[] read
+     * @param string[] write
      * @throws Exception
      * @return {}
      */
@@ -83,8 +83,8 @@ class Storage extends Service {
      * to update this resource.
      *
      * @param string fileId
-     * @param array read
-     * @param array write
+     * @param string[] read
+     * @param string[] write
      * @throws Exception
      * @return {}
      */

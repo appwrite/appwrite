@@ -8,8 +8,12 @@ use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
+use Utopia\Validator\Numeric;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 
 $utopia->init(function () use ($layout, $utopia) {
     $layout
@@ -178,25 +182,40 @@ $utopia->get('/console/database')
     });
 
 $utopia->get('/console/database/collection')
-    ->desc('Platform console project settings')
+    ->desc('Platform console project database collection')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->param('id', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(function ($id) use ($layout, $projectDB) {
-        $collection = $projectDB->getDocument($id, false);
+    ->action(function () use ($layout, $projectDB) {
+        $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Database Collection')
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/database/document')
+    ->desc('Platform console project database document')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->param('collection', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->action(function ($collection) use ($layout, $projectDB) {
+        Authorization::disable();
+        $collection = $projectDB->getDocument($collection, false);
+        Authorization::reset();
 
         if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             throw new Exception('Collection not found', 404);
         }
 
-        $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
+        $page = new View(__DIR__.'/../../views/console/database/document.phtml');
 
         $page
-            ->setParam('collection', $collection->getArrayCopy())
+            ->setParam('db', $projectDB)
+            ->setParam('collection', $collection)
         ;
 
         $layout
-            ->setParam('title', APP_NAME.' - Database')
+            ->setParam('title', APP_NAME.' - Database Document')
             ->setParam('body', $page);
     });
 

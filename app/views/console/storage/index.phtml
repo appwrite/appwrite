@@ -3,7 +3,7 @@ $home = $this->getParam('home', '');
 $fileLimit = $this->getParam('fileLimit', 0);
 $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 ?>
-<div class="cover margin-bottom-large">
+<div class="cover">
     <h1 class="zone xl margin-bottom-large">
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
         <br />
@@ -13,222 +13,227 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 </div>
 
 <div class="zone xl">
-    <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
-        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+    <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
+        <li data-state="/console/database?project={{router.params.project}}">
+            <h2 class="margin-bottom">Files</h2>
 
-        <h1>Upload File</h1>
+            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
+                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-        <form
-            data-analytics-event="submit"
-            data-analytics-category="console"
-            data-analytics-label="Create Storage File"
-            data-service="storage.createFile"
-            data-event="submit"
-            data-scope="sdk"
-            data-loading="Uploading File..."
-            data-success="alert,trigger,reset"
-            data-success-param-alert-text="File uploaded successfully"
-            data-success-param-trigger-events="storage.createFile"
-            data-failure="alert"
-            data-failure-param-alert-text="Failed to upload file"
-            data-failure-param-alert-classname="error">
-            <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+                <h1>Upload File</h1>
 
-            <label for="file-read">File</label>
-            <input type="file" name="file" id="file-file" size="1" required>
+                <form
+                    data-analytics-event="submit"
+                    data-analytics-category="console"
+                    data-analytics-label="Create Storage File"
+                    data-service="storage.createFile"
+                    data-event="submit"
+                    data-scope="sdk"
+                    data-loading="Uploading File..."
+                    data-success="alert,trigger,reset"
+                    data-success-param-alert-text="File uploaded successfully"
+                    data-success-param-trigger-events="storage.createFile"
+                    data-failure="alert"
+                    data-failure-param-alert-text="Failed to upload file"
+                    data-failure-param-alert-classname="error">
+                    <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
 
-            <div class="text-fade text-size-small margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+                    <label for="file-read">File</label>
+                    <input type="file" name="file" id="file-file" size="1" required>
 
-            <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
-            <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
-            
-            <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
-            <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
+                    <div class="text-fade text-size-small margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
-            <hr />
+                    <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                    <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
+                    
+                    <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                    <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
 
-            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-        </form>
-    </div>
+                    <hr />
 
-    <form class="box padding-small margin-bottom search"
-        data-service="storage.listFiles"
-        data-event="submit"
-        data-param-search="{{router.params.search}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-        data-param-offset=""
-        data-param-orderType="DESC"
-        data-scope="sdk"
-        data-name="project-files"
-        data-success="state"
-        data-success-param-state-keys="search,offset">
-        <div class="row thin responsive">
-            <div class="col span-10">
-                <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </form>
             </div>
-            <div class="col span-2 desktops-only">
-                <button class="fill" title="Search" aria-label="Search"><i class="icon-search"></i></button>
-            </div>
-        </div>
-    </form>
 
-    <div
-        data-service="storage.listFiles"
-        data-event="load,storage.createFile,storage.updateFile,storage.deleteFile"
-        data-param-search="{{router.params.search}}"
-        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-        data-param-offset="{{router.params.offset}}"
-        data-param-orderType="DESC"
-        data-scope="sdk"
-        data-name="project-files">
+            <form class="box padding-small margin-bottom search"
+                data-service="storage.listFiles"
+                data-event="submit"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-offset=""
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-files"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <div class="row thin responsive">
+                    <div class="col span-10">
+                        <input name="search" id="searchFiles" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+                    </div>
+                    <div class="col span-2 desktops-only">
+                        <button class="fill" title="Search" aria-label="Search"><i class="icon-search"></i></button>
+                    </div>
+                </div>
+            </form>
 
-        <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom">
-            <h3 class="margin-bottom-small text-bold">No Files Found</h3>
+            <div
+                data-service="storage.listFiles"
+                data-event="load,storage.createFile,storage.updateFile,storage.deleteFile"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-offset="{{router.params.offset}}"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-files">
 
-            <p class="margin-bottom-no">Upload your first file to get started</p>
-        </div>
+                <div data-ls-if="0 == {{project-files.sum}}" class="box margin-bottom">
+                    <h3 class="margin-bottom-small text-bold">No Files Found</h3>
 
-        <div data-ls-if="0 != {{project-files.sum}}">
-            <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> files found</div>
+                    <p class="margin-bottom-no">Upload your first file to get started</p>
+                </div>
 
-            <div class="box margin-bottom">
-                <table class="vertical">
-                    <thead>
-                        <tr>
-                            <th width="40"></th>
-                            <th>Filename</th>
-                            <th width="160">Type</th>
-                            <th width="100">Size</th>
-                            <th width="100">Created</th>
-                        </tr>
-                    </thead>
-                    <tbody data-ls-loop="project-files.files" data-ls-as="file">
-                        <tr>
-                            <td class="hide">
-                                <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" loading="lazy" width="30" height="30" />
-                            </td>
-                            <td data-title="Name: " class="text-one-liner">
-                                <div data-ui-modal class="box modal width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
-                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                <div data-ls-if="0 != {{project-files.sum}}">
+                    <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-files.sum}}"></span> files found</div>
 
-                                    <h1>Update File</h1>
+                    <div class="box margin-bottom">
+                        <table class="vertical">
+                            <thead>
+                                <tr>
+                                    <th width="40"></th>
+                                    <th>Filename</th>
+                                    <th width="120">Type</th>
+                                    <th width="120">Size</th>
+                                    <th width="120">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody data-ls-loop="project-files.files" data-ls-as="file">
+                                <tr>
+                                    <td class="hide">
+                                        <img src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="pull-start avatar" width="30" height="30" loading="lazy" />
+                                    </td>
+                                    <td data-title="Name: " class="text-one-liner" data-ls-attrs="title={{file.name}}" >
+                                        <div data-ui-modal class="box modal sticky-footer width-large close" data-button-text="{{file.name}}" data-button-class="link" data-button-element="span">
+                                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                    <hr />
+                                            <h1>Update File</h1>
 
-                                    <div class="row responsive modalize">
-                                        <div class="col span-8">
-                                            <form class="strip"
-                                                data-analytics-event="submit"
-                                                data-analytics-category="console"
-                                                data-analytics-label="Update Storage File"
-                                                data-service="storage.updateFile"
-                                                data-event="file-update-{{file.$id}}"
-                                                data-scope="sdk"
-                                                data-success="alert,trigger"
-                                                data-success-param-alert-text="File updated successfully"
-                                                data-success-param-trigger-events="storage.updateFile"
-                                                data-failure="alert"
-                                                data-failure-param-alert-text="Failed to update file"
-                                                data-failure-param-alert-classname="error">
+                                            <hr />
 
-                                                <label for="files-fileId">File ID</label>
-                                                <div class="input-copy">
-                                                    <input data-forms-copy type="text" name="fileId" id="files-fileId" disabled data-ls-bind="{{file.$id}}" />
+                                            <div class="row responsive modalize">
+                                                <div class="col span-8">
+                                                    <form class="strip"
+                                                        data-analytics-event="submit"
+                                                        data-analytics-category="console"
+                                                        data-analytics-label="Update Storage File"
+                                                        data-service="storage.updateFile"
+                                                        data-event="file-update-{{file.$id}}"
+                                                        data-scope="sdk"
+                                                        data-success="alert,trigger"
+                                                        data-success-param-alert-text="File updated successfully"
+                                                        data-success-param-trigger-events="storage.updateFile"
+                                                        data-failure="alert"
+                                                        data-failure-param-alert-text="Failed to update file"
+                                                        data-failure-param-alert-classname="error">
+
+                                                        <label for="files-fileId">File ID</label>
+                                                        <div class="input-copy">
+                                                            <input data-forms-copy type="text" data-ls-attrs="id=file-id-{{file.$id}}" name="fileId" disabled data-ls-bind="{{file.$id}}" />
+                                                        </div>
+                                                        <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="int" value="1">
+
+                                                        <label for="file-read">Read Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                        <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
+                                                        
+                                                        <label for="file-write">Write Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                        <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
+                                                    </form>
+
+                                                    <form class="strip"
+                                                        data-analytics-event="submit"
+                                                        data-analytics-category="console"
+                                                        data-analytics-label="Delete File"
+                                                        data-service="storage.deleteFile"
+                                                        data-scope="sdk"
+                                                        data-event="file-delete-{{file.$id}}"
+                                                        data-confirm="Are you sure you want to delete this file?"
+                                                        data-success="alert,trigger"
+                                                        data-success-param-alert-text="Deleted file successfully"
+                                                        data-success-param-trigger-events="storage.deleteFile"
+                                                        data-failure="alert"
+                                                        data-failure-param-alert-text="Failed to delete file"
+                                                        data-failure-param-alert-classname="error">
+
+                                                        <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
+                                                    </form>
                                                 </div>
-                                                <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+                                                <div class="col span-4">
+                                                    <div class="margin-bottom-small">File Preview</div>
+                                                    
+                                                    <div class="margin-bottom-small">
+                                                        <img src="" class="file-preview" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="225" height="160" />
+                                                    </div>
 
-                                                <label for="file-read">Read Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
-                                                
-                                                <label for="file-write">Write Permissions (<a href="<?php echo $home; ?>/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
-                                            </form>
+                                                    <div class="margin-bottom-tiny">
+                                                        <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
+                                                    </div>
 
-                                            <form class="strip"
-                                                data-analytics-event="submit"
-                                                data-analytics-category="console"
-                                                data-analytics-label="Delete File"
-                                                data-service="storage.deleteFile"
-                                                data-scope="sdk"
-                                                data-event="file-delete-{{file.$id}}"
-                                                data-confirm="Are you sure you want to delete this file?"
-                                                data-success="alert,trigger"
-                                                data-success-param-alert-text="Deleted file successfully"
-                                                data-success-param-trigger-events="storage.deleteFile"
-                                                data-failure="alert"
-                                                data-failure-param-alert-text="Failed to delete file"
-                                                data-failure-param-alert-classname="error">
+                                                    <div class="margin-bottom">
+                                                        <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                                <input type="hidden" name="fileId" data-ls-bind="{{file.$id}}" />
-                                            </form>
+                                            <footer>
+                                                <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
+                                                <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
+                                            </footer>
                                         </div>
-                                        <div class="col span-4">
-                                            <div class="margin-bottom-small">File Preview</div>
-                                            
-                                            <div class="margin-bottom-small">
-                                                <img src="" class="file-preview" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/preview?width=350&height=250&project={{router.params.project}}&mode=admin" loading="lazy" width="100%" height="100%" />
-                                            </div>
+                                    </td>
+                                    <td data-title="Type: ">
+                                        <span data-ls-bind="{{file.mimeType}}" class="tag"></span>
+                                    </td>
+                                    <td data-title="Size: ">
+                                        <span class="text-fade" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
+                                    </td>
+                                    <td data-title="Created: ">
+                                        <span class="text-fade" data-ls-bind="{{file.dateCreated|date-text}}"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                                            <div class="margin-bottom-tiny">
-                                                <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/view?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> New Window <i class="icon-link-ext"></i></a>
-                                            </div>
+                <div class="clear text-align-center paging">
+                    <form
+                        data-service="storage.listFiles"
+                        data-event="submit"
+                        data-param-search="{{router.params.search}}"
+                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-order-type="DESC"
+                        data-scope="sdk"
+                        data-name="project-files"
+                        data-success="state"
+                        data-success-param-state-keys="search,offset">
+                        <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                    </form>
 
-                                            <div class="margin-bottom">
-                                                <a href="" data-ls-attrs="href=//{{env.DOMAIN}}/v1/storage/files/{{file.$id}}/download?project={{router.params.project}}&mode=admin" target="_blank" rel="noopener"><i class="icon-angle-circled-right margin-start-negative-tiny margin-end-tiny"></i> Download <i class="icon-link-ext"></i></a>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
 
-                                    <hr class="margin-top-no" />
-
-                                    <button class="link pull-end text-danger" data-ls-ui-trigger="file-delete-{{file.$id}},modal-close">Delete File</button>
-
-                                    <button type="button" data-ls-ui-trigger="file-update-{{file.$id}},modal-close">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline tablets-only-inline">Cancel</button>
-                                </div>
-                            </td>
-                            <td data-title="Type: ">
-                                <span data-ls-bind="{{file.mimeType}}" class="text-fade text-size-small"></span>
-                            </td>
-                            <td data-title="Size: ">
-                                <span class="text-fade text-size-small" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
-                            </td>
-                            <td data-title="Created: ">
-                                <span class="text-fade text-size-small" data-ls-bind="{{file.dateCreated|date-text}}"></span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                    <form
+                        data-service="storage.listFiles"
+                        data-event="submit"
+                        data-param-search="{{router.params.search}}"
+                        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                        data-param-order-type="DESC"
+                        data-scope="sdk"
+                        data-name="project-files"
+                        data-success="state"
+                        data-success-param-state-keys="search,offset">
+                        <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                    </form>
+                </div>
             </div>
-        </div>
-
-        <div class="clear text-align-center paging">
-            <form
-                data-service="storage.listFiles"
-                data-event="submit"
-                data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-orderType="DESC"
-                data-scope="sdk"
-                data-name="project-files"
-                data-success="state"
-                data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
-            </form>
-
-            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-files.sum|pageTotal}}"></span>
-
-            <form
-                data-service="storage.listFiles"
-                data-event="submit"
-                data-param-search="{{router.params.search}}"
-                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
-                data-param-orderType="DESC"
-                data-scope="sdk"
-                data-name="project-files"
-                data-success="state"
-                data-success-param-state-keys="search,offset">
-                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-files.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
-            </form>
-        </div>
-    </div>
+        </li>
+    </ul>
 </div>

@@ -37,9 +37,9 @@ class Database extends Service {
      * Create a new Collection.
      *
      * @param string name
-     * @param array read
-     * @param array write
-     * @param array rules
+     * @param string[] read
+     * @param string[] write
+     * @param string[] rules
      * @throws Exception
      * @return {}
      */
@@ -84,9 +84,9 @@ class Database extends Service {
      *
      * @param string collectionId
      * @param string name
-     * @param array read
-     * @param array write
-     * @param array rules
+     * @param string[] read
+     * @param string[] write
+     * @param string[] rules
      * @throws Exception
      * @return {}
      */
@@ -133,7 +133,7 @@ class Database extends Service {
      * modes](/docs/admin).
      *
      * @param string collectionId
-     * @param array filters
+     * @param string[] filters
      * @param number offset
      * @param number limit
      * @param string orderField
@@ -171,8 +171,8 @@ class Database extends Service {
      *
      * @param string collectionId
      * @param object data
-     * @param array read
-     * @param array write
+     * @param string[] read
+     * @param string[] write
      * @param string parentDocument
      * @param string parentProperty
      * @param string parentPropertyType
@@ -222,8 +222,8 @@ class Database extends Service {
      * @param string collectionId
      * @param string documentId
      * @param object data
-     * @param array read
-     * @param array write
+     * @param string[] read
+     * @param string[] write
      * @throws Exception
      * @return {}
      */

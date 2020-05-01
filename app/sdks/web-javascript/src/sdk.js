@@ -286,28 +286,6 @@
             }
         }(window.document);
 
-        let iframe = function(method, url, params) {
-            let form = document.createElement('form');
-
-            form.setAttribute('method', method);
-            form.setAttribute('action', config.endpoint + url);
-
-            for(let key in params) {
-                if(params.hasOwnProperty(key)) {
-                    let hiddenField = document.createElement("input");
-                    hiddenField.setAttribute("type", "hidden");
-                    hiddenField.setAttribute("name", key);
-                    hiddenField.setAttribute("value", params[key]);
-
-                    form.appendChild(hiddenField);
-                }
-            }
-
-            document.body.appendChild(form);
-
-            return form.submit();
-        };
-
         let account = {
 
             /**
@@ -768,19 +746,11 @@
              * @param {string} success
              * @param {string} failure
              * @throws {Error}
-             * @return {string}             
+             * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success, failure) {
+            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
-                }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
@@ -798,8 +768,8 @@
                 payload['project'] = config.project;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
-                return config.endpoint + path + ((query) ? '?' + query : '');
+                
+                window.location = config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1162,7 +1132,7 @@
              * modes](/docs/admin).
              *
              * @param {string} collectionId
-             * @param {array} filters
+             * @param {string[]} filters
              * @param {number} offset
              * @param {number} limit
              * @param {string} orderField
@@ -1232,8 +1202,8 @@
              *
              * @param {string} collectionId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @param {string} parentDocument
              * @param {string} parentProperty
              * @param {string} parentPropertyType
@@ -1328,8 +1298,8 @@
              * @param {string} collectionId
              * @param {string} documentId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1435,7 +1405,7 @@
             },
 
             /**
-             * List Countries
+             * List Continents
              *
              * List of all continents. You can use the locale header to get the data in a
              * supported language.
@@ -1587,8 +1557,8 @@
              * read and write arguments.
              *
              * @param {File} file
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1659,8 +1629,8 @@
              * to update this resource.
              *
              * @param {string} fileId
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1743,7 +1713,7 @@
                 payload['project'] = config.project;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -1796,7 +1766,7 @@
                 payload['project'] = config.project;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -1827,7 +1797,7 @@
                 payload['project'] = config.project;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             }
         };
@@ -1884,7 +1854,7 @@
              * project.
              *
              * @param {string} name
-             * @param {array} roles
+             * @param {string[]} roles
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2039,7 +2009,7 @@
              *
              * @param {string} teamId
              * @param {string} email
-             * @param {array} roles
+             * @param {string[]} roles
              * @param {string} url
              * @param {string} name
              * @throws {Error}

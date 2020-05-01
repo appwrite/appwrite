@@ -67,12 +67,12 @@
                                 <small data-ls-bind="({{task.delay|ms2hum}} Delay)"></small>
                             </span>
                         </span>
-                        <small data-ls-if="undefined === {{task.previous}}">
+                        <small data-ls-if="undefined === {{task.previous}}" class="text-size-small">
                             None.
                         </small>
                     </td>
                     <td data-title="">
-                        <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="task-update-{{task.$id}}">
+                        <div data-ui-modal class="modal box sticky-footer close" data-button-alias="none" data-open-event="task-update-{{task.$id}}">
                             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                             <h1>Update Task</h1>
@@ -99,7 +99,7 @@
 
                                 <label data-ls-attrs="for=status-{{task.$id}}" class="margin-bottom">Status
                                     <div class="margin-top-small">
-                                        <input name="status" type="radio" checked="checked" required data-ls-bind="{{task.status}}" value="play" /> &nbsp; <span>Play</span>
+                                        <input name="status" type="radio" checked="checked" required data-ls-bind="{{task.status}}" value="play" /> &nbsp; <span>Play</span> &nbsp;
                                         <input name="status" type="radio" required data-ls-bind="{{task.status}}" value="pause" /> &nbsp; <span>Pause</span>
                                     </div>
                                 </label>
@@ -194,7 +194,9 @@
                                     </div>
                                 </div>
 
-                                <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                <footer>
+                                    <button type="submit">Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                </footer>
                             </form>
 
                         </div>
@@ -230,7 +232,7 @@
     </div>
 
     <div class="clear">
-        <div data-ui-modal class="modal box close" data-button-text="Add Task">
+        <div data-ui-modal class="modal box close sticky-footer" data-button-text="Add Task">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
             <h1>Add Task</h1>
@@ -338,7 +340,9 @@
                     </div>
                 </div>
 
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                <footer>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </footer>
             </form>
         </div>
     </div>

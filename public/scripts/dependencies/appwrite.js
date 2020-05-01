@@ -2784,7 +2784,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getUsage: function(projectId) {
+            getUsage: function(projectId, range = 'monthly') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2792,6 +2792,10 @@
                 let path = '/projects/{projectId}/usage'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 let payload = {};
+
+                if(range) {
+                    payload['range'] = range;
+                }
 
                 return http
                     .get(path, {
@@ -3918,13 +3922,12 @@
                     throw new Error('Missing required parameter: "sessionId"');
                 }
                 
-                let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
+                let path = '/users/{userId}/sessions/{sessionId}'
+                    .replace(new RegExp('{userId}', 'g'), userId)
+                    .replace(new RegExp('{sessionId}', 'g'), sessionId)
+                ;
 
                 let payload = {};
-
-                if(sessionId) {
-                    payload['sessionId'] = sessionId;
-                }
 
                 return http
                     .delete(path, {
