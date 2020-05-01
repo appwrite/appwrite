@@ -372,7 +372,7 @@ window.ls.filter
 
     return result.length;
   })
-  .add("documentLabel", function($value, rule, filter) {
+  .add("documentLabel", function($value, rule) {
     let value = ($value !== null && $value[rule['key']] !== undefined) ? $value[rule['key']] : null;
 
     switch (rule['type']) {
