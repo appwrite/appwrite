@@ -101,9 +101,9 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                 <tr>
                                     <th width="40"></th>
                                     <th>Filename</th>
-                                    <th width="160">Type</th>
-                                    <th width="100">Size</th>
-                                    <th width="100">Created</th>
+                                    <th width="120">Type</th>
+                                    <th width="120">Size</th>
+                                    <th width="120">Created</th>
                                 </tr>
                             </thead>
                             <tbody data-ls-loop="project-files.files" data-ls-as="file">
@@ -190,7 +190,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                         </div>
                                     </td>
                                     <td data-title="Type: ">
-                                        <span data-ls-bind="{{file.mimeType}}" class="text-fade"></span>
+                                        <span data-ls-bind="{{file.mimeType}}" class="tag"></span>
                                     </td>
                                     <td data-title="Size: ">
                                         <span class="text-fade" data-ls-bind="{{file.sizeOriginal|humanFileSize}}"></span>
