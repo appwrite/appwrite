@@ -95,7 +95,7 @@ trait HealthBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/quque/webhooks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -111,7 +111,91 @@ trait HealthBase
         return [];
     }
 
-    public function xtestStorageLocalSuccess():array
+    public function testTasksSuccess():array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/quque/tasks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(50, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        
+        return [];
+    }
+
+    public function testLogsSuccess():array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/quque/logs', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(50, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        
+        return [];
+    }
+
+    public function testUsageSuccess():array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/quque/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(50, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        
+        return [];
+    }
+
+    public function testCertificatesSuccess():array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/quque/certificates', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(50, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        
+        return [];
+    }
+
+    public function testStorageLocalSuccess():array
     {
         /**
          * Test for SUCCESS
