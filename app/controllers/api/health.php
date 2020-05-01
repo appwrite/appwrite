@@ -23,7 +23,7 @@ $utopia->get('/v1/health')
 
 $utopia->get('/v1/health/db')
     ->desc('Check DB Health')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getDB')
@@ -39,7 +39,7 @@ $utopia->get('/v1/health/db')
 
 $utopia->get('/v1/health/cache')
     ->desc('Check Cache Health')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getCache')
@@ -55,7 +55,7 @@ $utopia->get('/v1/health/cache')
 
 $utopia->get('/v1/health/time')
     ->desc('Check Time Health')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getTime')
@@ -103,7 +103,7 @@ $utopia->get('/v1/health/time')
 
 $utopia->get('/v1/health/queue/webhooks')
     ->desc('Check number of pending webhook messages')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueWebhooks')
@@ -117,7 +117,7 @@ $utopia->get('/v1/health/queue/webhooks')
 
 $utopia->get('/v1/health/queue/tasks')
     ->desc('Check the number of pending task messages')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueTasks')
@@ -131,7 +131,7 @@ $utopia->get('/v1/health/queue/tasks')
 
 $utopia->get('/v1/health/queue/logs')
 ->desc('Check the number of pending log messages')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueLogs')
@@ -145,7 +145,7 @@ $utopia->get('/v1/health/queue/logs')
 
 $utopia->get('/v1/health/queue/usage')
     ->desc('Check the number of pending usage messages')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueUsage')
@@ -159,7 +159,7 @@ $utopia->get('/v1/health/queue/usage')
 
 $utopia->get('/v1/health/queue/certificates')
     ->desc('Check the number of pending certificate messages')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getQueueCertificates')
@@ -173,7 +173,7 @@ $utopia->get('/v1/health/queue/certificates')
 
 $utopia->get('/v1/health/storage/local')
     ->desc('Check File System Health')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getStorageLocal')
@@ -186,9 +186,21 @@ $utopia->get('/v1/health/storage/local')
             if (!is_readable($device->getRoot().'/..')) {
                 throw new Exception('Device is not readable');
             }
+            
+            if (!is_writable($device->getRoot().'/../uploads')) {
+                throw new Exception('Device uploads dir is not writable');
+            }
+            
+            if (!is_writable($device->getRoot().'/../cache')) {
+                throw new Exception('Device cache dir is not writable');
+            }
 
-            if (!is_writable($device->getRoot().'/..')) {
-                throw new Exception('Device is not writable');
+            if (!is_writable($device->getRoot().'/../config')) {
+                throw new Exception('Device config dir is not writable');
+            }
+
+            if (!is_writable($device->getRoot().'/../certificates')) {
+                throw new Exception('Device certificates dir is not writable');
             }
 
             $response->json(['status' => 'OK']);
@@ -197,7 +209,7 @@ $utopia->get('/v1/health/storage/local')
 
 $utopia->get('/v1/health/storage/anti-virus')
     ->desc('Check Anti virus Health')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getStorageAntiVirus')

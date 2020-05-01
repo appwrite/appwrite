@@ -95,7 +95,7 @@ trait HealthBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/quque/webhooks', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/webhooks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -116,7 +116,7 @@ trait HealthBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/quque/tasks', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/tasks', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -137,7 +137,7 @@ trait HealthBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/quque/logs', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -158,7 +158,7 @@ trait HealthBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/quque/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -179,7 +179,7 @@ trait HealthBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/quque/certificates', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/certificates', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
