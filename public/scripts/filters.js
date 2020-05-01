@@ -416,6 +416,13 @@ window.ls.filter
 
     return $value;
   })
+  .add("platformsLimit", function($value) {
+
+    console.log('test console');
+    console.log($value);
+    
+    return $value;
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

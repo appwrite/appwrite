@@ -4,7 +4,6 @@
 ![Version](https://img.shields.io/badge/api%20version-0.5.3-blue.svg?v=1)
 
 
-
 ![Appwrite](https://appwrite.io/images/github.png)
 
 ## Installation

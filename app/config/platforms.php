@@ -124,13 +124,13 @@ return [
         'key' => APP_PLATFORM_FLUTTER,
         'name' => 'Flutter',
         'description' => 'Client libraries for integrating with '.APP_NAME.' to build cross-platform Flutter applications. Read the [getting started for Flutter](/docs/getting-started-for-flutter) tutorial to start building your first Flutter application.',
-        'enabled' => false,
+        'enabled' => true,
         'beta' => true,
         'languages' => [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '0.0.8',
+                'version' => '0.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'enabled' => true,
                 'beta' => true,

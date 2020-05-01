@@ -9,7 +9,6 @@
 
 
 
-
 ![Appwrite](https://appwrite.io/images/github.png)
 
 ## Installation
@@ -18,7 +17,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yml
 dependencies:
-  appwrite: ^0.0.8
+  appwrite: ^0.1.1
 ```
 
 You can install packages from the command line:

@@ -1,3 +1,13 @@
+.avatar-container {
+  position: relative;
+  
+  .corner {
+    position: absolute;
+    bottom: -3px;
+    .func-end(-3px);
+  }
+}
+
 .avatar {
   width: 60px;
   height: 60px;
@@ -28,7 +38,16 @@
     background: transparent;
   }
 
+  .no-shadow {
+    box-shadow: none;
+  }
+
   &.xs {
+    width: 30px;
+    height: 30px;
+  }
+
+  &.xxs {
     width: 20px;
     height: 20px;
   }

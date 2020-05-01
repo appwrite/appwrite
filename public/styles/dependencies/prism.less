@@ -64,7 +64,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 	}
 
 	&[data-lang="python"]::after {
-		background: var(--config-python-javascript);
+		background: var(--config-language-python);
 		color: var(--config-language-python-contrast);
 	}
 
@@ -78,11 +78,17 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		color: var(--config-language-dart-contrast);
 	}
 
+	&[data-lang="yaml"]::after {
+		background: var(--config-language-yaml);
+		color: var(--config-language-yaml-contrast);
+	}
+
 	.tag {
 		color: inherit!important;
 		background: transparent!important;
 		padding: inherit!important;
 		font-size: inherit!important;
+		line-height: 14px;
 	}
 
 	.copy {

@@ -2,6 +2,7 @@
 
 ## Features
 
+* Added support for Flutter iOS & Android apps
 * New locale for Khmer
 * Added TypeScript type hinting to the JS SDK (@zevektor)
 
@@ -9,6 +10,10 @@
 
 * Updated all the REST API query params to be in camelCase
 * Normalized locale phone codes response body
+
+## Bug Fixes
+
+* Fixed project users logout button
 
 # Version 0.5.3 (PRE-RELEASE)
 

@@ -8,7 +8,6 @@
 
 
 
-
 ![Appwrite](https://appwrite.io/images/github.png)
 
 ## Installation

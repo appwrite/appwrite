@@ -87,6 +87,11 @@ $graph = $this->getParam('graph', false);
     <div class="box margin-bottom" data-ls-if="0 < {{console-project.platforms.length}} && undefined !== {{console-project.platforms}}">
         <ul data-ls-loop="console-project.platforms" data-ls-as="platform" class="list">
             <li class="clear">
+                <div class="pull-end desktops-only">
+                    <button data-ls-ui-trigger="platform-delete-{{platform.$id}}" class="reverse danger margin-end-small">Delete</button>
+                    <button data-ls-ui-trigger="platform-update-{{platform.$id}}">Update</button>
+                </div>
+
 
                 <div data-ui-modal data-button-hide="on" data-open-event="platform-update-{{platform.$id}}">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
@@ -114,17 +119,22 @@ $graph = $this->getParam('graph', false);
                     <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
                 </form>
 
-                <div class="pull-end desktops-only">
-                    <button data-ls-ui-trigger="platform-delete-{{platform.$id}}" class="reverse danger margin-end-small">Delete</button>
-                    <button data-ls-ui-trigger="platform-update-{{platform.$id}}">Update</button>
+                <div>
+                    <div class="pull-start margin-end avatar-container">
+                        <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar" loading="lazy" width="60" height="60" />
+                        
+                        <div data-ls-if="{{platform.type}} === 'flutter-ios'" class="corner">
+                            <img src="" data-ls-attrs="src=/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xs" loading="lazy" width="30" height="30" />
+                        </div>
+                        
+                        <div data-ls-if="{{platform.type}} === 'flutter-android'" class="corner">
+                            <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xs" loading="lazy" width="30" height="30" />
+                        </div>
+                    </div>
+                    <span data-ls-bind="{{platform.name}}"></span> &nbsp; <small data-ls-bind="{{platform.hostname}}{{platform.key}}"></small>
                 </div>
 
-                <div class="margin-bottom-tiny">
-                    <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
-                    <span data-ls-bind="{{platform.name}}"></span>
-                </div>
-
-                <p class="margin-bottom-no desktops-only"><small data-ls-bind="{{platform.hostname}}"></small></p>
+                <p class="margin-bottom-no" style="margin-top: 10px;"><a href="">Get Started</a></p>
 
                 <div class="phones-only-inline tablets-only-inline margin-top-tiny">
                     <button class="link" data-ls-ui-trigger="platform-update-{{platform.$id}}">Update</button>
@@ -149,16 +159,19 @@ $graph = $this->getParam('graph', false);
     <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" data-blur="1" tabindex="1">
         <ul>
             <li>
-                <button class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Web Platform Logo" class="avatar xs margin-end" /> New Web App</button>
+                <div class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Web Platform Logo" class="avatar xxs margin-end-small" /> New Web App</div>
+            </li>
+            <li>
+                <div class="link flutter-new"><img src="/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Flutter Platform Logo" class="avatar xxs margin-end-small" /> New Flutter App &nbsp;<span class="text-size-tiny">(beta)</span></div>
             </li>
             <li class="disabled">
-                <button class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xs margin-end" /> New iOS App</button>
+                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" /> New iOS App</div>
             </li>
             <li class="disabled">
-                <button class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xs margin-end" /> New Android App</button>
+                <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" /> New Android App</div>
             </li>
             <li class="disabled">
-                <button class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xs margin-end" /> New Unity Game</button>
+                <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" /> New Unity Game</div>
             </li>
         </ul>
     </div>
@@ -202,7 +215,7 @@ $graph = $this->getParam('graph', false);
             </div>
         </div>
 
-        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
     </form>
 </div>
 
@@ -210,7 +223,7 @@ $graph = $this->getParam('graph', false);
     <form
         data-analytics-event="submit"
         data-analytics-category="console"
-        data-analytics-label="Update Project Platform"
+        data-analytics-label="Update Project Platform (Web)"
         data-service="projects.updatePlatform"
         data-scope="console"
         data-event="submit"
@@ -232,6 +245,150 @@ $graph = $this->getParam('graph', false);
         
         <hr />
 
-        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Cancel</button>
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
     </form>
+</script>
+
+<div data-ui-modal class="modal box close" data-button-alias=".flutter-new">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+    <h1 class="margin-bottom-xl">Register your Flutter App</h1>
+
+    <ul class="phases clear margin-top-negative-large padding" data-ui-phases>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;iOS&nbsp;&nbsp;</h2>
+
+            <form
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Project Platform (Flutter / iOS)"
+                data-service="projects.createPlatform"
+                data-scope="console"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Registered new platform successfully"
+                data-success-param-trigger-events="projects.createPlatform"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to register platform"
+                data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="flutter-ios" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" placeholder="My iOS App" />
+
+                <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" id="key" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+
+        </li>
+        <li>
+            <h2 style="display: none">&nbsp;&nbsp;Android&nbsp;&nbsp;</h2>
+
+            <form
+                data-analytics-event="submit"
+                data-analytics-category="console"
+                data-analytics-label="Create Project Platform (Flutter / Android)"
+                data-service="projects.createPlatform"
+                data-scope="console"
+                data-event="submit"
+                data-success="alert,trigger,reset"
+                data-success-param-alert-text="Registered new platform successfully"
+                data-success-param-trigger-events="projects.createPlatform"
+                data-failure="alert"
+                data-failure-param-alert-text="Failed to register platform"
+                data-failure-param-alert-classname="error">
+
+                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                <input type="hidden" name="type" data-ls-bind="flutter-android" />
+
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" placeholder="My Android App" />
+
+                <label for="key">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
+                <input type="text" class="full-width" id="key" name="key" required autocomplete="off" placeholder="com.company.appname" />
+
+                <hr />
+
+                <button type="submit">Register</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Back</button>
+            </form>
+        </li>
+    </ul>
+</div>
+
+<script type="text/html" id="template-ios-update">
+    <form
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Update Project Platform (iOS)"
+        data-service="projects.updatePlatform"
+        data-scope="console"
+        data-event="submit"
+        data-success="alert,trigger"
+        data-success-param-alert-text="Updated platform successfully"
+        data-success-param-trigger-events="projects.updatePlatform"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to update platform"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" />
+
+        <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
+        <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
+        
+        <hr />
+
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
+    </form>
+</script>
+
+<script type="text/html" id="template-android-update">
+    <form
+        data-analytics-event="submit"
+        data-analytics-category="console"
+        data-analytics-label="Update Project Platform (Android)"
+        data-service="projects.updatePlatform"
+        data-scope="console"
+        data-event="submit"
+        data-success="alert,trigger"
+        data-success-param-alert-text="Updated platform successfully"
+        data-success-param-trigger-events="projects.updatePlatform"
+        data-failure="alert"
+        data-failure-param-alert-text="Failed to update platform"
+        data-failure-param-alert-classname="error">
+
+        <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+        <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
+
+        <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" />
+
+        <label data-ls-attrs="for=key-{{platform.$id}}">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
+        <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
+        
+        <hr />
+
+        <button type="submit">Update</button> &nbsp; <button data-ls-ui-trigger="modal-close" type="button" class="reverse">Back</button>
+    </form>
+</script>
+
+<script type="text/html" id="template-flutter-ios-update">
+    <div data-ls-template="template-ios-update" data-type="script"></div>
+</script>
+
+<script type="text/html" id="template-flutter-android-update">
+    <div data-ls-template="template-ios-update" data-type="script"></div>
+</script>
+
+<script type="text/html" id="template-flutter-macos-update">
+    <div data-ls-template="template-macos-update" data-type="script"></div>
 </script>

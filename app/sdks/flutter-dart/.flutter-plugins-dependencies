@@ -1,0 +1,1 @@
+{"_info":"// This is a generated file; do not edit or check into version control.","dependencyGraph":[{"name":"flutter_web_auth","dependencies":[]},{"name":"package_info","dependencies":[]},{"name":"path_provider","dependencies":["path_provider_macos"]},{"name":"path_provider_macos","dependencies":[]}]}

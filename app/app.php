@@ -16,6 +16,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
+use Appwrite\Network\Validators\Origin;
 
 /*
  * Configuration files
@@ -51,7 +52,7 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $roles, $webhook, $audit, $usage, $clients) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $roles, $webhook, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 
@@ -96,16 +97,15 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      *  Adding Appwrite API domains to allow XDOMAIN communication
      *  Skip this check for non-web platforms which are not requiredto send an origin header
      */
-    $origin = parse_url($request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', '')), PHP_URL_HOST);
-    
-    if (!empty($origin)
-        && !in_array($origin, $clients)
-        && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
-        && empty($request->getHeader('X-Appwrite-Key', ''))
-    ) {
-        throw new Exception('Access from this client host is forbidden', 403);
-    }
+    $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
+    $originValidator = new Origin(array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
+    if(!$originValidator->isValid($origin)
+        && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
+        && empty($request->getHeader('X-Appwrite-Key', ''))) {
+            throw new Exception($originValidator->getDescription(), 403);
+    }
+    
     /*
      * ACL Check
      */

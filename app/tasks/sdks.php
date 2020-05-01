@@ -55,11 +55,14 @@ $cli
                 
                 //$spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
                 $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$language['family']);
+                $spec = getSSLPage('https://localhost:2444/v1/open-api-2.json?extensions=1&platform='.$language['family']);
 
                 $result = realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
                 $readme = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
                 $readme = ($readme) ? file_get_contents($readme) : '';
+                $examples = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/EXAMPLES.md');
+                $examples = ($examples) ? file_get_contents($examples) : '';
                 $changelog = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
                 $changelog = ($changelog) ? file_get_contents($changelog) : '# Change Log';
                 $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
@@ -135,6 +138,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK($config, new Swagger2($spec));
 
                 $sdk
+                    ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
+                        Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
+                        For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
+                    ->setShortDescription('Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API')
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
                     ->setVersion($language['version'])
@@ -151,6 +158,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setWarning($warning)
                     ->setReadme($readme)
                     ->setChangelog($changelog)
+                    ->setExamples($examples)
                 ;
                 
                 try {
