@@ -51,7 +51,7 @@ $events = [
         <ul data-ls-loop="console-webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
-                <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
+                <div data-ui-modal class="modal close sticky-footer" data-button-text="Update" data-button-class="pull-end">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                     <h1>Update Webhook</h1>
@@ -127,7 +127,9 @@ $events = [
                             </div>
                         </div>
 
-                        <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        <footer>
+                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        </footer>
                     </form>
                 </div>
 
@@ -164,7 +166,7 @@ $events = [
     </div>
 
     <div class="clear">
-        <div data-ui-modal class="modal close box" data-button-text="Add Webhook">
+        <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Webhook">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
             <h1>Add Webhook</h1>
@@ -239,7 +241,9 @@ $events = [
                     </div>
                 </div>
 
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                <footer>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </footer>
             </form>
         </div>
     </div>
