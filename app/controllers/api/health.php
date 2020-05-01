@@ -9,7 +9,7 @@ use Appwrite\ClamAV\Network;
 
 $utopia->get('/v1/health')
     ->desc('Check API HTTP Health')
-    ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'get')

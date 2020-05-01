@@ -56,7 +56,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     
     $route = $utopia->match($request);
 
-    if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId())) {
+    if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
     }
 
