@@ -13,6 +13,7 @@ $utopia->get('/v1/health')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'get')
+    ->label('sdk.description', '/docs/references/health/get.md')
     ->label('docs', false)
     ->action(
         function () use ($response) {
@@ -26,6 +27,7 @@ $utopia->get('/v1/health/db')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getDB')
+    ->label('sdk.description', '/docs/references/health/get-db.md')
     ->label('docs', false)
     ->action(
         function () use ($response, $register) {
@@ -41,6 +43,7 @@ $utopia->get('/v1/health/cache')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getCache')
+    ->label('sdk.description', '/docs/references/health/get-cache.md')
     ->label('docs', false)
     ->action(
         function () use ($response, $register) {
@@ -56,6 +59,7 @@ $utopia->get('/v1/health/time')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getTime')
+    ->label('sdk.description', '/docs/references/health/get-time.md')
     ->label('docs', false)
     ->action(
         function () use ($response) {
@@ -97,16 +101,73 @@ $utopia->get('/v1/health/time')
         }
     );
 
-$utopia->get('/v1/health/webhooks')
-    ->desc('Check Webhooks Health')
+$utopia->get('/v1/health/queue/webhooks')
+    ->desc('Check number of pending webhook messages')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getWebhooks')
+    ->label('sdk.method', 'getQueueWebhooks')
+    ->label('sdk.description', '/docs/references/health/get-queue-webhooks.md')
     ->label('docs', false)
     ->action(
         function () use ($response) {
             $response->json(['size' => Resque::size('v1-webhooks')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/tasks')
+    ->desc('Check the number of pending task messages')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueTasks')
+    ->label('sdk.description', '/docs/references/health/get-queue-tasks.md')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-tasks')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/logs')
+->desc('Check the number of pending log messages')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueLogs')
+    ->label('sdk.description', '/docs/references/health/get-queue-logs.md')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-audit')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/usage')
+    ->desc('Check the number of pending usage messages')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsage')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-usage')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/certificates')
+    ->desc('Check the number of pending certificate messages')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueCertificates')
+    ->label('sdk.description', '/docs/references/health/get-queue-certificates.md')
+    ->label('docs', false)
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-usage')]);
         }
     );
 
@@ -116,6 +177,7 @@ $utopia->get('/v1/health/storage/local')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getStorageLocal')
+    ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->label('docs', false)
     ->action(
         function () use ($response) {
@@ -139,6 +201,7 @@ $utopia->get('/v1/health/storage/anti-virus')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getStorageAntiVirus')
+    ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->label('docs', false)
     ->action(
         function () use ($response) {
@@ -151,12 +214,12 @@ $utopia->get('/v1/health/storage/anti-virus')
         }
     );
 
-$utopia->get('/v1/health/stats')
+$utopia->get('/v1/health/stats') // Currently only used internally
     ->desc('System Stats')
     ->label('scope', 'god')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStats')
+    // ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    // ->label('sdk.namespace', 'health')
+    // ->label('sdk.method', 'getStats')
     ->label('docs', false)
     ->action(
         function () use ($response, $register) {
