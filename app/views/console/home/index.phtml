@@ -18,6 +18,7 @@ $graph = $this->getParam('graph', false);
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
             <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
+            <!-- <li class="pull-end margin-start margin-bottom-small text-size-small margin-top-tiny"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}">May 2020 &nbsp; <i class="icon-down-dir"></i></a></li> -->
         </ul>
     </div>
 </div>
@@ -29,7 +30,7 @@ $graph = $this->getParam('graph', false);
             data-event="load"
             data-name="usage"
             data-param-project-id="{{router.params.project}}"
-            data-param-range="monthly">
+            data-param-range="last30">
 
             <?php if (!$graph) : ?>
                 <div class="row responsive">
@@ -41,13 +42,13 @@ $graph = $this->getParam('graph', false);
                         <div class="chart-metric">
                             <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
                             <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
-                            <div class="range">Current Month</div>
+                            <div class="range">Last 30 days</div>
                         </div>
                     </div>
                     <div class="col span-3">
                         <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.network.total|humanFileSize}}" data-default="0">0</span></div>
                         <div class="metric margin-bottom-small">Bandwidth</div>
-                        <div class="range">Current Month</div>
+                        <div class="range">Last 30 days</div>
                         <!-- <div class="margin-top dev-feature">
                             <a href="">Full Usage Report <i class="icon-right-open"></i></a>
                         </div> -->
@@ -254,7 +255,7 @@ $graph = $this->getParam('graph', false);
 
     <h1 class="margin-bottom-xl">Register your Flutter App</h1>
 
-    <ul class="phases clear margin-top-negative-large padding" data-ui-phases>
+    <ul class="phases clear margin-top-negative-small padding" data-ui-phases>
         <li>
             <h2 style="display: none">&nbsp;&nbsp;iOS&nbsp;&nbsp;</h2>
 

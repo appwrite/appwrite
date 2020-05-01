@@ -661,6 +661,7 @@ input[type=checkbox], input[type=radio] {
   padding-top: 0;
   background: var(--config-color-background-input);
   line-height: normal !important;
+  position: relative;
 
   &.hide {
     padding: 0 !important;
@@ -684,6 +685,10 @@ input[type=checkbox], input[type=radio] {
     border-bottom: solid 1px var(--config-color-fade-light);
     margin: 0 -15px 15px -15px;
     padding: 10px 15px;
+    position: sticky;
+    top: 70px;
+    background: var(--config-color-background-input);
+    border-radius: 10px 10px 0 0;
   }
 
   .pell-content {
@@ -1098,7 +1103,7 @@ ol {
 
     &:before {
       border: solid;
-      border-color: #ffffff transparent;
+      border-color: var(--config-color-background-fade) transparent;
       border-width: 8px 8px 0 8px;
       bottom: -8px;
       content: "";

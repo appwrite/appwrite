@@ -153,7 +153,7 @@ $utopia->get('/v1/projects/:projectId/usage')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('range', 'monthly', function () { return new WhiteList(['daily', 'monthly', 'last30', 'last90']); }, 'Date range.', true)
+    ->param('range', 'last30', function () { return new WhiteList(['daily', 'monthly', 'last30', 'last90']); }, 'Date range.', true)
     ->action(
         function ($projectId, $range) use ($response, $consoleDB, $projectDB, $register) {
             $project = $consoleDB->getDocument($projectId);
