@@ -12,7 +12,6 @@
         searchOpen.type = 'button';
         searchOpen.innerHTML = '<i class="icon icon-search"></i> Search';
         searchOpen.classList.add('reverse');
-        searchOpen.classList.add('small');
 
         let path = container.scope(searchButton);
 

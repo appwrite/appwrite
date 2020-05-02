@@ -41,7 +41,7 @@ if($type === 'document') {
 </ul>
 
 <?php if(!empty($list) && $type === 'document'): ?>
-    <div class="drop-list" data-ls-ui-open="" data-button-text="Add" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="reverse small margin-bottom-small" data-blur="1" tabindex="1">
+    <div class="drop-list" data-ls-ui-open="" data-button-text="Add" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="reverse margin-bottom-small" data-blur="1" tabindex="1">
         <ul>
             <?php foreach($list as $item):
                 $name = (isset($collections[$item])) ? $collections[$item] : '';
@@ -53,5 +53,5 @@ if($type === 'document') {
         </ul>
     </div>
 <?php else: ?>
-    <button type="button" data-ls-ui-trigger="collection-child-<?php echo $this->escape($namespace); ?>" class="reverse small margin-bottom-small">Add</button>
+    <button type="button" data-ls-ui-trigger="collection-child-<?php echo $this->escape($namespace); ?>" class="reverse margin-bottom-small">Add</button>
 <?php endif; ?>
