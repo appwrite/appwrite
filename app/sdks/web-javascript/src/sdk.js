@@ -494,7 +494,7 @@
                 }
 
                 if(oldPassword) {
-                    payload['old-password'] = oldPassword;
+                    payload['oldPassword'] = oldPassword;
                 }
 
                 return http
@@ -608,12 +608,12 @@
              *
              * @param {string} userId
              * @param {string} secret
-             * @param {string} passwordA
-             * @param {string} passwordB
+             * @param {string} password
+             * @param {string} passwordAgain
              * @throws {Error}
              * @return {Promise}             
              */
-            updateRecovery: function(userId, secret, passwordA, passwordB) {
+            updateRecovery: function(userId, secret, password, passwordAgain) {
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
@@ -622,12 +622,12 @@
                     throw new Error('Missing required parameter: "secret"');
                 }
                 
-                if(passwordA === undefined) {
-                    throw new Error('Missing required parameter: "passwordA"');
+                if(password === undefined) {
+                    throw new Error('Missing required parameter: "password"');
                 }
                 
-                if(passwordB === undefined) {
-                    throw new Error('Missing required parameter: "passwordB"');
+                if(passwordAgain === undefined) {
+                    throw new Error('Missing required parameter: "passwordAgain"');
                 }
                 
                 let path = '/account/recovery';
@@ -642,12 +642,12 @@
                     payload['secret'] = secret;
                 }
 
-                if(passwordA) {
-                    payload['password-a'] = passwordA;
+                if(password) {
+                    payload['password'] = password;
                 }
 
-                if(passwordB) {
-                    payload['password-b'] = passwordB;
+                if(passwordAgain) {
+                    payload['passwordAgain'] = passwordAgain;
                 }
 
                 return http
@@ -748,7 +748,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
+            createOAuth2Session: function(provider, success = 'https://localhost:2444/auth/oauth2/success', failure = 'https://localhost:2444/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -1166,15 +1166,15 @@
                 }
 
                 if(orderField) {
-                    payload['order-field'] = orderField;
+                    payload['orderField'] = orderField;
                 }
 
                 if(orderType) {
-                    payload['order-type'] = orderType;
+                    payload['orderType'] = orderType;
                 }
 
                 if(orderCast) {
-                    payload['order-cast'] = orderCast;
+                    payload['orderCast'] = orderCast;
                 }
 
                 if(search) {

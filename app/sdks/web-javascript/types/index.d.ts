@@ -213,12 +213,12 @@ declare namespace Appwrite {
 	     *
          * @param {string} userId
          * @param {string} secret
-         * @param {string} passwordA
-         * @param {string} passwordB
+         * @param {string} password
+         * @param {string} passwordAgain
          * @throws {Error}
          * @return {Promise}         
          */
-	    updateRecovery(userId: string, secret: string, passwordA: string, passwordB: string): Promise<object>;
+	    updateRecovery(userId: string, secret: string, password: string, passwordAgain: string): Promise<object>;
 
         /**
          * Get Account Sessions

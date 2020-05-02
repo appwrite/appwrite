@@ -57,6 +57,7 @@ declare class Appwrite {
 	account:Appwrite.Account;
 	avatars:Appwrite.Avatars;
 	database:Appwrite.Database;
+	health:Appwrite.Health;
 	locale:Appwrite.Locale;
 	projects:Appwrite.Projects;
 	storage:Appwrite.Storage;
@@ -215,12 +216,12 @@ declare namespace Appwrite {
 	     *
          * @param {string} userId
          * @param {string} secret
-         * @param {string} passwordA
-         * @param {string} passwordB
+         * @param {string} password
+         * @param {string} passwordAgain
          * @throws {Error}
          * @return {Promise}         
          */
-	    updateRecovery(userId: string, secret: string, passwordA: string, passwordB: string): Promise<object>;
+	    updateRecovery(userId: string, secret: string, password: string, passwordAgain: string): Promise<object>;
 
         /**
          * Get Account Sessions
@@ -575,6 +576,143 @@ declare namespace Appwrite {
          * @return {Promise}         
          */
 	    deleteDocument(collectionId: string, documentId: string): Promise<object>;
+
+        /**
+         * Get Collection Logs
+         *
+	     *
+         * @param {string} collectionId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getCollectionLogs(collectionId: string): Promise<object>;
+
+	}
+
+    export interface Health {
+
+        /**
+         * Check API HTTP Health
+         *
+         * Check the Appwrite HTTP server is up and responsive.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    get(): Promise<object>;
+
+        /**
+         * Check Cache Health
+         *
+         * Check the Appwrite in-memory cache server is up and connection is
+         * successful.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getCache(): Promise<object>;
+
+        /**
+         * Check DB Health
+         *
+         * Check the Appwrite database server is up and connection is successful.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getDB(): Promise<object>;
+
+        /**
+         * Check the number of pending certificate messages
+         *
+         * Get the number of certificates that are waiting to be issued against
+         * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
+         * server.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getQueueCertificates(): Promise<object>;
+
+        /**
+         * Check the number of pending log messages
+         *
+         * Get the number of logs that are waiting to be processed in the Appwrite
+         * internal queue server.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getQueueLogs(): Promise<object>;
+
+        /**
+         * Check the number of pending task messages
+         *
+         * Get the number of tasks that are waiting to be processed in the Appwrite
+         * internal queue server.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getQueueTasks(): Promise<object>;
+
+        /**
+         * Check the number of pending usage messages
+         *
+         * Get the number of usage stats that are waiting to be processed in the
+         * Appwrite internal queue server.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getQueueUsage(): Promise<object>;
+
+        /**
+         * Check number of pending webhook messages
+         *
+         * Get the number of webhooks that are waiting to be processed in the Appwrite
+         * internal queue server.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getQueueWebhooks(): Promise<object>;
+
+        /**
+         * Check Anti virus Health
+         *
+         * Check the Appwrite Anti Virus server is up and connection is successful.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getStorageAntiVirus(): Promise<object>;
+
+        /**
+         * Check File System Health
+         *
+         * Check the Appwrite local storage device is up and connection is successful.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getStorageLocal(): Promise<object>;
+
+        /**
+         * Check Time Health
+         *
+         * Check the Appwrite server time is synced with Google remote NTP server. We
+         * use this technology to smoothly handle leap seconds with no disruptive
+         * events. The [Network Time
+         * Protocol](https://en.wikipedia.org/wiki/Network_Time_Protocol) (NTP) is
+         * used by hundreds of millions of computers and devices to synchronize their
+         * clocks over the Internet. If your computer sets its own clock, it likely
+         * uses NTP.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getTime(): Promise<object>;
 
 	}
 
@@ -987,10 +1125,11 @@ declare namespace Appwrite {
          *
 	     *
          * @param {string} projectId
+         * @param {string} range
          * @throws {Error}
          * @return {Promise}         
          */
-	    getUsage(projectId: string): Promise<object>;
+	    getUsage(projectId: string, range: string): Promise<object>;
 
         /**
          * List Webhooks

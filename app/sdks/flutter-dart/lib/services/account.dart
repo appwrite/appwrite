@@ -143,7 +143,7 @@ class Account extends Service {
 
         final Map<String, dynamic> params = {
             'password': password,
-            'old-password': oldPassword,
+            'oldPassword': oldPassword,
         };
 
         final Map<String, String> headers = {
@@ -225,14 +225,14 @@ class Account extends Service {
      /// the only valid redirect URLs are the ones from domains you have set when
      /// adding your platforms in the console interface.
      ///
-    Future<Response> updateRecovery({@required String userId, @required String secret, @required String passwordA, @required String passwordB}) {
+    Future<Response> updateRecovery({@required String userId, @required String secret, @required String password, @required String passwordAgain}) {
         final String path = '/account/recovery';
 
         final Map<String, dynamic> params = {
             'userId': userId,
             'secret': secret,
-            'password-a': passwordA,
-            'password-b': passwordB,
+            'password': password,
+            'passwordAgain': passwordAgain,
         };
 
         final Map<String, String> headers = {

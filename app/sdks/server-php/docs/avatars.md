@@ -95,6 +95,6 @@ GET https://appwrite.io/v1/avatars/qr
 | --- | --- | --- | --- |
 | text | string | **Required** Plain text to be converted to QR code image. |  |
 | size | integer | QR code size. Pass an integer between 0 to 1000. Defaults to 400. | 400 |
-| margin | integer | Margin From Edge. Pass an integer between 0 to 10. Defaults to 1. | 1 |
+| margin | integer | Margin from edge. Pass an integer between 0 to 10. Defaults to 1. | 1 |
 | download | integer | Return resulting image with &#039;Content-Disposition: attachment &#039; headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0. | 0 |
 

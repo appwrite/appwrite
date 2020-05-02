@@ -494,7 +494,7 @@
                 }
 
                 if(oldPassword) {
-                    payload['old-password'] = oldPassword;
+                    payload['oldPassword'] = oldPassword;
                 }
 
                 return http
@@ -608,12 +608,12 @@
              *
              * @param {string} userId
              * @param {string} secret
-             * @param {string} passwordA
-             * @param {string} passwordB
+             * @param {string} password
+             * @param {string} passwordAgain
              * @throws {Error}
              * @return {Promise}             
              */
-            updateRecovery: function(userId, secret, passwordA, passwordB) {
+            updateRecovery: function(userId, secret, password, passwordAgain) {
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
@@ -622,12 +622,12 @@
                     throw new Error('Missing required parameter: "secret"');
                 }
                 
-                if(passwordA === undefined) {
-                    throw new Error('Missing required parameter: "passwordA"');
+                if(password === undefined) {
+                    throw new Error('Missing required parameter: "password"');
                 }
                 
-                if(passwordB === undefined) {
-                    throw new Error('Missing required parameter: "passwordB"');
+                if(passwordAgain === undefined) {
+                    throw new Error('Missing required parameter: "passwordAgain"');
                 }
                 
                 let path = '/account/recovery';
@@ -642,12 +642,12 @@
                     payload['secret'] = secret;
                 }
 
-                if(passwordA) {
-                    payload['password-a'] = passwordA;
+                if(password) {
+                    payload['password'] = password;
                 }
 
-                if(passwordB) {
-                    payload['password-b'] = passwordB;
+                if(passwordAgain) {
+                    payload['passwordAgain'] = passwordAgain;
                 }
 
                 return http
@@ -748,7 +748,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
+            createOAuth2Session: function(provider, success = 'https://localhost:2444/auth/oauth2/success', failure = 'https://localhost:2444/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -1371,15 +1371,15 @@
                 }
 
                 if(orderField) {
-                    payload['order-field'] = orderField;
+                    payload['orderField'] = orderField;
                 }
 
                 if(orderType) {
-                    payload['order-type'] = orderType;
+                    payload['orderType'] = orderType;
                 }
 
                 if(orderCast) {
-                    payload['order-cast'] = orderCast;
+                    payload['orderCast'] = orderCast;
                 }
 
                 if(search) {
@@ -1578,6 +1578,254 @@
 
                 return http
                     .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Collection Logs
+             *
+             *
+             * @param {string} collectionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getCollectionLogs: function(collectionId) {
+                if(collectionId === undefined) {
+                    throw new Error('Missing required parameter: "collectionId"');
+                }
+                
+                let path = '/database/collections/{collectionId}/logs'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            }
+        };
+
+        let health = {
+
+            /**
+             * Check API HTTP Health
+             *
+             * Check the Appwrite HTTP server is up and responsive.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            get: function() {
+                let path = '/health';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check Cache Health
+             *
+             * Check the Appwrite in-memory cache server is up and connection is
+             * successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getCache: function() {
+                let path = '/health/cache';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check DB Health
+             *
+             * Check the Appwrite database server is up and connection is successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getDB: function() {
+                let path = '/health/db';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending certificate messages
+             *
+             * Get the number of certificates that are waiting to be issued against
+             * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
+             * server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueCertificates: function() {
+                let path = '/health/queue/certificates';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending log messages
+             *
+             * Get the number of logs that are waiting to be processed in the Appwrite
+             * internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueLogs: function() {
+                let path = '/health/queue/logs';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending task messages
+             *
+             * Get the number of tasks that are waiting to be processed in the Appwrite
+             * internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueTasks: function() {
+                let path = '/health/queue/tasks';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending usage messages
+             *
+             * Get the number of usage stats that are waiting to be processed in the
+             * Appwrite internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueUsage: function() {
+                let path = '/health/queue/usage';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check number of pending webhook messages
+             *
+             * Get the number of webhooks that are waiting to be processed in the Appwrite
+             * internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueWebhooks: function() {
+                let path = '/health/queue/webhooks';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check Anti virus Health
+             *
+             * Check the Appwrite Anti Virus server is up and connection is successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getStorageAntiVirus: function() {
+                let path = '/health/storage/anti-virus';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check File System Health
+             *
+             * Check the Appwrite local storage device is up and connection is successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getStorageLocal: function() {
+                let path = '/health/storage/local';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check Time Health
+             *
+             * Check the Appwrite server time is synced with Google remote NTP server. We
+             * use this technology to smoothly handle leap seconds with no disruptive
+             * events. The [Network Time
+             * Protocol](https://en.wikipedia.org/wiki/Network_Time_Protocol) (NTP) is
+             * used by hundreds of millions of computers and devices to synchronize their
+             * clocks over the Internet. If your computer sets its own clock, it likely
+             * uses NTP.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getTime: function() {
+                let path = '/health/time';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
                         'content-type': 'application/json',
                     }, payload);
             }
@@ -2751,10 +2999,11 @@
              *
              *
              * @param {string} projectId
+             * @param {string} range
              * @throws {Error}
              * @return {Promise}             
              */
-            getUsage: function(projectId) {
+            getUsage: function(projectId, range = 'last30') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2762,6 +3011,10 @@
                 let path = '/projects/{projectId}/usage'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 let payload = {};
+
+                if(range) {
+                    payload['range'] = range;
+                }
 
                 return http
                     .get(path, {
@@ -3888,13 +4141,9 @@
                     throw new Error('Missing required parameter: "sessionId"');
                 }
                 
-                let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
+                let path = '/users/{userId}/sessions/{sessionId}'.replace(new RegExp('{userId}', 'g'), userId).replace(new RegExp('{sessionId}', 'g'), sessionId);
 
                 let payload = {};
-
-                if(sessionId) {
-                    payload['sessionId'] = sessionId;
-                }
 
                 return http
                     .delete(path, {
@@ -3945,6 +4194,7 @@
             account: account,
             avatars: avatars,
             database: database,
+            health: health,
             locale: locale,
             projects: projects,
             storage: storage,

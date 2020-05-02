@@ -121,7 +121,7 @@ DELETE https://appwrite.io/v1/users/{userId}/sessions
 ## Delete User Session
 
 ```http request
-DELETE https://appwrite.io/v1/users/{userId}/sessions/:session
+DELETE https://appwrite.io/v1/users/{userId}/sessions/{sessionId}
 ```
 
 ** Delete user sessions by its unique ID. **
@@ -131,7 +131,7 @@ DELETE https://appwrite.io/v1/users/{userId}/sessions/:session
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | userId | string | **Required** User unique ID. |  |
-| sessionId | string | User unique session ID. |  |
+| sessionId | string | **Required** User unique session ID. |  |
 
 ## Update User Status
 

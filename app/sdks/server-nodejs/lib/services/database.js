@@ -155,9 +155,9 @@ class Database extends Service {
                 'filters': filters,
                 'offset': offset,
                 'limit': limit,
-                'order-field': orderField,
-                'order-type': orderType,
-                'order-cast': orderCast,
+                'orderField': orderField,
+                'orderType': orderType,
+                'orderCast': orderCast,
                 'search': search,
                 'first': first,
                 'last': last
@@ -256,6 +256,23 @@ class Database extends Service {
         let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
         return await this.client.call('delete', path, {
+                    'content-type': 'application/json',
+               },
+               {
+            });
+    }
+
+    /**
+     * Get Collection Logs
+     *
+     * @param string collectionId
+     * @throws Exception
+     * @return {}
+     */
+    async getCollectionLogs(collectionId) {
+        let path = '/database/collections/{collectionId}/logs'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+        
+        return await this.client.call('get', path, {
                     'content-type': 'application/json',
                },
                {

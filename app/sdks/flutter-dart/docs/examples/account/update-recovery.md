@@ -11,8 +11,8 @@ client
 Future result = account.updateRecovery(
     userId: '[USER_ID]',
     secret: '[SECRET]',
-    passwordA: 'password',
-    passwordB: 'password',
+    password: 'password',
+    passwordAgain: 'password',
 );
 
 result
