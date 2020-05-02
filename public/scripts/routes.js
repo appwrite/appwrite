@@ -102,12 +102,16 @@ window.ls.router
     project: true
   })
   .add("/console/database/collection", {
-    template: "/console/database/collection?version=" + APP_ENV.VERSION,
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.VERSION;
+    },
     scope: "console",
     project: true
   })
   .add("/console/database/collection/:tab", {
-    template: "/console/database/collection?version=" + APP_ENV.VERSION,
+    template: function(window) {
+      return window.location.pathname + window.location.search + '&version=' + APP_ENV.VERSION;
+    },
     scope: "console",
     project: true
   })

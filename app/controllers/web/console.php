@@ -11,11 +11,8 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
-use Utopia\Validator\Numeric;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
 
-$utopia->init(function () use ($layout, $utopia) {
+$utopia->init(function () use ($layout) {
     $layout
         ->setParam('analytics', 'UA-26264668-5')
     ;
@@ -185,8 +182,21 @@ $utopia->get('/console/database/collection')
     ->desc('Platform console project database collection')
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout, $projectDB) {
+    ->param('id', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->action(function ($id) use ($layout, $projectDB) {
+        Authorization::disable();
+        $collection = $projectDB->getDocument($id, false);
+        Authorization::reset();
+
+        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
+        }
+
         $page = new View(__DIR__.'/../../views/console/database/collection.phtml');
+
+        $page
+            ->setParam('collection', $collection)
+        ;
 
         $layout
             ->setParam('title', APP_NAME.' - Database Collection')
@@ -208,10 +218,14 @@ $utopia->get('/console/database/document')
         }
 
         $page = new View(__DIR__.'/../../views/console/database/document.phtml');
+        $searchFiles = new View(__DIR__.'/../../views/console/database/search/files.phtml');
+        $searchDocuments = new View(__DIR__.'/../../views/console/database/search/documents.phtml');
 
         $page
             ->setParam('db', $projectDB)
             ->setParam('collection', $collection)
+            ->setParam('searchFiles', $searchFiles)
+            ->setParam('searchDocuments', $searchDocuments)
         ;
 
         $layout
