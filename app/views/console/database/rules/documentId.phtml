@@ -1,0 +1,19 @@
+<?php
+$key = $this->getParam('key', '');
+$required = $this->getParam('required', '');
+$namespace = $this->getParam('namespace', '');
+$collections = $this->getParam('collections', []);
+$array = $this->getParam('array', false);
+$list = $this->getParam('list', []);
+$list = (is_array($list)) ? $list : [];
+
+var_dump($collections);
+?>
+
+<input
+    type="text"
+    name="<?php echo $this->escape($key); ?>"
+    data-ls-bind="{{<?php echo $this->escape($namespace); ?>}}"
+    data-forms-document=""
+    data-search="<?php echo $this->escape($namespace); ?>"
+    class="margin-bottom-no">

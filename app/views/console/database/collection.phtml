@@ -1,3 +1,7 @@
+<?php
+$collection = $this->getParam('collection', []);
+$rules = $collection->getAttribute('rules', []);
+?>
 
 <div
     data-service="database.getCollection"
@@ -31,7 +35,7 @@
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/database/collection?id={{router.params.id}}&project={{router.params.project}}">
-                <a xdata-ls-if="{{project-collection.rules.length}} > 0" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}" class="button fly round text-align-center">
+                <a data-ls-if="{{project-collection.rules.length}} > 0" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}" class="button fly round text-align-center">
                     <i class="icon-plus"></i>
                 </a>
 
@@ -82,20 +86,42 @@
                         <div class="box margin-bottom y-scroll">
                             <table class="vertical">
                                 <thead>
-                                    <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
-                                        <th width="120" data-ls-bind="{{rule.label}}"></th>
+                                    <tr>
+                                        <?php foreach($rules as $rule):
+                                            $label = (isset($rule['label'])) ? $rule['label'] : '';
+                                            ?>
+                                            <th width="120"><?php echo $this->escape($label); ?></th>
+                                        <?php endforeach; ?>
                                     </tr>
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
-                                    <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
-                                        <td data-ls-attrs="data-title={{rule.label}}:" class="text-size-small text-height-small">
-                                            <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}">
-                                                <span data-ls-if="{{rule.type}} !== 'document' && {{rule.type}} !== 'fileId'" data-ls-bind="{{node|documentLabel}}" data-ls-attrs="title={{node|documentLabel}}"></span>
-                                                <span data-ls-if="{{rule.type}} == 'document' && {{rule.array}}">[...]</span>
-                                                <span data-ls-if="{{rule.type}} == 'document' && !{{rule.array}}">{...}</span>
-                                                <img data-ls-if="{{rule.type}} == 'fileId' && !{{rule.array}} && {{node|documentLabel|isEmpty}}" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node|documentLabel}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
-                                            </a>
-                                        </th>
+                                    <tr>
+                                        <?php foreach($rules as $rule):
+                                            $label = (isset($rule['label'])) ? $rule['label'] : '';
+                                            $key = (isset($rule['key'])) ? $rule['key'] : '';
+                                            $type = (isset($rule['type'])) ? $rule['type'] : '';
+                                            $array = (isset($rule['array'])) ? $rule['array'] : '';
+                                            ?>
+                                            <td title="<?php echo $this->escape($label); ?>" class="text-size-small text-height-small">
+                                                <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}">
+                                                    <?php if(!$array): ?>
+                                                        <?php switch($type):
+                                                            case 'fileId': ?>
+                                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
+                                                            <?php break; ?>
+                                                            <?php case 'document': ?>
+                                                                {...}
+                                                            <?php break; ?>
+                                                            <?php default: ?>
+                                                                <span data-ls-bind="{{node.<?php echo $this->escape($key); ?>}}" data-ls-attrs="title={{node.<?php echo $this->escape($key); ?>}}"></span>
+                                                            <?php break; ?>
+                                                        <?php endswitch; ?>
+                                                    <?php else: ?>
+                                                        [...]
+                                                    <?php endif; ?>
+                                                </a>
+                                            </td>
+                                        <?php endforeach; ?>
                                     </tr>
                                 </tbody>
                             </table>
@@ -238,16 +264,16 @@
                                                             <option value="boolean">Boolean</option>
                                                             <option value="wildcard">Wildcard (*)</option>
                                                         </optgroup>
+                                                        <optgroup label="Links">
+                                                            <option value="fileId">File ID</option>
+                                                            <option value="documentId">Document ID</option>
+                                                        </optgroup>
                                                         <optgroup label="Advanced">
                                                             <option value="email">Email</option>
                                                             <option value="url">URL</option>
                                                             <option value="ip">IP</option>
                                                             <option value="markdown">Markdown</option>
-                                                            <option value="document">Document</option>
-                                                        </optgroup>
-                                                        <optgroup label="Links">
-                                                            <option value="fileId">File ID</option>
-                                                            <option value="documentId">Document ID</option>
+                                                            <option value="document">Document (Embeded)</option>
                                                         </optgroup>
                                                     </select>
                                                         
@@ -389,16 +415,16 @@
                                     <option value="boolean">Boolean</option>
                                     <option value="wildcard">Wildcard (*)</option>
                                 </optgroup>
+                                <optgroup label="Links">
+                                    <option value="fileId">File ID</option>
+                                    <option value="documentId">Document ID</option>
+                                </optgroup>
                                 <optgroup label="Advanced">
                                     <option value="email">Email</option>
                                     <option value="url">URL</option>
                                     <option value="ip">IP</option>
                                     <option value="markdown">Markdown</option>
-                                    <option value="document">Document</option>
-                                </optgroup>
-                                <optgroup label="Links">
-                                        <option value="fileId">File ID</option>
-                                        <option value="documentId">Document ID</option>
+                                    <option value="document">Document (Embeded)</option>
                                 </optgroup>
                             </select>
                             
@@ -406,20 +432,6 @@
                             <input name="required" type="hidden" value="false" data-cast-to="boolean" />
                             <input name="array" type="hidden" value="false" data-cast-to="boolean" />
                             
-                            <!-- 
-                            <div class="margin-bottom">
-                                <label data-ls-attrs="for=rule-default-new">Default</label>
-                                <input name="default" type="text" />
-                            </div>
-                                
-                            <div class="margin-bottom">
-                                <input name="required" type="hidden" data-forms-switch data-cast-to="boolean" /> Required <span class="tooltip" data-tooltip="Mark whether this is a required attribute"><i class="icon-info-circled"></i></span>
-                            </div>
-                                                                                
-                            <div class="margin-bottom">
-                                <input name="array" type="hidden" data-forms-switch data-cast-to="boolean" /> Array <span class="tooltip" data-tooltip="Mark whether this attribute should act as an array"><i class="icon-info-circled"></i></span>
-                            </div> -->
-
                         </fieldset>
 
                         <hr class="margin-top-no" />
@@ -460,6 +472,14 @@
     </div>
 </script>
 
+<script type="text/html" id="template-validation-documentId">
+    <div data-ls-template="template-validation-document-array-{{rule.array}}" data-type="script"></div>
+
+    <div class="margin-bottom text-align-center margin-top-xl margin-bottom-large" data-ls-if="{{project-collections.sum}} == 1">
+        No Collections Found.
+    </div>
+</script>
+
 <script type="text/html" id="template-validation-document">
     <div data-ls-template="template-validation-document-array-{{rule.array}}" data-type="script"></div>
 
@@ -483,7 +503,7 @@
 
     <div data-ls-loop="project-collections.collections" data-ls-as="project" data-ls-key="$index2" class="tiles cell-3 margin-bottom-negative" style="visibility: hidden">
         <div class="margin-bottom" data-ls-if="{{project.$id}} != {{router.params.id}}">
-            <input type="radio" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" /> <span data-ls-bind="{{project.name}}"></span>
+            <input type="radio" name="list" data-ls-attrs="value={{project.$id}}" data-ls-bind="{{rule.list|firstElement}}" data-cast-to="array" required /> <span data-ls-bind="{{project.name}}"></span>
         </div>
     </div>
 </script>
