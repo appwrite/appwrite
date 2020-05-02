@@ -16,6 +16,7 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Go;
+use Appwrite\SDK\Language\Java;
 use Appwrite\SDK\Language\Typescript;
 
 $cli = new CLI();
@@ -127,6 +128,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'go':
                         $config = new Go();
+                        break;
+                    case 'java':
+                        $config = new Java();
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');
