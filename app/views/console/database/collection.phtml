@@ -35,7 +35,7 @@ $rules = $collection->getAttribute('rules', []);
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/database/collection?id={{router.params.id}}&project={{router.params.project}}">
-                <a data-ls-if="{{project-collection.rules.length}} > 0" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}" class="button fly round text-align-center">
+                <a data-ls-if="{{project-collection.rules.length}} > 0" data-ls-attrs="href=/console/database/document?collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}" class="button fly round text-align-center">
                     <i class="icon-plus"></i>
                 </a>
 
@@ -103,7 +103,7 @@ $rules = $collection->getAttribute('rules', []);
                                             $array = (isset($rule['array'])) ? $rule['array'] : '';
                                             ?>
                                             <td data-title="<?php echo $this->escape($label); ?>: " class="text-size-small text-height-small">
-                                                <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}">
+                                                <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}&buster={{project-collection.dateUpdated}}">
                                                     <?php if(!$array): ?>
                                                         <?php switch($type):
                                                             case 'fileId': ?>
