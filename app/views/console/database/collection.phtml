@@ -102,7 +102,7 @@ $rules = $collection->getAttribute('rules', []);
                                             $type = (isset($rule['type'])) ? $rule['type'] : '';
                                             $array = (isset($rule['array'])) ? $rule['array'] : '';
                                             ?>
-                                            <td title="<?php echo $this->escape($label); ?>" class="text-size-small text-height-small">
+                                            <td data-title="<?php echo $this->escape($label); ?>: " class="text-size-small text-height-small">
                                                 <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}">
                                                     <?php if(!$array): ?>
                                                         <?php switch($type):

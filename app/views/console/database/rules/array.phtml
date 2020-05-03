@@ -44,7 +44,7 @@ if($type === 'document') {
     <div class="drop-list" data-ls-ui-open="" data-button-text="Add" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="reverse margin-bottom-small" data-blur="1" tabindex="1">
         <ul>
             <?php foreach($list as $item):
-                $name = (isset($collections[$item])) ? $collections[$item] : '';
+                $name = (isset($collections[$item])) ? $collections[$item]->getAttribute('name', '') : '';
                 ?>
                 <li>
                     <button type="button" class="link" data-ls-ui-trigger="collection-child-<?php echo $this->escape($namespace); ?>-<?php echo $this->escape($item); ?>"><i class="icon-edit"></i> Add <?php echo $this->escape($name); ?></button>

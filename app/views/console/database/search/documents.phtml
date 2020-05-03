@@ -1,15 +1,20 @@
 
+<?php
+$collection = $this->getParam('collection', []);
+$id = $collection->getId();
+$name = $collection->getAttribute('name', 'Collection');
+$rules = $collection->getAttribute('rules', []);
+?>
 
-
-<div data-ui-modal class="modal sticky-footer width-large box close" data-button-hide="on" data-open-event="open-document-serach" data-close-event="none">
+<div data-ui-modal class="modal sticky-footer width-large box close" data-button-hide="on" data-open-event="open-document-serach-<?php echo $this->escape($id); ?>" data-close-event="none">
     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
     
-    <h2>Document Search</h2>
+    <h2><?php echo $this->escape($name); ?> Search</h2>
     
     <form class="search margin-bottom"
         data-service="database.listDocuments"
         data-event="submit"
-        data-param-collection-id="5e63e2dca1d10"
+        data-param-collection-id="<?php echo $this->escape($id); ?>"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
         data-param-offset="0"
         data-param-order-type="DESC"
@@ -17,13 +22,13 @@
         data-name="project-documents"
         data-success="state"
         data-success-param-state-keys="search,offset">
-        <input name="search" id="searchDocuments" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+        <input name="search" id="searchDocuments-<?php echo $this->escape($id); ?>" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
     </form>
 
     <div
         data-service="database.listDocuments"
-        data-event="open-document-serach"
-        data-param-collection-id="5e63e2dca1d10"
+        data-event="open-document-serach-<?php echo $this->escape($id); ?>"
+        data-param-collection-id="<?php echo $this->escape($id); ?>"
         data-param-search="{{router.params.search}}"
         data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
         data-param-offset="0"
@@ -41,21 +46,47 @@
             <div class="scroll">
                 <table class="margin-top-no margin-bottom-no">
                     <thead>
-                        <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
-                            <th width="120" data-ls-bind="{{rule.label}}"></th>
+                        <tr>
+                            <th width="40">&nbsp;</th>
+                            <?php foreach($rules as $rule):
+                                $label = (isset($rule['label'])) ? $rule['label'] : '';
+                                ?>
+                                <th width="120"><?php echo $this->escape($label); ?></th>
+                            <?php endforeach; ?>
                         </tr>
                     </thead>
                     <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
-                        <tr data-ls-loop="project-collection.rules" data-ls-as="rule">
-                            <td data-ls-attrs="data-title={{rule.label}}:" class="text-size-small text-height-small">
-                                <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection={{router.params.id}}&project={{router.params.project}}">
-                                    <span data-ls-if="{{rule.type}} !== 'document' && {{rule.type}} !== 'fileId'" data-ls-bind="{{node|documentLabel}}" data-ls-attrs="title={{node|documentLabel}}"></span>
-                                    <span data-ls-if="{{rule.type}} == 'document' && {{rule.array}}">[...]</span>
-                                    <span data-ls-if="{{rule.type}} == 'document' && !{{rule.array}}">{...}</span>
-                                    <img data-ls-if="{{rule.type}} == 'fileId' && !{{rule.array}} && {{node|documentLabel|isEmpty}}" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node|documentLabel}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
+                    <tr>
+                        <td data-title="x" class="">
+                            <input type="radio" id="selected-document-<?php echo $this->escape($id); ?>" name="selected" data-ls-attrs="value={{node.$id}}" data-ls-bind="{{search.selected}}" />
+                        </td>
+                        <?php foreach($rules as $rule):
+                            $label = (isset($rule['label'])) ? $rule['label'] : '';
+                            $key = (isset($rule['key'])) ? $rule['key'] : '';
+                            $type = (isset($rule['type'])) ? $rule['type'] : '';
+                            $array = (isset($rule['array'])) ? $rule['array'] : '';
+                            ?>
+                            <td data-title="<?php echo $this->escape($label); ?>" class="text-size-small text-height-small">
+                                <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection=<?php echo $this->escape($id); ?>&project={{router.params.project}}" target="_blank">
+                                    <?php if(!$array): ?>
+                                        <?php switch($type):
+                                            case 'fileId': ?>
+                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
+                                            <?php break; ?>
+                                            <?php case 'document': ?>
+                                                {...}
+                                            <?php break; ?>
+                                            <?php default: ?>
+                                                <span data-ls-bind="{{node.<?php echo $this->escape($key); ?>}}" data-ls-attrs="title={{node.<?php echo $this->escape($key); ?>}}"></span>
+                                            <?php break; ?>
+                                        <?php endswitch; ?>
+                                    <?php else: ?>
+                                        [...]
+                                    <?php endif; ?>
                                 </a>
-                            </th>
-                        </tr>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
                     </tbody>
                 </table>
             </div>
@@ -67,7 +98,7 @@
             <form
                 data-service="database.listDocuments"
                 data-event="submit"
-                data-param-collection-id="{{router.params.id}}"
+                data-param-collection-id="<?php echo $this->escape($id); ?>"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-order-type="DESC"
@@ -83,7 +114,7 @@
             <form
                 data-service="database.listDocuments"
                 data-event="submit"
-                data-param-collection-id="{{router.params.id}}"
+                data-param-collection-id="<?php echo $this->escape($id); ?>"
                 data-param-search="{{router.params.search}}"
                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                 data-param-order-type="DESC"

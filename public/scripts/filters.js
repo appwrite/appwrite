@@ -372,24 +372,6 @@ window.ls.filter
 
     return result.length;
   })
-  .add("documentLabel", function($value, rule) {
-    let value = ($value !== null && $value[rule['key']] !== undefined) ? $value[rule['key']] : null;
-
-    switch (rule['type']) {
-      case 'bool':
-      case 'boolean':
-        return (value) ? 'true' : 'false';
-        break;
-    
-      case 'numeric':
-        return (value && value.toString) ? value.toString() : value;
-        break;
-    
-      default:
-        return value;
-        break;
-    }
-  })
   .add("documentAction", function(container) {
     let collection = container.get('project-collection');
     let document = container.get('project-document');
