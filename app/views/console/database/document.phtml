@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\Database;
 use Utopia\View;
 use Appwrite\Database\Validator\Authorization;
 
@@ -12,6 +13,39 @@ $rules = $collection->getAttribute('rules', []);
 $namespace = 'project-document';
 $collections = [];
 ?>
+
+<?php echo $searchFiles->render(); ?>
+
+<?php foreach($rules as $rule): // Form to append child document
+    $key = (isset($rule['key'])) ? $rule['key'] : '';
+    $label = (isset($rule['label'])) ? $rule['label'] : '';
+    $type = (isset($rule['type'])) ? $rule['type'] : '';
+    $list = (isset($rule['list'])) ? $rule['list'] : [];
+?>
+    <?php foreach($list as $item):
+        if($item === $collection->getId()) {
+            continue; // Do not allow rec recrusion
+        }
+
+        if(!isset($collections[$item])) {
+            Authorization::disable(); //TODO Try and avoid calling the DB from the template
+            $collections[$item] = $db->getDocument($item, false);
+            Authorization::reset();
+        }
+
+        $childCollection = $collections[$item];
+
+        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
+            continue;
+        }
+
+        $searchDocuments
+            ->setParam('collection', $childCollection)
+        ;
+
+        echo $searchDocuments->render(); ?>
+    <?php endforeach; ?>
+<?php endforeach; ?>
 
 <?php foreach($rules as $rule): // Form to append child document
     $key = (isset($rule['key'])) ? $rule['key'] : '';
@@ -45,15 +79,17 @@ $collections = [];
             continue; // Do not allow rec recrusion
         }
 
-        Authorization::disable(); //TODO Try and avoid calling the DB from the template
-        $childCollection = $db->getDocument($item, false);
-        Authorization::reset();
-
-        if(!$childCollection->getId()) {
-            continue;
+        if(!isset($collections[$item])) {
+            Authorization::disable(); //TODO Try and avoid calling the DB from the template
+            $collections[$item] = $db->getDocument($item, false);
+            Authorization::reset();
         }
 
-        $collections[$childCollection->getId()] = $childCollection->getAttribute('name');
+        $childCollection = $collections[$item];
+
+        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
+            continue;
+        }
     ?>
         <form class="margin-bottom-no"
             data-service="container.path"
@@ -262,8 +298,3 @@ $collections = [];
         </ul>
     </div>
 </div>
-
-<?php
-echo $searchFiles->render();
-echo $searchDocuments->render();
-?>

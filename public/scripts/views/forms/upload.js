@@ -34,7 +34,7 @@
 
       count.className = "count";
 
-      upload.className = "button reverse small";
+      upload.className = "button reverse margin-bottom-small";
       upload.innerHTML = '<i class="icon icon-upload"></i> ' + labelButton;
       upload.tabIndex = 0;
 
@@ -148,7 +148,6 @@
         searchOpen.type = 'button';
         searchOpen.innerHTML = '<i class="icon icon-search"></i> Search';
         searchOpen.classList.add('reverse');
-        searchOpen.classList.add('small');
 
         let path = container.scope(searchButton);
 
