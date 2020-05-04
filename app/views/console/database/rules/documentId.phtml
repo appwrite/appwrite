@@ -46,7 +46,7 @@ $list = (is_array($list)) ? $list : [];
     </div>
 
     <input
-        type="text"
+        type="text" data-forms-document-preview="<?php echo $this->escape($collection->getId()); ?>"
         name="<?php echo $this->escape($key); ?>"
         data-ls-bind="{{<?php echo $this->escape($namespace); ?>}}"
         class="margin-bottom" disabled<?php if($required): ?> required<?php endif; ?>>
