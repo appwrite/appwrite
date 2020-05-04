@@ -16,7 +16,6 @@
                 };
 
                 scope.counter++;
-                console.log(message);
                 scope.list.unshift(message);
                 
                 if(scope.counter > scope.max) {

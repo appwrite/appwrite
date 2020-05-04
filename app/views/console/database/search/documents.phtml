@@ -129,9 +129,9 @@ $rules = $collection->getAttribute('rules', []);
         <form data-service="container.path"
             data-param-path="search.selected"
             data-param-type="assign"
-            data-param-value="{{file.$id}}"
+            data-param-value="{{node.$id}}"
             data-success="trigger"
-            data-success-param-trigger-events="modal-close"
+            data-success-param-trigger-events="modal-close,document-selected-<?php echo $this->escape($id); ?>"
             data-event="click"
             data-scope="window.ls">
 

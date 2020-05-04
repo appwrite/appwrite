@@ -399,11 +399,12 @@ window.ls.filter
     return $value;
   })
   .add("platformsLimit", function($value) {
-
-    console.log('test console');
-    console.log($value);
-    
     return $value;
+  })
+  .add("limit", function($value) {
+    let postfix = ($value.length >= 50) ? '...' : '';
+    return $value.substring(0, 50) + postfix;
+    ;
   })
 ;
 

@@ -198,11 +198,11 @@ class Structure extends Validator
                     $value = $document->getAttribute($key);
                     break;
                 case self::RULE_TYPE_DOCUMENTID:
-                    $validator = new DocumentId($this->database, (isset($rule['list'])) ? $rule['list'] : []);
+                    $validator = new DocumentId($this->database, (isset($rule['list']) && isset($rule['list'][0])) ? $rule['list'][0] : '');
                     $value = $document->getAttribute($key);
                     break;
                 case self::RULE_TYPE_FILEID:
-                    $validator = new DocumentId($this->database, [Database::SYSTEM_COLLECTION_FILES]);
+                    $validator = new DocumentId($this->database, Database::SYSTEM_COLLECTION_FILES);
                     $value = $document->getAttribute($key);
                     break;
             }
