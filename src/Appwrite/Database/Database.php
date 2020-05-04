@@ -35,6 +35,22 @@ class Database
     // Storage
     const SYSTEM_COLLECTION_FILES = 'files';
 
+    // Functions
+    const SYSTEM_COLLECTION_FUNCTIONS = 'functions';
+    const SYSTEM_COLLECTION_PACKAGES = 'packages';
+    const SYSTEM_COLLECTION_EXECUTIONS = 'executions';
+    
+    // Var Types
+    const SYSTEM_VAR_TYPE_TEXT = 'text';
+    const SYSTEM_VAR_TYPE_NUMERIC = 'numeric';
+    const SYSTEM_VAR_TYPE_BOOLEAN = 'boolean';
+    const SYSTEM_VAR_TYPE_DOCUMENT = 'document';
+    const SYSTEM_VAR_TYPE_WILDCARD = 'wildcard';
+    const SYSTEM_VAR_TYPE_EMAIL = 'email';
+    const SYSTEM_VAR_TYPE_IP = 'ip';
+    const SYSTEM_VAR_TYPE_URL = 'url';
+    const SYSTEM_VAR_TYPE_KEY = 'key';
+
     /**
      * @var array
      */

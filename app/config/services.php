@@ -75,6 +75,13 @@ return [
         'sdk' => true,
         'tests' => false,
     ],
+    'v1/functions' => [
+        'name' => 'Users',
+        'description' => '/docs/services/functions.md',
+        'controller' => 'controllers/api/functions.php',
+        'sdk' => true,
+        'tests' => false,
+    ],
     'v1/mock' => [
         'name' => 'Mock',
         'description' => '',
