@@ -65,7 +65,7 @@ $array = $this->getParam('array', false);
             ;
             ?>
         <li>
-        <label class="margin-bottom-no<?php if($type === 'document'): ?> margin-top-large<?php endif; ?>">
+            <label class="margin-bottom-no<?php if($type === 'document'): ?> margin-top-large<?php endif; ?>"<?php if($parent): ?> data-forms-nav-anchor="<?php echo $this->escape($key); ?>"<?php endif; ?>>
                 <?php echo $this->escape($label); ?>
 
                 <?php if($array): ?>

@@ -746,6 +746,31 @@
     }
   }
 
+  .document-nav {
+    display: none;
+    position: sticky;
+    top: 90px;
+
+    @media only screen and (min-width: 1380px) {
+      display: block;
+    }
+
+    ul {
+      position: absolute;
+      width: 200px;
+      .func-start(-260px);
+
+      li {
+        margin-bottom: 20px;
+
+        .selected {
+          font-weight: 500;
+        }
+      }
+    }
+
+  }
+
   .scroll-to {
     display: none;
   }

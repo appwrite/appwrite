@@ -398,6 +398,11 @@ window.ls.filter
 
     return $value;
   })
+  .add("limit", function($value) {
+    let postfix = ($value.length >= 50) ? '...' : '';
+    return $value.substring(0, 50) + postfix;
+    ;
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

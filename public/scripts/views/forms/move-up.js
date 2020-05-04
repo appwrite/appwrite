@@ -10,6 +10,7 @@
           obj.addEventListener("click", function() {
             if (element.previousElementSibling) {
               element.parentNode.insertBefore(element, element.previousElementSibling);
+              element.scrollIntoView(true);
             }
           });
         });

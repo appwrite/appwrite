@@ -69,6 +69,30 @@
     margin: 30px -30px;
   }
 
+  .label {
+    position: absolute;
+    top: 10px;
+    z-index: 2;
+    .func-end(10px);
+  }
+
+  &.fade-bottom {
+    position: relative;
+    overflow: hidden;
+
+    &:after {
+      content: "";
+      position: absolute;
+      display: block;
+      bottom: 15px;
+      width: 100%;
+      background: rgb(0,0,0);
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--config-color-background-fade) 80%);
+      height: 100px;
+      margin: 0 -15px;
+    }
+  }
+
   .header {
     position: static;
     height: 40px;

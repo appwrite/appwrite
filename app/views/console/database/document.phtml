@@ -210,6 +210,22 @@ $collections = [];
                             <label>&nbsp;</label>
 
                             <div class="box">
+
+                                <!-- <div class="document-nav" data-forms-nav>
+                                    <ul class="text-align-end margin-end-small">
+                                        <?php foreach($rules as $rule): // Form to append child document
+                                            $key = (isset($rule['key'])) ? $rule['key'] : '';
+                                            $label = (isset($rule['label'])) ? $rule['label'] : '';
+                                            $type = (isset($rule['type'])) ? $rule['type'] : '';
+                                            $list = (isset($rule['list'])) ? $rule['list'] : [];
+                                        ?>
+                                            <li class="text-size-small">
+                                                <span class="link text-fade" data-forms-nav-link="<?php echo $this->escape($key); ?>"><?php echo $this->escape($label); ?></span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div> -->
+                                
                                 <?php if(empty($rules)): ?>
                                     <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
                                         <h4 class="text-fade text-size-small">No attribute rules added yet.<br /><br /><a data-ls-attrs="href=/console/database/collection/settings?id={{router.params.collection}}&project={{router.params.project}}">Update Collection</a></h4>

@@ -19,13 +19,20 @@ class DocumentId extends Validator
     protected $database = null;
 
     /**
+     * @var string
+     */
+    protected $collection = '';
+
+    /**
      * Structure constructor.
      *
      * @param Database $database
+     * @param string $collection
      */
-    public function __construct(Database $database)
+    public function __construct(Database $database, string $collection = '')
     {
         $this->database = $database;
+        $this->collection = $collection;
     }
 
     /**
@@ -65,7 +72,7 @@ class DocumentId extends Validator
             return false;
         }
 
-        if($document->getCollection() !== Database::SYSTEM_COLLECTION_FILES) {
+        if($document->getCollection() !== $this->collection) {
             return false;
         }
 
