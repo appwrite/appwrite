@@ -158,4 +158,15 @@ window.ls.router
     template: "/console/users?version=" + APP_ENV.VERSION,
     scope: "console",
     project: true
-  });
+  })
+  .add("/console/functions", {
+    template: "/console/functions?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/functions/:tab", {
+    template: "/console/functions?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+;

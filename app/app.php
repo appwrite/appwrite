@@ -27,6 +27,7 @@ $services = include __DIR__.'/config/services.php'; // List of services
 $webhook = new Event('v1-webhooks', 'WebhooksV1');
 $audit = new Event('v1-audits', 'AuditsV1');
 $usage = new Event('v1-usage', 'UsageV1');
+$functions = new Event('v1-functions', 'FunctionsV1');
 
 /**
  * Get All verified client URLs for both console and current projects

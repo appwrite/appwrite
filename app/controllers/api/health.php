@@ -162,6 +162,19 @@ $utopia->get('/v1/health/queue/certificates')
         }
     );
 
+$utopia->get('/v1/health/queue/functions')
+    ->desc('Check the number of pending functions messages')
+    ->label('scope', 'public')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueFunctions')
+    ->label('sdk.description', '/docs/references/health/get-queue-functions.md')
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-functions')]);
+        }
+    );
+
 $utopia->get('/v1/health/storage/local')
     ->desc('Check File System Health')
     ->label('scope', 'public')

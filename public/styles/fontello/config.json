@@ -649,6 +649,20 @@
       "css": "dot-circled",
       "code": 61842,
       "src": "fontawesome"
+    },
+    {
+      "uid": "16dfcfc4bec79b89c8b147dafbb5dd37",
+      "css": "lightning",
+      "code": 59467,
+      "src": "custom_icons",
+      "selected": true,
+      "svg": {
+        "path": "M66.2 582.6L331.3 583.1 254.6 998.8 910.4 394.6 632.8 393 716.7 1.5 66.2 582.6Z",
+        "width": 1000
+      },
+      "search": [
+        "49958"
+      ]
     }
   ]
 }

@@ -276,3 +276,15 @@ $utopia->get('/console/users/view')
             ->setParam('title', APP_NAME.' - View User')
             ->setParam('body', $page);
     });
+
+$utopia->get('/console/functions')
+    ->desc('Platform console project functions')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Users')
+            ->setParam('body', $page);
+    });
