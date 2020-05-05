@@ -432,7 +432,6 @@ $utopia->patch('/v1/users/:userId/prefs')
         }
     );
 
-
 $utopia->delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->label('scope', 'users.write')
