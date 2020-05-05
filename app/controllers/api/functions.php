@@ -174,9 +174,11 @@ $utopia->post('/v1/functions/:functionId/tags')
     ->label('sdk.method', 'createTag')
     ->label('sdk.description', '/docs/references/functions/create-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
+    ->param('env', '', function () { return new WhiteList(['node-14', 'node-12', 'php-7.4']); }, 'Execution enviornment.')
+    ->param('command', '', function () { return new Text('1028'); }, 'Code execution command.')
     ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
     ->action(
-        function ($functionId, $code) use ($response, $projectDB) {
+        function ($functionId, $env, $command, $code) use ($response, $projectDB) {
             $function = $projectDB->getDocument($functionId);
 
             if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -191,6 +193,8 @@ $utopia->post('/v1/functions/:functionId/tags')
                 ],
                 'dateCreated' => time(),
                 'functionId' => $function->getId(),
+                'env' => $env,
+                'command' => $command,
                 'code' => $code,
             ]);
 
@@ -212,6 +216,7 @@ $utopia->get('/v1/functions/:functionId/tags')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listTags')
     ->label('sdk.description', '/docs/references/functions/list-tags.md')
+    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
@@ -311,9 +316,9 @@ $utopia->post('/v1/functions/:functionId/executions')
     ->label('sdk.method', 'createExecution')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
+    ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->action(
-        function ($functionId, $code) use ($response, $projectDB) {
+        function ($functionId, $async) use ($response, $projectDB) {
             $function = $projectDB->getDocument($functionId);
 
             if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -328,7 +333,7 @@ $utopia->post('/v1/functions/:functionId/executions')
                 ],
                 'dateCreated' => time(),
                 'functionId' => $function->getId(),
-                'status' => 'waiting',
+                'status' => 'waiting', // Proccesing / Completed / Failed
                 'exitCode' => 0,
                 'stdout' => '',
                 'stderr' => '',
@@ -337,6 +342,20 @@ $utopia->post('/v1/functions/:functionId/executions')
 
             if (false === $execution) {
                 throw new Exception('Failed saving execution to DB', 500);
+            }
+
+            $tag = $projectDB->getDocument($function->getAttribute('tag'));
+
+            if($tag->getAttribute('functionId') !== $function->getId()) {
+                throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+            }
+
+            if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+                throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+            }
+
+            if((bool)$async) {
+
             }
 
             $response
@@ -353,6 +372,7 @@ $utopia->get('/v1/functions/:functionId/executions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
     ->label('sdk.description', '/docs/references/functions/list-executions.md')
+    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)

@@ -14,6 +14,10 @@ class FunctionsV1
 {
     public $args = [];
 
+    public $images = [
+        
+    ];
+
     public function setUp()
     {
     }
