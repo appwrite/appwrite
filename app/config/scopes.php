@@ -11,6 +11,8 @@ return [ // List of publicly visible scopes
     'documents.write',
     'files.read',
     'files.write',
+    'functions.read',
+    'functions.write',
     // 'platforms.read',
     // 'platforms.write',
     // 'keys.read',

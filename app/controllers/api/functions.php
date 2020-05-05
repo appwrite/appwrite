@@ -39,7 +39,7 @@ $utopia->post('/v1/functions')
                 'dateUpdated' => time(),
                 'name' => $name,
                 'tag' => '',
-                'vars' => $vars, // Should be encrypted
+                'vars' => '', //$vars, // TODO Should be encrypted
                 'trigger' => $trigger,
                 'events' => $events,
                 'schedule' => $schedule,
@@ -131,7 +131,7 @@ $utopia->put('/v1/functions/:functionId')
             $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
                 'dateUpdated' => time(),
                 'name' => $name,
-                'vars' => $vars, //TODO Should be encrypted
+                'vars' => '', //$vars, //TODO Should be encrypted
                 'trigger' => $trigger,
                 'events' => $events,
                 'schedule' => $schedule,

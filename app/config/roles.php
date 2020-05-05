@@ -38,6 +38,8 @@ $admins = [
     'users.write',
     'collections.read',
     'collections.write',
+    'functions.read',
+    'functions.write',
     'platforms.read',
     'platforms.write',
     'keys.read',

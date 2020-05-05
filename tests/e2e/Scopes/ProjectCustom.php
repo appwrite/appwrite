@@ -73,6 +73,8 @@ trait ProjectCustom
                 'documents.write',
                 'files.read',
                 'files.write',
+                'functions.read',
+                'functions.write',
                 'locale.read',
                 'avatars.read',
             ],
