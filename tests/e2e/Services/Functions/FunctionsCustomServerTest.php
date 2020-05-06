@@ -90,7 +90,7 @@ class FunctionsConsoleServerTest extends Scope
     }
 
     /**
-     * @depends testCreate
+     * @depends testList
      */
     public function testGet(array $data):array
     {
@@ -114,6 +114,59 @@ class FunctionsConsoleServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($function['headers']['status-code'], 404);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGet
+     */
+    public function testUpdate($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response1 = $this->client->call(Client::METHOD_PUT, '/functions/'.$data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Test1',
+            'vars' => [
+                'key4' => 'value4',
+                'key5' => 'value5',
+                'key6' => 'value6',
+            ],
+            'trigger' => 'scheudle',
+            'events' => [
+                'account.update.name',
+                'account.update.email',
+            ],
+            'schedule' => '* * * * 1',
+            'timeout' => 5,
+        ]);
+
+        $this->assertEquals(200, $response1['headers']['status-code']);
+        $this->assertNotEmpty($response1['body']['$id']);
+        $this->assertEquals('Test1', $response1['body']['name']);
+        $this->assertIsInt($response1['body']['dateCreated']);
+        $this->assertIsInt($response1['body']['dateUpdated']);
+        $this->assertEquals('', $response1['body']['tag']);
+        // $this->assertEquals([
+        //     'key4' => 'value4',
+        //     'key5' => 'value5',
+        //     'key6' => 'value6',
+        // ], $response1['body']['vars']);
+        $this->assertEquals('scheudle', $response1['body']['trigger']);
+        $this->assertEquals([
+            'account.update.name',
+            'account.update.email',
+        ], $response1['body']['events']);
+        $this->assertEquals('* * * * 1', $response1['body']['schedule']);
+        $this->assertEquals(5, $response1['body']['timeout']);
+       
+        /**
+         * Test for FAILURE
+         */
 
         return $data;
     }
