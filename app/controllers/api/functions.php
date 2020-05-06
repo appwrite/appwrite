@@ -162,6 +162,10 @@ $utopia->delete('/v1/functions/:functionId')
                 throw new Exception('Function not found', 404);
             }
 
+            if (!$projectDB->deleteDocument($function->getId())) {
+                throw new Exception('Failed to remove function from DB', 500);
+            }
+
             $response->noContent();
         }
     );
@@ -302,6 +306,10 @@ $utopia->delete('/v1/functions/:functionId/tags/:tagId')
 
             if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
                 throw new Exception('Tag not found', 404);
+            }
+
+            if (!$projectDB->deleteDocument($tag->getId())) {
+                throw new Exception('Failed to remove tag from DB', 500);
             }
 
             $response->noContent();

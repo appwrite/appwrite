@@ -170,4 +170,34 @@ class FunctionsConsoleServerTest extends Scope
 
         return $data;
     }
+
+    /**
+     * @depends testUpdate
+     */
+    public function testDelete($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/'.$data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $function['headers']['status-code']);
+        $this->assertEmpty($function['body']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+       
+        $this->assertEquals(404, $function['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
 }
