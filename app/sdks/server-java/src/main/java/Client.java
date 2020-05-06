@@ -78,12 +78,6 @@ public class Client {
         return this;
     }
 
-    public Client setMode(String value) {
-        config.put("mode", value);
-        addHeader("X-Appwrite-Mode", value);
-        return this;
-    }
-
     public Client setSelfSigned(boolean status) {
         selfSigned = status;
         return this;

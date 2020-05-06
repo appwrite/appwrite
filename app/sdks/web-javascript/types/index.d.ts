@@ -28,16 +28,6 @@ declare class Appwrite {
      */
     setProject(project: string): this;
 	/**
-	 * Set Key
-	 *
-         * Your secret API key
-	 *
-     * @param value string
-     *
-     * @return this
-     */
-    setKey(key: string): this;
-	/**
 	 * Set Locale
 	 *
      * @param value string
@@ -45,14 +35,6 @@ declare class Appwrite {
      * @return this
      */
     setLocale(locale: string): this;
-	/**
-	 * Set Mode
-	 *
-     * @param value string
-     *
-     * @return this
-     */
-    setMode(mode: string): this;
 
 	account:Appwrite.Account;
 	avatars:Appwrite.Avatars;

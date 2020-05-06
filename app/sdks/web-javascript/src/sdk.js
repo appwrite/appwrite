@@ -7,9 +7,7 @@
         let config = {
             endpoint: 'https://appwrite.io/v1',
             project: '',
-            key: '',
             locale: '',
-            mode: '',
         };
 
         /**
@@ -41,24 +39,6 @@
         };
 
         /**
-         * Set Key
-         *
-         * Your secret API key
-         *
-         * @param value string
-         *
-         * @return this
-         */
-        let setKey = function (value)
-        {
-            http.addGlobalHeader('X-Appwrite-Key', value);
-
-            config.key = value;
-
-            return this;
-        };
-
-        /**
          * Set Locale
          *
          * @param value string
@@ -70,22 +50,6 @@
             http.addGlobalHeader('X-Appwrite-Locale', value);
 
             config.locale = value;
-
-            return this;
-        };
-
-        /**
-         * Set Mode
-         *
-         * @param value string
-         *
-         * @return this
-         */
-        let setMode = function (value)
-        {
-            http.addGlobalHeader('X-Appwrite-Mode', value);
-
-            config.mode = value;
 
             return this;
         };
@@ -2142,9 +2106,7 @@
         return {
             setEndpoint: setEndpoint,
             setProject: setProject,
-            setKey: setKey,
             setLocale: setLocale,
-            setMode: setMode,
             account: account,
             avatars: avatars,
             database: database,
