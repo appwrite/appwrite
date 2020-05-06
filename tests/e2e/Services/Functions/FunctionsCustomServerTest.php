@@ -44,7 +44,7 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals('Test', $response1['body']['name']);
         $this->assertIsInt($response1['body']['dateCreated']);
         $this->assertIsInt($response1['body']['dateUpdated']);
-        $this->assertEquals('', $response1['body']['tag']);
+        $this->assertEquals('', $response1['body']['active']);
         // $this->assertEquals([
         //     'key1' => 'value1',
         //     'key2' => 'value2',
@@ -150,7 +150,7 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals('Test1', $response1['body']['name']);
         $this->assertIsInt($response1['body']['dateCreated']);
         $this->assertIsInt($response1['body']['dateUpdated']);
-        $this->assertEquals('', $response1['body']['tag']);
+        $this->assertEquals('', $response1['body']['active']);
         // $this->assertEquals([
         //     'key4' => 'value4',
         //     'key5' => 'value5',
@@ -173,6 +173,236 @@ class FunctionsConsoleServerTest extends Scope
 
     /**
      * @depends testUpdate
+     */
+    public function testCreateTag($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/tags', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'env' => 'node-14',
+            'command' => 'node ./test.js',
+            'code' => 'codefilehere',
+        ]);
+
+        $tagId = (isset($tag['body']['$id'])) ? $tag['body']['$id'] : '';
+
+        $this->assertEquals(201, $tag['headers']['status-code']);
+        $this->assertNotEmpty($tag['body']['$id']);
+        $this->assertIsInt($tag['body']['dateCreated']);
+        $this->assertEquals('node-14', $tag['body']['env']);
+        $this->assertEquals('node ./test.js', $tag['body']['command']);
+        $this->assertEquals('codefilehere', $tag['body']['code']);
+       
+        /**
+         * Test for FAILURE
+         */
+
+        return array_merge($data, ['tagId' => $tagId]);
+    }
+
+    /**
+     * @depends testCreateTag
+     */
+    public function testUpdateActive($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/functions/'.$data['functionId'].'/active', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'active' => $data['tagId'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsInt($response['body']['dateCreated']);
+        $this->assertIsInt($response['body']['dateUpdated']);
+        $this->assertEquals($data['tagId'], $response['body']['active']);
+       
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateTag
+     */
+    public function testListTags(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertIsArray($function['body']['tags']);
+        $this->assertCount(1, $function['body']['tags']);
+        $this->assertEquals($function['body']['tags'][0]['env'], 'node-14');
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateTag
+     */
+    public function testGetTag(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags/' . $data['tagId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['env'], 'node-14');
+
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags/x', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 404);
+
+        return $data;
+    }
+
+
+    /**
+     * @depends testUpdateActive
+     */
+    public function testCreateExecution($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => 1,
+        ]);
+
+        $executionId = (isset($execution['body']['$id'])) ? $execution['body']['$id'] : '';
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertNotEmpty($execution['body']['functionId']);
+        $this->assertIsInt($execution['body']['dateCreated']);
+        $this->assertEquals($data['functionId'], $execution['body']['functionId']);
+        $this->assertEquals('waiting', $execution['body']['status']);
+        $this->assertEquals(0, $execution['body']['exitCode']);
+        $this->assertEquals('', $execution['body']['stdout']);
+        $this->assertEquals('', $execution['body']['stderr']);
+        $this->assertEquals(0, $execution['body']['time']);
+       
+        /**
+         * Test for FAILURE
+         */
+
+        return array_merge($data, ['executionId' => $executionId]);
+    }
+
+
+    /**
+     * @depends testCreateExecution
+     */
+    public function testListExecutions(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertIsArray($function['body']['executions']);
+        $this->assertCount(1, $function['body']['executions']);
+        $this->assertEquals($function['body']['executions'][0]['$id'], $data['executionId']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testListExecutions
+     */
+    public function testGetExecution(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/' . $data['executionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['$id'], $data['executionId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/x', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 404);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetExecution
+     */
+    public function testDeleteTag($data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_DELETE, '/functions/'.$data['functionId'].'/tags/' . $data['tagId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $function['headers']['status-code']);
+        $this->assertEmpty($function['body']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/tags/' . $data['tagId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+       
+        $this->assertEquals(404, $function['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateTag
      */
     public function testDelete($data):array
     {

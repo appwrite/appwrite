@@ -38,7 +38,7 @@ $utopia->post('/v1/functions')
                 'dateCreated' => time(),
                 'dateUpdated' => time(),
                 'name' => $name,
-                'tag' => '',
+                'active' => '',
                 'vars' => '', //$vars, // TODO Should be encrypted
                 'trigger' => $trigger,
                 'events' => $events,
@@ -115,7 +115,7 @@ $utopia->put('/v1/functions/:functionId')
     ->label('sdk.description', '/docs/references/functions/update-function.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('name', '', function () { return new Text(128); }, 'Function name.')
-    ->param('vars', '', function () { return new Assoc();}, 'Key-value JSON object.')
+    ->param('vars', '', function () { return new Assoc(); }, 'Key-value JSON object.')
     ->param('trigger', '', function () { return new WhiteList(['event', 'scheudle']); }, 'Function trigger type.')
     ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Events list.')
     ->param('schedule', null, function () { return new Cron(); }, 'Schedule CRON syntax.')
@@ -136,6 +136,35 @@ $utopia->put('/v1/functions/:functionId')
                 'events' => $events,
                 'schedule' => $schedule,
                 'timeout' => $timeout,   
+            ]));
+
+            if (false === $function) {
+                throw new Exception('Failed saving function to DB', 500);
+            }
+
+            $response->json($function->getArrayCopy());
+        }
+    );
+
+$utopia->patch('/v1/functions/:functionId/active')
+    ->desc('Update Function Active Tag')
+    ->label('scope', 'functions.write')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'updateActive')
+    ->label('sdk.description', '/docs/references/functions/update-tag.md')
+    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
+    ->param('active', '', function () { return new UID(); }, 'Active tag unique ID.')
+    ->action(
+        function ($functionId, $active) use ($response, $projectDB) {
+            $function = $projectDB->getDocument($functionId);
+
+            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                throw new Exception('Function not found', 404);
+            }
+
+            $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+                'active' => $active,
             ]));
 
             if (false === $function) {
@@ -334,7 +363,7 @@ $utopia->post('/v1/functions/:functionId/executions')
             }
             
             $execution = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_TAGS,
+                '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
                 '$permissions' => [
                     'read' => [],
                     'write' => [],
@@ -351,8 +380,8 @@ $utopia->post('/v1/functions/:functionId/executions')
             if (false === $execution) {
                 throw new Exception('Failed saving execution to DB', 500);
             }
-
-            $tag = $projectDB->getDocument($function->getAttribute('tag'));
+            
+            $tag = $projectDB->getDocument($function->getAttribute('active'));
 
             if($tag->getAttribute('functionId') !== $function->getId()) {
                 throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
@@ -401,7 +430,7 @@ $utopia->get('/v1/functions/:functionId/executions')
                 'orderCast' => 'int',
                 'search' => $search,
                 'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+                    '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
                     'functionId='.$function->getId(),
                 ],
             ]);
@@ -433,7 +462,7 @@ $utopia->get('/v1/functions/:functionId/executions/:executionId')
                 throw new Exception('Execution not found', 404);
             }
 
-            if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_TAGS != $execution->getCollection()) {
+            if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
                 throw new Exception('Execution not found', 404);
             }
 
