@@ -43,7 +43,7 @@ $rules = $collection->getAttribute('rules', []);
         </div>
 
         <div data-ls-if="({{project-documents.sum}})">
-            <div class="scroll">
+            <form class="scroll">
                 <table class="margin-top-no margin-bottom-no">
                     <thead>
                         <tr>
@@ -58,7 +58,8 @@ $rules = $collection->getAttribute('rules', []);
                     <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                     <tr>
                         <td data-title="x" class="">
-                            <input type="radio" id="selected-document-<?php echo $this->escape($id); ?>" name="selected" data-ls-attrs="value={{node.$id}}" data-ls-bind="{{search.selected}}" />
+                            <!-- <input type="radio" name="selected" data-ls-attrs="value={{file.$id}}" data-ls-bind="{{search.selected}}" /> -->
+                            <input type="radio" name="selected" data-ls-attrs="value={{node.$id}}" data-ls-bind="{{search.selected}}" />
                         </td>
                         <?php foreach($rules as $rule):
                             $label = (isset($rule['label'])) ? $rule['label'] : '';
@@ -89,7 +90,7 @@ $rules = $collection->getAttribute('rules', []);
                     </tr>
                     </tbody>
                 </table>
-            </div>
+            </form>
         </div>
     </div>
 
