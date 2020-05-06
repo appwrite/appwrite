@@ -43,12 +43,6 @@ module Appwrite
             return self
         end
 
-        def set_mode(value)
-            add_header('x-appwrite-mode', value)
-
-            return self
-        end
-
         def set_endpoint(endpoint)
             @endpoint = endpoint
             

@@ -14,6 +14,7 @@
 * New OAuth logos
 * Minor fixes to the dark mode theme
 * Added JSON view for a project user
+* Removed setKey and setMode methods from all client SDKs
 
 ## Breaking Changes
 

@@ -38,10 +38,6 @@ class Client:
         self._global_headers['x-appwrite-locale'] = value.lower()
         return self
 
-    def set_mode(self, value):
-        self._global_headers['x-appwrite-mode'] = value.lower()
-        return self
-
     def call(self, method, path='', headers=None, params=None):
         if headers is None:
             headers = {}

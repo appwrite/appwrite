@@ -53,22 +53,9 @@ class Client {
         return this;
     }
 
-     /// Your secret API key
-    Client setKey(value) {
-        config['key'] = value;
-        addHeader('X-Appwrite-Key', value);
-        return this;
-    }
-
     Client setLocale(value) {
         config['locale'] = value;
         addHeader('X-Appwrite-Locale', value);
-        return this;
-    }
-
-    Client setMode(value) {
-        config['mode'] = value;
-        addHeader('X-Appwrite-Mode', value);
         return this;
     }
 

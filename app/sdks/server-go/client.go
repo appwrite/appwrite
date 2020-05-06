@@ -45,10 +45,6 @@ func (clt *Client) SetLocale(value string) {
 	clt.headers["X-Appwrite-Locale"] = value
 }
 
-func (clt *Client) SetMode(value string) {
-	clt.headers["X-Appwrite-Mode"] = value
-}
-
 // Call an API using Client
 func (clt *Client) Call(method string, path string, headers map[string]interface{}, params map[string]interface{}) (map[string]interface{}, error) {
 	if clt.client == nil {
