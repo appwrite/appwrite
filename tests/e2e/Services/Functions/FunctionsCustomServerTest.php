@@ -37,6 +37,8 @@ class FunctionsConsoleServerTest extends Scope
             'timeout' => 10,
         ]);
 
+        $functionId = (isset($response1['body']['$id'])) ? $response1['body']['$id'] : '';
+
         $this->assertEquals(201, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
@@ -60,6 +62,59 @@ class FunctionsConsoleServerTest extends Scope
          * Test for FAILURE
          */
 
-        return [];
+        return [
+            'functionId' => $functionId,
+        ];
+    }
+
+    /**
+     * @depends testCreate
+     */
+    public function testList(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['sum'], 1);
+        $this->assertIsArray($function['body']['functions']);
+        $this->assertCount(1, $function['body']['functions']);
+        $this->assertEquals($function['body']['functions'][0]['name'], 'Test');
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreate
+     */
+    public function testGet(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 200);
+        $this->assertEquals($function['body']['name'], 'Test');
+               
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->client->call(Client::METHOD_GET, '/functions/x', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($function['headers']['status-code'], 404);
+
+        return $data;
     }
 }
