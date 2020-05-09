@@ -42,6 +42,7 @@ services:
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
@@ -68,8 +69,8 @@ services:
       - _APP_ENV=development
       - _APP_OPTIONS_ABUSE=disabled
       - _APP_OPENSSL_KEY_V1=your-secret-key
-      - _APP_DOMAIN=demo.appwrite.io
-      - _APP_DOMAIN_TARGET=demo.appwrite.io
+      #- _APP_DOMAIN=demo.appwrite.io
+      #- _APP_DOMAIN_TARGET=demo.appwrite.io
       - _APP_REDIS_HOST=redis
       - _APP_REDIS_PORT=6379
       - _APP_DB_HOST=mariadb

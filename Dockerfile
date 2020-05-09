@@ -78,7 +78,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests curl ca-certificates software-properties-common openssl gnupg && \
+  apt-get install -y --no-install-recommends --no-install-suggests curl ca-certificates software-properties-common openssl gnupg docker.io && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
   add-apt-repository ppa:certbot/certbot && \
@@ -119,6 +119,7 @@ COPY ./docker/www.conf /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
 
 # Add PHP Source Code
 COPY ./app /usr/share/nginx/html/app
+COPY ./bin /usr/share/nginx/html/bin
 COPY ./docs /usr/share/nginx/html/docs
 COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
@@ -137,16 +138,16 @@ RUN mkdir -p /storage/uploads && \
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 
 # Executables
-COPY ./docker/bin /home/bin
-RUN chmod +x /home/bin/start
-RUN chmod +x /home/bin/upgrade
-RUN chmod +x /home/bin/test
+RUN chmod +x /usr/share/nginx/html/bin/start
+RUN chmod +x /usr/share/nginx/html/bin/upgrade
+RUN chmod +x /usr/share/nginx/html/bin/test
+RUN export PATH=$PATH:/usr/share/nginx/html/bin
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 EXPOSE 80
 
-WORKDIR /home/bin
+WORKDIR /usr/share/nginx/html
 
-CMD ["/bin/bash", "start"]
+CMD ["/bin/bash", "bin/start"]
