@@ -1,15 +1,16 @@
 <?php
 
-require_once __DIR__.'/../init.php';
-
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Cron\CronExpression;
 
+require_once __DIR__.'/../init.php';
+
 cli_set_process_title('Tasks V1 Worker');
 
-echo APP_NAME.' tasks worker v1 has started';
+Console::success(APP_NAME.' tasks worker v1 has started');
 
 class TasksV1
 {

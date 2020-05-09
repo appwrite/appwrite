@@ -1,15 +1,15 @@
 <?php
 
-require_once __DIR__.'/../init.php';
-
-cli_set_process_title('Functions V1 Worker');
-
-echo APP_NAME.' functions worker v1 has started';
-
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Utopia\CLI\Console;
+
+require_once __DIR__.'/../init.php';
+
+cli_set_process_title('Functions V1 Worker');
+
+Console::success(APP_NAME.' functions worker v1 has started');
 
 $envs = [
     'node:14',

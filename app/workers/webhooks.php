@@ -1,14 +1,15 @@
 <?php
 
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Appwrite\Database\Database;
+use Appwrite\Database\Validator\Authorization;
+
 require_once __DIR__.'/../init.php';
 
 cli_set_process_title('Webhooks V1 Worker');
 
-echo APP_NAME.' webhooks worker v1 has started';
-
-use Utopia\Config\Config;
-use Appwrite\Database\Database;
-use Appwrite\Database\Validator\Authorization;
+Console::success(APP_NAME.' webhooks worker v1 has started');
 
 class WebhooksV1
 {

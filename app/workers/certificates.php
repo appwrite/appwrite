@@ -1,6 +1,7 @@
 <?php
 
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
@@ -11,7 +12,7 @@ require_once __DIR__.'/../init.php';
 
 cli_set_process_title('Certificates V1 Worker');
 
-echo APP_NAME.' certificates worker v1 has started';
+Console::success(APP_NAME.' certificates worker v1 has started');
 
 class CertificatesV1
 {
