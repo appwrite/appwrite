@@ -57,6 +57,7 @@ Config::load('providers', __DIR__.'/../app/config/providers.php');
 Config::load('platforms', __DIR__.'/../app/config/platforms.php');
 Config::load('locales', __DIR__.'/../app/config/locales.php');
 Config::load('collections', __DIR__.'/../app/config/collections.php');
+Config::load('environments', __DIR__.'/../app/config/environments.php');
 
 Config::setParam('env', $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION));
 Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
