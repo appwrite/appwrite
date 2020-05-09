@@ -9,6 +9,22 @@ echo APP_NAME.' functions worker v1 has started';
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
+use Utopia\CLI\Console;
+
+$envs = [
+    'node:14',
+    'php:7.4-cli',
+    'sdaskdjaksdjaksjda',
+];
+
+foreach($envs as $env) {
+    $stdout = '';
+    $stderr = '';
+    Console::execute('docker pull '.$env, null, $stdout, $stderr);
+
+    var_dump($stdout);
+    var_dump($stderr);
+}
 
 class FunctionsV1
 {

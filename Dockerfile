@@ -11,13 +11,13 @@ ENV TZ=Asia/Tel_Aviv \
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget curl git openssl && \
+  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common curl git openssl && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests make php$PHP_VERSION php$PHP_VERSION-dev zip unzip php$PHP_VERSION-zip && \
   # Redis Extension
-  wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
-  tar -xf $PHP_REDIS_VERSION.tar.gz && \
+  curl -L -o phpredis-$PHP_REDIS_VERSION.tar https://github.com/phpredis/phpredis/tarball/$PHP_REDIS_VERSION && \
+  mkdir phpredis-$PHP_REDIS_VERSION && tar xf phpredis-$PHP_REDIS_VERSION.tar -C phpredis-$PHP_REDIS_VERSION --strip-components 1 && \
   cd phpredis-$PHP_REDIS_VERSION && \
   phpize$PHP_VERSION && \
   ./configure && \
@@ -78,7 +78,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests wget curl ca-certificates software-properties-common openssl gnupg && \
+  apt-get install -y --no-install-recommends --no-install-suggests curl ca-certificates software-properties-common openssl gnupg && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
   add-apt-repository ppa:certbot/certbot && \
@@ -87,7 +87,7 @@ RUN \
   php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
   # Nginx
   echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
-  wget -q http://nginx.org/keys/nginx_signing.key && \
+  curl -o nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
   apt-key add nginx_signing.key && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests nginx && \
@@ -124,7 +124,8 @@ COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
 COPY --from=builder /usr/local/src/vendor /usr/share/nginx/html/vendor
 
-RUN mkdir -p /storage/uploads && \
+RUN mkdir -p /home/bin && \
+    mkdir -p /storage/uploads && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
@@ -136,19 +137,15 @@ RUN mkdir -p /storage/uploads && \
 # Supervisord Conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 
-# Start
-COPY ./docker/bin/start /start
-RUN chmod 775 /start
-
-# Upgrade
-COPY ./docker/bin/upgrade /upgrade
-RUN chmod 775 /upgrade
+# Executables
+COPY ./docker/bin /home/bin
+RUN chmod -Rf 775 /home/bin
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 EXPOSE 80
 
-WORKDIR /usr/share/nginx/html
+WORKDIR /home/bin
 
-CMD ["/bin/bash", "/start"]
+CMD ["/bin/bash", "start"]
