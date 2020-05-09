@@ -54,6 +54,7 @@ services:
       - ./public:/usr/share/nginx/html/public
       - ./src:/usr/share/nginx/html/src
       - ./docker/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/bin:/home/bin
     depends_on:
       - mariadb
       - redis

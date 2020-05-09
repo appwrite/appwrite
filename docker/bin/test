@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/bin/bash -c '/usr/share/nginx/html/vendor/bin/phpunit --configuration /usr/share/nginx/html/phpunit.xml'
+/usr/share/nginx/html/vendor/bin/phpunit --configuration /usr/share/nginx/html/phpunit.xml

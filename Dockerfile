@@ -124,8 +124,7 @@ COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
 COPY --from=builder /usr/local/src/vendor /usr/share/nginx/html/vendor
 
-RUN mkdir -p /home/bin && \
-    mkdir -p /storage/uploads && \
+RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
@@ -139,7 +138,9 @@ COPY ./docker/supervisord.conf /etc/supervisord.conf
 
 # Executables
 COPY ./docker/bin /home/bin
-RUN chmod -Rf 775 /home/bin
+RUN chmod +x /home/bin/start
+RUN chmod +x /home/bin/upgrade
+RUN chmod +x /home/bin/test
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
