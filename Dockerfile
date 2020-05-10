@@ -119,7 +119,7 @@ COPY ./docker/www.conf /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
 
 # Add PHP Source Code
 COPY ./app /usr/share/nginx/html/app
-COPY ./bin /usr/share/nginx/html/bin
+COPY ./bin /usr/local/bin
 COPY ./docs /usr/share/nginx/html/docs
 COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
@@ -138,10 +138,9 @@ RUN mkdir -p /storage/uploads && \
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 
 # Executables
-RUN chmod +x /usr/share/nginx/html/bin/start
-RUN chmod +x /usr/share/nginx/html/bin/upgrade
-RUN chmod +x /usr/share/nginx/html/bin/test
-RUN export PATH=$PATH:/usr/share/nginx/html/bin
+RUN chmod +x /usr/local/bin/start
+RUN chmod +x /usr/local/bin/upgrade
+RUN chmod +x /usr/local/bin/test
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
@@ -150,4 +149,4 @@ EXPOSE 80
 
 WORKDIR /usr/share/nginx/html
 
-CMD ["/bin/bash", "bin/start"]
+CMD ["/bin/bash", "/usr/local/bin/start"]
