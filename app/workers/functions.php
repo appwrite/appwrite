@@ -45,22 +45,32 @@ class FunctionsV1
         /**
          * 1. Get event args
          * 2. Unpackage code in an isolated folder
-         * 3. Execute in container with timeout
+         * 3. Execute in container with timeout + messure execution time
          * 4. Update execution status
          * 5. Update execution stdout & stderr
          * 6. Trigger audit log
          * 7. Trigger usage log
          */
+        $stdout = '';
+        $stderr = '';
+        $image  = 'php:7.4-cli';
+        $timeout  = 15;
 
-         // docker run --rm -v $(pwd):/app -w /app php:7.4-cli php tests/languages/php/test.php
+        $start = microtime(true);
+
+        Console::execute("docker run \
+            --rm \
+            -v $(pwd):/app \
+            -w /app \
+            {$image} \
+            php -v", null, $stdout, $stderr, $timeout);
+
+        $end = microtime(true);
+
+        echo "The code took " . ($end - $start) . " seconds to complete.";
     }
 
     public function tearDown()
     {
-        $stdout = '';
-        $stderr = '';
-        $image  = '';
-    
-        Console::execute('docker pull '.$image, null, $stdout, $stderr);
     }
 }
