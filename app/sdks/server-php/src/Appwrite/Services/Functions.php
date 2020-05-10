@@ -45,7 +45,7 @@ class Functions extends Service
      * @throws Exception
      * @return array
      */
-    public function create(string $name, array $vars, string $trigger, array $events, string $schedule, int $timeout):array
+    public function create(string $name, array $vars = , string $trigger = 'event', array $events = [], string $schedule = '', int $timeout = 10):array
     {
         $path   = str_replace([], [], '/functions');
         $params = [];
@@ -93,7 +93,7 @@ class Functions extends Service
      * @throws Exception
      * @return array
      */
-    public function update(string $functionId, string $name, array $vars, string $trigger, array $events, string $schedule, int $timeout):array
+    public function update(string $functionId, string $name, array $vars = , string $trigger = 'event', array $events = [], string $schedule = '', int $timeout = 10):array
     {
         $path   = str_replace(['{functionId}'], [$functionId], '/functions/{functionId}');
         $params = [];
@@ -136,7 +136,7 @@ class Functions extends Service
      * @throws Exception
      * @return array
      */
-    public function updateActive(string $functionId, string $active):array
+    public function updateTag(string $functionId, string $active):array
     {
         $path   = str_replace(['{functionId}'], [$functionId], '/functions/{functionId}/active');
         $params = [];

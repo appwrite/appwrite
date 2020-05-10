@@ -1659,29 +1659,9 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            create: function(name, vars, trigger, events, schedule, timeout) {
+            create: function(name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
-                }
-                
-                if(vars === undefined) {
-                    throw new Error('Missing required parameter: "vars"');
-                }
-                
-                if(trigger === undefined) {
-                    throw new Error('Missing required parameter: "trigger"');
-                }
-                
-                if(events === undefined) {
-                    throw new Error('Missing required parameter: "events"');
-                }
-                
-                if(schedule === undefined) {
-                    throw new Error('Missing required parameter: "schedule"');
-                }
-                
-                if(timeout === undefined) {
-                    throw new Error('Missing required parameter: "timeout"');
                 }
                 
                 let path = '/functions';
@@ -1755,33 +1735,13 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            update: function(functionId, name, vars, trigger, events, schedule, timeout) {
+            update: function(functionId, name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
                 if(functionId === undefined) {
                     throw new Error('Missing required parameter: "functionId"');
                 }
                 
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
-                }
-                
-                if(vars === undefined) {
-                    throw new Error('Missing required parameter: "vars"');
-                }
-                
-                if(trigger === undefined) {
-                    throw new Error('Missing required parameter: "trigger"');
-                }
-                
-                if(events === undefined) {
-                    throw new Error('Missing required parameter: "events"');
-                }
-                
-                if(schedule === undefined) {
-                    throw new Error('Missing required parameter: "schedule"');
-                }
-                
-                if(timeout === undefined) {
-                    throw new Error('Missing required parameter: "timeout"');
                 }
                 
                 let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
@@ -1850,7 +1810,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            updateActive: function(functionId, active) {
+            updateTag: function(functionId, active) {
                 if(functionId === undefined) {
                     throw new Error('Missing required parameter: "functionId"');
                 }

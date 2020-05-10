@@ -38,7 +38,7 @@ class Functions extends Service {
      * @throws Exception
      * @return {}
      */
-    async create(name, vars, trigger, events, schedule, timeout) {
+    async create(name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
         let path = '/functions';
         
         return await this.client.call('post', path, {
@@ -84,7 +84,7 @@ class Functions extends Service {
      * @throws Exception
      * @return {}
      */
-    async update(functionId, name, vars, trigger, events, schedule, timeout) {
+    async update(functionId, name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
         let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
         
         return await this.client.call('put', path, {
@@ -125,7 +125,7 @@ class Functions extends Service {
      * @throws Exception
      * @return {}
      */
-    async updateActive(functionId, active) {
+    async updateTag(functionId, active) {
         let path = '/functions/{functionId}/active'.replace(new RegExp('{functionId}', 'g'), functionId);
         
         return await this.client.call('patch', path, {

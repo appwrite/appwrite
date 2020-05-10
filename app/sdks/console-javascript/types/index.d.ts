@@ -665,7 +665,7 @@ declare namespace Appwrite {
          * @throws {Error}
          * @return {Promise}         
          */
-	    updateActive(functionId: string, active: string): Promise<object>;
+	    updateTag(functionId: string, active: string): Promise<object>;
 
         /**
          * List Executions

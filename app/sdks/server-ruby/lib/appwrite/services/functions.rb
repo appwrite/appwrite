@@ -16,7 +16,7 @@ module Appwrite
             }, params);
         end
 
-        def create(name:, vars:, trigger:, events:, schedule:, timeout:)
+        def create(name:, vars: [], trigger: 'event', events: [], schedule: '', timeout: 10)
             path = '/functions'
 
             params = {
@@ -45,7 +45,7 @@ module Appwrite
             }, params);
         end
 
-        def update(function_id:, name:, vars:, trigger:, events:, schedule:, timeout:)
+        def update(function_id:, name:, vars: [], trigger: 'event', events: [], schedule: '', timeout: 10)
             path = '/functions/{functionId}'
                 .gsub('{function_id}', function_id)
 
@@ -75,7 +75,7 @@ module Appwrite
             }, params);
         end
 
-        def update_active(function_id:, active:)
+        def update_tag(function_id:, active:)
             path = '/functions/{functionId}/active'
                 .gsub('{function_id}', function_id)
 

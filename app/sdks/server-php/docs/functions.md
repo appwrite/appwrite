@@ -26,11 +26,11 @@ POST https://appwrite.io/v1/functions
 | Field Name | Type | Description | Default |
 | --- | --- | --- | --- |
 | name | string | Function name. |  |
-| vars | object | Key-value JSON object. |  |
-| trigger | string | Function trigger type. |  |
-| events | array | Events list. |  |
+| vars | object | Key-value JSON object. | [] |
+| trigger | string | Function trigger type. | event |
+| events | array | Events list. | [] |
 | schedule | string | Schedule CRON syntax. |  |
-| timeout | integer | Function maximum execution time in seconds. |  |
+| timeout | integer | Function maximum execution time in seconds. | 10 |
 
 ## Get Function
 
@@ -56,11 +56,11 @@ PUT https://appwrite.io/v1/functions/{functionId}
 | --- | --- | --- | --- |
 | functionId | string | **Required** Function unique ID. |  |
 | name | string | Function name. |  |
-| vars | object | Key-value JSON object. |  |
-| trigger | string | Function trigger type. |  |
-| events | array | Events list. |  |
+| vars | object | Key-value JSON object. | [] |
+| trigger | string | Function trigger type. | event |
+| events | array | Events list. | [] |
 | schedule | string | Schedule CRON syntax. |  |
-| timeout | integer | Function maximum execution time in seconds. |  |
+| timeout | integer | Function maximum execution time in seconds. | 10 |
 
 ## Delete Function
 

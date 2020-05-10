@@ -12,4 +12,4 @@ $client
 
 $functions = new Functions($client);
 
-$result = $functions->create('[NAME]', [], 'event', [], '', 1);
+$result = $functions->create('[NAME]');

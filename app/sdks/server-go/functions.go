@@ -86,8 +86,8 @@ func (srv *Functions) Delete(FunctionId string) (map[string]interface{}, error) 
 	return srv.client.Call("DELETE", path, nil, params)
 }
 
-// UpdateActive
-func (srv *Functions) UpdateActive(FunctionId string, Active string) (map[string]interface{}, error) {
+// UpdateTag
+func (srv *Functions) UpdateTag(FunctionId string, Active string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{functionId}", FunctionId)
 	path := r.Replace("/functions/{functionId}/active")
 

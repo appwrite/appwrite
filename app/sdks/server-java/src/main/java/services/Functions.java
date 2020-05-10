@@ -115,7 +115,7 @@ public class Functions extends Service {
     }
 
      /// Update Function Active Tag
-    public Call updateActive(String functionId, String active) {
+    public Call updateTag(String functionId, String active) {
         final String path = "/functions/{functionId}/active".replace("{functionId}", functionId);
 
         final Map<String, Object> params = Map.ofEntries(

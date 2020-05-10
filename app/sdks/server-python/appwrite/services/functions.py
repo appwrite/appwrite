@@ -20,7 +20,7 @@ class Functions(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create(self, name, vars, trigger, events, schedule, timeout):
+    def create(self, name, vars=[], trigger='event', events=[], schedule='', timeout=10):
         """Create Function"""
 
         params = {}
@@ -47,7 +47,7 @@ class Functions(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update(self, function_id, name, vars, trigger, events, schedule, timeout):
+    def update(self, function_id, name, vars=[], trigger='event', events=[], schedule='', timeout=10):
         """Update Function"""
 
         params = {}
@@ -75,7 +75,7 @@ class Functions(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_active(self, function_id, active):
+    def update_tag(self, function_id, active):
         """Update Function Active Tag"""
 
         params = {}

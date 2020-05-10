@@ -11,10 +11,176 @@
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/functions?project={{router.params.project}}">
             <h2>Functions</h2>
+
+            <div class="zone xl"
+                data-service="functions.list"
+                data-scope="sdk"
+                data-event="load,functions.create,functions.update,functions.delete"
+                data-name="project-functions"
+                data-param-project-id="{{router.params.project}}"
+                data-success="trigger"
+                data-success-param-trigger-events="functions.list">
+
+                <div data-ls-if="0 == {{project-functions.functions.length}} || undefined == {{project-functions.functions.length}}" class="box margin-top margin-bottom">
+                    <h3 class="margin-bottom-small text-bold">No Functions Found</h3>
+
+                    <p class="margin-bottom-no">You haven't created any functions for your project yet.</p>
+                </div>
+
+                <div class="box margin-bottom" data-ls-if="0 != {{project-functions.functions.length}}">
+                    <ul data-ls-loop="project-functions" data-ls-as="function" class="list">
+                        <li class="clear">
+
+                            <div data-ui-modal class="modal close sticky-footer" data-button-text="Update" data-button-class="pull-end">
+                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                <h1>Update Function</h1>
+
+                                <form
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Update Project Function"
+                                    data-service="projects.updateFunction"
+                                    data-scope="console"
+                                    data-event="submit"
+                                    data-success="alert,trigger,reset"
+                                    data-success-param-alert-text="Updated function successfully"
+                                    data-success-param-trigger-events="projects.updateFunction"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to update function"
+                                    data-failure-param-alert-classname="error">
+
+                                    <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                    <input type="hidden" name="functionId" data-ls-bind="{{function.$id}}" />
+
+                                    <label data-ls-attrs="for=name-{{function.$id}}">Name</label>
+                                    <input type="text" class="full-width" data-ls-attrs="id=name-{{function.$id}}" name="name" required autocomplete="off" data-ls-bind="{{function.name}}" />
+
+                                    <label data-ls-attrs="for=events-{{function.$id}}">Events</label>
+                                    <div class="row responsive thin">
+                                        <?php foreach ($events as $i => $event) : ?>
+                                            <div class="col span-6 text-one-liner margin-bottom text-height-large">
+                                                <input type="checkbox" name="events" data-ls-bind="{{function.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
+                                            </div>
+                                            <?php if (($i + 1) % 2 === 0) : ?>
+                                            </div>
+                                            <div class="row responsive thin">
+                                            <?php endif; ?>
+
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <label data-ls-attrs="for=url-{{function.$id}}">POST URL</label>
+                                    <input type="url" class="full-width" data-ls-attrs="id=url-{{function.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{function.url}}" />
+
+                                    <div class="margin-bottom toggle" data-ls-ui-open>
+                                        <i class="icon-plus pull-end margin-top-tiny"></i>
+                                        <i class="icon-minus pull-end margin-top-tiny"></i>
+                                        
+                                        <h3 class="margin-bottom">
+                                            Advanced Options
+                                            <small class="text-size-small">(optional)</small>
+                                        </h3>
+
+                                        <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
+                                            <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
+                                                    
+                                            <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{function.$id}}" data-ls-bind="{{function.security}}" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
+                                            <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{function.$id}}" data-ls-bind="{{function.security}}" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
+                                        </label>
+
+                                        <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
+                                            <a href="https://en.wikipedia.org/wiki/Self-signed_certificate" target="_blank" rel="noopener">Learn more<i class="icon-link-ext"></i></a>
+                                        </p>
+
+                                        <label class="text-bold">HTTP Authentication <span class="tooltip" data-tooltip="Use to secure your endpoint from untrusted sources"><i class="icon-question"></i></span> &nbsp;<small>(optional)</small></label>
+
+                                        <div class="row responsive thin">
+                                            <div class="col span-6 margin-bottom">
+                                                <label data-ls-attrs="for=httpUser-{{function.$id}}">User</label>
+                                                <input type="text" class="full-width margin-bottom-no" data-ls-attrs="id=httpUser-{{function.$id}}" name="httpUser" autocomplete="off" data-ls-bind="{{function.httpUser}}" />
+                                            </div>
+                                            <div class="col span-6 margin-bottom">
+                                                <label data-ls-attrs="for=httpPass-{{function.$id}}">Password</label>
+                                                <input type="password" class="full-width margin-bottom-no" data-ls-attrs="id=httpPass-{{function.$id}}" name="httpPass" autocomplete="off" data-ls-bind="{{function.httpPass}}" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <footer>
+                                        <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                    </footer>
+                                </form>
+                            </div>
+
+                            <form class="pull-end margin-end"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Project Function"
+                                data-service="projects.deleteFunction"
+                                data-scope="console"
+                                data-event="submit"
+                                data-confirm="Are you sure you want to delete this function?"
+                                data-success="alert,trigger"
+                                data-success-param-alert-text="Deleted function successfully"
+                                data-success-param-trigger-events="projects.deleteFunction"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Failed to delete function"
+                                data-failure-param-alert-classname="error">
+
+                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+                                <input type="hidden" name="functionId" data-ls-bind="{{function.$id}}" />
+
+                                <button class="danger reverse">Delete</button>
+                            </form>
+
+                            <span data-ls-bind="{{function.name}}"></span> &nbsp; (<span data-ls-bind="{{function.events.length}}"></span> events)
+                            <span data-ls-if="0 == {{function.security}}">
+                                &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
+                            </span>
+                            <div class="margin-top-tiny">
+                                <a data-ls-attrs="href={{function.url}}" data-ls-bind="{{function.url}}" target="_blank" class="text-one-liner"></a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="clear">
+                    <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Function">
+                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                        <h1>Add Function</h1>
+
+                        <form
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Create Project Function"
+                            data-service="projects.create"
+                            data-scope="console"
+                            data-event="submit"
+                            data-success="alert,trigger,reset"
+                            data-success-param-alert-text="Created function successfully"
+                            data-success-param-trigger-events="projects.create"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to create function"
+                            data-failure-param-alert-classname="error">
+
+                            <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
+
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom-xl" />
+
+                            <footer>
+                                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            </footer>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </li>
 
-        <li data-state="/console/users/teams?project={{router.params.project}}">
+        <!-- <li data-state="/console/users/teams?project={{router.params.project}}">
             <h2>Teams</h2>
-        </li>
+        </li> -->
     </ul>
 </div>
