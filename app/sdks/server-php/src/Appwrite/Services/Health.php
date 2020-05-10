@@ -88,6 +88,23 @@ class Health extends Service
     }
 
     /**
+     * Check the number of pending functions messages
+     *
+     * @throws Exception
+     * @return array
+     */
+    public function getQueueFunctions():array
+    {
+        $path   = str_replace([], [], '/health/queue/functions');
+        $params = [];
+
+
+        return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
+        ], $params);
+    }
+
+    /**
      * Check the number of pending log messages
      *
      * Get the number of logs that are waiting to be processed in the Appwrite

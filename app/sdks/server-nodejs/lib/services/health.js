@@ -78,6 +78,22 @@ class Health extends Service {
     }
 
     /**
+     * Check the number of pending functions messages
+     *
+     * @throws Exception
+     * @return {}
+     */
+    async getQueueFunctions() {
+        let path = '/health/queue/functions';
+        
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
+            });
+    }
+
+    /**
      * Check the number of pending log messages
      *
      * Get the number of logs that are waiting to be processed in the Appwrite

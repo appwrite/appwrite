@@ -305,7 +305,7 @@ class Account extends Service {
      /// first. Use the success and failure arguments to provide a redirect URL's
      /// back to your app when login is completed.
      ///
-    Future createOAuth2Session({@required String provider, String success = 'https://localhost:2444/auth/oauth2/success', String failure = 'https://localhost:2444/auth/oauth2/failure'}) {
+    Future createOAuth2Session({@required String provider, String success = 'https://localhost/auth/oauth2/success', String failure = 'https://localhost/auth/oauth2/failure'}) {
         final String path = '/account/sessions/oauth2/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
         final Map<String, dynamic> params = {

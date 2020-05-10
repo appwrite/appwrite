@@ -57,6 +57,7 @@ declare class Appwrite {
 	account:Appwrite.Account;
 	avatars:Appwrite.Avatars;
 	database:Appwrite.Database;
+	functions:Appwrite.Functions;
 	health:Appwrite.Health;
 	locale:Appwrite.Locale;
 	projects:Appwrite.Projects;
@@ -589,6 +590,170 @@ declare namespace Appwrite {
 
 	}
 
+    export interface Functions {
+
+        /**
+         * List Functions
+         *
+	     *
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    list(search: string, limit: number, offset: number, orderType: string): Promise<object>;
+
+        /**
+         * Create Function
+         *
+	     *
+         * @param {string} name
+         * @param {object} vars
+         * @param {string} trigger
+         * @param {string[]} events
+         * @param {string} schedule
+         * @param {number} timeout
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    create(name: string, vars: object, trigger: string, events: string[], schedule: string, timeout: number): Promise<object>;
+
+        /**
+         * Get Function
+         *
+	     *
+         * @param {string} functionId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    get(functionId: string): Promise<object>;
+
+        /**
+         * Update Function
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} name
+         * @param {object} vars
+         * @param {string} trigger
+         * @param {string[]} events
+         * @param {string} schedule
+         * @param {number} timeout
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    update(functionId: string, name: string, vars: object, trigger: string, events: string[], schedule: string, timeout: number): Promise<object>;
+
+        /**
+         * Delete Function
+         *
+	     *
+         * @param {string} functionId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    delete(functionId: string): Promise<object>;
+
+        /**
+         * Update Function Active Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} active
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    updateActive(functionId: string, active: string): Promise<object>;
+
+        /**
+         * List Executions
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    listExecutions(functionId: string, search: string, limit: number, offset: number, orderType: string): Promise<object>;
+
+        /**
+         * Create Execution
+         *
+	     *
+         * @param {string} functionId
+         * @param {number} async
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    createExecution(functionId: string, async: number): Promise<object>;
+
+        /**
+         * Get Execution
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} executionId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getExecution(functionId: string, executionId: string): Promise<object>;
+
+        /**
+         * List Tags
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    listTags(functionId: string, search: string, limit: number, offset: number, orderType: string): Promise<object>;
+
+        /**
+         * Create Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} env
+         * @param {string} command
+         * @param {string} code
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    createTag(functionId: string, env: string, command: string, code: string): Promise<object>;
+
+        /**
+         * Get Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} tagId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getTag(functionId: string, tagId: string): Promise<object>;
+
+        /**
+         * Delete Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} tagId
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    deleteTag(functionId: string, tagId: string): Promise<object>;
+
+	}
+
     export interface Health {
 
         /**
@@ -633,6 +798,15 @@ declare namespace Appwrite {
          * @return {Promise}         
          */
 	    getQueueCertificates(): Promise<object>;
+
+        /**
+         * Check the number of pending functions messages
+         *
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getQueueFunctions(): Promise<object>;
 
         /**
          * Check the number of pending log messages

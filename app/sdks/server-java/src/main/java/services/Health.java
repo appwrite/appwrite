@@ -97,6 +97,22 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
+     /// Check the number of pending functions messages
+    public Call getQueueFunctions() {
+        final String path = "/health/queue/functions";
+
+        final Map<String, Object> params = Map.ofEntries(
+        );
+
+
+
+        final Map<String, String> headers = Map.ofEntries(
+            entry("content-type", "application/json")
+        );
+
+        return client.call("GET", path, headers, params);
+    }
+
      /// Check the number of pending log messages
      /*
      * Get the number of logs that are waiting to be processed in the Appwrite

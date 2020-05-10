@@ -60,6 +60,16 @@ func (srv *Health) GetQueueCertificates() (map[string]interface{}, error) {
 	return srv.client.Call("GET", path, nil, params)
 }
 
+// GetQueueFunctions
+func (srv *Health) GetQueueFunctions() (map[string]interface{}, error) {
+	path := "/health/queue/functions"
+
+	params := map[string]interface{}{
+	}
+
+	return srv.client.Call("GET", path, nil, params)
+}
+
 // GetQueueLogs get the number of logs that are waiting to be processed in the
 // Appwrite internal queue server.
 func (srv *Health) GetQueueLogs() (map[string]interface{}, error) {

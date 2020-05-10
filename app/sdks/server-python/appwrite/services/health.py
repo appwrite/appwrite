@@ -46,6 +46,16 @@ class Health(Service):
             'content-type': 'application/json',
         }, params)
 
+    def get_queue_functions(self):
+        """Check the number of pending functions messages"""
+
+        params = {}
+        path = '/health/queue/functions'
+
+        return self.client.call('get', path, {
+            'content-type': 'application/json',
+        }, params)
+
     def get_queue_logs(self):
         """Check the number of pending log messages"""
 

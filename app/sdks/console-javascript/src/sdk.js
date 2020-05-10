@@ -748,7 +748,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success = 'https://localhost:2444/auth/oauth2/success', failure = 'https://localhost:2444/auth/oauth2/failure') {
+            createOAuth2Session: function(provider, success = 'https://localhost/auth/oauth2/success', failure = 'https://localhost/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -1606,6 +1606,522 @@
             }
         };
 
+        let functions = {
+
+            /**
+             * List Functions
+             *
+             *
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            list: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                let path = '/functions';
+
+                let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Function
+             *
+             *
+             * @param {string} name
+             * @param {object} vars
+             * @param {string} trigger
+             * @param {string[]} events
+             * @param {string} schedule
+             * @param {number} timeout
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            create: function(name, vars, trigger, events, schedule, timeout) {
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(vars === undefined) {
+                    throw new Error('Missing required parameter: "vars"');
+                }
+                
+                if(trigger === undefined) {
+                    throw new Error('Missing required parameter: "trigger"');
+                }
+                
+                if(events === undefined) {
+                    throw new Error('Missing required parameter: "events"');
+                }
+                
+                if(schedule === undefined) {
+                    throw new Error('Missing required parameter: "schedule"');
+                }
+                
+                if(timeout === undefined) {
+                    throw new Error('Missing required parameter: "timeout"');
+                }
+                
+                let path = '/functions';
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(vars) {
+                    payload['vars'] = vars;
+                }
+
+                if(trigger) {
+                    payload['trigger'] = trigger;
+                }
+
+                if(events) {
+                    payload['events'] = events;
+                }
+
+                if(schedule) {
+                    payload['schedule'] = schedule;
+                }
+
+                if(timeout) {
+                    payload['timeout'] = timeout;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Function
+             *
+             *
+             * @param {string} functionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            get: function(functionId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Function
+             *
+             *
+             * @param {string} functionId
+             * @param {string} name
+             * @param {object} vars
+             * @param {string} trigger
+             * @param {string[]} events
+             * @param {string} schedule
+             * @param {number} timeout
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            update: function(functionId, name, vars, trigger, events, schedule, timeout) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(vars === undefined) {
+                    throw new Error('Missing required parameter: "vars"');
+                }
+                
+                if(trigger === undefined) {
+                    throw new Error('Missing required parameter: "trigger"');
+                }
+                
+                if(events === undefined) {
+                    throw new Error('Missing required parameter: "events"');
+                }
+                
+                if(schedule === undefined) {
+                    throw new Error('Missing required parameter: "schedule"');
+                }
+                
+                if(timeout === undefined) {
+                    throw new Error('Missing required parameter: "timeout"');
+                }
+                
+                let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(vars) {
+                    payload['vars'] = vars;
+                }
+
+                if(trigger) {
+                    payload['trigger'] = trigger;
+                }
+
+                if(events) {
+                    payload['events'] = events;
+                }
+
+                if(schedule) {
+                    payload['schedule'] = schedule;
+                }
+
+                if(timeout) {
+                    payload['timeout'] = timeout;
+                }
+
+                return http
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Function
+             *
+             *
+             * @param {string} functionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            delete: function(functionId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Function Active Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} active
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateActive: function(functionId, active) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(active === undefined) {
+                    throw new Error('Missing required parameter: "active"');
+                }
+                
+                let path = '/functions/{functionId}/active'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(active) {
+                    payload['active'] = active;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Executions
+             *
+             *
+             * @param {string} functionId
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listExecutions: function(functionId, search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}/executions'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Execution
+             *
+             *
+             * @param {string} functionId
+             * @param {number} async
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createExecution: function(functionId, async = 1) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}/executions'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(async) {
+                    payload['async'] = async;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Execution
+             *
+             *
+             * @param {string} functionId
+             * @param {string} executionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getExecution: function(functionId, executionId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(executionId === undefined) {
+                    throw new Error('Missing required parameter: "executionId"');
+                }
+                
+                let path = '/functions/{functionId}/executions/{executionId}'.replace(new RegExp('{functionId}', 'g'), functionId).replace(new RegExp('{executionId}', 'g'), executionId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Tags
+             *
+             *
+             * @param {string} functionId
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listTags: function(functionId, search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}/tags'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} env
+             * @param {string} command
+             * @param {string} code
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createTag: function(functionId, env, command, code) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(env === undefined) {
+                    throw new Error('Missing required parameter: "env"');
+                }
+                
+                if(command === undefined) {
+                    throw new Error('Missing required parameter: "command"');
+                }
+                
+                if(code === undefined) {
+                    throw new Error('Missing required parameter: "code"');
+                }
+                
+                let path = '/functions/{functionId}/tags'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(env) {
+                    payload['env'] = env;
+                }
+
+                if(command) {
+                    payload['command'] = command;
+                }
+
+                if(code) {
+                    payload['code'] = code;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} tagId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getTag: function(functionId, tagId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(tagId === undefined) {
+                    throw new Error('Missing required parameter: "tagId"');
+                }
+                
+                let path = '/functions/{functionId}/tags/{tagId}'.replace(new RegExp('{functionId}', 'g'), functionId).replace(new RegExp('{tagId}', 'g'), tagId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} tagId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteTag: function(functionId, tagId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(tagId === undefined) {
+                    throw new Error('Missing required parameter: "tagId"');
+                }
+                
+                let path = '/functions/{functionId}/tags/{tagId}'.replace(new RegExp('{functionId}', 'g'), functionId).replace(new RegExp('{tagId}', 'g'), tagId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            }
+        };
+
         let health = {
 
             /**
@@ -1678,6 +2194,24 @@
              */
             getQueueCertificates: function() {
                 let path = '/health/queue/certificates';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending functions messages
+             *
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueFunctions: function() {
+                let path = '/health/queue/functions';
 
                 let payload = {};
 
@@ -4194,6 +4728,7 @@
             account: account,
             avatars: avatars,
             database: database,
+            functions: functions,
             health: health,
             locale: locale,
             projects: projects,
