@@ -286,28 +286,6 @@
             }
         }(window.document);
 
-        let iframe = function(method, url, params) {
-            let form = document.createElement('form');
-
-            form.setAttribute('method', method);
-            form.setAttribute('action', config.endpoint + url);
-
-            for(let key in params) {
-                if(params.hasOwnProperty(key)) {
-                    let hiddenField = document.createElement("input");
-                    hiddenField.setAttribute("type", "hidden");
-                    hiddenField.setAttribute("name", key);
-                    hiddenField.setAttribute("value", params[key]);
-
-                    form.appendChild(hiddenField);
-                }
-            }
-
-            document.body.appendChild(form);
-
-            return form.submit();
-        };
-
         let account = {
 
             /**
@@ -768,19 +746,11 @@
              * @param {string} success
              * @param {string} failure
              * @throws {Error}
-             * @return {string}             
+             * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success, failure) {
+            createOAuth2Session: function(provider, success = 'https://localhost/auth/oauth2/success', failure = 'https://localhost/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
-                }
-                
-                if(success === undefined) {
-                    throw new Error('Missing required parameter: "success"');
-                }
-                
-                if(failure === undefined) {
-                    throw new Error('Missing required parameter: "failure"');
                 }
                 
                 let path = '/account/sessions/oauth2/{provider}'.replace(new RegExp('{provider}', 'g'), provider);
@@ -800,8 +770,8 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
-                return config.endpoint + path + ((query) ? '?' + query : '');
+                
+                window.location = config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1203,9 +1173,9 @@
              * Create a new Collection.
              *
              * @param {string} name
-             * @param {array} read
-             * @param {array} write
-             * @param {array} rules
+             * @param {string[]} read
+             * @param {string[]} write
+             * @param {string[]} rules
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1284,9 +1254,9 @@
              *
              * @param {string} collectionId
              * @param {string} name
-             * @param {array} read
-             * @param {array} write
-             * @param {array} rules
+             * @param {string[]} read
+             * @param {string[]} write
+             * @param {string[]} rules
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1367,7 +1337,7 @@
              * modes](/docs/admin).
              *
              * @param {string} collectionId
-             * @param {array} filters
+             * @param {string[]} filters
              * @param {number} offset
              * @param {number} limit
              * @param {string} orderField
@@ -1437,8 +1407,8 @@
              *
              * @param {string} collectionId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @param {string} parentDocument
              * @param {string} parentProperty
              * @param {string} parentPropertyType
@@ -1533,8 +1503,8 @@
              * @param {string} collectionId
              * @param {string} documentId
              * @param {object} data
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -1610,6 +1580,788 @@
                     .delete(path, {
                         'content-type': 'application/json',
                     }, payload);
+            },
+
+            /**
+             * Get Collection Logs
+             *
+             *
+             * @param {string} collectionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getCollectionLogs: function(collectionId) {
+                if(collectionId === undefined) {
+                    throw new Error('Missing required parameter: "collectionId"');
+                }
+                
+                let path = '/database/collections/{collectionId}/logs'.replace(new RegExp('{collectionId}', 'g'), collectionId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            }
+        };
+
+        let functions = {
+
+            /**
+             * List Functions
+             *
+             *
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            list: function(search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                let path = '/functions';
+
+                let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Function
+             *
+             *
+             * @param {string} name
+             * @param {object} vars
+             * @param {string} trigger
+             * @param {string[]} events
+             * @param {string} schedule
+             * @param {number} timeout
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            create: function(name, vars, trigger, events, schedule, timeout) {
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(vars === undefined) {
+                    throw new Error('Missing required parameter: "vars"');
+                }
+                
+                if(trigger === undefined) {
+                    throw new Error('Missing required parameter: "trigger"');
+                }
+                
+                if(events === undefined) {
+                    throw new Error('Missing required parameter: "events"');
+                }
+                
+                if(schedule === undefined) {
+                    throw new Error('Missing required parameter: "schedule"');
+                }
+                
+                if(timeout === undefined) {
+                    throw new Error('Missing required parameter: "timeout"');
+                }
+                
+                let path = '/functions';
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(vars) {
+                    payload['vars'] = vars;
+                }
+
+                if(trigger) {
+                    payload['trigger'] = trigger;
+                }
+
+                if(events) {
+                    payload['events'] = events;
+                }
+
+                if(schedule) {
+                    payload['schedule'] = schedule;
+                }
+
+                if(timeout) {
+                    payload['timeout'] = timeout;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Function
+             *
+             *
+             * @param {string} functionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            get: function(functionId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Function
+             *
+             *
+             * @param {string} functionId
+             * @param {string} name
+             * @param {object} vars
+             * @param {string} trigger
+             * @param {string[]} events
+             * @param {string} schedule
+             * @param {number} timeout
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            update: function(functionId, name, vars, trigger, events, schedule, timeout) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(name === undefined) {
+                    throw new Error('Missing required parameter: "name"');
+                }
+                
+                if(vars === undefined) {
+                    throw new Error('Missing required parameter: "vars"');
+                }
+                
+                if(trigger === undefined) {
+                    throw new Error('Missing required parameter: "trigger"');
+                }
+                
+                if(events === undefined) {
+                    throw new Error('Missing required parameter: "events"');
+                }
+                
+                if(schedule === undefined) {
+                    throw new Error('Missing required parameter: "schedule"');
+                }
+                
+                if(timeout === undefined) {
+                    throw new Error('Missing required parameter: "timeout"');
+                }
+                
+                let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(vars) {
+                    payload['vars'] = vars;
+                }
+
+                if(trigger) {
+                    payload['trigger'] = trigger;
+                }
+
+                if(events) {
+                    payload['events'] = events;
+                }
+
+                if(schedule) {
+                    payload['schedule'] = schedule;
+                }
+
+                if(timeout) {
+                    payload['timeout'] = timeout;
+                }
+
+                return http
+                    .put(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Function
+             *
+             *
+             * @param {string} functionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            delete: function(functionId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Function Active Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} active
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateActive: function(functionId, active) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(active === undefined) {
+                    throw new Error('Missing required parameter: "active"');
+                }
+                
+                let path = '/functions/{functionId}/active'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(active) {
+                    payload['active'] = active;
+                }
+
+                return http
+                    .patch(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Executions
+             *
+             *
+             * @param {string} functionId
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listExecutions: function(functionId, search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}/executions'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Execution
+             *
+             *
+             * @param {string} functionId
+             * @param {number} async
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createExecution: function(functionId, async = 1) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}/executions'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(async) {
+                    payload['async'] = async;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Execution
+             *
+             *
+             * @param {string} functionId
+             * @param {string} executionId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getExecution: function(functionId, executionId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(executionId === undefined) {
+                    throw new Error('Missing required parameter: "executionId"');
+                }
+                
+                let path = '/functions/{functionId}/executions/{executionId}'.replace(new RegExp('{functionId}', 'g'), functionId).replace(new RegExp('{executionId}', 'g'), executionId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Tags
+             *
+             *
+             * @param {string} functionId
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            listTags: function(functionId, search = '', limit = 25, offset = 0, orderType = 'ASC') {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}/tags'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Create Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} env
+             * @param {string} command
+             * @param {string} code
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            createTag: function(functionId, env, command, code) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(env === undefined) {
+                    throw new Error('Missing required parameter: "env"');
+                }
+                
+                if(command === undefined) {
+                    throw new Error('Missing required parameter: "command"');
+                }
+                
+                if(code === undefined) {
+                    throw new Error('Missing required parameter: "code"');
+                }
+                
+                let path = '/functions/{functionId}/tags'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(env) {
+                    payload['env'] = env;
+                }
+
+                if(command) {
+                    payload['command'] = command;
+                }
+
+                if(code) {
+                    payload['code'] = code;
+                }
+
+                return http
+                    .post(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} tagId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getTag: function(functionId, tagId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(tagId === undefined) {
+                    throw new Error('Missing required parameter: "tagId"');
+                }
+                
+                let path = '/functions/{functionId}/tags/{tagId}'.replace(new RegExp('{functionId}', 'g'), functionId).replace(new RegExp('{tagId}', 'g'), tagId);
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Delete Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} tagId
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            deleteTag: function(functionId, tagId) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(tagId === undefined) {
+                    throw new Error('Missing required parameter: "tagId"');
+                }
+                
+                let path = '/functions/{functionId}/tags/{tagId}'.replace(new RegExp('{functionId}', 'g'), functionId).replace(new RegExp('{tagId}', 'g'), tagId);
+
+                let payload = {};
+
+                return http
+                    .delete(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            }
+        };
+
+        let health = {
+
+            /**
+             * Check API HTTP Health
+             *
+             * Check the Appwrite HTTP server is up and responsive.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            get: function() {
+                let path = '/health';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check Cache Health
+             *
+             * Check the Appwrite in-memory cache server is up and connection is
+             * successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getCache: function() {
+                let path = '/health/cache';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check DB Health
+             *
+             * Check the Appwrite database server is up and connection is successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getDB: function() {
+                let path = '/health/db';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending certificate messages
+             *
+             * Get the number of certificates that are waiting to be issued against
+             * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
+             * server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueCertificates: function() {
+                let path = '/health/queue/certificates';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending functions messages
+             *
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueFunctions: function() {
+                let path = '/health/queue/functions';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending log messages
+             *
+             * Get the number of logs that are waiting to be processed in the Appwrite
+             * internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueLogs: function() {
+                let path = '/health/queue/logs';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending task messages
+             *
+             * Get the number of tasks that are waiting to be processed in the Appwrite
+             * internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueTasks: function() {
+                let path = '/health/queue/tasks';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check the number of pending usage messages
+             *
+             * Get the number of usage stats that are waiting to be processed in the
+             * Appwrite internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueUsage: function() {
+                let path = '/health/queue/usage';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check number of pending webhook messages
+             *
+             * Get the number of webhooks that are waiting to be processed in the Appwrite
+             * internal queue server.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueWebhooks: function() {
+                let path = '/health/queue/webhooks';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check Anti virus Health
+             *
+             * Check the Appwrite Anti Virus server is up and connection is successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getStorageAntiVirus: function() {
+                let path = '/health/storage/anti-virus';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check File System Health
+             *
+             * Check the Appwrite local storage device is up and connection is successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getStorageLocal: function() {
+                let path = '/health/storage/local';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Check Time Health
+             *
+             * Check the Appwrite server time is synced with Google remote NTP server. We
+             * use this technology to smoothly handle leap seconds with no disruptive
+             * events. The [Network Time
+             * Protocol](https://en.wikipedia.org/wiki/Network_Time_Protocol) (NTP) is
+             * used by hundreds of millions of computers and devices to synchronize their
+             * clocks over the Internet. If your computer sets its own clock, it likely
+             * uses NTP.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getTime: function() {
+                let path = '/health/time';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 
@@ -1640,7 +2392,7 @@
             },
 
             /**
-             * List Countries
+             * List Continents
              *
              * List of all continents. You can use the locale header to get the data in a
              * supported language.
@@ -2142,7 +2894,7 @@
              *
              * @param {string} projectId
              * @param {string} name
-             * @param {array} scopes
+             * @param {string[]} scopes
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2212,7 +2964,7 @@
              * @param {string} projectId
              * @param {string} keyId
              * @param {string} name
-             * @param {array} scopes
+             * @param {string[]} scopes
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2542,7 +3294,7 @@
              * @param {number} security
              * @param {string} httpMethod
              * @param {string} httpUrl
-             * @param {array} httpHeaders
+             * @param {string[]} httpHeaders
              * @param {string} httpUser
              * @param {string} httpPass
              * @throws {Error}
@@ -2663,7 +3415,7 @@
              * @param {number} security
              * @param {string} httpMethod
              * @param {string} httpUrl
-             * @param {array} httpHeaders
+             * @param {string[]} httpHeaders
              * @param {string} httpUser
              * @param {string} httpPass
              * @throws {Error}
@@ -2781,10 +3533,11 @@
              *
              *
              * @param {string} projectId
+             * @param {string} range
              * @throws {Error}
              * @return {Promise}             
              */
-            getUsage: function(projectId, range = 'monthly') {
+            getUsage: function(projectId, range = 'last30') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2832,7 +3585,7 @@
              *
              * @param {string} projectId
              * @param {string} name
-             * @param {array} events
+             * @param {string[]} events
              * @param {string} url
              * @param {number} security
              * @param {string} httpUser
@@ -2930,7 +3683,7 @@
              * @param {string} projectId
              * @param {string} webhookId
              * @param {string} name
-             * @param {array} events
+             * @param {string[]} events
              * @param {string} url
              * @param {number} security
              * @param {string} httpUser
@@ -3077,8 +3830,8 @@
              * read and write arguments.
              *
              * @param {File} file
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3149,8 +3902,8 @@
              * to update this resource.
              *
              * @param {string} fileId
-             * @param {array} read
-             * @param {array} write
+             * @param {string[]} read
+             * @param {string[]} write
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3235,7 +3988,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -3290,7 +4043,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
@@ -3323,7 +4076,7 @@
                 payload['key'] = config.key;
 
                 let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-
+                
                 return config.endpoint + path + ((query) ? '?' + query : '');
             }
         };
@@ -3380,7 +4133,7 @@
              * project.
              *
              * @param {string} name
-             * @param {array} roles
+             * @param {string[]} roles
              * @throws {Error}
              * @return {Promise}             
              */
@@ -3535,7 +4288,7 @@
              *
              * @param {string} teamId
              * @param {string} email
-             * @param {array} roles
+             * @param {string[]} roles
              * @param {string} url
              * @param {string} name
              * @throws {Error}
@@ -3922,10 +4675,7 @@
                     throw new Error('Missing required parameter: "sessionId"');
                 }
                 
-                let path = '/users/{userId}/sessions/{sessionId}'
-                    .replace(new RegExp('{userId}', 'g'), userId)
-                    .replace(new RegExp('{sessionId}', 'g'), sessionId)
-                ;
+                let path = '/users/{userId}/sessions/{sessionId}'.replace(new RegExp('{userId}', 'g'), userId).replace(new RegExp('{sessionId}', 'g'), sessionId);
 
                 let payload = {};
 
@@ -3978,6 +4728,8 @@
             account: account,
             avatars: avatars,
             database: database,
+            functions: functions,
+            health: health,
             locale: locale,
             projects: projects,
             storage: storage,
