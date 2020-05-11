@@ -1,3 +1,9 @@
+<?php
+
+$events = array_keys($this->getParam('events', []));
+
+?>
+
 <div
     data-service="functions.get"
     data-name="project-function"
@@ -11,7 +17,7 @@
             <a data-ls-attrs="href=/console/functions?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Functions</a>
             <br />
 
-            <span data-ls-bind="{{project-function.name}}">&nbsp;</span>
+            <span data-ls-bind="{{project-function.name}}&nbsp;">&nbsp;</span>
         </h1>
     </div>
 
@@ -55,22 +61,32 @@
                             <label>&nbsp;</label>
 
                             <div class="box">
-                                <label for="function-name">Name</label>
+                                <label for="name">Name</label>
                                 <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" />
                                 
+                                <label for="timeout">Timeout</label>
+                                <select name="timeout" data-ls-bind="{{project-function.timeout}}" required>
+                                    <option value="5">5 seconds</option>
+                                    <option value="15">15 seconds</option>
+                                    <option value="30">30 seconds</option>
+                                    <option value="60">1 minute</option>
+                                    <!-- <option value="300" disabled>5 minutes</option> -->
+                                    <!-- <option value="900" disabled>15 minutes</option> -->
+                                </select>
+                                
                                 <label for="function-trigger">Trigger</label>
-                                <select name="type" required>
+
+                                <select name="trigger" data-ls-bind="{{project-function.trigger}}" required>
                                     <option value="event">On Event</option>
                                     <option value="schedule">On Schedule</option>
                                 </select>
+
+                                <div data-ls-template="template-trigger-{{project-function.trigger}}" data-type="script" class="margin-bottom"></div>
+
                                 <h3 class="margin-bottom-small">Variables</h3>
 
                                 <div data-ls-if="(!{{project-function.vars.length}})">
                                     <hr class="margin-bottom margin-top-no" />
-
-                                    <!-- <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
-                                        <h4 class="text-fade text-size-small">No variables added yet.</h4>
-                                    </div> -->
 
                                     <fieldset name="vars" data-cast-to="object">
                                         <div data-ls-loop="project-function.vars" data-ls-as="var" style="overflow: hidden">
@@ -142,3 +158,25 @@
         </ul>
     </div>
 </div>
+
+<script type="text/html" id="template-trigger-event">
+    <label for="events">Events</label>
+
+    <div class="row responsive thin">
+        <?php foreach ($events as $i => $event) : ?>
+            <div class="col span-6 text-one-liner margin-bottom text-height-large">
+                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
+            </div>
+            <?php if (($i + 1) % 2 === 0) : ?>
+            </div>
+            <div class="row responsive thin">
+            <?php endif; ?>
+
+        <?php endforeach; ?>
+    </div>
+</script>
+
+<script type="text/html" id="template-trigger-schedule">
+    <label for="schedule">Schedule (CRON Syntax)</label>
+    <input type="text" class="full-width" name="schedule" required autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
+</script>
