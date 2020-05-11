@@ -26,7 +26,7 @@ $utopia->post('/v1/functions')
     ->param('trigger', 'event', function () { return new WhiteList(['event', 'scheudle']); }, 'Function trigger type.', true)
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 10, function () { return new Range(1, 10); }, 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, function () { return new WhiteList([5, 15, 30, 60]); }, 'Function maximum execution time in seconds.', true)
     ->action(
         function ($name, $vars, $trigger, $events, $schedule, $timeout) use ($response, $projectDB) {
             $function = $projectDB->createDocument([
@@ -119,7 +119,7 @@ $utopia->put('/v1/functions/:functionId')
     ->param('trigger', 'event', function () { return new WhiteList(['event', 'scheudle']); }, 'Function trigger type.', true)
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 10, function () { return new Range(1, 10); }, 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, function () { return new WhiteList([5, 15, 30, 60]); }, 'Function maximum execution time in seconds.', true)
     ->action(
         function ($functionId, $name, $vars, $trigger, $events, $schedule, $timeout) use ($response, $projectDB) {
             $function = $projectDB->getDocument($functionId);
