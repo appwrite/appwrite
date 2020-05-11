@@ -1,0 +1,144 @@
+<div
+    data-service="functions.get"
+    data-name="project-function"
+    data-event="load,functions.update"
+    data-param-function-id="{{router.params.id}}"
+    data-success="trigger"
+    data-success-param-trigger-events="functions.get">
+
+    <div class="cover">
+        <h1 class="zone xl margin-bottom-large">
+            <a data-ls-attrs="href=/console/functions?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Functions</a>
+            <br />
+
+            <span data-ls-bind="{{project-function.name}}">&nbsp;</span>
+        </h1>
+    </div>
+
+    <div data-ui-modal class="modal width-large box close" data-button-hide="on" data-open-event="open-json">
+        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+        
+        <h2>JSON View</h2>
+
+        <div class="margin-bottom">
+            <input type="hidden" data-ls-bind="{{project-function}}" data-forms-code />
+        </div>
+
+        <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+    </div>
+
+    <div class="zone xl">
+        <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
+            <li data-state="/console/functions/function?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Tags</h2>
+            </li>
+            <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Settings</h2>
+
+                <div class="row responsive margin-top-negative">
+                    <div class="col span-8">
+                        <form
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Update Function"
+                            data-service="functions.update"
+                            data-scope="sdk"
+                            data-event="submit"
+                            data-param-function-id="{{router.params.id}}"
+                            data-success="alert,trigger"
+                            data-success-param-alert-text="Updated function successfully"
+                            data-success-param-trigger-events="functions.update"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to update function"
+                            data-failure-param-alert-classname="error">
+
+                            <label>&nbsp;</label>
+
+                            <div class="box">
+                                <label for="function-name">Name</label>
+                                <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" />
+                                
+                                <label for="function-trigger">Trigger</label>
+                                <select name="type" required>
+                                    <option value="event">On Event</option>
+                                    <option value="schedule">On Schedule</option>
+                                </select>
+                                <h3 class="margin-bottom-small">Variables</h3>
+
+                                <div data-ls-if="(!{{project-function.vars.length}})">
+                                    <hr class="margin-bottom margin-top-no" />
+
+                                    <!-- <div class="margin-bottom-xl margin-top-xl margin-end margin-start text-align-center">
+                                        <h4 class="text-fade text-size-small">No variables added yet.</h4>
+                                    </div> -->
+
+                                    <fieldset name="vars" data-cast-to="object">
+                                        <div data-ls-loop="project-function.vars" data-ls-as="var" style="overflow: hidden">
+                                            <div class="margin-bottom-small">
+                                                <div data-forms-remove class="row thin">
+                                                    <div class="col span-10">
+                                                        <input type="hidden" data-forms-key-value data-ls-attrs="name={{$index}}" data-ls-bind="{{var}}" data-cast-to="array" />
+                                                    </div>
+                                                    <div class="col span-2">
+                                                        <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div data-forms-clone="" data-label="Add Variable" data-first="0">
+                                            <div class="margin-bottom-small">
+                                                <div data-forms-remove class="row thin margin-bottom-small">
+                                                    <div class="col span-10">
+                                                        <input type="hidden" name="" data-forms-key-value />
+                                                    </div>
+                                                    <div class="col span-2">
+                                                        <button type="button" data-remove class="reverse danger round pull-end"><i class="icon-cancel"></i></button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </fieldset>
+                                    <hr class="margin-bottom margin-top-small" />
+                                </div>
+
+                                <button>Update</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col span-4 sticky-top">
+                        <label>Function ID</label>
+                        <div class="input-copy margin-bottom">
+                            <input id="uid" type="text" autocomplete="off" placeholder="" data-ls-bind="{{project-function.$id}}" disabled data-forms-copy>
+                        </div>
+
+                        <ul class="margin-bottom-large text-fade text-size-small">
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|date-text}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|date-text}}"></span></li>
+                        </ul>
+
+                        <form name="functions.delete" class="margin-bottom"
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Delete Function"
+                            data-service="functions.delete"
+                            data-event="submit"
+                            data-param-function-id="{{router.params.id}}"
+                            data-confirm="Are you sure you want to delete this function?"
+                            data-success="alert,trigger,redirect"
+                            data-success-param-alert-text="Function deleted successfully"
+                            data-success-param-trigger-events="functions.delete"
+                            data-success-param-redirect-url="/console/functions?project={{router.params.project}}"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to delete function"
+                            data-failure-param-alert-classname="error">
+
+                            <button type="submit" class="danger fill">Delete Function</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>

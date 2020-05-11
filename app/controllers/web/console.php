@@ -265,15 +265,15 @@ $utopia->get('/console/users')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users/view')
+$utopia->get('/console/users/user')
     ->desc('Platform console project user')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../../views/console/users/view.phtml');
+        $page = new View(__DIR__.'/../../views/console/users/user.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - View User')
+            ->setParam('title', APP_NAME.' - User')
             ->setParam('body', $page);
     });
 
@@ -285,6 +285,18 @@ $utopia->get('/console/functions')
         $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - Users')
+            ->setParam('title', APP_NAME.' - Functions')
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/functions/function')
+    ->desc('Platform console project function')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Function')
             ->setParam('body', $page);
     });

@@ -10,7 +10,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = functions.updateTag('[FUNCTION_ID]', '[ACTIVE]');
+let promise = functions.updateTag('[FUNCTION_ID]', '[TAG]');
 
 promise.then(function (response) {
     console.log(response);

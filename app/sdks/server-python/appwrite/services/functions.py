@@ -75,18 +75,6 @@ class Functions(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update_tag(self, function_id, active):
-        """Update Function Active Tag"""
-
-        params = {}
-        path = '/functions/{functionId}/active'
-        path = path.replace('{functionId}', function_id)                
-        params['active'] = active
-
-        return self.client.call('patch', path, {
-            'content-type': 'application/json',
-        }, params)
-
     def list_executions(self, function_id, search='', limit=25, offset=0, order_type='ASC'):
         """List Executions"""
 
@@ -123,6 +111,18 @@ class Functions(Service):
         path = path.replace('{executionId}', execution_id)                
 
         return self.client.call('get', path, {
+            'content-type': 'application/json',
+        }, params)
+
+    def update_tag(self, function_id, tag):
+        """Update Function Tag"""
+
+        params = {}
+        path = '/functions/{functionId}/tag'
+        path = path.replace('{functionId}', function_id)                
+        params['tag'] = tag
+
+        return self.client.call('patch', path, {
             'content-type': 'application/json',
         }, params)
 

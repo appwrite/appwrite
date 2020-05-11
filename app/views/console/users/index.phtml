@@ -107,7 +107,7 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="45" alt="User Avatar" class="avatar pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <a data-ls-attrs="href=/console/users/view?id={{user.$id}}&project={{router.params.project}}">
+                                        <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
                                             <span data-ls-bind="{{user.name}}"></span>
                                             <span data-ls-if="{{user.name}} === ''">-----</span>
                                         </a>

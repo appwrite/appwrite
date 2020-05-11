@@ -657,17 +657,6 @@ declare namespace Appwrite {
 	    delete(functionId: string): Promise<object>;
 
         /**
-         * Update Function Active Tag
-         *
-	     *
-         * @param {string} functionId
-         * @param {string} active
-         * @throws {Error}
-         * @return {Promise}         
-         */
-	    updateTag(functionId: string, active: string): Promise<object>;
-
-        /**
          * List Executions
          *
 	     *
@@ -702,6 +691,17 @@ declare namespace Appwrite {
          * @return {Promise}         
          */
 	    getExecution(functionId: string, executionId: string): Promise<object>;
+
+        /**
+         * Update Function Tag
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} tag
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    updateTag(functionId: string, tag: string): Promise<object>;
 
         /**
          * List Tags

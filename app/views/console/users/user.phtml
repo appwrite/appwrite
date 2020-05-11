@@ -29,7 +29,7 @@
 
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
-            <li data-state="/console/users/view?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>General</h2>
 
                 <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
@@ -143,7 +143,7 @@
                     </div>
                 </div>
             </li>
-            <li data-state="/console/users/view/devices?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/users/user/devices?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Devices</h2>
 
                 <div
@@ -209,7 +209,7 @@
                 </div>
 
             </li>
-            <li data-state="/console/users/view/audit?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/users/user/audit?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Activity</h2>
 
                 <div

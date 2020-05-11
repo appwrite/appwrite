@@ -1802,38 +1802,6 @@
             },
 
             /**
-             * Update Function Active Tag
-             *
-             *
-             * @param {string} functionId
-             * @param {string} active
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            updateTag: function(functionId, active) {
-                if(functionId === undefined) {
-                    throw new Error('Missing required parameter: "functionId"');
-                }
-                
-                if(active === undefined) {
-                    throw new Error('Missing required parameter: "active"');
-                }
-                
-                let path = '/functions/{functionId}/active'.replace(new RegExp('{functionId}', 'g'), functionId);
-
-                let payload = {};
-
-                if(active) {
-                    payload['active'] = active;
-                }
-
-                return http
-                    .patch(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
              * List Executions
              *
              *
@@ -1928,6 +1896,38 @@
 
                 return http
                     .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Function Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} tag
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateTag: function(functionId, tag) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(tag === undefined) {
+                    throw new Error('Missing required parameter: "tag"');
+                }
+                
+                let path = '/functions/{functionId}/tag'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(tag) {
+                    payload['tag'] = tag;
+                }
+
+                return http
+                    .patch(path, {
                         'content-type': 'application/json',
                     }, payload);
             },

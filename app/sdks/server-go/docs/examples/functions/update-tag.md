@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.UpdateTag("[FUNCTION_ID]", "[ACTIVE]")
+    var response, error := service.UpdateTag("[FUNCTION_ID]", "[TAG]")
 
     if error != nil {
         panic(error)

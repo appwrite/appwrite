@@ -75,19 +75,6 @@ module Appwrite
             }, params);
         end
 
-        def update_tag(function_id:, active:)
-            path = '/functions/{functionId}/active'
-                .gsub('{function_id}', function_id)
-
-            params = {
-                'active': active
-            }
-
-            return @client.call('patch', path, {
-                'content-type' => 'application/json',
-            }, params);
-        end
-
         def list_executions(function_id:, search: '', limit: 25, offset: 0, order_type: 'ASC')
             path = '/functions/{functionId}/executions'
                 .gsub('{function_id}', function_id)
@@ -126,6 +113,19 @@ module Appwrite
             }
 
             return @client.call('get', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
+        def update_tag(function_id:, tag:)
+            path = '/functions/{functionId}/tag'
+                .gsub('{function_id}', function_id)
+
+            params = {
+                'tag': tag
+            }
+
+            return @client.call('patch', path, {
                 'content-type' => 'application/json',
             }, params);
         end

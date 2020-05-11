@@ -114,23 +114,6 @@ public class Functions extends Service {
         return client.call("DELETE", path, headers, params);
     }
 
-     /// Update Function Active Tag
-    public Call updateTag(String functionId, String active) {
-        final String path = "/functions/{functionId}/active".replace("{functionId}", functionId);
-
-        final Map<String, Object> params = Map.ofEntries(
-            entry("active", active)
-        );
-
-
-
-        final Map<String, String> headers = Map.ofEntries(
-            entry("content-type", "application/json")
-        );
-
-        return client.call("PATCH", path, headers, params);
-    }
-
      /// List Executions
     public Call listExecutions(String functionId, String search, int limit, int offset, OrderType orderType) {
         final String path = "/functions/{functionId}/executions".replace("{functionId}", functionId);
@@ -182,6 +165,23 @@ public class Functions extends Service {
         );
 
         return client.call("GET", path, headers, params);
+    }
+
+     /// Update Function Tag
+    public Call updateTag(String functionId, String tag) {
+        final String path = "/functions/{functionId}/tag".replace("{functionId}", functionId);
+
+        final Map<String, Object> params = Map.ofEntries(
+            entry("tag", tag)
+        );
+
+
+
+        final Map<String, String> headers = Map.ofEntries(
+            entry("content-type", "application/json")
+        );
+
+        return client.call("PATCH", path, headers, params);
     }
 
      /// List Tags

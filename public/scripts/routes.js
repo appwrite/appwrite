@@ -144,13 +144,13 @@ window.ls.router
     scope: "console",
     project: true
   })
-  .add("/console/users/view", {
-    template: "/console/users/view?version=" + APP_ENV.VERSION,
+  .add("/console/users/user", {
+    template: "/console/users/user?version=" + APP_ENV.VERSION,
     scope: "console",
     project: true
   })
-  .add("/console/users/view/:tab", {
-    template: "/console/users/view?version=" + APP_ENV.VERSION,
+  .add("/console/users/user/:tab", {
+    template: "/console/users/user?version=" + APP_ENV.VERSION,
     scope: "console",
     project: true
   })
@@ -161,6 +161,16 @@ window.ls.router
   })
   .add("/console/functions", {
     template: "/console/functions?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/functions/function", {
+    template: "/console/functions/function?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/functions/function/:tab", {
+    template: "/console/functions/function?version=" + APP_ENV.VERSION,
     scope: "console",
     project: true
   })

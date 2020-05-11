@@ -74,19 +74,6 @@ DELETE https://appwrite.io/v1/functions/{functionId}
 | --- | --- | --- | --- |
 | functionId | string | **Required** Function unique ID. |  |
 
-## Update Function Active Tag
-
-```http request
-PATCH https://appwrite.io/v1/functions/{functionId}/active
-```
-
-### Parameters
-
-| Field Name | Type | Description | Default |
-| --- | --- | --- | --- |
-| functionId | string | **Required** Function unique ID. |  |
-| active | string | Active tag unique ID. |  |
-
 ## List Executions
 
 ```http request
@@ -128,6 +115,19 @@ GET https://appwrite.io/v1/functions/{functionId}/executions/{executionId}
 | --- | --- | --- | --- |
 | functionId | string | **Required** Function unique ID. |  |
 | executionId | string | **Required** Execution unique ID. |  |
+
+## Update Function Tag
+
+```http request
+PATCH https://appwrite.io/v1/functions/{functionId}/tag
+```
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| functionId | string | **Required** Function unique ID. |  |
+| tag | string | Tag unique ID. |  |
 
 ## List Tags
 

@@ -129,26 +129,6 @@ class Functions extends Service
     }
 
     /**
-     * Update Function Active Tag
-     *
-     * @param string  $functionId
-     * @param string  $active
-     * @throws Exception
-     * @return array
-     */
-    public function updateTag(string $functionId, string $active):array
-    {
-        $path   = str_replace(['{functionId}'], [$functionId], '/functions/{functionId}/active');
-        $params = [];
-
-        $params['active'] = $active;
-
-        return $this->client->call(Client::METHOD_PATCH, $path, [
-            'content-type' => 'application/json',
-        ], $params);
-    }
-
-    /**
      * List Executions
      *
      * @param string  $functionId
@@ -209,6 +189,26 @@ class Functions extends Service
 
 
         return $this->client->call(Client::METHOD_GET, $path, [
+            'content-type' => 'application/json',
+        ], $params);
+    }
+
+    /**
+     * Update Function Tag
+     *
+     * @param string  $functionId
+     * @param string  $tag
+     * @throws Exception
+     * @return array
+     */
+    public function updateTag(string $functionId, string $tag):array
+    {
+        $path   = str_replace(['{functionId}'], [$functionId], '/functions/{functionId}/tag');
+        $params = [];
+
+        $params['tag'] = $tag;
+
+        return $this->client->call(Client::METHOD_PATCH, $path, [
             'content-type' => 'application/json',
         ], $params);
     }

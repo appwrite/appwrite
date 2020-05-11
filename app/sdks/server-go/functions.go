@@ -86,18 +86,6 @@ func (srv *Functions) Delete(FunctionId string) (map[string]interface{}, error) 
 	return srv.client.Call("DELETE", path, nil, params)
 }
 
-// UpdateTag
-func (srv *Functions) UpdateTag(FunctionId string, Active string) (map[string]interface{}, error) {
-	r := strings.NewReplacer("{functionId}", FunctionId)
-	path := r.Replace("/functions/{functionId}/active")
-
-	params := map[string]interface{}{
-		"active": Active,
-	}
-
-	return srv.client.Call("PATCH", path, nil, params)
-}
-
 // ListExecutions
 func (srv *Functions) ListExecutions(FunctionId string, Search string, Limit int, Offset int, OrderType string) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{functionId}", FunctionId)
@@ -134,6 +122,18 @@ func (srv *Functions) GetExecution(FunctionId string, ExecutionId string) (map[s
 	}
 
 	return srv.client.Call("GET", path, nil, params)
+}
+
+// UpdateTag
+func (srv *Functions) UpdateTag(FunctionId string, Tag string) (map[string]interface{}, error) {
+	r := strings.NewReplacer("{functionId}", FunctionId)
+	path := r.Replace("/functions/{functionId}/tag")
+
+	params := map[string]interface{}{
+		"tag": Tag,
+	}
+
+	return srv.client.Call("PATCH", path, nil, params)
 }
 
 // ListTags

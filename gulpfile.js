@@ -44,6 +44,8 @@ const configApp  = {
         'public/scripts/views/forms/document.js',
         'public/scripts/views/forms/document-preview.js',
         'public/scripts/views/forms/filter.js',
+        'public/scripts/views/forms/headers.js',
+        'public/scripts/views/forms/key-value.js',
         'public/scripts/views/forms/move-down.js',
         'public/scripts/views/forms/move-up.js',
         'public/scripts/views/forms/nav.js',

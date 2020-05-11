@@ -12,4 +12,4 @@ $client
 
 $functions = new Functions($client);
 
-$result = $functions->updateTag('[FUNCTION_ID]', '[ACTIVE]');
+$result = $functions->updateTag('[FUNCTION_ID]', '[TAG]');

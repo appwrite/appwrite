@@ -118,25 +118,6 @@ class Functions extends Service {
     }
 
     /**
-     * Update Function Active Tag
-     *
-     * @param string functionId
-     * @param string active
-     * @throws Exception
-     * @return {}
-     */
-    async updateTag(functionId, active) {
-        let path = '/functions/{functionId}/active'.replace(new RegExp('{functionId}', 'g'), functionId);
-        
-        return await this.client.call('patch', path, {
-                    'content-type': 'application/json',
-               },
-               {
-                'active': active
-            });
-    }
-
-    /**
      * List Executions
      *
      * @param string functionId
@@ -195,6 +176,25 @@ class Functions extends Service {
                     'content-type': 'application/json',
                },
                {
+            });
+    }
+
+    /**
+     * Update Function Tag
+     *
+     * @param string functionId
+     * @param string tag
+     * @throws Exception
+     * @return {}
+     */
+    async updateTag(functionId, tag) {
+        let path = '/functions/{functionId}/tag'.replace(new RegExp('{functionId}', 'g'), functionId);
+        
+        return await this.client.call('patch', path, {
+                    'content-type': 'application/json',
+               },
+               {
+                'tag': tag
             });
     }
 

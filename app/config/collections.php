@@ -1223,8 +1223,8 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Active',
-                'key' => 'active',
+                'label' => 'Tag',
+                'key' => 'tag',
                 'type' => Database::SYSTEM_VAR_TYPE_KEY,
                 'default' => '',
                 'required' => false,

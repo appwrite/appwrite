@@ -38,7 +38,7 @@ $utopia->post('/v1/functions')
                 'dateCreated' => time(),
                 'dateUpdated' => time(),
                 'name' => $name,
-                'active' => '',
+                'tag' => '',
                 'vars' => '', //$vars, // TODO Should be encrypted
                 'trigger' => $trigger,
                 'events' => $events,
@@ -146,17 +146,17 @@ $utopia->put('/v1/functions/:functionId')
         }
     );
 
-$utopia->patch('/v1/functions/:functionId/active')
-    ->desc('Update Function Active Tag')
+$utopia->patch('/v1/functions/:functionId/tag')
+    ->desc('Update Function Tag')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateTag')
     ->label('sdk.description', '/docs/references/functions/update-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('active', '', function () { return new UID(); }, 'Active tag unique ID.')
+    ->param('tag', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(
-        function ($functionId, $active) use ($response, $projectDB) {
+        function ($functionId, $tag) use ($response, $projectDB) {
             $function = $projectDB->getDocument($functionId);
 
             if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -164,7 +164,7 @@ $utopia->patch('/v1/functions/:functionId/active')
             }
 
             $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
-                'active' => $active,
+                'tag' => $tag,
             ]));
 
             if (false === $function) {
@@ -381,7 +381,7 @@ $utopia->post('/v1/functions/:functionId/executions')
                 throw new Exception('Failed saving execution to DB', 500);
             }
             
-            $tag = $projectDB->getDocument($function->getAttribute('active'));
+            $tag = $projectDB->getDocument($function->getAttribute('tag'));
 
             if($tag->getAttribute('functionId') !== $function->getId()) {
                 throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);

@@ -10,4 +10,4 @@ client = Client()
 
 functions = Functions(client)
 
-result = functions.update_tag('[FUNCTION_ID]', '[ACTIVE]')
+result = functions.update_tag('[FUNCTION_ID]', '[TAG]')
