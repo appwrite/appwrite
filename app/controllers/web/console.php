@@ -134,6 +134,10 @@ $utopia->get('/console/webhooks')
     ->action(function () use ($layout) {
         $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
 
+        $page
+            ->setParam('events', Config::getParam('events', []))
+        ;
+
         $layout
             ->setParam('title', APP_NAME.' - Webhooks')
             ->setParam('body', $page);
@@ -295,6 +299,10 @@ $utopia->get('/console/functions/function')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
         $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
+
+        $page
+            ->setParam('events', Config::getParam('events', []))
+        ;
 
         $layout
             ->setParam('title', APP_NAME.' - Function')

@@ -58,6 +58,14 @@ class FunctionsV1
 
         $start = microtime(true);
 
+        /**
+         * Limit CPU Usage
+         * Limit Memory Usage
+         * Limit Network Usage
+         * Make sure no access to redis, mariadb, influxdb or other system services
+         * Make sure no access to NFS server / storage volumes
+         * Access Appwrite REST from internal network for improved performance
+         */
         Console::execute("docker run \
             --rm \
             -v $(pwd):/app \
