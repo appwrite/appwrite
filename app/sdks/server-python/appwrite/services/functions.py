@@ -20,14 +20,13 @@ class Functions(Service):
             'content-type': 'application/json',
         }, params)
 
-    def create(self, name, vars=[], trigger='event', events=[], schedule='', timeout=10):
+    def create(self, name, vars=[], events=[], schedule='', timeout=15):
         """Create Function"""
 
         params = {}
         path = '/functions'
         params['name'] = name
         params['vars'] = vars
-        params['trigger'] = trigger
         params['events'] = events
         params['schedule'] = schedule
         params['timeout'] = timeout
@@ -47,7 +46,7 @@ class Functions(Service):
             'content-type': 'application/json',
         }, params)
 
-    def update(self, function_id, name, vars=[], trigger='event', events=[], schedule='', timeout=10):
+    def update(self, function_id, name, vars=[], events=[], schedule='', timeout=15):
         """Update Function"""
 
         params = {}
@@ -55,7 +54,6 @@ class Functions(Service):
         path = path.replace('{functionId}', function_id)                
         params['name'] = name
         params['vars'] = vars
-        params['trigger'] = trigger
         params['events'] = events
         params['schedule'] = schedule
         params['timeout'] = timeout

@@ -32,13 +32,12 @@ func (srv *Functions) List(Search string, Limit int, Offset int, OrderType strin
 }
 
 // Create
-func (srv *Functions) Create(Name string, Vars object, Trigger string, Events []interface{}, Schedule string, Timeout int) (map[string]interface{}, error) {
+func (srv *Functions) Create(Name string, Vars object, Events []interface{}, Schedule string, Timeout int) (map[string]interface{}, error) {
 	path := "/functions"
 
 	params := map[string]interface{}{
 		"name": Name,
 		"vars": Vars,
-		"trigger": Trigger,
 		"events": Events,
 		"schedule": Schedule,
 		"timeout": Timeout,
@@ -59,14 +58,13 @@ func (srv *Functions) Get(FunctionId string) (map[string]interface{}, error) {
 }
 
 // Update
-func (srv *Functions) Update(FunctionId string, Name string, Vars object, Trigger string, Events []interface{}, Schedule string, Timeout int) (map[string]interface{}, error) {
+func (srv *Functions) Update(FunctionId string, Name string, Vars object, Events []interface{}, Schedule string, Timeout int) (map[string]interface{}, error) {
 	r := strings.NewReplacer("{functionId}", FunctionId)
 	path := r.Replace("/functions/{functionId}")
 
 	params := map[string]interface{}{
 		"name": Name,
 		"vars": Vars,
-		"trigger": Trigger,
 		"events": Events,
 		"schedule": Schedule,
 		"timeout": Timeout,

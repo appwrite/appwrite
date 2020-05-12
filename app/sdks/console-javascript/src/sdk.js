@@ -1652,14 +1652,13 @@
              *
              * @param {string} name
              * @param {object} vars
-             * @param {string} trigger
              * @param {string[]} events
              * @param {string} schedule
              * @param {number} timeout
              * @throws {Error}
              * @return {Promise}             
              */
-            create: function(name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
+            create: function(name, vars = [], events = [], schedule = '', timeout = 15) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
@@ -1674,10 +1673,6 @@
 
                 if(vars) {
                     payload['vars'] = vars;
-                }
-
-                if(trigger) {
-                    payload['trigger'] = trigger;
                 }
 
                 if(events) {
@@ -1728,14 +1723,13 @@
              * @param {string} functionId
              * @param {string} name
              * @param {object} vars
-             * @param {string} trigger
              * @param {string[]} events
              * @param {string} schedule
              * @param {number} timeout
              * @throws {Error}
              * @return {Promise}             
              */
-            update: function(functionId, name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
+            update: function(functionId, name, vars = [], events = [], schedule = '', timeout = 15) {
                 if(functionId === undefined) {
                     throw new Error('Missing required parameter: "functionId"');
                 }
@@ -1754,10 +1748,6 @@
 
                 if(vars) {
                     payload['vars'] = vars;
-                }
-
-                if(trigger) {
-                    payload['trigger'] = trigger;
                 }
 
                 if(events) {

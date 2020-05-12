@@ -611,14 +611,13 @@ declare namespace Appwrite {
 	     *
          * @param {string} name
          * @param {object} vars
-         * @param {string} trigger
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
          * @throws {Error}
          * @return {Promise}         
          */
-	    create(name: string, vars: object, trigger: string, events: string[], schedule: string, timeout: number): Promise<object>;
+	    create(name: string, vars: object, events: string[], schedule: string, timeout: number): Promise<object>;
 
         /**
          * Get Function
@@ -637,14 +636,13 @@ declare namespace Appwrite {
          * @param {string} functionId
          * @param {string} name
          * @param {object} vars
-         * @param {string} trigger
          * @param {string[]} events
          * @param {string} schedule
          * @param {number} timeout
          * @throws {Error}
          * @return {Promise}         
          */
-	    update(functionId: string, name: string, vars: object, trigger: string, events: string[], schedule: string, timeout: number): Promise<object>;
+	    update(functionId: string, name: string, vars: object, events: string[], schedule: string, timeout: number): Promise<object>;
 
         /**
          * Delete Function

@@ -15,7 +15,7 @@ func main() {
         client: &client
     }
 
-    var response, error := service.Update("[FUNCTION_ID]", "[NAME]", , "event", [], "", 1)
+    var response, error := service.Update("[FUNCTION_ID]", "[NAME]", , [], "", 0)
 
     if error != nil {
         panic(error)

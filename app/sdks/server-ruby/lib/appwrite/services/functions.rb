@@ -16,13 +16,12 @@ module Appwrite
             }, params);
         end
 
-        def create(name:, vars: [], trigger: 'event', events: [], schedule: '', timeout: 10)
+        def create(name:, vars: [], events: [], schedule: '', timeout: 15)
             path = '/functions'
 
             params = {
                 'name': name, 
                 'vars': vars, 
-                'trigger': trigger, 
                 'events': events, 
                 'schedule': schedule, 
                 'timeout': timeout
@@ -45,14 +44,13 @@ module Appwrite
             }, params);
         end
 
-        def update(function_id:, name:, vars: [], trigger: 'event', events: [], schedule: '', timeout: 10)
+        def update(function_id:, name:, vars: [], events: [], schedule: '', timeout: 15)
             path = '/functions/{functionId}'
                 .gsub('{function_id}', function_id)
 
             params = {
                 'name': name, 
                 'vars': vars, 
-                'trigger': trigger, 
                 'events': events, 
                 'schedule': schedule, 
                 'timeout': timeout

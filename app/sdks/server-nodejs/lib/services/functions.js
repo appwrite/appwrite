@@ -31,14 +31,13 @@ class Functions extends Service {
      *
      * @param string name
      * @param object vars
-     * @param string trigger
      * @param string[] events
      * @param string schedule
      * @param number timeout
      * @throws Exception
      * @return {}
      */
-    async create(name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
+    async create(name, vars = [], events = [], schedule = '', timeout = 15) {
         let path = '/functions';
         
         return await this.client.call('post', path, {
@@ -47,7 +46,6 @@ class Functions extends Service {
                {
                 'name': name,
                 'vars': vars,
-                'trigger': trigger,
                 'events': events,
                 'schedule': schedule,
                 'timeout': timeout
@@ -77,14 +75,13 @@ class Functions extends Service {
      * @param string functionId
      * @param string name
      * @param object vars
-     * @param string trigger
      * @param string[] events
      * @param string schedule
      * @param number timeout
      * @throws Exception
      * @return {}
      */
-    async update(functionId, name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
+    async update(functionId, name, vars = [], events = [], schedule = '', timeout = 15) {
         let path = '/functions/{functionId}'.replace(new RegExp('{functionId}', 'g'), functionId);
         
         return await this.client.call('put', path, {
@@ -93,7 +90,6 @@ class Functions extends Service {
                {
                 'name': name,
                 'vars': vars,
-                'trigger': trigger,
                 'events': events,
                 'schedule': schedule,
                 'timeout': timeout

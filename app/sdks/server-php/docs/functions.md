@@ -27,10 +27,9 @@ POST https://appwrite.io/v1/functions
 | --- | --- | --- | --- |
 | name | string | Function name. |  |
 | vars | object | Key-value JSON object. | [] |
-| trigger | string | Function trigger type. | event |
 | events | array | Events list. | [] |
 | schedule | string | Schedule CRON syntax. |  |
-| timeout | integer | Function maximum execution time in seconds. | 10 |
+| timeout | integer | Function maximum execution time in seconds. | 15 |
 
 ## Get Function
 
@@ -57,10 +56,9 @@ PUT https://appwrite.io/v1/functions/{functionId}
 | functionId | string | **Required** Function unique ID. |  |
 | name | string | Function name. |  |
 | vars | object | Key-value JSON object. | [] |
-| trigger | string | Function trigger type. | event |
 | events | array | Events list. | [] |
 | schedule | string | Schedule CRON syntax. |  |
-| timeout | integer | Function maximum execution time in seconds. | 10 |
+| timeout | integer | Function maximum execution time in seconds. | 15 |
 
 ## Delete Function
 

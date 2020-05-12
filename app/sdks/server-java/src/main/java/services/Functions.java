@@ -39,13 +39,12 @@ public class Functions extends Service {
     }
 
      /// Create Function
-    public Call create(String name, Object vars, String trigger, List events, String schedule, int timeout) {
+    public Call create(String name, Object vars, List events, String schedule, int timeout) {
         final String path = "/functions";
 
         final Map<String, Object> params = Map.ofEntries(
             entry("name", name),
             entry("vars", vars),
-            entry("trigger", trigger),
             entry("events", events),
             entry("schedule", schedule),
             entry("timeout", timeout)
@@ -77,13 +76,12 @@ public class Functions extends Service {
     }
 
      /// Update Function
-    public Call update(String functionId, String name, Object vars, String trigger, List events, String schedule, int timeout) {
+    public Call update(String functionId, String name, Object vars, List events, String schedule, int timeout) {
         final String path = "/functions/{functionId}".replace("{functionId}", functionId);
 
         final Map<String, Object> params = Map.ofEntries(
             entry("name", name),
             entry("vars", vars),
-            entry("trigger", trigger),
             entry("events", events),
             entry("schedule", schedule),
             entry("timeout", timeout)

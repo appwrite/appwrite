@@ -38,21 +38,19 @@ class Functions extends Service
      *
      * @param string  $name
      * @param array  $vars
-     * @param string  $trigger
      * @param array  $events
      * @param string  $schedule
      * @param int  $timeout
      * @throws Exception
      * @return array
      */
-    public function create(string $name, array $vars = , string $trigger = 'event', array $events = [], string $schedule = '', int $timeout = 10):array
+    public function create(string $name, array $vars = , array $events = [], string $schedule = '', int $timeout = 15):array
     {
         $path   = str_replace([], [], '/functions');
         $params = [];
 
         $params['name'] = $name;
         $params['vars'] = $vars;
-        $params['trigger'] = $trigger;
         $params['events'] = $events;
         $params['schedule'] = $schedule;
         $params['timeout'] = $timeout;
@@ -86,21 +84,19 @@ class Functions extends Service
      * @param string  $functionId
      * @param string  $name
      * @param array  $vars
-     * @param string  $trigger
      * @param array  $events
      * @param string  $schedule
      * @param int  $timeout
      * @throws Exception
      * @return array
      */
-    public function update(string $functionId, string $name, array $vars = , string $trigger = 'event', array $events = [], string $schedule = '', int $timeout = 10):array
+    public function update(string $functionId, string $name, array $vars = , array $events = [], string $schedule = '', int $timeout = 15):array
     {
         $path   = str_replace(['{functionId}'], [$functionId], '/functions/{functionId}');
         $params = [];
 
         $params['name'] = $name;
         $params['vars'] = $vars;
-        $params['trigger'] = $trigger;
         $params['events'] = $events;
         $params['schedule'] = $schedule;
         $params['timeout'] = $timeout;
