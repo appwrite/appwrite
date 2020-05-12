@@ -28,7 +28,6 @@ class FunctionsConsoleClientTest extends Scope
                 'key2' => 'value2',
                 'key3' => 'value3',
             ],
-            'trigger' => 'event',
             'events' => [
                 'account.create',
                 'account.delete',

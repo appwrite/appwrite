@@ -175,7 +175,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 ],
                 'last30' => [
                     'start' => DateTime::createFromFormat('U', strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', strtotime('today')),
+                    'end' => DateTime::createFromFormat('U', strtotime('tomorrow')),
                     'group' => '1d',
                 ],
                 'last90' => [
@@ -272,7 +272,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                     }, $requests)),
                 ],
                 'network' => [
-                    'data' => $network,
+                    'data' => array_map(function ($value) {return ['value' => round($value['value'] / 1000000, 2), 'date' => $value['date']];}, $network), // convert bytes to mb
                     'total' => array_sum(array_map(function ($item) {
                         return $item['value'];
                     }, $network)),

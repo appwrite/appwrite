@@ -28,7 +28,6 @@ class FunctionsConsoleServerTest extends Scope
                 'key2' => 'value2',
                 'key3' => 'value3',
             ],
-            'trigger' => 'event',
             'events' => [
                 'account.create',
                 'account.delete',
@@ -50,7 +49,6 @@ class FunctionsConsoleServerTest extends Scope
         //     'key2' => 'value2',
         //     'key3' => 'value3',
         // ], $response1['body']['vars']);
-        $this->assertEquals('event', $response1['body']['trigger']);
         $this->assertEquals([
             'account.create',
             'account.delete',
@@ -136,7 +134,6 @@ class FunctionsConsoleServerTest extends Scope
                 'key5' => 'value5',
                 'key6' => 'value6',
             ],
-            'trigger' => 'scheudle',
             'events' => [
                 'account.update.name',
                 'account.update.email',
@@ -156,7 +153,6 @@ class FunctionsConsoleServerTest extends Scope
         //     'key5' => 'value5',
         //     'key6' => 'value6',
         // ], $response1['body']['vars']);
-        $this->assertEquals('scheudle', $response1['body']['trigger']);
         $this->assertEquals([
             'account.update.name',
             'account.update.email',
