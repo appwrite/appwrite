@@ -42,10 +42,27 @@ class FunctionsV1
     {
         global $environments;
 
+        /*
+         * 1. Get Original Task
+         * 2. Check for updates
+         *  If has updates skip task and don't reschedule
+         *  If status not equal to play skip task
+         * 3. Check next run date, update task and add new job at the given date
+         * 4. Execute task (set optional timeout)
+         * 5. Update task response to log
+         *      On success reset error count
+         *      On failure add error count
+         *      If error count bigger than allowed change status to pause
+         */
+
+
         /**
          * 1. Get event args
          * 2. Unpackage code in an isolated folder
-         * 3. Execute in container with timeout + messure execution time
+         * 3. Execute in container with timeout
+         *      + messure execution time
+         *      + pass env vars
+         *      + pass one-time api key
          * 4. Update execution status
          * 5. Update execution stdout & stderr
          * 6. Trigger audit log
@@ -57,6 +74,8 @@ class FunctionsV1
         $timeout  = 15;
 
         $start = microtime(true);
+
+        //TODO aviod scheduled execution if delay is bigger than X offest
 
         /**
          * Limit CPU Usage

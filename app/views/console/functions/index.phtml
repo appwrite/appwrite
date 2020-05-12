@@ -33,15 +33,7 @@
 
                             <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Settings</a>
 
-                            <span data-ls-bind="{{function.name}}"></span> &nbsp; (<span data-ls-bind="{{function.events.length}}"></span> events)
-                            
-                            <span data-ls-if="0 == {{function.security}}">
-                                &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
-                            </span>
-
-                            <div class="margin-top-tiny">
-                                <a data-ls-attrs="href={{function.url}}" data-ls-bind="{{function.url}}" target="_blank" class="text-one-liner"></a>
-                            </div>
+                            <span data-ls-bind="{{function.name}}"></span> &nbsp; <span data-ls-if="({{function.events.length}})">(<span data-ls-bind="{{function.events.length}}"></span> events)</span>
                         </li>
                     </ul>
                 </div>
@@ -79,7 +71,7 @@
         </li>
 
         <!-- <li data-state="/console/users/teams?project={{router.params.project}}">
-            <h2>Teams</h2>
+            <h2>Usage</h2>
         </li> -->
     </ul>
 </div>

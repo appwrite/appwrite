@@ -11,6 +11,7 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
+use Cron\CronExpression;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -23,12 +24,11 @@ $utopia->post('/v1/functions')
     ->label('sdk.description', '/docs/references/functions/create-function.md')
     ->param('name', '', function () { return new Text(128); }, 'Function name.')
     ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
-    ->param('trigger', 'event', function () { return new WhiteList(['event', 'scheudle']); }, 'Function trigger type.', true)
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, function () { return new WhiteList([5, 15, 30, 60]); }, 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, function () { return new Range(0, 60); }, 'Function maximum execution time in seconds.', true)
     ->action(
-        function ($name, $vars, $trigger, $events, $schedule, $timeout) use ($response, $projectDB) {
+        function ($name, $vars, $events, $schedule, $timeout) use ($response, $projectDB) {
             $function = $projectDB->createDocument([
                 '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
                 '$permissions' => [
@@ -37,12 +37,14 @@ $utopia->post('/v1/functions')
                 ],
                 'dateCreated' => time(),
                 'dateUpdated' => time(),
+                'status' => 'paused',
                 'name' => $name,
                 'tag' => '',
-                'vars' => '', //$vars, // TODO Should be encrypted
-                'trigger' => $trigger,
+                'vars' => $vars,
                 'events' => $events,
                 'schedule' => $schedule,
+                'previous' => null,
+                'next' => null,
                 'timeout' => $timeout,
             ]);
 
@@ -116,25 +118,28 @@ $utopia->put('/v1/functions/:functionId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('name', '', function () { return new Text(128); }, 'Function name.')
     ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
-    ->param('trigger', 'event', function () { return new WhiteList(['event', 'scheudle']); }, 'Function trigger type.', true)
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, function () { return new WhiteList([5, 15, 30, 60]); }, 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, function () { return new Range(0, 60); }, 'Function maximum execution time in seconds.', true)
     ->action(
-        function ($functionId, $name, $vars, $trigger, $events, $schedule, $timeout) use ($response, $projectDB) {
+        function ($functionId, $name, $vars, $events, $schedule, $timeout) use ($response, $projectDB) {
             $function = $projectDB->getDocument($functionId);
 
             if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
                 throw new Exception('Function not found', 404);
             }
 
+            $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+            $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
+
             $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
                 'dateUpdated' => time(),
                 'name' => $name,
-                'vars' => '', //$vars, //TODO Should be encrypted
-                'trigger' => $trigger,
+                'vars' => $vars,
                 'events' => $events,
                 'schedule' => $schedule,
+                'previous' => null,
+                'next' => $next,
                 'timeout' => $timeout,   
             ]));
 
@@ -163,8 +168,13 @@ $utopia->patch('/v1/functions/:functionId/tag')
                 throw new Exception('Function not found', 404);
             }
 
+            $schedule = $function->getAttribute('schedule', '');
+            $cron = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? CronExpression::factory($schedule) : null;
+            $next = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? $cron->getNextRunDate()->format('U') : null;
+
             $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
                 'tag' => $tag,
+                'next' => $next,
             ]));
 
             if (false === $function) {
