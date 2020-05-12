@@ -23,6 +23,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\OpenSSL\OpenSSL;
 use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';
@@ -32,7 +33,7 @@ const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email 
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
-const APP_CACHE_BUSTER = 126;
+const APP_CACHE_BUSTER = 130;
 const APP_VERSION_STABLE = '0.5.3';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_CACHE = '/storage/cache';
@@ -228,6 +229,43 @@ stream_context_set_default([ // Set global user agent and http settings
         'timeout' => 2,
     ],
 ]);
+
+/**
+ * DB Filters
+ */
+Database::addFilter('json',
+    function($value) {
+        if(!is_array($value)) {
+            return $value;
+        }
+        return json_encode($value);
+    },
+    function($value) {
+        return json_decode($value, true);
+    }
+);
+
+Database::addFilter('encrypt',
+    function($value) use ($request) {
+        $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
+        
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => bin2hex($iv),
+            'tag' => bin2hex($tag),
+            'version' => '1',
+        ]);
+    },
+    function($value) use ($request) {
+        $value = json_decode($value, true);
+        $key = $request->getServer('_APP_OPENSSL_KEY_V'.$value['version']);
+
+        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
 
 /*
  * Auth & Project Scope
