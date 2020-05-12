@@ -44,11 +44,11 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertIsInt($response1['body']['dateCreated']);
         $this->assertIsInt($response1['body']['dateUpdated']);
         $this->assertEquals('', $response1['body']['tag']);
-        // $this->assertEquals([
-        //     'key1' => 'value1',
-        //     'key2' => 'value2',
-        //     'key3' => 'value3',
-        // ], $response1['body']['vars']);
+        $this->assertEquals([
+            'key1' => 'value1',
+            'key2' => 'value2',
+            'key3' => 'value3',
+        ], $response1['body']['vars']);
         $this->assertEquals([
             'account.create',
             'account.delete',
@@ -148,11 +148,11 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertIsInt($response1['body']['dateCreated']);
         $this->assertIsInt($response1['body']['dateUpdated']);
         $this->assertEquals('', $response1['body']['tag']);
-        // $this->assertEquals([
-        //     'key4' => 'value4',
-        //     'key5' => 'value5',
-        //     'key6' => 'value6',
-        // ], $response1['body']['vars']);
+        $this->assertEquals([
+            'key4' => 'value4',
+            'key5' => 'value5',
+            'key6' => 'value6',
+        ], $response1['body']['vars']);
         $this->assertEquals([
             'account.update.name',
             'account.update.email',
