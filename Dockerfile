@@ -92,10 +92,7 @@ RUN \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests nginx && \
   # Brotli Support
-  cd /etc/nginx/modules && \
-  wget http://dl1.centos-webpanel.com/files/nginx/modules/nginx-brotli-modules.zip && \
-  unzip nginx-brotli-modules.zip && \
-  rm -rf nginx-broli-modules.zip && \
+  apt-get install nginx-plus-module-brotli && \
   # Redis Extension
   echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
