@@ -423,6 +423,10 @@
     position: relative;
     z-index: 1;
 
+    .chart {
+      width: 80%;
+    }
+
     hr {
       margin: 20px -20px;
       height: 2px;
@@ -516,48 +520,93 @@
       padding: 0;
       border: none;
     }
+  }
 
-    .chart-metric {
-      width: 19%;
+  .chart-metric {
+    width: 19%;
 
-      @media @tablets, @phones {
-        width: 100%;
-      }
+    @media @tablets, @phones {
+      width: 100%;
+    }
+  }
+
+  .chart {
+    width: ~"calc(100% - 2px)";
+    position: relative;
+    height: 0;
+    padding-top: 20px;
+    padding-bottom: 26%;
+    .func-margin-end(-2px);
+    overflow: hidden;
+    background-color: var(--config-color-background-fade);
+    background-image:
+      linear-gradient(transparent 1px, transparent 1px),
+      linear-gradient(90deg, transparent 1px, transparent 1px),
+      linear-gradient(var(--config-border-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);
+    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+    background-repeat: round;
+    border: solid 1px var(--config-border-color);
+    border-right: solid 1px transparent;
+    border-bottom: solid 1px transparent;
+
+    @media @tablets, @phones {
+      width: 100%!important;
+      float: none;
+      margin-bottom: 20px;
     }
 
-    .chart {
-      width: 80%;
-      position: relative;
-      height: 0;
-      padding-top: 20px;
-      padding-bottom: 26%;
-      .func-margin-end(-2px);
-      overflow: hidden;
-      background-color: var(--config-color-background-fade);
-      background-image:
-        linear-gradient(transparent 1px, transparent 1px),
-        linear-gradient(90deg, transparent 1px, transparent 1px),
-        linear-gradient(var(--config-border-color) 1px, transparent 1px),
-        linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);
-      background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
-      background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
-      background-repeat: round;
-      border: solid 1px var(--config-border-color);
-      border-right: solid 1px transparent;
-      border-bottom: solid 1px transparent;
+    canvas {
+      position: absolute;
+      bottom: 0;
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+  }
 
-      @media @tablets, @phones {
-        width: 100%;
-        float: none;
-        margin-bottom: 20px;
+  .chart-notes {
+    font-size: 12px;
+
+    li {
+      line-height: 20px;
+      display: inline-block;
+      .func-margin-end(15px);
+
+      &::before {
+        display: inline-block;
+        content: '';
+        width: 14px;
+        height: 14px;
+        background: var(--config-color-normal);
+        border-radius: 50%;
+        .func-margin-end(8px);
+        vertical-align: middle;
       }
 
-      canvas {
-        position: absolute;
-        bottom: 0;
-        display: block;
-        height: 100%;
-        width: 100%;
+      &:nth-child(1) {
+        color: #29b5d9;
+
+        &::before {
+          background: #29b5d9;
+        }
+      }
+
+      &:nth-child(2) {
+        color: #4eb55b;
+
+        &::before {
+          background: #4eb55b;
+        }
+      }
+
+      &:nth-child(3) {
+        color: #ec9323;
+
+        &::before {
+          background: #ec9323;
+        }
       }
     }
   }
