@@ -26,7 +26,7 @@ $utopia->post('/v1/functions')
     ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, function () { return new Range(0, 60); }, 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
     ->action(
         function ($name, $vars, $events, $schedule, $timeout) use ($response, $projectDB) {
             $function = $projectDB->createDocument([
@@ -120,7 +120,7 @@ $utopia->put('/v1/functions/:functionId')
     ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, function () { return new Range(0, 60); }, 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
     ->action(
         function ($functionId, $name, $vars, $events, $schedule, $timeout) use ($response, $projectDB) {
             $function = $projectDB->getDocument($functionId);

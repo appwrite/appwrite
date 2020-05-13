@@ -3,7 +3,6 @@
 $events = array_keys($this->getParam('events', []));
 
 ?>
-
 <div
     data-service="functions.get"
     data-name="project-function"
@@ -80,20 +79,20 @@ $events = array_keys($this->getParam('events', []));
                             data-service="functions.listTags"
                             data-scope="sdk"
                             data-event="load,functions.createTag,functions.deleteTag"
-                            data-name="project-functions"
+                            data-name="project-function-tags"
                             data-param-project-id="{{router.params.project}}"
                             data-success="trigger"
-                            data-success-param-trigger-events="functions.list">
+                            data-success-param-trigger-events="functions.listTags">
 
-                            <div data-ls-if="0 == {{project-functions.functions.length}} || undefined == {{project-functions.functions.length}}" class="box margin-top margin-bottom">
+                            <div data-ls-if="0 == {{project-function-tags.tags.length}} || undefined == {{project-function-tags.tags.length}}" class="box margin-top margin-bottom">
                                 <h3 class="margin-bottom-small text-bold">No Tags Found</h3>
 
-                                <p class="margin-bottom-no">You haven't uploaded any tags for your function yet.</p>
+                                <p class="margin-bottom-no">You haven't deployed any tags for your function yet.</p>
                             </div>
 
-                            <div data-ls-if="0 != {{project-functions.functions.length}}">
+                            <div data-ls-if="(0 != {{project-function-tags.tags.length}}) && (undefined !== {{project-function-tags.tags.length}})">
                                 <div class="box margin-bottom">
-                                    <ul data-ls-loop="project-functions.functions" data-ls-as="function" class="list">
+                                    <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
                                         <li class="clear">
     
                                             <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Set Default</a>
@@ -106,32 +105,14 @@ $events = array_keys($this->getParam('events', []));
                         </div>
 
                         <div class="pull-start">
-                            <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Tag">
+                            <div data-ui-modal class="modal close box sticky-footer" data-button-text="Deploy Tag">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1>Add Function</h1>
+                                <h1>Deploy a New Tag</h1>
 
-                                <form
-                                    data-analytics-event="submit"
-                                    data-analytics-category="console"
-                                    data-analytics-label="Create Project Function"
-                                    data-service="functions.create"
-                                    data-scope="sdk"
-                                    data-event="submit"
-                                    data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Created function successfully"
-                                    data-success-param-trigger-events="functions.create"
-                                    data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create function"
-                                    data-failure-param-alert-classname="error">
-
-                                    <label for="name">Name</label>
-                                    <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom-xl" />
-
-                                    <footer>
-                                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                    </footer>
-                                </form>
+                                <footer>
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                </footer>
                             </div>
                         </div>
 
@@ -224,15 +205,9 @@ $events = array_keys($this->getParam('events', []));
                                 <label for="name">Name</label>
                                 <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" />
                                 
-                                <label for="timeout">Timeout <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
-                                <select name="timeout" data-ls-bind="{{project-function.timeout}}" required>
-                                    <option value="5">5 seconds</option>
-                                    <option value="15">15 seconds</option>
-                                    <option value="30">30 seconds</option>
-                                    <option value="60">1 minute</option>
-                                    <!-- <option value="300" disabled>5 minutes</option> -->
-                                    <!-- <option value="900" disabled>15 minutes</option> -->
-                                </select>
+                                <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
+                                <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="900" />
+                                <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is 900 seconds (15 minutes)</div>
                                 
                                 <label for="events">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
                                 <div class="row responsive thin">
@@ -258,7 +233,7 @@ $events = array_keys($this->getParam('events', []));
                                     <hr class="margin-bottom margin-top-no" />
 
                                     <fieldset name="vars" data-cast-to="object">
-                                        <div data-ls-loop="project-function.vars" data-ls-as="var" style="overflow: hidden">
+                                        <div data-ls-loop="project-function.vars" data-ls-as="var" style="overflow: hidden" id="project-vars">
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin">
                                                     <div class="col span-10">
@@ -271,7 +246,7 @@ $events = array_keys($this->getParam('events', []));
                                             </div>
                                         </div>
 
-                                        <div data-forms-clone="" data-label="Add Variable" data-first="0">
+                                        <div data-forms-clone="" data-target="project-vars" data-label="Add Variable" data-first="0">
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin margin-bottom-small">
                                                     <div class="col span-10">
