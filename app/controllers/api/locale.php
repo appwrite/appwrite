@@ -150,7 +150,6 @@ $utopia->get('/v1/locale/continents')
         }
     );
 
-
 $utopia->get('/v1/locale/currencies')
     ->desc('List Currencies')
     ->label('scope', 'locale.read')

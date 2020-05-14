@@ -22,7 +22,7 @@ if (!empty($request->getQuery('version', ''))) {
 $layout
     ->setParam('title', APP_NAME)
     ->setParam('protocol', Config::getParam('protocol'))
-    ->setParam('domain', $domain)
+    ->setParam('domain', Config::getParam('domain'))
     ->setParam('home', $request->getServer('_APP_HOME'))
     ->setParam('setup', $request->getServer('_APP_SETUP'))
     ->setParam('class', 'unknown')

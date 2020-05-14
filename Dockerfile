@@ -100,14 +100,6 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-# Set Upload Limit (default to 100MB)
-RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-
-# Add logs file
-RUN echo "" >> /var/log/appwrite.log
-
 # Nginx Configuration (with self-signed ssl certificates)
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf
 COPY ./docker/ssl/cert.pem /etc/nginx/ssl/cert.pem
@@ -135,6 +127,18 @@ RUN mkdir -p /storage/uploads && \
 
 # Supervisord Conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
+
+# Set Upload Limit (default to 100MB)
+RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "opcache.preload_user=www-data" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "opcache.preload=/usr/share/nginx/html/app/preload.php" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "opcache.preload_user=www-data" >> /etc/php/$PHP_VERSION/cli/conf.d/appwrite.ini
+RUN echo "opcache.preload=/usr/share/nginx/html/app/preload.php" >> /etc/php/$PHP_VERSION/cli/conf.d/appwrite.ini
+
+# Add logs file
+RUN echo "" >> /var/log/appwrite.log
 
 # Start
 COPY ./docker/bin/start /start
