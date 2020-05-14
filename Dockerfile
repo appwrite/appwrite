@@ -22,6 +22,15 @@ RUN \
   phpize$PHP_VERSION && \
   ./configure && \
   make && \
+  # # XHprof Extension
+  # git clone "https://github.com/tideways/php-xhprof-extension.git" && \
+  # cd php-xhprof-extension && \
+  # phpize$PHP_VERSION && \
+  # ./configure && \
+  # make && \
+  # make install && \
+  # ls -ll && \
+  # ls -ll modules && \
   # Composer
   curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
@@ -73,6 +82,7 @@ ENV TZ=Asia/Tel_Aviv \
 #ENV _APP_SMTP_PASSWORD ''
 
 COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
+#COPY --from=builder /phpredis-5.2.1/php-xhprof-extension/modules/tideways_xhprof.so /usr/lib/php/20190902/
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -94,6 +104,9 @@ RUN \
   # Redis Extension
   echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
+  # XHProf Extension
+  #echo extension=tideways_xhprof.so >> /etc/php/$PHP_VERSION/fpm/conf.d/xhprof.ini && \
+  #echo extension=tideways_xhprof.so >> /etc/php/$PHP_VERSION/cli/conf.d/xhprof.ini && \
   # Cleanup
   cd ../ && \
   apt-get purge -y --auto-remove software-properties-common gnupg curl && \

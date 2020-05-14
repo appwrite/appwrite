@@ -8,6 +8,8 @@
  * ― Rick Cook, The Wizardry Compiled
  */
 
+// tideways_xhprof_enable(TIDEWAYS_XHPROF_FLAGS_MEMORY | TIDEWAYS_XHPROF_FLAGS_CPU);
+
 error_reporting(0);
 ini_set('display_errors', 0);
 
@@ -32,3 +34,10 @@ switch ($version) { // Switch between API version
         include __DIR__ . '/../app/app.php';
         break;
 }
+
+// $data = tideways_xhprof_disable();
+// $key = str_replace(['/', '.'], '_', $_GET['q']);
+// file_put_contents(
+//     "./{$key}-appwrite.xhprof",
+//     serialize($data)
+// );
