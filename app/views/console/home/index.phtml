@@ -127,10 +127,10 @@ $graph = $this->getParam('graph', false);
                             <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
                     </div>
-                    <span data-ls-bind="{{platform.name}}"></span> &nbsp; <small data-ls-bind="{{platform.hostname}}{{platform.key}}"></small>
+                    <span data-ls-bind="{{platform.name}}"></span>
                 </div>
 
-                <p class="margin-bottom-no" style="margin-top: 10px;"><a href="">Get Started</a></p>
+                <p class="margin-bottom-no" style="margin-top: 10px;"><small data-ls-bind="{{platform.hostname}}{{platform.key}}"></small></p>
             </li>
         </ul>
     </div>
