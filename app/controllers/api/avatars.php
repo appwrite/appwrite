@@ -25,7 +25,7 @@ $types = [
     'flags' => include __DIR__.'/../../config/avatars/flags.php',
 ];
 
-$avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response, $request) {
+$avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response) {
     $code = strtolower($code);
     $type = strtolower($type);
 
