@@ -205,11 +205,11 @@ $events = array_keys($this->getParam('events', []));
                                 <label for="name">Name</label>
                                 <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" />
                                 
-                                <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
+                                <label for="timeout">Timeout (seconds) <span class="tooltip small text-size-xs" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
                                 <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="900" />
                                 <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is 900 seconds (15 minutes)</div>
                                 
-                                <label for="events">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
+                                <label for="events">Events <span class="tooltip small text-size-xs" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
                                 <div class="row responsive thin">
                                     <?php foreach ($events as $i => $event) : ?>
                                         <div class="col span-6 text-one-liner margin-bottom text-height-large">
@@ -223,11 +223,11 @@ $events = array_keys($this->getParam('events', []));
                                     <?php endforeach; ?>
                                 </div>
 
-                                <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
+                                <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small text-size-xs" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
                                 <input type="text" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
                                 <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
 
-                                <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function."><i class="icon-info-circled"></i></span></h3>
+                                <h3 class="margin-bottom-small">Variables <span class="tooltip small text-size-xs" data-tooltip="Set variables or secret keys that will be passed as env vars to your function."><i class="icon-info-circled"></i></span></h3>
 
                                 <div data-ls-if="(!{{project-function.vars.length}})">
                                     <hr class="margin-bottom margin-top-no" />
