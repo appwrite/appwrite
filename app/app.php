@@ -234,6 +234,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     if($project->getId()
         && $mode !== APP_MODE_ADMIN
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
+        
         $usage
             ->setParam('request', $request->getSize())
             ->setParam('response', $response->getSize())
