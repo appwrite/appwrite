@@ -107,8 +107,6 @@ Currently, all of the Appwrite microservices are intended to communicate using t
 
 Security and privacy are extremely important to Appwrite, developers, and users alike. Make sure to follow the best industry standards and practices.
 
-<!-- To help you make sure you are doing as best as possible, we have set up our security checklist for pull requests and contributors. Please make sure to follow the list before sending a pull request. -->
-
 ## Dependencies
 
 Please avoid introducing new dependencies to Appwrite without consulting the team. New dependencies can be very helpful but also introduce new security and privacy issues, complexity, and impact total docker image size.
@@ -148,7 +146,7 @@ After finishing the installation process, you can start writing and editing code
 To build a new version of the Appwrite server, all you need to do is run the build.sh file like this:
 
 ```bash
-bash ./build.sh 1.0.0
+bash ./build.sh X.X.X
 ```
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
@@ -158,7 +156,7 @@ Before running the command, make sure you have proper write permissions to the A
 To run tests manually, run phpunit from your command line:
 
 ```bash
-docker exec appwrite /bin/bash -c '/usr/share/nginx/html/vendor/bin/phpunit'
+docker exec appwrite test
 ```
 
 ## Tutorials
