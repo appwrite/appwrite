@@ -8,7 +8,7 @@ use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
 
 $utopia->get('/v1/health')
-    ->desc('Check API HTTP Health')
+    ->desc('Get HTTP')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -21,7 +21,7 @@ $utopia->get('/v1/health')
     );
 
 $utopia->get('/v1/health/db')
-    ->desc('Check DB Health')
+    ->desc('Get DB')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -36,7 +36,7 @@ $utopia->get('/v1/health/db')
     );
 
 $utopia->get('/v1/health/cache')
-    ->desc('Check Cache Health')
+    ->desc('Get Cache')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -51,7 +51,7 @@ $utopia->get('/v1/health/cache')
     );
 
 $utopia->get('/v1/health/time')
-    ->desc('Check Time Health')
+    ->desc('Get Time')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -98,7 +98,7 @@ $utopia->get('/v1/health/time')
     );
 
 $utopia->get('/v1/health/queue/webhooks')
-    ->desc('Check number of pending webhook messages')
+    ->desc('Get Webhooks Queue')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -111,7 +111,7 @@ $utopia->get('/v1/health/queue/webhooks')
     );
 
 $utopia->get('/v1/health/queue/tasks')
-    ->desc('Check the number of pending task messages')
+    ->desc('Get Tasks Queue')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -124,7 +124,7 @@ $utopia->get('/v1/health/queue/tasks')
     );
 
 $utopia->get('/v1/health/queue/logs')
-->desc('Check the number of pending log messages')
+->desc('Get Logs Queue')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -137,7 +137,7 @@ $utopia->get('/v1/health/queue/logs')
     );
 
 $utopia->get('/v1/health/queue/usage')
-    ->desc('Check the number of pending usage messages')
+    ->desc('Get Usage Queue')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -150,7 +150,7 @@ $utopia->get('/v1/health/queue/usage')
     );
 
 $utopia->get('/v1/health/queue/certificates')
-    ->desc('Check the number of pending certificate messages')
+    ->desc('Get Certificate Queue')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -163,7 +163,7 @@ $utopia->get('/v1/health/queue/certificates')
     );
 
 $utopia->get('/v1/health/storage/local')
-    ->desc('Check File System Health')
+    ->desc('Get Local Storage')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -197,12 +197,12 @@ $utopia->get('/v1/health/storage/local')
         }
     );
 
-$utopia->get('/v1/health/storage/anti-virus')
-    ->desc('Check Anti virus Health')
+$utopia->get('/v1/health/anti-virus')
+    ->desc('Get Anti virus')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStorageAntiVirus')
+    ->label('sdk.method', 'getAntiVirus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->action(
         function () use ($response) {
@@ -216,7 +216,7 @@ $utopia->get('/v1/health/storage/anti-virus')
     );
 
 $utopia->get('/v1/health/stats') // Currently only used internally
-    ->desc('System Stats')
+    ->desc('Get System Stats')
     ->label('scope', 'god')
     // ->label('sdk.platform', [APP_PLATFORM_SERVER])
     // ->label('sdk.namespace', 'health')
