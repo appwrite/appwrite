@@ -163,7 +163,7 @@ $utopia->get('/v1/health/queue/certificates')
     );
 
 $utopia->get('/v1/health/queue/functions')
-    ->desc('Check the number of pending functions messages')
+    ->desc('Get Functions Queue')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
