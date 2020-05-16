@@ -84,7 +84,7 @@ RUN \
   add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests htop supervisor php$PHP_VERSION php$PHP_VERSION-fpm \
-  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
+  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom php$PHP_VERSION-yaml webp certbot && \
   # Nginx
   echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
   wget -q http://nginx.org/keys/nginx_signing.key && \

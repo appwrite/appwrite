@@ -175,7 +175,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 ],
                 'last30' => [
                     'start' => DateTime::createFromFormat('U', strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', strtotime('today')),
+                    'end' => DateTime::createFromFormat('U', strtotime('tomorrow')),
                     'group' => '1d',
                 ],
                 'last90' => [
