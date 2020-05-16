@@ -30,8 +30,8 @@ use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$oauthDefaultSuccess = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/success';
-$oauthDefaultFailure = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/failure';
+$oauthDefaultSuccess = Config::getParam('protocol').'://'.$request->getServer('_APP_HOME').'/auth/oauth2/success';
+$oauthDefaultFailure = Config::getParam('protocol').'://'.$request->getServer('_APP_HOME').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
