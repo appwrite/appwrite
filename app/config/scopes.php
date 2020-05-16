@@ -13,6 +13,7 @@ return [ // List of publicly visible scopes
     'files.write',
     'functions.read',
     'functions.write',
+    'health.read',
     // 'platforms.read',
     // 'platforms.write',
     // 'keys.read',
