@@ -41,7 +41,7 @@ $cli
         }
 
         $platforms = Config::getParam('platforms');
-        $selected = Console::confirm('Choose SDK ("*" for all):');
+        $selected = strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $message = Console::confirm('Please enter your commit message:');
         $production = (Console::confirm('Type "Appwrite" to deploy for production') == 'Appwrite');
 
@@ -50,7 +50,7 @@ $cli
                 if($selected !== $language['key'] && $selected !== '*') {
                     continue;
                 }
-                
+
                 if(!$language['enabled']) {
                     Console::warning($language['name'].' for '.$platform['name'] . ' is disabled');
                     continue;
@@ -140,7 +140,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK($config, new Swagger2($spec));
 
                 $sdk
-                    ->setName($language['sdk'])
+                    ->setName($language['name'])
                     ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
                         Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
                         For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")

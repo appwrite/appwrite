@@ -30,7 +30,7 @@ class Client {
         
         this.headers = {
             'content-type': 'application/json',
-            'x-sdk-version': 'appwrite:dart:0.1.1',
+            'x-sdk-version': 'appwrite:dart:0.2.0',
         };
 
         this.config = {};

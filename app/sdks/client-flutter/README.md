@@ -1,4 +1,4 @@
-# Appwrite  SDK
+# Appwrite Flutter SDK
 
 [![pub package](https://img.shields.io/pub/v/appwrite.svg)](https://pub.dartlang.org/packages/appwrite)
 ![License](https://img.shields.io/github/license/appwrite/sdk-for-flutter.svg?v=1)
@@ -20,7 +20,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yml
 dependencies:
-  appwrite: ^0.1.1
+  appwrite: ^0.2.0
 ```
 
 You can install packages from the command line:
