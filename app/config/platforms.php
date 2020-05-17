@@ -11,7 +11,7 @@ return [
         'description' => 'Client libraries for integrating with '.APP_NAME.' to build client-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) or [getting started for Flutter](/docs/getting-started-for-flutter) tutorials to start building your first application.',
         'enabled' => true,
         'beta' => false,
-        'languages' => [
+        'languages' => [ // TODO change key to 'sdks'
             [
                 'key' => 'web',
                 'name' => 'Web',
@@ -53,19 +53,19 @@ return [
                 'gitRepoName' => 'sdk-for-swift',
                 'gitUserName' => 'appwrite',
             ],
-            [
-                'key' => 'objective-c',
-                'name' => 'Objective C',
-                'url' => '',
-                'enabled' => false,
-                'beta' => false,
-                'family' => APP_PLATFORM_CLIENT,
-                'prism' => '',
-                'source' => false,
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-objective-c.git',
-                'gitRepoName' => 'sdk-for-objective-c',
-                'gitUserName' => 'appwrite',
-            ],
+            // [
+            //     'key' => 'objective-c',
+            //     'name' => 'Objective C',
+            //     'url' => '',
+            //     'enabled' => false,
+            //     'beta' => false,
+            //     'family' => APP_PLATFORM_CLIENT,
+            //     'prism' => '',
+            //     'source' => false,
+            //     'gitUrl' => 'git@github.com:appwrite/sdk-for-objective-c.git',
+            //     'gitRepoName' => 'sdk-for-objective-c',
+            //     'gitUserName' => 'appwrite',
+            // ],
             [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
@@ -79,61 +79,28 @@ return [
                 'gitRepoName' => 'sdk-for-kotlin',
                 'gitUserName' => 'appwrite',
             ],
-            [
-                'key' => 'java',
-                'name' => 'Java',
-                'url' => '',
-                'enabled' => false,
-                'beta' => false,
-                'family' => APP_PLATFORM_CLIENT,
-                'prism' => 'java',
-                'source' => false,
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-java.git',
-                'gitRepoName' => 'sdk-for-java',
-                'gitUserName' => 'appwrite',
-            ],
+            // [
+            //     'key' => 'java',
+            //     'name' => 'Java',
+            //     'url' => '',
+            //     'enabled' => false,
+            //     'beta' => false,
+            //     'family' => APP_PLATFORM_CLIENT,
+            //     'prism' => 'java',
+            //     'source' => false,
+            //     'gitUrl' => 'git@github.com:appwrite/sdk-for-java.git',
+            //     'gitRepoName' => 'sdk-for-java',
+            //     'gitUserName' => 'appwrite',
+            // ],
         ],
     ],
     
-    // APP_PLATFORM_IOS => [
-    //     'key' => APP_PLATFORM_IOS,
-    //     'name' => 'iOS',
-    //     'description' => 'Client libraries for integrating with '.APP_NAME.' to build iOS applications. Read the [getting started for iOS](/docs/getting-started-for-ios) tutorial to start building your first iOS application.',
-    //     'enabled' => false,
-    //     'beta' => false,
-    //     'languages' => [
-            
-    //     ],
-    // ],
-
-    // APP_PLATFORM_ANDROID => [
-    //     'key' => APP_PLATFORM_ANDROID,
-    //     'name' => 'Android',
-    //     'description' => 'Client libraries for integrating with '.APP_NAME.' to build Android applications. Read the [getting started for Android](/docs/getting-started-for-android) tutorial to start building your first Android application.',
-    //     'enabled' => false,
-    //     'beta' => false,
-    //     'languages' => [
-            
-    //     ],
-    // ],
-
-    // APP_PLATFORM_FLUTTER => [
-    //     'key' => APP_PLATFORM_FLUTTER,
-    //     'name' => 'Flutter',
-    //     'description' => 'Client libraries for integrating with '.APP_NAME.' to build cross-platform Flutter applications. Read the [getting started for Flutter](/docs/getting-started-for-flutter) tutorial to start building your first Flutter application.',
-    //     'enabled' => true,
-    //     'beta' => true,
-    //     'languages' => [
-            
-    //     ],
-    // ],
-
     APP_PLATFORM_CONSOLE => [
         'key' => APP_PLATFORM_CONSOLE,
         'name' => 'Console',
         'enabled' => false,
         'beta' => false,
-        'languages' => [
+        'languages' => [ // TODO change key to 'sdks'
             [
                 'key' => 'javascript',
                 'name' => 'Console',
@@ -157,7 +124,7 @@ return [
         'description' => 'Libraries for integrating with '.APP_NAME.' to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
         'beta' => false,
-        'languages' => [
+        'languages' => [ // TODO change key to 'sdks'
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
