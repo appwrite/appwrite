@@ -2363,8 +2363,7 @@ object=object[path.shift()];}
 let shift=path.shift();if(value!==null&&value!==undefined&&object&&shift&&(object[shift]!==undefined||object[shift]!==null)){switch(type){case'append':if(!Array.isArray(object[shift])){object[shift]=[];}
 object[shift].push(value);break;case'prepend':if(!Array.isArray(object[shift])){object[shift]=[];}
 object[shift].unshift(value);break;case'splice':if(!Array.isArray(object[shift])){object[shift]=[];}
-object[shift].splice(value,1);break;case'merge':if(!typeof object[shift]!=='object'){object[shift]={};}
-console.log('object[shift]',object[shift]);console.log('object',object);console.log('shift',shift);console.log('value',value);console.log('result',{...object[shift],...value});object[shift]={...object[shift],...value};break;default:object[shift]=value;}
+object[shift].splice(value,1);break;default:object[shift]=value;}
 return true;}
 if(!object){return null;}
 if(!shift){result=object;}else{return object[shift];}

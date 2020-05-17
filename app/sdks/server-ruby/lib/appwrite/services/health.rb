@@ -58,20 +58,6 @@ module Appwrite
 
         def get_queue_functions()
             path = '/health/queue/functions'
-<<<<<<< HEAD
-
-            params = {
-            }
-
-            return @client.call('get', path, {
-                'content-type' => 'application/json',
-            }, params);
-        end
-
-        def get_queue_logs()
-            path = '/health/queue/logs'
-=======
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
 
             params = {
             }

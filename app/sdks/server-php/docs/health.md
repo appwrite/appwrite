@@ -40,21 +40,13 @@ GET https://appwrite.io/v1/health/queue/certificates
 
 ** Get the number of certificates that are waiting to be issued against [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue server. **
 
-<<<<<<< HEAD
-## Check the number of pending functions messages
-=======
 ## Get Functions Queue
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
 
 ```http request
 GET https://appwrite.io/v1/health/queue/functions
 ```
 
-<<<<<<< HEAD
-## Check the number of pending log messages
-=======
 ## Get Logs Queue
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
 
 ```http request
 GET https://appwrite.io/v1/health/queue/logs

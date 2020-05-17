@@ -305,11 +305,7 @@ class Account extends Service {
      /// first. Use the success and failure arguments to provide a redirect URL's
      /// back to your app when login is completed.
      ///
-<<<<<<< HEAD:app/sdks/flutter-dart/lib/services/account.dart
-    Future createOAuth2Session({@required String provider, String success = 'https://localhost/auth/oauth2/success', String failure = 'https://localhost/auth/oauth2/failure'}) {
-=======
     Future createOAuth2Session({@required String provider, String success = 'https://appwrite.io/auth/oauth2/success', String failure = 'https://appwrite.io/auth/oauth2/failure'}) {
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/client-flutter/lib/services/account.dart
         final String path = '/account/sessions/oauth2/{provider}'.replaceAll(RegExp('{provider}'), provider);
 
         final Map<String, dynamic> params = {

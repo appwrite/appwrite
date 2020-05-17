@@ -712,11 +712,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-<<<<<<< HEAD:app/sdks/web-javascript/src/sdk.js
-            createOAuth2Session: function(provider, success = 'https://localhost/auth/oauth2/success', failure = 'https://localhost/auth/oauth2/failure') {
-=======
             createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/client-web/src/sdk.js
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }

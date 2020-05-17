@@ -808,11 +808,7 @@ declare namespace Appwrite {
 	    getQueueCertificates(): Promise<object>;
 
         /**
-<<<<<<< HEAD:app/sdks/console-javascript/types/index.d.ts
-         * Check the number of pending functions messages
-=======
          * Get Functions Queue
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/console-web/types/index.d.ts
          *
 	     *
          * @throws {Error}
@@ -821,11 +817,7 @@ declare namespace Appwrite {
 	    getQueueFunctions(): Promise<object>;
 
         /**
-<<<<<<< HEAD:app/sdks/console-javascript/types/index.d.ts
-         * Check the number of pending log messages
-=======
          * Get Logs Queue
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/console-web/types/index.d.ts
          *
          * Get the number of logs that are waiting to be processed in the Appwrite
          * internal queue server.

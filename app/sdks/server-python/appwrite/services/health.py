@@ -57,11 +57,7 @@ class Health(Service):
         }, params)
 
     def get_queue_functions(self):
-<<<<<<< HEAD
-        """Check the number of pending functions messages"""
-=======
         """Get Functions Queue"""
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
 
         params = {}
         path = '/health/queue/functions'

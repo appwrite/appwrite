@@ -116,11 +116,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-<<<<<<< HEAD
-     /// Check the number of pending functions messages
-=======
      /// Get Functions Queue
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
     public Call getQueueFunctions() {
         final String path = "/health/queue/functions";
 
@@ -136,11 +132,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-<<<<<<< HEAD
-     /// Check the number of pending log messages
-=======
      /// Get Logs Queue
->>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
      /*
      * Get the number of logs that are waiting to be processed in the Appwrite
      * internal queue server.
