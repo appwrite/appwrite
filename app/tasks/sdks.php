@@ -123,6 +123,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             ->setGemPackage('appwrite')
                         ;
                         break;
+                    case 'flutter':
                     case 'dart':
                         $config = new Dart();
                         break;
