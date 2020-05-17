@@ -17,7 +17,6 @@ use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
-use Appwrite\SDK\Language\Typescript;
 
 $cli = new CLI();
 
@@ -42,11 +41,16 @@ $cli
         }
 
         $platforms = Config::getParam('platforms');
+        $selected = Console::confirm('Choose SDK ("*" for all):');
         $message = Console::confirm('Please enter your commit message:');
         $production = (Console::confirm('Type "Appwrite" to deploy for production') == 'Appwrite');
 
         foreach($platforms as $key => $platform) {
             foreach($platform['languages'] as $language) {
+                if($selected !== $language['key'] && $selected !== '*') {
+                    continue;
+                }
+                
                 if(!$language['enabled']) {
                     Console::warning($language['name'].' for '.$platform['name'] . ' is disabled');
                     continue;
