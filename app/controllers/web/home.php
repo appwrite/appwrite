@@ -409,15 +409,6 @@ $utopia->get('/open-api-2.json')
                     if ($extensions) {
                         $platformList = $route->getLabel('sdk.platform', []);
 
-                        if(in_array(APP_PLATFORM_CLIENT, $platformList)) {
-                            $platformList = array_merge($platformList, [
-                                APP_PLATFORM_WEB,
-                                APP_PLATFORM_IOS,
-                                APP_PLATFORM_ANDROID,
-                                APP_PLATFORM_FLUTTER,
-                            ]);
-                        }
-
                         $temp['extensions'] = [
                             'weight' => $route->getOrder(),
                             'cookies' => $route->getLabel('sdk.cookies', false),

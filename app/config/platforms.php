@@ -1,25 +1,19 @@
 <?php
 
-const APP_PLATFORM_WEB = 'web';
-const APP_PLATFORM_IOS = 'ios';
-const APP_PLATFORM_ANDROID = 'android';
-const APP_PLATFORM_UNITY = 'unity';
-const APP_PLATFORM_FLUTTER = 'flutter';
-
 const APP_PLATFORM_SERVER = 'server';
 const APP_PLATFORM_CLIENT = 'client';
 const APP_PLATFORM_CONSOLE = 'console';
 
 return [
-    APP_PLATFORM_WEB => [
-        'key' => APP_PLATFORM_WEB,
-        'name' => 'Web',
-        'description' => 'Client libraries for integrating with '.APP_NAME.' to build web-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) tutorial to start building your first web application.',
+    APP_PLATFORM_CLIENT => [
+        'key' => APP_PLATFORM_CLIENT,
+        'name' => 'Client',
+        'description' => 'Client libraries for integrating with '.APP_NAME.' to build client-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) or [getting started for Flutter](/docs/getting-started-for-flutter) tutorials to start building your first application.',
         'enabled' => true,
         'beta' => false,
         'languages' => [
             [
-                'key' => 'javascript',
+                'key' => 'web',
                 'name' => 'Web',
                 'version' => '1.0.29',
                 'url' => 'https://github.com/appwrite/sdk-for-js',
@@ -27,21 +21,25 @@ return [
                 'beta' => false,
                 'family' => APP_PLATFORM_CLIENT,
                 'prism' => 'javascript',
-                'source' => realpath(__DIR__ . '/../sdks/web-javascript'),
+                'source' => realpath(__DIR__ . '/../sdks/web-web'),
                 'gitUrl' => 'git@github.com:appwrite/sdk-for-js.git',
                 'gitRepoName' => 'sdk-for-js',
                 'gitUserName' => 'appwrite',
             ],
-        ],
-    ],
-    
-    APP_PLATFORM_IOS => [
-        'key' => APP_PLATFORM_IOS,
-        'name' => 'iOS',
-        'description' => 'Client libraries for integrating with '.APP_NAME.' to build iOS applications. Read the [getting started for iOS](/docs/getting-started-for-ios) tutorial to start building your first iOS application.',
-        'enabled' => false,
-        'beta' => false,
-        'languages' => [
+            [
+                'key' => 'flutter',
+                'name' => 'Flutter',
+                'version' => '0.1.1',
+                'url' => 'https://github.com/appwrite/sdk-for-flutter',
+                'enabled' => true,
+                'beta' => true,
+                'family' => APP_PLATFORM_CLIENT,
+                'prism' => 'dart',
+                'source' => realpath(__DIR__ . '/../sdks/flutter-flutter'),
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-flutter.git',
+                'gitRepoName' => 'sdk-for-flutter',
+                'gitUserName' => 'appwrite',
+            ],
             [
                 'key' => 'swift',
                 'name' => 'Swift',
@@ -68,16 +66,6 @@ return [
                 'gitRepoName' => 'sdk-for-objective-c',
                 'gitUserName' => 'appwrite',
             ],
-        ],
-    ],
-
-    APP_PLATFORM_ANDROID => [
-        'key' => APP_PLATFORM_ANDROID,
-        'name' => 'Android',
-        'description' => 'Client libraries for integrating with '.APP_NAME.' to build Android applications. Read the [getting started for Android](/docs/getting-started-for-android) tutorial to start building your first Android application.',
-        'enabled' => false,
-        'beta' => false,
-        'languages' => [
             [
                 'key' => 'kotlin',
                 'name' => 'Kotlin',
@@ -106,30 +94,39 @@ return [
             ],
         ],
     ],
+    
+    // APP_PLATFORM_IOS => [
+    //     'key' => APP_PLATFORM_IOS,
+    //     'name' => 'iOS',
+    //     'description' => 'Client libraries for integrating with '.APP_NAME.' to build iOS applications. Read the [getting started for iOS](/docs/getting-started-for-ios) tutorial to start building your first iOS application.',
+    //     'enabled' => false,
+    //     'beta' => false,
+    //     'languages' => [
+            
+    //     ],
+    // ],
 
-    APP_PLATFORM_FLUTTER => [
-        'key' => APP_PLATFORM_FLUTTER,
-        'name' => 'Flutter',
-        'description' => 'Client libraries for integrating with '.APP_NAME.' to build cross-platform Flutter applications. Read the [getting started for Flutter](/docs/getting-started-for-flutter) tutorial to start building your first Flutter application.',
-        'enabled' => true,
-        'beta' => true,
-        'languages' => [
-            [
-                'key' => 'flutter',
-                'name' => 'Flutter',
-                'version' => '0.1.1',
-                'url' => 'https://github.com/appwrite/sdk-for-flutter',
-                'enabled' => true,
-                'beta' => true,
-                'family' => APP_PLATFORM_CLIENT,
-                'prism' => 'dart',
-                'source' => realpath(__DIR__ . '/../sdks/flutter-flutter'),
-                'gitUrl' => 'git@github.com:appwrite/sdk-for-flutter.git',
-                'gitRepoName' => 'sdk-for-dart',
-                'gitUserName' => 'appwrite',
-            ],
-        ],
-    ],
+    // APP_PLATFORM_ANDROID => [
+    //     'key' => APP_PLATFORM_ANDROID,
+    //     'name' => 'Android',
+    //     'description' => 'Client libraries for integrating with '.APP_NAME.' to build Android applications. Read the [getting started for Android](/docs/getting-started-for-android) tutorial to start building your first Android application.',
+    //     'enabled' => false,
+    //     'beta' => false,
+    //     'languages' => [
+            
+    //     ],
+    // ],
+
+    // APP_PLATFORM_FLUTTER => [
+    //     'key' => APP_PLATFORM_FLUTTER,
+    //     'name' => 'Flutter',
+    //     'description' => 'Client libraries for integrating with '.APP_NAME.' to build cross-platform Flutter applications. Read the [getting started for Flutter](/docs/getting-started-for-flutter) tutorial to start building your first Flutter application.',
+    //     'enabled' => true,
+    //     'beta' => true,
+    //     'languages' => [
+            
+    //     ],
+    // ],
 
     APP_PLATFORM_CONSOLE => [
         'key' => APP_PLATFORM_CONSOLE,
@@ -139,7 +136,7 @@ return [
         'languages' => [
             [
                 'key' => 'javascript',
-                'name' => 'JS',
+                'name' => 'Console',
                 'version' => '1.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
                 'enabled' => true,
@@ -247,5 +244,4 @@ return [
             ],
         ],
     ],
-    
 ];

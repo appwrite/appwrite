@@ -1,7 +1,7 @@
 # Appwrite SDK for Dart
 
 [![pub package](https://img.shields.io/pub/v/appwrite.svg)](https://pub.dartlang.org/packages/appwrite)
-![License](https://img.shields.io/github/license/appwrite/sdk-for-dart.svg?v=1)
+![License](https://img.shields.io/github/license/appwrite/sdk-for-flutter.svg?v=1)
 ![Version](https://img.shields.io/badge/api%20version-0.6.0-blue.svg?v=1)
 
 **This SDK is compatible with Appwrite server version 0.6.0. For older versions, please check previous releases.**
