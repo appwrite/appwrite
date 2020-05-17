@@ -12,6 +12,17 @@ module Appwrite
             }, params);
         end
 
+        def get_anti_virus()
+            path = '/health/anti-virus'
+
+            params = {
+            }
+
+            return @client.call('get', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
         def get_cache()
             path = '/health/cache'
 
@@ -36,6 +47,17 @@ module Appwrite
 
         def get_queue_certificates()
             path = '/health/queue/certificates'
+
+            params = {
+            }
+
+            return @client.call('get', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
+        def get_queue_functions()
+            path = '/health/queue/functions'
 
             params = {
             }
@@ -80,17 +102,6 @@ module Appwrite
 
         def get_queue_webhooks()
             path = '/health/queue/webhooks'
-
-            params = {
-            }
-
-            return @client.call('get', path, {
-                'content-type' => 'application/json',
-            }, params);
-        end
-
-        def get_storage_anti_virus()
-            path = '/health/storage/anti-virus'
 
             params = {
             }

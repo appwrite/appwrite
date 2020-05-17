@@ -26,6 +26,17 @@ func (srv *Health) Get() (map[string]interface{}, error) {
 	return srv.client.Call("GET", path, nil, params)
 }
 
+// GetAntiVirus check the Appwrite Anti Virus server is up and connection is
+// successful.
+func (srv *Health) GetAntiVirus() (map[string]interface{}, error) {
+	path := "/health/anti-virus"
+
+	params := map[string]interface{}{
+	}
+
+	return srv.client.Call("GET", path, nil, params)
+}
+
 // GetCache check the Appwrite in-memory cache server is up and connection is
 // successful.
 func (srv *Health) GetCache() (map[string]interface{}, error) {
@@ -53,6 +64,16 @@ func (srv *Health) GetDB() (map[string]interface{}, error) {
 // internal queue server.
 func (srv *Health) GetQueueCertificates() (map[string]interface{}, error) {
 	path := "/health/queue/certificates"
+
+	params := map[string]interface{}{
+	}
+
+	return srv.client.Call("GET", path, nil, params)
+}
+
+// GetQueueFunctions
+func (srv *Health) GetQueueFunctions() (map[string]interface{}, error) {
+	path := "/health/queue/functions"
 
 	params := map[string]interface{}{
 	}
@@ -97,17 +118,6 @@ func (srv *Health) GetQueueUsage() (map[string]interface{}, error) {
 // processed in the Appwrite internal queue server.
 func (srv *Health) GetQueueWebhooks() (map[string]interface{}, error) {
 	path := "/health/queue/webhooks"
-
-	params := map[string]interface{}{
-	}
-
-	return srv.client.Call("GET", path, nil, params)
-}
-
-// GetStorageAntiVirus check the Appwrite Anti Virus server is up and
-// connection is successful.
-func (srv *Health) GetStorageAntiVirus() (map[string]interface{}, error) {
-	path := "/health/storage/anti-virus"
 
 	params := map[string]interface{}{
 	}

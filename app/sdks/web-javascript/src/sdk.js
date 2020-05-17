@@ -712,7 +712,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success = 'https://localhost:2444/auth/oauth2/success', failure = 'https://localhost:2444/auth/oauth2/failure') {
+            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
