@@ -483,6 +483,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
                 $state['success'] = URLParser::parse($state['success']);
                 $query = URLParser::parseQuery($state['success']['query']);
+                $query['project'] = $project->getId();
                 $query['domain'] = COOKIE_DOMAIN;
                 $query['key'] = Auth::$cookieName;
                 $query['secret'] = Auth::encodeSession($user->getId(), $secret);
