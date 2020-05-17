@@ -1,3 +1,7 @@
+## 0.2.1
+
+- Fixed callback scheme
+
 ## 0.2.0
 
 - Updated flutter_web_auth plugin to version 0.2.4
