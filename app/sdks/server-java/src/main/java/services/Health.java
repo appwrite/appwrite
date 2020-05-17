@@ -18,7 +18,7 @@ public class Health extends Service {
         super(client);
     }
 
-     /// Check API HTTP Health
+     /// Get HTTP
      /*
      * Check the Appwrite HTTP server is up and responsive.
      */
@@ -37,7 +37,26 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check Cache Health
+     /// Get Anti virus
+     /*
+     * Check the Appwrite Anti Virus server is up and connection is successful.
+     */
+    public Call getAntiVirus() {
+        final String path = "/health/anti-virus";
+
+        final Map<String, Object> params = Map.ofEntries(
+        );
+
+
+
+        final Map<String, String> headers = Map.ofEntries(
+            entry("content-type", "application/json")
+        );
+
+        return client.call("GET", path, headers, params);
+    }
+
+     /// Get Cache
      /*
      * Check the Appwrite in-memory cache server is up and connection is
      * successful.
@@ -57,7 +76,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check DB Health
+     /// Get DB
      /*
      * Check the Appwrite database server is up and connection is successful.
      */
@@ -76,7 +95,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check the number of pending certificate messages
+     /// Get Certificate Queue
      /*
      * Get the number of certificates that are waiting to be issued against
      * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
@@ -97,7 +116,11 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
+<<<<<<< HEAD
      /// Check the number of pending functions messages
+=======
+     /// Get Functions Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
     public Call getQueueFunctions() {
         final String path = "/health/queue/functions";
 
@@ -113,7 +136,11 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
+<<<<<<< HEAD
      /// Check the number of pending log messages
+=======
+     /// Get Logs Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
      /*
      * Get the number of logs that are waiting to be processed in the Appwrite
      * internal queue server.
@@ -133,7 +160,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check the number of pending task messages
+     /// Get Tasks Queue
      /*
      * Get the number of tasks that are waiting to be processed in the Appwrite
      * internal queue server.
@@ -153,7 +180,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check the number of pending usage messages
+     /// Get Usage Queue
      /*
      * Get the number of usage stats that are waiting to be processed in the
      * Appwrite internal queue server.
@@ -173,7 +200,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check number of pending webhook messages
+     /// Get Webhooks Queue
      /*
      * Get the number of webhooks that are waiting to be processed in the Appwrite
      * internal queue server.
@@ -193,26 +220,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check Anti virus Health
-     /*
-     * Check the Appwrite Anti Virus server is up and connection is successful.
-     */
-    public Call getStorageAntiVirus() {
-        final String path = "/health/storage/anti-virus";
-
-        final Map<String, Object> params = Map.ofEntries(
-        );
-
-
-
-        final Map<String, String> headers = Map.ofEntries(
-            entry("content-type", "application/json")
-        );
-
-        return client.call("GET", path, headers, params);
-    }
-
-     /// Check File System Health
+     /// Get Local Storage
      /*
      * Check the Appwrite local storage device is up and connection is successful.
      */
@@ -231,7 +239,7 @@ public class Health extends Service {
         return client.call("GET", path, headers, params);
     }
 
-     /// Check Time Health
+     /// Get Time
      /*
      * Check the Appwrite server time is synced with Google remote NTP server. We
      * use this technology to smoothly handle leap seconds with no disruptive

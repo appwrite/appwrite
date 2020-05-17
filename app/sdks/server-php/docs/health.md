@@ -1,6 +1,6 @@
 # Health Service
 
-## Check API HTTP Health
+## Get HTTP
 
 ```http request
 GET https://appwrite.io/v1/health
@@ -8,7 +8,15 @@ GET https://appwrite.io/v1/health
 
 ** Check the Appwrite HTTP server is up and responsive. **
 
-## Check Cache Health
+## Get Anti virus
+
+```http request
+GET https://appwrite.io/v1/health/anti-virus
+```
+
+** Check the Appwrite Anti Virus server is up and connection is successful. **
+
+## Get Cache
 
 ```http request
 GET https://appwrite.io/v1/health/cache
@@ -16,7 +24,7 @@ GET https://appwrite.io/v1/health/cache
 
 ** Check the Appwrite in-memory cache server is up and connection is successful. **
 
-## Check DB Health
+## Get DB
 
 ```http request
 GET https://appwrite.io/v1/health/db
@@ -24,7 +32,7 @@ GET https://appwrite.io/v1/health/db
 
 ** Check the Appwrite database server is up and connection is successful. **
 
-## Check the number of pending certificate messages
+## Get Certificate Queue
 
 ```http request
 GET https://appwrite.io/v1/health/queue/certificates
@@ -32,13 +40,21 @@ GET https://appwrite.io/v1/health/queue/certificates
 
 ** Get the number of certificates that are waiting to be issued against [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue server. **
 
+<<<<<<< HEAD
 ## Check the number of pending functions messages
+=======
+## Get Functions Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
 
 ```http request
 GET https://appwrite.io/v1/health/queue/functions
 ```
 
+<<<<<<< HEAD
 ## Check the number of pending log messages
+=======
+## Get Logs Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
 
 ```http request
 GET https://appwrite.io/v1/health/queue/logs
@@ -46,7 +62,7 @@ GET https://appwrite.io/v1/health/queue/logs
 
 ** Get the number of logs that are waiting to be processed in the Appwrite internal queue server. **
 
-## Check the number of pending task messages
+## Get Tasks Queue
 
 ```http request
 GET https://appwrite.io/v1/health/queue/tasks
@@ -54,7 +70,7 @@ GET https://appwrite.io/v1/health/queue/tasks
 
 ** Get the number of tasks that are waiting to be processed in the Appwrite internal queue server. **
 
-## Check the number of pending usage messages
+## Get Usage Queue
 
 ```http request
 GET https://appwrite.io/v1/health/queue/usage
@@ -62,7 +78,7 @@ GET https://appwrite.io/v1/health/queue/usage
 
 ** Get the number of usage stats that are waiting to be processed in the Appwrite internal queue server. **
 
-## Check number of pending webhook messages
+## Get Webhooks Queue
 
 ```http request
 GET https://appwrite.io/v1/health/queue/webhooks
@@ -70,15 +86,7 @@ GET https://appwrite.io/v1/health/queue/webhooks
 
 ** Get the number of webhooks that are waiting to be processed in the Appwrite internal queue server. **
 
-## Check Anti virus Health
-
-```http request
-GET https://appwrite.io/v1/health/storage/anti-virus
-```
-
-** Check the Appwrite Anti Virus server is up and connection is successful. **
-
-## Check File System Health
+## Get Local Storage
 
 ```http request
 GET https://appwrite.io/v1/health/storage/local
@@ -86,7 +94,7 @@ GET https://appwrite.io/v1/health/storage/local
 
 ** Check the Appwrite local storage device is up and connection is successful. **
 
-## Check Time Health
+## Get Time
 
 ```http request
 GET https://appwrite.io/v1/health/time

@@ -7,7 +7,7 @@ class Health(Service):
         super(Health, self).__init__(client)
 
     def get(self):
-        """Check API HTTP Health"""
+        """Get HTTP"""
 
         params = {}
         path = '/health'
@@ -16,8 +16,18 @@ class Health(Service):
             'content-type': 'application/json',
         }, params)
 
+    def get_anti_virus(self):
+        """Get Anti virus"""
+
+        params = {}
+        path = '/health/anti-virus'
+
+        return self.client.call('get', path, {
+            'content-type': 'application/json',
+        }, params)
+
     def get_cache(self):
-        """Check Cache Health"""
+        """Get Cache"""
 
         params = {}
         path = '/health/cache'
@@ -27,7 +37,7 @@ class Health(Service):
         }, params)
 
     def get_d_b(self):
-        """Check DB Health"""
+        """Get DB"""
 
         params = {}
         path = '/health/db'
@@ -37,7 +47,7 @@ class Health(Service):
         }, params)
 
     def get_queue_certificates(self):
-        """Check the number of pending certificate messages"""
+        """Get Certificate Queue"""
 
         params = {}
         path = '/health/queue/certificates'
@@ -47,7 +57,11 @@ class Health(Service):
         }, params)
 
     def get_queue_functions(self):
+<<<<<<< HEAD
         """Check the number of pending functions messages"""
+=======
+        """Get Functions Queue"""
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
 
         params = {}
         path = '/health/queue/functions'
@@ -57,7 +71,7 @@ class Health(Service):
         }, params)
 
     def get_queue_logs(self):
-        """Check the number of pending log messages"""
+        """Get Logs Queue"""
 
         params = {}
         path = '/health/queue/logs'
@@ -67,7 +81,7 @@ class Health(Service):
         }, params)
 
     def get_queue_tasks(self):
-        """Check the number of pending task messages"""
+        """Get Tasks Queue"""
 
         params = {}
         path = '/health/queue/tasks'
@@ -77,7 +91,7 @@ class Health(Service):
         }, params)
 
     def get_queue_usage(self):
-        """Check the number of pending usage messages"""
+        """Get Usage Queue"""
 
         params = {}
         path = '/health/queue/usage'
@@ -87,7 +101,7 @@ class Health(Service):
         }, params)
 
     def get_queue_webhooks(self):
-        """Check number of pending webhook messages"""
+        """Get Webhooks Queue"""
 
         params = {}
         path = '/health/queue/webhooks'
@@ -96,18 +110,8 @@ class Health(Service):
             'content-type': 'application/json',
         }, params)
 
-    def get_storage_anti_virus(self):
-        """Check Anti virus Health"""
-
-        params = {}
-        path = '/health/storage/anti-virus'
-
-        return self.client.call('get', path, {
-            'content-type': 'application/json',
-        }, params)
-
     def get_storage_local(self):
-        """Check File System Health"""
+        """Get Local Storage"""
 
         params = {}
         path = '/health/storage/local'
@@ -117,7 +121,7 @@ class Health(Service):
         }, params)
 
     def get_time(self):
-        """Check Time Health"""
+        """Get Time"""
 
         params = {}
         path = '/health/time'

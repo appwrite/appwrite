@@ -3,7 +3,7 @@ const Service = require('../service.js');
 class Health extends Service {
 
     /**
-     * Check API HTTP Health
+     * Get HTTP
      *
      * Check the Appwrite HTTP server is up and responsive.
      *
@@ -21,7 +21,25 @@ class Health extends Service {
     }
 
     /**
-     * Check Cache Health
+     * Get Anti virus
+     *
+     * Check the Appwrite Anti Virus server is up and connection is successful.
+     *
+     * @throws Exception
+     * @return {}
+     */
+    async getAntiVirus() {
+        let path = '/health/anti-virus';
+        
+        return await this.client.call('get', path, {
+                    'content-type': 'application/json',
+               },
+               {
+            });
+    }
+
+    /**
+     * Get Cache
      *
      * Check the Appwrite in-memory cache server is up and connection is
      * successful.
@@ -40,7 +58,7 @@ class Health extends Service {
     }
 
     /**
-     * Check DB Health
+     * Get DB
      *
      * Check the Appwrite database server is up and connection is successful.
      *
@@ -58,7 +76,7 @@ class Health extends Service {
     }
 
     /**
-     * Check the number of pending certificate messages
+     * Get Certificate Queue
      *
      * Get the number of certificates that are waiting to be issued against
      * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
@@ -78,7 +96,11 @@ class Health extends Service {
     }
 
     /**
+<<<<<<< HEAD
      * Check the number of pending functions messages
+=======
+     * Get Functions Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
      *
      * @throws Exception
      * @return {}
@@ -94,7 +116,11 @@ class Health extends Service {
     }
 
     /**
+<<<<<<< HEAD
      * Check the number of pending log messages
+=======
+     * Get Logs Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44
      *
      * Get the number of logs that are waiting to be processed in the Appwrite
      * internal queue server.
@@ -113,7 +139,7 @@ class Health extends Service {
     }
 
     /**
-     * Check the number of pending task messages
+     * Get Tasks Queue
      *
      * Get the number of tasks that are waiting to be processed in the Appwrite
      * internal queue server.
@@ -132,7 +158,7 @@ class Health extends Service {
     }
 
     /**
-     * Check the number of pending usage messages
+     * Get Usage Queue
      *
      * Get the number of usage stats that are waiting to be processed in the
      * Appwrite internal queue server.
@@ -151,7 +177,7 @@ class Health extends Service {
     }
 
     /**
-     * Check number of pending webhook messages
+     * Get Webhooks Queue
      *
      * Get the number of webhooks that are waiting to be processed in the Appwrite
      * internal queue server.
@@ -170,25 +196,7 @@ class Health extends Service {
     }
 
     /**
-     * Check Anti virus Health
-     *
-     * Check the Appwrite Anti Virus server is up and connection is successful.
-     *
-     * @throws Exception
-     * @return {}
-     */
-    async getStorageAntiVirus() {
-        let path = '/health/storage/anti-virus';
-        
-        return await this.client.call('get', path, {
-                    'content-type': 'application/json',
-               },
-               {
-            });
-    }
-
-    /**
-     * Check File System Health
+     * Get Local Storage
      *
      * Check the Appwrite local storage device is up and connection is successful.
      *
@@ -206,7 +214,7 @@ class Health extends Service {
     }
 
     /**
-     * Check Time Health
+     * Get Time
      *
      * Check the Appwrite server time is synced with Google remote NTP server. We
      * use this technology to smoothly handle leap seconds with no disruptive

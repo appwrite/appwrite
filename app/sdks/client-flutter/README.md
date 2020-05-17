@@ -1,13 +1,13 @@
-# Appwrite SDK for Dart
+# Appwrite Flutter SDK
 
 [![pub package](https://img.shields.io/pub/v/appwrite.svg)](https://pub.dartlang.org/packages/appwrite)
-![License](https://img.shields.io/github/license/appwrite/sdk-for-dart.svg?v=1)
-![Version](https://img.shields.io/badge/api%20version-0.5.3-blue.svg?v=1)
+![License](https://img.shields.io/github/license/appwrite/sdk-for-flutter.svg?v=1)
+![Version](https://img.shields.io/badge/api%20version-0.6.0-blue.svg?v=1)
 
-**This SDK is compatible with Appwrite server version 0.5.3. For older versions, please check previous releases.**
+**This SDK is compatible with Appwrite server version 0.6.0. For older versions, please check previous releases.**
 
 Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
-                        Use the Dart SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
+                        Use the Flutter SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
                         For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)
 
 
@@ -20,7 +20,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yml
 dependencies:
-  appwrite: ^0.1.1
+  appwrite: ^0.2.0
 ```
 
 You can install packages from the command line:

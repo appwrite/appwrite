@@ -46,6 +46,7 @@ const APP_SOCIAL_LINKEDIN = 'https://www.linkedin.com/company/appwrite';
 const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://discord.gg/GSeTUeA';
+const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 
 $register = new Registry();
 $request = new Request();

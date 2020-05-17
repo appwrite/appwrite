@@ -748,7 +748,11 @@
              * @throws {Error}
              * @return {Promise}             
              */
+<<<<<<< HEAD:app/sdks/console-javascript/src/sdk.js
             createOAuth2Session: function(provider, success = 'https://localhost/auth/oauth2/success', failure = 'https://localhost/auth/oauth2/failure') {
+=======
+            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/console-web/src/sdk.js
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -2075,7 +2079,7 @@
         let health = {
 
             /**
-             * Check API HTTP Health
+             * Get HTTP
              *
              * Check the Appwrite HTTP server is up and responsive.
              *
@@ -2094,7 +2098,26 @@
             },
 
             /**
-             * Check Cache Health
+             * Get Anti virus
+             *
+             * Check the Appwrite Anti Virus server is up and connection is successful.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getAntiVirus: function() {
+                let path = '/health/anti-virus';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Cache
              *
              * Check the Appwrite in-memory cache server is up and connection is
              * successful.
@@ -2114,7 +2137,7 @@
             },
 
             /**
-             * Check DB Health
+             * Get DB
              *
              * Check the Appwrite database server is up and connection is successful.
              *
@@ -2133,7 +2156,7 @@
             },
 
             /**
-             * Check the number of pending certificate messages
+             * Get Certificate Queue
              *
              * Get the number of certificates that are waiting to be issued against
              * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
@@ -2154,6 +2177,7 @@
             },
 
             /**
+<<<<<<< HEAD:app/sdks/console-javascript/src/sdk.js
              * Check the number of pending functions messages
              *
              *
@@ -2173,6 +2197,27 @@
 
             /**
              * Check the number of pending log messages
+=======
+             * Get Functions Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/console-web/src/sdk.js
+             *
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getQueueFunctions: function() {
+                let path = '/health/queue/functions';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Get Logs Queue
              *
              * Get the number of logs that are waiting to be processed in the Appwrite
              * internal queue server.
@@ -2192,7 +2237,7 @@
             },
 
             /**
-             * Check the number of pending task messages
+             * Get Tasks Queue
              *
              * Get the number of tasks that are waiting to be processed in the Appwrite
              * internal queue server.
@@ -2212,7 +2257,7 @@
             },
 
             /**
-             * Check the number of pending usage messages
+             * Get Usage Queue
              *
              * Get the number of usage stats that are waiting to be processed in the
              * Appwrite internal queue server.
@@ -2232,7 +2277,7 @@
             },
 
             /**
-             * Check number of pending webhook messages
+             * Get Webhooks Queue
              *
              * Get the number of webhooks that are waiting to be processed in the Appwrite
              * internal queue server.
@@ -2252,26 +2297,7 @@
             },
 
             /**
-             * Check Anti virus Health
-             *
-             * Check the Appwrite Anti Virus server is up and connection is successful.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getStorageAntiVirus: function() {
-                let path = '/health/storage/anti-virus';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check File System Health
+             * Get Local Storage
              *
              * Check the Appwrite local storage device is up and connection is successful.
              *
@@ -2290,7 +2316,7 @@
             },
 
             /**
-             * Check Time Health
+             * Get Time
              *
              * Check the Appwrite server time is synced with Google remote NTP server. We
              * use this technology to smoothly handle leap seconds with no disruptive

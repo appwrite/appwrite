@@ -755,7 +755,7 @@ declare namespace Appwrite {
     export interface Health {
 
         /**
-         * Check API HTTP Health
+         * Get HTTP
          *
          * Check the Appwrite HTTP server is up and responsive.
 	     *
@@ -765,7 +765,17 @@ declare namespace Appwrite {
 	    get(): Promise<object>;
 
         /**
-         * Check Cache Health
+         * Get Anti virus
+         *
+         * Check the Appwrite Anti Virus server is up and connection is successful.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getAntiVirus(): Promise<object>;
+
+        /**
+         * Get Cache
          *
          * Check the Appwrite in-memory cache server is up and connection is
          * successful.
@@ -776,7 +786,7 @@ declare namespace Appwrite {
 	    getCache(): Promise<object>;
 
         /**
-         * Check DB Health
+         * Get DB
          *
          * Check the Appwrite database server is up and connection is successful.
 	     *
@@ -786,7 +796,7 @@ declare namespace Appwrite {
 	    getDB(): Promise<object>;
 
         /**
-         * Check the number of pending certificate messages
+         * Get Certificate Queue
          *
          * Get the number of certificates that are waiting to be issued against
          * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
@@ -798,7 +808,11 @@ declare namespace Appwrite {
 	    getQueueCertificates(): Promise<object>;
 
         /**
+<<<<<<< HEAD:app/sdks/console-javascript/types/index.d.ts
          * Check the number of pending functions messages
+=======
+         * Get Functions Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/console-web/types/index.d.ts
          *
 	     *
          * @throws {Error}
@@ -807,7 +821,11 @@ declare namespace Appwrite {
 	    getQueueFunctions(): Promise<object>;
 
         /**
+<<<<<<< HEAD:app/sdks/console-javascript/types/index.d.ts
          * Check the number of pending log messages
+=======
+         * Get Logs Queue
+>>>>>>> 1d96911000c2322cd8c363449837bc103f427c44:app/sdks/console-web/types/index.d.ts
          *
          * Get the number of logs that are waiting to be processed in the Appwrite
          * internal queue server.
@@ -818,7 +836,7 @@ declare namespace Appwrite {
 	    getQueueLogs(): Promise<object>;
 
         /**
-         * Check the number of pending task messages
+         * Get Tasks Queue
          *
          * Get the number of tasks that are waiting to be processed in the Appwrite
          * internal queue server.
@@ -829,7 +847,7 @@ declare namespace Appwrite {
 	    getQueueTasks(): Promise<object>;
 
         /**
-         * Check the number of pending usage messages
+         * Get Usage Queue
          *
          * Get the number of usage stats that are waiting to be processed in the
          * Appwrite internal queue server.
@@ -840,7 +858,7 @@ declare namespace Appwrite {
 	    getQueueUsage(): Promise<object>;
 
         /**
-         * Check number of pending webhook messages
+         * Get Webhooks Queue
          *
          * Get the number of webhooks that are waiting to be processed in the Appwrite
          * internal queue server.
@@ -851,17 +869,7 @@ declare namespace Appwrite {
 	    getQueueWebhooks(): Promise<object>;
 
         /**
-         * Check Anti virus Health
-         *
-         * Check the Appwrite Anti Virus server is up and connection is successful.
-	     *
-         * @throws {Error}
-         * @return {Promise}         
-         */
-	    getStorageAntiVirus(): Promise<object>;
-
-        /**
-         * Check File System Health
+         * Get Local Storage
          *
          * Check the Appwrite local storage device is up and connection is successful.
 	     *
@@ -871,7 +879,7 @@ declare namespace Appwrite {
 	    getStorageLocal(): Promise<object>;
 
         /**
-         * Check Time Health
+         * Get Time
          *
          * Check the Appwrite server time is synced with Google remote NTP server. We
          * use this technology to smoothly handle leap seconds with no disruptive
