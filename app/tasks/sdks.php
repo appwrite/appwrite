@@ -82,25 +82,18 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.';
 
                 switch ($language['key']) {
-                    case 'php':
-                        $config = new PHP();
-                        $config
-                            ->setComposerVendor('appwrite')
-                            ->setComposerPackage('appwrite')
-                        ;
-                        break;
-                    case 'javascript':
+                    case 'web':
                         $config = new JS();
                         $config
                             ->setNPMPackage('appwrite')
                             ->setBowerPackage('appwrite')
                         ;
                         break;
-                    case 'typescript':
-                        $config = new Typescript();
+                    case 'php':
+                        $config = new PHP();
                         $config
-                            ->setNPMPackage('appwrite')
-                            ->setBowerPackage('appwrite')
+                            ->setComposerVendor('appwrite')
+                            ->setComposerPackage('appwrite')
                         ;
                         break;
                     case 'nodejs':
@@ -143,6 +136,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK($config, new Swagger2($spec));
 
                 $sdk
+                    ->setName($language['sdk'])
                     ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
                         Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
                         For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")

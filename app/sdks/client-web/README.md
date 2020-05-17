@@ -1,10 +1,10 @@
-# Appwrite SDK for JavaScript
+# Appwrite  SDK
 
-![License](https://img.shields.io/github/license/appwrite/sdk-for-console.svg?v=1)
+![License](https://img.shields.io/github/license/appwrite/sdk-for-js.svg?v=1)
 ![Version](https://img.shields.io/badge/api%20version-0.6.0-blue.svg?v=1)
 
 Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
-                        Use the JS SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
+                        Use the Web SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
                         For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)
 
 ![Appwrite](https://appwrite.io/images/github.png)
@@ -30,24 +30,9 @@ import * as Appwrite from "appwrite";
 To install with a CDN (content delivery network) add the following scripts to the bottom of your <body> tag, but before you use any Appwrite services:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite@1.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/appwrite@1.0.29"></script>
 ```
 
-## Getting Started
-
-Initialise the Appwrite SDK in your code, and setup your API credentials:
-
-```js
-
-// Init your JS SDK
-var appwrite = new Appwrite();
-
-appwrite
-    .setEndpoint('http://localhost/v1') // Set only when using self-hosted solution
-    .setProject('455x34dfkj') // Your Appwrite Project UID
-;
-
-```
 
 
 ## Contribution

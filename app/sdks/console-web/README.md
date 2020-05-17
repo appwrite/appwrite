@@ -1,33 +1,39 @@
-# Appwrite SDK for Dart
+# Appwrite  SDK
 
-[![pub package](https://img.shields.io/pub/v/appwrite.svg)](https://pub.dartlang.org/packages/appwrite)
-![License](https://img.shields.io/github/license/appwrite/sdk-for-flutter.svg?v=1)
+![License](https://img.shields.io/github/license/appwrite/sdk-for-console.svg?v=1)
 ![Version](https://img.shields.io/badge/api%20version-0.6.0-blue.svg?v=1)
 
-**This SDK is compatible with Appwrite server version 0.6.0. For older versions, please check previous releases.**
-
 Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
-                        Use the Flutter SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
+                        Use the Console SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
                         For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)
-
-
 
 ![Appwrite](https://appwrite.io/images/github.png)
 
 ## Installation
 
-Add this to your package's `pubspec.yaml` file:
+### NPM
 
-```yml
-dependencies:
-  appwrite: ^0.1.1
-```
-
-You can install packages from the command line:
+To install via [NPM](https://www.npmjs.com/):
 
 ```bash
-pub get appwrite
+npm install appwrite --save
 ```
+
+If you're using a bundler (like [Browserify](http://browserify.org/) or [webpack](https://webpack.js.org/)), you can import the Appwrite module when you need it:
+
+```js
+import * as Appwrite from "appwrite";
+```
+
+### CDN
+
+To install with a CDN (content delivery network) add the following scripts to the bottom of your <body> tag, but before you use any Appwrite services:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/appwrite@1.0.0"></script>
+```
+
+
 
 ## Contribution
 

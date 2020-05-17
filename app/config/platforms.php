@@ -102,7 +102,7 @@ return [
         'beta' => false,
         'languages' => [ // TODO change key to 'sdks'
             [
-                'key' => 'javascript',
+                'key' => 'web',
                 'name' => 'Console',
                 'version' => '1.0.0',
                 'url' => 'https://github.com/appwrite/sdk-for-console',
@@ -110,7 +110,7 @@ return [
                 'beta' => false,
                 'family' => APP_PLATFORM_CONSOLE,
                 'prism' => 'console',
-                'source' => realpath(__DIR__ . '/../sdks/console-javascript'),
+                'source' => realpath(__DIR__ . '/../sdks/console-web'),
                 'gitUrl' => null,
                 'gitRepoName' => 'sdk-for-console',
                 'gitUserName' => 'appwrite',
