@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '1.0.29',
+                'version' => '1.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-js',
                 'enabled' => true,
                 'beta' => false,
@@ -128,7 +128,7 @@ return [
             [
                 'key' => 'nodejs',
                 'name' => 'Node.js',
-                'version' => '1.0.32',
+                'version' => '1.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-node',
                 'enabled' => true,
                 'beta' => false,
@@ -142,7 +142,7 @@ return [
             [
                 'key' => 'php',
                 'name' => 'PHP',
-                'version' => '1.0.17',
+                'version' => '1.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-php',
                 'enabled' => true,
                 'beta' => false,
@@ -156,7 +156,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '0.0.4',
+                'version' => '0.0.5',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'enabled' => true,
                 'beta' => true,
@@ -170,7 +170,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '1.0.9',
+                'version' => '1.0.10',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'enabled' => true,
                 'beta' => true,
@@ -184,7 +184,7 @@ return [
             [
                 'key' => 'go',
                 'name' => 'Go',
-                'version' => '0.0.6',
+                'version' => '0.0.7',
                 'url' => 'https://github.com/appwrite/sdk-for-go',
                 'enabled' => false,
                 'beta' => true,
@@ -198,7 +198,7 @@ return [
             [
                 'key' => 'java',
                 'name' => 'Java',
-                'version' => '0.0.1',
+                'version' => '0.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-java',
                 'enabled' => false,
                 'beta' => true,

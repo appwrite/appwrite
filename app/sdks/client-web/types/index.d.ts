@@ -1,4 +1,4 @@
-// Type definitions for appwrite 1.0.29
+// Type definitions for appwrite 1.1.0
 // Project: Appwrite
 
 
