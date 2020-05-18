@@ -40,20 +40,25 @@ class Avatars extends Service {
      /// card provider you need. Use width, height and quality arguments to change
      /// the output settings.
      ///
-    Future<Response> getCreditCard({@required String code, int width = 100, int height = 100, int quality = 100}) {
+    String getCreditCard({@required String code, int width = 100, int height = 100, int quality = 100}) {
         final String path = '/avatars/credit-cards/{code}'.replaceAll(RegExp('{code}'), code);
 
         final Map<String, dynamic> params = {
             'width': width,
             'height': height,
             'quality': quality,
+            'project': client.config['project'],
         };
 
-        final Map<String, String> headers = {
-            'content-type': 'application/json',
-        };
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
 
-        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+        return url.toString();
     }
 
      /// Get Favicon
@@ -61,18 +66,23 @@ class Avatars extends Service {
      /// Use this endpoint to fetch the favorite icon (AKA favicon) of a  any remote
      /// website URL.
      ///
-    Future<Response> getFavicon({@required String url}) {
+    String getFavicon({@required String url}) {
         final String path = '/avatars/favicon';
 
         final Map<String, dynamic> params = {
             'url': url,
+            'project': client.config['project'],
         };
 
-        final Map<String, String> headers = {
-            'content-type': 'application/json',
-        };
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
 
-        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+        return url.toString();
     }
 
      /// Get Country Flag
@@ -81,20 +91,25 @@ class Avatars extends Service {
      /// users. The code argument receives the 2 letter country code. Use width,
      /// height and quality arguments to change the output settings.
      ///
-    Future<Response> getFlag({@required String code, int width = 100, int height = 100, int quality = 100}) {
+    String getFlag({@required String code, int width = 100, int height = 100, int quality = 100}) {
         final String path = '/avatars/flags/{code}'.replaceAll(RegExp('{code}'), code);
 
         final Map<String, dynamic> params = {
             'width': width,
             'height': height,
             'quality': quality,
+            'project': client.config['project'],
         };
 
-        final Map<String, String> headers = {
-            'content-type': 'application/json',
-        };
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
 
-        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+        return url.toString();
     }
 
      /// Get Image from URL
@@ -104,20 +119,25 @@ class Avatars extends Service {
      /// remote images in your app or in case you want to make sure a 3rd party
      /// image is properly served using a TLS protocol.
      ///
-    Future<Response> getImage({@required String url, int width = 400, int height = 400}) {
+    String getImage({@required String url, int width = 400, int height = 400}) {
         final String path = '/avatars/image';
 
         final Map<String, dynamic> params = {
             'url': url,
             'width': width,
             'height': height,
+            'project': client.config['project'],
         };
 
-        final Map<String, String> headers = {
-            'content-type': 'application/json',
-        };
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
 
-        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+        return url.toString();
     }
 
      /// Get QR Code
@@ -125,7 +145,7 @@ class Avatars extends Service {
      /// Converts a given plain text to a QR code image. You can use the query
      /// parameters to change the size and style of the resulting image.
      ///
-    Future<Response> getQR({@required String text, int size = 400, int margin = 1, int download = 0}) {
+    String getQR({@required String text, int size = 400, int margin = 1, int download = 0}) {
         final String path = '/avatars/qr';
 
         final Map<String, dynamic> params = {
@@ -133,12 +153,17 @@ class Avatars extends Service {
             'size': size,
             'margin': margin,
             'download': download,
+            'project': client.config['project'],
         };
 
-        final Map<String, String> headers = {
-            'content-type': 'application/json',
-        };
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri url = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
 
-        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+        return url.toString();
     }
 }
