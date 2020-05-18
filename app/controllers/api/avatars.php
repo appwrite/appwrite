@@ -99,6 +99,7 @@ $utopia->get('/v1/avatars/credit-cards/:code')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getCreditCard')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
@@ -127,6 +128,7 @@ $utopia->get('/v1/avatars/flags/:code')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFlag')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-flag.md')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('flags', $code, $width, $height, $quality);
     });
@@ -140,6 +142,7 @@ $utopia->get('/v1/avatars/image')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getImage')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-image.md')
     ->action(
         function ($url, $width, $height) use ($response) {
@@ -206,6 +209,7 @@ $utopia->get('/v1/avatars/favicon')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFavicon')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
         function ($url) use ($response, $request) {
@@ -362,6 +366,7 @@ $utopia->get('/v1/avatars/qr')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getQR')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-qr.md')
     ->action(
         function ($text, $size, $margin, $download) use ($response) {
