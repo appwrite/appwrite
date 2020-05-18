@@ -233,7 +233,7 @@ class HealthCustomClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('online', $response['body']['status']);
+        $this->assertEquals('OK', $response['body']['status']);
         $this->assertStringStartsWith('ClamAV ', $response['body']['version']);
 
         /**
