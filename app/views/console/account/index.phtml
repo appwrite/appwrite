@@ -253,7 +253,7 @@
                         </span>
 
                         <div class="margin-top-small">
-                            <img data-ls-attrs="src={{env.API}}/avatars/flags/{{session.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xs margin-end-small inline" />
+                            <img data-ls-attrs="src={{env.API}}/avatars/flags/{{session.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
                             <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.geo.country}}"></small>
                         </div>
                     </li>
@@ -302,11 +302,11 @@
                                 <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
                                 <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                 <td data-title="Client: ">
-                                    <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xs inline margin-end-small" />
+                                    <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
                                 </td>
                                 <td data-title="Location: ">
-                                    <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xs inline margin-end-small" />
+                                    <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                     <span data-ls-bind="{{log.geo.country}}"></span>
                                 </td>
                                 <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>

@@ -15,6 +15,7 @@
 
       add.type = "text";
       add.className = "add";
+      add.placeholder = element.placeholder;
 
       //add.required = element.required;
 
@@ -69,6 +70,10 @@
         for (let index = 0; index < array.length; index++) {
           let value = array[index];
           let tag = window.document.createElement("li");
+
+          if(!value || value === ' ') {
+            continue;
+          }
 
           tag.className = "tag";
           tag.textContent = value;

@@ -181,13 +181,12 @@ class Users extends Service {
      * @return {}
      */
     async deleteSession(userId, sessionId) {
-        let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
+        let path = '/users/{userId}/sessions/{sessionId}'.replace(new RegExp('{userId}', 'g'), userId).replace(new RegExp('{sessionId}', 'g'), sessionId);
         
         return await this.client.call('delete', path, {
                     'content-type': 'application/json',
                },
                {
-                'sessionId': sessionId
             });
     }
 

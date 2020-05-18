@@ -218,7 +218,7 @@
 
     &.sticky-top {
       position: sticky;
-      top: 0;
+      top: 90px;
     }
 
     &.sticky-bottom {
@@ -284,10 +284,10 @@
   .clear;
   position: relative;
 
-  li {
+  > * {
     .margin-end-large;
     .pull-start;
-    width: ~"calc(33% - 30.333px)";
+    width: ~"calc(33.3333% - 33.3333px)";
 
     .photo-title {
       width: ~"calc(100% + 30px)";
@@ -304,7 +304,7 @@
   }
 
   @media @tablets {
-    li {
+    > li {
       width: ~"calc(50% - 25px)";
 
       &:nth-child(3n) {
@@ -319,7 +319,7 @@
 
   @media @phones {
 
-    li {
+    > li {
       width: 100%;
         .func-margin-end(0)!important;
     }

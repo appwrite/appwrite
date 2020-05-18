@@ -21,4 +21,5 @@ return [ // List of publicly visible scopes
     // 'webhooks.write',
     'locale.read',
     'avatars.read',
+    'health.read',
 ];;

@@ -516,7 +516,7 @@
                 }
 
                 if(oldPassword) {
-                    payload['old-password'] = oldPassword;
+                    payload['oldPassword'] = oldPassword;
                 }
 
                 return http
@@ -630,12 +630,12 @@
              *
              * @param {string} userId
              * @param {string} secret
-             * @param {string} passwordA
-             * @param {string} passwordB
+             * @param {string} password
+             * @param {string} passwordAgain
              * @throws {Error}
              * @return {Promise}             
              */
-            updateRecovery: function(userId, secret, passwordA, passwordB) {
+            updateRecovery: function(userId, secret, password, passwordAgain) {
                 if(userId === undefined) {
                     throw new Error('Missing required parameter: "userId"');
                 }
@@ -644,12 +644,12 @@
                     throw new Error('Missing required parameter: "secret"');
                 }
                 
-                if(passwordA === undefined) {
-                    throw new Error('Missing required parameter: "passwordA"');
+                if(password === undefined) {
+                    throw new Error('Missing required parameter: "password"');
                 }
                 
-                if(passwordB === undefined) {
-                    throw new Error('Missing required parameter: "passwordB"');
+                if(passwordAgain === undefined) {
+                    throw new Error('Missing required parameter: "passwordAgain"');
                 }
                 
                 let path = '/account/recovery';
@@ -664,12 +664,12 @@
                     payload['secret'] = secret;
                 }
 
-                if(passwordA) {
-                    payload['password-a'] = passwordA;
+                if(password) {
+                    payload['password'] = password;
                 }
 
-                if(passwordB) {
-                    payload['password-b'] = passwordB;
+                if(passwordAgain) {
+                    payload['passwordAgain'] = passwordAgain;
                 }
 
                 return http
@@ -1401,15 +1401,15 @@
                 }
 
                 if(orderField) {
-                    payload['order-field'] = orderField;
+                    payload['orderField'] = orderField;
                 }
 
                 if(orderType) {
-                    payload['order-type'] = orderType;
+                    payload['orderType'] = orderType;
                 }
 
                 if(orderCast) {
-                    payload['order-cast'] = orderCast;
+                    payload['orderCast'] = orderCast;
                 }
 
                 if(search) {
@@ -2784,7 +2784,7 @@
              * @throws {Error}
              * @return {Promise}             
              */
-            getUsage: function(projectId) {
+            getUsage: function(projectId, range = 'monthly') {
                 if(projectId === undefined) {
                     throw new Error('Missing required parameter: "projectId"');
                 }
@@ -2792,6 +2792,10 @@
                 let path = '/projects/{projectId}/usage'.replace(new RegExp('{projectId}', 'g'), projectId);
 
                 let payload = {};
+
+                if(range) {
+                    payload['range'] = range;
+                }
 
                 return http
                     .get(path, {
@@ -3918,13 +3922,12 @@
                     throw new Error('Missing required parameter: "sessionId"');
                 }
                 
-                let path = '/users/{userId}/sessions/:session'.replace(new RegExp('{userId}', 'g'), userId);
+                let path = '/users/{userId}/sessions/{sessionId}'
+                    .replace(new RegExp('{userId}', 'g'), userId)
+                    .replace(new RegExp('{sessionId}', 'g'), sessionId)
+                ;
 
                 let payload = {};
-
-                if(sessionId) {
-                    payload['sessionId'] = sessionId;
-                }
 
                 return http
                     .delete(path, {

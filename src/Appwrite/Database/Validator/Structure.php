@@ -8,6 +8,21 @@ use Utopia\Validator;
 
 class Structure extends Validator
 {
+    const RULE_TYPE_ID = 'id';
+    const RULE_TYPE_PERMISSIONS = 'permissions';
+    const RULE_TYPE_KEY = 'key';
+    const RULE_TYPE_TEXT = 'text';
+    const RULE_TYPE_MARKDOWN = 'markdown';
+    const RULE_TYPE_NUMERIC = 'numeric';
+    const RULE_TYPE_BOOLEAN = 'boolean';
+    const RULE_TYPE_EMAIL = 'email';
+    const RULE_TYPE_URL = 'url';
+    const RULE_TYPE_IP = 'ip';
+    const RULE_TYPE_WILDCARD = 'wildcard';
+    const RULE_TYPE_DOCUMENT = 'document';
+    const RULE_TYPE_DOCUMENTID = 'documentId';
+    const RULE_TYPE_FILEID = 'fileId';
+
     /**
      * @var Database
      */
@@ -28,7 +43,7 @@ class Structure extends Validator
             'label' => '$id',
             '$collection' => Database::SYSTEM_COLLECTION_RULES,
             'key' => '$id',
-            'type' => 'uid',
+            'type' => 'id',
             'default' => null,
             'required' => false,
             'array' => false,
@@ -37,7 +52,7 @@ class Structure extends Validator
             'label' => '$collection',
             '$collection' => Database::SYSTEM_COLLECTION_RULES,
             'key' => '$collection',
-            'type' => 'uid',
+            'type' => 'id',
             'default' => null,
             'required' => true,
             'array' => false,
@@ -147,40 +162,47 @@ class Structure extends Validator
             $validator = null;
 
             switch ($ruleType) {
-                case 'uid':
+                case self::RULE_TYPE_ID:
                     $validator = new UID();
                     break;
-                case 'text':
-                    $validator = new Validator\Text(0);
-                    break;
-                case 'numeric':
-                    $validator = new Validator\Numeric();
-                    break;
-                case 'boolean':
-                    $validator = new Validator\Boolean();
-                    break;
-                case 'email':
-                    $validator = new Validator\Email();
-                    break;
-                case 'url':
-                    $validator = new Validator\URL();
-                    break;
-                case 'ip':
-                    $validator = new Validator\IP();
-                    break;
-                case 'wildcard':
-                    $validator = new Validator\Mock();
-                    break;
-                case 'permissions':
+                case self::RULE_TYPE_PERMISSIONS:
                     $validator = new Permissions($document); //$validator = ($this->forcePermissions) ? new Authorization($original, 'write') : new Validator\Mock();
                     break;
-                case 'key':
+                case self::RULE_TYPE_KEY:
                     $validator = new Key();
                     break;
-                case 'document':
+                case self::RULE_TYPE_TEXT:
+                case self::RULE_TYPE_MARKDOWN:
+                    $validator = new Validator\Text(0);
+                    break;
+                case self::RULE_TYPE_NUMERIC:
+                    $validator = new Validator\Numeric();
+                    break;
+                case self::RULE_TYPE_BOOLEAN:
+                    $validator = new Validator\Boolean();
+                    break;
+                case self::RULE_TYPE_EMAIL:
+                    $validator = new Validator\Email();
+                    break;
+                case self::RULE_TYPE_URL:
+                    $validator = new Validator\URL();
+                    break;
+                case self::RULE_TYPE_IP:
+                    $validator = new Validator\IP();
+                    break;
+                case self::RULE_TYPE_WILDCARD:
+                    $validator = new Validator\Mock();
+                    break;
+                case self::RULE_TYPE_DOCUMENT:
                     $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : []);
-                    // $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : [],
-                    //     ['$permissions' => (isset($document['$permissions'])) ? $document['$permissions'] : []]);
+                    $value = $document->getAttribute($key);
+                    break;
+                case self::RULE_TYPE_DOCUMENTID:
+                    $validator = new DocumentId($this->database, (isset($rule['list']) && isset($rule['list'][0])) ? $rule['list'][0] : '');
+                    $value = $document->getAttribute($key);
+                    break;
+                case self::RULE_TYPE_FILEID:
+                    $validator = new DocumentId($this->database, Database::SYSTEM_COLLECTION_FILES);
                     $value = $document->getAttribute($key);
                     break;
             }

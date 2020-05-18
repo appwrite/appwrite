@@ -9,6 +9,9 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
+use Utopia\Locale\Locale;
+use Utopia\Audit\Audit;
+use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
@@ -18,6 +21,8 @@ use Appwrite\Database\Validator\Collection;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
 use Appwrite\Database\Exception\Structure as StructureException;
+use DeviceDetector\DeviceDetector;
+use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -68,6 +73,10 @@ $utopia->post('/v1/database/collections')
                 throw new Exception('Bad structure. '.$exception->getMessage(), 400);
             } catch (\Exception $exception) {
                 throw new Exception('Failed saving document to DB', 500);
+            }
+
+            if (false === $data) {
+                throw new Exception('Failed saving collection to DB', 500);
             }
 
             $data = $data->getArrayCopy();
@@ -160,6 +169,70 @@ $utopia->get('/v1/database/collections/:collectionId')
         }
     );
 
+$utopia->get('/v1/database/collections/:collectionId/logs')
+    ->desc('Get Collection Logs')
+    ->label('scope', 'collections.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'database')
+    ->label('sdk.method', 'getCollectionLogs')
+    ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
+    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->action(
+        function ($collectionId) use ($response, $register, $projectDB, $project) {
+            $collection = $projectDB->getDocument($collectionId);
+
+            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+                throw new Exception('Collection not found', 404);
+            }
+
+            $adapter = new AuditAdapter($register->get('db'));
+            $adapter->setNamespace('app_'.$project->getId());
+
+            $audit = new Audit($adapter);
+            
+            $countries = Locale::getText('countries');
+
+            $logs = $audit->getLogsByResource('database/collection/'.$collection->getId());
+
+            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
+            $output = [];
+
+            foreach ($logs as $i => &$log) {
+                $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+                $dd = new DeviceDetector($log['userAgent']);
+
+                $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+                $dd->parse();
+
+                $output[$i] = [
+                    'event' => $log['event'],
+                    'ip' => $log['ip'],
+                    'time' => strtotime($log['time']),
+                    'OS' => $dd->getOs(),
+                    'client' => $dd->getClient(),
+                    'device' => $dd->getDevice(),
+                    'brand' => $dd->getBrand(),
+                    'model' => $dd->getModel(),
+                    'geo' => [],
+                ];
+
+                try {
+                    $record = $reader->country($log['ip']);
+                    $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
+                    $output[$i]['geo']['country'] = $record->country->name;
+                    $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
+                } catch (\Exception $e) {
+                    $output[$i]['geo']['isoCode'] = '--';
+                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
+                }
+            }
+
+            $response->json($output);
+        }
+    );
+
 $utopia->put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->label('scope', 'collections.write')
@@ -193,16 +266,24 @@ $utopia->put('/v1/database/collections/:collectionId')
                 ], $rule);
             }
 
-            $collection = $projectDB->updateDocument(array_merge($collection->getArrayCopy(), [
-                'name' => $name,
-                'structure' => true,
-                'dateUpdated' => time(),
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-                'rules' => $rules,
-            ]));
+            try {
+                $collection = $projectDB->updateDocument(array_merge($collection->getArrayCopy(), [
+                    'name' => $name,
+                    'structure' => true,
+                    'dateUpdated' => time(),
+                    '$permissions' => [
+                        'read' => $read,
+                        'write' => $write,
+                    ],
+                    'rules' => $parsedRules,
+                ]));
+            } catch (AuthorizationException $exception) {
+                throw new Exception('Unauthorized action', 401);
+            } catch (StructureException $exception) {
+                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+            } catch (\Exception $exception) {
+                throw new Exception('Failed saving document to DB', 500);
+            }
 
             if (false === $collection) {
                 throw new Exception('Failed saving collection to DB', 500);
@@ -336,6 +417,18 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
                 $data = $parentDocument->getArrayCopy();
             }
 
+            /**
+             * Set default collection values
+             */
+            foreach ($collection->getAttribute('rules') as $key => $rule) {
+                $key = (isset($rule['key'])) ? $rule['key'] : '';
+                $default = (isset($rule['default'])) ? $rule['default'] : null;
+
+                if(!isset($data[$key])) {
+                    $data[$key] = $default;
+                }
+            }
+
             try {
                 $data = $projectDB->createDocument($data);
             } catch (AuthorizationException $exception) {
@@ -379,9 +472,9 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->param('filters', [], function () { return new ArrayList(new Text(128)); }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$id>=5bed2d152c362\'.', true)
     ->param('offset', 0, function () { return new Range(0, 900000000); }, 'Offset value. Use this value to manage pagination.', true)
     ->param('limit', 50, function () { return new Range(0, 1000); }, 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
-    ->param('order-field', '$id', function () { return new Text(128); }, 'Document field that results will be sorted by.', true)
-    ->param('order-type', 'ASC', function () { return new WhiteList(array('DESC', 'ASC')); }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
-    ->param('order-cast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
+    ->param('orderField', '$id', function () { return new Text(128); }, 'Document field that results will be sorted by.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(array('DESC', 'ASC')); }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
+    ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
     ->param('first', 0, function () { return new Range(0, 1); }, 'Return only the first document. Pass 1 for true or 0 for false. The default value is 0.', true)
     ->param('last', 0, function () { return new Range(0, 1); }, 'Return only the last document. Pass 1 for true or 0 for false. The default value is 0.', true)

@@ -96,12 +96,12 @@ GET https://appwrite.io/v1/database/collections/{collectionId}/documents
 | filters | array | Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, &gt;, &lt;, &lt;=, &gt;=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: &#039;name=John Doe&#039; or &#039;category.$id&gt;=5bed2d152c362&#039;. | [] |
 | offset | integer | Offset value. Use this value to manage pagination. | 0 |
 | limit | integer | Maximum number of documents to return in response.  Use this value to manage pagination. | 50 |
-| order-field | string | Document field that results will be sorted by. | $id |
-| order-type | string | Order direction. Possible values are DESC for descending order, or ASC for ascending order. | ASC |
-| order-cast | string | Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string. | string |
+| orderField | string | Document field that results will be sorted by. | $id |
+| orderType | string | Order direction. Possible values are DESC for descending order, or ASC for ascending order. | ASC |
+| orderCast | string | Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string. | string |
 | search | string | Search query. Enter any free text search. The database will try to find a match against all document attributes and children. |  |
-| first | integer | Return only first document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
-| last | integer | Return only last document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
+| first | integer | Return only the first document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
+| last | integer | Return only the last document. Pass 1 for true or 0 for false. The default value is 0. | 0 |
 
 ## Create Document
 
@@ -168,4 +168,16 @@ DELETE https://appwrite.io/v1/database/collections/{collectionId}/documents/{doc
 | --- | --- | --- | --- |
 | collectionId | string | **Required** Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection). |  |
 | documentId | string | **Required** Document unique ID. |  |
+
+## Get Collection Logs
+
+```http request
+GET https://appwrite.io/v1/database/collections/{collectionId}/logs
+```
+
+### Parameters
+
+| Field Name | Type | Description | Default |
+| --- | --- | --- | --- |
+| collectionId | string | **Required** Collection unique ID. |  |
 

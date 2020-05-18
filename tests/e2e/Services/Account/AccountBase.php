@@ -52,7 +52,7 @@ trait AccountBase
         sleep(5);
 
         return [
-            'uid' => $id,
+            'id' => $id,
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -449,7 +449,7 @@ trait AccountBase
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'password' => 'new-password',
-            'old-password' => $password,
+            'oldPassword' => $password,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -702,7 +702,7 @@ trait AccountBase
      */
     public function testUpdateAccountVerification($data):array
     {
-        $id = (isset($data['uid'])) ? $data['uid'] : '';
+        $id = (isset($data['id'])) ? $data['id'] : '';
         $session = (isset($data['session'])) ? $data['session'] : '';
         $verification = (isset($data['verification'])) ? $data['verification'] : '';
         
@@ -772,7 +772,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $sessionNewUid = $response['body']['$id'];
+        $sessionNewId = $response['body']['$id'];
         $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
@@ -786,7 +786,7 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/'.$sessionNewUid, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/'.$sessionNewId, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1005,7 +1005,7 @@ trait AccountBase
      */
     public function testUpdateAccountRecovery($data):array
     {
-        $id = (isset($data['uid'])) ? $data['uid'] : '';
+        $id = (isset($data['id'])) ? $data['id'] : '';
         $recovery = (isset($data['recovery'])) ? $data['recovery'] : '';
         $newPassowrd = 'test-recovery';
         
@@ -1019,8 +1019,8 @@ trait AccountBase
         ]), [
             'userId' => $id,
             'secret' => $recovery,
-            'password-a' => $newPassowrd,
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd,
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1035,8 +1035,8 @@ trait AccountBase
         ]), [
             'userId' => 'ewewe',
             'secret' => $recovery,
-            'password-a' => $newPassowrd,
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd,
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -1048,8 +1048,8 @@ trait AccountBase
         ]), [
             'userId' => $id,
             'secret' => 'sdasdasdasd',
-            'password-a' => $newPassowrd,
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd,
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
@@ -1061,8 +1061,8 @@ trait AccountBase
         ]), [
             'userId' => $id,
             'secret' => $recovery,
-            'password-a' => $newPassowrd.'x',
-            'password-b' => $newPassowrd,
+            'password' => $newPassowrd.'x',
+            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

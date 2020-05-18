@@ -302,7 +302,23 @@ $utopia->get('/v1/users/:userId/logs')
             
             $countries = Locale::getText('countries');
 
-            $logs = $audit->getLogsByUser($user->getId());
+            $logs = $audit->getLogsByUserAndActions($user->getId(), [
+                'account.create',
+                'account.delete',
+                'account.update.name',
+                'account.update.email',
+                'account.update.password',
+                'account.update.prefs',
+                'account.sessions.create',
+                'account.sessions.delete',
+                'account.recovery.create',
+                'account.recovery.update',
+                'account.verification.create',
+                'account.verification.update',
+                'teams.membership.create',
+                'teams.membership.update',
+                'teams.membership.delete',
+            ]);
 
             $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
             $output = [];
@@ -433,7 +449,7 @@ $utopia->patch('/v1/users/:userId/prefs')
     );
 
 
-$utopia->delete('/v1/users/:userId/sessions/:session')
+$utopia->delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])

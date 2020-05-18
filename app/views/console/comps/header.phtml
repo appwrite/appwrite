@@ -20,7 +20,7 @@
             </label>
         </div>
 
-        <button style="overflow: visible;" class="project-only setup-new tooltip round down" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
+        <button style="overflow: visible;" class="project-only setup-new tooltip round down pull-end" aria-label="Quick Start" data-tooltip="Create a new project"><i class="icon-plus"></i></button>
     </div>
 
     <div class="account-box pull-end"
@@ -37,20 +37,32 @@
             <a href="/console">Back to Console &nbsp;<i class="icon-right-open"></i></a>
         </div>
 
-        <a href="/console/account" class="account pull-end clear">
+        <div class="account link pull-end clear">
             <img src="" data-ls-attrs="src={{account|gravatar}}" alt="User Avatar" class="avatar margin-start pull-end" />
             <span class="name pull-end desktops-only" data-ls-bind="{{account.name}}"></span>
-        </a>
-    </div>
-    
-    <div class="pull-end margin-end switch-theme desktops-only">
-        <button data-general-theme
-            data-analytics-event="click"
-            data-analytics-category="console/header"
-            data-analytics-label="Switch Theme">
-            <i class="icon-sun-inv force-light"></i>
-            <i class="icon-moon-inv force-dark"></i>
-        </button>
+        </div>
+
+        <div class="console-index drop-list bottom end" data-ls-ui-open="" data-button-text="" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="account-button" data-blur="1" tabindex="1">
+            <ul class="margin-top-large arrow-end">
+                <li>
+                    <a href="/console/account"><i class="icon-user"></i> &nbsp; Your Account</a>
+                </li>
+                <li>
+                    <span class="link"><i class="icon-sun-inv force-dark pull-start"></i><i class="icon-moon-inv force-light pull-start"></i> &nbsp; Change Theme
+                        <div class="pull-end switch-theme">
+                            <button data-general-theme
+                                data-analytics-event="click"
+                                data-analytics-category="console/header"
+                                data-analytics-label="Switch Theme">
+                                <i class="icon-sun-inv force-light"></i>
+                                <i class="icon-moon-inv force-dark"></i>
+                            </button>
+                        </div>    
+                    </span>
+                </li>
+            </ul>
+        </div>
+
     </div>
 
     <nav class="project-only" data-ls-ui-open="" data-button-class="round icon-btn phones-only tablets-only" data-button-icon="icon-dot-3">
@@ -185,7 +197,7 @@
     <img src="/images/appwrite-footer-dark.svg" alt="Appwrite Dark Logo" class="force-dark" />
 </div>
 
-<div data-ui-modal class="modal box close" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="create-project">
+<div data-ui-modal class="modal box close sticky-footer" data-button-alias=".setup-new" data-button-icon="icon-plus" data-button-class="project-only" data-open-event="create-project">
     <h1>Create Project</h1>
 
     <form
@@ -196,10 +208,10 @@
         <p>Appwrite projects are containers for your resources and apps across different platforms.</p>
 
         <label>Name</label>
-        <input type="text" class="full-width" name="name" required autocomplete="off" />
+        <input type="text" class="full-width margin-bottom-xl" name="name" required autocomplete="off" />
 
-        <hr />
-
-        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        <footer>
+            <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+        </footer>
     </form>
 </div>

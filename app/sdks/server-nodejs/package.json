@@ -1,7 +1,7 @@
 {
   "name": "node-appwrite",
   "homepage": "https://appwrite.io/support",
-  "description": "Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)",
+  "description": "Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API",
   "version": "1.0.32",
   "license": "BSD-3-Clause",
   "main": "index.js",

@@ -11,9 +11,11 @@
                 var scope = this;
 
                 message.id = scope.ids++;
+                message.remove = function () {
+                    scope.remove(message.id);
+                };
 
                 scope.counter++;
-                
                 scope.list.unshift(message);
                 
                 if(scope.counter > scope.max) {

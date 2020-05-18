@@ -39,7 +39,8 @@ if(!empty($platforms)) {
     <meta name="description" content="<?php echo $this->getParam('description', ''); ?>" />
     <link rel="stylesheet" media="all" type="text/css" href="/dist/styles/default-<?php echo Locale::getText('settings.direction'); ?>.css?v=<?php echo APP_CACHE_BUSTER; ?>.<?php echo $version; ?>" />
     <link rel="icon" type="image/png" href="<?php echo $this->escape($this->getParam('icon', '')); ?>?v=<?php echo APP_CACHE_BUSTER; ?>" />
-    <link href="https://fonts.googleapis.com/css?family=Poppins:100,300,400,500,600" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css?family=Poppins:100,300,400,500,600" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
     <link rel="apple-touch-icon" href="/images/apple.png">
     <!-- <link rel="preconnect" href="" /> -->
     <?php if (!empty($canonical)): ?>
@@ -119,17 +120,18 @@ if(!empty($platforms)) {
 
     <div class="loader"></div>
 
-    <div data-cookie-policy="We are using cookies to make this website easier to use."></div>
+    <div data-cookies="We are using cookies to make this website easier to use."></div>
 
-    <section data-ls-ui-alerts="" class="alerts">
+    <section class="alerts">
         <ul data-ls-loop="alerts.list" data-ls-as="alert">
-            <li>
+            <li data-forms-remove>
                 <div data-ls-attrs="class={{alert.class}} message">
-                    <i class="icon-cancel" data-ls-ui-alerts-delete data-message="{{alert.id}}"></i>
+                    <i class="icon-cancel" data-forms-run="alert.remove"></i>
+                    
                     <span data-ls-bind="{{alert.text}}"></span>
 
                     <span data-ls-if="undefined !== {{alert.link}}">
-                        <a data-ls-attrs="href={{alert.link}}" data-ls-ui-alerts-delete data-message="{{alert.id}}">Learn More</a>
+                        <a data-ls-attrs="href={{alert.link}}" data-remove>Learn more</a>
                     </span>
                 </div>
             </li>

@@ -1,5 +1,5 @@
 * {
-  font-family: Poppins,sans-serif,Arial;
+  font-family: 'Poppins', sans-serif;
   -webkit-font-smoothing: antialiased;
   font-weight: 300;
 }
@@ -36,6 +36,10 @@ a, .link {
     border-bottom: none;
     opacity: .9;
   }
+
+  &.danger {
+    color: var(--config-color-danger);
+  }
 }
 
 b, strong {
@@ -56,6 +60,10 @@ small {
   font-size: 13px;
 }
 
+.text-size-xs {
+  font-size: 10px;
+}
+
 .text-size-normal {
   font-size: 16px;
 }
@@ -63,6 +71,10 @@ small {
 .text-height-large {
   height: 30px;
   line-height: 30px;
+}
+
+.text-height-small {
+  line-height: 13px;
 }
 
 .text-one-liner {

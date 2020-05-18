@@ -1,4 +1,4 @@
-The avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.
+The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.
 
 The Avatars service allows you to fetch country flags, browser icons, payment methods logos, remote websites favicons, generate QR codes, and manipulate remote images URLs.
 

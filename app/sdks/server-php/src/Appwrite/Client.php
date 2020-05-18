@@ -93,20 +93,6 @@ class Client
         return $this;
     }
 
-    /**
-     * Set Mode
-     *
-     * @param string $value
-     *
-     * @return Client
-     */
-    public function setMode($value)
-    {
-        $this->addHeader('X-Appwrite-Mode', $value);
-
-        return $this;
-    }
-
 
     /***
      * @param bool $status

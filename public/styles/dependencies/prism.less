@@ -15,6 +15,10 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 	border-radius: 10px;
 	margin-bottom: 30px;
 
+	* {
+		font-family: 'Source Code Pro', monospace;
+	}
+
 	&[data-lang]::after {
 		content: attr(data-lang-label);
 		display: inline-block;
@@ -39,6 +43,11 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		color: var(--config-language-javascript-contrast);
 	}
 
+	&[data-lang="web"]::after {
+		background: var(--config-language-web);
+		color: var(--config-language-web-contrast);
+	}
+
 	&[data-lang="html"]::after {
 		background: var(--config-language-html);
 		color: var(--config-language-html-contrast);
@@ -60,7 +69,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 	}
 
 	&[data-lang="python"]::after {
-		background: var(--config-python-javascript);
+		background: var(--config-language-python);
 		color: var(--config-language-python-contrast);
 	}
 
@@ -74,11 +83,22 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		color: var(--config-language-dart-contrast);
 	}
 
+	&[data-lang="flutter"]::after {
+		background: var(--config-language-flutter);
+		color: var(--config-language-flutter-contrast);
+	}
+
+	&[data-lang="yaml"]::after {
+		background: var(--config-language-yaml);
+		color: var(--config-language-yaml-contrast);
+	}
+
 	.tag {
 		color: inherit!important;
 		background: transparent!important;
 		padding: inherit!important;
 		font-size: inherit!important;
+		line-height: 14px;
 	}
 
 	.copy {
@@ -98,6 +118,7 @@ https://prismjs.com/download.html#themes=prism-okaidia&languages=markup+css+clik
 		opacity: 0;
 		transition: bottom .3s, opacity .3s;
 		line-height: normal;
+		font-family: 'Poppins', sans-serif;
 
 		&::before {
 			.func-padding-end(5px);

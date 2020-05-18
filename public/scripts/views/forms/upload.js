@@ -3,20 +3,20 @@
 
   window.ls.container.get("view").add({
     selector: "data-forms-upload",
-    controller: function(element, container, alerts, expression, env) {
+    controller: function(element, container, alerts, expression, env, search) {
       var scope = element.dataset["scope"];
+      var project = expression.parse(element.dataset["project"] || "console");
       var labelButton = element.dataset["labelButton"] || "Upload";
       var labelLoading = element.dataset["labelLoading"] || "Uploading...";
       var previewWidth = element.dataset["previewWidth"] || 200;
       var previewHeight = element.dataset["previewHeight"] || 200;
       var accept = element.dataset["accept"] || "";
+      var searchButton = (element.dataset["search"] || 0);
       var required = element.dataset["required"] || false;
       var className = element.dataset["class"] || "upload";
       var max = parseInt(element.dataset["max"] || 4);
-      var sdk =
-        scope === "sdk" ? container.get("sdk") : container.get("console");
+      var sdk = scope === "sdk" ? container.get("sdk") : container.get("console");
       var output = element.value || null;
-      var total = 0;
 
       var wrapper = document.createElement("div");
       var input = document.createElement("input");
@@ -34,7 +34,7 @@
 
       count.className = "count";
 
-      upload.className = "button reverse margin-bottom";
+      upload.className = "button reverse margin-bottom-small";
       upload.innerHTML = '<i class="icon icon-upload"></i> ' + labelButton;
       upload.tabIndex = 0;
 
@@ -43,27 +43,6 @@
       progress.className = "progress";
       progress.style.width = "0%";
       progress.style.display = "none";
-
-      var humanFileSize = function(bytes, si) {
-        var thresh = si ? 1000 : 1024;
-
-        if (Math.abs(bytes) < thresh) {
-          return bytes + " B";
-        }
-
-        var units = si
-          ? ["KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-          : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
-
-        var u = -1;
-
-        do {
-          bytes /= thresh;
-          ++u;
-        } while (Math.abs(bytes) >= thresh && u < units.length - 1);
-
-        return bytes.toFixed(1) + " " + units[u];
-      };
 
       var onComplete = function(message) {
         alerts.remove(message);
@@ -94,7 +73,8 @@
           previewWidth +
           "&height=" +
           previewHeight +
-          "&project=console";
+          "&project="+project +
+          "&mode=admin";
 
         file.className = "file avatar";
         file.tabIndex = 0;
@@ -140,11 +120,12 @@
       });
 
       element.addEventListener("change", function() {
-        console.log('change', element);
         if (!element.value) {
           return;
         }
-        render(output);
+        render(element.value);
+
+        wrapper.scrollIntoView();
       });
 
       upload.addEventListener("keypress", function() {
@@ -160,6 +141,29 @@
       upload.appendChild(input);
 
       render(output);
+
+      if(searchButton) {
+        let searchOpen = document.createElement("button");
+
+        searchOpen.type = 'button';
+        searchOpen.innerHTML = '<i class="icon icon-search"></i> Search';
+        searchOpen.classList.add('reverse');
+
+        let path = container.scope(searchButton);
+
+        searchOpen.addEventListener('click', function() {
+          search.selected = element.value;
+          search.path = path;
+
+          document.dispatchEvent(
+            new CustomEvent("open-file-serach", {
+              bubbles: false,
+              cancelable: true
+            }));
+        });
+
+        wrapper.appendChild(searchOpen);
+      }
     }
   });
 })(window);

@@ -87,4 +87,20 @@ class URLTest extends TestCase
         $this->assertIsString($url);
         $this->assertEquals('https://eldad:fux@appwrite.io/#bottom', $url);
     }
+
+    public function testParseQuery()
+    {
+        $result = URL::parseQuery('param1=value1&param2=value2');
+
+        $this->assertIsArray($result);
+        $this->assertEquals(['param1' => 'value1', 'param2' => 'value2'], $result);
+    }
+
+    public function testUnParseQuery()
+    {
+        $result = URL::unparseQuery(['param1' => 'value1', 'param2' => 'value2']);
+
+        $this->assertIsString($result);
+        $this->assertEquals('param1=value1&param2=value2', $result);
+    }
 }

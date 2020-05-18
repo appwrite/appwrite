@@ -360,8 +360,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                     data-failure-param-alert-text="Failed to Remove Member"
                                     data-failure-param-alert-classname="error">
 
-                                    <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                    <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$id}}">
+                                    <input name="teamId" data-ls-attrs="id=leave-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                                    <input name="inviteId" data-ls-attrs="id=leave-inviteId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
                                     <button class="danger">Leave</button>
                                 </form>
@@ -380,8 +380,8 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                         data-failure-param-alert-text="Failed to Resend Invitation"
                                         data-failure-param-alert-classname="error">
 
-                                        <input name="teamId" id="teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">
-                                        <input name="inviteId" id="inviteId" type="hidden" data-ls-bind="{{member.$id}}">
+                                        <input name="teamId" data-ls-attrs="id=resend-teamId-{{member.$id}}" type="hidden" data-ls-bind="{{console-project.teamId}}">
+                                        <input name="inviteId" data-ls-attrs="id=resend-inviteId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
 
                                         <button class="reverse">Resend</button>
                                     </form>

@@ -99,9 +99,9 @@ func (srv *Database) ListDocuments(CollectionId string, Filters []interface{}, O
 		"filters": Filters,
 		"offset": Offset,
 		"limit": Limit,
-		"order-field": OrderField,
-		"order-type": OrderType,
-		"order-cast": OrderCast,
+		"orderField": OrderField,
+		"orderType": OrderType,
+		"orderCast": OrderCast,
 		"search": Search,
 		"first": First,
 		"last": Last,
@@ -164,4 +164,15 @@ func (srv *Database) DeleteDocument(CollectionId string, DocumentId string) (map
 	}
 
 	return srv.client.Call("DELETE", path, nil, params)
+}
+
+// GetCollectionLogs
+func (srv *Database) GetCollectionLogs(CollectionId string) (map[string]interface{}, error) {
+	r := strings.NewReplacer("{collectionId}", CollectionId)
+	path := r.Replace("/database/collections/{collectionId}/logs")
+
+	params := map[string]interface{}{
+	}
+
+	return srv.client.Call("GET", path, nil, params)
 }

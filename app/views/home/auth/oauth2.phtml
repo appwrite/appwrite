@@ -8,6 +8,9 @@
         document.getElementById('message').style.display = 'block';
     }, 25);
 
-    window.location = 'appwrite-callback://'+window.location.search;
+    const query = new URLSearchParams(window.location.search);
+    const project = query.get('project');
+
+    window.location = 'appwrite-callback-'+project+'://'+window.location.search;
 </script>
 <hr />

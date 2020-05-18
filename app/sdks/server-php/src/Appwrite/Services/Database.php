@@ -164,9 +164,9 @@ class Database extends Service
         $params['filters'] = $filters;
         $params['offset'] = $offset;
         $params['limit'] = $limit;
-        $params['order-field'] = $orderField;
-        $params['order-type'] = $orderType;
-        $params['order-cast'] = $orderCast;
+        $params['orderField'] = $orderField;
+        $params['orderType'] = $orderType;
+        $params['orderCast'] = $orderCast;
         $params['search'] = $search;
         $params['first'] = $first;
         $params['last'] = $last;
@@ -274,6 +274,24 @@ class Database extends Service
 
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
+            'content-type' => 'application/json',
+        ], $params);
+    }
+
+    /**
+     * Get Collection Logs
+     *
+     * @param string  $collectionId
+     * @throws Exception
+     * @return array
+     */
+    public function getCollectionLogs(string $collectionId):array
+    {
+        $path   = str_replace(['{collectionId}'], [$collectionId], '/database/collections/{collectionId}/logs');
+        $params = [];
+
+
+        return $this->client->call(Client::METHOD_GET, $path, [
             'content-type' => 'application/json',
         ], $params);
     }

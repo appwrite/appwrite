@@ -9,7 +9,7 @@ class URL
      * 
      * Take a URL string and split it to array parts
      * 
-     * @param $url string
+     * @param string $url
      * 
      * @return array
      */
@@ -34,8 +34,8 @@ class URL
      * 
      * Take URL parts and combine them to a valid string
      * 
-     * @param $url array
-     * @param $ommit array
+     * @param array $url
+     * @param array $ommit
      * 
      * @return string
      */
@@ -74,5 +74,35 @@ class URL
         }
     
         return $parts['scheme'].$parts['user'].$parts['pass'].$parts['host'].$parts['port'].$parts['path'].$parts['query'].$parts['fragment'];
+    }
+
+    /**
+     * Parse Query String
+     * 
+     * Convert query string to array
+     * 
+     * @param string $query
+     * 
+     * @return array
+     */
+    static public function parseQuery(string $query):array
+    {
+        parse_str($query, $result);
+
+        return $result;
+    }
+
+    /**
+     * Un-Parse Query String
+     * 
+     * Convert query string array to string
+     * 
+     * @param string $query
+     * 
+     * @return array
+     */
+    static public function unparseQuery(array $query):string
+    {
+        return http_build_query($query);
     }
 }

@@ -196,10 +196,9 @@ class Users extends Service
      */
     public function deleteSession(string $userId, string $sessionId):array
     {
-        $path   = str_replace(['{userId}'], [$userId], '/users/{userId}/sessions/:session');
+        $path   = str_replace(['{userId}', '{sessionId}'], [$userId, $sessionId], '/users/{userId}/sessions/{sessionId}');
         $params = [];
 
-        $params['sessionId'] = $sessionId;
 
         return $this->client->call(Client::METHOD_DELETE, $path, [
             'content-type' => 'application/json',

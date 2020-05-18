@@ -99,6 +99,7 @@ $utopia->get('/v1/avatars/credit-cards/:code')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getCreditCard')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
@@ -127,6 +128,7 @@ $utopia->get('/v1/avatars/flags/:code')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFlag')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-flag.md')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('flags', $code, $width, $height, $quality);
     });
@@ -140,6 +142,7 @@ $utopia->get('/v1/avatars/image')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getImage')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-image.md')
     ->action(
         function ($url, $width, $height) use ($response) {
@@ -206,6 +209,7 @@ $utopia->get('/v1/avatars/favicon')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getFavicon')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
         function ($url) use ($response, $request) {
@@ -356,12 +360,13 @@ $utopia->get('/v1/avatars/qr')
     ->desc('Get QR Code')
     ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image.')
     ->param('size', 400, function () { return new Range(0, 1000); }, 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
-    ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin From Edge. Pass an integer between 0 to 10. Defaults to 1.', true)
+    ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', 0, function () { return new Range(0, 1); }, 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getQR')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-qr.md')
     ->action(
         function ($text, $size, $margin, $download) use ($response) {

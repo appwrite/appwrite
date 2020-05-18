@@ -20,6 +20,7 @@
   overflow: auto;
   display: none;
   position: fixed;
+  transform: translate3d(0,0,0);
   width: 100%;
   max-height: 90%;
   max-width: 640px;
@@ -40,18 +41,30 @@
     width: ~"calc(100% - 20px)";
   }
 
+  &.full {
+    max-width: none;
+    max-height: none;
+    height: 100%;
+    border-radius: 0;
+    padding: 80px 120px;
+
+    h1 {
+      font-weight: 700;
+    }
+  }
+
   &.padding-small {
     padding: 15px;
   }
 
   &.height-tiny {
-    form {
+    > form {
       height: 100px;
     }
   }
 
   &.height-small {
-    form {
+    > form {
       height: 220px;
     }
   }
@@ -94,7 +107,7 @@
     line-height: 35px;
   }
 
-  form, .main {
+  > form, .main {
     position: relative;
     border-top: solid 1px var(--config-border-color);
     padding: 30px 30px 0 30px;
@@ -131,6 +144,12 @@
     border-bottom: solid 1px var(--config-modal-note-border);
   }
 
+  .ide.strech {
+    box-shadow: none;
+    border-radius: 0;
+    margin: 0 -30px;
+  }
+
   button.close {
     width: 30px;
     height: 30px;
@@ -140,5 +159,35 @@
     background: var(--config-color-normal);
     color: var(--config-color-background-fade);
     border-radius: 50%;
+  }
+
+  .paging {
+    form {
+      padding: 0;
+      margin: 0;
+      border-top: none;
+    }
+  }
+
+  &.sticky-footer {
+    form {
+      footer {
+        margin: -30px;
+      }
+    }
+
+    footer {
+      position: sticky;
+      bottom: -30px;
+      background: var(--config-color-background-fade-super);
+      height: 50px;
+      z-index: 1;
+      padding: 30px;
+      box-shadow: 0 0 1px rgba(0,0,0,.15);
+
+      form {
+        display: inline-block;
+      }
+    }
   }
 }

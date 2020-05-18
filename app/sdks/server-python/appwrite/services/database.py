@@ -80,9 +80,9 @@ class Database(Service):
         params['filters'] = filters
         params['offset'] = offset
         params['limit'] = limit
-        params['order-field'] = order_field
-        params['order-type'] = order_type
-        params['order-cast'] = order_cast
+        params['orderField'] = order_field
+        params['orderType'] = order_type
+        params['orderCast'] = order_cast
         params['search'] = search
         params['first'] = first
         params['last'] = last
@@ -144,5 +144,16 @@ class Database(Service):
         path = path.replace('{documentId}', document_id)                
 
         return self.client.call('delete', path, {
+            'content-type': 'application/json',
+        }, params)
+
+    def get_collection_logs(self, collection_id):
+        """Get Collection Logs"""
+
+        params = {}
+        path = '/database/collections/{collectionId}/logs'
+        path = path.replace('{collectionId}', collection_id)                
+
+        return self.client.call('get', path, {
             'content-type': 'application/json',
         }, params)
