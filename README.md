@@ -21,7 +21,7 @@ Appwrite API services aim to make developer's life a lot easier by hiding the co
 
 Using Appwrite, you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and team data, storage and file management, image manipulation and cropping, schedule cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
-Appwrite can also integrate really well with your backend. Appwrite can word behind your own proxy facing your internal network, or alongside your own custom backend. You can use Appwrite server SDK to integrate your backend with Appwrite's APIs and webhooks.
+Appwrite can also integrate really well with your backend. Appwrite can work behind your own proxy facing your internal network, or alongside your own custom backend. You can use Appwrite server SDK to integrate your backend with Appwrite's APIs and webhooks.
 
 [https://appwrite.io](https://appwrite.io)
 
