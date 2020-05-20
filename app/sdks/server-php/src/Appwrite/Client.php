@@ -37,7 +37,7 @@ class Client
      */
     protected $headers = [
         'content-type' => '',
-        'x-sdk-version' => 'appwrite:php:1.0.17',
+        'x-sdk-version' => 'appwrite:php:1.1.0',
     ];
 
     /**
@@ -89,20 +89,6 @@ class Client
     public function setLocale($value)
     {
         $this->addHeader('X-Appwrite-Locale', $value);
-
-        return $this;
-    }
-
-    /**
-     * Set Mode
-     *
-     * @param string $value
-     *
-     * @return Client
-     */
-    public function setMode($value)
-    {
-        $this->addHeader('X-Appwrite-Mode', $value);
 
         return $this;
     }

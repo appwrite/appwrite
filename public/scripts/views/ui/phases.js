@@ -21,13 +21,7 @@
           element.children[i].dataset["state"] || ""
         );
 
-        if (
-          tabState ===
-          (window.location.pathname + window.location.search).substring(
-            0,
-            tabState.length
-          )
-        ) {
+        if (tabState && tabState === (window.location.pathname + window.location.search).substring(0, tabState.length)) {
           position = i;
         }
       }
@@ -100,7 +94,7 @@
           setTab(position - 1);
         });
       });
-
+      
       setTab(position);
 
       container.appendChild(tabs);

@@ -1,0 +1,57 @@
+<?php
+$key = $this->getParam('key', '');
+$type = $this->getParam('type', '');
+$required = $this->getParam('required', '');
+$comp = $this->getParam('comp', '');
+$namespace = $this->getParam('namespace', '');
+$list = $this->getParam('list', []);
+$collections = $this->getParam('collections', []);
+
+$comp->setParam('namespace', 'node');
+
+if($type === 'document') {
+    $comp->setParam('key', null);
+}
+?>
+
+<input type="hidden" name="<?php echo $this->escape($key); ?>"<?php if($required): ?> required<?php endif; ?> data-cast-to="array-empty">
+
+<hr />
+
+<ul data-ls-loop="<?php echo $this->escape($namespace); ?>" data-ls-as="node" class="sortable numbers">
+    <li data-forms-move-up  data-forms-move-down>
+        <div class="drop-list bottom end settings" data-ls-ui-open="" data-button-text="" data-button-icon="icon-cog" data-button-selector="[data-toggler]" data-button-class="round dark small margin-bottom-small margin-top-tiny pull-end" data-blur="1" tabindex="1">
+            <ul class="arrow-end margin-top margin-end-negative-small">
+                <li data-move-up>
+                    <button type="button" class="link"><i class="icon-up-dir"></i> Move Up</button>
+                </li>
+                <li data-move-down>
+                    <button type="button" class="link"><i class="icon-down-dir"></i> Move Down</button>
+                </li>
+                <li>
+                    <button type="button" data-ls-ui-trigger="splice-<?php echo $this->escape($namespace); ?>-{{$index}}" class="link" data-debug="1"><i class="icon-cancel"></i> Remove</button>
+                </li>
+            </ul>
+        </div>
+    
+        <?php echo $comp->render(); ?>
+            
+        <hr />
+    </li>
+</ul>
+
+<?php if(!empty($list) && $type === 'document'): ?>
+    <div class="drop-list" data-ls-ui-open="" data-button-text="Add" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="reverse margin-bottom-small" data-blur="1" tabindex="1">
+        <ul>
+            <?php foreach($list as $item):
+                $name = (isset($collections[$item])) ? $collections[$item]->getAttribute('name', '') : '';
+                ?>
+                <li>
+                    <button type="button" class="link" data-ls-ui-trigger="collection-child-<?php echo $this->escape($namespace); ?>-<?php echo $this->escape($item); ?>"><i class="icon-edit"></i> Add <?php echo $this->escape($name); ?></button>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+<?php else: ?>
+    <button type="button" data-ls-ui-trigger="collection-child-<?php echo $this->escape($namespace); ?>" class="reverse margin-bottom-small">Add</button>
+<?php endif; ?>

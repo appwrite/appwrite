@@ -126,8 +126,12 @@ COPY --from=builder /usr/local/src/vendor /usr/share/nginx/html/vendor
 
 RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/cache && \
+    mkdir -p /storage/config && \
+    mkdir -p /storage/certificates && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
-    chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache
+    chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
+    chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
+    chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates
 
 # Supervisord Conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf

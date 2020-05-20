@@ -79,9 +79,9 @@ module Appwrite
                 'filters': filters, 
                 'offset': offset, 
                 'limit': limit, 
-                'order-field': order_field, 
-                'order-type': order_type, 
-                'order-cast': order_cast, 
+                'orderField': order_field, 
+                'orderType': order_type, 
+                'orderCast': order_cast, 
                 'search': search, 
                 'first': first, 
                 'last': last
@@ -148,6 +148,18 @@ module Appwrite
             }
 
             return @client.call('delete', path, {
+                'content-type' => 'application/json',
+            }, params);
+        end
+
+        def get_collection_logs(collection_id:)
+            path = '/database/collections/{collectionId}/logs'
+                .gsub('{collection_id}', collection_id)
+
+            params = {
+            }
+
+            return @client.call('get', path, {
                 'content-type' => 'application/json',
             }, params);
         end

@@ -115,11 +115,10 @@ func (srv *Users) DeleteSessions(UserId string) (map[string]interface{}, error) 
 
 // DeleteSession delete user sessions by its unique ID.
 func (srv *Users) DeleteSession(UserId string, SessionId string) (map[string]interface{}, error) {
-	r := strings.NewReplacer("{userId}", UserId)
-	path := r.Replace("/users/{userId}/sessions/:session")
+	r := strings.NewReplacer("{userId}", UserId, "{sessionId}", SessionId)
+	path := r.Replace("/users/{userId}/sessions/{sessionId}")
 
 	params := map[string]interface{}{
-		"sessionId": SessionId,
 	}
 
 	return srv.client.Call("DELETE", path, nil, params)

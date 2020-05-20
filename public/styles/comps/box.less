@@ -58,8 +58,14 @@
     }
   }
 
+  .tabs {
+    border-bottom: solid 1px var(--config-border-color);
+    margin: 0 -30px;
+    padding: 0 30px!important;
+  }
+
   &>footer {
-    margin: 30px -30px -30px -30px;
+    margin: 0 -30px -30px -30px;
     padding: 15px 30px;
     background: var(--config-color-background-fade);
     border: solid 1px var(--config-border-color);
@@ -68,9 +74,33 @@
 
   hr {
     height: 1px;
-    background: var(--config-border-color);
+    background: var(--config-console-background);
     border: none;
     margin: 30px -30px;
+  }
+
+  .label {
+    position: absolute;
+    top: 10px;
+    z-index: 2;
+    .func-end(10px);
+  }
+
+  &.fade-bottom {
+    position: relative;
+    overflow: hidden;
+
+    &:after {
+      content: "";
+      position: absolute;
+      display: block;
+      bottom: 15px;
+      width: 100%;
+      background: rgb(0,0,0);
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--config-color-background-fade) 80%);
+      height: 100px;
+      margin: 0 -15px;
+    }
   }
 
   .header {
@@ -83,19 +113,120 @@
     border-bottom: solid 1px #efefef;
   }
 
+  ul.numbers {
+    > li {
+      position: relative;
+      .func-margin-start(30px);
+      .func-margin-end(50px);
+
+      hr {
+        .func-margin-start(-60px);
+        .func-margin-end(-80px);
+      }
+
+      .settings {
+        position: absolute;
+        top: 3px;
+        .func-end(-50px);
+      }
+      
+      &::after {
+        display: block;
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: 50%;
+        background: var(--config-color-focus);
+        color: var(--config-color-background);
+        counter-increment: section;
+        content: counter(section);
+        text-align: center;
+        position: absolute;
+        top: 3px;
+        .func-start(-45px);
+      }
+    }
+  }
+
+  .scroll {
+    margin: 0 -30px;
+    overflow-y: scroll;
+
+    table {
+      width: 100%;
+      margin: 0;
+    }
+  }
+  
+  ul.sortable {
+    counter-reset: section;
+
+    > li {
+
+      [data-move-up].round, [data-move-down].round, [data-remove].round {
+        background: var(--config-color-focus);
+        color: var(--config-color-background-fade);
+        width: 25px;
+        height: 25px;
+        line-height: 25px;
+        display: inline-block;
+        text-align: center;
+        padding: 0;
+        .func-margin-end(5px);
+
+        &:disabled {
+          display: none;
+        }
+      }
+
+      &:first-child {
+        [data-move-up] {
+          display: none;
+
+          &:disabled {
+            display: inline-block;
+            background: var(--config-color-background);
+          }
+        }
+      }
+      &:last-child {
+        [data-move-down] {
+          display: none;
+
+          &:disabled {
+            display: inline-block;
+            background: var(--config-color-background);
+          }
+        }
+      }
+    }
+  }
+
   .toggle {
     position: relative;
-    border-top: 2px solid var(--config-color-background);
-    border-bottom: 2px solid var(--config-color-background);
+    border-top: 1px solid var(--config-console-background);
+    border-bottom: 1px solid var(--config-console-background);
     margin: 0 -30px;
     padding: 30px 30px 0 30px;
     height: 65px;
     overflow: hidden;
 
+    &.list {
+      border-bottom: none;
+    }
+
+    &.sorts {
+      button.ls-ui-open {
+        width: ~"calc(100% - 100px)";
+      }
+    }
+
     button.ls-ui-open {
+      .func-end(0);
       position: absolute;
       top: 0;
-      .func-start(0);
       width: 100%;
       height: 95px;
       background: transparent;
@@ -103,7 +234,7 @@
       border-radius: 0;
     }
 
-    .icon-minus {
+    .icon-minus, .icon-up-open {
       display: none;
     }
 
@@ -114,11 +245,11 @@
     &.open {
       height: auto;
 
-      .icon-minus {
+      .icon-minus, .icon-up-open {
         display: block;
       }
 
-      .icon-plus {
+      .icon-plus, .icon-down-open {
         display: none;
       }
 
@@ -162,6 +293,28 @@
     b {
       margin-top: 20px;
       display: block;
+    }
+  }
+
+  .info {
+    margin: 0 -30px;
+    padding: 20px 30px;
+    background: var(--config-modal-note-background);
+    color: var(--config-modal-note-color);
+    border-top: solid 1px var(--config-modal-note-border);
+    border-bottom: solid 1px var(--config-modal-note-border);
+
+    hr {
+      background: var(--config-modal-note-border)!important;
+    }
+  }
+
+  .table-wrap {
+    margin: 0 -30px;
+    overflow-y: scroll;
+
+    table {
+      margin: 0;
     }
   }
 

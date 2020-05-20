@@ -51,7 +51,7 @@ $events = [
         <ul data-ls-loop="console-webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
-                <div data-ui-modal class="modal close" data-button-text="Update" data-button-class="pull-end">
+                <div data-ui-modal class="modal close sticky-footer" data-button-text="Update" data-button-class="pull-end">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                     <h1>Update Webhook</h1>
@@ -105,8 +105,8 @@ $events = [
                             <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                                 <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span>
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span>
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
                             </label>
 
                             <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
@@ -127,7 +127,9 @@ $events = [
                             </div>
                         </div>
 
-                        <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        <footer>
+                            <button type="submit">Save</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                        </footer>
                     </form>
                 </div>
 
@@ -164,7 +166,7 @@ $events = [
     </div>
 
     <div class="clear">
-        <div data-ui-modal class="modal close box" data-button-text="Add Webhook">
+        <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Webhook">
             <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
             <h1>Add Webhook</h1>
@@ -217,8 +219,8 @@ $events = [
                     <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                         <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                        <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span>Enabled</span>
-                        <input name="security" type="radio" required data-ls-attrs="id=secure-no" value="0" /> &nbsp; <span>Disabled</span>
+                        <input name="security" type="radio" required data-ls-attrs="id=secure-yes" checked="checked" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
+                        <input name="security" type="radio" required data-ls-attrs="id=secure-no" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
                     </label>
 
                     <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
@@ -239,7 +241,9 @@ $events = [
                     </div>
                 </div>
 
-                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                <footer>
+                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                </footer>
             </form>
         </div>
     </div>

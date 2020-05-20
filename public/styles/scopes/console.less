@@ -1,13 +1,13 @@
 .console {
   width: 100%;
   padding: 0;
-  overflow: auto;
+  //overflow: auto;
   overscroll-behavior: none;
   
   body {
     position: relative;
     width: ~"calc(100% - 320px)";
-    overflow: auto;
+    // overflow: auto;
     padding-top: 70px;
     padding-bottom: 0;
     .func-padding-end(50px);
@@ -42,6 +42,10 @@
         display: block;
       }
 
+      .console-index {
+        display: none;
+      }
+
       .account {
         display: none;
       }
@@ -52,9 +56,17 @@
         display: none;
       }
 
+      .console-index {
+        display: block;
+      }
+
       .account {
         display: block;
       }
+    }
+
+    .console-index {
+      display: block;
     }
 
     .console-back {
@@ -124,9 +136,22 @@
       }
     }
 
+    .switch-theme {
+      margin: 2px 0;
+    }
+
     .avatar {
       height: 40px;
       width: 40px;
+    }
+
+    .account-button {
+      background: transparent;
+      position: absolute;
+      width: 100%;
+      height: 40px;
+      border-radius: 0;
+      z-index: 1;
     }
 
     .notifications {
@@ -719,6 +744,31 @@
       border-radius: 50%;
       margin-bottom: 20px;
     }
+  }
+
+  .document-nav {
+    display: none;
+    position: sticky;
+    top: 90px;
+
+    @media only screen and (min-width: 1380px) {
+      display: block;
+    }
+
+    ul {
+      position: absolute;
+      width: 200px;
+      .func-start(-260px);
+
+      li {
+        margin-bottom: 20px;
+
+        .selected {
+          font-weight: 500;
+        }
+      }
+    }
+
   }
 
   .scroll-to {

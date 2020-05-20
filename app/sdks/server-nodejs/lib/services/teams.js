@@ -39,7 +39,7 @@ class Teams extends Service {
      * project.
      *
      * @param string name
-     * @param array roles
+     * @param string[] roles
      * @throws Exception
      * @return {}
      */
@@ -156,7 +156,7 @@ class Teams extends Service {
      *
      * @param string teamId
      * @param string email
-     * @param array roles
+     * @param string[] roles
      * @param string url
      * @param string name
      * @throws Exception

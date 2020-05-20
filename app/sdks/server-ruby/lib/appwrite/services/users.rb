@@ -104,11 +104,11 @@ module Appwrite
         end
 
         def delete_session(user_id:, session_id:)
-            path = '/users/{userId}/sessions/:session'
+            path = '/users/{userId}/sessions/{sessionId}'
                 .gsub('{user_id}', user_id)
+                .gsub('{session_id}', session_id)
 
             params = {
-                'sessionId': session_id
             }
 
             return @client.call('delete', path, {

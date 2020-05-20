@@ -1,0 +1,148 @@
+
+<?php
+$collection = $this->getParam('collection', []);
+$id = $collection->getId();
+$name = $collection->getAttribute('name', 'Collection');
+$rules = $collection->getAttribute('rules', []);
+?>
+
+<div data-ui-modal class="modal sticky-footer width-large box close" data-button-hide="on" data-open-event="open-document-serach-<?php echo $this->escape($id); ?>" data-close-event="none">
+    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
+    
+    <h2><?php echo $this->escape($name); ?> Search</h2>
+    
+    <form class="search margin-bottom"
+        data-service="database.listDocuments"
+        data-event="submit"
+        data-param-collection-id="<?php echo $this->escape($id); ?>"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset="0"
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-documents"
+        data-success="state"
+        data-success-param-state-keys="search,offset">
+        <input name="search" id="searchDocuments-<?php echo $this->escape($id); ?>" type="search" autocomplete="off" placeholder="Search" class="margin-bottom-no" data-ls-bind="{{router.params.search}}">
+    </form>
+
+    <div
+        data-service="database.listDocuments"
+        data-event="open-document-serach-<?php echo $this->escape($id); ?>"
+        data-param-collection-id="<?php echo $this->escape($id); ?>"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset="0"
+        data-param-order-type="DESC"
+        data-scope="sdk"
+        data-name="project-documents">
+
+        <div data-ls-if="0 == {{project-documents.sum}}" class="margin-bottom">
+            <h3 class="margin-bottom-small text-bold">No Documents Found</h3>
+
+            <p class="margin-bottom-no">Try a different search term.</p>
+        </div>
+
+        <div data-ls-if="({{project-documents.sum}})">
+            <form class="scroll">
+                <table class="margin-top-no margin-bottom-no">
+                    <thead>
+                        <tr>
+                            <th width="40">&nbsp;</th>
+                            <?php foreach($rules as $rule):
+                                $label = (isset($rule['label'])) ? $rule['label'] : '';
+                                ?>
+                                <th width="120"><?php echo $this->escape($label); ?></th>
+                            <?php endforeach; ?>
+                        </tr>
+                    </thead>
+                    <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
+                    <tr>
+                        <td data-title="x" class="">
+                            <!-- <input type="radio" name="selected" data-ls-attrs="value={{file.$id}}" data-ls-bind="{{search.selected}}" /> -->
+                            <input type="radio" name="selected" data-ls-attrs="value={{node.$id}}" data-ls-bind="{{search.selected}}" />
+                        </td>
+                        <?php foreach($rules as $rule):
+                            $label = (isset($rule['label'])) ? $rule['label'] : '';
+                            $key = (isset($rule['key'])) ? $rule['key'] : '';
+                            $type = (isset($rule['type'])) ? $rule['type'] : '';
+                            $array = (isset($rule['array'])) ? $rule['array'] : '';
+                            ?>
+                            <td data-title="<?php echo $this->escape($label); ?>" class="text-size-small text-height-small">
+                                <a data-ls-attrs="href=/console/database/document?id={{node.$id}}&collection=<?php echo $this->escape($id); ?>&project={{router.params.project}}" target="_blank">
+                                    <?php if(!$array): ?>
+                                        <?php switch($type):
+                                            case 'fileId': ?>
+                                                <img data-ls-if="{{node.<?php echo $this->escape($key); ?>}} != ''" src="" data-ls-attrs="src=//{{env.DOMAIN}}/v1/storage/files/{{node.<?php echo $this->escape($key); ?>}}/preview?width=65&height=65&project={{router.params.project}}&mode=admin" class="avatar" width="30" height="30" loading="lazy" />
+                                            <?php break; ?>
+                                            <?php case 'document': ?>
+                                                {...}
+                                            <?php break; ?>
+                                            <?php default: ?>
+                                                <span data-ls-bind="{{node.<?php echo $this->escape($key); ?>}}" data-ls-attrs="title={{node.<?php echo $this->escape($key); ?>}}"></span>
+                                            <?php break; ?>
+                                        <?php endswitch; ?>
+                                    <?php else: ?>
+                                        [...]
+                                    <?php endif; ?>
+                                </a>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="clear text-align-center paging pull-end">
+            <form
+                data-service="database.listDocuments"
+                data-event="submit"
+                data-param-collection-id="<?php echo $this->escape($id); ?>"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-documents"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
+
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-documents.sum|pageTotal}}"></span>
+
+            <form
+                data-service="database.listDocuments"
+                data-event="submit"
+                data-param-collection-id="<?php echo $this->escape($id); ?>"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="sdk"
+                data-name="project-documents"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-documents.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
+        </div>
+
+        <form data-service="container.path"
+            data-param-path="search.selected"
+            data-param-type="assign"
+            data-param-value="{{node.$id}}"
+            data-success="trigger"
+            data-success-param-trigger-events="modal-close,document-selected-<?php echo $this->escape($id); ?>"
+            data-event="click"
+            data-scope="window.ls">
+
+            <input type="hidden" name="path" data-ls-bind="{{search.path}}" />
+            <input type="hidden" name="type" value="assign" />
+            <input type="hidden" name="value" data-ls-bind="{{search.selected}}" />
+
+            <button data-ls-if="({{search.selected}})" type="button" class="">Select</button> &nbsp; 
+            <button data-ls-if="(!{{search.selected}})" type="button" class="" disabled>Select</button> &nbsp; 
+        </form>
+        <button data-ui-modal-close="" type="button" class="reverse desktops-only-inline">Cancel</button>
+    </footer>
+</div>

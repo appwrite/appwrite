@@ -30,8 +30,8 @@ use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$oauthDefaultSuccess = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/success';
-$oauthDefaultFailure = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/failure';
+$oauthDefaultSuccess = $request->getServer('_APP_HOME').'/auth/oauth2/success';
+$oauthDefaultFailure = $request->getServer('_APP_HOME').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
@@ -483,6 +483,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
                 $state['success'] = URLParser::parse($state['success']);
                 $query = URLParser::parseQuery($state['success']['query']);
+                $query['project'] = $project->getId();
                 $query['domain'] = COOKIE_DOMAIN;
                 $query['key'] = Auth::$cookieName;
                 $query['secret'] = Auth::encodeSession($user->getId(), $secret);
@@ -721,7 +722,7 @@ $utopia->patch('/v1/account/password')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
     ->param('password', '', function () { return new Password(); }, 'New user password.')
-    ->param('old-password', '', function () { return new Password(); }, 'Old user password.')
+    ->param('oldPassword', '', function () { return new Password(); }, 'Old user password.')
     ->action(
         function ($password, $oldPassword) use ($response, $user, $projectDB, $audit, $oauth2Keys) {
             if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -1119,11 +1120,11 @@ $utopia->put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
     ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')
-    ->param('password-a', '', function () { return new Password(); }, 'New password.')
-    ->param('password-b', '', function () {return new Password(); }, 'New password again.')
+    ->param('password', '', function () { return new Password(); }, 'New password.')
+    ->param('passwordAgain', '', function () {return new Password(); }, 'New password again.')
     ->action(
-        function ($userId, $secret, $passwordA, $passwordB) use ($response, $projectDB, $audit) {
-            if ($passwordA !== $passwordB) {
+        function ($userId, $secret, $password, $passwordAgain) use ($response, $projectDB, $audit) {
+            if ($password !== $passwordAgain) {
                 throw new Exception('Passwords must match', 400);
             }
 
@@ -1149,7 +1150,7 @@ $utopia->put('/v1/account/recovery')
             Authorization::setRole('user:'.$profile->getId());
 
             $profile = $projectDB->updateDocument(array_merge($profile->getArrayCopy(), [
-                'password' => Auth::passwordHash($passwordA),
+                'password' => Auth::passwordHash($password),
                 'password-update' => time(),
                 'emailVerification' => true,
             ]));

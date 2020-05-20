@@ -1,0 +1,7 @@
+<?php
+$key = $this->getParam('key', '');
+$required = $this->getParam('required', '');
+$namespace = $this->getParam('namespace', '');
+?>
+
+<input name="<?php echo $this->escape($key); ?>" type="number" autocomplete="off" data-ls-bind="{{<?php echo $this->escape($namespace); ?>}}" data-cast-to="integer"<?php if($required): ?> required<?php endif; ?> class="margin-bottom-no" />

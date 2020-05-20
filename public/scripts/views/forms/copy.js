@@ -13,6 +13,8 @@
       element.parentNode.insertBefore(button, element.nextSibling);
 
       var copy = function(event) {
+        let disabled = element.disabled;
+
         element.disabled = false;
 
         element.focus();
@@ -26,7 +28,9 @@
           window.getSelection().removeAllRanges();
         }
 
-        element.disabled = true;
+        element.disabled = disabled;
+
+        element.blur();
 
         alerts.add({ text: "Copied to clipboard", class: "" }, 3000);
       };

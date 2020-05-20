@@ -20,7 +20,7 @@ module Appwrite
             @headers = {
                 'content-type' => '',
                 'user-agent' => RUBY_PLATFORM + ':ruby-' + RUBY_VERSION,
-                'x-sdk-version' => 'appwrite:ruby:1.0.9'
+                'x-sdk-version' => 'appwrite:ruby:1.0.10'
             }
             @endpoint = 'https://appwrite.io/v1';
         end
@@ -39,12 +39,6 @@ module Appwrite
 
         def set_locale(value)
             add_header('x-appwrite-locale', value)
-
-            return self
-        end
-
-        def set_mode(value)
-            add_header('x-appwrite-mode', value)
 
             return self
         end

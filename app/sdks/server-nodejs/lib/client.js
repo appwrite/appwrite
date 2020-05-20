@@ -7,7 +7,7 @@ class Client {
         this.endpoint = 'https://appwrite.io/v1';
         this.headers = {
             'content-type': '',
-            'x-sdk-version': 'appwrite:nodejs:1.0.32',
+            'x-sdk-version': 'appwrite:nodejs:1.1.0',
         };
         this.selfSigned = false;
     }
@@ -51,19 +51,6 @@ class Client {
      */
     setLocale(value) {
         this.addHeader('X-Appwrite-Locale', value);
-
-        return this;
-    }
-
-    /**
-     * Set Mode
-     *
-     * @param string value
-     *
-     * @return self
-     */
-    setMode(value) {
-        this.addHeader('X-Appwrite-Mode', value);
 
         return this;
     }

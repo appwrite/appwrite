@@ -8,12 +8,12 @@ use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
 
 $utopia->get('/v1/health')
-    ->desc('Check API HTTP Health')
+    ->desc('Get HTTP')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'get')
-    ->label('docs', false)
+    ->label('sdk.description', '/docs/references/health/get.md')
     ->action(
         function () use ($response) {
             $response->json(['status' => 'OK']);
@@ -21,12 +21,12 @@ $utopia->get('/v1/health')
     );
 
 $utopia->get('/v1/health/db')
-    ->desc('Check DB Health')
+    ->desc('Get DB')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getDB')
-    ->label('docs', false)
+    ->label('sdk.description', '/docs/references/health/get-db.md')
     ->action(
         function () use ($response, $register) {
             $register->get('db'); /* @var $db PDO */
@@ -36,12 +36,12 @@ $utopia->get('/v1/health/db')
     );
 
 $utopia->get('/v1/health/cache')
-    ->desc('Check Cache Health')
+    ->desc('Get Cache')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getCache')
-    ->label('docs', false)
+    ->label('sdk.description', '/docs/references/health/get-cache.md')
     ->action(
         function () use ($response, $register) {
             $register->get('cache'); /* @var $cache Predis\Client */
@@ -51,12 +51,12 @@ $utopia->get('/v1/health/cache')
     );
 
 $utopia->get('/v1/health/time')
-    ->desc('Check Time Health')
+    ->desc('Get Time')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getTime')
-    ->label('docs', false)
+    ->label('sdk.description', '/docs/references/health/get-time.md')
     ->action(
         function () use ($response) {
             /*
@@ -97,26 +97,91 @@ $utopia->get('/v1/health/time')
         }
     );
 
-$utopia->get('/v1/health/webhooks')
-    ->desc('Check Webhooks Health')
+$utopia->get('/v1/health/queue/webhooks')
+    ->desc('Get Webhooks Queue')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getWebhooks')
-    ->label('docs', false)
+    ->label('sdk.method', 'getQueueWebhooks')
+    ->label('sdk.description', '/docs/references/health/get-queue-webhooks.md')
     ->action(
         function () use ($response) {
             $response->json(['size' => Resque::size('v1-webhooks')]);
         }
     );
 
+$utopia->get('/v1/health/queue/tasks')
+    ->desc('Get Tasks Queue')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueTasks')
+    ->label('sdk.description', '/docs/references/health/get-queue-tasks.md')
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-tasks')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/logs')
+->desc('Get Logs Queue')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueLogs')
+    ->label('sdk.description', '/docs/references/health/get-queue-logs.md')
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-audit')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/usage')
+    ->desc('Get Usage Queue')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueUsage')
+    ->label('sdk.description', '/docs/references/health/get-queue-usage.md')
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-usage')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/certificates')
+    ->desc('Get Certificate Queue')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueCertificates')
+    ->label('sdk.description', '/docs/references/health/get-queue-certificates.md')
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-usage')]);
+        }
+    );
+
+$utopia->get('/v1/health/queue/functions')
+    ->desc('Get Functions Queue')
+    ->label('scope', 'health.read')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueFunctions')
+    ->label('sdk.description', '/docs/references/health/get-queue-functions.md')
+    ->action(
+        function () use ($response) {
+            $response->json(['size' => Resque::size('v1-functions')]);
+        }
+    );
+
 $utopia->get('/v1/health/storage/local')
-    ->desc('Check File System Health')
+    ->desc('Get Local Storage')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getStorageLocal')
-    ->label('docs', false)
+    ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->action(
         function () use ($response) {
             $device = new Local(APP_STORAGE_UPLOADS.'/');
@@ -124,22 +189,34 @@ $utopia->get('/v1/health/storage/local')
             if (!is_readable($device->getRoot().'/..')) {
                 throw new Exception('Device is not readable');
             }
+            
+            if (!is_writable($device->getRoot().'/../uploads')) {
+                throw new Exception('Device uploads dir is not writable');
+            }
+            
+            if (!is_writable($device->getRoot().'/../cache')) {
+                throw new Exception('Device cache dir is not writable');
+            }
 
-            if (!is_writable($device->getRoot().'/..')) {
-                throw new Exception('Device is not writable');
+            if (!is_writable($device->getRoot().'/../config')) {
+                throw new Exception('Device config dir is not writable');
+            }
+
+            if (!is_writable($device->getRoot().'/../certificates')) {
+                throw new Exception('Device certificates dir is not writable');
             }
 
             $response->json(['status' => 'OK']);
         }
     );
 
-$utopia->get('/v1/health/storage/anti-virus')
-    ->desc('Check Anti virus Health')
+$utopia->get('/v1/health/anti-virus')
+    ->desc('Get Anti virus')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStorageAntiVirus')
-    ->label('docs', false)
+    ->label('sdk.method', 'getAntiVirus')
+    ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->action(
         function () use ($response) {
             $antiVirus = new Network('clamav', 3310);
@@ -151,12 +228,12 @@ $utopia->get('/v1/health/storage/anti-virus')
         }
     );
 
-$utopia->get('/v1/health/stats')
-    ->desc('System Stats')
+$utopia->get('/v1/health/stats') // Currently only used internally
+    ->desc('Get System Stats')
     ->label('scope', 'god')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStats')
+    // ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    // ->label('sdk.namespace', 'health')
+    // ->label('sdk.method', 'getStats')
     ->label('docs', false)
     ->action(
         function () use ($response, $register) {

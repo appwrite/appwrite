@@ -1,3 +1,31 @@
+# Version 0.6.0 (PRE-RELEASE)
+
+## Features
+
+* New collections UI with ability to create and update a collection
+* New documents UI with ability to create and update a document
+* Added support for Flutter iOS & Android apps
+* Added support for default DB document values
+* Exposed health API to all the server SDKs
+* New locale for Khmer
+* Added TypeScript type hinting to the JS SDK (@zevektor)
+* Added LTR/RTL support for markdown editor
+* Added cachebuster to version number on footer
+* New OAuth logos
+* Minor fixes to the dark mode theme
+* Added JSON view for a project user
+* Removed setKey and setMode methods from all client SDKs
+
+## Breaking Changes
+
+* Updated all the REST API query params to be in camelCase
+* Normalized locale phone codes response body
+
+## Bug Fixes
+
+* Fixed project users logout button
+* Fixed wrong target in database back link
+
 # Version 0.5.3 (PRE-RELEASE)
 
 ## Bug Fixes

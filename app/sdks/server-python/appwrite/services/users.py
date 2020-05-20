@@ -104,9 +104,9 @@ class Users(Service):
         """Delete User Session"""
 
         params = {}
-        path = '/users/{userId}/sessions/:session'
+        path = '/users/{userId}/sessions/{sessionId}'
         path = path.replace('{userId}', user_id)                
-        params['sessionId'] = session_id
+        path = path.replace('{sessionId}', session_id)                
 
         return self.client.call('delete', path, {
             'content-type': 'application/json',

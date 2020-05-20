@@ -7,7 +7,7 @@ class Client:
         self._endpoint = 'https://appwrite.io/v1'
         self._global_headers = {
             'content-type': '',
-            'x-sdk-version': 'appwrite:python:0.0.4',
+            'x-sdk-version': 'appwrite:python:0.0.5',
         }
 
     def set_self_signed(self, status=True):
@@ -36,10 +36,6 @@ class Client:
 
     def set_locale(self, value):
         self._global_headers['x-appwrite-locale'] = value.lower()
-        return self
-
-    def set_mode(self, value):
-        self._global_headers['x-appwrite-mode'] = value.lower()
         return self
 
     def call(self, method, path='', headers=None, params=None):

@@ -43,8 +43,9 @@ return [
     ],
     'v1/health' => [
         'name' => 'Health',
+        'description' => '/docs/services/health.md',
         'controller' => 'controllers/api/health.php',
-        'sdk' => false,
+        'sdk' => true,
         'tests' => false,
     ],
     'v1/projects' => [
