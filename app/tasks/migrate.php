@@ -175,7 +175,7 @@ function fixDocument(Document $document) {
 $cli
     ->task('run')
     ->action(function () use ($console, $projectDB, $consoleDB, $callbacks) {
-        Console::success('Starting Upgrade');
+        Console::success('Starting Data Migration');
 
         Authorization::disable();
 
@@ -213,6 +213,8 @@ $cli
 
             Console::success('Fetched '.$sum.' projects...');
         }
+
+        Console::success('Data Migration Completed');
     });
 
 $cli->run();

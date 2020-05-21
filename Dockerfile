@@ -140,9 +140,9 @@ COPY ./docker/supervisord.conf /etc/supervisord.conf
 COPY ./docker/bin/start /start
 RUN chmod 775 /start
 
-# Upgrade
-COPY ./docker/bin/upgrade /upgrade
-RUN chmod 775 /upgrade
+# Migrate
+COPY ./docker/bin/migrate /migrate
+RUN chmod 775 /migrate
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
