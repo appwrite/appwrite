@@ -21,7 +21,7 @@ $callbacks = [
     },
     '0.5.0' => function($project) use ($db, $projectDB, $requset) {
 
-        Console::info('Upgrading project: '.$project->getId());
+        Console::log('Migrating project: '.$project->getId());
 
         // Update all documents $uid -> $id
 
@@ -40,7 +40,7 @@ $callbacks = [
 
             $sum = count($all);
             
-            Console::success('Fetched '.$sum.' (offset: '.$offset.' / limit: '.$limit.') documents from a total of '.$projectDB->getSum());
+            Console::log('Migrating: '.$offset.' / '.$projectDB->getSum());
             
             foreach($all as $document) {
                 $document = fixDocument($document);
@@ -51,7 +51,6 @@ $callbacks = [
 
                 try {
                     $new = $projectDB->overwriteDocument($document->getArrayCopy());
-                    Console::success('Updated document succefully');
                 } catch (\Throwable $th) {
                     Console::error('Failed to update document: '.$th->getMessage());
                     continue;
@@ -153,7 +152,7 @@ function fixDocument(Document $document) {
         ->removeAttribute('$uid')
     ;
 
-    Console::log('Switched from $uid to $id: '.$document->getCollection().'/'.$document->getId());
+    //Console::log('Switched from $uid to $id: '.$document->getCollection().'/'.$document->getId());
 
     foreach($document as &$attr) {
         if($attr instanceof Document) {
@@ -211,7 +210,7 @@ $cli
             $sum = count($projects);
             $offset = $offset + $limit;
 
-            Console::success('Fetched '.$sum.' projects...');
+            Console::log('Fetched '.$sum.' projects...');
         }
 
         Console::success('Data Migration Completed');
