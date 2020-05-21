@@ -41,7 +41,7 @@ $collections = [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 'name' => 'Current Host',
                 'type' => 'web',
-                'hostname' => $request->getServer('HTTP_HOST'),
+                'hostname' => parse_url($request->getServer('HTTP_HOST'), PHP_URL_HOST),
             ],
         ],
         'legalName' => '',
