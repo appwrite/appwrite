@@ -1229,9 +1229,8 @@ $utopia->post('/v1/projects/:projectId/domains')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domain', null, function () { return new DomainValidator(); }, 'Domain name.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
+        function ($projectId, $domain) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
-            $domain = Config::getParam('domain');
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
