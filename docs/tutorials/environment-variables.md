@@ -32,7 +32,7 @@ To enable this option, pass a list of allowed email domains separated by a comma
 
 ### _APP_CONSOLE_WHITELIST_IPS
 
-This last option allows you to restrict access to Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.
+This last option allows you to restrict creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.
 
 To enable/activate this option, pass a list of allowed IP addresses separated by a comma.
 
