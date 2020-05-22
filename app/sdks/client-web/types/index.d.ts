@@ -1,4 +1,4 @@
-// Type definitions for appwrite 1.0.29
+// Type definitions for appwrite 1.1.0
 // Project: Appwrite
 
 
@@ -338,9 +338,9 @@ declare namespace Appwrite {
          * @param {number} height
          * @param {number} quality
          * @throws {Error}
-         * @return {Promise}         
+         * @return {string}         
          */
-	    getCreditCard(code: string, width: number, height: number, quality: number): Promise<object>;
+	    getCreditCard(code: string, width: number, height: number, quality: number): string;
 
         /**
          * Get Favicon
@@ -350,9 +350,9 @@ declare namespace Appwrite {
 	     *
          * @param {string} url
          * @throws {Error}
-         * @return {Promise}         
+         * @return {string}         
          */
-	    getFavicon(url: string): Promise<object>;
+	    getFavicon(url: string): string;
 
         /**
          * Get Country Flag
@@ -366,9 +366,9 @@ declare namespace Appwrite {
          * @param {number} height
          * @param {number} quality
          * @throws {Error}
-         * @return {Promise}         
+         * @return {string}         
          */
-	    getFlag(code: string, width: number, height: number, quality: number): Promise<object>;
+	    getFlag(code: string, width: number, height: number, quality: number): string;
 
         /**
          * Get Image from URL
@@ -382,9 +382,9 @@ declare namespace Appwrite {
          * @param {number} width
          * @param {number} height
          * @throws {Error}
-         * @return {Promise}         
+         * @return {string}         
          */
-	    getImage(url: string, width: number, height: number): Promise<object>;
+	    getImage(url: string, width: number, height: number): string;
 
         /**
          * Get QR Code
@@ -397,9 +397,9 @@ declare namespace Appwrite {
          * @param {number} margin
          * @param {number} download
          * @throws {Error}
-         * @return {Promise}         
+         * @return {string}         
          */
-	    getQR(text: string, size: number, margin: number, download: number): Promise<object>;
+	    getQR(text: string, size: number, margin: number, download: number): string;
 
 	}
 

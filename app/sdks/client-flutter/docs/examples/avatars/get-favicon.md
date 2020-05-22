@@ -8,13 +8,8 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-Future result = avatars.getFavicon(
+String result = avatars.getFavicon(
     url: 'https://example.com',
 );
 
-result
-  .then((response) {
-    print(response);
-  }).catchError((error) {
-    print(error);
-  });
+print(result); // Resource URL string

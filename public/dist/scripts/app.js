@@ -313,7 +313,7 @@ return result;};let resolve=function(target,prefix="param",data={}){if(!target){
 let args=getParams(target);return target.apply(target,args.map(function(value){let result=getValue(value,prefix,data);return result;}));};let exec=function(event){let parsedSuccess=expression.parse(success);let parsedFailure=expression.parse(failure);let parsedAction=expression.parse(action);parsedSuccess=parsedSuccess&&parsedSuccess!=""?parsedSuccess.split(",").map(element=>element.trim()):[];parsedFailure=parsedFailure&&parsedFailure!=""?parsedFailure.split(",").map(element=>element.trim()):[];element.$lsSkip=true;element.classList.add("load-service-start");if(!document.body.contains(element)){element=undefined;return false;}
 if(event){event.preventDefault();}
 if(running){return false;}
-running=true;element.style.backgroud='red';if(confirm){if(window.confirm(confirm)!==true){element.classList.add("load-service-end");return false;}}
+running=true;element.style.backgroud='red';if(confirm){if(window.confirm(confirm)!==true){element.classList.add("load-service-end");element.$lsSkip=false;running=false;return false;}}
 if(loading){loaderId=alerts.add({text:loading,class:""},0);}
 let method=container.path(scope+"."+parsedAction);if(!method){throw new Error('Method "'+scope+"."+parsedAction+'" not found');}
 let formData="FORM"===element.tagName?form.toJson(element):{};let result=resolve(method,"param",formData);if(!result){return;}

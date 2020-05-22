@@ -2,7 +2,7 @@
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>Simple Backend Server for your [Vue / Angular / React / iOS / Android / Flutter / *ANY OTHER*] Frontend App</b>
+    <b>Simple Backend Server for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] Frontend App</b>
     <br />
     <br />
 </p>
@@ -21,7 +21,7 @@ Appwrite API services aim to make developer's life a lot easier by hiding the co
 
 Using Appwrite, you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and team data, storage and file management, image manipulation and cropping, schedule cron tasks and many other features to help you get more results in faster times and with a lot less code.
 
-Appwrite can also integrate really well with your backend. Appwrite can word behind your own proxy facing your internal network, or alongside your own custom backend. You can use Appwrite server SDK to integrate your backend with Appwrite's APIs and webhooks.
+Appwrite can also integrate really well with your backend. Appwrite can work behind your own proxy facing your internal network, or alongside your own custom backend. You can use Appwrite server SDK to integrate your backend with Appwrite's APIs and webhooks.
 
 [https://appwrite.io](https://appwrite.io)
 
@@ -49,7 +49,7 @@ The easiest way to start running your Appwrite server is by running our docker-c
 docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/install/appwrite:rw \
-    -e version=0.6.0 \
+    -e version=0.6.1 \
     appwrite/install
 ```
 

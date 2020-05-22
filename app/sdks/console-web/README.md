@@ -1,4 +1,4 @@
-# Appwrite  SDK
+# Appwrite Console SDK
 
 ![License](https://img.shields.io/github/license/appwrite/sdk-for-console.svg?v=1)
 ![Version](https://img.shields.io/badge/api%20version-0.6.0-blue.svg?v=1)

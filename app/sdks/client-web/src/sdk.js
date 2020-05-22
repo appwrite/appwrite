@@ -103,7 +103,7 @@
                 globalParams.push({key: key, value: value});
             };
 
-            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.0.29');
+            addGlobalHeader('x-sdk-version', 'appwrite:javascript:1.1.0');
             addGlobalHeader('content-type', '');
 
             /**
@@ -900,7 +900,7 @@
              * @param {number} height
              * @param {number} quality
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getCreditCard: function(code, width = 100, height = 100, quality = 100) {
                 if(code === undefined) {
@@ -923,10 +923,11 @@
                     payload['quality'] = quality;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -937,7 +938,7 @@
              *
              * @param {string} url
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getFavicon: function(url) {
                 if(url === undefined) {
@@ -952,10 +953,11 @@
                     payload['url'] = url;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -970,7 +972,7 @@
              * @param {number} height
              * @param {number} quality
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getFlag: function(code, width = 100, height = 100, quality = 100) {
                 if(code === undefined) {
@@ -993,10 +995,11 @@
                     payload['quality'] = quality;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1011,7 +1014,7 @@
              * @param {number} width
              * @param {number} height
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getImage: function(url, width = 400, height = 400) {
                 if(url === undefined) {
@@ -1034,10 +1037,11 @@
                     payload['height'] = height;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1051,7 +1055,7 @@
              * @param {number} margin
              * @param {number} download
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getQR: function(text, size = 400, margin = 1, download = 0) {
                 if(text === undefined) {
@@ -1078,10 +1082,11 @@
                     payload['download'] = download;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
             }
         };
 

@@ -324,7 +324,7 @@ class Account extends Service {
 
         return FlutterWebAuth.authenticate(
           url: url.toString(),
-          callbackUrlScheme: "appwrite-callback" + client.config['project']
+          callbackUrlScheme: "appwrite-callback-" + client.config['project']
           ).then((value) {
               Uri url = Uri.parse(value);
                 List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
