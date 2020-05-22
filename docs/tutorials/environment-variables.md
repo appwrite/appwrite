@@ -22,17 +22,17 @@ Maximun file size allowed for file upload. The deafult value is 100MB limitation
 
 ### _APP_CONSOLE_WHITELIST_EMAILS
 
-This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.
+This option allows you to limit creation of users to Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.
 
 ### _APP_CONSOLE_WHITELIST_DOMAINS
 
-This option allows you to restrict access to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.
+This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.
 
 To enable this option, pass a list of allowed email domains separated by a comma.
 
 ### _APP_CONSOLE_WHITELIST_IPS
 
-This last option allows you to restrict creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.
+This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.
 
 To enable/activate this option, pass a list of allowed IP addresses separated by a comma.
 
