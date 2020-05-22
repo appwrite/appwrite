@@ -29,7 +29,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 
                 <div class="row responsive">
                     <div class="col span-8 margin-bottom">
-                        <div class="box">
+                        <div class="box margin-bottom-large">
                             <form
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
@@ -72,6 +72,32 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 
 
                                 <button class="" type="submit">Save</button>
+                            </form>
+                        </div>
+
+                        <h3 class="text-danger">Danger Zone</h3>
+
+                        <div class="box danger">
+                            <p>This is the area where you can delete your project.</p>
+
+                            <p>By deleting your project you will lose all your project metadata, resources and stats.</p>
+
+                            <p>PLEASE NOTE: Project deletion is irreversible.</p>
+
+                            <form class="inline"
+                                data-analytics-event="submit"
+                                data-analytics-category="console"
+                                data-analytics-label="Delete Account"
+                                data-service="account.delete"
+                                data-scope="console"
+                                data-event="submit"
+                                data-confirm="Are you sure you want to delete this project?"
+                                data-success="trigger"
+                                data-success-param-trigger-events="account.delete"
+                                data-failure="alert"
+                                data-failure-param-alert-text="Account deactivation failed"
+                                data-failure-param-alert-classname="error">
+                                <button class="danger reverse">Delete Project</button>
                             </form>
                         </div>
 
