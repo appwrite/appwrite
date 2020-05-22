@@ -7,6 +7,7 @@
 - Removed empty tab on document editor
 - Changed upgrade script name to migrate to better reflect what it actually does
 - Fixed bug where after clicking the cancel option in the confiramtion dialog the button got disabled
+- Fixed small grammer error in the documents list screen
 
 # Version 0.6.0 (PRE-RELEASE)
 
