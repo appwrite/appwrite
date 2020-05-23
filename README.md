@@ -88,6 +88,7 @@ For advanced production and custom installation, check out our Docker [environme
 Getting started with Appwrite is as easy as creating a new project, choosing your platform and integrating its SDK in your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
 
 * [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
+* [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
 * [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
 * Getting Started for Android (soon...)
 * Getting Started for iOS (soon...)
@@ -110,7 +111,11 @@ Currently, we support only a few SDK libraries and are constantly working on inc
 
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
-* ✅ [JS](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+#### Client
+* ✅ [Web](https://github.com/appwrite/sdk-for-js) (Maintained by the Appwrite Team)
+* ✅ [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
+
+#### Server
 * ✅ [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
 * ✅ [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
 * ✅ [Go](https://github.com/appwrite/sdk-for-go) **Work in progress** (Maintained by the Appwrite Team)
