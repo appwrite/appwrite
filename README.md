@@ -64,7 +64,7 @@ docker run -it --rm \
 docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/install/appwrite:rw ^
-    -e version=<?php echo APP_VERSION_STABLE; ?> ^
+    -e version=0.6.1 ^
     appwrite/install
 ```
 
