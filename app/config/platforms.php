@@ -29,7 +29,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.2.1',
+                'version' => '0.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'enabled' => true,
                 'beta' => true,

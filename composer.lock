@@ -485,12 +485,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "351a213ba2ea52b7b7d26339fad552f0edba5742"
+                "reference": "c8162bee934111d42b1db4869c09fb58926074c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/351a213ba2ea52b7b7d26339fad552f0edba5742",
-                "reference": "351a213ba2ea52b7b7d26339fad552f0edba5742",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/c8162bee934111d42b1db4869c09fb58926074c7",
+                "reference": "c8162bee934111d42b1db4869c09fb58926074c7",
                 "shasum": ""
             },
             "require": {
@@ -544,7 +544,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2020-05-17T09:36:12+00:00"
+            "time": "2020-05-19T12:55:02+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -603,12 +603,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "c247bf84e343f0b95927fa86cf23b7ffc9af04f3"
+                "reference": "188cc82398f157483976ccf61bd04ee80afcf29c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/c247bf84e343f0b95927fa86cf23b7ffc9af04f3",
-                "reference": "c247bf84e343f0b95927fa86cf23b7ffc9af04f3",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/188cc82398f157483976ccf61bd04ee80afcf29c",
+                "reference": "188cc82398f157483976ccf61bd04ee80afcf29c",
                 "shasum": ""
             },
             "require": {
@@ -666,7 +666,7 @@
                 "uri",
                 "url"
             ],
-            "time": "2020-05-13T14:56:52+00:00"
+            "time": "2020-05-17T20:05:25+00:00"
         },
         {
             "name": "influxdb/influxdb-php",
@@ -1745,7 +1745,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "27a137a63009f25ad68ef2f3ce4b8c5d936f9d71"
+                "reference": "e889aa5764f6cca683b5ccd83eed2e4632173937"
             },
             "require": {
                 "ext-curl": "*",
@@ -1775,7 +1775,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-05-17T18:39:41+00:00"
+            "time": "2020-05-23T14:30:05+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -3309,27 +3309,27 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "60e2bda53d9d5cb79a43a32c04d978e0f9e80c03"
+                "reference": "5c6d49589687b4fe694059cab72da1ff5b7a5ece"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/60e2bda53d9d5cb79a43a32c04d978e0f9e80c03",
-                "reference": "60e2bda53d9d5cb79a43a32c04d978e0f9e80c03",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/5c6d49589687b4fe694059cab72da1ff5b7a5ece",
+                "reference": "5c6d49589687b4fe694059cab72da1ff5b7a5ece",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.0",
+                "php": ">=7.1.3",
                 "symfony/polyfill-ctype": "^1.8",
                 "symfony/polyfill-mbstring": "^1.3"
             },
             "require-dev": {
                 "psr/container": "^1.0",
-                "symfony/phpunit-bridge": "^4.4|^5.0"
+                "symfony/phpunit-bridge": "^4.4.9|^5.0.9"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.12-dev"
+                    "dev-master": "2.13-dev"
                 }
             },
             "autoload": {
@@ -3366,7 +3366,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-05-11T08:19:36+00:00"
+            "time": "2020-05-21T09:55:12+00:00"
         },
         {
             "name": "webmozart/assert",
