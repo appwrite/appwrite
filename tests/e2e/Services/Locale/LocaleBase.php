@@ -188,7 +188,7 @@ trait LocaleBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/locale/langauges', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/locale/languages', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
