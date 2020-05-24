@@ -176,8 +176,8 @@ $utopia->get('/v1/locale/languages')
     ->label('sdk.description', '/docs/references/locale/get-languages.md')
     ->action(
         function () use ($response) {
-            $currencies = include __DIR__.'/../../config/languages.php';
+            $languages = include __DIR__.'/../../config/languages.php';
 
-            $response->json($currencies);
+            $response->json($languages);
         }
     );
