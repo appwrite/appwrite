@@ -125,14 +125,14 @@ class Storage extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get File Preview
@@ -155,14 +155,14 @@ class Storage extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get File for View
@@ -179,13 +179,13 @@ class Storage extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 }

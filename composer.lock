@@ -485,12 +485,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "c8162bee934111d42b1db4869c09fb58926074c7"
+                "reference": "0d137e94480b275aadd1f2536a76d91cf580711c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/c8162bee934111d42b1db4869c09fb58926074c7",
-                "reference": "c8162bee934111d42b1db4869c09fb58926074c7",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/0d137e94480b275aadd1f2536a76d91cf580711c",
+                "reference": "0d137e94480b275aadd1f2536a76d91cf580711c",
                 "shasum": ""
             },
             "require": {
@@ -498,7 +498,7 @@
                 "guzzlehttp/promises": "^1.0",
                 "guzzlehttp/psr7": "^1.6.1",
                 "php": ">=5.5",
-                "symfony/polyfill-intl-idn": "^1.11"
+                "symfony/polyfill-intl-idn": "1.17.0"
             },
             "require-dev": {
                 "ext-curl": "*",
@@ -544,7 +544,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2020-05-19T12:55:02+00:00"
+            "time": "2020-05-23T18:58:46+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1141,7 +1141,7 @@
         },
         {
             "name": "symfony/polyfill-intl-idn",
-            "version": "dev-master",
+            "version": "v1.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-idn.git",
@@ -1745,7 +1745,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "e889aa5764f6cca683b5ccd83eed2e4632173937"
+                "reference": "69f8cfabf7f40cb9fb7198cdd9770afdd030a88a"
             },
             "require": {
                 "ext-curl": "*",
@@ -1775,7 +1775,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-05-23T14:30:05+00:00"
+            "time": "2020-05-24T05:26:35+00:00"
         },
         {
             "name": "doctrine/instantiator",
