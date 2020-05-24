@@ -195,15 +195,15 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertCount(184, $response['body']);
+        $this->assertCount(185, $response['body']);
 
         $this->assertEquals($response['body'][0]['code'], 'aa');
         $this->assertEquals($response['body'][0]['name'], 'Afar');
         $this->assertEquals($response['body'][0]['nativeName'], 'Afar');
 
-        $this->assertEquals($response['body'][183]['code'], 'zu');
-        $this->assertEquals($response['body'][183]['name'], 'Zulu');
-        $this->assertEquals($response['body'][183]['nativeName'], 'isiZulu');
+        $this->assertEquals($response['body'][184]['code'], 'zu');
+        $this->assertEquals($response['body'][184]['name'], 'Zulu');
+        $this->assertEquals($response['body'][184]['nativeName'], 'isiZulu');
         
         /**
          * Test for FAILURE
