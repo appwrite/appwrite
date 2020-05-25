@@ -1,3 +1,11 @@
+# Version 0.6.2 (PRE-RELEASE)
+
+## Bug Fixes
+
+- Fixed custom domain not setting correct domain
+- Fixed wrong SDK method type in avatars browser route 
+- Fixed bug denied public documents (*) to be accessed by guest users
+
 # Version 0.6.1 (PRE-RELEASE)
 
 ## Bug Fixes

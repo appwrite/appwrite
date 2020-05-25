@@ -58,6 +58,7 @@ return [
             'public',
             'home',
             'console',
+            'documents.read',
             'files.read',
             'locale.read',
             'avatars.read',
