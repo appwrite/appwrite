@@ -54,6 +54,7 @@ $response = new Response();
 /*
  * ENV vars
  */
+Config::load('events', __DIR__.'/../app/config/events.php');
 Config::load('providers', __DIR__.'/../app/config/providers.php');
 Config::load('platforms', __DIR__.'/../app/config/platforms.php');
 Config::load('locales', __DIR__.'/../app/config/locales.php');
