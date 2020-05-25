@@ -5,6 +5,7 @@
 - Fixed custom domain not setting correct domain
 - Fixed wrong SDK method type in avatars browser route 
 - Fixed bug denied public documents (*) to be accessed by guest users
+- Fixed cache control issue not allowing collection UI to update properly
 
 # Version 0.6.1 (PRE-RELEASE)
 
