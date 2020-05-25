@@ -5,54 +5,54 @@
  */
 return [
     'account.create' => [
-        'description' => 'Triggers any time a new user register an account.',
+        'description' => 'This event triggers when the account is created.',
     ],
     'account.update.email' => [
-        'description' => 'Triggers any time a a user updates his or her acoount email address.',
+        'description' => 'This event triggers when the account email address is updated.',
     ],
     'account.update.name' => [
-        'description' => 'Triggers any time a a user updates his or her acoount name.',
+        'description' => 'This event triggers when the account name is updated.',
     ],
     'account.update.password' => [
-        'description' => 'Triggers any time a a user updates his or her acoount password.',
+        'description' => 'This event triggers when the account password is updated.',
     ],
     'account.update.prefs' => [
-        'description' => 'Triggers any time a a user updates his or her acoount preferences.',
+        'description' => 'This event triggers when the account preferences are updated.',
     ],
     'account.delete' => [
-        'description' => 'Triggers any time a new user is deleting its account.',
+        'description' => 'This event triggers when the account is deleted.',
     ],
     'account.sessions.create' => [
-        'description' => 'Triggers any time a user session is being created.',
+        'description' => 'This event triggers when the account session is created.',
     ],
     'account.sessions.delete' => [
-        'description' => 'Triggers any time a user session is being deleted.',
+        'description' => 'This event triggers when the account session is deleted.',
     ],
     'database.collections.create' => [
-        'description' => 'Triggers any time a new database collection is being created.',
+        'description' => 'This event triggers when a database collection is created.',
     ],
     'database.collections.update' => [
-        'description' => 'Triggers any time a new database collection is being updated.',
+        'description' => 'This event triggers when a database collection is updated.',
     ],
     'database.collections.delete' => [
-        'description' => 'Triggers any time a database collection is being deleted.',
+        'description' => 'This event triggers when a database collection is deleted.',
     ],
     'database.documents.create' => [
-        'description' => 'Triggers any time a new database document is being created.',
+        'description' => 'This event triggers when a database document is created.',
     ],
     'database.documents.patch' => [
-        'description' => 'Triggers any time a new database document is being updated.',
+        'description' => 'This event triggers when a database document is patched.',
     ],
     'database.documents.delete' => [
-        'description' => 'Triggers any time a database document is being deleted.',
+        'description' => 'This event triggers when a database document is deleted.',
     ],
     'storage.files.create' => [
-        'description' => 'Triggers any time a storage file has been created.',
+        'description' => 'This event triggers when a storage file is created.',
     ],
     'storage.files.update' => [
-        'description' => 'Triggers any time a storage file has been updated.',
+        'description' => 'This event triggers when a storage file is updated.',
     ],
     'storage.files.delete' => [
-        'description' => 'Triggers any time a file has been deleted.',
+        'description' => 'This event triggers when a storage file is deleted.',
     ],
 ];
