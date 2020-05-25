@@ -218,7 +218,11 @@ $utopia->get('/v1/health/anti-virus')
     ->label('sdk.method', 'getAntiVirus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->action(
-        function () use ($response) {
+        function () use ($request, $response) {
+            if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+                throw new Exception('Anitvirus is disabled');
+            }
+
             $antiVirus = new Network('clamav', 3310);
 
             $response->json([

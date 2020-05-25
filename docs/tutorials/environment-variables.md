@@ -20,6 +20,10 @@ This is your server private secret key that is used to encrypt all sensitive dat
 
 Maximun file size allowed for file upload. The deafult value is 100MB limitation. You should pass your size limit value in bytes.
 
+### _APP_STORAGE_ANTIVIRUS
+
+This variable allows you to disable internal anti-virus scans. By default, this value is set to 'enabled' to cancel the scans, set the value to 'disabled'. When disabled, it's recommended to turn off the ClamAV container for better resource usage.
+
 ### _APP_CONSOLE_WHITELIST_EMAILS
 
 This option allows you to limit creation of users to Appwrite console. This option is very useful for small teams or sole developers. To enable it, pass a list of allowed email addresses separated by a comma.
