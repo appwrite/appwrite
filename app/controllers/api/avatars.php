@@ -114,6 +114,7 @@ $utopia->get('/v1/avatars/browsers/:code')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getBrowser')
+    ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-browser.md')
     ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('browsers', $code, $width, $height, $quality);
     });
