@@ -1,35 +1,32 @@
 # Adding a New OAuth2 Provider
 
-This document is part of the Appwrite contributors' guide. Before you continue reading this document make sure you have read the [Code of Conduct](../CODE_OF_CONDUCT.md) and the [Contributing Guide](../CONTRIBUTING.md).
+OAuth2 providers help users to log into apps and websites without providing passwords or any other type of credentials. Appwrite supports major OAuth2 providers and some less common providers, where possible.
 
-## Getting Started
+### Adding a new provider
 
-### Agenda
+Add a new OAuth2 provider to the list of providers in the config file array located inside `./app/config/providers.php`.
 
-OAuth2 providers help users to log in easily to apps and websites without the need to provide passwords or any other type of credentials. Appwrite's goal is to have support from as many **major** OAuth2 providers as possible.
-
-As of the writing of these lines, we do not accept any minor OAuth2 providers. For us to accept some smaller and potentially unlimited number of OAuth2 providers, some product design and software architecture changes must be applied first.
-
-### List Your new Provider
-
-The first step in adding a new OAuth2 provider is to add it to the list in providers config file array, located at:
-
-```
-./app/config/providers.php
+```php
+Code snippet ...
 ```
 
-Make sure to fill all data needed and that your provider array key name:
+Fill all required data fields. The provider array key name must conform to this format:
 
-- is in camelCase format 
-- has no spaces or special characters.
+- camelCase format 
+- no spaces or special characters 
+> better say what exactly is allowed. E.g. ASCII a-z,A-Z,-,_unicode?
 
-### Add Provider Logo
+The name can be tested with this Regex: `[a-z]+[a-zA-Z0-9]*`.
 
-Add a logo image to your new provider in this path: `./public/images/oauth2`. Your logo should be a png 100×100px file with the name of your provider (all lowercase). Please make sure to leave about 30px padding around the logo to be consistent with other logos.
+Valid name examples: `exampleOne`, `exampleTwo`. Invalid examples: `ExampleOne`, `example two`, `example_three`.
 
-### Add Provider Class
+> REVIEW AND EDIT THIS SECTION!!!
 
-Once you have finished setting up all the metadata for the new provider, you need to start coding.
+### Adding provider logo
+
+Place the logo image of the new provider in `./public/images/oauth2` folder. The logo should be a *.png* 100×100px file with the same name as the provider name as specified in the configuration array, but in lowercase. Leave a 30px padding around the logo for visual consistency with other providers.
+
+### Adding provider class
 
 Create a new class that extends the basic OAuth2 provider abstract class in this location:
 
@@ -37,20 +34,23 @@ Create a new class that extends the basic OAuth2 provider abstract class in this
 ./src/Auth/OAuth/ProviderName
 ```
 
-Note that the class name should start with a capital letter as PHP FIG standards suggest.
+The class name should start with a capital letter as per [PHP FIG standard requirements](https://www.php-fig.org/bylaws/psr-naming-conventions/).
 
-Once a new class is created, you can start to implement your new provider's login flow. The best way to do this correctly is to have a look at another provider's implementation and try to follow the same standards.
+We recommend implementing login flows for a new provider by using an existing implementation of another provider as a template. Include references to resources and API docs used to implement the provider's OAuth2 protocol as comments inside the implementation and in the accompanying documentation.
 
-Please mention in your documentation what resources or API docs you used to implement the provider's OAuth2 protocol.
+### Testing your provider
 
-### Test Your Provider
+You should be able to see the new provider in your Appwrite console after adding the provider configuration and its implementation class under `Project > Users > Providers`. Fill in the new provider settings form to start testing.
 
-After you finished adding your new provider to Appwrite you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
+Test both, successful and failed login flows. 
+> I don't get this one at all >>> (where the user rejects integration on provider page).
 
-Add credentials and check both a successful and a failed login (where the user rejects integration on provider page).
+You can test the new OAuth2 provider inside your test app by using this OAuth2 method: https://appwrite.io/docs/account#createOAuth2Session from Appwrite JS SDK.
 
-You can test your OAuth2 provider by trying to login using the [OAuth2 method](https://appwrite.io/docs/account#createOAuth2Session) when integrating the Appwrite JS SDK in a demo app.
+Pass your new adapter name as the provider parameter. If the login is successful, you should be redirected to the URL specified in "success URL" parameter. Otherwise, you will be redirected to "failure URL".
 
-Pass your new adapter name as the provider parameter. If login is successful, you will be redirected to your success URL parameter. Otherwise, you will be redirected to your failure URL.
+### Submitting a pull request
 
-If everything goes well, just submit a pull request and be ready to respond to any feedback which can arise during our code review.
+We welcome pull requests for new OAuth2 providers, but may need more information about the implementation and testing after the initial code review. Unfortunately, the current architecture limits the number of OAuth2 providers that can be accepted.
+
+Make sure you read our [Code of Conduct](../CODE_OF_CONDUCT.md) and [Contributor Guide](../CONTRIBUTING.md) before submitting a pull request.
