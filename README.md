@@ -103,11 +103,9 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 * [**Locale**](https://appwrite.io/docs/locale) - Track your user's location, and manage your app locale-based data.
 * [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols, and generate QR codes.
 
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io).
+For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
 
 ### SDKs
-
-Currently, we support only a few SDK libraries and are constantly working on including new ones.
 
 Below is a list of currently supported platforms and languages. If you wish to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
 
