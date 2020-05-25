@@ -1,5 +1,9 @@
 # Version 0.6.2 (PRE-RELEASE)
 
+## Features
+
+- New route in Locale API to fetch list of languages
+
 ## Bug Fixes
 
 - Fixed custom domain not setting correct domain
