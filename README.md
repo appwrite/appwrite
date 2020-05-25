@@ -14,14 +14,9 @@
 [![Twitter Account](https://badgen.net/twitter/follow/appwrite_io?label=twitter)](https://twitter.com/appwrite_io)
 [![Follow Appwrite on StackShare](https://badgen.net/badge/follow%20on/stackshare/blue)](https://stackshare.io/appwrite)
 
+Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker microservices. Appwrite abstract the complexity and repetitiveness required to build a modern backend API from scratch to allow you to build secure apps faster.
 
-Appwrite is a simple self-hosted backend server for web and mobile developers with a shiny dashboard and a very easy-to-use REST API.
-
-Appwrite API services aim to make developer's life a lot easier by hiding the complexity of common and repetitive software development tasks.
-
-Using Appwrite, you can easily manage user authentication with multiple sign-in methods, a database for storing and querying user and team data, storage and file management, image manipulation and cropping, schedule cron tasks and many other features to help you get more results in faster times and with a lot less code.
-
-Appwrite can also integrate really well with your backend. Appwrite can work behind your own proxy facing your internal network, or alongside your own custom backend. You can use Appwrite server SDK to integrate your backend with Appwrite's APIs and webhooks.
+Using Appwrite, you can easily integrate your app with user authentication & multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, schedule CRON tasks, and [more services](https://appwrite.io/docs).
 
 [https://appwrite.io](https://appwrite.io)
 
@@ -32,9 +27,13 @@ Table of Contents:
 - [Installation](#installation)
   - [Unix](#unix)
   - [Windows](#windows)
+    - [CMD](#cmd)
+    - [PowerShell](#powershell)
 - [Getting Started](#getting-started)
   - [Services](#services)
   - [SDKs](#sdks)
+    - [Client](#client)
+    - [Server](#server)
 - [Security](#security)
 - [Follow Us](#follow-us)
 - [Contributing](#contributing)
