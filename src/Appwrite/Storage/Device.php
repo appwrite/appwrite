@@ -99,7 +99,7 @@ abstract class Device
      *
      * @return bool
      */
-    abstract public function delete(string $path, bool $recrusive):bool;
+    abstract public function delete(string $path, bool $recrusive = false):bool;
 
     /**
      * Returns given file path its size.

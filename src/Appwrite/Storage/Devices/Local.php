@@ -161,7 +161,7 @@ class Local extends Device
             $files = glob($path.'*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
     
             foreach($files as $file) {
-                $this->delete($file);      
+                $this->delete($file, true);      
             }
     
             rmdir($path);

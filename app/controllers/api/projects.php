@@ -429,14 +429,6 @@ $utopia->delete('/v1/projects/:projectId')
                 throw new Exception('Failed to remove project from DB', 500);
             }
 
-            // Delete all DBs
-            $consoleDB->deleteNamespace($project->getId());
-
-            // Optimize DB?
-
-            // Delete all storage files
-            // Delete all storage cache
-
             $response->noContent();
         }
     );

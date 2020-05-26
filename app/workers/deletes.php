@@ -49,9 +49,7 @@ class DeletesV1
         $uploads = new Local(APP_STORAGE_UPLOADS.'/app-'.$document->getId());
         $cache = new Local(APP_STORAGE_CACHE.'/app-'.$document->getId());
 
-        // Optimize DB?
-
-        // Delete all storage files
-        // Delete all storage cache
+        $uploads->delete($uploads->getRoot(), true);
+        $cache->delete($cache->getRoot(), true);
     }
 }
