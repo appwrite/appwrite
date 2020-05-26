@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB;
+global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $deletes;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -402,7 +402,7 @@ $utopia->delete('/v1/projects/:projectId')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation.')
     ->action(
-        function ($projectId, $password) use ($response, $consoleDB, $user) {
+        function ($projectId, $password) use ($response, $consoleDB, $user, $deletes) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
@@ -412,6 +412,8 @@ $utopia->delete('/v1/projects/:projectId')
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
+
+            $deletes->setParam('document', $project->getArrayCopy());
 
             foreach(['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
                 $list = $project->getAttribute('webhooks', []);
