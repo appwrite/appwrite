@@ -413,14 +413,22 @@ $utopia->delete('/v1/projects/:projectId')
                 throw new Exception('Project not found', 404);
             }
 
-            // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
+            foreach(['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
+                $list = $project->getAttribute('webhooks', []);
+
+                foreach ($list as $document) { /* @var $document Document */
+                    if (!$consoleDB->deleteDocument($projectId)) {
+                        throw new Exception('Failed to remove project document ('.$key.')] from DB', 500);
+                    }
+                }
+            }
 
             if (!$consoleDB->deleteDocument($projectId)) {
                 throw new Exception('Failed to remove project from DB', 500);
             }
 
             // Delete all DBs
-            // $consoleDB->deleteNamespace($project->getId());
+            $consoleDB->deleteNamespace($project->getId());
 
             // Optimize DB?
 

@@ -88,15 +88,19 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 data-analytics-event="submit"
                                 data-analytics-category="console"
                                 data-analytics-label="Delete Project"
-                                data-service="project.delete"
+                                data-service="projects.delete"
                                 data-scope="console"
                                 data-event="submit"
-                                data-confirm="Are you sure you want to delete this project?"
-                                data-success="trigger"
-                                data-success-param-trigger-events="project.delete"
-                                data-failure="alert"
+                                data-confirmx="Are you sure you want to delete this project?"
+                                data-success="trigger,redirect"
+                                data-success-param-trigger-events="project.delete,reset,modal-close"
+                                data-success-param-redirect-url="/console"
+                                data-failure="alert,trigger,reset"
                                 data-failure-param-alert-text="Project deletion failed"
+                                data-failure-param-trigger-events="modal-close"
                                 data-failure-param-alert-classname="error">
+
+                                <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                                 <div data-ui-modal class="modal box close width-small height-small" data-button-text="Delete Project" data-button-class="danger reverse">
                                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
