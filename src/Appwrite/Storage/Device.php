@@ -95,11 +95,11 @@ abstract class Device
      * @see http://php.net/manual/en/function.filesize.php
      *
      * @param string $path
-     * @param bool $recrusive
+     * @param bool $recursive
      *
      * @return bool
      */
-    abstract public function delete(string $path, bool $recrusive = false):bool;
+    abstract public function delete(string $path, bool $recursive = false):bool;
 
     /**
      * Returns given file path its size.

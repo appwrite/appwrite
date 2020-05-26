@@ -151,13 +151,13 @@ class Local extends Device
      * @see http://php.net/manual/en/function.filesize.php
      *
      * @param string $path
-     * @param bool $recrusive
+     * @param bool $recursive
      *
      * @return bool
      */
-    public function delete(string $path, bool $recrusive = false):bool
+    public function delete(string $path, bool $recursive = false):bool
     {
-        if(is_dir($path) && $recrusive) {
+        if(is_dir($path) && $recursive) {
             $files = glob($path.'*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
     
             foreach($files as $file) {
