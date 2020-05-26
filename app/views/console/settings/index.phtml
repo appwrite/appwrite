@@ -75,21 +75,6 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             </form>
                         </div>
 
-                        <div data-ui-modal class="modal box close width-small height-small" data-button-text="Delete Project" data-button-class="danger reverse">
-                            <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>    
-                            
-                            <h3>Custom Endpoints</h3>
-                            
-                            <hr />
-
-                            <label>Password</label>
-                            <input name="password" type="password" class="full-width" autocomplete="off" placeholder="" required>
-                            
-                            <hr />
-
-                            <button type="submit" class="margin-bottom-no danger fill">Delete Project</button>
-                        </div>
-
                         <h3 class="text-danger">Danger Zone</h3>
 
                         <div class="box danger">
@@ -148,7 +133,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                         </div>
 
                         <ul class="margin-bottom-large text-fade text-size-small">
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">Use a custom endpoint</button></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <a data-ls-attrs="href=/console/settings/domains?project={{router.params.project}}" class=" text-size-small">Add a custom endpoint</a></li>
                         </ul>
                     </div>
                 </div>
