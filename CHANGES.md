@@ -11,6 +11,7 @@
 - Fixed bug denied public documents (*) to be accessed by guest users
 - Fixed cache control issue not allowing collection UI to update properly
 - Added missing webhooks events in the console
+- Fixed a bug where single permission tag in the console was not being saved
 
 # Version 0.6.1 (PRE-RELEASE)
 
