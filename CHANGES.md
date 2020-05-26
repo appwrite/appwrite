@@ -1,3 +1,17 @@
+# Version 0.6.2 (PRE-RELEASE)
+
+## Features
+
+- New route in Locale API to fetch list of languages
+
+## Bug Fixes
+
+- Fixed custom domain not setting correct domain
+- Fixed wrong SDK method type in avatars browser route 
+- Fixed bug denied public documents (*) to be accessed by guest users
+- Fixed cache control issue not allowing collection UI to update properly
+- Added missing webhooks events in the console
+
 # Version 0.6.1 (PRE-RELEASE)
 
 ## Bug Fixes

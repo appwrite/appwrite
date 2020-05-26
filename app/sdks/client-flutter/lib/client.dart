@@ -15,7 +15,7 @@ class Client {
     Map<String, String> headers;
     Map<String, String> config;
     bool selfSigned;
-    bool init = false;
+    bool initialized = false;
     Dio http;
     PersistCookieJar cookieJar;
 
@@ -30,7 +30,7 @@ class Client {
         
         this.headers = {
             'content-type': 'application/json',
-            'x-sdk-version': 'appwrite:dart:0.2.1',
+            'x-sdk-version': 'appwrite:dart:0.2.2',
         };
 
         this.config = {};
@@ -76,6 +76,22 @@ class Client {
         return this;
     }
 
+    Future init() async {
+        if(!initialized) {
+          final Directory cookieDir = await _getCookiePath();
+
+          cookieJar = new PersistCookieJar(dir:cookieDir.path);
+
+          this.http.options.baseUrl = this.endPoint;
+          this.http.options.validateStatus = (status) => status < 400;
+          this.http.interceptors.add(CookieManager(cookieJar));
+
+          PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+          addHeader('Origin', 'appwrite-' + type + '://' + packageInfo.packageName);
+        }
+    }
+
     Future<Response> call(HttpMethod method, {String path = '', Map<String, String> headers = const {}, Map<String, dynamic> params = const {}}) async {
         if(selfSigned) {
             // Allow self signed requests
@@ -85,21 +101,7 @@ class Client {
             };
         }
 
-        if(!init) {
-            final Directory cookieDir = await _getCookiePath();
-
-            cookieJar = new PersistCookieJar(dir:cookieDir.path);
-
-            this.http.options.baseUrl = this.endPoint;
-            this.http.options.validateStatus = (status) => status < 400;
-            this.http.interceptors.add(CookieManager(cookieJar));
-
-            PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
-            addHeader('Origin', 'appwrite-' + type + '://' + packageInfo.packageName);
-
-            init = true;
-        }
+        await this.init();
 
         // Origin is hardcoded for testing
         Options options = Options(

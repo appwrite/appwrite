@@ -51,14 +51,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get Favicon
@@ -75,14 +75,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get Country Flag
@@ -102,14 +102,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get Image from URL
@@ -130,14 +130,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get QR Code
@@ -157,13 +157,13 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 }
