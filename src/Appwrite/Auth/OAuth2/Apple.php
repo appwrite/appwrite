@@ -138,4 +138,33 @@ class Apple extends OAuth2
 
         return $this->user;
     }
+
+    protected function getToken($p8)
+    {
+        $keyfile = 'AuthKey_AABBCC1234.p8';               # <- Your AuthKey file
+        $keyid = '4LFF7TZ6Q5';                            # <- Your Key ID
+        $teamid = 'YJHMCSNREU';                           # <- Your Team ID (see Developer Portal)
+        $bundleid = 'test2.appwrite.io';                  # <- Your Bundle ID
+        $url = 'https://api.development.push.apple.com';  # <- development url, or use http://api.push.apple.com for production environment
+        $token = 'e2c48ed32ef9b018........';              # <- Device Token
+        
+        function base64($data) {
+            return rtrim(strtr(base64_encode(json_encode($data)), '+/', '-_'), '=');
+        }
+
+        $message = '{"aps":{"alert":"Hi there!","sound":"default"}}';
+
+        $key = openssl_pkey_get_private('file://'.$keyfile);
+
+        $header = ['alg'=>'ES256', 'kid'=>$keyid];
+        $claims = ['iss'=>$teamid, 'iat'=>time()];
+
+        $header_encoded = base64($header);
+        $claims_encoded = base64($claims);
+
+        $signature = '';
+        openssl_sign($header_encoded . '.' . $claims_encoded, $signature, $key, 'sha256');
+        $jwt = $header_encoded . '.' . $claims_encoded . '.' . base64_encode($signature);
+
+    }
 }

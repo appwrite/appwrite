@@ -73,12 +73,12 @@ return [
         'enabled' => true,
         'mock' => false,
     ],
-    // 'apple' => [
-    //     'developers' => 'https://developer.apple.com/',
-    //     'icon' => 'icon-apple',
-    //     'enabled' => false,
-    //     'mock' => false,
-    // ],
+    'apple' => [
+        'developers' => 'https://developer.apple.com/',
+        'icon' => 'icon-apple',
+        'enabled' => true,
+        'mock' => false,
+    ],
     'amazon' => [
         'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',
         'icon' => 'icon-amazon',
