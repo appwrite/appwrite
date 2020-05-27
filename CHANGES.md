@@ -13,6 +13,10 @@
 - Added missing webhooks events in the console
 - Fixed a bug where single permission tag in the console was not being saved
 
+## Security
+
+- [low severity] Patch for email library (https://github.com/advisories/GHSA-f7hx-fqxw-rvvj)
+
 # Version 0.6.1 (PRE-RELEASE)
 
 ## Bug Fixes
