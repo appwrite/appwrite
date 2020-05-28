@@ -15,6 +15,7 @@ use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
+use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
 
@@ -106,6 +107,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             ->setNPMPackage('node-appwrite')
                             ->setBowerPackage('appwrite')
                         ;
+                        break;
+                    case 'deno':
+                        $config = new Deno();
                         break;
                     case 'python':
                         $config = new Python();

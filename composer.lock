@@ -485,12 +485,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "0d137e94480b275aadd1f2536a76d91cf580711c"
+                "reference": "a4a1b6930528a8f7ee03518e6442ec7a44155d9d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/0d137e94480b275aadd1f2536a76d91cf580711c",
-                "reference": "0d137e94480b275aadd1f2536a76d91cf580711c",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/a4a1b6930528a8f7ee03518e6442ec7a44155d9d",
+                "reference": "a4a1b6930528a8f7ee03518e6442ec7a44155d9d",
                 "shasum": ""
             },
             "require": {
@@ -544,7 +544,7 @@
                 "rest",
                 "web service"
             ],
-            "time": "2020-05-23T18:58:46+00:00"
+            "time": "2020-05-25T19:35:05+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1745,7 +1745,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "69f8cfabf7f40cb9fb7198cdd9770afdd030a88a"
+                "reference": "e05090724e28cdafb73a48aa9925b35e69ef2e1b"
             },
             "require": {
                 "ext-curl": "*",
@@ -1775,7 +1775,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-05-24T05:26:35+00:00"
+            "time": "2020-05-28T04:38:44+00:00"
         },
         {
             "name": "doctrine/instantiator",
