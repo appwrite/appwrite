@@ -10,8 +10,14 @@
 - Fixed wrong SDK method type in avatars browser route 
 - Fixed bug denied public documents (*) to be accessed by guest users
 - Fixed cache control issue not allowing collection UI to update properly
-- Added missing webhooks events in the console
 - Fixed a bug where single permission tag in the console was not being saved
+- Added missing webhooks events in the console
+- Added missing option to delete project
+- Fixed a bug where the session was not set properly when the API used an IP with non-standard port as hostname
+
+## Security
+
+- [low severity] Patch for email library (https://github.com/advisories/GHSA-f7hx-fqxw-rvvj)
 
 # Version 0.6.1 (PRE-RELEASE)
 

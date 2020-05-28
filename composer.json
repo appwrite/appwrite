@@ -50,7 +50,7 @@
         "domnikl/statsd": "2.0.*",
         "influxdb/influxdb-php": "1.15.*",
         "bacon/bacon-qr-code": "2.0.0",
-        "phpmailer/phpmailer": "6.0.7"
+        "phpmailer/phpmailer": "6.1.6"
     },
     "require-dev": {
         "appwrite/sdk-generator": "master",
