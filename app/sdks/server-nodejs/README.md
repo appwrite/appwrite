@@ -1,7 +1,7 @@
 # Appwrite Node.js SDK
 
 ![License](https://img.shields.io/github/license/appwrite/sdk-for-node.svg?v=1)
-![Version](https://img.shields.io/badge/api%20version-0.6.0-blue.svg?v=1)
+![Version](https://img.shields.io/badge/api%20version-0.6.1-blue.svg?v=1)
 
 Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
                         Use the Node.js SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.

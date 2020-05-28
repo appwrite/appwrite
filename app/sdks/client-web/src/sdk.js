@@ -858,7 +858,7 @@
              * @param {number} height
              * @param {number} quality
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getBrowser: function(code, width = 100, height = 100, quality = 100) {
                 if(code === undefined) {
@@ -881,10 +881,11 @@
                     payload['quality'] = quality;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**

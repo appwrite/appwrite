@@ -1,15 +1,17 @@
 import 'package:appwrite/appwrite.dart';
 
-// Init SDK
-Client client = Client();
-Avatars avatars = Avatars(client);
+void main() { // Init SDK
+  Client client = Client();
+  Avatars avatars = Avatars(client);
 
-client
+  client
+    .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-;
+  ;
 
-String result = avatars.getImage(
+  String result = avatars.getImage(
     url: 'https://example.com',
-);
+  );
 
-print(result); // Resource URL string
+  print(result); // Resource URL string
+}

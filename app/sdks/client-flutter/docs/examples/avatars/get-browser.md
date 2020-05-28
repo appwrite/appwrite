@@ -1,20 +1,17 @@
 import 'package:appwrite/appwrite.dart';
 
-// Init SDK
-Client client = Client();
-Avatars avatars = Avatars(client);
+void main() { // Init SDK
+  Client client = Client();
+  Avatars avatars = Avatars(client);
 
-client
+  client
+    .setEndpoint('https://[HOSTNAME_OR_IP]/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-;
+  ;
 
-Future result = avatars.getBrowser(
+  String result = avatars.getBrowser(
     code: 'aa',
-);
+  );
 
-result
-  .then((response) {
-    print(response);
-  }).catchError((error) {
-    print(error);
-  });
+  print(result); // Resource URL string
+}
