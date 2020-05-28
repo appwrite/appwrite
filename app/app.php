@@ -69,11 +69,12 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     $refDomain = $protocol.'://'.((in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
-    $selfDomain = new Domain(Config::getParam('domain'));
+    $selfDomain = new Domain(Config::getParam('hostname'));
     $endDomain = new Domain($origin);
 
     Config::setParam('domainVerification',
-        ($selfDomain->getRegisterable() === $endDomain->getRegisterable()));
+        ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
+            $endDomain->getRegisterable() !== '');
         
     /*
      * Security Headers

@@ -13,6 +13,7 @@
 - Fixed a bug where single permission tag in the console was not being saved
 - Added missing webhooks events in the console
 - Added missing option to delete project
+- Fixed a bug where the session was not set properly when the API used an IP with non-standard port as hostname
 
 ## Security
 
