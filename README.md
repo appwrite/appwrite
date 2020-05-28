@@ -94,13 +94,13 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ### Services
 
-* [**Account**](https://appwrite.io/docs/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
-* [**Users**](https://appwrite.io/docs/users) - Manage and list all project users when in admin mode.
-* [**Teams**](https://appwrite.io/docs/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
-* [**Database**](https://appwrite.io/docs/database) - Manage database collections and documents. Read, create, update, and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
-* [**Storage**](https://appwrite.io/docs/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
-* [**Locale**](https://appwrite.io/docs/locale) - Track your user's location, and manage your app locale-based data.
-* [**Avatars**](https://appwrite.io/docs/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols, and generate QR codes.
+* [**Account**](https://appwrite.io/docs/client/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
+* [**Users**](https://appwrite.io/docs/server/users) - Manage and list all project users when in admin mode.
+* [**Teams**](https://appwrite.io/docs/client/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
+* [**Database**](https://appwrite.io/docs/client/database) - Manage database collections and documents. Read, create, update, and delete documents and filter lists of documents collections using an advanced filter with graph-like capabilities.
+* [**Storage**](https://appwrite.io/docs/client/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to fit your app perfectly. All files are scanned by ClamAV and stored in a secure and encrypted way.
+* [**Locale**](https://appwrite.io/docs/client/locale) - Track your user's location, and manage your app locale-based data.
+* [**Avatars**](https://appwrite.io/docs/client/avatars) - Manage your users' avatars, countries' flags, browser icons, credit card symbols, and generate QR codes.
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
 
