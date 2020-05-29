@@ -351,7 +351,7 @@ window.ls.filter
       return 0;
     }
 
-    $value = abbreviate($value, 1, false, false);
+    $value = abbreviate($value, 0, false, false);
 
     return $value === "0" ? "N/A" : $value;
   })
