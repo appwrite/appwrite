@@ -308,6 +308,29 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         }
     );
 
+$utopia->post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+    ->desc('OAuth2 Callback')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
+    ->label('scope', 'public')
+    ->label('origin', '*')
+    ->label('docs', false)
+    ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID.')
+    ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
+    ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
+    ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
+    ->action(
+        function ($projectId, $provider, $code, $state) use ($response) {
+            $domain = Config::getParam('domain');
+            $protocol = Config::getParam('protocol');
+            
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                    .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+        }
+    );
+
 $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->label('error', __DIR__.'/../../views/general/error.phtml')
@@ -361,6 +384,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
                 throw new Exception('Invalid redirect URL for failure login', 400);
             }
+            
             $state['failure'] = null;
             $accessToken = $oauth2->getAccessToken($code);
 
