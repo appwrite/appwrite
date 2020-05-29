@@ -2,6 +2,7 @@
 
 ## Features
 
+- New OAuth adapter for sign-in with Apple
 - New route in Locale API to fetch list of languages
 
 ## Bug Fixes

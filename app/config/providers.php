@@ -87,7 +87,7 @@ return [
         'developers' => 'https://developer.apple.com/',
         'icon' => 'icon-apple',
         'enabled' => true,
-        'form' => 'apple.phtml',
+        'form' => 'apple.phtml', // Perperation for adding ability to customized OAuth UI forms, currently handled hardcoded.
         'mock' => false,
     ],
     'amazon' => [
