@@ -6,6 +6,7 @@ return [
         'icon' => 'icon-bitbucket',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'facebook' => [
@@ -13,6 +14,7 @@ return [
         'icon' => 'icon-facebook',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'github' => [
@@ -20,6 +22,7 @@ return [
         'icon' => 'icon-github-circled',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'gitlab' => [
@@ -27,6 +30,7 @@ return [
         'icon' => 'icon-gitlab',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'google' => [
@@ -34,12 +38,14 @@ return [
         'icon' => 'icon-google',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     // 'instagram' => [
     //     'developers' => 'https://www.instagram.com/developer/',
     //     'icon' => 'icon-instagram',
     //     'enabled' => false,
+    //     'beta' => false,
     //     'mock' => false,
     // ],
     'microsoft' => [
@@ -47,12 +53,14 @@ return [
         'icon' => 'icon-windows',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     // 'twitter' => [
     //     'developers' => 'https://developer.twitter.com/',
     //     'icon' => 'icon-twitter',
     //     'enabled' => false,
+    //     'beta' => false,
     //     'mock' => false,
     // ],
     'linkedin' => [
@@ -60,6 +68,7 @@ return [
         'icon' => 'icon-linkedin',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'slack' => [
@@ -67,6 +76,7 @@ return [
         'icon' => 'icon-slack',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'dropbox' => [
@@ -74,6 +84,7 @@ return [
         'icon' => 'icon-dropbox',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'salesforce' => [
@@ -81,6 +92,7 @@ return [
         'icon' => 'icon-salesforce',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'apple' => [
@@ -88,6 +100,7 @@ return [
         'icon' => 'icon-apple',
         'enabled' => true,
         'form' => 'apple.phtml', // Perperation for adding ability to customized OAuth UI forms, currently handled hardcoded.
+        'beta' => true,
         'mock' => false,
     ],
     'amazon' => [
@@ -95,6 +108,7 @@ return [
         'icon' => 'icon-amazon',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'vk' => [
@@ -102,6 +116,7 @@ return [
         'icon' => 'icon-vk',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'discord' => [
@@ -109,6 +124,7 @@ return [
         'icon' => 'icon-discord',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'twitch' => [
@@ -116,6 +132,7 @@ return [
         'icon' => 'icon-twitch',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'spotify' => [
@@ -123,6 +140,7 @@ return [
         'icon' => 'icon-spotify',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'yahoo' => [
@@ -130,6 +148,7 @@ return [
         'icon' => 'icon-yahoo',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'yandex' => [
@@ -137,6 +156,7 @@ return [
         'icon' => 'icon-yandex',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false,
     ],
     'twitter' => [
@@ -144,6 +164,7 @@ return [
         'icon' => 'icon-twitter',
         'enabled' => false,
         'form' => false,
+        'beta' => false,
         'mock' => false
     ],
     'paypal' => [
@@ -151,6 +172,7 @@ return [
         'icon' => 'icon-paypal',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false
     ],
     'bitly' => [
@@ -158,6 +180,7 @@ return [
         'icon' => 'icon-bitly',
         'enabled' => true,
         'form' => false,
+        'beta' => false,
         'mock' => false
     ],
     // Keep Last
@@ -165,6 +188,8 @@ return [
         'developers' => 'https://appwrite.io',
         'icon' => 'icon-appwrite',
         'enabled' => true,
+        'form' => false,
+        'beta' => false,
         'mock' => true,
     ]
 ];

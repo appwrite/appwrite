@@ -338,6 +338,7 @@ $providers = $this->getParam('providers', []);
                         if (isset($data['enabled']) && !$data['enabled']) { continue; }
                         if (isset($data['mock']) && $data['mock']) { continue; }
                         $form = (isset($data['form'])) ? $data['form'] : false;
+                        $beta = (isset($data['beta'])) ? $data['beta'] : false;
                         ?>
                         <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
                             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
@@ -404,7 +405,7 @@ $providers = $this->getParam('providers', []);
 
                             <img src="/images/oauth2/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
                             <span>
-                                <?php echo ucfirst($provider); ?>
+                                <?php echo ucfirst($provider); ?> <?php if($beta): ?>(beta)<?php endif; ?>
                             </span>
                             <p class="margin-bottom-no margin-top-small text-one-liner">
                                 <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Developer Docs<i class="icon-link-ext"></i></a>
