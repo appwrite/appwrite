@@ -14,6 +14,7 @@
 - Added missing webhooks events in the console
 - Added missing option to delete project
 - Fixed a bug where the session was not set properly when the API used an IP with non-standard port as hostname
+- Fixed bug where requests number on the dashboard was hidden when the number got too long
 
 ## Security
 
