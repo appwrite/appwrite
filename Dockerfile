@@ -53,6 +53,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
     _APP_STORAGE_LIMIT=104857600 \
+    _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
     _APP_DB_HOST=mariadb \
@@ -111,6 +112,7 @@ COPY ./docker/www.conf /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
 
 # Add PHP Source Code
 COPY ./app /usr/share/nginx/html/app
+COPY ./bin /usr/local/bin
 COPY ./docs /usr/share/nginx/html/docs
 COPY ./public /usr/share/nginx/html/public
 COPY ./src /usr/share/nginx/html/src
@@ -131,7 +133,6 @@ COPY ./docker/supervisord.conf /etc/supervisord.conf
 # Set Upload Limit (default to 100MB)
 RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "opcache.preload_user=www-data" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/share/nginx/html/app/preload.php" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "opcache.preload_user=www-data" >> /etc/php/$PHP_VERSION/cli/conf.d/appwrite.ini
@@ -140,13 +141,10 @@ RUN echo "opcache.preload=/usr/share/nginx/html/app/preload.php" >> /etc/php/$PH
 # Add logs file
 RUN echo "" >> /var/log/appwrite.log
 
-# Start
-COPY ./docker/bin/start /start
-RUN chmod 775 /start
-
-# Upgrade
-COPY ./docker/bin/upgrade /upgrade
-RUN chmod 775 /upgrade
+# Executables
+RUN chmod +x /usr/local/bin/start
+RUN chmod +x /usr/local/bin/migrate
+RUN chmod +x /usr/local/bin/test
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
@@ -155,4 +153,4 @@ EXPOSE 80
 
 WORKDIR /usr/share/nginx/html
 
-CMD ["/bin/bash", "/start"]
+CMD ["/bin/bash", "/usr/local/bin/start"]

@@ -213,7 +213,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('email', '', function () { return new Email(); }, 'New team member email.')
     ->param('name', '', function () { return new Text(100); }, 'New team member name.', true)
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
-    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.') // TODO add our own built-in confirm page
+    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.') // TODO add our own built-in confirm page
     ->action(
         function ($teamId, $email, $name, $roles, $url) use ($response, $register, $project, $user, $audit, $projectDB) {
             $name = (empty($name)) ? $email : $name;

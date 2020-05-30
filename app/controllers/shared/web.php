@@ -31,7 +31,7 @@ $layout
     ->setParam('env', $utopia->getEnv())
 ;
 
-$utopia->shutdown(function () use ($utopia, $response, $request, $layout) {
+$utopia->init(function () use ($utopia, $response, $request, $layout) {
     $time = (60 * 60 * 24 * 45); // 45 days cache
     $isDev = (\Utopia\App::ENV_TYPE_DEVELOPMENT == Config::getParam('env'));
 

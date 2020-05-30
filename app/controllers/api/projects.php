@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB;
+global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $deletes;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -175,7 +175,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 ],
                 'last30' => [
                     'start' => DateTime::createFromFormat('U', strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', strtotime('today')),
+                    'end' => DateTime::createFromFormat('U', strtotime('tomorrow')),
                     'group' => '1d',
                 ],
                 'last90' => [
@@ -402,7 +402,7 @@ $utopia->delete('/v1/projects/:projectId')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation.')
     ->action(
-        function ($projectId, $password) use ($response, $consoleDB, $user) {
+        function ($projectId, $password) use ($response, $consoleDB, $user, $deletes) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
                 throw new Exception('Invalid credentials', 401);
             }
@@ -413,19 +413,21 @@ $utopia->delete('/v1/projects/:projectId')
                 throw new Exception('Project not found', 404);
             }
 
-            // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
+            $deletes->setParam('document', $project->getArrayCopy());
+
+            foreach(['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
+                $list = $project->getAttribute('webhooks', []);
+
+                foreach ($list as $document) { /* @var $document Document */
+                    if (!$consoleDB->deleteDocument($projectId)) {
+                        throw new Exception('Failed to remove project document ('.$key.')] from DB', 500);
+                    }
+                }
+            }
 
             if (!$consoleDB->deleteDocument($projectId)) {
                 throw new Exception('Failed to remove project from DB', 500);
             }
-
-            // Delete all DBs
-            // $consoleDB->deleteNamespace($project->getId());
-
-            // Optimize DB?
-
-            // Delete all storage files
-            // Delete all storage cache
 
             $response->noContent();
         }
@@ -1229,9 +1231,8 @@ $utopia->post('/v1/projects/:projectId/domains')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domain', null, function () { return new DomainValidator(); }, 'Domain name.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
+        function ($projectId, $domain) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
-            $domain = Config::getParam('domain');
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);

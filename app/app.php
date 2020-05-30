@@ -27,6 +27,7 @@ $services = include __DIR__.'/config/services.php'; // List of services
 $webhook = new Event('v1-webhooks', 'WebhooksV1');
 $audit = new Event('v1-audits', 'AuditsV1');
 $usage = new Event('v1-usage', 'UsageV1');
+$deletes = new Event('v1-deletes', 'DeletesV1');
 
 /**
  * Get All verified client URLs for both console and current projects
@@ -68,11 +69,12 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     $refDomain = $protocol.'://'.((in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
-    $selfDomain = new Domain(Config::getParam('domain'));
+    $selfDomain = new Domain(Config::getParam('hostname'));
     $endDomain = new Domain($origin);
 
     Config::setParam('domainVerification',
-        ($selfDomain->getRegisterable() === $endDomain->getRegisterable()));
+        ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
+            $endDomain->getRegisterable() !== '');
         
     /*
      * Security Headers
@@ -86,7 +88,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, Cache-Control, Expires, Pragma')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $refDomain)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
@@ -215,10 +217,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $mode, $project, $utopia) {
+$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
 
     /*
-     * Trigger Events for background jobs
+     * Trigger events for background workers
      */
     if (!empty($webhook->getParam('event'))) {
         $webhook->trigger();
@@ -226,6 +228,10 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     
     if (!empty($audit->getParam('event'))) {
         $audit->trigger();
+    }
+    
+    if (!empty($deletes->getParam('document'))) {
+        $deletes->trigger();
     }
     
     $route = $utopia->match($request);
@@ -246,7 +252,7 @@ $utopia->options(function () use ($request, $response) {
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, X-Fallback-Cookies')
+        ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')

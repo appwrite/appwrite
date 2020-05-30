@@ -298,6 +298,8 @@
         if (confirm) {
           if (window.confirm(confirm) !== true) {
             element.classList.add("load-service-end");
+            element.$lsSkip = false;
+            running = false;
             return false;
           }
         }

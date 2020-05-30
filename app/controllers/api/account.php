@@ -30,8 +30,8 @@ use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$oauthDefaultSuccess = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/success';
-$oauthDefaultFailure = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/failure';
+$oauthDefaultSuccess = $request->getServer('_APP_HOME').'/auth/oauth2/success';
+$oauthDefaultFailure = $request->getServer('_APP_HOME').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
@@ -251,8 +251,8 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
-    ->param('success', $oauthDefaultSuccess, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.', true)
-    ->param('failure', $oauthDefaultFailure, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.', true)
+    ->param('success', $oauthDefaultSuccess, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true)
+    ->param('failure', $oauthDefaultFailure, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true)
     ->action(
         function ($provider, $success, $failure) use ($response, $request, $project) {
             $protocol = Config::getParam('protocol');
@@ -483,6 +483,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
                 $state['success'] = URLParser::parse($state['success']);
                 $query = URLParser::parseQuery($state['success']['query']);
+                $query['project'] = $project->getId();
                 $query['domain'] = COOKIE_DOMAIN;
                 $query['key'] = Auth::$cookieName;
                 $query['secret'] = Auth::encodeSession($user->getId(), $secret);
@@ -1026,7 +1027,7 @@ $utopia->post('/v1/account/recovery')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email.')
+    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.')
     ->action(
         function ($email, $url) use ($request, $response, $projectDB, $register, $audit, $project) {
             $profile = $projectDB->getCollection([ // Get user by email address
@@ -1187,7 +1188,7 @@ $utopia->post('/v1/account/verification')
     ->label('sdk.description', '/docs/references/account/create-verification.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email.') // TODO add built-in confirm page
+    ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.') // TODO add built-in confirm page
     ->action(
         function ($url) use ($request, $response, $register, $user, $project, $projectDB, $audit) {
             $verificationSecret = Auth::tokenGenerator();
