@@ -95,28 +95,44 @@ class Preloader
     private function loadFile(string $path): void
     {
         // We resolve the classname from composer's autoload mapping
-        $class = $this->fileMap[$path] ?? null;
+        $class = $this->fileMap[$path] ?? $path;
         
         // And use it to make sure the class shouldn't be ignored
         if ($this->shouldIgnore($class)) {
             return;
         }
-
+        echo "[Preloader] Preloaded `{$class}`" . PHP_EOL;
         // Finally we require the path,
         // causing all its dependencies to be loaded as well
-        require_once($path);
+        try {
+            ob_start(); //Start of build
+
+            require_once $path;
+
+            $output = mb_strlen(ob_get_contents());
+    
+            ob_end_clean(); //End of build
+        } catch (\Throwable $th) {
+            echo "[Preloader] Failed to load `{$class}`" . PHP_EOL;
+            return;
+        }
 
         self::$count++;
 
-        echo "[Preloader] Preloaded `{$class}`" . PHP_EOL;
+        
     }
 
     private function shouldIgnore(?string $name): bool
     {
-        if ($name === null) {
+        if($name === null) {
             return true;
         }
 
+        if(!in_array(pathinfo($name, PATHINFO_EXTENSION), ['php'])) {
+            return true;
+        }
+
+        var_dump($name);
         foreach ($this->ignores as $ignore) {
             if (strpos($name, $ignore) === 0) {
                 return true;
