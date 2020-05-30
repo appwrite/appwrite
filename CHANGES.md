@@ -1,9 +1,12 @@
+# Version 0.7.0 (NOT-RELEASED)
+
+- New route in Locale API to fetch list of languages
+
 # Version 0.6.2 (PRE-RELEASE)
 
 ## Features
 
 - New OAuth adapter for sign-in with Apple
-- New route in Locale API to fetch list of languages
 
 ## Bug Fixes
 
