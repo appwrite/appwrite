@@ -400,7 +400,7 @@ $utopia->delete('/v1/projects/:projectId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'delete')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation.')
+    ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation. Must be between 6 to 32 chars.')
     ->action(
         function ($projectId, $password) use ($response, $consoleDB, $user, $deletes) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
