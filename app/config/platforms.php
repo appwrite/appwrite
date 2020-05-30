@@ -184,7 +184,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '1.0.10',
+                'version' => '1.0.11',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'enabled' => true,
                 'beta' => true,
