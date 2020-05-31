@@ -19,6 +19,7 @@
 - Added missing option to delete project
 - Fixed a bug where the session was not set properly when the API used an IP with non-standard port as hostname
 - Fixed bug where requests number on the dashboard was hidden when the number got too long
+- Permission fields are not required for file creation or update
 
 ## Security
 
