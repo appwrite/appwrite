@@ -174,9 +174,10 @@ $rules = $collection->getAttribute('rules', []);
                             data-scope="sdk"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-success="alert,trigger"
+                            data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Updated collection successfully"
                             data-success-param-trigger-events="database.updateCollection"
+                            data-success-param-redirect-url="/console/database/collection/settings?id={{serviceData.$id}}&project={{router.params.project}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
