@@ -1,6 +1,12 @@
 # Version 0.7.0 (NOT-RELEASED)
 
+## Features
+
 - New route in Locale API to fetch a list of languages
+
+## Bug Fixes
+
+- Fixed output of /v1/health/queue/certificates returning wrong data
 
 # Version 0.6.2 (PRE-RELEASE)
 
