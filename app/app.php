@@ -82,6 +82,14 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      * As recommended at:
      * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
      */
+    if ($request->getServer('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if(Config::getParam('protocol') !== 'https') {
+           return $response->redirect('https://' . Config::getParam('domain').$request->getServer('REQUEST_URI'));
+        }
+
+        $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
+    }    
+
     $response
         ->addHeader('Server', 'Appwrite')
         ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.urlencode($request->getServer('REQUEST_URI')))
