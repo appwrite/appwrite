@@ -57,7 +57,7 @@ $utopia->post('/v1/account')
     ->label('sdk.description', '/docs/references/account/create.md')
     ->label('abuse-limit', 10)
     ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password.')
+    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
         function ($email, $password, $name) use ($register, $request, $response, $audit, $projectDB, $project, $webhook, $oauth2Keys) {
@@ -158,7 +158,7 @@ $utopia->post('/v1/account/sessions')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password.')
+    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->action(
         function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook) {
             $protocol = Config::getParam('protocol');
@@ -308,6 +308,29 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         }
     );
 
+$utopia->post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+    ->desc('OAuth2 Callback')
+    ->label('error', __DIR__.'/../../views/general/error.phtml')
+    ->label('scope', 'public')
+    ->label('origin', '*')
+    ->label('docs', false)
+    ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID.')
+    ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
+    ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
+    ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
+    ->action(
+        function ($projectId, $provider, $code, $state) use ($response) {
+            $domain = Config::getParam('domain');
+            $protocol = Config::getParam('protocol');
+            
+            $response
+                ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->addHeader('Pragma', 'no-cache')
+                ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
+                    .http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
+        }
+    );
+
 $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->label('error', __DIR__.'/../../views/general/error.phtml')
@@ -361,6 +384,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             if (!empty($state['failure']) && !$validateURL->isValid($state['failure'])) {
                 throw new Exception('Invalid redirect URL for failure login', 400);
             }
+            
             $state['failure'] = null;
             $accessToken = $oauth2->getAccessToken($code);
 
@@ -721,8 +745,8 @@ $utopia->patch('/v1/account/password')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
-    ->param('password', '', function () { return new Password(); }, 'New user password.')
-    ->param('oldPassword', '', function () { return new Password(); }, 'Old user password.')
+    ->param('password', '', function () { return new Password(); }, 'New user password. Must be between 6 to 32 chars.')
+    ->param('oldPassword', '', function () { return new Password(); }, 'Old user password. Must be between 6 to 32 chars.')
     ->action(
         function ($password, $oldPassword) use ($response, $user, $projectDB, $audit, $oauth2Keys) {
             if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
@@ -764,7 +788,7 @@ $utopia->patch('/v1/account/email')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
     ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password.')
+    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->action(
         function ($email, $password) use ($response, $user, $projectDB, $audit, $oauth2Keys) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
@@ -1120,8 +1144,8 @@ $utopia->put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
     ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')
-    ->param('password', '', function () { return new Password(); }, 'New password.')
-    ->param('passwordAgain', '', function () {return new Password(); }, 'New password again.')
+    ->param('password', '', function () { return new Password(); }, 'New password. Must be between 6 to 32 chars.')
+    ->param('passwordAgain', '', function () {return new Password(); }, 'New password again. Must be between 6 to 32 chars.')
     ->action(
         function ($userId, $secret, $password, $passwordAgain) use ($response, $projectDB, $audit) {
             if ($password !== $passwordAgain) {

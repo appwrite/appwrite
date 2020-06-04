@@ -158,7 +158,7 @@ $utopia->get('/v1/health/queue/certificates')
     ->label('sdk.description', '/docs/references/health/get-queue-certificates.md')
     ->action(
         function () use ($response) {
-            $response->json(['size' => Resque::size('v1-usage')]);
+            $response->json(['size' => Resque::size('v1-certificates')]);
         }
     );
 

@@ -31,7 +31,7 @@ module Appwrite
 
         def get(team_id:)
             path = '/teams/{teamId}'
-                .gsub('{team_id}', team_id)
+                .gsub('{teamId}', team_id)
 
             params = {
             }
@@ -43,7 +43,7 @@ module Appwrite
 
         def update(team_id:, name:)
             path = '/teams/{teamId}'
-                .gsub('{team_id}', team_id)
+                .gsub('{teamId}', team_id)
 
             params = {
                 'name': name
@@ -56,7 +56,7 @@ module Appwrite
 
         def delete(team_id:)
             path = '/teams/{teamId}'
-                .gsub('{team_id}', team_id)
+                .gsub('{teamId}', team_id)
 
             params = {
             }
@@ -68,7 +68,7 @@ module Appwrite
 
         def get_memberships(team_id:)
             path = '/teams/{teamId}/memberships'
-                .gsub('{team_id}', team_id)
+                .gsub('{teamId}', team_id)
 
             params = {
             }
@@ -80,7 +80,7 @@ module Appwrite
 
         def create_membership(team_id:, email:, roles:, url:, name: '')
             path = '/teams/{teamId}/memberships'
-                .gsub('{team_id}', team_id)
+                .gsub('{teamId}', team_id)
 
             params = {
                 'email': email, 
@@ -96,8 +96,8 @@ module Appwrite
 
         def delete_membership(team_id:, invite_id:)
             path = '/teams/{teamId}/memberships/{inviteId}'
-                .gsub('{team_id}', team_id)
-                .gsub('{invite_id}', invite_id)
+                .gsub('{teamId}', team_id)
+                .gsub('{inviteId}', invite_id)
 
             params = {
             }

@@ -361,7 +361,7 @@ $utopia->patch('/v1/projects/:projectId/oauth2')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'Provider Name', false)
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
-    ->param('secret', '', function () { return new text(256); }, 'Provider secret key.', true)
+    ->param('secret', '', function () { return new text(512); }, 'Provider secret key.', true)
     ->action(
         function ($projectId, $provider, $appId, $secret) use ($request, $response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -400,7 +400,7 @@ $utopia->delete('/v1/projects/:projectId')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'delete')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation.')
+    ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation. Must be between 6 to 32 chars.')
     ->action(
         function ($projectId, $password) use ($response, $consoleDB, $user, $deletes) {
             if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password

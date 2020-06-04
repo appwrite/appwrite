@@ -1,20 +1,31 @@
+# Version 0.7.0 (NOT-RELEASED)
+
+## Features
+
+- New route in Locale API to fetch a list of languages
+
+## Bug Fixes
+
+- Fixed output of /v1/health/queue/certificates returning wrong data
+
 # Version 0.6.2 (PRE-RELEASE)
 
 ## Features
 
-- New route in Locale API to fetch list of languages
+- New OAuth adapter for sign-in with Apple
 
 ## Bug Fixes
 
 - Fixed custom domain not setting correct domain
 - Fixed wrong SDK method type in avatars browser route 
 - Fixed bug denied public documents (*) to be accessed by guest users
-- Fixed cache control issue not allowing collection UI to update properly
+- Fixed cache-control issue not allowing collection UI to update properly
 - Fixed a bug where single permission tag in the console was not being saved
 - Added missing webhooks events in the console
 - Added missing option to delete project
-- Fixed a bug where the session was not set properly when the API used an IP with non-standard port as hostname
+- Fixed a bug where the session was not set properly when the API used an IP with a non-standard port as hostname
 - Fixed bug where requests number on the dashboard was hidden when the number got too long
+- Permission fields are not required for file creation or update
 
 ## Security
 
