@@ -23,6 +23,8 @@ use Appwrite\Preloader\Preloader;
     ->paths(realpath(__DIR__ . '/../src'))
     ->ignore(realpath(__DIR__ . '/../vendor/twig/twig'))
     ->ignore(realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'))
-    ->ignore(realpath(__DIR__ . '/../vendor/geoip2/geoip2'))
+    ->ignore(realpath(__DIR__ . '/../vendor/geoip2'))
     ->ignore(realpath(__DIR__ . '/../vendor/maxmind'))
+    ->ignore(realpath(__DIR__ . '/../vendor/maxmind-db'))
+    ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
     ->load();
