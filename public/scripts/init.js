@@ -2,7 +2,8 @@
 
 window.ls.error = function() {
   return function(error) {
-    console.error("ERROR-APP", error);
+    window.console.error(error);
+    window.location = '/console';
   };
 };
 
