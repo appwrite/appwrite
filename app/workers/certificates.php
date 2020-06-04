@@ -29,11 +29,12 @@ class CertificatesV1
          * 1. Get new domain document - DONE
          *  1.1. Validate domain is valid, public suffix is known and CNAME records are verified - DONE
          * 2. Check if a certificate already exists - DONE
-         * 3. Check if certificate is not about to expire skip
+         * 3. Check if certificate is about to expire, if not - skip it
          *  3.1. Create / renew certificate
          *  3.2. Update loadblancer
          *  3.3. Update database (domains, change date, expiry)
          *  3.4. Set retry on failure
+         *  3.5. Schedule to renew certificate in 60 days
          */
 
         Authorization::disable();

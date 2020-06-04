@@ -15,9 +15,9 @@ use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
+use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
-use Appwrite\SDK\Language\Typescript;
 
 $cli = new CLI();
 
@@ -42,11 +42,16 @@ $cli
         }
 
         $platforms = Config::getParam('platforms');
+        $selected = strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $message = Console::confirm('Please enter your commit message:');
         $production = (Console::confirm('Type "Appwrite" to deploy for production') == 'Appwrite');
 
         foreach($platforms as $key => $platform) {
             foreach($platform['languages'] as $language) {
+                if($selected !== $language['key'] && $selected !== '*') {
+                    continue;
+                }
+
                 if(!$language['enabled']) {
                     Console::warning($language['name'].' for '.$platform['name'] . ' is disabled');
                     continue;
@@ -56,7 +61,7 @@ $cli
                 
                 //$spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
                 $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$language['family']);
-                $spec = getSSLPage('https://localhost:2444/v1/open-api-2.json?extensions=1&platform='.$language['family']);
+                $spec = getSSLPage('https://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
 
                 $result = realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
@@ -82,25 +87,18 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.';
 
                 switch ($language['key']) {
-                    case 'php':
-                        $config = new PHP();
-                        $config
-                            ->setComposerVendor('appwrite')
-                            ->setComposerPackage('appwrite')
-                        ;
-                        break;
-                    case 'javascript':
+                    case 'web':
                         $config = new JS();
                         $config
                             ->setNPMPackage('appwrite')
                             ->setBowerPackage('appwrite')
                         ;
                         break;
-                    case 'typescript':
-                        $config = new Typescript();
+                    case 'php':
+                        $config = new PHP();
                         $config
-                            ->setNPMPackage('appwrite')
-                            ->setBowerPackage('appwrite')
+                            ->setComposerVendor('appwrite')
+                            ->setComposerPackage('appwrite')
                         ;
                         break;
                     case 'nodejs':
@@ -109,6 +107,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             ->setNPMPackage('node-appwrite')
                             ->setBowerPackage('appwrite')
                         ;
+                        break;
+                    case 'deno':
+                        $config = new Deno();
                         break;
                     case 'python':
                         $config = new Python();
@@ -123,6 +124,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                             ->setGemPackage('appwrite')
                         ;
                         break;
+                    case 'flutter':
                     case 'dart':
                         $config = new Dart();
                         break;
@@ -142,6 +144,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 $sdk = new SDK($config, new Swagger2($spec));
 
                 $sdk
+                    ->setName($language['name'])
                     ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way.
                         Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools.
                         For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")

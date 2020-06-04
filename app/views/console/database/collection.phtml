@@ -75,7 +75,7 @@ $rules = $collection->getAttribute('rules', []);
                     data-name="project-documents">
 
                     <div data-ls-if="0 == {{project-documents.sum}}" class="box margin-bottom">
-                        <h3 class="margin-bottom-small text-bold">No Documnets Found</h3>
+                        <h3 class="margin-bottom-small text-bold">No Documents Found</h3>
 
                         <p class="margin-bottom-no">Create your first document to get started</p>
                     </div>
@@ -174,9 +174,10 @@ $rules = $collection->getAttribute('rules', []);
                             data-scope="sdk"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-success="alert,trigger"
+                            data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Updated collection successfully"
                             data-success-param-trigger-events="database.updateCollection"
+                            data-success-param-redirect-url="/console/database/collection/settings?id={{serviceData.$id}}&project={{router.params.project}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
@@ -264,10 +265,10 @@ $rules = $collection->getAttribute('rules', []);
                                                             <option value="boolean">Boolean</option>
                                                             <option value="wildcard">Wildcard (*)</option>
                                                         </optgroup>
-                                                        <optgroup label="Links">
+                                                        <!-- <optgroup label="Links">
                                                             <option value="fileId">File ID</option>
                                                             <option value="documentId">Document ID</option>
-                                                        </optgroup>
+                                                        </optgroup> -->
                                                         <optgroup label="Advanced">
                                                             <option value="email">Email</option>
                                                             <option value="url">URL</option>
@@ -308,9 +309,11 @@ $rules = $collection->getAttribute('rules', []);
                                     
                                     <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
                                     <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                                     
                                     <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
                                     <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                 </div>
 
                                 <button>Update</button>
@@ -415,10 +418,10 @@ $rules = $collection->getAttribute('rules', []);
                                     <option value="boolean">Boolean</option>
                                     <option value="wildcard">Wildcard (*)</option>
                                 </optgroup>
-                                <optgroup label="Links">
+                                <!-- <optgroup label="Links">
                                     <option value="fileId">File ID</option>
                                     <option value="documentId">Document ID</option>
-                                </optgroup>
+                                </optgroup> -->
                                 <optgroup label="Advanced">
                                     <option value="email">Email</option>
                                     <option value="url">URL</option>

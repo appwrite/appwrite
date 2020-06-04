@@ -21,7 +21,8 @@ class Google extends OAuth2
      */
     protected $scopes = [
         'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'openid'
     ];
 
     /**
@@ -60,7 +61,7 @@ class Google extends OAuth2
     {
         $accessToken = $this->request(
             'POST',
-            'https://www.googleapis.com/oauth2/'.$this->version.'/token?'.http_build_query([
+            'https://oauth2.googleapis.com/token?'.http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,

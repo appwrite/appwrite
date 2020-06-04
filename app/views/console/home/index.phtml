@@ -41,7 +41,7 @@ $graph = $this->getParam('graph', false);
 
                         <div class="chart-metric">
                             <div class="value margin-bottom-small"><span class="sum" data-ls-bind="{{usage.requests.total|statsTotal}}">N/A</span></div>
-                            <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests this month"><i class="icon-info-circled"></i></span></div>
+                            <div class="metric margin-bottom-small">Requests <span class="tooltip" data-tooltip="Total number of API requests last 30 days"><i class="icon-info-circled"></i></span></div>
                             <div class="range">Last 30 days</div>
                         </div>
                     </div>
@@ -203,7 +203,7 @@ $graph = $this->getParam('graph', false);
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" id="name" name="name" required autocomplete="off" placeholder="My Web App" />
 
-        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
+        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" required>
         
         <div class="info margin-top margin-bottom">
@@ -241,7 +241,7 @@ $graph = $this->getParam('graph', false);
         <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
         <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" />
 
-        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments."><i class="icon-question"></i></span></label>
+        <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" data-ls-bind="{{platform.hostname}}" required />
         
         <hr />

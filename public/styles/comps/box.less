@@ -18,9 +18,14 @@
   &.danger {
     background: var(--config-color-danger);
     color: #fff;
+    
+    .box {
+      color: var(--config-color-normal);
+      background: var(--config-color-background-fade);
+    }
 
-    button,
-    .button {
+    > button,
+    > .button {
       background: #ffffff;
       color: var(--config-color-danger);
     }

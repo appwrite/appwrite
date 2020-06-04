@@ -37,7 +37,7 @@
         "utopia-php/abuse": "0.2.*",
         "utopia-php/audit": "0.3.*",
         "utopia-php/cache": "0.2.*",
-        "utopia-php/cli": "0.4.*",
+        "utopia-php/cli": "0.5.*",
         "utopia-php/config": "0.2.*",
         "utopia-php/locale": "0.2.*",
         "utopia-php/registry": "0.2.*",
@@ -51,7 +51,7 @@
         "domnikl/statsd": "2.0.*",
         "influxdb/influxdb-php": "1.15.*",
         "bacon/bacon-qr-code": "2.0.0",
-        "phpmailer/phpmailer": "6.0.7"
+        "phpmailer/phpmailer": "6.1.6"
     },
     "require-dev": {
         "appwrite/sdk-generator": "master",

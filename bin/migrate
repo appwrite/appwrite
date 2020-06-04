@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export PHP_VERSION=$PHP_VERSION
+
+# Init server settings
+php /usr/share/nginx/html/app/tasks/migrate.php run

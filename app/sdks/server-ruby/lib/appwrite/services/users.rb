@@ -32,7 +32,7 @@ module Appwrite
 
         def get(user_id:)
             path = '/users/{userId}'
-                .gsub('{user_id}', user_id)
+                .gsub('{userId}', user_id)
 
             params = {
             }
@@ -44,7 +44,7 @@ module Appwrite
 
         def get_logs(user_id:)
             path = '/users/{userId}/logs'
-                .gsub('{user_id}', user_id)
+                .gsub('{userId}', user_id)
 
             params = {
             }
@@ -56,7 +56,7 @@ module Appwrite
 
         def get_prefs(user_id:)
             path = '/users/{userId}/prefs'
-                .gsub('{user_id}', user_id)
+                .gsub('{userId}', user_id)
 
             params = {
             }
@@ -68,7 +68,7 @@ module Appwrite
 
         def update_prefs(user_id:, prefs:)
             path = '/users/{userId}/prefs'
-                .gsub('{user_id}', user_id)
+                .gsub('{userId}', user_id)
 
             params = {
                 'prefs': prefs
@@ -81,7 +81,7 @@ module Appwrite
 
         def get_sessions(user_id:)
             path = '/users/{userId}/sessions'
-                .gsub('{user_id}', user_id)
+                .gsub('{userId}', user_id)
 
             params = {
             }
@@ -93,7 +93,7 @@ module Appwrite
 
         def delete_sessions(user_id:)
             path = '/users/{userId}/sessions'
-                .gsub('{user_id}', user_id)
+                .gsub('{userId}', user_id)
 
             params = {
             }
@@ -105,8 +105,8 @@ module Appwrite
 
         def delete_session(user_id:, session_id:)
             path = '/users/{userId}/sessions/{sessionId}'
-                .gsub('{user_id}', user_id)
-                .gsub('{session_id}', session_id)
+                .gsub('{userId}', user_id)
+                .gsub('{sessionId}', session_id)
 
             params = {
             }
@@ -118,7 +118,7 @@ module Appwrite
 
         def update_status(user_id:, status:)
             path = '/users/{userId}/status'
-                .gsub('{user_id}', user_id)
+                .gsub('{userId}', user_id)
 
             params = {
                 'status': status

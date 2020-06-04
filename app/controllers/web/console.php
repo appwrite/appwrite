@@ -133,7 +133,11 @@ $utopia->get('/console/webhooks')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
         $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
-
+        
+        $page
+            ->setParam('events', Config::getParam('events', []))
+        ;
+        
         $layout
             ->setParam('title', APP_NAME.' - Webhooks')
             ->setParam('body', $page);
@@ -183,7 +187,7 @@ $utopia->get('/console/database/collection')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('id', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(function ($id) use ($layout, $projectDB) {
+    ->action(function ($id) use ($response, $layout, $projectDB) {
         Authorization::disable();
         $collection = $projectDB->getDocument($id, false);
         Authorization::reset();
@@ -197,10 +201,18 @@ $utopia->get('/console/database/collection')
         $page
             ->setParam('collection', $collection)
         ;
-
+        
         $layout
             ->setParam('title', APP_NAME.' - Database Collection')
-            ->setParam('body', $page);
+            ->setParam('body', $page)
+        ;
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Expires', 0)
+            ->addHeader('Pragma', 'no-cache')
+        ;
+
     });
 
 $utopia->get('/console/database/document')
