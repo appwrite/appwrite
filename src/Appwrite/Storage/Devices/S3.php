@@ -107,7 +107,7 @@ class S3 extends Device
      *
      * @return bool
      */
-    public function delete(string $path):bool
+    public function delete(string $path, bool $recursive = false):bool
     {
         return false;
     }

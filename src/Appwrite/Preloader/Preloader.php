@@ -13,8 +13,6 @@ class Preloader
 
     private $paths;
 
-    private $fileMap;
-
     public function __construct(string ...$paths)
     {
         $this->paths = $paths;
@@ -23,8 +21,11 @@ class Preloader
         // to easily find which classes to autoload,
         // based on their filename
         $classMap = require __DIR__ . '/../../../vendor/composer/autoload_classmap.php';
-                
-        $this->fileMap = array_flip($classMap);
+
+        $this->paths = array_merge(
+            $this->paths,
+            array_values($classMap)
+        );
     }
     
     public function paths(string ...$paths): Preloader
@@ -94,14 +95,11 @@ class Preloader
 
     private function loadFile(string $path): void
     {
-        // We resolve the classname from composer's autoload mapping
-        $class = $this->fileMap[$path] ?? $path;
-        
         // And use it to make sure the class shouldn't be ignored
-        if ($this->shouldIgnore($class)) {
+        if ($this->shouldIgnore($path)) {
             return;
         }
-        echo "[Preloader] Preloaded `{$class}`" . PHP_EOL;
+        echo "[Preloader] Preloaded `{$path}`" . PHP_EOL;
         // Finally we require the path,
         // causing all its dependencies to be loaded as well
         try {
@@ -113,28 +111,25 @@ class Preloader
     
             ob_end_clean(); //End of build
         } catch (\Throwable $th) {
-            echo "[Preloader] Failed to load `{$class}`" . PHP_EOL;
+            echo "[Preloader] Failed to load `{$path}`" . PHP_EOL;
             return;
         }
 
         self::$count++;
-
-        
     }
 
-    private function shouldIgnore(?string $name): bool
+    private function shouldIgnore(?string $path): bool
     {
-        if($name === null) {
+        if($path === null) {
             return true;
         }
 
-        if(!in_array(pathinfo($name, PATHINFO_EXTENSION), ['php'])) {
+        if(!in_array(pathinfo($path, PATHINFO_EXTENSION), ['php'])) {
             return true;
         }
 
-        var_dump($name);
         foreach ($this->ignores as $ignore) {
-            if (strpos($name, $ignore) === 0) {
+            if (strpos($path, $ignore) === 0) {
                 return true;
             }
         }

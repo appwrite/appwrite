@@ -13,18 +13,14 @@
 // error_reporting(E_ALL);
 
 if (file_exists(__DIR__.'/../vendor/autoload.php')) {
-    require_once __DIR__.'/../vendor/autoload.php';
+    require __DIR__.'/../vendor/autoload.php';
 }
 
 use Appwrite\Preloader\Preloader;
 
-require_once __DIR__.'/../app/init.php';
-require_once __DIR__.'/../app/app.php';
-
 (new Preloader())
-    ->paths(realpath(__DIR__ . '/../vendor'))
     ->paths(realpath(__DIR__ . '/../app/config'))
-    ->paths(realpath(__DIR__ . '/../app/controllers'))
-    ->paths(realpath(__DIR__ . '/../app/views'))
-    ->ignore(__DIR__ . '/../vendor/phpmailer/phpmailer/get_oauth_token.php')
+    ->paths(realpath(__DIR__ . '/../src'))
+    ->ignore(realpath(__DIR__ . '/../vendor/twig/twig'))
+    ->ignore(realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'))
     ->load();
