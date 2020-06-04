@@ -3,6 +3,7 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages
+- Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 
 ## Bug Fixes
 
