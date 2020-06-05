@@ -44,7 +44,6 @@ $utopia->init(function() use (&$oauth2Keys) {
         $oauth2Keys[] = 'oauth2'.ucfirst($key);
         $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
     }
-
 });
 
 $utopia->post('/v1/account')
@@ -133,17 +132,7 @@ $utopia->post('/v1/account')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json(array_merge($user->getArrayCopy(array_merge(
-                    [
-                        '$id',
-                        'email',
-                        'registration',
-                        'name',
-                    ],
-                    $oauth2Keys
-                )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user);
         }
     );
 
@@ -232,8 +221,9 @@ $utopia->post('/v1/account/sessions')
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($session->getArrayCopy(['$id', 'type', 'expire']))
             ;
+
+            $response->dynamic($session);
         }
     );
 
@@ -535,16 +525,7 @@ $utopia->get('/v1/account')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
         function () use ($response, &$user, $oauth2Keys) {
-            $response->json(array_merge($user->getArrayCopy(array_merge(
-                [
-                    '$id',
-                    'email',
-                    'emailVerification',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user);
         }
     );
 

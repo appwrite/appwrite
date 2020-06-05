@@ -3,6 +3,11 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages
+- New and consistent response format for all API object + new response examples in the docs
+  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
+  - Removed type attribute from session object response (used only internally)
+  - ** - might be changed before merging to master
+  
 
 ## Bug Fixes
 

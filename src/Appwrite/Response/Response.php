@@ -2,20 +2,89 @@
 
 namespace Appwrite\Response;
 
-use Appwrite\Database\Document;
 use Exception;
+use Appwrite\Database\Document;
+use Appwrite\Response\Results\User;
 use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse
 {
+
+    public function __construct()
+    {
+        $this
+            ->setResult(new User)
+        ;
+    }
+
     /**
      * HTTP content types
      */
     const CONTENT_TYPE_YAML = 'application/x-yaml';
 
-    public function dynamic(Document $document)
+    /**
+     * List of defined output objects
+     */
+    protected $results = [];
+
+    /**
+     * Set Result Object
+     * 
+     * @return self
+     */
+    public function setResult(Result $result): self
     {
-        # code...
+        $this->results[$result->getCollection()] = $result;
+
+        return $this;
+    }
+
+    /**
+     * Get Result Object
+     * 
+     * @return Result
+     */
+    public function getResult(string $key): Result
+    {
+        if(!isset($this->results[$key])) {
+            throw new Exception('Undefined result');
+        }
+
+        return $this->results[$key];
+    }
+
+    /**
+     * Validate response objects and outputs
+     *  the response according to given format type
+     */
+    public function dynamic(Document $document, $type = self::CONTENT_TYPE_JSON)
+    {
+        $collection = $document->getCollection();
+        $data       = $document->getArrayCopy();
+        $result     = $this->getResult($collection);
+        $output     = [];
+
+        foreach($result->getRules() as $key => $rule) {
+            if(!isset($data[$key])) {
+                throw new Exception('Missing result key');
+            }
+
+            $output[$key] = $data[$key];
+        }
+
+        switch ($type) {
+            case self::CONTENT_TYPE_JSON:
+                return $this->json($output);
+                break;
+            
+            case self::CONTENT_TYPE_YAML:
+                return $this->yaml($output);
+                break;
+            
+            default:
+                throw new Exception('Unknown content type');
+                break;
+        }
     }
 
     /**
