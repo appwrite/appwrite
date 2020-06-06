@@ -4,13 +4,10 @@
     controller: function(element, expression, document) {
       let check = function() {
         let links = element.getElementsByTagName("a");
-        let parent = expression.parse(element.dataset["parent"] || "");
         let selected = null;
         let list = [];
 
         for (let i = 0; i < links.length; i++) {
-          links[i].href =
-            links[i].href || expression.parse(links[i].dataset["lsHref"] || "");
           list.push(links[i]);
         }
 
@@ -19,30 +16,20 @@
         });
 
         for (let i = 0; i < list.length; i++) {
+          let path = list.dataset["selected"] || list[i].pathname;
+          
           if (
-            list[i].pathname ===
-            window.location.pathname.substring(0, list[i].pathname.length)
+            path ===
+            window.location.pathname.substring(0, path.length)
           ) {
             list[i].classList.add("selected");
-            
-            if(parent) {
-              list[i].parentNode.classList.add("selected");
-            }
 
             if (selected !== null) {
               list[selected].classList.remove("selected");
-
-              if(parent) {
-                list[selected].parentNode.classList.add("selected");
-              }
             }
             selected = i;
           } else {
             list[i].classList.remove("selected");
-            
-            if(parent) {
-              list[i].parentNode.classList.remove("selected");
-            }
           }
         }
       };
