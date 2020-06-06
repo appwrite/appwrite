@@ -3,7 +3,10 @@
 window.ls.error = function() {
   return function(error) {
     window.console.error(error);
-    window.location = '/console';
+
+    if(window.location.pathname !== '/console') {
+      window.location = '/console';
+    }
   };
 };
 
