@@ -4,6 +4,7 @@
     controller: function(element, expression, document) {
       let check = function() {
         let links = element.getElementsByTagName("a");
+        let parent = expression.parse(element.dataset["parent"] || "");
         let selected = null;
         let list = [];
 
@@ -23,13 +24,25 @@
             window.location.pathname.substring(0, list[i].pathname.length)
           ) {
             list[i].classList.add("selected");
+            
+            if(parent) {
+              list[i].parentNode.classList.add("selected");
+            }
 
             if (selected !== null) {
               list[selected].classList.remove("selected");
+
+              if(parent) {
+                list[selected].parentNode.classList.add("selected");
+              }
             }
             selected = i;
           } else {
             list[i].classList.remove("selected");
+            
+            if(parent) {
+              list[i].parentNode.classList.remove("selected");
+            }
           }
         }
       };
