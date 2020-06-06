@@ -417,6 +417,7 @@ $utopia->get('/open-api-2.json')
                             'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                             'rate-limit' => $route->getLabel('abuse-limit', 0),
                             'rate-time' => $route->getLabel('abuse-time', 3600),
+                            'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                             'scope' => $route->getLabel('scope', ''),
                             'platforms' => $platformList,
                         ];
