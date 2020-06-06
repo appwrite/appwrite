@@ -16,7 +16,7 @@
         });
 
         for (let i = 0; i < list.length; i++) {
-          let path = list.dataset["selected"] || list[i].pathname;
+          let path = list[i].dataset["selected"] || list[i].pathname;
           
           if (
             path ===
