@@ -277,14 +277,26 @@ $utopia->get('/console/users')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users/view')
+$utopia->get('/console/users/user')
     ->desc('Platform console project user')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../../views/console/users/view.phtml');
+        $page = new View(__DIR__.'/../../views/console/users/user.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - View User')
+            ->setParam('title', APP_NAME.' - User')
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/users/team')
+    ->desc('Platform console project team')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__.'/../../views/console/users/team.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Team')
             ->setParam('body', $page);
     });
