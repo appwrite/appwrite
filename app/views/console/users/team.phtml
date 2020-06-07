@@ -110,7 +110,39 @@
                                 </div>
                             </div>
 
-                            <div class="clear text-align-center paging">
+                            <div data-ui-modal class="box modal close" data-button-text="Invite Member" data-button-class="pull-start">
+                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                <h1>Create User</h1>
+                                <form
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Create User"
+                                    data-service="users.create"
+                                    data-event="submit"
+                                    data-success="alert,trigger,reset"
+                                    data-success-param-alert-text="Created user successfully"
+                                    data-success-param-trigger-events="users.create"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to create user"
+                                    data-failure-param-alert-classname="error">
+
+                                    <label for="user-name">Name</label>
+                                    <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
+
+                                    <label for="user-email">Email</label>
+                                    <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
+
+                                    <label for="user-password">Password</label>
+                                    <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
+
+                                    <hr />
+
+                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                </form>
+                            </div>
+
+                            <div class="clear text-align-center paging pull-end">
                                 <form
                                     data-service="teams.list"
                                     data-event="submit"
