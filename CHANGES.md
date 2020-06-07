@@ -3,6 +3,7 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages
+- Added Google Fonts to Appwrite for offline availability
 
 ## Bug Fixes
 
