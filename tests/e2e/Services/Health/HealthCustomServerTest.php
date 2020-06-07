@@ -6,12 +6,13 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Tests\E2E\Scopes\SideServer;
 
 class HealthCustomClientTest extends Scope
 {
     use HealthBase;
     use ProjectCustom;
-    use SideClient;
+    use SideServer;
 
     public function testHTTPSuccess():array
     {
