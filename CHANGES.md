@@ -8,6 +8,7 @@
 ## Bug Fixes
 
 - Fixed output of /v1/health/queue/certificates returning wrong data
+- Fixed network calculation for uploaded files
 
 ## Security
 
