@@ -289,7 +289,7 @@ $utopia->get('/console/users/user')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users/team')
+$utopia->get('/console/users/teams/team')
     ->desc('Platform console project team')
     ->label('permission', 'public')
     ->label('scope', 'console')
