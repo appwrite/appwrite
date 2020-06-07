@@ -11,7 +11,7 @@
 
 ## Security
 
-- Access to health API now requires authentication with an API Key with access to `health.read` scope allowed
+- Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
 
 # Version 0.6.2 (PRE-RELEASE)
 
