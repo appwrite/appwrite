@@ -3,10 +3,15 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages
+- Added Google Fonts to Appwrite for offline availability
 
 ## Bug Fixes
 
 - Fixed output of /v1/health/queue/certificates returning wrong data
+
+## Security
+
+- Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
 
 # Version 0.6.2 (PRE-RELEASE)
 
