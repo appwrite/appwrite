@@ -24,7 +24,6 @@ $logged = [
     'projects.write',
     'locale.read',
     'avatars.read',
-    'health.read',
 ];
 
 $admins = [
@@ -62,7 +61,6 @@ return [
             'files.read',
             'locale.read',
             'avatars.read',
-            'health.read',
         ],
     ],
     ROLE_MEMBER => [
