@@ -113,10 +113,10 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Blocked User Successfully"
+                                data-success-param-alert-text="Blocked user successfully"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to Block User"
+                                data-failure-param-alert-text="Failed to block user"
                                 data-failure-param-alert-classname="error">
 
                                 <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
@@ -132,10 +132,10 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Activated User Successfully"
+                                data-success-param-alert-text="Activated user successfully"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to Activate User"
+                                data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
                                 <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>

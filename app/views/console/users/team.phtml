@@ -33,10 +33,6 @@
             <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>General</h2>
 
-                <div data-ls-if="{{team.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
-                    This user account is blocked.
-                </div>
-
                 <div class="row responsive margin-top-xl">
                     <div class="col span-8">
                         <label>&nbsp;</label>
@@ -72,24 +68,22 @@
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
                         </ul>
 
-                        <div data-ls-if="{{team.status}} !== <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
-                            <form name="users.updateStatus" class="margin-bottom"
-                                data-analytics-event="submit"
-                                data-analytics-category="console"
-                                data-analytics-label="Update User Status"
-                                data-service="users.updateStatus"
-                                data-event="submit"
-                                data-param-user-id="{{router.params.id}}"
-                                data-success="alert,trigger"
-                                data-success-param-alert-text="Blocked User Successfully"
-                                data-success-param-trigger-events="users.update"
-                                data-failure="alert"
-                                data-failure-param-alert-text="Failed to Block User"
-                                data-failure-param-alert-classname="error">
+                        <form name="teams.delete" class="margin-bottom"
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Update User Status"
+                            data-service="users.updateStatus"
+                            data-event="submit"
+                            data-param-team-id="{{router.params.id}}"
+                            data-success="alert,trigger"
+                            data-success-param-alert-text="Team deleted successfully"
+                            data-success-param-trigger-events="users.update"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to delete team"
+                            data-failure-param-alert-classname="error">
 
-                                <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
-                            </form>
-                        </div>
+                            <button type="submit" class="danger fill">Delete Team</button>
+                        </form>
 
                         <div data-ls-if="{{team.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none">
                             <form name="users.updateStatus" class="margin-bottom"
@@ -100,10 +94,10 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Activated User Successfully"
+                                data-success-param-alert-text="Activated user successfully"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to Activate User"
+                                data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
                                 <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>
