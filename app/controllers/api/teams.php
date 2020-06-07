@@ -371,8 +371,12 @@ $utopia->get('/v1/teams/:teamId/memberships')
     ->label('sdk.method', 'getMemberships')
     ->label('sdk.description', '/docs/references/teams/get-team-members.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
-        function ($teamId) use ($response, $projectDB) {
+        function ($teamId, $search, $limit, $offset, $orderType) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
             if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
@@ -380,8 +384,12 @@ $utopia->get('/v1/teams/:teamId/memberships')
             }
 
             $memberships = $projectDB->getCollection([
-                'limit' => 50,
-                'offset' => 0,
+                'limit' => $limit,
+                'offset' => $offset,
+                'orderField' => 'joined',
+                'orderType' => $orderType,
+                'orderCast' => 'int',
+                'search' => $search,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                     'teamId='.$teamId,
@@ -408,15 +416,8 @@ $utopia->get('/v1/teams/:teamId/memberships')
                 ]));
             }
 
-            usort($users, function ($a, $b) {
-                if ($a['joined'] === 0 || $b['joined'] === 0) {
-                    return $b['joined'] - $a['joined'];
-                }
+            $response->json(['sum' => $projectDB->getSum(), 'memberships' => $users]);
 
-                return $a['joined'] - $b['joined'];
-            });
-
-            $response->json($users);
         }
     );
 

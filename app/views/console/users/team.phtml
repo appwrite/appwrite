@@ -65,7 +65,81 @@
 
                         <h3 class="margin-bottom">Members</h3>
 
+                        <div
+                            data-service="teams.getMemberships"
+                            data-event="load,teams.create,teams.update,teams.delete"
+                            data-param-team-id="{{router.params.id}}"
+                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                            data-param-offset="{{router.params.offset}}"
+                            data-param-order-type="DESC"
+                            data-scope="sdk"
+                            data-name="project-teams">
 
+                            <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom">
+                                <h3 class="margin-bottom-small text-bold">No Memberships Found</h3>
+
+                                <p class="margin-bottom-no">Create your first team member to get started</p>
+                            </div>
+
+                            <div data-ls-if="0 != {{project-teams.sum}}">
+                                <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
+
+                                <div class="box margin-bottom margin-top-negative">
+                                    <table class="vertical">
+                                        <thead>
+                                            <tr>
+                                                <th width="40"></th>
+                                                <th>Name</th>
+                                                <th width="150">Members</th>
+                                                <th width="150">Created</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
+                                            <tr>
+                                                <td class="hide">
+                                                    <img src="" data-ls-attrs="src={{team.name|gravatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
+                                                </td>
+                                                <td data-title="Name: ">
+                                                    <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>
+                                                </td>
+                                                <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
+                                                <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|date-text}}"></small></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="clear text-align-center paging">
+                                <form
+                                    data-service="teams.list"
+                                    data-event="submit"
+                                    data-param-search="{{router.params.search}}"
+                                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                                    data-param-order-type="DESC"
+                                    data-scope="sdk"
+                                    data-name="project-teams"
+                                    data-success="state"
+                                    data-success-param-state-keys="search,offset">
+                                    <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                </form>
+
+                                <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-teams.sum|pageTotal}}"></span>
+
+                                <form
+                                    data-service="teams.list"
+                                    data-event="submit"
+                                    data-param-search="{{router.params.search}}"
+                                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                                    data-param-order-type="DESC"
+                                    data-scope="sdk"
+                                    data-name="project-teams"
+                                    data-success="state"
+                                    data-success-param-state-keys="search,offset">
+                                    <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                     <div class="col span-4 sticky-top">
                         <label>Team ID</label>

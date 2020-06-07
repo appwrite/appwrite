@@ -2,8 +2,11 @@
 
 ## Features
 
-- New route in Locale API to fetch a list of languages
+- Added a new route in Locale API to fetch a list of languages
 - Added Google Fonts to Appwrite for offline availability
+- Added option to delete team from the console
+- Added option to view team members from the console
+- Added option to join a user to any team from the console
 
 ## Bug Fixes
 
