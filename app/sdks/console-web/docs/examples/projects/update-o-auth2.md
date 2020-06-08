@@ -6,7 +6,7 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.projects.updateOAuth2('[PROJECT_ID]', 'bitbucket');
+let promise = sdk.projects.updateOAuth2('[PROJECT_ID]', 'amazon');
 
 promise.then(function (response) {
     console.log(response); // Success

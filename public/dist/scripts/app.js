@@ -288,7 +288,8 @@ $value=abbreviate($value,0,false,false);return $value==="0"?"N/A":$value;}).add(
 return result.length;}).add("documentAction",function(container){let collection=container.get('project-collection');let document=container.get('project-document');if(collection&&document&&!document.$id){return'database.createDocument';}
 return'database.updateDocument';}).add("documentSuccess",function(container){let document=container.get('project-document');if(document&&!document.$id){return',redirect';}
 return'';}).add("firstElement",function($value){if($value&&$value[0]){return $value[0];}
-return $value;}).add("platformsLimit",function($value){return $value;}).add("limit",function($value){let postfix=($value.length>=50)?'...':'';return $value.substring(0,50)+postfix;;});function abbreviate(number,maxPlaces,forcePlaces,forceLetter){number=Number(number);forceLetter=forceLetter||false;if(forceLetter!==false){return annotate(number,maxPlaces,forcePlaces,forceLetter);}
+return $value;}).add("platformsLimit",function($value){return $value;}).add("limit",function($value){let postfix=($value.length>=50)?'...':'';return $value.substring(0,50)+postfix;;}).add("arraySentence",function($value){if(!Array.isArray($value)){return'';}
+return $value.join(", ").replace(/,\s([^,]+)$/,' and $1');});function abbreviate(number,maxPlaces,forcePlaces,forceLetter){number=Number(number);forceLetter=forceLetter||false;if(forceLetter!==false){return annotate(number,maxPlaces,forcePlaces,forceLetter);}
 let abbr;if(number>=1e12){abbr="T";}else if(number>=1e9){abbr="B";}else if(number>=1e6){abbr="M";}else if(number>=1e3){abbr="K";}else{abbr="";}
 return annotate(number,maxPlaces,forcePlaces,abbr);}
 function annotate(number,maxPlaces,forcePlaces,abbr){let rounded=0;switch(abbr){case"T":rounded=number/1e12;break;case"B":rounded=number/1e9;break;case"M":rounded=number/1e6;break;case"K":rounded=number/1e3;break;case"":rounded=number;break;}
