@@ -1,7 +1,7 @@
 <div
     data-service="teams.get"
     data-name="team"
-    data-event="load,teams.update"
+    data-event="load,teams.update,teams.deleteMembership,teams.createMembership"
     data-param-team-id="{{router.params.id}}"
     data-success="trigger"
     data-success-param-trigger-events="teams.get">
@@ -34,7 +34,7 @@
                 <h2>General</h2>
                 
                 <div class="row responsive margin-top-negative">
-                    <div class="col span-8">
+                    <div class="col span-8 margin-bottom-large">
                         <label>&nbsp;</label>
 
                         <div class="box margin-bottom-large">
@@ -67,13 +67,13 @@
 
                         <div
                             data-service="teams.getMemberships"
-                            data-event="load,teams.create,teams.update,teams.delete"
+                            data-event="load,teams.create,teams.update,teams.delete,teams.deleteMembership,teams.createMembership"
                             data-param-team-id="{{router.params.id}}"
                             data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                             data-param-offset="{{router.params.offset}}"
                             data-param-order-type="DESC"
                             data-scope="sdk"
-                            data-name="project-teams">
+                            data-name="project-members">
 
                             <div data-ls-if="0 == {{project-teams.sum}}" class="box margin-bottom">
                                 <h3 class="margin-bottom-small text-bold">No Memberships Found</h3>
@@ -81,94 +81,113 @@
                                 <p class="margin-bottom-no">Create your first team member to get started</p>
                             </div>
 
-                            <div data-ls-if="0 != {{project-teams.sum}}">
-                                <div class="margin-bottom-small margin-end-small text-align-end text-size-small"><span data-ls-bind="{{project-teams.sum}}"></span> results found</div>
+                            <div data-ls-if="0 != {{project-members.sum}}">
+                                <div class="margin-bottom-small margin-end-small text-align-end text-size-small margin-top-negative"><span data-ls-bind="{{project-members.sum}}"></span> members found</div>
 
-                                <div class="box margin-bottom margin-top-negative">
-                                    <table class="vertical">
-                                        <thead>
-                                            <tr>
-                                                <th width="40"></th>
-                                                <th>Name</th>
-                                                <th width="150">Members</th>
-                                                <th width="150">Created</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
-                                            <tr>
-                                                <td class="hide">
-                                                    <img src="" data-ls-attrs="src={{team.name|gravatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
-                                                </td>
-                                                <td data-title="Name: ">
-                                                    <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>
-                                                </td>
-                                                <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
-                                                <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|date-text}}"></small></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <div class="box margin-bottom">
+                                    <ul data-ls-loop="project-members.memberships" data-ls-as="member" class="list">
+                                        <li class="clear">
+                                            <form class="pull-end"
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Delete Team Membership"
+                                                data-service="teams.deleteMembership"
+                                                data-event="submit"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Member Removed Successfully"
+                                                data-success-param-trigger-events="teams.deleteMembership"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to Remove Member"
+                                                data-failure-param-alert-classname="error">
+
+                                                <input name="teamId" data-ls-attrs="id={{member.$id}}" type="hidden" data-ls-bind="{{router.params.id}}">
+                                                <input name="inviteId" data-ls-attrs="id=leave-inviteId-{{member.$id}}" type="hidden" data-ls-bind="{{member.$id}}">
+
+                                                <button class="danger">Leave</button>
+                                            </form>
+
+                                            <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+
+                                            <div class="margin-bottom-tiny">
+                                                <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;
+                                                <span data-ls-if="1 == {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="({{member.roles.length}} role)" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
+                                                <span  data-ls-if="2 <= {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="({{member.roles.length}} roles)" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
+                                            </div>
+                                            <small class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="text-danger text-size-small">Pending Approval</span>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
 
-                            <div data-ui-modal class="box modal close" data-button-text="Invite Member" data-button-class="pull-start">
+                            <div data-ui-modal class="box modal close" data-button-text="Add Member" data-button-class="pull-start">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                <h1>Create User</h1>
-                                <form
+                                <h1>Add Member</h1>
+
+                                <form name="teams.createTeamMembership"
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
-                                    data-analytics-label="Create User"
-                                    data-service="users.create"
+                                    data-analytics-label="Create Team Membership"
+                                    data-service="teams.createMembership"
                                     data-event="submit"
+                                    data-loading="Sending invitation, please wait..."
                                     data-success="alert,trigger,reset"
-                                    data-success-param-alert-text="Created user successfully"
-                                    data-success-param-trigger-events="users.create"
+                                    data-success-param-alert-text="Invitation sent successfully"
+                                    data-success-param-trigger-events="teams.createMembership"
                                     data-failure="alert"
-                                    data-failure-param-alert-text="Failed to create user"
+                                    data-failure-param-alert-text="Failed to send invite"
                                     data-failure-param-alert-classname="error">
 
-                                    <label for="user-name">Name</label>
-                                    <input type="text" class="full-width" id="user-name" name="name" required autocomplete="off" />
+                                    <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{team.$id}}">
+                                    <input name="url" type="hidden" data-ls-bind="{{env.PROTOCOL}}://{{env.DOMAIN}}" />
+                                    
+                                    <label for="email">Email</label>
+                                    <input name="email" id="email" type="email" autocomplete="email" required>
+                                    
+                                    <label for="team-name">Name <small>(optional)</small></label>
+                                    <input name="name" id="team-name" type="text" autocomplete="name">
 
-                                    <label for="user-email">Email</label>
-                                    <input type="email" class="full-width" id="user-email" name="email" required autocomplete="off" />
-
-                                    <label for="user-password">Password</label>
-                                    <input type="password" class="full-width" id="user-password" name="password" required pattern=".{6,}" title="Six or more characters" autocomplete="off" />
+                                    <label for="roles">Roles</label>
+                                    <input type="hidden" id="team-roles" name="roles" data-forms-tags data-cast-to="json" data-ls-bind="<?php echo $this->escape(json_encode(['owner'])); ?>" placeholder="Add any role you like" />
 
                                     <hr />
 
-                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                    <div class="clear">
+                                        <button>Send Invite</button>
+                                        &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                    </div>
                                 </form>
                             </div>
 
                             <div class="clear text-align-center paging pull-end">
                                 <form
-                                    data-service="teams.list"
+                                    data-service="teams.getMemberships"
                                     data-event="submit"
+                                    data-param-team-id="{{router.params.id}}"
                                     data-param-search="{{router.params.search}}"
                                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                     data-param-order-type="DESC"
                                     data-scope="sdk"
-                                    data-name="project-teams"
+                                    data-name="project-members"
                                     data-success="state"
                                     data-success-param-state-keys="search,offset">
-                                    <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                    <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-members.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                                 </form>
 
-                                <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-teams.sum|pageTotal}}"></span>
+                                <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-members.sum|pageTotal}}"></span>
 
                                 <form
-                                    data-service="teams.list"
+                                    data-service="teams.getMemberships"
                                     data-event="submit"
+                                    data-param-team-id="{{router.params.id}}"
                                     data-param-search="{{router.params.search}}"
                                     data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                     data-param-order-type="DESC"
                                     data-scope="sdk"
-                                    data-name="project-teams"
+                                    data-name="project-members"
                                     data-success="state"
                                     data-success-param-state-keys="search,offset">
-                                    <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-teams.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                    <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-members.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                                 </form>
                             </div>
                         </div>
