@@ -424,6 +424,10 @@ $utopia->delete('/v1/projects/:projectId')
                     }
                 }
             }
+            
+            if (!$consoleDB->deleteDocument($project->getAttribute('teamId', null))) {
+                throw new Exception('Failed to remove project team from DB', 500);
+            }
 
             if (!$consoleDB->deleteDocument($projectId)) {
                 throw new Exception('Failed to remove project from DB', 500);
