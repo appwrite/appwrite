@@ -22,7 +22,7 @@ trait TeamsBaseServer
         ], $this->getHeaders()));
         
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']);
+        $this->assertEquals(0, $response['body']['sum']);
 
         /**
          * Test for FAILURE

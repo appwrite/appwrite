@@ -22,10 +22,11 @@ trait TeamsBaseClient
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body'][0]['$id']);
-        $this->assertEquals($this->getUser()['name'], $response['body'][0]['name']);
-        $this->assertEquals($this->getUser()['email'], $response['body'][0]['email']);
-        $this->assertEquals('owner', $response['body'][0]['roles'][0]);
+        $this->assertIsInt($response['body']['sum']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+        $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
+        $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
+        $this->assertEquals('owner', $response['body'][0]['roles']['memberships'][0]);
 
         /**
          * Test for FAILURE
