@@ -26,7 +26,7 @@ trait TeamsBaseClient
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['name']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['email']);
-        $this->assertEquals('owner', $response['body'][0]['memberships']['roles'][0]);
+        $this->assertEquals('owner', $response['body']['memberships'][0]['roles'][0]);
 
         /**
          * Test for FAILURE
