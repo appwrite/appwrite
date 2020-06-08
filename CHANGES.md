@@ -11,6 +11,7 @@
 ## Bug Fixes
 
 - Fixed output of /v1/health/queue/certificates returning wrong data
+- Fixed bug where team members count was wrong in some cases
 
 ## Security
 

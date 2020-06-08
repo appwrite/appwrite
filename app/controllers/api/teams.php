@@ -584,9 +584,11 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
                 throw new Exception('Failed to remove membership from DB', 500);
             }
 
-            $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) - 1,
-            ]));
+            if ($membership->getAttribute('confirm')) { // Count only confirmed members
+                $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
+                    'sum' => $team->getAttribute('sum', 0) - 1,
+                ]));
+            }
 
             if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);
