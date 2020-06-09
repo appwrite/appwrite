@@ -1,1 +1,2 @@
 *.phtml linguist-detectable=false
+*.php linguist-detectable=false
