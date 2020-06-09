@@ -341,7 +341,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $mail->AltBody = strip_tags($body->render());
 
             try {
-                if(APP_MODE_ADMIN === $mode) { // No need in comfirmation when in admin mode
+                if(!APP_MODE_ADMIN === $mode) { // No need in comfirmation when in admin mode
                     $mail->send();
                 }
             } catch (\Exception $error) {
