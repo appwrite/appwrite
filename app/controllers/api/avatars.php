@@ -426,11 +426,16 @@ $utopia->get('/v1/avatars/initials')
             $initials = null;
             $code = 0;
 
-            foreach ($words as $w) {
+            foreach ($words as $key => $w) {
                 $initials .= (isset($w[0])) ? $w[0] : '';
                 $code += (isset($w[0])) ? ord($w[0]) : 0;
+
+                if($key == 1) {
+                    break;
+                }
             }
 
+            $length = count($words);
             $rand = substr($code,-1);
             $background = (!empty($background)) ? '#'.$background : $themes[$rand]['background'];
             $color = (!empty($color)) ? '#'.$color : $themes[$rand]['color'];
