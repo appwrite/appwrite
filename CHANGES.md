@@ -4,6 +4,7 @@
 
 - New route in Locale API to fetch a list of languages
 - Added Google Fonts to Appwrite for offline availability
+- Added a new route in the Avatars API to get user initials avatar
 
 ## Bug Fixes
 
