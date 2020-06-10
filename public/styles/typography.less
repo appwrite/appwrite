@@ -238,3 +238,11 @@ small {
 .icon-dot-3:before {
   .func-rotate(90deg);
 }
+
+// fix icons vertical alignment
+i[class^='icon-'], i[class*=' icon-']{
+  &:before {
+    display: inline;
+    line-height: unset;
+  }
+}
