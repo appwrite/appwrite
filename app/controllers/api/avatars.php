@@ -16,6 +16,7 @@ use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Utopia\Config\Config;
+use Utopia\Validator\HexColor;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -385,7 +386,83 @@ $utopia->get('/v1/avatars/qr')
             $response
                 ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
                 ->setContentType('image/png')
-                ->send('', $writer->writeString($text))
+                ->send($writer->writeString($text))
+            ;
+        }
+    );
+
+$utopia->get('/v1/avatars/initials')
+    ->desc('Get User Initials')
+    ->param('name', '', function () { return new Text(512); }, 'Full Name. When empty, current user name or email will be used.', true)
+    ->param('width', 500, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('height', 500, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
+    ->param('color', '', function () { return new HexColor(); }, 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
+    ->param('background', '', function () { return new HexColor(); }, 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
+    ->label('scope', 'avatars.read')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'avatars')
+    ->label('sdk.method', 'getInitials')
+    ->label('sdk.methodType', 'location')
+    ->label('sdk.description', '/docs/references/avatars/get-initials.md')
+    ->action(
+        function ($name, $width, $height, $color, $background) use ($response, $user) {
+            $themes = [
+                ['color' => '#27005e', 'background' => '#e1d2f6'], // VIOLET
+                ['color' => '#5e2700', 'background' => '#f3d9c6'], // ORANGE
+                ['color' => '#006128', 'background' => '#c9f3c6'], // GREEN
+                ['color' => '#580061', 'background' => '#f2d1f5'], // FUSCHIA
+                ['color' => '#00365d', 'background' => '#c6e1f3'], // BLUE
+                ['color' => '#00075c', 'background' => '#d2d5f6'], // INDIGO
+                ['color' => '#610038', 'background' => '#f5d1e6'], // PINK
+                ['color' => '#386100', 'background' => '#dcf1bd'], // LIME
+                ['color' => '#615800', 'background' => '#f1ecba'], // YELLOW
+                ['color' => '#610008', 'background' => '#f6d2d5'] // RED
+            ];
+
+            $rand = rand(0, count($themes)-1);
+
+            $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
+            $words = explode(' ', strtoupper($name));
+            $initials = null;
+            $code = 0;
+
+            foreach ($words as $key => $w) {
+                $initials .= (isset($w[0])) ? $w[0] : '';
+                $code += (isset($w[0])) ? ord($w[0]) : 0;
+
+                if($key == 1) {
+                    break;
+                }
+            }
+
+            $length = count($words);
+            $rand = substr($code,-1);
+            $background = (!empty($background)) ? '#'.$background : $themes[$rand]['background'];
+            $color = (!empty($color)) ? '#'.$color : $themes[$rand]['color'];
+
+            $image = new \Imagick();
+            $draw = new \ImagickDraw();
+            $fontSize = min($width, $height) / 2;
+            
+            $draw->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-600.ttf");
+            $image->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-600.ttf");
+
+            $draw->setFillColor(new \ImagickPixel($color));
+            $draw->setFontSize($fontSize);
+            
+            $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
+            $draw->annotation($width / 1.97, ($height / 2) + ($fontSize / 3), $initials);
+            
+            $image->newImage($width, $height, $background);
+            $image->setImageFormat("png");
+            $image->drawImage($draw);
+
+            //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
+
+            $response
+                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+                ->setContentType('image/png')
+                ->send($image->getImageBlob())
             ;
         }
     );
