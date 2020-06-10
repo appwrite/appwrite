@@ -3,7 +3,7 @@ window.ls.filter
     if (!$value) {
       return "";
     }
-    
+
     // MD5 (Message-Digest Algorithm) by WebToolkit
     let MD5 = function(s) {
       function L(k, d) {
@@ -216,59 +216,68 @@ window.ls.filter
     let email = $value.email || $value || "";
     let name = $value.name || $value || "";
     
-    name = (typeof name !== 'string') ? '' : name;
+    name = (typeof name !== 'string') ? '--' : name;
 
-    let theme = name
-      .split("")
-      .map(char => char.charCodeAt(0))
-      .reduce((a, b) => a + b, 0)
-      .toString();
-    let themes = [
-      { color: "27005e", background: "e1d2f6" }, // VIOLET
-      { color: "5e2700", background: "f3d9c6" }, // ORANGE
-      { color: "006128", background: "c9f3c6" }, // GREEN
-      { color: "580061", background: "f2d1f5" }, // FUSCHIA
-      { color: "00365d", background: "c6e1f3" }, // BLUE
-      { color: "00075c", background: "d2d5f6" }, // INDIGO
-      { color: "610038", background: "f5d1e6" }, // PINK
-      { color: "386100", background: "dcf1bd" }, // LIME
-      { color: "615800", background: "f1ecba" }, // YELLOW
-      { color: "610008", background: "f6d2d5" } // RED
-    ];
+    // let theme = name
+    //   .split("")
+    //   .map(char => char.charCodeAt(0))
+    //   .reduce((a, b) => a + b, 0)
+    //   .toString();
+    // let themes = [
+    //   { color: "27005e", background: "e1d2f6" }, // VIOLET
+    //   { color: "5e2700", background: "f3d9c6" }, // ORANGE
+    //   { color: "006128", background: "c9f3c6" }, // GREEN
+    //   { color: "580061", background: "f2d1f5" }, // FUSCHIA
+    //   { color: "00365d", background: "c6e1f3" }, // BLUE
+    //   { color: "00075c", background: "d2d5f6" }, // INDIGO
+    //   { color: "610038", background: "f5d1e6" }, // PINK
+    //   { color: "386100", background: "dcf1bd" }, // LIME
+    //   { color: "615800", background: "f1ecba" }, // YELLOW
+    //   { color: "610008", background: "f6d2d5" } // RED
+    // ];
 
-    name =
-      name
-        .split(" ")
-        .map(function(n) {
-          if (!isNaN(parseFloat(n)) && isFinite(n)) {
-            return "";
-          }
+    // name =
+    //   name
+    //     .split(" ")
+    //     .map(function(n) {
+    //       if (!isNaN(parseFloat(n)) && isFinite(n)) {
+    //         return "";
+    //       }
 
-          return n[0];
-        })
-        .join("") || "--";
+    //       return n[0];
+    //     })
+    //     .join("") || "--";
 
-    let background = themes[theme[theme.length - 1]]["background"];
-    let color = themes[theme[theme.length - 1]]["color"];
+    // let background = themes[theme[theme.length - 1]]["background"];
+    // let color = themes[theme[theme.length - 1]]["color"];
 
     let def =
-      "https://ui-avatars.com/api/" +
+      "/v1/avatars/initials?project=console"+
+      "&name=" +
       encodeURIComponent(name) +
-      "/" +
+      "&width=" +
       size +
-      "/" +
-      encodeURIComponent(background) +
-      "/" +
-      encodeURIComponent(color);
+      "&height=" +
+      size;
 
-    return (
-      "//www.gravatar.com/avatar/" +
-      MD5(email) +
-      ".jpg?s=" +
-      size +
-      "&d=" +
-      encodeURIComponent(def)
-    );
+    return def;
+    // let def =
+    //   "https://ui-avatars.com/api/" +
+    //   encodeURIComponent(name) +
+    //   "/" +
+    //   size +
+    //   "/" +
+    //   encodeURIComponent(background) +
+    //   "/" +
+    //   encodeURIComponent(color);
+    // return (
+    //   "//www.gravatar.com/avatar/" +
+    //   MD5(email) +
+    //   ".jpg?s=" +
+    //   size +
+    //   "&d=" +
+    //   encodeURIComponent(def)
+    // );
   })
   .add("selectedCollection", function($value, router) {
     return $value === router.params.collectionId ? "selected" : "";

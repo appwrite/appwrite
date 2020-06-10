@@ -5,6 +5,7 @@
 - New route in Locale API to fetch a list of languages
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Added Google Fonts to Appwrite for offline availability
+- Added a new route in the Avatars API to get user initials avatar
 
 ## Bug Fixes
 
