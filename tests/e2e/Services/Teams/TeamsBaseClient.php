@@ -234,8 +234,6 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['memberships']);
 
-        var_dump($response);
-
         return [];
     }
 }
