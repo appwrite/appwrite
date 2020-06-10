@@ -8,10 +8,11 @@
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Users</a>
+            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Users</a>
             <br />
 
             <span data-ls-bind="{{user.name}}">&nbsp;</span>
+            <span data-ls-if="{{user.name}} === ''">Unknown</span>
         </h1>
     </div>
 

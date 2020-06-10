@@ -4,10 +4,17 @@
 
 - New route in Locale API to fetch a list of languages
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
+- Added Google Fonts to Appwrite for offline availability
 
 ## Bug Fixes
 
 - Fixed output of /v1/health/queue/certificates returning wrong data
+- Fixed network calculation for uploaded files
+- Fixed a UI bug preventing float values in numeric fields
+
+## Security
+
+- Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
 
 # Version 0.6.2 (PRE-RELEASE)
 

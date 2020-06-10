@@ -130,10 +130,6 @@
     .account {
       .func-margin-start(25px);
       .text-one-liner;
-
-      &:hover {
-        border-bottom: none;
-      }
     }
 
     .switch-theme {
@@ -189,11 +185,6 @@
         height: 39px;
         padding: 15px 20px;
         display: block;
-        border-bottom: none;
-
-        &:hover {
-          border-bottom: none;
-        }
 
         img {
           display: inline-block;
@@ -364,7 +355,6 @@
           &:hover,
           &.selected {
             color: #e4e4e4;
-            font-weight: 500;
           }
         }
       }
@@ -548,6 +538,7 @@
 
       @media @tablets, @phones {
         width: 100%;
+        padding-bottom: 32%;
         float: none;
         margin-bottom: 20px;
       }

@@ -201,7 +201,7 @@ $graph = $this->getParam('graph', false);
         <input type="hidden" name="type" data-ls-bind="web" />
 
         <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" id="name" name="name" required autocomplete="off" placeholder="My Web App" />
+        <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Web App" />
 
         <label for="hostname">Hostname <span class="tooltip large" data-tooltip="The hostname that your website will use to interact with the <?php echo APP_NAME; ?> APIs in production or development environments. No port number required."><i class="icon-question"></i></span></label>
         <input name="hostname" type="text" class="margin-bottom" autocomplete="off" placeholder="localhost" required>
@@ -277,10 +277,10 @@ $graph = $this->getParam('graph', false);
                 <input type="hidden" name="type" data-ls-bind="flutter-ios" />
 
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" placeholder="My iOS App" />
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My iOS App" />
 
                 <label for="key">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
-                <input type="text" class="full-width" id="key" name="key" required autocomplete="off" placeholder="com.company.appname" />
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
 
                 <hr />
 
@@ -309,10 +309,10 @@ $graph = $this->getParam('graph', false);
                 <input type="hidden" name="type" data-ls-bind="flutter-android" />
 
                 <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" placeholder="My Android App" />
+                <input type="text" class="full-width" name="name" required autocomplete="off" placeholder="My Android App" />
 
                 <label for="key">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
-                <input type="text" class="full-width" id="key" name="key" required autocomplete="off" placeholder="com.company.appname" />
+                <input type="text" class="full-width" name="key" required autocomplete="off" placeholder="com.company.appname" />
 
                 <hr />
 

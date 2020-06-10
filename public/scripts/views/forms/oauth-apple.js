@@ -63,7 +63,6 @@
       }
 
       function sync() {
-        console.log('sync');
         if(!element.value) {
           return;
         }
