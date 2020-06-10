@@ -9,6 +9,9 @@
                 case 'integer':
                     value = parseInt(value);
                     break;
+                case 'numeric':
+                    value = Number(value);
+                    break;
                 case 'string':
                     value = value.toString();
                     break;

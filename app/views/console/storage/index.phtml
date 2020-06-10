@@ -36,7 +36,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to upload file"
                     data-failure-param-alert-classname="error">
-                    <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+                    <input type="hidden" name="folderId" id="files-folderId" data-cast-to="integer" value="1">
 
                     <label for="file-read">File</label>
                     <input type="file" name="file" id="file-file" size="1" required>
@@ -141,7 +141,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                         <div class="input-copy">
                                                             <input data-forms-copy type="text" data-ls-attrs="id=file-id-{{file.$id}}" name="fileId" disabled data-ls-bind="{{file.$id}}" />
                                                         </div>
-                                                        <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="int" value="1">
+                                                        <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="integer" value="1">
 
                                                         <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
                                                         <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" placeholder="User ID, Team ID or Role" />
