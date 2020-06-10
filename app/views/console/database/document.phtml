@@ -20,7 +20,7 @@ $collections = [];
     $key = (isset($rule['key'])) ? $rule['key'] : '';
     $label = (isset($rule['label'])) ? $rule['label'] : '';
     $type = (isset($rule['type'])) ? $rule['type'] : '';
-    $list = (isset($rule['list'])) ? $rule['list'] : [];
+    $list = (isset($rule['list']) && !empty($list)) ? $rule['list'] : [];
 ?>
     <?php foreach($list as $item):
         if($item === $collection->getId()) {
@@ -51,7 +51,7 @@ $collections = [];
     $key = (isset($rule['key'])) ? $rule['key'] : '';
     $label = (isset($rule['label'])) ? $rule['label'] : '';
     $type = (isset($rule['type'])) ? $rule['type'] : '';
-    $list = (isset($rule['list'])) ? $rule['list'] : false;
+    $list = (isset($rule['list'])) ? $rule['list'] : [];
     $array = (isset($rule['array'])) ? $rule['array'] : false;
 ?>
 
