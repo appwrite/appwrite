@@ -457,7 +457,7 @@ $rules = $collection->getAttribute('rules', []);
 <script type="text/html" id="template-validation-numeric">
     <div class="margin-bottom">
         <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
-        <input name="default" type="number" data-ls-bind="{{rule.default}}" data-cast-to="integer" placeholder="0" />
+        <input name="default" type="number" data-ls-bind="{{rule.default}}" data-cast-to="numeric" placeholder="0" step="any" />
     </div>
 </script>
 
