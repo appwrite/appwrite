@@ -51,6 +51,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
     _APP_OPTIONS_ABUSE=enabled \
+    _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
     _APP_STORAGE_LIMIT=104857600 \
     _APP_STORAGE_ANTIVIRUS=enabled \
