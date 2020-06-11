@@ -415,6 +415,13 @@ window.ls.filter
     return $value.substring(0, 50) + postfix;
     ;
   })
+  .add("arraySentence", function($value) {
+    if(!Array.isArray($value)) {
+      return '';
+    }
+
+    return $value.join(", ").replace(/,\s([^,]+)$/, ' and $1');
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {
