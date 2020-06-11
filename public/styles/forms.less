@@ -17,6 +17,11 @@ input, textarea {
   background: var(--config-color-background-input);
 }
 
+input[type=file],
+input[type=file]::-webkit-file-upload-button {
+    cursor: pointer; 
+}
+
 button,
 .button {
   display: inline-block;
