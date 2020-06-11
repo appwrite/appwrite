@@ -316,12 +316,19 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/_base.tpl');
+            $content = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.invitation.body'));
+            $cta = new Template(__DIR__.'/../../config/locales/templates/_cta.tpl');
+
             $body
+                ->setParam('{{content}}', $content->render())
+                ->setParam('{{cta}}', $cta->render())
+                ->setParam('{{title}}', Locale::getText('account.emails.invitation.title'))
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
                 ->setParam('{{owner}}', $user->getAttribute('name', ''))
+                ->setParam('{{name}}', $name)
                 ->setParam('{{redirect}}', $url)
             ;
 

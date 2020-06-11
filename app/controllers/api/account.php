@@ -1074,8 +1074,14 @@ $utopia->post('/v1/account/recovery')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.recovery.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/_base.tpl');
+            $content = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.recovery.body'));
+            $cta = new Template(__DIR__.'/../../config/locales/templates/_cta.tpl');
+
             $body
+                ->setParam('{{content}}', $content->render())
+                ->setParam('{{cta}}', $cta->render())
+                ->setParam('{{title}}', Locale::getText('account.emails.recovery.title'))
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{name}}', $profile->getAttribute('name'))
@@ -1223,8 +1229,14 @@ $utopia->post('/v1/account/verification')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.verification.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/_base.tpl');
+            $content = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.verification.body'));
+            $cta = new Template(__DIR__.'/../../config/locales/templates/_cta.tpl');
+
             $body
+                ->setParam('{{content}}', $content->render())
+                ->setParam('{{cta}}', $cta->render())
+                ->setParam('{{title}}', Locale::getText('account.emails.verification.title'))
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{name}}', $user->getAttribute('name'))
