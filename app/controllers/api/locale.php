@@ -165,3 +165,19 @@ $utopia->get('/v1/locale/currencies')
             $response->json($currencies);
         }
     );
+
+
+$utopia->get('/v1/locale/languages')
+    ->desc('List Languages')
+    ->label('scope', 'locale.read')
+    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'locale')
+    ->label('sdk.method', 'getLanguages')
+    ->label('sdk.description', '/docs/references/locale/get-languages.md')
+    ->action(
+        function () use ($response) {
+            $languages = include __DIR__.'/../../config/languages.php';
+
+            $response->json($languages);
+        }
+    );

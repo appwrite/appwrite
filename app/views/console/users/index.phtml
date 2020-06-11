@@ -107,7 +107,7 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="45" alt="User Avatar" class="avatar pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <a data-ls-attrs="href=/console/users/view?id={{user.$id}}&project={{router.params.project}}">
+                                        <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
                                             <span data-ls-bind="{{user.name}}"></span>
                                             <span data-ls-if="{{user.name}} === ''">-----</span>
                                         </a>
@@ -253,36 +253,7 @@ $providers = $this->getParam('providers', []);
                                         <img src="" data-ls-attrs="src={{team.name|gravatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
-                                        <div data-ui-modal class="box modal close" data-button-text="{{team.name}}" data-button-class="link">
-                                            <h1>Update Team</h1>
-
-                                            <form
-                                                data-analytics-event="submit"
-                                                data-analytics-category="console"
-                                                data-analytics-label="Update Team"
-                                                data-service="teams.update"
-                                                data-scope="sdk"
-                                                data-event="submit"
-                                                data-success="alert,trigger"
-                                                data-success-param-alert-text="Updated team successfully"
-                                                data-success-param-trigger-events="teams.update"
-                                                data-failure="alert"
-                                                data-failure-param-alert-text="Failed to update team"
-                                                data-failure-param-alert-classname="error">
-
-                                                <label for="name">ID</label>
-                                                <div class="input-copy">
-                                                    <input data-ls-attrs="id=team-id-{{team.$id}}" name="teamId" data-forms-copy type="text" disabled data-ls-bind="{{team.$id}}" />
-                                                </div>
-
-                                                <label for="name">Name</label>
-                                                <input data-ls-attrs="id=team-name-{{team.$id}}" name="name" type="text" autocomplete="off" data-ls-bind="{{team.name}}">
-
-                                                <hr />
-
-                                                <button>Update</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                            </form>
-                                        </div>
+                                        <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>
                                     </td>
                                     <td data-title="Members: "><span data-ls-bind="{{team.sum}} members"></span></td>
                                     <td data-title="Date Created: "><small data-ls-bind="{{team.dateCreated|date-text}}"></small></td>

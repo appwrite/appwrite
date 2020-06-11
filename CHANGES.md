@@ -6,10 +6,14 @@
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Added Google Fonts to Appwrite for offline availability
 - Added a new route in the Avatars API to get user initials avatar
+- Added option to delete team from the console
+- Added option to view team members from the console
+- Added option to join a user to any team from the console
 
 ## Bug Fixes
 
 - Fixed output of /v1/health/queue/certificates returning wrong data
+- Fixed bug where team members count was wrong in some cases
 - Fixed network calculation for uploaded files
 - Fixed a UI bug preventing float values in numeric fields
 
