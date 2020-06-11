@@ -16,6 +16,7 @@
 - Fixed bug where team members count was wrong in some cases
 - Fixed network calculation for uploaded files
 - Fixed a UI bug preventing float values in numeric fields
+- Fixed scroll positioning when moving rules order up & down
 
 ## Security
 
