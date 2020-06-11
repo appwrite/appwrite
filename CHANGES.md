@@ -12,6 +12,7 @@
 - Fixed output of /v1/health/queue/certificates returning wrong data
 - Fixed network calculation for uploaded files
 - Fixed a UI bug preventing float values in numeric fields
+- Fixed missing validation for database documents key length (32 chars)
 
 ## Security
 
