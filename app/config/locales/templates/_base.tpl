@@ -39,7 +39,6 @@
     .container {
       display: block;
       margin: 0 auto !important;
-      /* makes it centered */
       max-width: 580px;
       padding: 10px;
       width: 580px;
@@ -68,7 +67,6 @@
       padding-bottom: 10px;
       padding-top: 10px;
     }
-
 
     p {
       font-family: sans-serif;
