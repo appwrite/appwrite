@@ -2,19 +2,19 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Storage\Validators\FileType;
+use Appwrite\Storage\Validator\Upload;
 use PHPUnit\Framework\TestCase;
 
-class FileTypeTest extends TestCase
+class UploadTest extends TestCase
 {
     /**
-     * @var FileType
+     * @var Upload
      */
     protected $object = null;
 
     public function setUp()
     {
-        $this->object = new FileType([FileType::FILE_TYPE_JPEG]);
+        $this->object = new Upload();
     }
 
     public function tearDown()
@@ -23,9 +23,10 @@ class FileTypeTest extends TestCase
 
     public function testValues()
     {
-        $this->assertEquals($this->object->isValid(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg'), true);
-        $this->assertEquals($this->object->isValid(__DIR__ . '/../../../resources/disk-a/kitten-2.jpg'), true);
+        $this->assertEquals($this->object->isValid(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg'), false);
+        $this->assertEquals($this->object->isValid(__DIR__ . '/../../../resources/disk-a/kitten-2.jpg'), false);
         $this->assertEquals($this->object->isValid(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), false);
         $this->assertEquals($this->object->isValid(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), false);
+        $this->assertEquals($this->object->isValid(__FILE__), false);
     }
 }

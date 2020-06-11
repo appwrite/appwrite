@@ -475,7 +475,7 @@ $utopia->get('/open-api-2.json')
                                 $node['x-example'] = '{}';
                                 //$node['format'] = 'json';
                                 break;
-                            case 'Appwrite\Storage\Validators\File':
+                            case 'Appwrite\Storage\Validator\File':
                                 $consumes = ['multipart/form-data'];
                                 $node['type'] = 'file';
                                 break;

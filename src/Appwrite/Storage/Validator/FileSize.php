@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Storage\Validators;
+namespace Appwrite\Storage\Validator;
 
 use Utopia\Validator;
 

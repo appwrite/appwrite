@@ -16,7 +16,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use Appwrite\Network\Validators\Origin;
+use Appwrite\Network\Validator\Origin;
 
 /*
  * Configuration files

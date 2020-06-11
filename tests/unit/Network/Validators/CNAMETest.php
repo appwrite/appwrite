@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Network\Validators\CNAME;
+use Appwrite\Network\Validator\CNAME;
 use PHPUnit\Framework\TestCase;
 
 class CNAMETest extends TestCase

@@ -5,7 +5,7 @@ use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
-use Appwrite\Network\Validators\CNAME;
+use Appwrite\Network\Validator\CNAME;
 
 require_once __DIR__.'/../init.php';
 
