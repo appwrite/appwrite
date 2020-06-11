@@ -104,7 +104,7 @@ $providers = $this->getParam('providers', []);
                             <tbody data-ls-loop="project-users.users" data-ls-as="user">
                                 <tr>
                                     <td class="hide">
-                                        <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="45" alt="User Avatar" class="avatar pull-start" loading="lazy" width="30" height="30" />
+                                        <img src="" data-ls-attrs="src={{user|avatar}}" data-size="45" alt="User Avatar" class="avatar pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/user?id={{user.$id}}&project={{router.params.project}}">
@@ -250,7 +250,7 @@ $providers = $this->getParam('providers', []);
                             <tbody data-ls-loop="project-teams.teams" data-ls-as="team">
                                 <tr>
                                     <td class="hide">
-                                        <img src="" data-ls-attrs="src={{team.name|gravatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
+                                        <img src="" data-ls-attrs="src={{team.name|avatar}}" data-size="45" alt="Collection Avatar" class="avatar margin-end pull-start" loading="lazy" width="30" height="30" />
                                     </td>
                                     <td data-title="Name: ">
                                         <a data-ls-attrs="href=/console/users/teams/team?id={{team.$id}}&project={{router.params.project}}" data-ls-bind="{{team.name}}"></a>

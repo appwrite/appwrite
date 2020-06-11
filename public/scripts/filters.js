@@ -1,5 +1,5 @@
 window.ls.filter
-  .add("gravatar", function($value, element) {
+  .add("avatar", function($value, element) {
     if (!$value) {
       return "";
     }
