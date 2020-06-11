@@ -1,6 +1,7 @@
 <?php
 $collection = $this->getParam('collection', []);
 $rules = $collection->getAttribute('rules', []);
+$maxCells = 10;
 ?>
 
 <div
@@ -87,7 +88,10 @@ $rules = $collection->getAttribute('rules', []);
                             <table class="vertical">
                                 <thead>
                                     <tr>
-                                        <?php foreach($rules as $rule):
+                                        <?php foreach($rules as $i => $rule):
+                                            if($i > $maxCells) {
+                                                break;
+                                            }
                                             $label = (isset($rule['label'])) ? $rule['label'] : '';
                                             ?>
                                             <th width="120"><?php echo $this->escape($label); ?></th>
@@ -96,7 +100,10 @@ $rules = $collection->getAttribute('rules', []);
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                                     <tr>
-                                        <?php foreach($rules as $rule):
+                                        <?php foreach($rules as $i => $rule):
+                                            if($i > $maxCells) {
+                                                break;
+                                            }
                                             $label = (isset($rule['label'])) ? $rule['label'] : '';
                                             $key = (isset($rule['key'])) ? $rule['key'] : '';
                                             $type = (isset($rule['type'])) ? $rule['type'] : '';
