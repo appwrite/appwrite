@@ -80,7 +80,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests gcc git wget curl ca-certificates software-properties-common openssl gnupg && \
+  apt-get install -y --no-install-recommends --no-install-suggests git wget curl ca-certificates software-properties-common openssl gnupg && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
   add-apt-repository ppa:certbot/certbot && \
@@ -110,7 +110,8 @@ RUN cd /usr/local/src \
 RUN ls -la /usr/local/src/ngx_brotli
 
 WORKDIR /usr/local/src/nginx-1.19.0
-RUN ./configure --with-cc-opt='-g -O2 -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2' \
+RUN apt-get install -y --no-install-recommends --no-install-suggests gcc && \
+    ./configure --with-cc-opt='-g -O2 -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2' \
     --with-ld-opt='-Wl,-Bsymbolic-functions -fPIE -pie -Wl,-z,relro -Wl,-z,now' \
     --prefix=/usr/share/nginx \
     --conf-path=/etc/nginx/nginx.conf \
