@@ -1086,6 +1086,12 @@ $utopia->post('/v1/account/recovery')
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{name}}', $profile->getAttribute('name'))
                 ->setParam('{{redirect}}', $url)
+                ->setParam('{{bg-body}}', '#f6f6f6')
+                ->setParam('{{bg-content}}', '#ffffff')
+                ->setParam('{{bg-cta}}', '#3498db')
+                ->setParam('{{bg-cta-hover}}', '#34495e')
+                ->setParam('{{text-content}}', '#000000')
+                ->setParam('{{text-cta}}', '#ffffff')
             ;
 
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
@@ -1241,6 +1247,12 @@ $utopia->post('/v1/account/verification')
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{name}}', $user->getAttribute('name'))
                 ->setParam('{{redirect}}', $url)
+                ->setParam('{{bg-body}}', '#f6f6f6')
+                ->setParam('{{bg-content}}', '#ffffff')
+                ->setParam('{{bg-cta}}', '#3498db')
+                ->setParam('{{bg-cta-hover}}', '#34495e')
+                ->setParam('{{text-content}}', '#000000')
+                ->setParam('{{text-cta}}', '#ffffff')
             ;
 
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */

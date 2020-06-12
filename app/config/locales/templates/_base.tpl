@@ -7,7 +7,8 @@
   <title>{{title}}</title>
   <style>
     body {
-      background-color: #f6f6f6;
+      background-color: {{bg-body}};
+      color: {{text-content}};
       font-family: sans-serif;
       -webkit-font-smoothing: antialiased;
       font-size: 14px;
@@ -32,7 +33,7 @@
     }
 
     .body {
-      background-color: #f6f6f6;
+      background-color: {{bg-body}};
       width: 100%;
     }
 
@@ -50,10 +51,11 @@
       margin: 0 auto;
       max-width: 580px;
       padding: 10px;
+      color: {{text-content}};
     }
 
     .main {
-      background: #ffffff;
+      background: {{bg-content}};
       border-radius: 3px;
       width: 100%;
     }
@@ -94,14 +96,14 @@
     }
 
     .btn table td {
-      background-color: #ffffff;
+      background-color: {{bg-content}};
       border-radius: 5px;
       text-align: center;
     }
 
     .btn a {
-      background-color: #ffffff;
-      border: solid 1px #3498db;
+      background-color: {{bg-content}};
+      border: solid 1px {{bg-cta}};
       border-radius: 5px;
       box-sizing: border-box;
       color: #3498db;
@@ -116,13 +118,13 @@
     }
 
     .btn-primary table td {
-      background-color: #3498db;
+      background-color: {{bg-cta}};
     }
 
     .btn-primary a {
-      background-color: #3498db;
-      border-color: #3498db;
-      color: #ffffff;
+      background-color: {{bg-cta}};
+      border-color: {{bg-cta}};
+      color: {{text-cta}};
     }
 
     @media only screen and (max-width: 620px) {
@@ -196,18 +198,18 @@
       }
 
       .btn-primary table td:hover {
-        background-color: #34495e !important;
+        background-color: {{bg-cta-hover}} !important;
       }
 
       .btn-primary a:hover {
-        background-color: #34495e !important;
-        border-color: #34495e !important;
+        background-color: {{bg-cta-hover}} !important;
+        border-color: {{bg-cta-hover}} !important;
       }
     }
   </style>
 </head>
 
-<body class="" style="direction: {{direction}}">
+<body style="direction: {{direction}}">
   <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="body">
     <tr>
       <td>&nbsp;</td>

@@ -329,6 +329,12 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
                 ->setParam('{{owner}}', $user->getAttribute('name', ''))
                 ->setParam('{{redirect}}', $url)
+                ->setParam('{{bg-body}}', '#f6f6f6')
+                ->setParam('{{bg-content}}', '#ffffff')
+                ->setParam('{{bg-cta}}', '#3498db')
+                ->setParam('{{bg-cta-hover}}', '#34495e')
+                ->setParam('{{text-content}}', '#000000')
+                ->setParam('{{text-cta}}', '#ffffff')
             ;
 
             $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
