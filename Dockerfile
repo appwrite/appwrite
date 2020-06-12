@@ -91,17 +91,12 @@ RUN \
   cd /usr/local/src && \
   wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
   tar -xzvf nginx-1.19.0.tar.gz && \
+  cd - && \
   # Redis Extension
   echo "extension=redis.so" >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo "extension=redis.so" >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
-  # Cleanup
-  cd ../ && \
-  apt-get purge -y --auto-remove software-properties-common gnupg curl && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
-  
   #Brotli
-RUN cd /usr/local/src \
+  cd /usr/local/src \
   && git clone https://github.com/google/ngx_brotli.git --recursive \
   && cd ngx_brotli \
   && git submodule update --recursive
@@ -110,7 +105,8 @@ RUN cd /usr/local/src \
 RUN ls -la /usr/local/src/ngx_brotli
 
 WORKDIR /usr/local/src/nginx-1.19.0
-RUN apt-get install -y --no-install-recommends --no-install-suggests gcc && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --no-install-suggests gcc build-essential && \
     ./configure --with-cc-opt='-g -O2 -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2' \
     --with-ld-opt='-Wl,-Bsymbolic-functions -fPIE -pie -Wl,-z,relro -Wl,-z,now' \
     --prefix=/usr/share/nginx \
@@ -148,13 +144,18 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests gcc && \
     --add-module=/usr/local/src/ngx_brotli \
     --sbin-path=/usr/sbin/nginx
 
+# Cleanup
 RUN make \
     && apt-get remove nginx -y \
     && apt-get remove nginx-common -y \
     && checkinstall -y \
     && mkdir -p /var/lib/nginx \
     && mkdir -p /var/lib/nginx/body \
-    && mkdir -p /var/lib/nginx/fastcgi
+    && mkdir -p /var/lib/nginx/fastcgi \
+    && cd ../ && \
+    apt-get purge -y --auto-remove software-properties-common gnupg curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
