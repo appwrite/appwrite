@@ -88,9 +88,9 @@ RUN \
   apt-get install -y --no-install-recommends --no-install-suggests htop supervisor php$PHP_VERSION php$PHP_VERSION-fpm \
   php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
   # Nginx
-  RUN cd /usr/local/src \
-    && wget http://nginx.org/download/nginx-1.19.0.tar.gz \
-    && tar -xzvf nginx-1.19.0.tar.gz
+  cd /usr/local/src && \
+  wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
+  tar -xzvf nginx-1.19.0.tar.gz && \
   # Redis Extension
   echo "extension=redis.so" >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo "extension=redis.so" >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
