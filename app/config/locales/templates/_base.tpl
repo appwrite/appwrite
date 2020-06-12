@@ -76,6 +76,10 @@
       margin-bottom: 15px;
     }
 
+    a {
+      word-break: break-all;
+    }
+
     .btn {
       box-sizing: border-box;
       width: 100%;

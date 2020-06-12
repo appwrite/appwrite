@@ -17,3 +17,10 @@
     </tr>
   </tbody>
 </table>
+<p>
+  <small>
+    <a href="{{redirect}}" target="_blank">
+      {{redirect}}
+    </a>
+  </small>
+</p>
