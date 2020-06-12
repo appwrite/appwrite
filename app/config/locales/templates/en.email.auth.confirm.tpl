@@ -1,15 +1,15 @@
 <p>
-  Hello {{name}},
+    Hello {{name}},
 </p>
 <p>
-  Follow this link to verify your email address.
+    Follow this link to verify your email address.
 </p>
 {{cta}}
 <p>
-  If you didn’t ask to verify this address, you can ignore this message.
+    If you didn’t ask to verify this address, you can ignore this message.
 </p>
 <p>
-  Thanks,
-  <br />
-  {{project}} team
+    Thanks,
+    <br />
+    {{project}} team
 </p>

@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halo {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Tindakake link iki kanggo ngreset {{project}} sandhi.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Yen sampeyan ora njaluk ngreset sandhi, sampeyan bisa nglalekake pesen iki.
-    <br />
-    <br />
+</p>
+<p>
     Matur suwun,
     <br />
     tim {{project}}
-</div>
+</p>

@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hello {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Ikuti pautan ini sekiranya anda mahu menetapkan semula kata laluan {{project}} anda.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Sekiranya anda tidak meminta untuk menetapkan semula kata laluan anda,anda boleh sahaja mengabaikan mesej ini.
-    <br />
-    <br />
+</p>
+<p>
     Terima Kasih,
     <br />
     Kumpulan {{project}}
-</div>
+</p>

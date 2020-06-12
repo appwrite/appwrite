@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Xin chào {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Hãy theo liên kết này để khôi phục mật khẩu của bạn ở {{project}}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Hãy bỏ qua lời nhắn này nếu bạn không yêu cầu khôi phục mật khẩu.
-    <br />
-    <br />
+</p>
+<p>
     Xin cảm ơn,
     <br />
     {{project}} team
-</div>
+</p>

@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Ողջույն,
-    <br />
-    <br />
+</p>
+<p>
     Դուք ստացել եք այս նամակը, քանի որ <b>{{owner}}-ը</b> հրավիրում է Ձեզ <b>{{team}}</b> խումբ, {{project}} պրոեկտում։
-    <br />
-    <br />
+</p>
+<p>
     Անցեք հղումով, որ միանաք <b>{{team}}</b> թիմին՝
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Եթե հետաքրքրված չեք դրանով, պարզապես արհամարհեք այս նամակը։
-    <br />
-    <br />
+</p>
+<p>
     Շնորհակալություն,
     <br />
     {{project}} թիմ
-</div>
+</p>

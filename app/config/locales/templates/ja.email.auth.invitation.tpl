@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     こんにちは。
-    <br />
-    <br />
+</p>
+<p>
     <b>{{owner}}</b> さんから {{project}} プロジェクトの <b>{{team}}</b> チームへの参加招待が届きました。
-    <br />
-    <br />
+</p>
+<p>
     下記のリンクから <b>{{team}}</b> へ参加してください。
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     お手数ですが、心当たりがない場合このメールを破棄してください。
-    <br />
-    <br />
+</p>
+<p>
     ありがとうございます。
     <br />
     {{project}} チーム
-</div>
+</p>

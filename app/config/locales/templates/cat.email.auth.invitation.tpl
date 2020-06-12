@@ -1,28 +1,19 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hola,
-    <br />
-    <br />
+</p>
+<p>
     T'hem enviat aquest correu perquè <b>{{owner}}</b> et vol convidar a formar part
     de l'equip <b>{{team}}</b> a {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Segueix aquest enllaç per unir-te a l'equip <b>{{team}}</b>:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Si no estàs interessat, pots ignorar aquest missatge.
-    <br />
-    <br />
+</p>
+<p>
     Gràcies,
     <br />
     Equip {{project}}
-</div>
+</p>

@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Ahoj {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Pomocí tohoto odkazu obnovte své heslo {{project}}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Pokud jste nepožádali o resetování hesla, můžete tuto zprávu ignorovat.
-    <br />
-    <br />
+</p>
+<p>
     Dík,
     <br />
     {{project}} tým
-</div>
+</p>

@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     مرحبا {{name}}،
-    <br />
-    <br />
+</p>
+<p>
     اتبع هذا الرابط لإعادة تعيين كلمة مرور {{project}}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     إذا لم تطلب إعادة تعيين كلمة المرور الخاصة بك، فيمكنك تجاهل هذه الرسالة.
-    <br />
-    <br />
+</p>
+<p>
     شكرا،
     <br />
     فريق {{project}}
-</div>
+</p>
