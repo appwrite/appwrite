@@ -328,7 +328,6 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
                 ->setParam('{{owner}}', $user->getAttribute('name', ''))
-                ->setParam('{{name}}', $name)
                 ->setParam('{{redirect}}', $url)
             ;
 
