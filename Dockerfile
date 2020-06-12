@@ -149,7 +149,6 @@ RUN apt-get update && \
 RUN make \
     && apt-get remove nginx -y \
     && apt-get remove nginx-common -y \
-    && checkinstall -y \
     && mkdir -p /var/lib/nginx \
     && mkdir -p /var/lib/nginx/body \
     && mkdir -p /var/lib/nginx/fastcgi \
