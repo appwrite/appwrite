@@ -92,8 +92,8 @@ RUN \
     && wget http://nginx.org/download/nginx-1.19.0.tar.gz \
     && tar -xzvf nginx-1.19.0.tar.gz
   # Redis Extension
-  echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
-  echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
+  echo "extension=redis.so" >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
+  echo "extension=redis.so" >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
   # Cleanup
   cd ../ && \
   apt-get purge -y --auto-remove software-properties-common gnupg curl && \
