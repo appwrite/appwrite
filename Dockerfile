@@ -106,7 +106,7 @@ RUN ls -la /usr/local/src/ngx_brotli
 
 WORKDIR /usr/local/src/nginx-1.19.0
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends --no-install-suggests gcc build-essential pcre-devel && \
+    apt-get install -y --no-install-recommends --no-install-suggests gcc build-essential libpcre3-dev && \
     ./configure --with-cc-opt='-g -O2 -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2' \
     --with-ld-opt='-Wl,-Bsymbolic-functions -fPIE -pie -Wl,-z,relro -Wl,-z,now' \
     --prefix=/usr/share/nginx \
