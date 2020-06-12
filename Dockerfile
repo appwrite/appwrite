@@ -80,7 +80,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests git wget curl ca-certificates software-properties-common openssl gnupg && \
+  apt-get install -y --no-install-recommends --no-install-suggests gcc git wget curl ca-certificates software-properties-common openssl gnupg && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
   add-apt-repository ppa:certbot/certbot && \
