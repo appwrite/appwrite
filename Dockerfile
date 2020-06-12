@@ -107,7 +107,7 @@ RUN ls -la /usr/local/src/ngx_brotli
 WORKDIR /usr/local/src/nginx-1.19.0
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --no-install-suggests gcc build-essential zlib1g-dev libpcre3-dev \
-    libssl-dev libxslt1-dev libxml2-dev libgd2-xpm-dev libgeoip-dev libgoogle-perftools-dev libperl-dev && \
+    libssl-dev libxslt1-dev libxml2-dev libgd-dev libgeoip-dev libgoogle-perftools-dev libperl-dev && \
     ./configure --with-cc-opt='-g -O2 -fPIE -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2' \
     --with-ld-opt='-Wl,-Bsymbolic-functions -fPIE -pie -Wl,-z,relro -Wl,-z,now' \
     --prefix=/usr/share/nginx \
