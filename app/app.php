@@ -27,7 +27,7 @@ $services = include __DIR__.'/config/services.php'; // List of services
 $webhook = new Event('v1-webhooks', 'WebhooksV1');
 $audit = new Event('v1-audits', 'AuditsV1');
 $usage = new Event('v1-usage', 'UsageV1');
-$deletes = new Event('v1-deletes', 'DeletesV1');
+$mail = new Event('v1-mails', 'MailsV1');
 
 /**
  * Get All verified client URLs for both console and current projects
@@ -53,7 +53,7 @@ $clients = array_unique(array_merge($clientsConsole, array_map(function ($node) 
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $roles, $webhook, $audit, $usage, $clients) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $roles, $webhook, $mail, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 
@@ -226,7 +226,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
+$utopia->shutdown(function () use ($response, $request, $webhook, $mail, $audit, $usage, $mode, $project, $utopia) {
 
     /*
      * Trigger events for background workers

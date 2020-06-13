@@ -1,7 +1,7 @@
 <?php
 
 global $utopia, $register, $request, $response, $user, $audit,
-    $webhook, $project, $projectDB, $clients;
+    $webhook, $mail, $project, $projectDB, $clients;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -60,7 +60,7 @@ $utopia->post('/v1/account')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
-        function ($email, $password, $name) use ($register, $request, $response, $audit, $projectDB, $project, $webhook, $oauth2Keys) {
+        function ($email, $password, $name) use ($request, $response, $audit, $projectDB, $project, $webhook, $oauth2Keys) {
             if ('console' === $project->getId()) {
                 $whitlistEmails = $project->getAttribute('authWhitelistEmails');
                 $whitlistIPs = $project->getAttribute('authWhitelistIPs');
@@ -1053,7 +1053,7 @@ $utopia->post('/v1/account/recovery')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.')
     ->action(
-        function ($email, $url) use ($request, $response, $projectDB, $register, $audit, $project) {
+        function ($email, $url) use ($request, $response, $projectDB, $mail, $audit, $project) {
             $profile = $projectDB->getCollection([ // Get user by email address
                 'limit' => 1,
                 'first' => true,
@@ -1106,19 +1106,13 @@ $utopia->post('/v1/account/recovery')
                 ->setParam('{{redirect}}', $url)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-
-            $mail->addAddress($profile->getAttribute('email', ''), $profile->getAttribute('name', ''));
-
-            $mail->Subject = Locale::getText('account.emails.recovery.title');
-            $mail->Body = $body->render();
-            $mail->AltBody = strip_tags($body->render());
-
-            try {
-                $mail->send();
-            } catch (\Exception $error) {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
-            }
+            $mail
+                ->setParam('recipient', $profile->getAttribute('email', ''))
+                ->setParam('name', $profile->getAttribute('name', ''))
+                ->setParam('subject', Locale::getText('account.emails.recovery.title'))
+                ->setParam('body', $body->render())
+                ->trigger();
+            ;
 
             $audit
                 ->setParam('userId', $profile->getId())
@@ -1214,7 +1208,7 @@ $utopia->post('/v1/account/verification')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.') // TODO add built-in confirm page
     ->action(
-        function ($url) use ($request, $response, $register, $user, $project, $projectDB, $audit) {
+        function ($url) use ($request, $response, $mail, $user, $project, $projectDB, $audit) {
             $verificationSecret = Auth::tokenGenerator();
             
             $verification = new Document([
@@ -1255,19 +1249,13 @@ $utopia->post('/v1/account/verification')
                 ->setParam('{{redirect}}', $url)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-
-            $mail->addAddress($user->getAttribute('email'), $user->getAttribute('name'));
-
-            $mail->Subject = Locale::getText('account.emails.verification.title');
-            $mail->Body = $body->render();
-            $mail->AltBody = strip_tags($body->render());
-
-            try {
-                $mail->send();
-            } catch (\Exception $error) {
-                throw new Exception('Problem sending mail: ' . $error->getMessage(), 500);
-            }
+            $mail
+                ->setParam('recipient', $user->getAttribute('email'))
+                ->setParam('name', $user->getAttribute('name'))
+                ->setParam('subject', Locale::getText('account.emails.verification.title'))
+                ->setParam('body', $body->render())
+                ->trigger()
+            ;
 
             $audit
                 ->setParam('userId', $user->getId())
