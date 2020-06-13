@@ -659,8 +659,6 @@ trait AccountBase
         $this->assertEquals(2, $response['body']['type']);
         $this->assertIsNumeric($response['body']['expire']);
 
-        sleep(1);
-        
         $lastEmail = $this->getLastEmail();
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
@@ -953,8 +951,6 @@ trait AccountBase
         $this->assertEquals(3, $response['body']['type']);
         $this->assertIsNumeric($response['body']['expire']);
 
-        sleep(1);
-        
         $lastEmail = $this->getLastEmail();
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);

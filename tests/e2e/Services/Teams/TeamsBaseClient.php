@@ -65,8 +65,6 @@ trait TeamsBaseClient
         $this->assertIsInt($response['body']['joined']);
         $this->assertEquals(false, $response['body']['confirm']);
 
-        sleep(1);
-
         $lastEmail = $this->getLastEmail();
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
