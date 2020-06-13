@@ -411,4 +411,95 @@ trait AvatarsBase
 
         return [];
     }
+
+
+    public function testGetInitials()
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'width' => 200,
+            'height' => 200,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'W W',
+            'width' => 200,
+            'height' => 200,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'W W',
+            'width' => 200,
+            'height' => 200,
+            'color' => 'ffffff',
+            'background' => '000000',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'W W',
+            'width' => 200000,
+            'height' => 200,
+            'color' => 'ffffff',
+            'background' => '000000',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'W W',
+            'width' => 200,
+            'height' => 200,
+            'color' => 'white',
+            'background' => '000000',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'W W',
+            'width' => 200,
+            'height' => 200,
+            'color' => 'ffffff',
+            'background' => 'black',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
 }

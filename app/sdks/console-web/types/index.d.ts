@@ -86,10 +86,10 @@ declare namespace Appwrite {
          *
          * Use this endpoint to allow a new user to register a new account in your
          * project. After the user registration completes successfully, you can use
-         * the [/account/verfication](/docs/account#createVerification) route to start
-         * verifying the user email address. To allow your new user to login to his
-         * new account, you need to create a new [account
-         * session](/docs/account#createSession).
+         * the [/account/verfication](/docs/client/account#createVerification) route
+         * to start verifying the user email address. To allow your new user to login
+         * to his new account, you need to create a new [account
+         * session](/docs/client/account#createSession).
 	     *
          * @param {string} email
          * @param {string} password
@@ -192,7 +192,7 @@ declare namespace Appwrite {
          * When the user clicks the confirmation link he is redirected back to your
          * app password reset URL with the secret key and email address values
          * attached to the URL query string. Use the query string params to submit a
-         * request to the [PUT /account/recovery](/docs/account#updateRecovery)
+         * request to the [PUT /account/recovery](/docs/client/account#updateRecovery)
          * endpoint to complete the process.
 	     *
          * @param {string} email
@@ -208,7 +208,7 @@ declare namespace Appwrite {
          * Use this endpoint to complete the user account password reset. Both the
          * **userId** and **secret** arguments will be passed as query parameters to
          * the redirect URL you have provided when sending your request to the [POST
-         * /account/recovery](/docs/account#createRecovery) endpoint.
+         * /account/recovery](/docs/client/account#createRecovery) endpoint.
          * 
          * Please note that in order to avoid a [Redirect
          * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -298,7 +298,7 @@ declare namespace Appwrite {
          * should redirect the user back for your app and allow you to complete the
          * verification process by verifying both the **userId** and **secret**
          * parameters. Learn more about how to [complete the verification
-         * process](/docs/account#updateAccountVerification). 
+         * process](/docs/client/account#updateAccountVerification). 
          * 
          * Please note that in order to avoid a [Redirect
          * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -343,9 +343,9 @@ declare namespace Appwrite {
          * @param {number} height
          * @param {number} quality
          * @throws {Error}
-         * @return {Promise}         
+         * @return {string}         
          */
-	    getBrowser(code: string, width: number, height: number, quality: number): Promise<object>;
+	    getBrowser(code: string, width: number, height: number, quality: number): string;
 
         /**
          * Get Credit Card Icon
@@ -523,7 +523,10 @@ declare namespace Appwrite {
         /**
          * Create Document
          *
-         * Create a new Document.
+         * Create a new Document. Before using this route, you should create a new
+         * collection resource using either a [server
+         * integration](/docs/server/database?sdk=nodejs#createCollection) API or
+         * directly from your database console.
 	     *
          * @param {string} collectionId
          * @param {object} data
@@ -1565,10 +1568,14 @@ declare namespace Appwrite {
          * for this list of resources.
 	     *
          * @param {string} teamId
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
          * @throws {Error}
          * @return {Promise}         
          */
-	    getMemberships(teamId: string): Promise<object>;
+	    getMemberships(teamId: string, search: string, limit: number, offset: number, orderType: string): Promise<object>;
 
         /**
          * Create Team Membership
@@ -1579,8 +1586,8 @@ declare namespace Appwrite {
          * 
          * Use the 'URL' parameter to redirect the user from the invitation email back
          * to your app. When the user is redirected, use the [Update Team Membership
-         * Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to
-         * accept the invitation to the team.
+         * Status](/docs/client/teams#updateMembershipStatus) endpoint to allow the
+         * user to accept the invitation to the team.
          * 
          * Please note that in order to avoid a [Redirect
          * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)

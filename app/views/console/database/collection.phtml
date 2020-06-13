@@ -1,6 +1,7 @@
 <?php
 $collection = $this->getParam('collection', []);
 $rules = $collection->getAttribute('rules', []);
+$maxCells = 10;
 ?>
 
 <div
@@ -12,7 +13,7 @@ $rules = $collection->getAttribute('rules', []);
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/database?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Database</a>
+            <a data-ls-attrs="href=/console/database?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Database</a>
 
             <br />
 
@@ -87,7 +88,10 @@ $rules = $collection->getAttribute('rules', []);
                             <table class="vertical">
                                 <thead>
                                     <tr>
-                                        <?php foreach($rules as $rule):
+                                        <?php foreach($rules as $i => $rule):
+                                            if($i > $maxCells) {
+                                                break;
+                                            }
                                             $label = (isset($rule['label'])) ? $rule['label'] : '';
                                             ?>
                                             <th width="120"><?php echo $this->escape($label); ?></th>
@@ -96,7 +100,10 @@ $rules = $collection->getAttribute('rules', []);
                                 </thead>
                                 <tbody data-ls-loop="project-documents.documents" data-ls-as="node">
                                     <tr>
-                                        <?php foreach($rules as $rule):
+                                        <?php foreach($rules as $i => $rule):
+                                            if($i > $maxCells) {
+                                                break;
+                                            }
                                             $label = (isset($rule['label'])) ? $rule['label'] : '';
                                             $key = (isset($rule['key'])) ? $rule['key'] : '';
                                             $type = (isset($rule['type'])) ? $rule['type'] : '';
@@ -174,9 +181,10 @@ $rules = $collection->getAttribute('rules', []);
                             data-scope="sdk"
                             data-event="submit"
                             data-param-collection-id="{{router.params.id}}"
-                            data-success="alert,trigger"
+                            data-success="alert,trigger,redirect"
                             data-success-param-alert-text="Updated collection successfully"
                             data-success-param-trigger-events="database.updateCollection"
+                            data-success-param-redirect-url="/console/database/collection/settings?id={{serviceData.$id}}&project={{router.params.project}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to update collection"
                             data-failure-param-alert-classname="error">
@@ -250,7 +258,7 @@ $rules = $collection->getAttribute('rules', []);
                                                                 <span class="tooltip small" data-tooltip="Attribute key name. Used as the document JSON key in the Database API"><i class="icon-info-circled"></i></span>
                                                             </label>
                                                             <div class="input-copy">
-                                                                <input data-forms-copy name="key" type="text" data-ls-bind="{{rule.key}}" max="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
+                                                                <input data-forms-copy name="key" type="text" data-ls-bind="{{rule.key}}" maxlength="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -308,9 +316,11 @@ $rules = $collection->getAttribute('rules', []);
                                     
                                     <label for="collection-read">Read Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</span></label>
                                     <input type="hidden" id="collection-read" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                                     
                                     <label for="collection-write">Write Access <span class="text-size-small">(<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
                                     <input type="hidden" id="collection-write" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{project-collection.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                 </div>
 
                                 <button>Update</button>
@@ -401,7 +411,7 @@ $rules = $collection->getAttribute('rules', []);
                                         <span class="tooltip small" data-tooltip="Attribute key name. Used as the document JSON key in the Database API"><i class="icon-info-circled"></i></span>
                                     </label>
                                     <div class="input-copy">
-                                        <input data-forms-copy name="key" type="text" required max="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
+                                        <input data-forms-copy name="key" type="text" required maxlength="32" pattern="^(\d|\w)+$" title="No spaces or special charts allowed" />
                                     </div>
                                 </div>
                             </div>
@@ -454,7 +464,7 @@ $rules = $collection->getAttribute('rules', []);
 <script type="text/html" id="template-validation-numeric">
     <div class="margin-bottom">
         <label data-ls-attrs="for=rule-default-{{rule.$id}}">Default Value</label>
-        <input name="default" type="number" data-ls-bind="{{rule.default}}" data-cast-to="integer" placeholder="0" />
+        <input name="default" type="number" data-ls-bind="{{rule.default}}" data-cast-to="numeric" placeholder="0" step="any" />
     </div>
 </script>
 

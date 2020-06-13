@@ -130,10 +130,6 @@
     .account {
       .func-margin-start(25px);
       .text-one-liner;
-
-      &:hover {
-        border-bottom: none;
-      }
     }
 
     .switch-theme {
@@ -189,11 +185,6 @@
         height: 39px;
         padding: 15px 20px;
         display: block;
-        border-bottom: none;
-
-        &:hover {
-          border-bottom: none;
-        }
 
         img {
           display: inline-block;
@@ -364,7 +355,6 @@
           &:hover,
           &.selected {
             color: #e4e4e4;
-            font-weight: 500;
           }
         }
       }
@@ -530,40 +520,39 @@
     }
   }
 
-  .chart {
-    width: ~"calc(100% - 2px)";
-    position: relative;
-    height: 0;
-    padding-top: 20px;
-    padding-bottom: 26%;
-    .func-margin-end(-2px);
-    overflow: hidden;
-    background-color: var(--config-color-background-fade);
-    background-image:
-      linear-gradient(transparent 1px, transparent 1px),
-      linear-gradient(90deg, transparent 1px, transparent 1px),
-      linear-gradient(var(--config-border-color) 1px, transparent 1px),
-      linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);
-    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
-    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;
-    background-repeat: round;
-    border: solid 1px var(--config-border-color);
-    border-right: solid 1px transparent;
-    border-bottom: solid 1px transparent;
-
-    @media @tablets, @phones {
-      width: 100%!important;
-      float: none;
-      margin-bottom: 20px;
-    }
-
-    canvas {
-      position: absolute;
-      bottom: 0;
-      display: block;
-      height: 100%;
-      width: 100%;
-    }
+  .chart {	
+    width: 80%;	
+    position: relative;	
+    height: 0;	
+    padding-top: 20px;	
+    padding-bottom: 26%;	
+    .func-margin-end(-2px);	
+    overflow: hidden;	
+    background-color: var(--config-color-background-fade);	
+    background-image:	
+      linear-gradient(transparent 1px, transparent 1px),	
+      linear-gradient(90deg, transparent 1px, transparent 1px),	
+      linear-gradient(var(--config-border-color) 1px, transparent 1px),	
+      linear-gradient(90deg, var(--config-border-color) 1px, transparent 1px);	
+    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;	
+    background-position: -2px -2px, -2px -2px, -1px -1px, -1px -1px;	
+    background-repeat: round;	
+    border: solid 1px var(--config-border-color);	
+    border-right: solid 1px transparent;	
+    border-bottom: solid 1px transparent;	
+    @media @tablets, @phones {	
+      width: 100%;	
+      padding-bottom: 32%;	
+      float: none;	
+      margin-bottom: 20px;	
+    }	
+    canvas {	
+      position: absolute;	
+      bottom: 0;	
+      display: block;	
+      height: 100%;	
+      width: 100%;	
+    }	
   }
 
   .chart-notes {
@@ -610,7 +599,7 @@
       }
     }
   }
-
+  
   .link-list {
     li {
       margin-bottom: 15px;

@@ -17,20 +17,25 @@ class Avatars extends Service {
      /// /account/sessions endpoint. Use width, height and quality arguments to
      /// change the output settings.
      ///
-    Future<Response> getBrowser({@required String code, int width = 100, int height = 100, int quality = 100}) {
+    String getBrowser({@required String code, int width = 100, int height = 100, int quality = 100}) {
         final String path = '/avatars/browsers/{code}'.replaceAll(RegExp('{code}'), code);
 
         final Map<String, dynamic> params = {
             'width': width,
             'height': height,
             'quality': quality,
+            'project': client.config['project'],
         };
 
-        final Map<String, String> headers = {
-            'content-type': 'application/json',
-        };
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri location = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
 
-        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+        return location.toString();
     }
 
      /// Get Credit Card Icon
@@ -51,14 +56,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get Favicon
@@ -75,14 +80,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get Country Flag
@@ -102,14 +107,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get Image from URL
@@ -130,14 +135,14 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 
      /// Get QR Code
@@ -157,13 +162,13 @@ class Avatars extends Service {
         };
 
         Uri endpoint = Uri.parse(client.endPoint);
-        Uri url = new Uri(scheme: endpoint.scheme,
+        Uri location = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
           queryParameters:params,
         );
 
-        return url.toString();
+        return location.toString();
     }
 }

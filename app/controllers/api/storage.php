@@ -15,10 +15,10 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
-use Appwrite\Storage\Devices\Local;
-use Appwrite\Storage\Validators\File;
-use Appwrite\Storage\Validators\FileSize;
-use Appwrite\Storage\Validators\Upload;
+use Appwrite\Storage\Device\Local;
+use Appwrite\Storage\Validator\File;
+use Appwrite\Storage\Validator\FileSize;
+use Appwrite\Storage\Validator\Upload;
 use Appwrite\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
@@ -179,8 +179,6 @@ $utopia->post('/v1/storage/files')
                 throw new Exception('File size not allowed', 400);
             }
 
-            $antiVirus = new Network('clamav', 3310);
-
             /*
              * Models
              */
@@ -200,10 +198,14 @@ $utopia->post('/v1/storage/files')
 
             $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
-            // Check if file size is exceeding allowed limit
-            if (!$antiVirus->fileScan($path)) {
-                $device->delete($path);
-                throw new Exception('Invalid file', 403);
+            if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+                $antiVirus = new Network('clamav', 3310);
+    
+                // Check if file size is exceeding allowed limit
+                if (!$antiVirus->fileScan($path)) {
+                    $device->delete($path);
+                    throw new Exception('Invalid file', 403);
+                }
             }
 
             // Compression
@@ -654,53 +656,53 @@ $utopia->delete('/v1/storage/files/:fileId')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId/scan')
-    ->desc('Scan Storage')
-    ->label('scope', 'god')
-    ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getFileScan')
-    ->label('sdk.hide', true)
-    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->param('storage', 'local', function () { return new WhiteList(['local']);})
-    ->action(
-        function ($fileId, $storage) use ($response, $request, $projectDB) {
-            $file = $projectDB->getDocument($fileId);
+// $utopia->get('/v1/storage/files/:fileId/scan')
+//     ->desc('Scan Storage')
+//     ->label('scope', 'god')
+//     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
+//     ->label('sdk.namespace', 'storage')
+//     ->label('sdk.method', 'getFileScan')
+//     ->label('sdk.hide', true)
+//     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
+//     ->param('storage', 'local', function () { return new WhiteList(['local']);})
+//     ->action(
+//         function ($fileId, $storage) use ($response, $request, $projectDB) {
+//             $file = $projectDB->getDocument($fileId);
 
-            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-                throw new Exception('File not found', 404);
-            }
+//             if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+//                 throw new Exception('File not found', 404);
+//             }
 
-            $path = $file->getAttribute('path', '');
+//             $path = $file->getAttribute('path', '');
 
-            if (!file_exists($path)) {
-                throw new Exception('File not found in '.$path, 404);
-            }
+//             if (!file_exists($path)) {
+//                 throw new Exception('File not found in '.$path, 404);
+//             }
 
-            $compressor = new GZIP();
-            $device = Storage::getDevice($storage);
+//             $compressor = new GZIP();
+//             $device = Storage::getDevice($storage);
 
-            $source = $device->read($path);
+//             $source = $device->read($path);
 
-            if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
-                $source = OpenSSL::decrypt(
-                    $source,
-                    $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
-                    0,
-                    hex2bin($file->getAttribute('fileOpenSSLIV')),
-                    hex2bin($file->getAttribute('fileOpenSSLTag'))
-                );
-            }
+//             if (!empty($file->getAttribute('fileOpenSSLCipher'))) { // Decrypt
+//                 $source = OpenSSL::decrypt(
+//                     $source,
+//                     $file->getAttribute('fileOpenSSLCipher'),
+//                     $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+//                     0,
+//                     hex2bin($file->getAttribute('fileOpenSSLIV')),
+//                     hex2bin($file->getAttribute('fileOpenSSLTag'))
+//                 );
+//             }
 
-            $source = $compressor->decompress($source);
+//             $source = $compressor->decompress($source);
 
-            $antiVirus = new Network('clamav', 3310);
+//             $antiVirus = new Network('clamav', 3310);
 
-            //var_dump($antiVirus->ping());
-            //var_dump($antiVirus->version());
-            //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
+//             //var_dump($antiVirus->ping());
+//             //var_dump($antiVirus->version());
+//             //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
 
-            //$response->json($antiVirus->continueScan($device->getRoot()));
-        }
-    );
+//             //$response->json($antiVirus->continueScan($device->getRoot()));
+//         }
+//     );

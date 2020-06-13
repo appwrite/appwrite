@@ -3,6 +3,18 @@
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+if [ -z "$1" ]
+then
+      echo "Missing tag number"
+      exit 1
+fi
+
+if [ -z "$2" ]
+then
+      echo "Missing version number"
+      exit 1
+fi
+
 echo "Updating git repository $1 / $2"
 
 git fetch origin

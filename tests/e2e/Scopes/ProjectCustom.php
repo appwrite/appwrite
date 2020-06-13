@@ -77,6 +77,7 @@ trait ProjectCustom
                 'functions.write',
                 'locale.read',
                 'avatars.read',
+                'health.read',
             ],
         ]);
 

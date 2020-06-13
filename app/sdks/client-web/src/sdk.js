@@ -276,10 +276,10 @@
              *
              * Use this endpoint to allow a new user to register a new account in your
              * project. After the user registration completes successfully, you can use
-             * the [/account/verfication](/docs/account#createVerification) route to start
-             * verifying the user email address. To allow your new user to login to his
-             * new account, you need to create a new [account
-             * session](/docs/account#createSession).
+             * the [/account/verfication](/docs/client/account#createVerification) route
+             * to start verifying the user email address. To allow your new user to login
+             * to his new account, you need to create a new [account
+             * session](/docs/client/account#createSession).
              *
              * @param {string} email
              * @param {string} password
@@ -522,7 +522,7 @@
              * When the user clicks the confirmation link he is redirected back to your
              * app password reset URL with the secret key and email address values
              * attached to the URL query string. Use the query string params to submit a
-             * request to the [PUT /account/recovery](/docs/account#updateRecovery)
+             * request to the [PUT /account/recovery](/docs/client/account#updateRecovery)
              * endpoint to complete the process.
              *
              * @param {string} email
@@ -563,7 +563,7 @@
              * Use this endpoint to complete the user account password reset. Both the
              * **userId** and **secret** arguments will be passed as query parameters to
              * the redirect URL you have provided when sending your request to the [POST
-             * /account/recovery](/docs/account#createRecovery) endpoint.
+             * /account/recovery](/docs/client/account#createRecovery) endpoint.
              * 
              * Please note that in order to avoid a [Redirect
              * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -772,7 +772,7 @@
              * should redirect the user back for your app and allow you to complete the
              * verification process by verifying both the **userId** and **secret**
              * parameters. Learn more about how to [complete the verification
-             * process](/docs/account#updateAccountVerification). 
+             * process](/docs/client/account#updateAccountVerification). 
              * 
              * Please note that in order to avoid a [Redirect
              * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -858,7 +858,7 @@
              * @param {number} height
              * @param {number} quality
              * @throws {Error}
-             * @return {Promise}             
+             * @return {string}             
              */
             getBrowser: function(code, width = 100, height = 100, quality = 100) {
                 if(code === undefined) {
@@ -881,10 +881,11 @@
                     payload['quality'] = quality;
                 }
 
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
+                payload['project'] = config.project;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
             },
 
             /**
@@ -1167,7 +1168,10 @@
             /**
              * Create Document
              *
-             * Create a new Document.
+             * Create a new Document. Before using this route, you should create a new
+             * collection resource using either a [server
+             * integration](/docs/server/database?sdk=nodejs#createCollection) API or
+             * directly from your database console.
              *
              * @param {string} collectionId
              * @param {object} data
@@ -1941,10 +1945,14 @@
              * for this list of resources.
              *
              * @param {string} teamId
+             * @param {string} search
+             * @param {number} limit
+             * @param {number} offset
+             * @param {string} orderType
              * @throws {Error}
              * @return {Promise}             
              */
-            getMemberships: function(teamId) {
+            getMemberships: function(teamId, search = '', limit = 25, offset = 0, orderType = 'ASC') {
                 if(teamId === undefined) {
                     throw new Error('Missing required parameter: "teamId"');
                 }
@@ -1952,6 +1960,22 @@
                 let path = '/teams/{teamId}/memberships'.replace(new RegExp('{teamId}', 'g'), teamId);
 
                 let payload = {};
+
+                if(search) {
+                    payload['search'] = search;
+                }
+
+                if(limit) {
+                    payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
+                }
+
+                if(orderType) {
+                    payload['orderType'] = orderType;
+                }
 
                 return http
                     .get(path, {
@@ -1968,8 +1992,8 @@
              * 
              * Use the 'URL' parameter to redirect the user from the invitation email back
              * to your app. When the user is redirected, use the [Update Team Membership
-             * Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to
-             * accept the invitation to the team.
+             * Status](/docs/client/teams#updateMembershipStatus) endpoint to allow the
+             * user to accept the invitation to the team.
              * 
              * Please note that in order to avoid a [Redirect
              * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)

@@ -3,7 +3,7 @@
 global $utopia, $request, $response, $register, $project;
 
 use Utopia\Exception;
-use Appwrite\Storage\Devices\Local;
+use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
 
@@ -158,7 +158,7 @@ $utopia->get('/v1/health/queue/certificates')
     ->label('sdk.description', '/docs/references/health/get-queue-certificates.md')
     ->action(
         function () use ($response) {
-            $response->json(['size' => Resque::size('v1-usage')]);
+            $response->json(['size' => Resque::size('v1-certificates')]);
         }
     );
 
@@ -218,7 +218,11 @@ $utopia->get('/v1/health/anti-virus')
     ->label('sdk.method', 'getAntiVirus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->action(
-        function () use ($response) {
+        function () use ($request, $response) {
+            if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+                throw new Exception('Anitvirus is disabled');
+            }
+
             $antiVirus = new Network('clamav', 3310);
 
             $response->json([

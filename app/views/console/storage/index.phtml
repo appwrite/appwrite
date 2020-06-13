@@ -5,7 +5,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 ?>
 <div class="cover">
     <h1 class="zone xl margin-bottom-large">
-        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Home</a>
         <br />
 
         <span>Storage</span>
@@ -17,7 +17,7 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
         <li data-state="/console/database?project={{router.params.project}}">
             <h2 class="margin-bottom">Files</h2>
 
-            <div data-ui-modal class="box modal close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
+            <div data-ui-modal class="box modal sticky-footer close" data-button-text="" data-button-class="fly round" data-button-icon="icon-plus">
                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
                 <h1>Upload File</h1>
@@ -36,22 +36,24 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                     data-failure="alert"
                     data-failure-param-alert-text="Failed to upload file"
                     data-failure-param-alert-classname="error">
-                    <input type="hidden" name="folderId" id="files-folderId" data-cast-to="int" value="1">
+                    <input type="hidden" name="folderId" id="files-folderId" data-cast-to="integer" value="1">
 
                     <label for="file-read">File</label>
                     <input type="file" name="file" id="file-file" size="1" required>
 
-                    <div class="text-fade text-size-small margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
+                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
                     <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                    <input type="hidden" id="file-read" name="read" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
+                    <input type="hidden" id="file-read" name="read" data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" placeholder="User ID, Team ID or Role" />
+                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                     
                     <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                    <input type="hidden" id="file-write" name="write" required data-forms-tags data-cast-to="json" value="<?php echo htmlentities(json_encode(['*'])); ?>" />
+                    <input type="hidden" id="file-write" name="write" data-forms-tags data-cast-to="json" value="" placeholder="User ID, Team ID or Role" />
+                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
 
-                    <hr />
-
-                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    <footer>
+                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                    </footer>
                 </form>
             </div>
 
@@ -139,13 +141,15 @@ $fileLimitHuman = $this->getParam('fileLimitHuman', 0);
                                                         <div class="input-copy">
                                                             <input data-forms-copy type="text" data-ls-attrs="id=file-id-{{file.$id}}" name="fileId" disabled data-ls-bind="{{file.$id}}" />
                                                         </div>
-                                                        <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="int" value="1">
+                                                        <input type="hidden" data-ls-attrs="id=file-folderId-{{file.$id}}" name="folderId" data-cast-to="integer" value="1">
 
-                                                        <label for="file-read">Read Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                        <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" />
+                                                        <label for="file-read">Read Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                        <input type="hidden" data-ls-attrs="id=file-read-{{file.$id}}" name="read" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.read}}" placeholder="User ID, Team ID or Role" />
+                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                                         
-                                                        <label for="file-write">Write Permissions (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
-                                                        <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" required data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" />
+                                                        <label for="file-write">Write Access (<a data-ls-attrs="href={{env.HOME}}/docs/permissions" target="_blank">Learn more</a>)</label>
+                                                        <input type="hidden" data-ls-attrs="id=file-write-{{file.$id}}" name="write" data-forms-tags data-cast-to="json" data-ls-bind="{{file.$permissions.write}}" placeholder="User ID, Team ID or Role" />
+                                                        <div class="text-fade text-size-xs margin-top-negative-small margin-bottom">Add * for wildcard access</div>
                                                     </form>
 
                                                     <form class="strip"

@@ -34,7 +34,7 @@ const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 15;
 const APP_CACHE_BUSTER = 125;
-const APP_VERSION_STABLE = '0.6.1';
+const APP_VERSION_STABLE = '0.6.2';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
@@ -68,6 +68,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
 Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
 Config::setParam('port', (string) parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
+Config::setParam('hostname', parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
 
 $utopia = new App('Asia/Tel_Aviv', Config::getParam('env'));
 
@@ -78,10 +79,11 @@ define('COOKIE_DOMAIN',
     (
         $request->getServer('HTTP_HOST', null) === 'localhost' ||
         $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
-        (filter_var($request->getServer('HTTP_HOST', null), FILTER_VALIDATE_IP) !== false)
+        (filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
     )
         ? null
-        : '.'.parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_HOST));
+        : '.'.Config::getParam('hostname')
+    );
 define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
@@ -295,7 +297,7 @@ if (APP_MODE_ADMIN === $mode) {
 $session = Auth::decodeSession(
     $request->getCookie(Auth::$cookieName, // Get sessions
         $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-                $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
 
 // Get fallback session from clients who block 3rd-party cookies
 $response->addHeader('X-Debug-Fallback', 'false');

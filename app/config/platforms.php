@@ -29,7 +29,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.2.1',
+                'version' => '0.2.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'enabled' => true,
                 'beta' => true,
@@ -140,6 +140,20 @@ return [
                 'gitUserName' => 'appwrite',
             ],
             [
+                'key' => 'deno',
+                'name' => 'Deno',
+                'version' => '0.0.1',
+                'url' => 'https://github.com/appwrite/sdk-for-deno',
+                'enabled' => false,
+                'beta' => true,
+                'family' => APP_PLATFORM_SERVER,
+                'prism' => 'typescript',
+                'source' => realpath(__DIR__ . '/../sdks/server-deno'),
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-deno.git',
+                'gitRepoName' => 'sdk-for-deno',
+                'gitUserName' => 'appwrite',
+            ],
+            [
                 'key' => 'php',
                 'name' => 'PHP',
                 'version' => '1.1.0',
@@ -170,7 +184,7 @@ return [
             [
                 'key' => 'ruby',
                 'name' => 'Ruby',
-                'version' => '1.0.10',
+                'version' => '1.0.11',
                 'url' => 'https://github.com/appwrite/sdk-for-ruby',
                 'enabled' => true,
                 'beta' => true,

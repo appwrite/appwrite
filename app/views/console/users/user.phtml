@@ -8,10 +8,11 @@
 
     <div class="cover">
         <h1 class="zone xl margin-bottom-large">
-            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Users</a>
+            <a data-ls-attrs="href=/console/users?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Users</a>
             <br />
 
             <span data-ls-bind="{{user.name}}">&nbsp;</span>
+            <span data-ls-if="{{user.name}} === ''">Unknown</span>
         </h1>
     </div>
 
@@ -42,7 +43,7 @@
 
                         <div class="box margin-bottom-large">
                             <div class="text-align-center">
-                                <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
+                                <img src="" data-ls-attrs="src={{user|avatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
 
                                 <div class="margin-top-small" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
@@ -112,10 +113,10 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Blocked User Successfully"
+                                data-success-param-alert-text="Blocked user successfully"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to Block User"
+                                data-failure-param-alert-text="Failed to block user"
                                 data-failure-param-alert-classname="error">
 
                                 <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
@@ -131,10 +132,10 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Activated User Successfully"
+                                data-success-param-alert-text="Activated user successfully"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to Activate User"
+                                data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
                                 <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>

@@ -154,6 +154,16 @@ window.ls.router
     scope: "console",
     project: true
   })
+  .add("/console/users/teams/team", {
+    template: "/console/users/teams/team?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/users/teams/team/:tab", {
+    template: "/console/users/teams/team?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
   .add("/console/users/:tab", {
     template: "/console/users?version=" + APP_ENV.VERSION,
     scope: "console",

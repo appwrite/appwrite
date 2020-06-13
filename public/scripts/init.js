@@ -2,7 +2,11 @@
 
 window.ls.error = function() {
   return function(error) {
-    console.error("ERROR-APP", error);
+    window.console.error(error);
+
+    if(window.location.pathname !== '/console') {
+      window.location = '/console';
+    }
   };
 };
 

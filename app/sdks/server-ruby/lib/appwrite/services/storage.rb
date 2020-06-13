@@ -32,7 +32,7 @@ module Appwrite
 
         def get_file(file_id:)
             path = '/storage/files/{fileId}'
-                .gsub('{file_id}', file_id)
+                .gsub('{fileId}', file_id)
 
             params = {
             }
@@ -44,7 +44,7 @@ module Appwrite
 
         def update_file(file_id:, read:, write:)
             path = '/storage/files/{fileId}'
-                .gsub('{file_id}', file_id)
+                .gsub('{fileId}', file_id)
 
             params = {
                 'read': read, 
@@ -58,7 +58,7 @@ module Appwrite
 
         def delete_file(file_id:)
             path = '/storage/files/{fileId}'
-                .gsub('{file_id}', file_id)
+                .gsub('{fileId}', file_id)
 
             params = {
             }
@@ -70,7 +70,7 @@ module Appwrite
 
         def get_file_download(file_id:)
             path = '/storage/files/{fileId}/download'
-                .gsub('{file_id}', file_id)
+                .gsub('{fileId}', file_id)
 
             params = {
             }
@@ -82,7 +82,7 @@ module Appwrite
 
         def get_file_preview(file_id:, width: 0, height: 0, quality: 100, background: '', output: '')
             path = '/storage/files/{fileId}/preview'
-                .gsub('{file_id}', file_id)
+                .gsub('{fileId}', file_id)
 
             params = {
                 'width': width, 
@@ -99,7 +99,7 @@ module Appwrite
 
         def get_file_view(file_id:, as: '')
             path = '/storage/files/{fileId}/view'
-                .gsub('{file_id}', file_id)
+                .gsub('{fileId}', file_id)
 
             params = {
                 'as': as
