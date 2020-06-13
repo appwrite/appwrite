@@ -9,6 +9,7 @@
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
+- Added support for Brotli compression
 
 ## Bug Fixes
 
