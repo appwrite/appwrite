@@ -1107,6 +1107,7 @@ $utopia->post('/v1/account/recovery')
             ;
 
             $mail
+                ->setParam('event', 'account.recovery.create')
                 ->setParam('recipient', $profile->getAttribute('email', ''))
                 ->setParam('name', $profile->getAttribute('name', ''))
                 ->setParam('subject', Locale::getText('account.emails.recovery.title'))
@@ -1250,6 +1251,7 @@ $utopia->post('/v1/account/verification')
             ;
 
             $mail
+                ->setParam('event', 'account.verification.create')
                 ->setParam('recipient', $user->getAttribute('email'))
                 ->setParam('name', $user->getAttribute('name'))
                 ->setParam('subject', Locale::getText('account.emails.verification.title'))

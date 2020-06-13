@@ -21,6 +21,7 @@ class MailsV1
     {
         global $register;
 
+        $event = $this->args['event'];
         $recipient = $this->args['recipient'];
         $name = $this->args['name'];
         $subject = $this->args['subject'];
