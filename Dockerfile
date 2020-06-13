@@ -122,7 +122,7 @@ RUN \
   echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
   # Cleanup
   cd ../ && \
-  apt-get purge -y --auto-remove wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
+  apt-get purge -y --auto-remove wget software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
   apt-get clean && \
   rm -rf /ngx_brotli && \
   rm -rf /var/lib/apt/lists/*
