@@ -88,7 +88,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev htop supervisor openssl gnupg && \
+  apt-get install -y --no-install-recommends --no-install-suggests wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev openssl gnupg htop supervisor && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
   add-apt-repository ppa:certbot/certbot && \
@@ -116,12 +116,13 @@ RUN \
     --add-module=/ngx_brotli && \
   make && \
   make install && \
+  rm -rf ../nginx-1.19.0 && \
   # Redis Extension
   echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
   # Cleanup
   cd ../ && \
-  apt-get purge -y --auto-remove software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
+  apt-get purge -y --auto-remove wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
   apt-get clean && \
   rm -rf /ngx_brotli && \
   rm -rf /var/lib/apt/lists/*
