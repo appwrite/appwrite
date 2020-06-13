@@ -1094,6 +1094,62 @@
             },
 
             /**
+             * Get User Initials
+             *
+             * Use this endpoint to show your user initials avatar icon on your website or
+             * app. By default, this route will try to print your logged-in user name or
+             * email initials. You can also overwrite the user name if you pass the 'name'
+             * parameter. If no name is given and no user is logged, an empty avatar will
+             * be returned.
+             * 
+             * You can use the color and background params to change the avatar colors. By
+             * default, a random theme will be selected. The random theme will persist for
+             * the user's initials when reloading the same theme will always return for
+             * the same initials.
+             *
+             * @param {string} name
+             * @param {number} width
+             * @param {number} height
+             * @param {string} color
+             * @param {string} background
+             * @throws {Error}
+             * @return {string}             
+             */
+            getInitials: function(name = '', width = 500, height = 500, color = '', background = '') {
+                let path = '/avatars/initials';
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(width) {
+                    payload['width'] = width;
+                }
+
+                if(height) {
+                    payload['height'] = height;
+                }
+
+                if(color) {
+                    payload['color'] = color;
+                }
+
+                if(background) {
+                    payload['background'] = background;
+                }
+
+                payload['project'] = config.project;
+
+                payload['key'] = config.key;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
+            },
+
+            /**
              * Get QR Code
              *
              * Converts a given plain text to a QR code image. You can use the query
@@ -1421,7 +1477,10 @@
             /**
              * Create Document
              *
-             * Create a new Document.
+             * Create a new Document. Before using this route, you should create a new
+             * collection resource using either a [server
+             * integration](/docs/server/database?sdk=nodejs#createCollection) API or
+             * directly from your database console.
              *
              * @param {string} collectionId
              * @param {object} data
@@ -1670,14 +1729,13 @@
              *
              * @param {string} name
              * @param {object} vars
-             * @param {string} trigger
              * @param {string[]} events
              * @param {string} schedule
              * @param {number} timeout
              * @throws {Error}
              * @return {Promise}             
              */
-            create: function(name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
+            create: function(name, vars = [], events = [], schedule = '', timeout = 15) {
                 if(name === undefined) {
                     throw new Error('Missing required parameter: "name"');
                 }
@@ -1692,10 +1750,6 @@
 
                 if(vars) {
                     payload['vars'] = vars;
-                }
-
-                if(trigger) {
-                    payload['trigger'] = trigger;
                 }
 
                 if(events) {
@@ -1746,14 +1800,13 @@
              * @param {string} functionId
              * @param {string} name
              * @param {object} vars
-             * @param {string} trigger
              * @param {string[]} events
              * @param {string} schedule
              * @param {number} timeout
              * @throws {Error}
              * @return {Promise}             
              */
-            update: function(functionId, name, vars = [], trigger = 'event', events = [], schedule = '', timeout = 10) {
+            update: function(functionId, name, vars = [], events = [], schedule = '', timeout = 15) {
                 if(functionId === undefined) {
                     throw new Error('Missing required parameter: "functionId"');
                 }
@@ -1772,10 +1825,6 @@
 
                 if(vars) {
                     payload['vars'] = vars;
-                }
-
-                if(trigger) {
-                    payload['trigger'] = trigger;
                 }
 
                 if(events) {
@@ -1815,38 +1864,6 @@
 
                 return http
                     .delete(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Update Function Active Tag
-             *
-             *
-             * @param {string} functionId
-             * @param {string} active
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            updateTag: function(functionId, active) {
-                if(functionId === undefined) {
-                    throw new Error('Missing required parameter: "functionId"');
-                }
-                
-                if(active === undefined) {
-                    throw new Error('Missing required parameter: "active"');
-                }
-                
-                let path = '/functions/{functionId}/active'.replace(new RegExp('{functionId}', 'g'), functionId);
-
-                let payload = {};
-
-                if(active) {
-                    payload['active'] = active;
-                }
-
-                return http
-                    .patch(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -1946,6 +1963,38 @@
 
                 return http
                     .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * Update Function Tag
+             *
+             *
+             * @param {string} functionId
+             * @param {string} tag
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            updateTag: function(functionId, tag) {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                if(tag === undefined) {
+                    throw new Error('Missing required parameter: "tag"');
+                }
+                
+                let path = '/functions/{functionId}/tag'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(tag) {
+                    payload['tag'] = tag;
+                }
+
+                return http
+                    .patch(path, {
                         'content-type': 'application/json',
                     }, payload);
             },
@@ -2095,269 +2144,6 @@
 
                 return http
                     .delete(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            }
-        };
-
-        let health = {
-
-            /**
-             * Check API HTTP Health
-             *
-             * Check the Appwrite HTTP server is up and responsive.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            get: function() {
-                let path = '/health';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check Cache Health
-             *
-             * Check the Appwrite in-memory cache server is up and connection is
-             * successful.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getCache: function() {
-                let path = '/health/cache';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check DB Health
-             *
-             * Check the Appwrite database server is up and connection is successful.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getDB: function() {
-                let path = '/health/db';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check the number of pending certificate messages
-             *
-             * Get the number of certificates that are waiting to be issued against
-             * [Letsencrypt](https://letsencrypt.org/) in the Appwrite internal queue
-             * server.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getQueueCertificates: function() {
-                let path = '/health/queue/certificates';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check the number of pending functions messages
-             *
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getQueueFunctions: function() {
-                let path = '/health/queue/functions';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check the number of pending log messages
-             *
-             * Get the number of logs that are waiting to be processed in the Appwrite
-             * internal queue server.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getQueueLogs: function() {
-                let path = '/health/queue/logs';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check the number of pending task messages
-             *
-             * Get the number of tasks that are waiting to be processed in the Appwrite
-             * internal queue server.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getQueueTasks: function() {
-                let path = '/health/queue/tasks';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check the number of pending usage messages
-             *
-             * Get the number of usage stats that are waiting to be processed in the
-             * Appwrite internal queue server.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getQueueUsage: function() {
-                let path = '/health/queue/usage';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check number of pending webhook messages
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getQueueWebhooks: function() {
-                let path = '/health/queue/webhooks';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check Anti virus Health
-             *
-             * Check the Appwrite Anti Virus server is up and connection is successful.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getStorageAntiVirus: function() {
-                let path = '/health/storage/anti-virus';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check File System Health
-             *
-             * Check the Appwrite local storage device is up and connection is successful.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getStorageLocal: function() {
-                let path = '/health/storage/local';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Check Time Health
-             *
-             * Check the Appwrite server time is synced with Google remote NTP server. We
-             * use this technology to smoothly handle leap seconds with no disruptive
-             * events. The [Network Time
-             * Protocol](https://en.wikipedia.org/wiki/Network_Time_Protocol) (NTP) is
-             * used by hundreds of millions of computers and devices to synchronize their
-             * clocks over the Internet. If your computer sets its own clock, it likely
-             * uses NTP.
-             *
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getTime: function() {
-                let path = '/health/time';
-
-                let payload = {};
-
-                return http
-                    .get(path, {
-                        'content-type': 'application/json',
-                    }, payload);
-            },
-
-            /**
-             * Get Collection Logs
-             *
-             *
-             * @param {string} collectionId
-             * @throws {Error}
-             * @return {Promise}             
-             */
-            getCollectionLogs: function(collectionId) {
-                if(collectionId === undefined) {
-                    throw new Error('Missing required parameter: "collectionId"');
-                }
-                
-                let path = '/database/collections/{collectionId}/logs'.replace(new RegExp('{collectionId}', 'g'), collectionId);
-
-                let payload = {};
-
-                return http
-                    .get(path, {
                         'content-type': 'application/json',
                     }, payload);
             }
@@ -2715,15 +2501,35 @@
             /**
              * List Currencies
              *
-             * List of all currencies, including currency symol, name, plural, and decimal
-             * digits for all major and minor currencies. You can use the locale header to
-             * get the data in a supported language.
+             * List of all currencies, including currency symbol, name, plural, and
+             * decimal digits for all major and minor currencies. You can use the locale
+             * header to get the data in a supported language.
              *
              * @throws {Error}
              * @return {Promise}             
              */
             getCurrencies: function() {
                 let path = '/locale/currencies';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Languages
+             *
+             * List of all languages classified by ISO 639-1 including 2-letter code, name
+             * in English, and name in the respective language.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getLanguages: function() {
+                let path = '/locale/languages';
 
                 let payload = {};
 
