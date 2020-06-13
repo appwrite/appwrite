@@ -28,6 +28,7 @@ $webhook = new Event('v1-webhooks', 'WebhooksV1');
 $audit = new Event('v1-audits', 'AuditsV1');
 $usage = new Event('v1-usage', 'UsageV1');
 $mail = new Event('v1-mails', 'MailsV1');
+$deletes = new Event('v1-deletes', 'DeletesV1');
 
 /**
  * Get All verified client URLs for both console and current projects
@@ -226,7 +227,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $mail, $audit, $usage, $mode, $project, $utopia) {
+$utopia->shutdown(function () use ($response, $request, $webhook, $deletes, $audit, $usage, $mode, $project, $utopia) {
 
     /*
      * Trigger events for background workers
