@@ -227,7 +227,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $deletes, $audit, $usage, $mode, $project, $utopia) {
+$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
 
     /*
      * Trigger events for background workers
