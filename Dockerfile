@@ -25,7 +25,11 @@ RUN \
   # Composer
   wget https://getcomposer.org/composer.phar && \
   chmod +x ./composer.phar && \
-  mv ./composer.phar /usr/bin/composer
+  mv ./composer.phar /usr/bin/composer && \
+  #Brotli
+  cd / && \
+  git clone https://github.com/eustas/ngx_brotli.git && \
+  cd ngx_brotli && git submodule update --init && cd ..
 
 WORKDIR /usr/local/src/
 
@@ -77,6 +81,8 @@ ENV TZ=Asia/Tel_Aviv \
 #ENV _APP_SMTP_PASSWORD ''
 
 COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
+COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
+COPY --from=builder /ngx_brotli /ngx_brotli
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -90,11 +96,6 @@ RUN \
   apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
   php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
   # Nginx
-  # echo "deb http://nginx.org/packages/nginx-1.19.0/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
-  # wget -q http://nginx.org/keys/nginx_signing.key && \
-  # apt-key add nginx_signing.key && \
-  # apt-get update && \
-  # apt-get install -y --no-install-recommends --no-install-suggests nginx && \
   wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
   tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \
   cd nginx-1.19.0 && \
@@ -111,7 +112,8 @@ RUN \
     --build=Ubuntu \
     --with-http_gzip_static_module \
     --with-http_ssl_module \
-    --with-http_v2_module && \
+    --with-http_v2_module \
+    --add-module=/ngx_brotli && \
   make && \
   make install && \
   # Redis Extension
@@ -121,6 +123,7 @@ RUN \
   cd ../ && \
   apt-get purge -y --auto-remove software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
   apt-get clean && \
+  rm -rf /ngx_brotli && \
   rm -rf /var/lib/apt/lists/*
 
 # Set Upload Limit (default to 100MB)
