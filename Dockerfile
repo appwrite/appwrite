@@ -11,7 +11,7 @@ ENV TZ=Asia/Tel_Aviv \
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget curl git openssl && \
+  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget git openssl && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests make php$PHP_VERSION php$PHP_VERSION-dev zip unzip php$PHP_VERSION-zip && \
@@ -23,7 +23,13 @@ RUN \
   ./configure && \
   make && \
   # Composer
-  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+  wget https://getcomposer.org/composer.phar && \
+  chmod +x ./composer.phar && \
+  mv ./composer.phar /usr/bin/composer && \
+  #Brotli
+  cd / && \
+  git clone https://github.com/eustas/ngx_brotli.git && \
+  cd ngx_brotli && git submodule update --init && cd ..
 
 WORKDIR /usr/local/src/
 
@@ -51,6 +57,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_HOME=https://appwrite.io \
     _APP_EDITION=community \
     _APP_OPTIONS_ABUSE=enabled \
+    _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
     _APP_STORAGE_LIMIT=104857600 \
     _APP_STORAGE_ANTIVIRUS=enabled \
@@ -74,31 +81,50 @@ ENV TZ=Asia/Tel_Aviv \
 #ENV _APP_SMTP_PASSWORD ''
 
 COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
+COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
+COPY --from=builder /ngx_brotli /ngx_brotli
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests wget curl ca-certificates software-properties-common openssl gnupg && \
+  apt-get install -y --no-install-recommends --no-install-suggests wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev openssl gnupg htop supervisor && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
   add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests htop supervisor php$PHP_VERSION php$PHP_VERSION-fpm \
+  apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
   php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
   # Nginx
-  echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
-  wget -q http://nginx.org/keys/nginx_signing.key && \
-  apt-key add nginx_signing.key && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests nginx && \
+  wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
+  tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \
+  cd nginx-1.19.0 && \
+  ./configure --prefix=/usr/share/nginx \
+    --sbin-path=/usr/sbin/nginx \
+    --modules-path=/usr/lib/nginx/modules \
+    --conf-path=/etc/nginx/nginx.conf \
+    --error-log-path=/var/log/nginx/error.log \
+    --http-log-path=/var/log/nginx/access.log \
+    --pid-path=/run/nginx.pid \
+    --lock-path=/var/lock/nginx.lock \
+    --user=www-data \
+    --group=www-data \
+    --build=Ubuntu \
+    --with-http_gzip_static_module \
+    --with-http_ssl_module \
+    --with-http_v2_module \
+    --add-module=/ngx_brotli && \
+  make && \
+  make install && \
+  rm -rf ../nginx-1.19.0 && \
   # Redis Extension
   echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
   # Cleanup
   cd ../ && \
-  apt-get purge -y --auto-remove software-properties-common gnupg curl && \
+  apt-get purge -y --auto-remove wget software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
   apt-get clean && \
+  rm -rf /ngx_brotli && \
   rm -rf /var/lib/apt/lists/*
 
 # Nginx Configuration (with self-signed ssl certificates)

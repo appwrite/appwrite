@@ -17,6 +17,11 @@ input, textarea {
   background: var(--config-color-background-input);
 }
 
+input[type=file],
+input[type=file]::-webkit-file-upload-button {
+    cursor: pointer; 
+}
+
 button,
 .button {
   display: inline-block;
@@ -36,7 +41,6 @@ button,
   &:hover,
   &:focus {
     background: var(--config-color-focus-hover);
-    border-bottom: none;
   }
 
   &.fly {
@@ -174,10 +178,6 @@ button,
     line-height: normal;
     padding: 0;
     .func-padding-end(0) !important;
-
-    &:hover {
-      border-bottom: dotted 1px var(--config-color-link);
-    }
 
     &:focus {
       box-shadow: inherit;

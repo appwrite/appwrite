@@ -3,10 +3,26 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages
+- Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
+- Added Google Fonts to Appwrite for offline availability
+- Added a new route in the Avatars API to get user initials avatar
+- Added option to delete team from the console
+- Added option to view team members from the console
+- Added option to join a user to any team from the console
+- Added support for Brotli compression
 
 ## Bug Fixes
 
 - Fixed output of /v1/health/queue/certificates returning wrong data
+- Fixed bug where team members count was wrong in some cases
+- Fixed network calculation for uploaded files
+- Fixed a UI bug preventing float values in numeric fields
+- Fixed scroll positioning when moving rules order up & down
+- Fixed missing validation for database documents key length (32 chars)
+
+## Security
+
+- Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
 
 # Version 0.6.2 (PRE-RELEASE)
 

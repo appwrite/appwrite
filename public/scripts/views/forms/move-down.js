@@ -9,8 +9,9 @@
         .map(function(obj) {
           obj.addEventListener("click", function() {
             if (element.nextElementSibling) {
+              console.log('down', element.offsetHeight);
               element.parentNode.insertBefore(element.nextElementSibling, element);
-              element.scrollIntoView(true);
+              element.scrollIntoView({block: 'center'});
             }
           });
         });

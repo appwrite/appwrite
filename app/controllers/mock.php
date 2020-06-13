@@ -7,7 +7,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Response;
 use Utopia\Validator\Host;
-use Appwrite\Storage\Validators\File;
+use Appwrite\Storage\Validator\File;
 
 $result = [];
 

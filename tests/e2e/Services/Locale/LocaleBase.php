@@ -183,6 +183,35 @@ trait LocaleBase
         return [];
     }
 
+    public function testGetLanguages():array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/locale/languages', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertIsArray($response['body']);
+        $this->assertCount(185, $response['body']);
+
+        $this->assertEquals($response['body'][0]['code'], 'aa');
+        $this->assertEquals($response['body'][0]['name'], 'Afar');
+        $this->assertEquals($response['body'][0]['nativeName'], 'Afar');
+
+        $this->assertEquals($response['body'][184]['code'], 'zu');
+        $this->assertEquals($response['body'][184]['name'], 'Zulu');
+        $this->assertEquals($response['body'][184]['nativeName'], 'isiZulu');
+        
+        /**
+         * Test for FAILURE
+         */
+
+        return [];
+    }
+
     public function testLangaugaes(): array
     {
         /**

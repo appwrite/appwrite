@@ -8,7 +8,7 @@ echo APP_NAME.' deletes worker v1 has started';
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
-use Appwrite\Storage\Devices\Local;
+use Appwrite\Storage\Device\Local;
 
 class DeletesV1
 {
