@@ -30,7 +30,7 @@
 
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
-            <li data-state="/console/users/view?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>General</h2>
 
                 <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
@@ -43,7 +43,7 @@
 
                         <div class="box margin-bottom-large">
                             <div class="text-align-center">
-                                <img src="" data-ls-attrs="src={{user|gravatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
+                                <img src="" data-ls-attrs="src={{user|avatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
 
                                 <div class="margin-top-small" data-ls-bind="Member since {{user.registration|date-text}}"></div>
                                 <div class="margin-top-small">
@@ -113,10 +113,10 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Blocked User Successfully"
+                                data-success-param-alert-text="Blocked user successfully"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to Block User"
+                                data-failure-param-alert-text="Failed to block user"
                                 data-failure-param-alert-classname="error">
 
                                 <button name="status" type="submit" class="danger fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>">Block Account</button>
@@ -132,10 +132,10 @@
                                 data-event="submit"
                                 data-param-user-id="{{router.params.id}}"
                                 data-success="alert,trigger"
-                                data-success-param-alert-text="Activated User Successfully"
+                                data-success-param-alert-text="Activated user successfully"
                                 data-success-param-trigger-events="users.update"
                                 data-failure="alert"
-                                data-failure-param-alert-text="Failed to Activate User"
+                                data-failure-param-alert-text="Failed to activate user"
                                 data-failure-param-alert-classname="error">
 
                                 <button name="status" type="submit" class="fill" value="<?php echo \Appwrite\Auth\Auth::USER_STATUS_ACTIVATED; ?>">Activate Account</button>
@@ -144,7 +144,7 @@
                     </div>
                 </div>
             </li>
-            <li data-state="/console/users/view/devices?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/users/user/devices?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Devices</h2>
 
                 <div
@@ -210,7 +210,7 @@
                 </div>
 
             </li>
-            <li data-state="/console/users/view/audit?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/users/user/audit?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Activity</h2>
 
                 <div

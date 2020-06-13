@@ -444,8 +444,8 @@ $utopia->get('/v1/avatars/initials')
             $draw = new \ImagickDraw();
             $fontSize = min($width, $height) / 2;
             
-            $draw->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-600.ttf");
-            $image->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-600.ttf");
+            $draw->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-500.ttf");
+            $image->setFont(__DIR__."/../../../public/fonts/poppins-v9-latin-500.ttf");
 
             $draw->setFillColor(new \ImagickPixel($color));
             $draw->setFontSize($fontSize);

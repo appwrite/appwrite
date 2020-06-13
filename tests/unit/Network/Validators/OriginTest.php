@@ -2,7 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\Network\Validators\Origin;
+use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
 
 class OriginTest extends TestCase

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Storage\Devices;
+namespace Appwrite\Storage\Device;
 
 use Appwrite\Storage\Device;
 

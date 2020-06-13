@@ -3,7 +3,7 @@
 global $utopia, $request, $response, $register, $project;
 
 use Utopia\Exception;
-use Appwrite\Storage\Devices\Local;
+use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
 

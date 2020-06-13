@@ -18,7 +18,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Network\Validators\CNAME;
+use Appwrite\Network\Validator\CNAME;
 use Cron\CronExpression;
 
 include_once __DIR__ . '/../shared/api.php';

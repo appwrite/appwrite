@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Storage\Devices;
+namespace Appwrite\Storage\Device;
 
 use Exception;
 use Appwrite\Storage\Device;
