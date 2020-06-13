@@ -18,6 +18,7 @@
 - Fixed network calculation for uploaded files
 - Fixed a UI bug preventing float values in numeric fields
 - Fixed scroll positioning when moving rules order up & down
+- Fixed missing validation for database documents key length (32 chars)
 
 ## Security
 
