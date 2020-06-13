@@ -6,6 +6,7 @@
       let buttonClass = element.dataset["buttonClass"] || "ls-ui-open";
       let buttonText = element.dataset["buttonText"] || "";
       let buttonIcon = element.dataset["buttonIcon"] || "";
+      let buttonAria = element.dataset["buttonAria"] || "Open";
       let buttonSelector = element.dataset["buttonSelector"] || "";
       let hover = element.hasAttribute("data-hover");
       let blur = element.hasAttribute("data-blur");
@@ -19,7 +20,7 @@
 
       button.innerText = buttonText;
       button.className = buttonClass;
-      button.tabIndex = 1;
+      // button.tabIndex = 1;
       button.type = "button";
 
       if (buttonIcon) {
@@ -28,6 +29,10 @@
         icon.className = buttonIcon;
 
         button.insertBefore(icon, button.firstChild);
+      }
+
+      if(buttonAria) {
+        button.setAttribute('aria-label', buttonAria);
       }
 
       if (def === "close") {

@@ -73,7 +73,7 @@ $events = array_keys($this->getParam('events', []));
                         <label data-ls-attrs="for=url-{{webhook.$id}}">POST URL</label>
                         <input type="url" class="full-width" data-ls-attrs="id=url-{{webhook.$id}}" name="url" required autocomplete="off" placeholder="https://example.com/callback" data-ls-bind="{{webhook.url}}" />
 
-                        <div class="margin-bottom toggle" data-ls-ui-open>
+                        <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
                             <i class="icon-plus pull-end margin-top-tiny"></i>
                             <i class="icon-minus pull-end margin-top-tiny"></i>
                             
@@ -187,7 +187,7 @@ $events = array_keys($this->getParam('events', []));
                 <label for="url">POST URL</label>
                 <input type="url" class="full-width" id="url" name="url" required autocomplete="off" placeholder="https://example.com/callback" />
 
-                <div class="margin-bottom toggle" data-ls-ui-open>
+                <div class="margin-bottom toggle" data-ls-ui-open data-button-aria="Advanced Options">
                     <i class="icon-plus pull-end margin-top-tiny"></i>
                     <i class="icon-minus pull-end margin-top-tiny"></i>
                     
