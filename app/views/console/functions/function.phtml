@@ -58,21 +58,6 @@ $events = array_keys($this->getParam('events', []));
                             </div>
                         </div>
 
-                        <h3>Usage</h3>
-
-                        <div class="box margin-bottom-small">
-                            <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                                <div class="chart margin-bottom-no">
-                                    <div class="content" data-forms-chart="Requests=usage.requests.data,Network=usage.network.data"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <ul class="chart-notes margin-bottom-large">
-                            <li>Invocations</li>
-                            <li>CPU Time</li>
-                        </ul>
-
                         <h3>Tags</h3>
 
                         <div class="margin-bottom"
@@ -178,6 +163,54 @@ $events = array_keys($this->getParam('events', []));
                         </form>
                     </div>
                 </div>
+            </li>
+            <li data-state="/console/functions/function/usage?id={{router.params.id}}&project={{router.params.project}}">
+                <h2>Activity & Usage</h2>
+
+                <div class="box margin-bottom-small">
+                    <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
+                        <div class="chart margin-bottom-no">
+                            <div class="content" data-forms-chart="Requests=usage.requests.data,Network=usage.network.data"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="chart-notes margin-bottom-large">
+                    <li>Invocations</li>
+                    <li>CPU Time</li>
+                </ul>
+
+                <h3>Logs</h3>
+
+                <div class="box">
+                    <table class="vertical small">
+                        <thead>
+                            <tr>
+                                <th width="140">Date</th>
+                                <th width="175">Event</th>
+                                <th>Client</th>
+                                <th width="90">Location</th>
+                                <th width="90">IP</th>
+                            </tr>
+                        </thead>
+                        <!-- <tbody data-ls-loop="securityLogs" data-ls-as="log">
+                            <tr>
+                                <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
+                                <td data-title="Client: ">
+                                    <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
+                                    <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                </td>
+                                <td data-title="Location: ">
+                                    <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                    <span data-ls-bind="{{log.geo.country}}"></span>
+                                </td>
+                                <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
+                            </tr>
+                        </tbody> -->
+                    </table>
+                </div>
+
             </li>
             <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>

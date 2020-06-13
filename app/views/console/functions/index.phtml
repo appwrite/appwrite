@@ -51,9 +51,10 @@
                             data-service="functions.create"
                             data-scope="sdk"
                             data-event="submit"
-                            data-success="alert,trigger,reset"
+                            data-success="alert,trigger,reset,redirect"
                             data-success-param-alert-text="Created function successfully"
                             data-success-param-trigger-events="functions.create"
+                            data-success-param-redirect-url="/console/functions/function?id={{serviceData.$id}}&project={{router.params.project}}"
                             data-failure="alert"
                             data-failure-param-alert-text="Failed to create function"
                             data-failure-param-alert-classname="error">
@@ -69,9 +70,5 @@
                 </div>
             </div>
         </li>
-
-        <!-- <li data-state="/console/users/teams?project={{router.params.project}}">
-            <h2>Usage</h2>
-        </li> -->
     </ul>
 </div>

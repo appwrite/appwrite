@@ -415,6 +415,10 @@
 
     .chart {
       width: 80%;
+
+      @media @phones, @tablets {
+        width: 100%;
+      }
     }
 
     hr {
@@ -521,9 +525,9 @@
   }
 
   .chart {	
-    width: 80%;	
+    width: 100%;	
     position: relative;	
-    height: 0;	
+    height: 0;
     padding-top: 20px;	
     padding-bottom: 26%;	
     .func-margin-end(-2px);	
