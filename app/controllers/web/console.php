@@ -14,6 +14,7 @@ use Appwrite\Storage\Storage;
 
 $utopia->init(function () use ($layout) {
     $layout
+        ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
         ->setParam('analytics', 'UA-26264668-5')
     ;
 });
