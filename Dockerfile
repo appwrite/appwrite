@@ -11,7 +11,7 @@ ENV TZ=Asia/Tel_Aviv \
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget curl git openssl && \
+  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget git openssl && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests make php$PHP_VERSION php$PHP_VERSION-dev zip unzip php$PHP_VERSION-zip && \
@@ -23,7 +23,9 @@ RUN \
   ./configure && \
   make && \
   # Composer
-  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+  wget https://getcomposer.org/composer.phar && \
+  chmod +x ./composer.phar && \
+  mv ./composer.phar /usr/bin/composer
 
 WORKDIR /usr/local/src/
 
@@ -80,25 +82,44 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests wget curl ca-certificates software-properties-common openssl gnupg && \
+  apt-get install -y --no-install-recommends --no-install-suggests wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev htop supervisor openssl gnupg && \
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
   add-apt-repository universe && \
   add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests htop supervisor php$PHP_VERSION php$PHP_VERSION-fpm \
+  apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
   php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
   # Nginx
-  echo "deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
-  wget -q http://nginx.org/keys/nginx_signing.key && \
-  apt-key add nginx_signing.key && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests nginx && \
+  # echo "deb http://nginx.org/packages/nginx-1.19.0/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list && \
+  # wget -q http://nginx.org/keys/nginx_signing.key && \
+  # apt-key add nginx_signing.key && \
+  # apt-get update && \
+  # apt-get install -y --no-install-recommends --no-install-suggests nginx && \
+  wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
+  tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \
+  cd nginx-1.19.0 && \
+  ./configure --prefix=/usr/share/nginx \
+    --sbin-path=/usr/sbin/nginx \
+    --modules-path=/usr/lib/nginx/modules \
+    --conf-path=/etc/nginx/nginx.conf \
+    --error-log-path=/var/log/nginx/error.log \
+    --http-log-path=/var/log/nginx/access.log \
+    --pid-path=/run/nginx.pid \
+    --lock-path=/var/lock/nginx.lock \
+    --user=www-data \
+    --group=www-data \
+    --build=Ubuntu \
+    --with-http_gzip_static_module \
+    --with-http_ssl_module \
+    --with-http_v2_module && \
+  make && \
+  make install && \
   # Redis Extension
   echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
   echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
   # Cleanup
   cd ../ && \
-  apt-get purge -y --auto-remove software-properties-common gnupg curl && \
+  apt-get purge -y --auto-remove software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
