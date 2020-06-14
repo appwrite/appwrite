@@ -11,6 +11,8 @@
 - Added option to join a user to any team from the console
 - Added support for Brotli compression
 - UI performance & accessibility improvments
+- Updated ClamAV conntainer to version 1.0.9
+- All emails are now sent asynchronously for improved performance
 
 ## Bug Fixes
 
