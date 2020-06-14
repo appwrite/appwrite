@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halló,
-    <br />
-    <br />
+</p>
+<p>
     Þessi póstur var sendur til þín vegna þess að <b>{{owner}}</b> vildi bjóða þér að gerast liðsmaður í <b>{{team}}</b> teymi í {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Fylgdu þessum hlekk til að ganga í <b>{{team}}</b> liðið:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Ef þú hefur ekki áhuga geturðu hunsað þessi skilaboð.
-    <br />
-    <br />
+</p>
+<p>
     Takk,
     <br />
     {{project}} Teymi
-</div>
+</p>

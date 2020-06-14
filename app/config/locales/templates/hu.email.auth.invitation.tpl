@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Szia,
-    <br />
-    <br />
+</p>
+<p>
     Azért küldtük ezt az e-mailt <b>{{owner}}</b> mert meg szeretnénk hívni a <b>{{team}}</b> csapatba a következő projektre {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Kattints erre a linkre, hogy a <b>{{team}}</b> csapat tagja legyél:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Ha nem vegy ebben érdekelt ignoráld ezt az üzenetet.
-    <br />
-    <br />
+</p>
+<p>
     Köszönettel,
     <br />
     {{project}} csapat
-</div>
+</p>

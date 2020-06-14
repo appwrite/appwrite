@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Szia {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Kattints erre a linkre, hogy visszaállítsuk a {{project}} jelszavad.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Ha nem kérvényezted, hogy visszaállítsuk a jelszavad ignoráld ezt a levelet.
-    <br />
-    <br />
+</p>
+<p>
     Köszönettel,
     <br />
     {{project}} csapat
-</div>
+</p>

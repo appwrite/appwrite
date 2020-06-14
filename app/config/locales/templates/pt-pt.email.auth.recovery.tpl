@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Olá {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Use este link para repor a sua palavra-passe {{project}}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Se não solicitou a reposição da sua palavra-passe, por favor ignore esta mensagem.
-    <br />
-    <br />
+</p>
+<p>
     Com os melhores cumprimentos,
     <br />
     Equipa {{project}}
-</div>
+</p>

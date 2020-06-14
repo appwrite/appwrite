@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     হ্যালো {{name}},
-    <br />
-    <br />
+</p>
+<p>
     এই লিংকটি অনুসরণ করুন আপনার ইমেইল এড্রেস যাচাই করতে |
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     আপনি যদি আপনার ইমেইল এড্রেস যাচাই করতে অনুরোধ করেননি, আপনি এই মেসেজটি অগ্রাহ্য করতে পারেন |
-    <br />
-    <br />
+</p>
+<p>
     ধন্যবাদান্তে,
     <br />
     {{project}} টীম
-</div>
+</p>

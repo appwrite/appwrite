@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Здравствуйте,
-    <br />
-    <br />
+</p>
+<p>
     Это письмо отправлено вам, потому что <b>{{owner}}</b> приглашает стать членом команды <b>{{team}}</b> в проекте {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Перейдите по ссылке, чтобы присоединиться к команде <b>{{team}}</b> :
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Если вы не заинтересованы, проигнорируйте это сообщение.
-    <br />
-    <br />
+</p>
+<p>
     Спасибо,
     <br />
     команда {{project}}
-</div>
+</p>

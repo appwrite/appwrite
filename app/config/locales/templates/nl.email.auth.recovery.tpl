@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hallo {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Klik op deze link om uw {{project}} wachtwoord te resetten.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Als u niet gevraagd heeft om uw wachtwoord te resetten, kunt u dit bericht negeren.
-    <br />
-    <br />
+</p>
+<p>
     Bedankt,
     <br />
     {{project}} team
-</div>
+</p>
