@@ -20,7 +20,7 @@ if($type === 'document') {
 
 <ul data-ls-loop="<?php echo $this->escape($namespace); ?>" data-ls-as="node" class="sortable numbers">
     <li data-forms-move-up  data-forms-move-down>
-        <div class="drop-list bottom end settings" data-ls-ui-open="" data-button-text="" data-button-icon="icon-cog" data-button-selector="[data-toggler]" data-button-class="round dark small margin-bottom-small margin-top-tiny pull-end" data-blur="1" tabindex="1">
+        <div class="drop-list bottom end settings" data-ls-ui-open="" data-button-text="" data-button-icon="icon-cog" data-button-aria="Options" data-button-selector="[data-toggler]" data-button-class="round dark small margin-bottom-small margin-top-tiny pull-end" data-blur="1">
             <ul class="arrow-end margin-top margin-end-negative-small">
                 <li data-move-up>
                     <button type="button" class="link"><i class="icon-up-dir"></i> Move Up</button>
@@ -41,7 +41,7 @@ if($type === 'document') {
 </ul>
 
 <?php if(!empty($list) && $type === 'document'): ?>
-    <div class="drop-list" data-ls-ui-open="" data-button-text="Add" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="reverse margin-bottom-small" data-blur="1" tabindex="1">
+    <div class="drop-list" data-ls-ui-open="" data-button-text="Add" data-button-aria="Add" data-button-icon="" data-button-selector="[data-toggler]" data-button-class="reverse margin-bottom-small" data-blur="1">
         <ul>
             <?php foreach($list as $item):
                 $name = (isset($collections[$item])) ? $collections[$item]->getAttribute('name', '') : '';
