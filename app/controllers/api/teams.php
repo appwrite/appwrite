@@ -332,14 +332,16 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{redirect}}', $url)
             ;
 
-            $mail
-                ->setParam('event', 'teams.membership.create')
-                ->setParam('recipient', $email)
-                ->setParam('name', $name)
-                ->setParam('subject', sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
-                ->setParam('body', $body->render())
-                ->trigger();
-            ;
+            if(APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
+                $mail
+                    ->setParam('event', 'teams.membership.create')
+                    ->setParam('recipient', $email)
+                    ->setParam('name', $name)
+                    ->setParam('subject', sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
+                    ->setParam('body', $body->render())
+                    ->trigger();
+                ;
+            }
 
             $audit
                 ->setParam('userId', $invitee->getId())
