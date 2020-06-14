@@ -33,7 +33,7 @@ abstract class Scope extends TestCase
 
     protected function getLastEmail():array
     {
-        sleep(5);
+        sleep(10);
         $emails = json_decode(file_get_contents('http://maildev/email'), true);
 
         if($emails && is_array($emails)) {
