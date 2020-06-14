@@ -2,8 +2,7 @@
     Hola,
 </p>
 <p>
-    T'hem enviat aquest correu perquè <b>{{owner}}</b> et vol convidar a formar part
-    de l'equip <b>{{team}}</b> a {{project}}.
+    T'hem enviat aquest correu perquè <b>{{owner}}</b> et vol convidar a formar part de l'equip <b>{{team}}</b> a {{project}}.
 </p>
 <p>
     Segueix aquest enllaç per unir-te a l'equip <b>{{team}}</b>:

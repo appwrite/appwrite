@@ -9,7 +9,7 @@
 </p>
 {{cta}}
 <p>
-    Si no est�s interesado, puedes ignorar este mensaje.
+    Si no estás interesado, puedes ignorar este mensaje.
 </p>
 <p>
     Gracias,
