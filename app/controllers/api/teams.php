@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mode, $clients;
+global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mail, $mode, $clients;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -215,7 +215,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.') // TODO add our own built-in confirm page
     ->action(
-        function ($teamId, $email, $name, $roles, $url) use ($response, $register, $project, $user, $audit, $projectDB, $mode) {
+        function ($teamId, $email, $name, $roles, $url) use ($response, $mail, $project, $user, $audit, $projectDB, $mode) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
@@ -332,20 +332,15 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{redirect}}', $url)
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-
-            $mail->addAddress($email, $name);
-
-            $mail->Subject = sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-            $mail->Body = $body->render();
-            $mail->AltBody = strip_tags($body->render());
-
-            try {
-                if(APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
-                    $mail->send();
-                }
-            } catch (\Exception $error) {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+            if(APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
+                $mail
+                    ->setParam('event', 'teams.membership.create')
+                    ->setParam('recipient', $email)
+                    ->setParam('name', $name)
+                    ->setParam('subject', sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
+                    ->setParam('body', $body->render())
+                    ->trigger();
+                ;
             }
 
             $audit
