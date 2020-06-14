@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hej {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Följ denna länk för att ändra ditt {{project}} lösenord.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Om du inte bett om att ändra ditt lösenord så kan du ignorera detta meddelande.
-    <br />
-    <br />
+</p>
+<p>
     Tack,
     <br />
     {{project}}-teamet
-</div>
+</p>

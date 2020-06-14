@@ -14,10 +14,10 @@ $graph = $this->getParam('graph', false);
         </h1>
 
         <ul class="margin-top-negative-small margin-bottom clear">
-            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
-            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/settings?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-cog"></i> &nbsp;Settings</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/keys?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-key-inv"></i> &nbsp;API Keys</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/webhooks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-link"></i> &nbsp;Webhooks</a> &nbsp;&nbsp;</li>
+            <li class="pull-start margin-end margin-bottom-small"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}" class="link-animation-enabled"><i class="icon-clock"></i> &nbsp;Tasks</a> &nbsp;&nbsp;</li>
             <!-- <li class="pull-end margin-start margin-bottom-small text-size-small margin-top-tiny"><a data-ls-attrs="href=/console/tasks?project={{router.params.project}}">May 2020 &nbsp; <i class="icon-down-dir"></i></a></li> -->
         </ul>
     </div>
@@ -157,22 +157,22 @@ $graph = $this->getParam('graph', false);
         <a data-ls-attrs="href=/console/keys?project={{router.params.project}}">Manage Your Server API Keys</a>
     </div>
 
-    <div class="drop-list pull-start" data-ls-ui-open="" data-button-text="Add Platform" data-button-class="button" data-blur="1" tabindex="1">
+    <div class="drop-list pull-start" data-ls-ui-open="" data-button-aria="Choose Platform" data-button-text="Add Platform" data-button-class="button" data-blur="1">
         <ul>
             <li>
-                <div class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Web Platform Logo" class="avatar xxs margin-end-small" /> New Web App</div>
+                <div class="link web-new"><img src="/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Web Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Web App</div>
             </li>
             <li>
-                <div class="link flutter-new"><img src="/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Flutter Platform Logo" class="avatar xxs margin-end-small" /> New Flutter App &nbsp;<span class="text-size-tiny">(beta)</span></div>
+                <div class="link flutter-new"><img src="/images/clients/flutter.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Flutter Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Flutter App &nbsp;<span class="text-size-tiny">(beta)</span></div>
             </li>
             <li class="disabled">
-                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" /> New iOS App</div>
+                <div class="link ios-new"><img src="/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New iOS App</div>
             </li>
             <li class="disabled">
-                <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" /> New Android App</div>
+                <div class="link android-new"><img src="/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Android App</div>
             </li>
             <li class="disabled">
-                <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" /> New Unity Game</div>
+                <div class="link unity-new"><img src="/images/clients/unity.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Unity Platform Logo" class="avatar xxs margin-end-small" loading="lazy" /> New Unity Game</div>
             </li>
         </ul>
     </div>
@@ -209,7 +209,7 @@ $graph = $this->getParam('graph', false);
         <div class="info margin-top margin-bottom">
             <div class="text-bold margin-bottom-small">Next Steps</div>
 
-            <p>After adding your new website, install our JS SDK to integrate with your code and read our <a data-ls-attrs="href={{env.HOME}}/docs/getting-started-for-web" target="_blank">getting started</a> tutorial.</p>
+            <p>After adding your new website, install our JS SDK to integrate with your code and read our <a data-ls-attrs="href={{env.HOME}}/docs/getting-started-for-web" target="_blank" rel="noopener">getting started</a> tutorial.</p>
 
             <div class="margin-bottom-no ide" data-lang="bash" data-lang-label="bash">
                 <pre class="line-numbers"><code class="prism language-bash" data-prism>npm install appwrite</code></pre>

@@ -9,9 +9,8 @@ $home = $this->getParam('home', '');
         <p class="margin-bottom margin-top-negative-small">Take advantage of the Appwrite APIs and tools.</p>
 
         <ul class="margin-bottom-xl clear">
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/" target="_blank"><i class="icon-lamp"></i> &nbsp;Learn more</a></li>
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank" rel="noopener"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank" rel="noopener"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
         </ul>
     </div>
 </div>
@@ -33,7 +32,7 @@ $home = $this->getParam('home', '');
 
         <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3" style="visibility: hidden">
             <li class="margin-bottom">
-                <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box link-animation-disabled">
+                <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
                     <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>
                     
                     <p data-ls-if="({{project.platforms.length}})" class="text-fade text-size-small" data-ls-bind="{{project.platforms.length}} apps"></p>
@@ -65,7 +64,7 @@ $home = $this->getParam('home', '');
 
     <div class="row responsive">
         <div class="col span-6 margin-bottom">
-            <div class="box line">
+            <div class="box line community">
                 <h3 class="margin-bottom-small text-size-normal">Join The Community</h3>
         
                 <p class="text-fade">Join Appwrite growing developers community channels.</p>

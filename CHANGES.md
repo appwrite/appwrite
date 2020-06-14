@@ -2,14 +2,18 @@
 
 ## Features
 
-- New route in Locale API to fetch a list of languages
+- New route in Locale API to fetch a list of languages (@TorstenDittmann)
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Added Google Fonts to Appwrite for offline availability
 - Added a new route in the Avatars API to get user initials avatar
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
-- Added support for Brotli compression
+- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
+- New UI micro-interactions and styles fixes (@AnatoleLucet)
+- UI performance & accessibility improvments
+- Updated ClamAV conntainer to version 1.0.9
+- All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 
 ## Bug Fixes
 

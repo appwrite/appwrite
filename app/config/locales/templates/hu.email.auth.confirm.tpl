@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Szia {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Kattints erre a linkre, hogy megerősítsd az e-mail címed.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Ha nem kérelmezted, hogy megerősítsük ezt a címet, ignoráld ezt a levelet.
-    <br />
-    <br />
+</p>
+<p>
     Köszönettel,
     <br />
     {{project}} csapat
-</div>
+</p>

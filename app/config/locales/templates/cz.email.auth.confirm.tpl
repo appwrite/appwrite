@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Ahoj {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Kliknutím na tento odkaz ověřte svou e-mailovou adresu.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Pokud jste nepožádali o ověření této adresy, můžete tuto zprávu ignorovat.
-    <br />
-    <br />
+</p>
+<p>
     dík,
     <br />
     {{project}} tým
-</div>
+</p>

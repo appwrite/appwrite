@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hola {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Segueix aquest enllaç per restablir la teva contrasenya de {{project}}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Si no has demanat restablir la teva contrasenya, pots ignorar aquest missatge.
-    <br />
-    <br />
+</p>
+<p>
     Gràcies,
     <br />
     Equip {{project}}
-</div>
+</p>
