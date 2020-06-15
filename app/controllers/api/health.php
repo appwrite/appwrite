@@ -20,6 +20,15 @@ $utopia->get('/v1/health')
         }
     );
 
+$utopia->get('/v1/health/version')
+    ->desc('Get Version')
+    ->label('scope', 'public')
+    ->action(
+        function () use ($response) {
+            $response->json(['version' => APP_VERSION_STABLE]);
+        }
+    );
+
 $utopia->get('/v1/health/db')
     ->desc('Get DB')
     ->label('scope', 'health.read')
@@ -124,7 +133,7 @@ $utopia->get('/v1/health/queue/tasks')
     );
 
 $utopia->get('/v1/health/queue/logs')
-->desc('Get Logs Queue')
+    ->desc('Get Logs Queue')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
