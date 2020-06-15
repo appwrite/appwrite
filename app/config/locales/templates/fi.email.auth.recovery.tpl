@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hei {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Resetoi {{project}} salasana tästä linkistä.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Jos et pyytänyt salasanan nollaamista, voit sivuuttaa tämän viestin-
-    <br />
-    <br />
+</p>
+<p>
     Kiitos,
     <br />
     {{project}} tiimi
-</div>
+</p>

@@ -1,28 +1,19 @@
 
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halo,
-    <br />
-    <br />
+</p>
+<p>
     Email iki dikirim menyang sampeyan amarga <b>{{owner}}</b> pengin ngajak sampeyan dadi anggota tim ing <b>{{team}}</b> tim ing {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Tindakake link iki kanggo gabung ing <b>{{team}}</b>:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Yen sampeyan ora kasengsem, sampeyan bisa nglirwakake pesen iki.
-    <br />
-    <br />
+</p>
+<p>
     Matur suwun,
     <br />
     tim {{project}}
-</div>
+</p>

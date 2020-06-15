@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hei,
-    <br />
-    <br />
+</p>
+<p>
     Sait tämän sähköpostin koska <b>{{owner}}</b> halusi kutsua sinut jäseneksi <b>{{team}}</b> tiimiin, täällä {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Käytä tätä linkkiä liittyäksesi <b>{{team}}</b> tiimiin:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Jos et ole kiinnostunut, voit sivuuttaa tämän viestin.
-    <br />
-    <br />
+</p>
+<p>
     kiitos,
     <br />
     {{project}} tiimi
-</div>
+</p>

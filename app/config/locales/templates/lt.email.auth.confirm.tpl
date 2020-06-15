@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Sveiki, {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Paspauskite nuorodą, kad patvirtinti savo el. paštą.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Jei neprašėte el. pašto patvirtinimo, ignoruokite šį laišką
-    <br />
-    <br />
+</p>
+<p>
     Ačiū,
     <br />
     komanda {{project}}
-</div>
+</p>
