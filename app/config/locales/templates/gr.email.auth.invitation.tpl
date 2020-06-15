@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Γεια,
-    <br />
-    <br />
+</p>
+<p>
     Έλαβες αυτό το email επειδή ο <b>{{owner}}</b> σε προσκάλεσε να γίνεις μέλος της ομάδας <b>{{team}}</b> στο {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Ακολούθησε αυτό τον σύνδεσμο για να γίνεις μέλος της ομάδας <b>{{team}}</b>:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Άν δεν ενδιαφέρεσαι, μπορείς να αγνοήσεις αυτό το μήνυμα.
-    <br />
-    <br />
+</p>
+<p>
     Ευχαριστούμε,
     <br />
     Η ομάδα του {{project}}
-</div>
+</p>

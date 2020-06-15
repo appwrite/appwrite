@@ -149,6 +149,7 @@ $register->set('smtp', function () use ($request) {
     $mail->Password = $password;
     $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
     $mail->SMTPAutoTLS = false;
+    $mail->CharSet = 'UTF-8';
 
     $from = urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
     $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -278,9 +279,10 @@ $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register))
 $projectDB->setNamespace('app_'.$project->getId());
 $projectDB->setMocks(Config::getParam('collections', []));
 
-$user = $projectDB->getDocument(Auth::$unique);
-
-if (APP_MODE_ADMIN === $mode) {
+if (APP_MODE_ADMIN !== $mode) {
+    $user = $projectDB->getDocument(Auth::$unique);
+}
+else {
     $user = $consoleDB->getDocument(Auth::$unique);
 
     $user
