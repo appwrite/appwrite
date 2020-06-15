@@ -47,19 +47,19 @@ class OriginTest extends TestCase
         $this->assertEquals($validator->isValid('http://example.com:80'), false);
 
         $this->assertEquals($validator->isValid('appwrite-ios://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Inavlid Origin. Register your new client (com.company.appname) as a new iOS platform on your project console dashboard');
+        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new iOS platform on your project console dashboard');
         
         $this->assertEquals($validator->isValid('appwrite-android://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Inavlid Origin. Register your new client (com.company.appname) as a new Android platform on your project console dashboard');
+        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new Android platform on your project console dashboard');
         
         $this->assertEquals($validator->isValid('appwrite-macos://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Inavlid Origin. Register your new client (com.company.appname) as a new macOS platform on your project console dashboard');
+        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new macOS platform on your project console dashboard');
         
         $this->assertEquals($validator->isValid('appwrite-linux://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Inavlid Origin. Register your new client (com.company.appname) as a new Linux platform on your project console dashboard');
+        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new Linux platform on your project console dashboard');
 
         $this->assertEquals($validator->isValid('appwrite-windows://com.company.appname'), false);
-        $this->assertEquals($validator->getDescription(), 'Inavlid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard');
+        $this->assertEquals($validator->getDescription(), 'Invalid Origin. Register your new client (com.company.appname) as a new Windows platform on your project console dashboard');
 
     }
 }
