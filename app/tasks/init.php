@@ -89,6 +89,17 @@ $cli
             //throw $th;
         }
 
+        try {
+            if($request->getServer('_APP_OPTIONS_ABUSE', 'disabled') === 'disabled') {
+                Console::log('🔴 Abuse protection is enabled');
+            }
+            else {
+                Console::log('🟢 Abuse protection is enabled');
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
         sleep(1);
 
         try {

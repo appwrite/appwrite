@@ -13,7 +13,8 @@
 - New UI micro-interactions and styles fixes (@AnatoleLucet)
 - UI performance & accessibility improvments
 - Updated ClamAV conntainer to version 1.0.9
-- All emails are now sent asynchronously for improved performance (@TorstenDittmann)
+- All emails are now sent asynchronously for improved performance (@)
+- New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 
 ## Bug Fixes
 
