@@ -298,20 +298,20 @@ $providers = $this->getParam('providers', []);
         <li data-state="/console/users/providers?project={{router.params.project}}">
             <h2>OAuth2 Providers</h2>
 
-            <div class="box margin-bottom margin-top-large"
+            <div class="margin-bottom margin-top-large"
                 data-service="projects.get"
                 data-event="load,projects.create,projects.update,projects.deleteProject"
                 data-name="console-project"
                 data-param-project-id="{{router.params.project}}"
                 data-scope="console">
-                <ul class="list">
+                <ul class="tiles cell-3 margin-bottom-small">
                     <?php foreach ($providers as $provider => $data):
                         if (isset($data['enabled']) && !$data['enabled']) { continue; }
                         if (isset($data['mock']) && $data['mock']) { continue; }
                         $form = (isset($data['form'])) ? $data['form'] : false;
                         $beta = (isset($data['beta'])) ? $data['beta'] : false;
                         ?>
-                        <li class="clear <?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
+                        <li class="<?php echo (isset($data['enabled']) && !$data['enabled']) ? 'dev-feature' : ''; ?>">
                             <div data-ui-modal class="modal close" data-button-alias="none" data-open-event="provider-update-<?php echo $provider; ?>">
                                 <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
@@ -363,24 +363,29 @@ $providers = $this->getParam('providers', []);
                                 </form>
                             </div>
 
-                            <span data-ls-if="
-                                {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} &&
-                                {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
-                                <button class="switch on pull-end margin-top-small" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
-                            </span>
-                            <span data-ls-if="
-                                !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} ||
-                                !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
-                                <button class="switch pull-end margin-top-small" data-ls-ui-trigger="provider-update-<?php echo $this->escape($provider); ?>"></button>
-                            </span>
+                            <div class="box padding-small margin-bottom">
+                                <span data-ls-if="
+                                    {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} &&
+                                    {{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
+                                    <button class="switch on pull-end" data-ls-ui-trigger="provider-update-<?php echo $provider; ?>"></button>
+                                </span>
 
-                            <img src="/images/oauth2/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
-                            <span>
-                                <?php echo ucfirst($provider); ?> <?php if($beta): ?>(beta)<?php endif; ?>
-                            </span>
-                            <p class="margin-bottom-no margin-top-small text-one-liner">
-                                <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Developer Docs<i class="icon-link-ext"></i></a>
-                            </p>
+                                <span data-ls-if="
+                                    !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Appid}} ||
+                                    !{{console-project.usersOauth2<?php echo $this->escape(ucfirst($provider)); ?>Secret}}">
+                                    <button class="switch pull-end" data-ls-ui-trigger="provider-update-<?php echo $this->escape($provider); ?>"></button>
+                                </span>
+
+                                <img src="/images/oauth2/<?php echo $this->escape(strtolower($provider)); ?>.png?buster=<?php echo APP_CACHE_BUSTER; ?>" alt="<?php echo $this->escape(ucfirst($provider)); ?> Logo" class="pull-start provider margin-end" />
+                                
+                                <span class="text-size-small">
+                                    <?php echo ucfirst($provider); ?> <?php if($beta): ?>(beta)<?php endif; ?>
+                                </span>
+
+                                <p class="margin-bottom-no text-one-liner text-size-small">
+                                    <a href="<?php echo $data['developers']; ?>" target="_blank" rel="noopener">OAuth2 Docs<i class="icon-link-ext"></i></a>
+                                </p>
+                            </div>
                         </li>
                     <?php endforeach; ?>
                 </ul>
