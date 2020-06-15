@@ -6,7 +6,7 @@
 </p>
 {{cta}}
 <p>
-    Caso você não solicitou a redefinição de senha, por favor ignore esta mensagem.
+    Caso não tenha solicitado a redefinição de senha, por favor ignore esta mensagem.
 </p>
 <p>
     Atenciosamente,
