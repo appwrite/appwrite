@@ -37,7 +37,7 @@ $cli
 /    \ ) __/ ) __/\ /\ / )   / )(   )(   ) _)  _  )((  O )
 \_/\_/(__)  (__)  (_/\_)(__\_)(__) (__) (____)(_)(__)\__/ ");
 
-        Console::log("\n".'Running '.APP_NAME.' Doctor 👩‍⚕️ for version '.$request->getServer('_APP_VERSION', 'UNKNOWN').' ...'."\n");
+        Console::log("\n".'👩‍⚕️ Running '.APP_NAME.' Doctor for version '.$request->getServer('_APP_VERSION', 'UNKNOWN').' ...'."\n");
 
         Console::log('Checking for production best practices...');
         
