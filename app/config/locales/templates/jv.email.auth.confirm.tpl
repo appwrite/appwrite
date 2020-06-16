@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halo, {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Tindakake tautan iki kanggo verifikasi alamat email sampeyan.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Yen sampeyan ora njaluk verifikasi alamat iki, sampeyan bisa nglalekake pesen iki.
-    <br />
-    <br />
+</p>
+<p>
     Matur suwun,
     <br />
     tim {{project}}
-</div>
+</p>

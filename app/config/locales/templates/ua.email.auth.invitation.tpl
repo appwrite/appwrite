@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Вітаємо,
-    <br />
-    <br />
+</p>
+<p>
     Цей лист був надісланий вам тому що  <b>{{owner}}</b>  хоче запросити вас стати членом команди  <b>{{team}}</b> у  {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Перейдіть за цим посиланням щоб приєднатись до команди <b>{{team}}</b> :
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Якщо ви не зацікавлені, проігноруйте це повідомлення.
-    <br />
-    <br />
+</p>
+<p>
     Дякуємо,
     <br />
     Команда {{project}}
-</div>
+</p>

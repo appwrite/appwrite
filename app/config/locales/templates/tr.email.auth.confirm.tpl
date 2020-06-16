@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Merhaba {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Aşağıdaki bağlantıyı takip ederek email hesabınızı doğrulayın.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Bu adresi doğrulamayı istemediyseniz, bu mesajı yok sayabilirsiniz.
-    <br />
-    <br />
+</p>
+<p>
     Teşekkürler,
     <br />
     {{project}} takımı
-</div>
+</p>

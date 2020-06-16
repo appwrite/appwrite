@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halló,
-    <br />
-    <br />
+</p>
+<p>
     Hesa teldupost var send til tín tí <b>{{owner}}</b> vildi bjóða tær at vera eitt lið limur hjá <b>{{team}}</b> á {{project}}
-    <br />
-    <br />
+</p>
+<p>
     Fylg hettar lenka fyrið at bliva vi <b>{{team}}</b> lið:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Om tú ikke er áhugaður, kannst tú ignorera hesa boð
-    <br />
-    <br />
+</p>
+<p>
     Takk,
     <br />
     {{project}} lið
-</div>
+</p>

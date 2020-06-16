@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Pozdravljeni {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Sledite tej povezavi za potrditev vašega email naslova.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Če niste zahtevali potrditve tega naslova, lahko to sporočilo prezrete.
-    <br />
-    <br />
+</p>
+<p>
     Hvala,
     <br />
     {{project}} ekipa
-</div>
+</p>

@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Kamusta {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Sundan ang link na ito updang i-reset ang iyong password sa {{ project }}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Kung hindi mo hiniling na i-reset ang iyong password, maaari mong balewalain ang mensahe na ito.
-    <br />
-    <br />
+</p>
+<p>
     Salamat,
     <br />
     Pangkat ng {{project}}
-</div>
+</p>

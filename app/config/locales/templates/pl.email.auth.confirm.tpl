@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Witaj {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Kliknij ten link, aby zweryfikować swój adres e-mail.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Jeśli nie prosiłeś o weryfikację tego adresu, możesz zignorować tę wiadomość.
-    <br />
-    <br />
+</p>
+<p>
     Dziękujemy,
     <br />
     zespół {{project}}
-</div>
+</p>
