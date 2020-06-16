@@ -708,10 +708,11 @@
              * @param {string} provider
              * @param {string} success
              * @param {string} failure
+             * @param {string[]} scopes
              * @throws {Error}
              * @return {Promise}             
              */
-            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure') {
+            createOAuth2Session: function(provider, success = 'https://appwrite.io/auth/oauth2/success', failure = 'https://appwrite.io/auth/oauth2/failure', scopes = []) {
                 if(provider === undefined) {
                     throw new Error('Missing required parameter: "provider"');
                 }
@@ -728,9 +729,28 @@
                     payload['failure'] = failure;
                 }
 
+                if(scopes) {
+                    payload['scopes'] = scopes;
+                }
+
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 window.location = config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -882,7 +902,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -925,7 +960,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -955,7 +1005,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -997,7 +1062,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -1039,7 +1119,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -1093,7 +1188,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -1138,7 +1248,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             }
@@ -1758,7 +1883,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -1811,7 +1951,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             },
@@ -1842,7 +1997,22 @@
 
                 payload['project'] = config.project;
 
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+
+                let query = [];
+
+                for (let p in payload) {
+                    if(Array.isArray(payload[p])) {
+                        for (let index = 0; index < payload[p].length; index++) {
+                            let param = payload[p][index];
+                            query.push(encodeURIComponent(p + '[]') + "=" + encodeURIComponent(param));
+                        }
+                    }
+                    else {
+                        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(payload[p]));
+                    }
+                }
+
+                query =  query.join("&");
                 
                 return config.endpoint + path + ((query) ? '?' + query : '');
             }
