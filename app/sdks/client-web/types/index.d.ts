@@ -387,6 +387,30 @@ declare namespace Appwrite {
 	    getImage(url: string, width: number, height: number): string;
 
         /**
+         * Get User Initials
+         *
+         * Use this endpoint to show your user initials avatar icon on your website or
+         * app. By default, this route will try to print your logged-in user name or
+         * email initials. You can also overwrite the user name if you pass the 'name'
+         * parameter. If no name is given and no user is logged, an empty avatar will
+         * be returned.
+         * 
+         * You can use the color and background params to change the avatar colors. By
+         * default, a random theme will be selected. The random theme will persist for
+         * the user's initials when reloading the same theme will always return for
+         * the same initials.
+	     *
+         * @param {string} name
+         * @param {number} width
+         * @param {number} height
+         * @param {string} color
+         * @param {string} background
+         * @throws {Error}
+         * @return {string}         
+         */
+	    getInitials(name: string, width: number, height: number, color: string, background: string): string;
+
+        /**
          * Get QR Code
          *
          * Converts a given plain text to a QR code image. You can use the query
@@ -555,14 +579,25 @@ declare namespace Appwrite {
         /**
          * List Currencies
          *
-         * List of all currencies, including currency symol, name, plural, and decimal
-         * digits for all major and minor currencies. You can use the locale header to
-         * get the data in a supported language.
+         * List of all currencies, including currency symbol, name, plural, and
+         * decimal digits for all major and minor currencies. You can use the locale
+         * header to get the data in a supported language.
 	     *
          * @throws {Error}
          * @return {Promise}         
          */
 	    getCurrencies(): Promise<object>;
+
+        /**
+         * List Languages
+         *
+         * List of all languages classified by ISO 639-1 including 2-letter code, name
+         * in English, and name in the respective language.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getLanguages(): Promise<object>;
 
 	}
 
