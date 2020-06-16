@@ -25,6 +25,7 @@
 - Fixed scroll positioning when moving rules order up & down
 - Fixed missing validation for database documents key length (32 chars)
 - Grammer fix for pt-br email templates (@rubensdemelo)
+- Fixed update form labels and tooltips for Flutter Android apps
 
 ## Security
 
