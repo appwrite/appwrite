@@ -10,6 +10,10 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
 
     $route = $utopia->match($request);
 
+    if(empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
+        throw new Exception('Missing or unknown project ID', 400);
+    }
+
     /*
      * Abuse Check
      */
@@ -33,6 +37,7 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
     $abuse = new Abuse($timeLimit);
 
     if ($timeLimit->limit()) {
+        
         $response
             ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
             ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
