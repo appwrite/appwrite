@@ -6,6 +6,7 @@ require_once __DIR__.'/../init.php';
 global $request;
 
 use Appwrite\Storage\Device\Local;
+use Appwrite\Storage\Storage;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Domains\Domain;
@@ -100,7 +101,7 @@ $cli
             //throw $th;
         }
 
-        sleep(1);
+        sleep(0.2);
 
         try {
             Console::log("\n".'Checking connectivity...');
@@ -163,75 +164,58 @@ $cli
             Console::error('InfluxDB.........disconnected 👎');
         }
 
-        sleep(1);
+        sleep(0.2);
 
         Console::log('');
         Console::log('Checking volumes...');
 
-        $device = new Local(APP_STORAGE_UPLOADS.'/');
+        foreach ([
+            'Uploads' => APP_STORAGE_UPLOADS,
+            'Cache' => APP_STORAGE_CACHE,
+            'Config' => APP_STORAGE_CONFIG,
+            'Certs' => APP_STORAGE_CERTIFICATES
+        ] as $key => $volume) {
+            $device = new Local($volume);
 
-        // Upload
-
-        if (is_readable($device->getRoot())) {
-            Console::success('Upload Volume........readable 👍');
-        }
-        else {
-            Console::error('Upload Volume......unreadable 👎');
-        }
-
-        if (is_writable($device->getRoot())) {
-            Console::success('Upload Volume.......writeable 👍');
-        }
-        else {
-            Console::error('Upload Volume.....unwriteable 👎');
-        }
-
-        // Cache
-
-        if (is_readable($device->getRoot().'/../cache')) {
-            Console::success('Cache Volume.........readable 👍');
-        }
-        else {
-            Console::error('Cache Volume.......unreadable 👎');
+            if (is_readable($device->getRoot())) {
+                Console::success('🟢 '.$key.' Volume is readable');
+            }
+            else {
+                Console::error('🔴 '.$key.' Volume is unreadable');
+            }
+            
+            if (is_writable($device->getRoot())) {
+                Console::success('🟢 '.$key.' Volume is writeable');
+            }
+            else {
+                Console::error('🔴 '.$key.' Volume is unwriteable');
+            }
         }
 
-        if (is_writable($device->getRoot().'/../cache')) {
-            Console::success('Cache Volume........writeable 👍');
-        }
-        else {
-            Console::error('Cache Volume......unwriteable 👎');
-        }
-        
-        // Config
+        sleep(0.2);
 
-        if (is_readable($device->getRoot().'/../config')) {
-            Console::success('Config Volume........readable 👍');
-        }
-        else {
-            Console::error('Config Volume......unreadable 👎');
-        }
+        Console::log('');
+        Console::log('Checking disk space usage...');
 
-        if (is_writable($device->getRoot().'/../config')) {
-            Console::success('Config Volume.......writeable 👍');
-        }
-        else {
-            Console::error('Config Volume.....unwriteable 👎');
-        }
+        foreach ([
+            'Uploads' => APP_STORAGE_UPLOADS,
+            'Cache' => APP_STORAGE_CACHE,
+            'Config' => APP_STORAGE_CONFIG,
+            'Certs' => APP_STORAGE_CERTIFICATES
+        ] as $key => $volume) {
+            $device = new Local($volume);
 
-        // Certs
-
-        if (is_readable($device->getRoot().'/../certificates')) {
-            Console::success('Certs Volume.........readable 👍');
-        }
-        else {
-            Console::error('Certs Volume.......unreadable 👎');
-        }
-
-        if (is_writable($device->getRoot().'/../certificates')) {
-            Console::success('Certs Volume........writeable 👍');
-        }
-        else {
-            Console::error('Certs Volume......unwriteable 👎');
+            $percentage = (($device->getPartitionTotalSpace() - $device->getPartitionFreeSpace())
+            / $device->getPartitionTotalSpace()) * 100;
+    
+            $message = $key.' Volume has '.Storage::human($device->getPartitionFreeSpace()) . ' free space ('.round($percentage, 2).'% used)';
+    
+            if ($percentage < 80) {
+                Console::success('🟢 ' . $message);
+            }
+            else {
+                Console::error('🔴 ' . $message);
+            }
         }
 
         
