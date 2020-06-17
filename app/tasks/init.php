@@ -246,13 +246,11 @@ $cli
                 }
             }
             else {
-                //Console::error('Failed to check for a newer version'."\n");
+                Console::error('Failed to check for a newer version'."\n");
             }
         } catch (\Throwable $th) {
-            //Console::error('Failed to check for a newer version'."\n");
+            Console::error('Failed to check for a newer version'."\n");
         }
-
-        Console::info('A new version (0.7.0) is available! 🥳'."\n");
     });
 
 $cli->run();
