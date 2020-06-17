@@ -26,6 +26,7 @@
 - Fixed missing validation for database documents key length (32 chars)
 - Grammer fix for pt-br email templates (@rubensdemelo)
 - Fixed update form labels and tooltips for Flutter Android apps
+- Fixed missing custom scopes param for OAuth2 session create API route
 
 ## Security
 
