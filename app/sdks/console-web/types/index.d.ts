@@ -269,10 +269,11 @@ declare namespace Appwrite {
          * @param {string} provider
          * @param {string} success
          * @param {string} failure
+         * @param {string[]} scopes
          * @throws {Error}
          * @return {Promise}         
          */
-	    createOAuth2Session(provider: string, success: string, failure: string): Promise<object>;
+	    createOAuth2Session(provider: string, success: string, failure: string, scopes: string[]): Promise<object>;
 
         /**
          * Delete Account Session
