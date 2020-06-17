@@ -187,7 +187,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
             throw new Exception('Project not found', 404);
         }
         
-        throw new Exception($user->getAttribute('email', 'Guest').' (role: '.strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
+        throw new Exception($user->getAttribute('email', 'User').' (role: '.strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
     if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated

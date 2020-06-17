@@ -21,7 +21,7 @@ class CNAME extends Validator
 
     public function getDescription()
     {
-        return 'Inavlid CNAME record';
+        return 'Invalid CNAME record';
     }
 
     /**

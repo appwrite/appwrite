@@ -341,7 +341,7 @@ $graph = $this->getParam('graph', false);
         <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
 
         <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" />
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My iOS App" />
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Bundle ID <span class="tooltip large" data-tooltip="You can find your Bundle Identifier in the General tab for your app's primary target in Xcode."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
@@ -371,7 +371,7 @@ $graph = $this->getParam('graph', false);
         <input type="hidden" name="platformId" data-ls-bind="{{platform.$id}}" />
 
         <label data-ls-attrs="for=name-{{platform.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different apps."><i class="icon-question"></i></span></label>
-        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Web App" />
+        <input type="text" class="full-width" data-ls-attrs="id=name-{{platform.$id}}" name="name" required autocomplete="off" data-ls-bind="{{platform.name}}" placeholder="My Android App" />
 
         <label data-ls-attrs="for=key-{{platform.$id}}">Package Name <span class="tooltip large" data-tooltip="Your package name is generally the applicationId in your app-level build.gradle file."><i class="icon-question"></i></span></label>
         <input name="key" type="text" class="margin-bottom" autocomplete="off" placeholder="com.cpmpany.appname" data-ls-bind="{{platform.key}}" required />
@@ -387,7 +387,7 @@ $graph = $this->getParam('graph', false);
 </script>
 
 <script type="text/html" id="template-flutter-android-update">
-    <div data-ls-template="template-ios-update" data-type="script"></div>
+    <div data-ls-template="template-android-update" data-type="script"></div>
 </script>
 
 <script type="text/html" id="template-flutter-macos-update">

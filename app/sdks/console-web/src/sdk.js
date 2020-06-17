@@ -226,28 +226,27 @@
                     }
 
                     request.onload = function () {
+                        let data = request.response;
+                        let contentType = this.getResponseHeader('content-type') || '';
+                        contentType = contentType.substring(0, contentType.indexOf(';'));
+
+                        switch (contentType) {
+                            case 'application/json':
+                                data = JSON.parse(data);
+                                break;
+                        }
+
+                        let cookieFallback = this.getResponseHeader('X-Fallback-Cookies') || '';
+                        
+                        if(window.localStorage && cookieFallback) {
+                            window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
+                            window.localStorage.setItem('cookieFallback', cookieFallback);
+                        }
+
                         if (4 === request.readyState && 399 >= request.status) {
-                            let data = request.response;
-                            let contentType = this.getResponseHeader('content-type') || '';
-                            contentType = contentType.substring(0, contentType.indexOf(';'));
-
-                            switch (contentType) {
-                                case 'application/json':
-                                    data = JSON.parse(data);
-                                    break;
-                            }
-
-                            let cookieFallback = this.getResponseHeader('X-Fallback-Cookies') || '';
-                            
-                            if(window.localStorage && cookieFallback) {
-                                window.console.warn('Appwrite is using localStorage for session management. Increase your security by adding a custom domain as your API endpoint.');
-                                window.localStorage.setItem('cookieFallback', cookieFallback);
-                            }
-
                             resolve(data);
-
                         } else {
-                            reject(new Error(request.statusText));
+                            reject(data);
                         }
                     };
 
@@ -1082,6 +1081,62 @@
 
                 if(height) {
                     payload['height'] = height;
+                }
+
+                payload['project'] = config.project;
+
+                payload['key'] = config.key;
+
+                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
+                
+                return config.endpoint + path + ((query) ? '?' + query : '');
+            },
+
+            /**
+             * Get User Initials
+             *
+             * Use this endpoint to show your user initials avatar icon on your website or
+             * app. By default, this route will try to print your logged-in user name or
+             * email initials. You can also overwrite the user name if you pass the 'name'
+             * parameter. If no name is given and no user is logged, an empty avatar will
+             * be returned.
+             * 
+             * You can use the color and background params to change the avatar colors. By
+             * default, a random theme will be selected. The random theme will persist for
+             * the user's initials when reloading the same theme will always return for
+             * the same initials.
+             *
+             * @param {string} name
+             * @param {number} width
+             * @param {number} height
+             * @param {string} color
+             * @param {string} background
+             * @throws {Error}
+             * @return {string}             
+             */
+            getInitials: function(name = '', width = 500, height = 500, color = '', background = '') {
+                let path = '/avatars/initials';
+
+                let payload = {};
+
+                if(name) {
+                    payload['name'] = name;
+                }
+
+                if(width) {
+                    payload['width'] = width;
+                }
+
+                if(height) {
+                    payload['height'] = height;
+                }
+
+                if(color) {
+                    payload['color'] = color;
+                }
+
+                if(background) {
+                    payload['background'] = background;
                 }
 
                 payload['project'] = config.project;
@@ -1979,15 +2034,35 @@
             /**
              * List Currencies
              *
-             * List of all currencies, including currency symol, name, plural, and decimal
-             * digits for all major and minor currencies. You can use the locale header to
-             * get the data in a supported language.
+             * List of all currencies, including currency symbol, name, plural, and
+             * decimal digits for all major and minor currencies. You can use the locale
+             * header to get the data in a supported language.
              *
              * @throws {Error}
              * @return {Promise}             
              */
             getCurrencies: function() {
                 let path = '/locale/currencies';
+
+                let payload = {};
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
+            },
+
+            /**
+             * List Languages
+             *
+             * List of all languages classified by ISO 639-1 including 2-letter code, name
+             * in English, and name in the respective language.
+             *
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getLanguages: function() {
+                let path = '/locale/languages';
 
                 let payload = {};
 
