@@ -315,12 +315,26 @@ class Account extends Service {
             'project': client.config['project'],
         };
 
+
+        final List query = [];
+
+        params.forEach((key, value) {
+          if (value is List) { 
+            for (var item in value) {
+              query.add(Uri.encodeComponent(key + '[]') + '=' + Uri.encodeComponent(item));
+            }
+          }
+          else {
+              query.add(Uri.encodeComponent(key) + '=' + Uri.encodeComponent(value));
+          }
+        });
+
         Uri endpoint = Uri.parse(client.endPoint);
         Uri url = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
-          queryParameters:params,
+          query: query.join('&')
         );
 
         return FlutterWebAuth.authenticate(
