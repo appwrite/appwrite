@@ -5,6 +5,7 @@ require_once __DIR__.'/../init.php';
 
 global $request;
 
+use Appwrite\ClamAV\Network;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Utopia\CLI\CLI;
@@ -42,63 +43,64 @@ $cli
 
         Console::log('Checking for production best practices...');
         
-        try {
-            $domain = new Domain($request->getServer('_APP_DOMAIN'));
+        $domain = new Domain($request->getServer('_APP_DOMAIN'));
 
-            if(!$domain->isKnown() || $domain->isTest()) {
-                Console::log('🔴 Hostname has a public suffix');
-            }
-            else {
-                Console::log('🟢 Hostname has a public suffix');
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
+        if(!$domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 Hostname has a public suffix');
+        }
+        else {
+            Console::log('🟢 Hostname has a public suffix');
         }
         
-        try {
-            $domain = new Domain($request->getServer('_APP_DOMAIN_TARGET'));
+        $domain = new Domain($request->getServer('_APP_DOMAIN_TARGET'));
 
-            if(!$domain->isKnown() || $domain->isTest()) {
-                Console::log('🔴 CNAME target has a public suffix');
-            }
-            else {
-                Console::log('🟢 CNAME target has a public suffix');
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
+        if(!$domain->isKnown() || $domain->isTest()) {
+            Console::log('🔴 CNAME target has a public suffix');
+        }
+        else {
+            Console::log('🟢 CNAME target has a public suffix');
         }
         
-        try {
-            if($request->getServer('_APP_OPENSSL_KEY_V1', 'your-secret-key') === 'your-secret-key') {
-                Console::log('🔴 Using a unique secret key for encryption');
-            }
-            else {
-                Console::log('🟢 Using a unique secret key for encryption');
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
+        if($request->getServer('_APP_OPENSSL_KEY_V1', 'your-secret-key') === 'your-secret-key') {
+            Console::log('🔴 Using a unique secret key for encryption');
+        }
+        else {
+            Console::log('🟢 Using a unique secret key for encryption');
         }
 
-        try {
-            if($request->getServer('_APP_ENV', 'development') === 'development') {
-                Console::log('🔴 App enviornment is set for production');
-            }
-            else {
-                Console::log('🟢 App enviornment is set for production');
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
+        if($request->getServer('_APP_ENV', 'development') === 'development') {
+            Console::log('🔴 App enviornment is set for production');
+        }
+        else {
+            Console::log('🟢 App enviornment is set for production');
         }
 
-        try {
-            if($request->getServer('_APP_OPTIONS_ABUSE', 'disabled') === 'disabled') {
-                Console::log('🔴 Abuse protection is enabled');
-            }
-            else {
-                Console::log('🟢 Abuse protection is enabled');
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
+        if($request->getServer('_APP_OPTIONS_ABUSE', 'disabled') === 'disabled') {
+            Console::log('🔴 Abuse protection is enabled');
+        }
+        else {
+            Console::log('🟢 Abuse protection is enabled');
+        }
+
+        $authWhitelistEmails = $request->getServer('_APP_CONSOLE_WHITELIST_EMAILS', null);
+        $authWhitelistIPs = $request->getServer('_APP_CONSOLE_WHITELIST_IPS', null);
+        $authWhitelistDomains = $request->getServer('_APP_CONSOLE_WHITELIST_DOMAINS', null);
+
+        if(empty($authWhitelistEmails)
+            && empty($authWhitelistDomains)
+            && empty($authWhitelistIPs)
+        ) {
+            Console::log('🔴 Console access limits are disabled');
+        }
+        else {
+            Console::log('🟢 Console access limits are enabled');
+        }
+        
+        if(empty($request->getServer('_APP_OPTIONS_FORCE_HTTPS', null))) {
+            Console::log('🔴 HTTP force option is disabled');
+        }
+        else {
+            Console::log('🟢 HTTP force option is enabled');
         }
 
         sleep(0.2);
@@ -128,6 +130,18 @@ $cli
             Console::success('Cache...............connected 👍');
         } catch (\Throwable $th) {
             Console::error('Cache............disconnected 👎');
+        }
+
+        if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+            $antiVirus = new Network('clamav', 3310);
+
+            if((@$antiVirus->ping())) {
+                Console::success('AntiVirus...........connected 👍');
+            }
+            else {
+                Console::error('AntiVirus........disconnected 👎');
+            }
+
         }
 
         try {
@@ -232,11 +246,13 @@ $cli
                 }
             }
             else {
-                Console::error('Failed to check for a newer version'."\n");
+                //Console::error('Failed to check for a newer version'."\n");
             }
         } catch (\Throwable $th) {
-            Console::error('Failed to check for a newer version'."\n");
+            //Console::error('Failed to check for a newer version'."\n");
         }
+
+        Console::info('A new version (0.7.0) is available! 🥳'."\n");
     });
 
 $cli->run();
