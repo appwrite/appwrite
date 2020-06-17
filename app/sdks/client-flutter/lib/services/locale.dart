@@ -106,12 +106,30 @@ class Locale extends Service {
 
      /// List Currencies
      ///
-     /// List of all currencies, including currency symol, name, plural, and decimal
-     /// digits for all major and minor currencies. You can use the locale header to
-     /// get the data in a supported language.
+     /// List of all currencies, including currency symbol, name, plural, and
+     /// decimal digits for all major and minor currencies. You can use the locale
+     /// header to get the data in a supported language.
      ///
     Future<Response> getCurrencies() {
         final String path = '/locale/currencies';
+
+        final Map<String, dynamic> params = {
+        };
+
+        final Map<String, String> headers = {
+            'content-type': 'application/json',
+        };
+
+        return client.call(HttpMethod.get, path: path, params: params, headers: headers);
+    }
+
+     /// List Languages
+     ///
+     /// List of all languages classified by ISO 639-1 including 2-letter code, name
+     /// in English, and name in the respective language.
+     ///
+    Future<Response> getLanguages() {
+        final String path = '/locale/languages';
 
         final Map<String, dynamic> params = {
         };
