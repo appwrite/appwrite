@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e93c84ab77f0085004222c942dcba6f4",
+    "content-hash": "001a9336198793f293f83f62df2b7567",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1452,21 +1452,21 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.5.0",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "c66255fed87f00c5a8f7cc0c482cdb082260cd32"
+                "reference": "e636c61ac4d0cf7539be332adba9dd9889dc300e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/c66255fed87f00c5a8f7cc0c482cdb082260cd32",
-                "reference": "c66255fed87f00c5a8f7cc0c482cdb082260cd32",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/e636c61ac4d0cf7539be332adba9dd9889dc300e",
+                "reference": "e636c61ac4d0cf7539be332adba9dd9889dc300e",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.1",
-                "utopia-php/framework": "0.2.*"
+                "utopia-php/framework": "0.3.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
@@ -1496,7 +1496,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-05-05T09:02:10+00:00"
+            "time": "2020-06-18T19:28:40+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -1596,16 +1596,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "e3d88b794badbd5ededcf62d708b31009111f860"
+                "reference": "9c3bb4fb69ab85d3d5ba76f334d682845dc4815c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e3d88b794badbd5ededcf62d708b31009111f860",
-                "reference": "e3d88b794badbd5ededcf62d708b31009111f860",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/9c3bb4fb69ab85d3d5ba76f334d682845dc4815c",
+                "reference": "9c3bb4fb69ab85d3d5ba76f334d682845dc4815c",
                 "shasum": ""
             },
             "require": {
@@ -1636,7 +1636,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-03-08T15:42:21+00:00"
+            "time": "2020-06-18T19:23:47+00:00"
         },
         {
             "name": "utopia-php/locale",
