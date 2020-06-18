@@ -17,6 +17,7 @@
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 - Updated grid for OAuth2 providers list in the console
 - Upgraded Redis Resque queue library to version 1.3.6
+- Added container names to docker-compose.yml (@drandell)
 
 ## Bug Fixes
 
