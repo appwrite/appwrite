@@ -292,7 +292,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
 
     $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
-    $output = ((App::ENV_TYPE_DEVELOPMENT == $env)) ? [
+    $output = ((App::MODE_TYPE_DEVELOPMENT == $env)) ? [
         'message' => $error->getMessage(),
         'code' => $error->getCode(),
         'file' => $error->getFile(),

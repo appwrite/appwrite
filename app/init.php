@@ -60,7 +60,7 @@ Config::load('platforms', __DIR__.'/../app/config/platforms.php');
 Config::load('locales', __DIR__.'/../app/config/locales.php');
 Config::load('collections', __DIR__.'/../app/config/collections.php');
 
-Config::setParam('env', $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION));
+Config::setParam('env', $request->getServer('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
 Config::setParam('domainVerification', false);
 Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
