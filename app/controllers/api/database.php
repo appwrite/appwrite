@@ -584,7 +584,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.description', '/docs/references/database/update-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
-    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON object.')
+    ->param('data', [], function () { return new JSON(); }, 'Document data as JSON object.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(
@@ -592,7 +592,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
             $document = $projectDB->getDocument($documentId, $isDev);
 
-            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
+            $data = (is_string($data)) ? json_decode($data, true) : $data; // Cast to JSON array
 
             if (!is_array($data)) {
                 throw new Exception('Data param should be a valid JSON', 400);
