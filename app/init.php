@@ -279,9 +279,10 @@ $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register))
 $projectDB->setNamespace('app_'.$project->getId());
 $projectDB->setMocks(Config::getParam('collections', []));
 
-$user = $projectDB->getDocument(Auth::$unique);
-
-if (APP_MODE_ADMIN === $mode) {
+if (APP_MODE_ADMIN !== $mode) {
+    $user = $projectDB->getDocument(Auth::$unique);
+}
+else {
     $user = $consoleDB->getDocument(Auth::$unique);
 
     $user

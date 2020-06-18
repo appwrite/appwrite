@@ -169,6 +169,7 @@ RUN echo "" >> /var/log/appwrite.log
 
 # Executables
 RUN chmod +x /usr/local/bin/start
+RUN chmod +x /usr/local/bin/doctor
 RUN chmod +x /usr/local/bin/migrate
 RUN chmod +x /usr/local/bin/test
 

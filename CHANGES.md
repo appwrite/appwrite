@@ -13,7 +13,11 @@
 - New UI micro-interactions and styles fixes (@AnatoleLucet)
 - UI performance & accessibility improvments
 - Updated ClamAV conntainer to version 1.0.9
+- New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
+- Updated grid for OAuth2 providers list in the console
+- Upgraded Redis Resque queue library to version 1.3.6
+- Added container names to docker-compose.yml (@drandell)
 
 ## Bug Fixes
 
@@ -23,6 +27,9 @@
 - Fixed a UI bug preventing float values in numeric fields
 - Fixed scroll positioning when moving rules order up & down
 - Fixed missing validation for database documents key length (32 chars)
+- Grammer fix for pt-br email templates (@rubensdemelo)
+- Fixed update form labels and tooltips for Flutter Android apps
+- Fixed missing custom scopes param for OAuth2 session create API route
 
 ## Security
 

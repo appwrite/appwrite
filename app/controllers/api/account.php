@@ -27,6 +27,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
+use Utopia\Validator\ArrayList;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -253,8 +254,9 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'OAuth2 Provider. Currently, supported providers are: ' . implode(', ', array_keys(array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
     ->param('success', $oauthDefaultSuccess, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true)
     ->param('failure', $oauthDefaultFailure, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true)
+    ->param('scopes', [], function () { return new ArrayList(new Text(128)); }, 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->action(
-        function ($provider, $success, $failure) use ($response, $request, $project) {
+        function ($provider, $success, $failure, $scopes) use ($response, $request, $project) {
             $protocol = Config::getParam('protocol');
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $appId = $project->getAttribute('usersOauth2'.ucfirst($provider).'Appid', '');
@@ -277,7 +279,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
                 throw new Exception('Provider is not supported', 501);
             }
 
-            $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure]);
+            $oauth2 = new $classname($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
 
             $response
                 ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
