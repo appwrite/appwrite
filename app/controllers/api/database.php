@@ -170,69 +170,69 @@ $utopia->get('/v1/database/collections/:collectionId')
         }
     );
 
-$utopia->get('/v1/database/collections/:collectionId/logs')
-    ->desc('Get Collection Logs')
-    ->label('scope', 'collections.read')
-    ->label('sdk.platform', [APP_PLATFORM_SERVER])
-    ->label('sdk.namespace', 'database')
-    ->label('sdk.method', 'getCollectionLogs')
-    ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
-    ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(
-        function ($collectionId) use ($response, $register, $projectDB, $project) {
-            $collection = $projectDB->getDocument($collectionId);
+// $utopia->get('/v1/database/collections/:collectionId/logs')
+//     ->desc('Get Collection Logs')
+//     ->label('scope', 'collections.read')
+//     ->label('sdk.platform', [APP_PLATFORM_SERVER])
+//     ->label('sdk.namespace', 'database')
+//     ->label('sdk.method', 'getCollectionLogs')
+//     ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
+//     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
+//     ->action(
+//         function ($collectionId) use ($response, $register, $projectDB, $project) {
+//             $collection = $projectDB->getDocument($collectionId);
 
-            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
+//             if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+//                 throw new Exception('Collection not found', 404);
+//             }
 
-            $adapter = new AuditAdapter($register->get('db'));
-            $adapter->setNamespace('app_'.$project->getId());
+//             $adapter = new AuditAdapter($register->get('db'));
+//             $adapter->setNamespace('app_'.$project->getId());
 
-            $audit = new Audit($adapter);
+//             $audit = new Audit($adapter);
             
-            $countries = Locale::getText('countries');
+//             $countries = Locale::getText('countries');
 
-            $logs = $audit->getLogsByResource('database/collection/'.$collection->getId());
+//             $logs = $audit->getLogsByResource('database/collection/'.$collection->getId());
 
-            $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
-            $output = [];
+//             $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
+//             $output = [];
 
-            foreach ($logs as $i => &$log) {
-                $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+//             foreach ($logs as $i => &$log) {
+//                 $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
 
-                $dd = new DeviceDetector($log['userAgent']);
+//                 $dd = new DeviceDetector($log['userAgent']);
 
-                $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+//                 $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
-                $dd->parse();
+//                 $dd->parse();
 
-                $output[$i] = [
-                    'event' => $log['event'],
-                    'ip' => $log['ip'],
-                    'time' => strtotime($log['time']),
-                    'OS' => $dd->getOs(),
-                    'client' => $dd->getClient(),
-                    'device' => $dd->getDevice(),
-                    'brand' => $dd->getBrand(),
-                    'model' => $dd->getModel(),
-                    'geo' => [],
-                ];
+//                 $output[$i] = [
+//                     'event' => $log['event'],
+//                     'ip' => $log['ip'],
+//                     'time' => strtotime($log['time']),
+//                     'OS' => $dd->getOs(),
+//                     'client' => $dd->getClient(),
+//                     'device' => $dd->getDevice(),
+//                     'brand' => $dd->getBrand(),
+//                     'model' => $dd->getModel(),
+//                     'geo' => [],
+//                 ];
 
-                try {
-                    $record = $reader->country($log['ip']);
-                    $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
-                    $output[$i]['geo']['country'] = $record->country->name;
-                    $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-                } catch (\Exception $e) {
-                    $output[$i]['geo']['isoCode'] = '--';
-                    $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
-                }
-            }
+//                 try {
+//                     $record = $reader->country($log['ip']);
+//                     $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
+//                     $output[$i]['geo']['country'] = $record->country->name;
+//                     $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
+//                 } catch (\Exception $e) {
+//                     $output[$i]['geo']['isoCode'] = '--';
+//                     $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
+//                 }
+//             }
 
-            $response->json($output);
-        }
-    );
+//             $response->json($output);
+//         }
+//     );
 
 $utopia->put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
@@ -351,7 +351,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', '/docs/references/database/create-document.md')
-    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('data', [], function () { return new JSON(); }, 'Document data as JSON object.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -469,7 +469,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listDocuments')
     ->label('sdk.description', '/docs/references/database/list-documents.md')
-    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('filters', [], function () { return new ArrayList(new Text(128)); }, 'Array of filter strings. Each filter is constructed from a key name, comparison operator (=, !=, >, <, <=, >=) and a value. You can also use a dot (.) separator in attribute names to filter by child document attributes. Examples: \'name=John Doe\' or \'category.$id>=5bed2d152c362\'.', true)
     ->param('offset', 0, function () { return new Range(0, 900000000); }, 'Offset value. Use this value to manage pagination.', true)
     ->param('limit', 50, function () { return new Range(0, 1000); }, 'Maximum number of documents to return in response.  Use this value to manage pagination.', true)
@@ -536,7 +536,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'getDocument')
     ->label('sdk.description', '/docs/references/database/get-document.md')
-    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(
         function ($collectionId, $documentId) use ($response, $request, $projectDB, $isDev) {
@@ -582,7 +582,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'updateDocument')
     ->label('sdk.description', '/docs/references/database/update-document.md')
-    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->param('data', [], function () { return new JSON(); }, 'Document data as JSON object.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
@@ -661,7 +661,7 @@ $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.method', 'deleteDocument')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
-    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/database?platform=server#createCollection).')
+    ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(
         function ($collectionId, $documentId) use ($response, $projectDB, $audit, $webhook, $isDev) {
