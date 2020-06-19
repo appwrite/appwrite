@@ -105,7 +105,7 @@ class CertificatesV1
                 throw new Exception('Renew isn\'t required');
         }
 
-        $staging = (Config::getParam('env') === App::ENV_TYPE_PRODUCTION) ? '' : ' --dry-run';
+        $staging = (Config::getParam('env') === App::MODE_TYPE_PRODUCTION) ? '' : ' --dry-run';
 
         $response = shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} --email security@appwrite.io \
             -w ".APP_STORAGE_CERTIFICATES." \

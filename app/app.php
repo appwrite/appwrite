@@ -83,7 +83,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      * As recommended at:
      * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
      */
-    if ($request->getServer('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+    if ($utopia->getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if(Config::getParam('protocol') !== 'https') {
            return $response->redirect('https://' . Config::getParam('domain').$request->getServer('REQUEST_URI'));
         }
@@ -292,7 +292,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
 
     $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
-    $output = ((App::ENV_TYPE_DEVELOPMENT == $env)) ? [
+    $output = ((App::MODE_TYPE_DEVELOPMENT == $env)) ? [
         'message' => $error->getMessage(),
         'code' => $error->getCode(),
         'file' => $error->getFile(),
