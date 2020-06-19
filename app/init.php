@@ -166,7 +166,7 @@ $register->set('smtp', function () use ($request) {
 /*
  * Localization
  */
-$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', null));
+$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
 
 Locale::$exceptions = false;
 
@@ -243,7 +243,7 @@ $consoleDB->setNamespace('app_console'); // Should be replaced with param if we 
 $consoleDB->setMocks(Config::getParam('collections', []));
 Authorization::disable();
 
-$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', null)));
+$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
 
 Authorization::enable();
 
@@ -267,7 +267,7 @@ $response->addHeader('X-Debug-Fallback', 'false');
 
 if(empty($session['id']) && empty($session['secret'])) {
     $response->addHeader('X-Debug-Fallback', 'true');
-    $fallback = $request->getHeader('X-Fallback-Cookies', null);
+    $fallback = $request->getHeader('X-Fallback-Cookies', '');
     $fallback = json_decode($fallback, true);
     $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
 }
