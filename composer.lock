@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "001a9336198793f293f83f62df2b7567",
+    "content-hash": "b40a5280315184407b21232e6c607b85",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1452,21 +1452,21 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.6.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "e636c61ac4d0cf7539be332adba9dd9889dc300e"
+                "reference": "0e88da425122f81020e90d575cbe80232f364b68"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/e636c61ac4d0cf7539be332adba9dd9889dc300e",
-                "reference": "e636c61ac4d0cf7539be332adba9dd9889dc300e",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/0e88da425122f81020e90d575cbe80232f364b68",
+                "reference": "0e88da425122f81020e90d575cbe80232f364b68",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.1",
-                "utopia-php/framework": "0.3.*"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
@@ -1496,7 +1496,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-06-18T19:28:40+00:00"
+            "time": "2020-06-18T23:00:19+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -1596,16 +1596,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.3.0",
+            "version": "0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "9c3bb4fb69ab85d3d5ba76f334d682845dc4815c"
+                "reference": "dae7464b257663cd250e58244b21781a996134c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/9c3bb4fb69ab85d3d5ba76f334d682845dc4815c",
-                "reference": "9c3bb4fb69ab85d3d5ba76f334d682845dc4815c",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/dae7464b257663cd250e58244b21781a996134c2",
+                "reference": "dae7464b257663cd250e58244b21781a996134c2",
                 "shasum": ""
             },
             "require": {
@@ -1636,7 +1636,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-06-18T19:23:47+00:00"
+            "time": "2020-06-18T23:28:10+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -2141,12 +2141,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e"
+                "reference": "5892a510fe31de9c4200e6f9ae30e91dc5cd5a41"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
-                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/5892a510fe31de9c4200e6f9ae30e91dc5cd5a41",
+                "reference": "5892a510fe31de9c4200e6f9ae30e91dc5cd5a41",
                 "shasum": ""
             },
             "require": {
@@ -2186,7 +2186,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-02-22T12:28:44+00:00"
+            "time": "2020-06-18T20:57:11+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",

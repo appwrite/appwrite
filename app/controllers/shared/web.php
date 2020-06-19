@@ -28,12 +28,12 @@ $layout
     ->setParam('class', 'unknown')
     ->setParam('icon', '/images/favicon.png')
     ->setParam('roles', $roles)
-    ->setParam('env', $utopia->getEnv())
+    ->setParam('env', $utopia->getMode())
 ;
 
 $utopia->init(function () use ($utopia, $response, $request, $layout) {
     $time = (60 * 60 * 24 * 45); // 45 days cache
-    $isDev = (\Utopia\App::ENV_TYPE_DEVELOPMENT == Config::getParam('env'));
+    $isDev = (\Utopia\App::MODE_TYPE_DEVELOPMENT == Config::getParam('env'));
 
     $response
         ->addHeader('Cache-Control', 'public, max-age='.$time)
