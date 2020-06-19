@@ -26,7 +26,7 @@ $utopia->get('/v1/locale')
             $countries = Locale::getText('countries');
             $continents = Locale::getText('continents');
 
-            if (App::ENV_TYPE_PRODUCTION !== $utopia->getEnv()) {
+            if (App::MODE_TYPE_PRODUCTION !== $utopia->getMode()) {
                 $ip = '79.177.241.94';
             }
 

@@ -26,7 +26,7 @@ use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$isDev = (App::ENV_TYPE_PRODUCTION !== $utopia->getEnv());
+$isDev = (App::MODE_TYPE_PRODUCTION !== $utopia->getMode());
 
 $utopia->post('/v1/database/collections')
     ->desc('Create Collection')
