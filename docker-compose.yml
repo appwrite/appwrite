@@ -59,7 +59,7 @@ services:
       - mariadb
       - redis
       # - smtp
-      - clamav
+      # - clamav
       - influxdb
       - telegraf
       - maildev
@@ -71,6 +71,7 @@ services:
       - _APP_OPENSSL_KEY_V1=your-secret-key
       - _APP_DOMAIN=demo.appwrite.io
       - _APP_DOMAIN_TARGET=demo.appwrite.io
+      # - _APP_STORAGE_ANTIVIRUS=disabled
       - _APP_REDIS_HOST=redis
       - _APP_REDIS_PORT=6379
       - _APP_DB_HOST=mariadb
@@ -130,14 +131,14 @@ services:
     volumes:
       - appwrite-redis:/data:rw
 
-  clamav:
-    image: appwrite/clamav:1.0.9
-    container_name: appwrite_clamav
-    restart: unless-stopped
-    networks:
-      - appwrite
-    volumes:
-      - appwrite-uploads:/storage/uploads
+  # clamav:
+  #   image: appwrite/clamav:1.0.9
+  #   container_name: appwrite_clamav
+  #   restart: unless-stopped
+  #   networks:
+  #     - appwrite
+  #   volumes:
+  #     - appwrite-uploads:/storage/uploads
 
   influxdb:
     image: influxdb:1.6
