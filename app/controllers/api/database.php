@@ -9,6 +9,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\JSON;
 use Utopia\Locale\Locale;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
@@ -351,7 +352,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
     ->label('sdk.method', 'createDocument')
     ->label('sdk.description', '/docs/references/database/create-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
-    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON object.')
+    ->param('data', [], function () { return new JSON(); }, 'Document data as JSON object.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
@@ -359,8 +360,8 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->action(
         function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
-            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
-            
+            $data = (is_string($data)) ? json_decode($data, true) : $data; // Cast to JSON array
+
             if (empty($data)) {
                 throw new Exception('Missing payload', 400);
             }
@@ -583,7 +584,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.description', '/docs/references/database/update-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
-    ->param('data', [], function () { return new \Utopia\Validator\Mock(); }, 'Document data as JSON object.')
+    ->param('data', [], function () { return new JSON(); }, 'Document data as JSON object.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(
@@ -591,7 +592,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
             $document = $projectDB->getDocument($documentId, $isDev);
 
-            $data = (is_string($data) && $result = json_decode($data, true)) ? $result : $data; // Cast to JSON array
+            $data = (is_string($data)) ? json_decode($data, true) : $data; // Cast to JSON array
 
             if (!is_array($data)) {
                 throw new Exception('Data param should be a valid JSON', 400);
