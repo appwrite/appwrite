@@ -64,6 +64,7 @@ trait AccountBase
      */
     public function testCreateAccountSession($data):array
     {
+        sleep(10);
         $email = (isset($data['email'])) ? $data['email'] : '';
         $password = (isset($data['password'])) ? $data['password'] : '';
 
@@ -279,7 +280,6 @@ trait AccountBase
      */
     public function testGetAccountLogs($data):array
     {
-        sleep(10);
         $session = (isset($data['session'])) ? $data['session'] : '';
 
         /**
