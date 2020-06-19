@@ -50,6 +50,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 $register = new Registry();
 $request = new Request();
 $response = new Response();
+$utopia = new App('Asia/Tel_Aviv');
+
+$utopia->setMode($utopia->getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
 /*
  * ENV vars
@@ -60,15 +63,13 @@ Config::load('platforms', __DIR__.'/../app/config/platforms.php');
 Config::load('locales', __DIR__.'/../app/config/locales.php');
 Config::load('collections', __DIR__.'/../app/config/collections.php');
 
-Config::setParam('env', $request->getServer('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+Config::setParam('env', $utopia->getMode());
 Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
 Config::setParam('domainVerification', false);
 Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
 Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
 Config::setParam('port', (string) parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
 Config::setParam('hostname', parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
-
-$utopia = new App('Asia/Tel_Aviv', Config::getParam('env'));
 
 Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
     .':'.$request->getServer('_APP_REDIS_PORT', ''));
