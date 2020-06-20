@@ -133,15 +133,18 @@ $cli
         }
 
         if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-            $antiVirus = new Network('clamav', 3310);
+            try {
+                $antiVirus = new Network('clamav', 3310);
 
-            if((@$antiVirus->ping())) {
-                Console::success('AntiVirus...........connected 👍');
-            }
-            else {
+                if((@$antiVirus->ping())) {
+                    Console::success('AntiVirus...........connected 👍');
+                }
+                else {
+                    Console::error('AntiVirus........disconnected 👎');
+                }
+            } catch (\Throwable $th) {
                 Console::error('AntiVirus........disconnected 👎');
             }
-
         }
 
         try {
