@@ -168,7 +168,7 @@ We use some automation tools to help us keep a healthy code base.
 Improve PHP exeution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
 
 ```bash
-php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes  
+php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
 ```
 
 ## Tutorials
