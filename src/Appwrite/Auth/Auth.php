@@ -82,7 +82,7 @@ class Auth
      */
     public static function encodeSession($id, $secret)
     {
-        return base64_encode(json_encode([
+        return \base64_encode(\json_encode([
             'id' => $id,
             'secret' => $secret,
         ]));
@@ -99,14 +99,14 @@ class Auth
      */
     public static function decodeSession($session)
     {
-        $session = json_decode(base64_decode($session), true);
+        $session = \json_decode(\base64_decode($session), true);
         $default = ['id' => null, 'secret' => ''];
 
-        if (!is_array($session)) {
+        if (!\is_array($session)) {
             return $default;
         }
 
-        return array_merge($default, $session);
+        return \array_merge($default, $session);
     }
 
     /**
@@ -120,7 +120,7 @@ class Auth
      */
     public static function hash($string)
     {
-        return hash('sha256', $string);
+        return \hash('sha256', $string);
     }
 
     /**
@@ -134,7 +134,7 @@ class Auth
      */
     public static function passwordHash($string)
     {
-        return password_hash($string, PASSWORD_BCRYPT, array('cost' => 8));
+        return \password_hash($string, PASSWORD_BCRYPT, array('cost' => 8));
     }
 
     /**
@@ -147,7 +147,7 @@ class Auth
      */
     public static function passwordVerify($plain, $hash)
     {
-        return password_verify($plain, $hash);
+        return \password_verify($plain, $hash);
     }
 
     /**
@@ -163,7 +163,7 @@ class Auth
      */
     public static function passwordGenerator(int $length = 20):string
     {
-        return bin2hex(random_bytes($length));
+        return \bin2hex(\random_bytes($length));
     }
 
     /**
@@ -179,7 +179,7 @@ class Auth
      */
     public static function tokenGenerator(int $length = 128):string
     {
-        return bin2hex(random_bytes($length));
+        return \bin2hex(\random_bytes($length));
     }
 
     /**
@@ -199,7 +199,7 @@ class Auth
                isset($token['expire']) &&
                $token['type'] == $type &&
                $token['secret'] === self::hash($secret) &&
-               $token['expire']  >= time()) {
+               $token['expire']  >= \time()) {
                 return $token->getId();
             }
         }

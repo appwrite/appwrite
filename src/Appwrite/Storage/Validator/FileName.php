@@ -24,7 +24,7 @@ class FileName extends Validator
             return false;
         }
 
-        if (!preg_match('/^[a-zA-Z0-9.]+$/', $name)) {
+        if (!\preg_match('/^[a-zA-Z0-9.]+$/', $name)) {
             return false;
         }
 

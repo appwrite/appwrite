@@ -26,7 +26,7 @@ class URL
             'fragment' => '',
         ];
 
-        return array_merge($default, parse_url($url));
+        return \array_merge($default, \parse_url($url));
     }
     
     /**
@@ -41,7 +41,7 @@ class URL
      */
     static public function unparse(array $url, array $ommit = []):string
     {
-        if (isset($url['path']) && mb_substr($url['path'], 0, 1) !== '/') {
+        if (isset($url['path']) && \mb_substr($url['path'], 0, 1) !== '/') {
             $url['path'] = '/'.$url['path'];
         }
     
@@ -87,7 +87,7 @@ class URL
      */
     static public function parseQuery(string $query):array
     {
-        parse_str($query, $result);
+        \parse_str($query, $result);
 
         return $result;
     }
@@ -103,6 +103,6 @@ class URL
      */
     static public function unparseQuery(array $query):string
     {
-        return http_build_query($query);
+        return \http_build_query($query);
     }
 }

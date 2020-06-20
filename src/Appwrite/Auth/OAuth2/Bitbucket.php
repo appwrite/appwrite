@@ -32,11 +32,11 @@ class Bitbucket extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://bitbucket.org/site/oauth2/authorize?'.http_build_query([
+        return 'https://bitbucket.org/site/oauth2/authorize?'.\http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->getScopes()),
-                'state' => json_encode($this->state),
+                'scope' => \implode(' ', $this->getScopes()),
+                'state' => \json_encode($this->state),
             ]);
     }
 
@@ -54,7 +54,7 @@ class Bitbucket extends OAuth2
             'POST',
             'https://bitbucket.org/site/oauth2/access_token',
             $headers,
-            http_build_query([
+            \http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
@@ -62,7 +62,7 @@ class Bitbucket extends OAuth2
             ])
         );
 
-        $accessToken = json_decode($accessToken, true);
+        $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -127,11 +127,11 @@ class Bitbucket extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token='.urlencode($accessToken));
-            $this->user = json_decode($user, true);
+            $user = $this->request('GET', 'https://api.bitbucket.org/2.0/user?access_token='.\urlencode($accessToken));
+            $this->user = \json_decode($user, true);
 
-            $email = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.urlencode($accessToken));
-            $this->user['email'] = json_decode($email, true)['values'][0]['email'];
+            $email = $this->request('GET', 'https://api.bitbucket.org/2.0/user/emails?access_token='.\urlencode($accessToken));
+            $this->user['email'] = \json_decode($email, true)['values'][0]['email'];
         }
         return $this->user;
     }
