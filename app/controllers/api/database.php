@@ -46,7 +46,7 @@ $utopia->post('/v1/database/collections')
             $parsedRules = [];
 
             foreach ($rules as &$rule) {
-                $parsedRules[] = array_merge([
+                $parsedRules[] = \array_merge([
                     '$collection' => Database::SYSTEM_COLLECTION_RULES,
                     '$permissions' => [
                         'read' => $read,
@@ -59,8 +59,8 @@ $utopia->post('/v1/database/collections')
                 $data = $projectDB->createDocument([
                     '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
                     'name' => $name,
-                    'dateCreated' => time(),
-                    'dateUpdated' => time(),
+                    'dateCreated' => \time(),
+                    'dateUpdated' => \time(),
                     'structure' => true,
                     '$permissions' => [
                         'read' => $read,
@@ -258,7 +258,7 @@ $utopia->put('/v1/database/collections/:collectionId')
             $parsedRules = [];
 
             foreach ($rules as &$rule) {
-                $parsedRules[] = array_merge([
+                $parsedRules[] = \array_merge([
                     '$collection' => Database::SYSTEM_COLLECTION_RULES,
                     '$permissions' => [
                         'read' => $read,
@@ -268,10 +268,10 @@ $utopia->put('/v1/database/collections/:collectionId')
             }
 
             try {
-                $collection = $projectDB->updateDocument(array_merge($collection->getArrayCopy(), [
+                $collection = $projectDB->updateDocument(\array_merge($collection->getArrayCopy(), [
                     'name' => $name,
                     'structure' => true,
-                    'dateUpdated' => time(),
+                    'dateUpdated' => \time(),
                     '$permissions' => [
                         'read' => $read,
                         'write' => $write,
@@ -360,7 +360,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->action(
         function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
-            $data = (is_string($data)) ? json_decode($data, true) : $data; // Cast to JSON array
+            $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
             if (empty($data)) {
                 throw new Exception('Missing payload', 400);
@@ -372,7 +372,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
             
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
 
-            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -483,7 +483,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
         function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search, $first, $last) use ($response, $projectDB, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);
 
-            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -496,7 +496,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
                 'search' => $search,
                 'first' => (bool) $first,
                 'last' => (bool) $last,
-                'filters' => array_merge($filters, [
+                'filters' => \array_merge($filters, [
                     '$collection='.$collectionId,
                 ]),
             ]);
@@ -549,20 +549,20 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
 
             $output = $document->getArrayCopy();
 
-            $paths = explode('/', $request->getParam('q', ''));
-            $paths = array_slice($paths, 7, count($paths));
+            $paths = \explode('/', $request->getParam('q', ''));
+            $paths = \array_slice($paths, 7, \count($paths));
             
-            if (count($paths) > 0) {
-                if (count($paths) % 2 == 1) {
-                    $output = $document->getAttribute(implode('.', $paths));
+            if (\count($paths) > 0) {
+                if (\count($paths) % 2 == 1) {
+                    $output = $document->getAttribute(\implode('.', $paths));
                 } else {
-                    $id = (int) array_pop($paths);
-                    $output = $document->search('$id', $id, $document->getAttribute(implode('.', $paths)));
+                    $id = (int) \array_pop($paths);
+                    $output = $document->search('$id', $id, $document->getAttribute(\implode('.', $paths)));
                 }
 
                 $output = ($output instanceof Document) ? $output->getArrayCopy() : $output;
 
-                if (!is_array($output)) {
+                if (!\is_array($output)) {
                     throw new Exception('No document found', 404);
                 }
             }
@@ -592,13 +592,13 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
             $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
             $document = $projectDB->getDocument($documentId, $isDev);
 
-            $data = (is_string($data)) ? json_decode($data, true) : $data; // Cast to JSON array
+            $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
-            if (!is_array($data)) {
+            if (!\is_array($data)) {
                 throw new Exception('Data param should be a valid JSON', 400);
             }
 
-            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 
@@ -616,7 +616,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
                 $data['$permissions']['write'] = $read;
             }
 
-            $data = array_merge($document->getArrayCopy(), $data);
+            $data = \array_merge($document->getArrayCopy(), $data);
 
             $data['$collection'] = $collection->getId(); // Make sure user don't switch collectionID
             $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
@@ -672,7 +672,7 @@ $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
                 throw new Exception('No document found', 404);
             }
 
-            if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
             }
 

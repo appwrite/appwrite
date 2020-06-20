@@ -37,7 +37,7 @@ $utopia->init(function () use ($utopia, $response, $request, $layout) {
 
     $response
         ->addHeader('Cache-Control', 'public, max-age='.$time)
-        ->addHeader('Expires', date('D, d M Y H:i:s', time() + $time).' GMT') // 45 days cache
+        ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
         ->addHeader('X-UA-Compatible', 'IE=Edge'); // Deny IE browsers from going into quirks mode
 
     $route = $utopia->match($request);

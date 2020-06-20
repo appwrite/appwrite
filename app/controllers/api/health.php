@@ -75,34 +75,34 @@ $utopia->get('/v1/health/time')
             $gap = 60; // Allow [X] seconds gap
 
             /* Create a socket and connect to NTP server */
-            $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+            $sock = \socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
 
-            socket_connect($sock, $host, 123);
+            \socket_connect($sock, $host, 123);
 
             /* Send request */
-            $msg = "\010".str_repeat("\0", 47);
+            $msg = "\010".\str_repeat("\0", 47);
 
-            socket_send($sock, $msg, strlen($msg), 0);
+            \socket_send($sock, $msg, \strlen($msg), 0);
 
             /* Receive response and close socket */
-            socket_recv($sock, $recv, 48, MSG_WAITALL);
-            socket_close($sock);
+            \socket_recv($sock, $recv, 48, MSG_WAITALL);
+            \socket_close($sock);
 
             /* Interpret response */
-            $data = unpack('N12', $recv);
-            $timestamp = sprintf('%u', $data[9]);
+            $data = \unpack('N12', $recv);
+            $timestamp = \sprintf('%u', $data[9]);
 
             /* NTP is number of seconds since 0000 UT on 1 January 1900
                Unix time is seconds since 0000 UT on 1 January 1970 */
             $timestamp -= 2208988800;
 
-            $diff = ($timestamp - time());
+            $diff = ($timestamp - \time());
 
             if ($diff > $gap || $diff < ($gap * -1)) {
                 throw new Exception('Server time gaps detected');
             }
 
-            $response->json(['remote' => $timestamp, 'local' => time(), 'diff' => $diff]);
+            $response->json(['remote' => $timestamp, 'local' => \time(), 'diff' => $diff]);
         }
     );
 
@@ -202,11 +202,11 @@ $utopia->get('/v1/health/storage/local')
             ] as $key => $volume) {
                 $device = new Local($volume);
 
-                if (!is_readable($device->getRoot())) {
+                if (!\is_readable($device->getRoot())) {
                     throw new Exception('Device '.$key.' dir is not readable');
                 }
 
-                if (!is_writable($device->getRoot())) {
+                if (!\is_writable($device->getRoot())) {
                     throw new Exception('Device '.$key.' dir is not writable');
                 }
             }
@@ -255,7 +255,7 @@ $utopia->get('/v1/health/stats') // Currently only used internally
                 ->json([
                     'server' => [
                         'name' => 'nginx',
-                        'version' => shell_exec('nginx -v 2>&1'),
+                        'version' => \shell_exec('nginx -v 2>&1'),
                     ],
                     'storage' => [
                         'used' => Storage::human($device->getDirectorySize($device->getRoot().'/')),

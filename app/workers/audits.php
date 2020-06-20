@@ -2,7 +2,7 @@
 
 require_once __DIR__.'/../init.php';
 
-cli_set_process_title('Audits V1 Worker');
+\cli_set_process_title('Audits V1 Worker');
 
 echo APP_NAME.' audits worker v1 has started';
 

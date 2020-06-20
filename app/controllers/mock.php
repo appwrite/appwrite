@@ -175,9 +175,9 @@ $utopia->post('/v1/mock/tests/general/upload')
     ->action(
         function ($x, $y, $z, $file) use ($request) {
             $file = $request->getFiles('file');
-            $file['tmp_name'] = (is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
-            $file['name'] = (is_array($file['name'])) ? $file['name'] : [$file['name']];
-            $file['size'] = (is_array($file['size'])) ? $file['size'] : [$file['size']];
+            $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
+            $file['name'] = (\is_array($file['name'])) ? $file['name'] : [$file['name']];
+            $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
 
             foreach ($file['name'] as $i => $name) {
                 if($name !== 'file.png') {
@@ -192,7 +192,7 @@ $utopia->post('/v1/mock/tests/general/upload')
             }
 
             foreach ($file['tmp_name'] as $i => $tmpName) {
-                if(md5(file_get_contents($tmpName)) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
+                if(\md5(\file_get_contents($tmpName)) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
                     throw new Exception('Wrong file uploaded', 400);
                 }
             }
@@ -230,7 +230,7 @@ $utopia->get('/v1/mock/tests/general/set-cookie')
     ->label('sdk.description', 'Mock a set cookie request for SDK tests')
     ->action(
         function () use ($response) {
-            $response->addCookie('cookieName', 'cookieValue', time() + 31536000, '/', 'localhost', true, true);
+            $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', 'localhost', true, true);
         }
     );
 
@@ -271,7 +271,7 @@ $utopia->get('/v1/mock/tests/general/oauth2')
     ->param('state', '', function () { return new Text(1024); }, 'OAuth2 state.')
     ->action(
         function ($clientId, $redirectURI, $scope, $state) use ($response) {
-            $response->redirect($redirectURI.'?'.http_build_query(['code' => 'abcdef', 'state' => $state]));
+            $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
         }
     );
 
@@ -348,17 +348,17 @@ $utopia->shutdown(function() use ($response, $request, &$result, $utopia) {
     
     $route  = $utopia->match($request);
     $path   = APP_STORAGE_CACHE.'/tests.json';
-    $tests  = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+    $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
     
-    if(!is_array($tests)) {
+    if(!\is_array($tests)) {
         throw new Exception('Failed to read results', 500);
     }
 
     $result[$route->getMethod() . ':' . $route->getURL()] = true;
 
-    $tests = array_merge($tests, $result);
+    $tests = \array_merge($tests, $result);
 
-    if(!file_put_contents($path, json_encode($tests), LOCK_EX)) {
+    if(!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
         throw new Exception('Failed to save resutls', 500);
     }
 
