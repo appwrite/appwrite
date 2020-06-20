@@ -187,32 +187,29 @@ $utopia->get('/v1/health/queue/functions')
 $utopia->get('/v1/health/storage/local')
     ->desc('Get Local Storage')
     ->label('scope', 'health.read')
+    ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getStorageLocal')
     ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->action(
         function () use ($response) {
-            $device = new Local(APP_STORAGE_UPLOADS.'/');
 
-            if (!is_readable($device->getRoot().'/..')) {
-                throw new Exception('Device is not readable');
-            }
-            
-            if (!is_writable($device->getRoot().'/../uploads')) {
-                throw new Exception('Device uploads dir is not writable');
-            }
-            
-            if (!is_writable($device->getRoot().'/../cache')) {
-                throw new Exception('Device cache dir is not writable');
-            }
+            foreach ([
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES
+            ] as $key => $volume) {
+                $device = new Local($volume);
 
-            if (!is_writable($device->getRoot().'/../config')) {
-                throw new Exception('Device config dir is not writable');
-            }
+                if (!is_readable($device->getRoot())) {
+                    throw new Exception('Device '.$key.' dir is not readable');
+                }
 
-            if (!is_writable($device->getRoot().'/../certificates')) {
-                throw new Exception('Device certificates dir is not writable');
+                if (!is_writable($device->getRoot())) {
+                    throw new Exception('Device '.$key.' dir is not writable');
+                }
             }
 
             $response->json(['status' => 'OK']);
