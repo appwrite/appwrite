@@ -68,23 +68,23 @@ class FileType extends Validator
             return false;
         }
 
-        $handle = fopen($path, 'r');
+        $handle = \fopen($path, 'r');
 
         if (!$handle) {
             return false;
         }
 
-        $bytes = fgets($handle, 8);
+        $bytes = \fgets($handle, 8);
 
         foreach ($this->whiteList as $key) {
-            if (strpos($bytes, $this->types[$key]) === 0) {
-                fclose($handle);
+            if (\strpos($bytes, $this->types[$key]) === 0) {
+                \fclose($handle);
 
                 return true;
             }
         }
 
-        fclose($handle);
+        \fclose($handle);
 
         return false;
     }

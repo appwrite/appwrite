@@ -81,7 +81,7 @@ class Origin extends Validator
 
     public function getDescription()
     {
-        if(!array_key_exists($this->client, $this->platforms)) {
+        if(!\array_key_exists($this->client, $this->platforms)) {
             return 'Unsupported platform';
         }
 
@@ -99,8 +99,8 @@ class Origin extends Validator
      */
     public function isValid($origin)
     {
-        $scheme = parse_url($origin, PHP_URL_SCHEME);
-        $host = parse_url($origin, PHP_URL_HOST);
+        $scheme = \parse_url($origin, PHP_URL_SCHEME);
+        $host = \parse_url($origin, PHP_URL_HOST);
 
         $this->host = $host;
         $this->client = $scheme;
@@ -109,7 +109,7 @@ class Origin extends Validator
             return true;
         }
 
-        if(in_array($host, $this->clients)) {
+        if(\in_array($host, $this->clients)) {
             return true;
         }
 

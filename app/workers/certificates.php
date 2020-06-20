@@ -9,7 +9,7 @@ use Appwrite\Network\Validator\CNAME;
 
 require_once __DIR__.'/../init.php';
 
-cli_set_process_title('Certificates V1 Worker');
+\cli_set_process_title('Certificates V1 Worker');
 
 echo APP_NAME.' certificates worker v1 has started';
 
@@ -51,7 +51,7 @@ class CertificatesV1
         $domain = new Domain((!empty($domain)) ? $domain : '');
         $expiry = 60 * 60 * 24 * 30 * 2; // 60 days
         $safety = 60 * 60; // 1 hour
-        $renew  = (time() + $expiry);
+        $renew  = (\time() + $expiry);
 
         if(empty($domain->get())) {
             throw new Exception('Missing domain');
@@ -101,13 +101,13 @@ class CertificatesV1
 
         if(!empty($certificate)
             && isset($certificate['issueDate'])
-            && (($certificate['issueDate'] + ($expiry)) > time())) { // Check last issue time
+            && (($certificate['issueDate'] + ($expiry)) > \time())) { // Check last issue time
                 throw new Exception('Renew isn\'t required');
         }
 
         $staging = (Config::getParam('env') === App::MODE_TYPE_PRODUCTION) ? '' : ' --dry-run';
 
-        $response = shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
+        $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
             --email ".$request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', 'security@localhost.test')." \
             -w ".APP_STORAGE_CERTIFICATES." \
             -d {$domain->get()}");
@@ -118,39 +118,39 @@ class CertificatesV1
 
         $path = APP_STORAGE_CERTIFICATES.'/'.$domain->get();
 
-        if(!is_readable($path)) {
-            if (!mkdir($path, 0755, true)) {
+        if(!\is_readable($path)) {
+            if (!\mkdir($path, 0755, true)) {
                 throw new Exception('Failed to create path...');
             }
         }
         
-        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
-            throw new Exception('Failed to rename certificate cert.pem: '.json_encode($response));
+        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/cert.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/cert.pem')) {
+            throw new Exception('Failed to rename certificate cert.pem: '.\json_encode($response));
         }
 
-        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
-            throw new Exception('Failed to rename certificate chain.pem: '.json_encode($response));
+        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/chain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/chain.pem')) {
+            throw new Exception('Failed to rename certificate chain.pem: '.\json_encode($response));
         }
 
-        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
-            throw new Exception('Failed to rename certificate fullchain.pem: '.json_encode($response));
+        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/fullchain.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/fullchain.pem')) {
+            throw new Exception('Failed to rename certificate fullchain.pem: '.\json_encode($response));
         }
 
-        if(!@rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
-            throw new Exception('Failed to rename certificate privkey.pem: '.json_encode($response));
+        if(!@\rename('/etc/letsencrypt/live/'.$domain->get().'/privkey.pem', APP_STORAGE_CERTIFICATES.'/'.$domain->get().'/privkey.pem')) {
+            throw new Exception('Failed to rename certificate privkey.pem: '.\json_encode($response));
         }
 
-        $certificate = array_merge($certificate, [
+        $certificate = \array_merge($certificate, [
             '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
             '$permissions' => [
                 'read' => [],
                 'write' => [],
             ],
             'domain' => $domain->get(),
-            'issueDate' => time(),
+            'issueDate' => \time(),
             'renewDate' => $renew,
             'attempts' => 0,
-            'log' => json_encode($response),
+            'log' => \json_encode($response),
         ]);
 
         $certificate = $consoleDB->createDocument($certificate);
@@ -160,8 +160,8 @@ class CertificatesV1
         }
 
         if(!empty($document)) {
-            $document = array_merge($document, [
-                'updated' => time(),
+            $document = \array_merge($document, [
+                'updated' => \time(),
                 'certificateId' => $certificate->getId(),
             ]);
     
@@ -178,7 +178,7 @@ class CertificatesV1
     - certFile: /storage/certificates/{$domain->get()}/fullchain.pem
       keyFile: /storage/certificates/{$domain->get()}/privkey.pem";
 
-        if(!file_put_contents(APP_STORAGE_CONFIG.'/'.$domain->get().'.yml', $config)) {
+        if(!\file_put_contents(APP_STORAGE_CONFIG.'/'.$domain->get().'.yml', $config)) {
             throw new Exception('Failed to save SSL configuration');
         }
 

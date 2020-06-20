@@ -42,11 +42,11 @@ class Redis extends Adapter
      */
     public function getDocument($id)
     {
-        $output = json_decode($this->getRedis()->get($this->getNamespace().':document-'.$id), true);
+        $output = \json_decode($this->getRedis()->get($this->getNamespace().':document-'.$id), true);
 
         if (!$output) {
             $output = $this->adapter->getDocument($id);
-            $this->getRedis()->set($this->getNamespace().':document-'.$id, json_encode($output, JSON_UNESCAPED_UNICODE));
+            $this->getRedis()->set($this->getNamespace().':document-'.$id, \json_encode($output, JSON_UNESCAPED_UNICODE));
         }
 
         $output = $this->parseRelations($output);
@@ -78,7 +78,7 @@ class Redis extends Adapter
         foreach ($output['temp-relations'] as $i => $relationship) {
             $node = $relationship['end'];
 
-            $node = (!empty($nodes[$i])) ? $this->parseRelations(json_decode($nodes[$i], true)) : $this->getDocument($node);
+            $node = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument($node);
 
             if (empty($node)) {
                 continue;
@@ -196,7 +196,7 @@ class Redis extends Adapter
         $nodes = (!empty($keys)) ? $this->getRedis()->mget($keys) : [];
 
         foreach ($data as $i => &$node) {
-            $temp = (!empty($nodes[$i])) ? $this->parseRelations(json_decode($nodes[$i], true)) : $this->getDocument($node);
+            $temp = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument($node);
 
             if (!empty($temp)) {
                 $node = $temp;

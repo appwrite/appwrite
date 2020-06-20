@@ -34,15 +34,15 @@ class Key extends Validator
      */
     public function isValid($value)
     {
-        if(!is_string($value)) {
+        if(!\is_string($value)) {
             return false;
         }
         
-        if (preg_match('/[^A-Za-z0-9\-\_]/', $value)) {
+        if (\preg_match('/[^A-Za-z0-9\-\_]/', $value)) {
             return false;
         }
 
-        if (mb_strlen($value) > 32) {
+        if (\mb_strlen($value) > 32) {
             return false;
         }
 

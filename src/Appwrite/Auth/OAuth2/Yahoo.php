@@ -49,7 +49,7 @@ class Yahoo extends OAuth2
      */
     public function parseState(string $state)
     {
-        return json_decode(html_entity_decode($state), true);
+        return \json_decode(\html_entity_decode($state), true);
     }
 
     /**
@@ -58,12 +58,12 @@ class Yahoo extends OAuth2
     public function getLoginURL():string
     {
         return $this->endpoint . 'request_auth?'.
-            http_build_query([
+            \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->getScopes()),
+                'scope' => \implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
-                'state' => json_encode($this->state)
+                'state' => \json_encode($this->state)
             ]);
     }
 
@@ -75,15 +75,15 @@ class Yahoo extends OAuth2
     public function getAccessToken(string $code):string
     {
         $header = [
-            "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret),
+            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
             "Content-Type: application/x-www-form-urlencoded",
         ];
 
-        $result = json_decode($this->request(
+        $result = \json_decode($this->request(
             'POST',
             $this->endpoint . 'get_token',
             $header,
-            http_build_query([
+            \http_build_query([
                 "code" => $code,
                 "grant_type" => "authorization_code",
                 "redirect_uri" => $this->callback
@@ -153,8 +153,8 @@ class Yahoo extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET',
-                $this->resourceEndpoint, ['Authorization: Bearer '.urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET',
+                $this->resourceEndpoint, ['Authorization: Bearer '.\urlencode($accessToken)]), true);
         }
 
         return $this->user;

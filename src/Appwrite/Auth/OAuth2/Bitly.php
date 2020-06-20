@@ -44,10 +44,10 @@ class Bitly extends OAuth2
     public function getLoginURL():string
     {
         return $this->endpoint . 'authorize?'.
-            http_build_query([
+            \http_build_query([
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
-                'state' => json_encode($this->state)
+                'state' => \json_encode($this->state)
             ]);
     }
 
@@ -62,19 +62,19 @@ class Bitly extends OAuth2
             'POST',
             $this->resourceEndpoint . 'oauth/access_token',
             ["Content-Type: application/x-www-form-urlencoded"],
-            http_build_query([
+            \http_build_query([
                 "client_id" => $this->appID,
                 "client_secret" => $this->appSecret,
                 "code" => $code,
                 "redirect_uri" => $this->callback,
-                "state" => json_encode($this->state)
+                "state" => \json_encode($this->state)
             ])
         );
 
         $result = null;
 
         if ($response) {
-            parse_str($response, $result);
+            \parse_str($response, $result);
             return $result['access_token'];
         }
 
@@ -137,12 +137,12 @@ class Bitly extends OAuth2
     protected function getUser(string $accessToken)
     {
         $headers = [
-            'Authorization: Bearer '. urlencode($accessToken),
+            'Authorization: Bearer '. \urlencode($accessToken),
             "Accept: application/json"
         ];
 
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET', $this->resourceEndpoint . "v4/user", $headers), true);
+            $this->user = \json_decode($this->request('GET', $this->resourceEndpoint . "v4/user", $headers), true);
         }
 
 

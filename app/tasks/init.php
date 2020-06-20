@@ -22,7 +22,7 @@ $cli
 
         Console::log('Issue a TLS certificate for master domain ('.$domain.')');
 
-        ResqueScheduler::enqueueAt(time() + 30, 'v1-certificates', 'CertificatesV1', [
+        ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
             'document' => [],
             'domain' => $domain,
             'validateTarget' => false,
@@ -103,7 +103,7 @@ $cli
             Console::log('🟢 HTTP force option is enabled');
         }
 
-        sleep(0.2);
+        \sleep(0.2);
 
         try {
             Console::log("\n".'Checking connectivity...');
@@ -164,9 +164,9 @@ $cli
         $host = $request->getServer('_APP_STATSD_HOST', 'telegraf');
         $port = $request->getServer('_APP_STATSD_PORT', 8125);
 
-        if($fp = @fsockopen('udp://'.$host, $port, $errCode, $errStr, 2)){   
+        if($fp = @\fsockopen('udp://'.$host, $port, $errCode, $errStr, 2)){   
             Console::success('StatsD..............connected 👍');
-            fclose($fp);
+            \fclose($fp);
         } else {
             Console::error('StatsD...........disconnected 👎');
         }
@@ -174,14 +174,14 @@ $cli
         $host = $request->getServer('_APP_INFLUXDB_HOST', '');
         $port = $request->getServer('_APP_INFLUXDB_PORT', '');
 
-        if($fp = @fsockopen($host, $port, $errCode, $errStr, 2)){   
+        if($fp = @\fsockopen($host, $port, $errCode, $errStr, 2)){   
             Console::success('InfluxDB............connected 👍');
-            fclose($fp);
+            \fclose($fp);
         } else {
             Console::error('InfluxDB.........disconnected 👎');
         }
 
-        sleep(0.2);
+        \sleep(0.2);
 
         Console::log('');
         Console::log('Checking volumes...');
@@ -194,14 +194,14 @@ $cli
         ] as $key => $volume) {
             $device = new Local($volume);
 
-            if (is_readable($device->getRoot())) {
+            if (\is_readable($device->getRoot())) {
                 Console::success('🟢 '.$key.' Volume is readable');
             }
             else {
                 Console::error('🔴 '.$key.' Volume is unreadable');
             }
             
-            if (is_writable($device->getRoot())) {
+            if (\is_writable($device->getRoot())) {
                 Console::success('🟢 '.$key.' Volume is writeable');
             }
             else {
@@ -209,7 +209,7 @@ $cli
             }
         }
 
-        sleep(0.2);
+        \sleep(0.2);
 
         Console::log('');
         Console::log('Checking disk space usage...');
@@ -225,7 +225,7 @@ $cli
             $percentage = (($device->getPartitionTotalSpace() - $device->getPartitionFreeSpace())
             / $device->getPartitionTotalSpace()) * 100;
     
-            $message = $key.' Volume has '.Storage::human($device->getPartitionFreeSpace()) . ' free space ('.round($percentage, 2).'% used)';
+            $message = $key.' Volume has '.Storage::human($device->getPartitionFreeSpace()) . ' free space ('.\round($percentage, 2).'% used)';
     
             if ($percentage < 80) {
                 Console::success('🟢 ' . $message);
@@ -238,10 +238,10 @@ $cli
         
         try {
             Console::log('');
-            $version = json_decode(@file_get_contents($request->getServer('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
+            $version = \json_decode(@\file_get_contents($request->getServer('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
             
             if($version && isset($version['version'])) {
-                if(version_compare($version['version'], $request->getServer('_APP_VERSION', 'UNKNOWN')) === 0) {
+                if(\version_compare($version['version'], $request->getServer('_APP_VERSION', 'UNKNOWN')) === 0) {
                     Console::info('You are running the latest version of '.APP_NAME.'! 🥳');
                 }
                 else {

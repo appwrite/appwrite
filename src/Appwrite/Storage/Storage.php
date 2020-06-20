@@ -27,7 +27,7 @@ class Storage
      */
     public static function addDevice($name, Device $device)
     {
-        if (array_key_exists($name, self::$devices)) {
+        if (\array_key_exists($name, self::$devices)) {
             throw new Exception('The device "'.$name.'" is already listed');
         }
 
@@ -47,7 +47,7 @@ class Storage
      */
     public static function getDevice($name)
     {
-        if (!array_key_exists($name, self::$devices)) {
+        if (!\array_key_exists($name, self::$devices)) {
             throw new Exception('The device "'.$name.'" is not listed');
         }
 
@@ -65,7 +65,7 @@ class Storage
      */
     public static function exists($name)
     {
-        return (bool) array_key_exists($name, self::$devices);
+        return (bool) \array_key_exists($name, self::$devices);
     }
 
     /**
@@ -89,6 +89,6 @@ class Storage
             ++$i;
         }
 
-        return round($bytes, $decimals).$units[$i];
+        return \round($bytes, $decimals).$units[$i];
     }
 }

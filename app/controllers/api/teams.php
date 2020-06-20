@@ -43,7 +43,7 @@ $utopia->post('/v1/teams')
                 ],
                 'name' => $name,
                 'sum' => ($mode !== APP_MODE_ADMIN && $user->getId()) ? 1 : 0,
-                'dateCreated' => time(),
+                'dateCreated' => \time(),
             ]);
 
             Authorization::reset();
@@ -62,8 +62,8 @@ $utopia->post('/v1/teams')
                     'userId' => $user->getId(),
                     'teamId' => $team->getId(),
                     'roles' => $roles,
-                    'invited' => time(),
-                    'joined' => time(),
+                    'invited' => \time(),
+                    'joined' => \time(),
                     'confirm' => true,
                     'secret' => '',
                 ]);
@@ -151,7 +151,7 @@ $utopia->put('/v1/teams/:teamId')
                 throw new Exception('Team not found', 404);
             }
 
-            $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
+            $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
                 'name' => $name,
             ]));
 
@@ -256,8 +256,8 @@ $utopia->post('/v1/teams/:teamId/memberships')
                         'emailVerification' => false,
                         'status' => Auth::USER_STATUS_UNACTIVATED,
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'password-update' => time(),
-                        'registration' => time(),
+                        'password-update' => \time(),
+                        'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
                         'tokens' => [],
@@ -280,7 +280,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                     throw new Exception('User has already been invited or is already a member of this team', 409);
                 }
 
-                if ($member->getAttribute('userId') == $user->getId() && in_array('owner', $member->getAttribute('roles', []))) {
+                if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
                     $isOwner = true;
                 }
             }
@@ -300,7 +300,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'userId' => $invitee->getId(),
                 'teamId' => $team->getId(),
                 'roles' => $roles,
-                'invited' => time(),
+                'invited' => \time(),
                 'joined' => 0,
                 'confirm' => (APP_MODE_ADMIN === $mode),
                 'secret' => Auth::hash($secret),
@@ -349,7 +349,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                     ->setParam('event', 'teams.membership.create')
                     ->setParam('recipient', $email)
                     ->setParam('name', $name)
-                    ->setParam('subject', sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
+                    ->setParam('subject', \sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
                     ->setParam('body', $body->render())
                     ->trigger();
                 ;
@@ -363,7 +363,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED) // TODO change response of this endpoint
-                ->json(array_merge($membership->getArrayCopy([
+                ->json(\array_merge($membership->getArrayCopy([
                     '$id',
                     'userId',
                     'teamId',
@@ -421,7 +421,7 @@ $utopia->get('/v1/teams/:teamId/memberships')
 
                 $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
 
-                $users[] = array_merge($temp, $membership->getArrayCopy([
+                $users[] = \array_merge($temp, $membership->getArrayCopy([
                     '$id',
                     'userId',
                     'teamId',
@@ -495,7 +495,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             }
 
             $membership // Attach user to team
-                ->setAttribute('joined', time())
+                ->setAttribute('joined', \time())
                 ->setAttribute('confirm', true)
             ;
 
@@ -505,7 +505,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             ;
 
             // Log user in
-            $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
             $secret = Auth::tokenGenerator();
 
             $user->setAttribute('tokens', new Document([
@@ -528,7 +528,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             Authorization::disable();
 
-            $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
+            $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
                 'sum' => $team->getAttribute('sum', 0) + 1,
             ]));
 
@@ -546,14 +546,14 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             if(!Config::getParam('domainVerification')) {
                 $response
-                    ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+                    ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
             }
 
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                ->json(array_merge($membership->getArrayCopy([
+                ->json(\array_merge($membership->getArrayCopy([
                     '$id',
                     'userId',
                     'teamId',
@@ -601,7 +601,7 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
             }
 
             if ($membership->getAttribute('confirm')) { // Count only confirmed members
-                $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
+                $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
                     'sum' => $team->getAttribute('sum', 0) - 1,
                 ]));
             }

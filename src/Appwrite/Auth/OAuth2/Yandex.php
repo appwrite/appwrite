@@ -36,7 +36,7 @@ class Yandex extends OAuth2
      */
     public function parseState(string $state)
     {
-        return json_decode(html_entity_decode($state), true);
+        return \json_decode(\html_entity_decode($state), true);
     }
 
 
@@ -45,11 +45,11 @@ class Yandex extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://oauth.yandex.com/authorize?'.http_build_query([
+        return 'https://oauth.yandex.com/authorize?'.\http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope'=> implode(' ', $this->getScopes()),
-                'state' => json_encode($this->state)
+                'scope'=> \implode(' ', $this->getScopes()),
+                'state' => \json_encode($this->state)
             ]);
     }
 
@@ -61,7 +61,7 @@ class Yandex extends OAuth2
     public function getAccessToken(string $code): string
     {
         $headers = [
-            "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret),
+            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
             "Content-Type: application/x-www-form-urlencoded",
         ];
 
@@ -69,12 +69,12 @@ class Yandex extends OAuth2
             'POST',
             'https://oauth.yandex.com/token',
             $headers,
-            http_build_query([
+            \http_build_query([
                 'code' => $code,
                 'grant_type' => 'authorization_code'
             ])
         );
-        $accessToken = json_decode($accessToken, true);
+        $accessToken = \json_decode($accessToken, true);
         
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -139,11 +139,11 @@ class Yandex extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://login.yandex.ru/info?'.http_build_query([
+            $user = $this->request('GET', 'https://login.yandex.ru/info?'.\http_build_query([
                 'format' => 'json',
                 'oauth_token' => $accessToken
             ]));
-            $this->user = json_decode($user, true);
+            $this->user = \json_decode($user, true);
         }
         return $this->user;
     }

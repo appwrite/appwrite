@@ -124,11 +124,11 @@ class Structure extends Validator
      */
     public function isValid($document)
     {
-        $document = (is_array($document)) ? new Document($document) : $document;
+        $document = (\is_array($document)) ? new Document($document) : $document;
 
         $this->id = $document->getId();
 
-        if (is_null($document->getCollection())) {
+        if (\is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
 
             return false;
@@ -136,14 +136,14 @@ class Structure extends Validator
 
         $collection = $this->getCollection($document->getCollection());
 
-        if (is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
             $this->message = 'Collection not found';
 
             return false;
         }
 
         $array = $document->getArrayCopy();
-        $rules = array_merge($this->rules, $collection->getAttribute('rules', []));
+        $rules = \array_merge($this->rules, $collection->getAttribute('rules', []));
 
         foreach ($rules as $rule) { // Check all required keys are set
             if (isset($rule['key']) && !isset($array[$rule['key']])
@@ -208,11 +208,11 @@ class Structure extends Validator
             }
 
             if (empty($validator)) { // Error creating validator for property
-                $this->message = 'Unknown rule type "'.$ruleType.'" for property "'.htmlspecialchars($key, ENT_QUOTES, 'UTF-8').'"';
+                $this->message = 'Unknown rule type "'.$ruleType.'" for property "'.\htmlspecialchars($key, ENT_QUOTES, 'UTF-8').'"';
 
                 if (empty($ruleType)) {
                     $this->message = 'Unknown property "'.$key.'" type'.
-                        '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
+                        '. Make sure to follow '.\strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
                 }
 
                 return false;
@@ -232,7 +232,7 @@ class Structure extends Validator
             }
 
             if ($ruleArray) { // Array of values validation
-                if (!is_array($value)) {
+                if (!\is_array($value)) {
                     $this->message = 'Property "'.$key.'" must be an array';
 
                     return false;
@@ -260,8 +260,8 @@ class Structure extends Validator
         }
 
         if (!empty($array)) { // No fields should be left unvalidated
-            $this->message = 'Unknown properties are not allowed ('.implode(', ', array_keys($array)).') for this collection'.
-                '. Make sure to follow '.strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
+            $this->message = 'Unknown properties are not allowed ('.\implode(', ', \array_keys($array)).') for this collection'.
+                '. Make sure to follow '.\strtolower($collection->getAttribute('name', 'unknown')).' collection structure';
 
             return false;
         }

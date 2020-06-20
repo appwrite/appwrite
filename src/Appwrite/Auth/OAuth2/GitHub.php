@@ -31,11 +31,11 @@ class Github extends OAuth2
      */
     public function getLoginURL():string
     {
-        return 'https://github.com/login/oauth/authorize?'. http_build_query([
+        return 'https://github.com/login/oauth/authorize?'. \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'scope' => implode(' ', $this->getScopes()),
-            'state' => json_encode($this->state)
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state)
         ]);
 
     }
@@ -51,7 +51,7 @@ class Github extends OAuth2
             'POST',
             'https://github.com/login/oauth/access_token',
             [],
-            http_build_query([
+            \http_build_query([
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
                 'client_secret' => $this->appSecret,
@@ -61,7 +61,7 @@ class Github extends OAuth2
 
         $output = [];
 
-        parse_str($accessToken, $output);
+        \parse_str($accessToken, $output);
 
         if (isset($output['access_token'])) {
             return $output['access_token'];
@@ -93,7 +93,7 @@ class Github extends OAuth2
      */
     public function getUserEmail(string $accessToken):string
     {
-        $emails = json_decode($this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.urlencode($accessToken)]), true);
+        $emails = \json_decode($this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token '.\urlencode($accessToken)]), true);
 
         foreach ($emails as $email) {
             if ($email['primary'] && $email['verified']) {
@@ -128,7 +128,7 @@ class Github extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token '.\urlencode($accessToken)]), true);
         }
 
         return $this->user;

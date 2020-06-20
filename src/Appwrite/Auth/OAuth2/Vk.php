@@ -44,13 +44,13 @@ class Vk extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://oauth.vk.com/authorize?' . http_build_query([
+        return 'https://oauth.vk.com/authorize?' . \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
-            'state' => json_encode($this->state),
+            'state' => \json_encode($this->state),
             'v' => $this->version,
-            'scope' => implode(' ', $this->getScopes())
+            'scope' => \implode(' ', $this->getScopes())
         ]);
     }
 
@@ -66,14 +66,14 @@ class Vk extends OAuth2
             'POST',
             'https://oauth.vk.com/access_token?',
             $headers,
-            http_build_query([
+            \http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'redirect_uri' => $this->callback
             ])
         );
-        $accessToken = json_decode($accessToken, true);
+        $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['email'])) {
             $this->user['email'] = $accessToken['email'];
@@ -147,14 +147,14 @@ class Vk extends OAuth2
         if (empty($this->user['name'])) {
             $user = $this->request(
                 'GET',
-                'https://api.vk.com/method/users.get?'. http_build_query([
+                'https://api.vk.com/method/users.get?'. \http_build_query([
                     'v' => $this->version,
                     'fields' => 'id,name,email,first_name,last_name',
                     'access_token' => $accessToken
                 ])
             );
             
-            $user = json_decode($user, true);
+            $user = \json_decode($user, true);
             $this->user['name'] = $user['response'][0]['first_name'] ." ".$user['response'][0]['last_name'];
         }
         return $this->user;

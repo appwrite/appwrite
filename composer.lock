@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b40a5280315184407b21232e6c607b85",
+    "content-hash": "9deec50e5a99197511b5efbcaa9593bd",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1311,16 +1311,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8a014449fe92b5275ef5006ac7f7ecaaec23e64d"
+                "reference": "b485eddeda335c4f7d1a16fbf5544e37bdf195ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8a014449fe92b5275ef5006ac7f7ecaaec23e64d",
-                "reference": "8a014449fe92b5275ef5006ac7f7ecaaec23e64d",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b485eddeda335c4f7d1a16fbf5544e37bdf195ac",
+                "reference": "b485eddeda335c4f7d1a16fbf5544e37bdf195ac",
                 "shasum": ""
             },
             "require": {
@@ -1354,20 +1354,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-28T19:43:47+00:00"
+            "time": "2020-06-20T11:35:08+00:00"
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "ed624c324835859b68521099de13c01c6928703f"
+                "reference": "7bcceba05ed640fe910e7b6b0c82d998fb9d6495"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/ed624c324835859b68521099de13c01c6928703f",
-                "reference": "ed624c324835859b68521099de13c01c6928703f",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/7bcceba05ed640fe910e7b6b0c82d998fb9d6495",
+                "reference": "7bcceba05ed640fe910e7b6b0c82d998fb9d6495",
                 "shasum": ""
             },
             "require": {
@@ -1401,20 +1401,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-04-17T19:42:29+00:00"
+            "time": "2020-06-20T11:36:43+00:00"
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "7c0dbf1ae1c216a2ab8c3fdb7f2c0166a2e0988d"
+                "reference": "52a20ae1d5e3f5be11492c4bb0af9cf2a2c07e5d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/7c0dbf1ae1c216a2ab8c3fdb7f2c0166a2e0988d",
-                "reference": "7c0dbf1ae1c216a2ab8c3fdb7f2c0166a2e0988d",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/52a20ae1d5e3f5be11492c4bb0af9cf2a2c07e5d",
+                "reference": "52a20ae1d5e3f5be11492c4bb0af9cf2a2c07e5d",
                 "shasum": ""
             },
             "require": {
@@ -1448,20 +1448,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-09T13:02:50+00:00"
+            "time": "2020-06-20T11:43:40+00:00"
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.6.1",
+            "version": "0.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "0e88da425122f81020e90d575cbe80232f364b68"
+                "reference": "8ad0371ce045b60034ebcb2b001b6e88bdcc3670"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/0e88da425122f81020e90d575cbe80232f364b68",
-                "reference": "0e88da425122f81020e90d575cbe80232f364b68",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/8ad0371ce045b60034ebcb2b001b6e88bdcc3670",
+                "reference": "8ad0371ce045b60034ebcb2b001b6e88bdcc3670",
                 "shasum": ""
             },
             "require": {
@@ -1496,20 +1496,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-06-18T23:00:19+00:00"
+            "time": "2020-06-20T11:37:51+00:00"
         },
         {
             "name": "utopia-php/config",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/config.git",
-                "reference": "f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d"
+                "reference": "48c5009c33b8426260ee7425100e716d7ed7f693"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/config/zipball/f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d",
-                "reference": "f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d",
+                "url": "https://api.github.com/repos/utopia-php/config/zipball/48c5009c33b8426260ee7425100e716d7ed7f693",
+                "reference": "48c5009c33b8426260ee7425100e716d7ed7f693",
                 "shasum": ""
             },
             "require": {
@@ -1542,7 +1542,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-03-28T10:24:18+00:00"
+            "time": "2020-06-20T11:38:58+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -1596,16 +1596,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.3.3",
+            "version": "0.3.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "dae7464b257663cd250e58244b21781a996134c2"
+                "reference": "ca2ebe37936983d786f57bae8ee6e006299f4942"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/dae7464b257663cd250e58244b21781a996134c2",
-                "reference": "dae7464b257663cd250e58244b21781a996134c2",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ca2ebe37936983d786f57bae8ee6e006299f4942",
+                "reference": "ca2ebe37936983d786f57bae8ee6e006299f4942",
                 "shasum": ""
             },
             "require": {
@@ -1636,20 +1636,20 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-06-18T23:28:10+00:00"
+            "time": "2020-06-20T11:33:46+00:00"
         },
         {
             "name": "utopia-php/locale",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
-                "reference": "e3e5f16b190e0ddc654ef2fd86f6280d7acc41b1"
+                "reference": "f2ed7f0b50fe961d65600871e8f8d9dea3167500"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/locale/zipball/e3e5f16b190e0ddc654ef2fd86f6280d7acc41b1",
-                "reference": "e3e5f16b190e0ddc654ef2fd86f6280d7acc41b1",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/f2ed7f0b50fe961d65600871e8f8d9dea3167500",
+                "reference": "f2ed7f0b50fe961d65600871e8f8d9dea3167500",
                 "shasum": ""
             },
             "require": {
@@ -1682,20 +1682,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-09T13:03:33+00:00"
+            "time": "2020-06-20T11:41:46+00:00"
         },
         {
             "name": "utopia-php/registry",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "ca38e4b9b1079fb375463c6a7df3eecc2cb91d10"
+                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/ca38e4b9b1079fb375463c6a7df3eecc2cb91d10",
-                "reference": "ca38e4b9b1079fb375463c6a7df3eecc2cb91d10",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
+                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
                 "shasum": ""
             },
             "require": {
@@ -1729,7 +1729,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-09T13:04:53+00:00"
+            "time": "2020-06-20T11:46:06+00:00"
         }
     ],
     "packages-dev": [
@@ -1739,7 +1739,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "5183b758ec53db3b6e9529892cacebf842773675"
+                "reference": "2b9a55bc447b8b856a8b9dc8c5c86a2c61a6ed3a"
             },
             "require": {
                 "ext-curl": "*",
@@ -1769,7 +1769,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-06-18T12:20:14+00:00"
+            "time": "2020-06-20T07:38:05+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -2092,12 +2092,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionCommon.git",
-                "reference": "985f414b55eca4296ffc99db960a97b3cc8fbcea"
+                "reference": "cf8df60735d98fd18070b7cab0019ba0831e219c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/985f414b55eca4296ffc99db960a97b3cc8fbcea",
-                "reference": "985f414b55eca4296ffc99db960a97b3cc8fbcea",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/cf8df60735d98fd18070b7cab0019ba0831e219c",
+                "reference": "cf8df60735d98fd18070b7cab0019ba0831e219c",
                 "shasum": ""
             },
             "require": {
@@ -2133,7 +2133,7 @@
                 "reflection",
                 "static analysis"
             ],
-            "time": "2020-04-27T09:34:19+00:00"
+            "time": "2020-06-19T17:42:03+00:00"
         },
         {
             "name": "phpdocumentor/reflection-docblock",
@@ -2141,12 +2141,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "5892a510fe31de9c4200e6f9ae30e91dc5cd5a41"
+                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/5892a510fe31de9c4200e6f9ae30e91dc5cd5a41",
-                "reference": "5892a510fe31de9c4200e6f9ae30e91dc5cd5a41",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
+                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
                 "shasum": ""
             },
             "require": {
@@ -2186,7 +2186,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-06-18T20:57:11+00:00"
+            "time": "2020-06-19T18:58:43+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -2194,12 +2194,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "95d8782070ccd738295bbe4483f8760f998ad64d"
+                "reference": "94f3ddc5d77e49daadadd33b798b933e52dde82c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/95d8782070ccd738295bbe4483f8760f998ad64d",
-                "reference": "95d8782070ccd738295bbe4483f8760f998ad64d",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/94f3ddc5d77e49daadadd33b798b933e52dde82c",
+                "reference": "94f3ddc5d77e49daadadd33b798b933e52dde82c",
                 "shasum": ""
             },
             "require": {
@@ -2232,7 +2232,7 @@
                 }
             ],
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
-            "time": "2020-05-13T13:46:15+00:00"
+            "time": "2020-06-19T19:40:27+00:00"
         },
         {
             "name": "phpspec/prophecy",

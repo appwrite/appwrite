@@ -41,13 +41,13 @@ class Apple extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://appleid.apple.com/auth/authorize?'.http_build_query([
+        return 'https://appleid.apple.com/auth/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'state' => json_encode($this->state),
+            'state' => \json_encode($this->state),
             'response_type' => 'code',
             'response_mode' => 'form_post',
-            'scope' => implode(' ', $this->getScopes())
+            'scope' => \implode(' ', $this->getScopes())
         ]);
     }
 
@@ -63,7 +63,7 @@ class Apple extends OAuth2
             'POST',
             'https://appleid.apple.com/auth/token',
             $headers,
-            http_build_query([
+            \http_build_query([
                 'grant_type' => 'authorization_code',
                 'code' => $code,
                 'client_id' => $this->appID,
@@ -72,10 +72,10 @@ class Apple extends OAuth2
             ])
         );
 
-        $accessToken    = json_decode($accessToken, true);
+        $accessToken    = \json_decode($accessToken, true);
 
-        $this->claims   = (isset($accessToken['id_token'])) ? explode('.', $accessToken['id_token']) : [0 => '', 1 => ''];
-        $this->claims   = (isset($this->claims[1])) ? json_decode(base64_decode($this->claims[1]), true) : [];
+        $this->claims   = (isset($accessToken['id_token'])) ? \explode('.', $accessToken['id_token']) : [0 => '', 1 => ''];
+        $this->claims   = (isset($this->claims[1])) ? \json_decode(\base64_decode($this->claims[1]), true) : [];
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -135,7 +135,7 @@ class Apple extends OAuth2
     protected function getAppSecret():string
     {
         try {
-            $secret = json_decode($this->appSecret, true);
+            $secret = \json_decode($this->appSecret, true);
         } catch (\Throwable $th) {
             throw new Exception('Invalid secret');
         }
@@ -152,19 +152,19 @@ class Apple extends OAuth2
         
         $claims = [
             'iss' => $teamID,
-            'iat' => time(),
-            'exp' => time() + 86400*180,
+            'iat' => \time(),
+            'exp' => \time() + 86400*180,
             'aud' => 'https://appleid.apple.com',
             'sub' => $bundleID,
         ];
 
-        $pkey = openssl_pkey_get_private($keyfile);
+        $pkey = \openssl_pkey_get_private($keyfile);
 
-        $payload = $this->encode(json_encode($headers)).'.'.$this->encode(json_encode($claims));
+        $payload = $this->encode(\json_encode($headers)).'.'.$this->encode(\json_encode($claims));
 
         $signature = '';
 
-        $success = openssl_sign($payload, $signature, $pkey, OPENSSL_ALGO_SHA256);
+        $success = \openssl_sign($payload, $signature, $pkey, OPENSSL_ALGO_SHA256);
 
         if (!$success) return '';
 
@@ -176,7 +176,7 @@ class Apple extends OAuth2
      */
     protected function encode($data)
     {
-        return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($data));
+        return \str_replace(['+', '/', '='], ['-', '_', ''], \base64_encode($data));
     }
 
     /**
@@ -184,8 +184,8 @@ class Apple extends OAuth2
      */
     protected function retrievePositiveInteger(string $data): string
     {
-        while ('00' === mb_substr($data, 0, 2, '8bit') && mb_substr($data, 2, 2, '8bit') > '7f') {
-            $data = mb_substr($data, 2, null, '8bit');
+        while ('00' === \mb_substr($data, 0, 2, '8bit') && \mb_substr($data, 2, 2, '8bit') > '7f') {
+            $data = \mb_substr($data, 2, null, '8bit');
         }
 
         return $data;

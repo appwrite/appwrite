@@ -41,10 +41,10 @@ $utopia->get('/v1/locale')
                 //$output['countryTimeZone'] = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, $record->country->isoCode);
                 $output['continent'] = (isset($continents[$record->continent->code])) ? $continents[$record->continent->code] : Locale::getText('locale.country.unknown');
                 $output['continentCode'] = $record->continent->code;
-                $output['eu'] = (in_array($record->country->isoCode, $eu)) ? true : false;
+                $output['eu'] = (\in_array($record->country->isoCode, $eu)) ? true : false;
 
                 foreach ($currencies as $code => $element) {
-                    if (isset($element['locations']) && isset($element['code']) && in_array($record->country->isoCode, $element['locations'])) {
+                    if (isset($element['locations']) && isset($element['code']) && \in_array($record->country->isoCode, $element['locations'])) {
                         $currency = $element['code'];
                     }
                 }
@@ -61,7 +61,7 @@ $utopia->get('/v1/locale')
 
             $response
                 ->addHeader('Cache-Control', 'public, max-age='.$time)
-                ->addHeader('Expires', date('D, d M Y H:i:s', time() + $time).' GMT') // 45 days cache
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
                 ->json($output);
         }
     );
@@ -77,7 +77,7 @@ $utopia->get('/v1/locale/countries')
         function () use ($response) {
             $list = Locale::getText('countries'); /* @var $list array */
 
-            asort($list);
+            \asort($list);
 
             $response->json($list);
         }
@@ -97,12 +97,12 @@ $utopia->get('/v1/locale/countries/eu')
             $list = [];
 
             foreach ($eu as $code) {
-                if (array_key_exists($code, $countries)) {
+                if (\array_key_exists($code, $countries)) {
                     $list[$code] = $countries[$code];
                 }
             }
 
-            asort($list);
+            \asort($list);
 
             $response->json($list);
         }
@@ -122,12 +122,12 @@ $utopia->get('/v1/locale/countries/phones')
             $countries = Locale::getText('countries'); /* @var $countries array */
 
             foreach ($list as $code => $name) {
-                if (array_key_exists($code, $countries)) {
+                if (\array_key_exists($code, $countries)) {
                     $list[$code] = '+'.$list[$code];
                 }
             }
 
-            asort($list);
+            \asort($list);
 
             $response->json($list);
         }
@@ -144,7 +144,7 @@ $utopia->get('/v1/locale/continents')
         function () use ($response) {
             $list = Locale::getText('continents'); /* @var $list array */
 
-            asort($list);
+            \asort($list);
 
             $response->json($list);
         }

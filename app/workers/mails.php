@@ -2,7 +2,7 @@
 
 require_once __DIR__.'/../init.php';
 
-cli_set_process_title('Mails V1 Worker');
+\cli_set_process_title('Mails V1 Worker');
 
 echo APP_NAME.' mails worker v1 has started';
 
@@ -32,7 +32,7 @@ class MailsV1
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;
-        $mail->AltBody = strip_tags($body);
+        $mail->AltBody = \strip_tags($body);
 
         try {
             $mail->send();
