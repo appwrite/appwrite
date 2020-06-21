@@ -32,6 +32,9 @@
 - Fixed missing custom scopes param for OAuth2 session create API route
 - Fixed wrong JSON validation when creating and updating database documnets
 
+## Breaking Changes
+- **Deprecated** `first` and `last` query params for documents list route in the database API
+
 ## Security
 
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
