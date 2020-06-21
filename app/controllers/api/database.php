@@ -5,6 +5,7 @@ global $utopia, $register, $request, $response, $webhook, $audit, $projectDB;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -22,8 +23,9 @@ use Appwrite\Database\Validator\Collection;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
 use Appwrite\Database\Exception\Structure as StructureException;
-use DeviceDetector\DeviceDetector;
-use GeoIp2\Database\Reader;
+
+// use DeviceDetector\DeviceDetector;
+// use GeoIp2\Database\Reader;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -477,11 +479,13 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->param('orderType', 'ASC', function () { return new WhiteList(array('DESC', 'ASC')); }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
-    ->param('first', 0, function () { return new Range(0, 1); }, 'Return only the first document. Pass 1 for true or 0 for false. The default value is 0. This option refers to the first element in your current documents range (limit/offset), and not the entire collection.', true)
-    ->param('last', 0, function () { return new Range(0, 1); }, 'Return only the last document. Pass 1 for true or 0 for false. The default value is 0. This option refers to the last element in your current documents range (limit/offset), and not the entire collection.', true)
+    ->param('first', false, function () { return new Boolean(true); }, 'Return only the first document. Pass 1 for true or 0 for false. The default value is 0. This option refers to the first element in your current documents range (limit/offset), and not the entire collection.', true)
+    ->param('last', false, function () { return new Boolean(true); }, 'Return only the last document. Pass 1 for true or 0 for false. The default value is 0. This option refers to the last element in your current documents range (limit/offset), and not the entire collection.', true)
     ->action(
         function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search, $first, $last) use ($response, $projectDB, $isDev) {
             $collection = $projectDB->getDocument($collectionId, $isDev);
+            $first = ($first === '1' || $first === 'true' || $first === 1 || $first === true);
+            $last = ($last === '1' || $last === 'true' || $last === 1 || $last === true);
 
             if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
