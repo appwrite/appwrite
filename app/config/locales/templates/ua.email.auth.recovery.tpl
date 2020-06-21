@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Вітаємо, {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Перейдіть за цим посиланням для того щоб скинути свій пароль для  {{project}} .
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Якщо ви не запитували скидання паролю, проігноруйте це повідомлення.
-    <br />
-    <br />
+</p>
+<p>
     Дякуємо,
     <br />
     команда {{project}}
-</div>
+</p>

@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hallo {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Om jou epos adres te verifieer, kliek op die web adres hier:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     As jy nie aangevra het om jou epos adres te verifieer nie, kan jy die boodskap ignoreer.
-    <br />
-    <br />
+</p>
+<p>
     Baie dankie,
     <br />
     {{project}} span
-</div>
+</p>

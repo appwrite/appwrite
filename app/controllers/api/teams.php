@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mode, $clients;
+global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mail, $mode, $clients;
 
 use Utopia\Exception;
 use Utopia\Response;
@@ -43,7 +43,7 @@ $utopia->post('/v1/teams')
                 ],
                 'name' => $name,
                 'sum' => ($mode !== APP_MODE_ADMIN && $user->getId()) ? 1 : 0,
-                'dateCreated' => time(),
+                'dateCreated' => \time(),
             ]);
 
             Authorization::reset();
@@ -62,8 +62,8 @@ $utopia->post('/v1/teams')
                     'userId' => $user->getId(),
                     'teamId' => $team->getId(),
                     'roles' => $roles,
-                    'invited' => time(),
-                    'joined' => time(),
+                    'invited' => \time(),
+                    'joined' => \time(),
                     'confirm' => true,
                     'secret' => '',
                 ]);
@@ -151,7 +151,7 @@ $utopia->put('/v1/teams/:teamId')
                 throw new Exception('Team not found', 404);
             }
 
-            $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
+            $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
                 'name' => $name,
             ]));
 
@@ -215,7 +215,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.') // TODO add our own built-in confirm page
     ->action(
-        function ($teamId, $email, $name, $roles, $url) use ($response, $register, $project, $user, $audit, $projectDB) {
+        function ($teamId, $email, $name, $roles, $url) use ($response, $mail, $project, $user, $audit, $projectDB, $mode) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
@@ -256,8 +256,8 @@ $utopia->post('/v1/teams/:teamId/memberships')
                         'emailVerification' => false,
                         'status' => Auth::USER_STATUS_UNACTIVATED,
                         'password' => Auth::passwordHash(Auth::passwordGenerator()),
-                        'password-update' => time(),
-                        'registration' => time(),
+                        'password-update' => \time(),
+                        'registration' => \time(),
                         'reset' => false,
                         'name' => $name,
                         'tokens' => [],
@@ -280,12 +280,12 @@ $utopia->post('/v1/teams/:teamId/memberships')
                     throw new Exception('User has already been invited or is already a member of this team', 409);
                 }
 
-                if ($member->getAttribute('userId') == $user->getId() && in_array('owner', $member->getAttribute('roles', []))) {
+                if ($member->getAttribute('userId') == $user->getId() && \in_array('owner', $member->getAttribute('roles', []))) {
                     $isOwner = true;
                 }
             }
 
-            if (!$isOwner) {
+            if (!$isOwner && (APP_MODE_ADMIN !== $mode)) {
                 throw new Exception('User is not allowed to send invitations for this team', 401);
             }
 
@@ -300,13 +300,20 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'userId' => $invitee->getId(),
                 'teamId' => $team->getId(),
                 'roles' => $roles,
-                'invited' => time(),
+                'invited' => \time(),
                 'joined' => 0,
-                'confirm' => false,
+                'confirm' => (APP_MODE_ADMIN === $mode),
                 'secret' => Auth::hash($secret),
             ]);
 
-            $membership = $projectDB->createDocument($membership->getArrayCopy());
+            if(APP_MODE_ADMIN === $mode) { // Allow admin to create membership
+                Authorization::disable();
+                $membership = $projectDB->createDocument($membership->getArrayCopy());
+                Authorization::reset();
+            }
+            else {
+                $membership = $projectDB->createDocument($membership->getArrayCopy());
+            }
 
             if (false === $membership) {
                 throw new Exception('Failed saving membership to DB', 500);
@@ -316,27 +323,36 @@ $utopia->post('/v1/teams/:teamId/memberships')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.invitation.body'));
+            $body = new Template(__DIR__.'/../../config/locales/templates/_base.tpl');
+            $content = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.invitation.body'));
+            $cta = new Template(__DIR__.'/../../config/locales/templates/_cta.tpl');
+
             $body
+                ->setParam('{{content}}', $content->render())
+                ->setParam('{{cta}}', $cta->render())
+                ->setParam('{{title}}', Locale::getText('account.emails.invitation.title'))
                 ->setParam('{{direction}}', Locale::getText('settings.direction'))
                 ->setParam('{{project}}', $project->getAttribute('name', ['[APP-NAME]']))
                 ->setParam('{{team}}', $team->getAttribute('name', '[TEAM-NAME]'))
                 ->setParam('{{owner}}', $user->getAttribute('name', ''))
                 ->setParam('{{redirect}}', $url)
+                ->setParam('{{bg-body}}', '#f6f6f6')
+                ->setParam('{{bg-content}}', '#ffffff')
+                ->setParam('{{bg-cta}}', '#3498db')
+                ->setParam('{{bg-cta-hover}}', '#34495e')
+                ->setParam('{{text-content}}', '#000000')
+                ->setParam('{{text-cta}}', '#ffffff')
             ;
 
-            $mail = $register->get('smtp'); /* @var $mail \PHPMailer\PHPMailer\PHPMailer */
-
-            $mail->addAddress($email, $name);
-
-            $mail->Subject = sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]']));
-            $mail->Body = $body->render();
-            $mail->AltBody = strip_tags($body->render());
-
-            try {
-                $mail->send();
-            } catch (\Exception $error) {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+            if(APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
+                $mail
+                    ->setParam('event', 'teams.membership.create')
+                    ->setParam('recipient', $email)
+                    ->setParam('name', $name)
+                    ->setParam('subject', \sprintf(Locale::getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
+                    ->setParam('body', $body->render())
+                    ->trigger();
+                ;
             }
 
             $audit
@@ -347,7 +363,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED) // TODO change response of this endpoint
-                ->json(array_merge($membership->getArrayCopy([
+                ->json(\array_merge($membership->getArrayCopy([
                     '$id',
                     'userId',
                     'teamId',
@@ -371,8 +387,12 @@ $utopia->get('/v1/teams/:teamId/memberships')
     ->label('sdk.method', 'getMemberships')
     ->label('sdk.description', '/docs/references/teams/get-team-members.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
-        function ($teamId) use ($response, $projectDB) {
+        function ($teamId, $search, $limit, $offset, $orderType) use ($response, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
             if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
@@ -380,8 +400,12 @@ $utopia->get('/v1/teams/:teamId/memberships')
             }
 
             $memberships = $projectDB->getCollection([
-                'limit' => 50,
-                'offset' => 0,
+                'limit' => $limit,
+                'offset' => $offset,
+                'orderField' => 'joined',
+                'orderType' => $orderType,
+                'orderCast' => 'int',
+                'search' => $search,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                     'teamId='.$teamId,
@@ -397,7 +421,7 @@ $utopia->get('/v1/teams/:teamId/memberships')
 
                 $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
 
-                $users[] = array_merge($temp, $membership->getArrayCopy([
+                $users[] = \array_merge($temp, $membership->getArrayCopy([
                     '$id',
                     'userId',
                     'teamId',
@@ -408,15 +432,8 @@ $utopia->get('/v1/teams/:teamId/memberships')
                 ]));
             }
 
-            usort($users, function ($a, $b) {
-                if ($a['joined'] === 0 || $b['joined'] === 0) {
-                    return $b['joined'] - $a['joined'];
-                }
+            $response->json(['sum' => $projectDB->getSum(), 'memberships' => $users]);
 
-                return $a['joined'] - $b['joined'];
-            });
-
-            $response->json($users);
         }
     );
 
@@ -478,7 +495,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             }
 
             $membership // Attach user to team
-                ->setAttribute('joined', time())
+                ->setAttribute('joined', \time())
                 ->setAttribute('confirm', true)
             ;
 
@@ -488,7 +505,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             ;
 
             // Log user in
-            $expiry = time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+            $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
             $secret = Auth::tokenGenerator();
 
             $user->setAttribute('tokens', new Document([
@@ -511,7 +528,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             Authorization::disable();
 
-            $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
+            $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
                 'sum' => $team->getAttribute('sum', 0) + 1,
             ]));
 
@@ -529,14 +546,14 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
             if(!Config::getParam('domainVerification')) {
                 $response
-                    ->addHeader('X-Fallback-Cookies', json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
+                    ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
             }
 
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                ->json(array_merge($membership->getArrayCopy([
+                ->json(\array_merge($membership->getArrayCopy([
                     '$id',
                     'userId',
                     'teamId',
@@ -583,9 +600,11 @@ $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
                 throw new Exception('Failed to remove membership from DB', 500);
             }
 
-            $team = $projectDB->updateDocument(array_merge($team->getArrayCopy(), [
-                'sum' => $team->getAttribute('sum', 0) - 1,
-            ]));
+            if ($membership->getAttribute('confirm')) { // Count only confirmed members
+                $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
+                    'sum' => $team->getAttribute('sum', 0) - 1,
+                ]));
+            }
 
             if (false === $team) {
                 throw new Exception('Failed saving team to DB', 500);

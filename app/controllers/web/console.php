@@ -14,6 +14,7 @@ use Appwrite\Storage\Storage;
 
 $utopia->init(function () use ($layout) {
     $layout
+        ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
         ->setParam('analytics', 'UA-26264668-5')
     ;
 });
@@ -277,14 +278,26 @@ $utopia->get('/console/users')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users/view')
+$utopia->get('/console/users/user')
     ->desc('Platform console project user')
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../../views/console/users/view.phtml');
+        $page = new View(__DIR__.'/../../views/console/users/user.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - View User')
+            ->setParam('title', APP_NAME.' - User')
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/users/teams/team')
+    ->desc('Platform console project team')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__.'/../../views/console/users/team.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Team')
             ->setParam('body', $page);
     });

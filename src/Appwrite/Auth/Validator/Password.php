@@ -34,7 +34,7 @@ class Password extends Validator
      */
     public function isValid($value)
     {
-        if (strlen($value) < 6 || strlen($value) > 32) {
+        if (\strlen($value) < 6 || \strlen($value) > 32) {
             return false;
         }
 

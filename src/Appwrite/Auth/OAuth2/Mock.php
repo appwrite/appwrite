@@ -36,11 +36,11 @@ class Mock extends OAuth2
      */
     public function getLoginURL():string
     {
-        return 'http://localhost/'.$this->version.'/mock/tests/general/oauth2?'. http_build_query([
+        return 'http://localhost/'.$this->version.'/mock/tests/general/oauth2?'. \http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'scope' => implode(' ', $this->getScopes()),
-            'state' => json_encode($this->state)
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state)
         ]);
     }
 
@@ -54,7 +54,7 @@ class Mock extends OAuth2
         $accessToken = $this->request(
             'GET',
             'http://localhost/'.$this->version.'/mock/tests/general/oauth2/token?'.
-            http_build_query([
+            \http_build_query([
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
                 'client_secret' => $this->appSecret,
@@ -62,7 +62,7 @@ class Mock extends OAuth2
             ])
         );
 
-        $accessToken = json_decode($accessToken, true); //
+        $accessToken = \json_decode($accessToken, true); //
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -127,9 +127,9 @@ class Mock extends OAuth2
     protected function getUser(string $accessToken):array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'http://localhost/'.$this->version.'/mock/tests/general/oauth2/user?token='.urlencode($accessToken));
+            $user = $this->request('GET', 'http://localhost/'.$this->version.'/mock/tests/general/oauth2/user?token='.\urlencode($accessToken));
 
-            $this->user = json_decode($user, true);
+            $this->user = \json_decode($user, true);
         }
 
         return $this->user;

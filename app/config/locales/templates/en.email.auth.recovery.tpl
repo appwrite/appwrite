@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hello {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Follow this link to reset your {{project}} password.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
-    If you didn't ask to reset your password, you can ignore this message.
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
+    If you didn’t ask to verify this address, you can ignore this message.
+</p>
+<p>
     Thanks,
     <br />
     {{project}} team
-</div>
+</p>

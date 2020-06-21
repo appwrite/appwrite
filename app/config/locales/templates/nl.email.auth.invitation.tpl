@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hallo,
-    <br />
-    <br />
+</p>
+<p>
     Deze mail is naar je gestuurd omdat <b>{{owner}}</b> wilde dat u een lid zou worden in het <b>{{team}}</b> team voor {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Volg deze link om het team te joinen <b>{{team}}</b>:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     ALs u niet geïnteresseerd bent, kunt u dit bericht negeren.
-    <br />
-    <br />
+</p>
+<p>
     Bedankt,
     <br />
     {{project}} team
-</div>
+</p>

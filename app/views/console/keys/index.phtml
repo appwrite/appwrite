@@ -3,7 +3,7 @@ $scopes = $this->getParam('scopes', []);
 ?>
 <div class="cover margin-bottom-large">
     <h1 class="zone xl margin-bottom-large">
-        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Home</a>
         <br />
 
         <span>API Keys</span>
@@ -49,10 +49,10 @@ $scopes = $this->getParam('scopes', []);
                         <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
                         <input type="hidden" name="keyId" data-ls-bind="{{key.$id}}" />
 
-                        <label data-ls-attrs="for=name-{{key.$id}}">Name</label>
+                        <label data-ls-attrs="for=name-{{key.$id}}">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
                         <input type="text" class="full-width" data-ls-attrs="id=name-{{key.$id}}" name="name" required autocomplete="off" data-ls-bind="{{key.name}}" />
 
-                        <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank">Learn more</a>)</label>
+                        <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
                         <div class="row responsive thin">
                             <?php foreach ($scopes as $i => $scope) : ?>
                                 <div class="col span-6 text-one-liner margin-bottom text-height-large">
@@ -144,10 +144,10 @@ $scopes = $this->getParam('scopes', []);
 
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
-                <label for="name">Name</label>
+                <label for="name">Name <span class="tooltip large" data-tooltip="Choose any name that will help you distinguish between your different API keys."><i class="icon-question"></i></span></label>
                 <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
 
-                <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank">Learn more</a>)</label>
+                <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
                 <div class="row responsive thin">
                     <?php foreach ($scopes as $i => $scope) : ?>
                         <div class="col span-6 text-one-liner margin-bottom text-height-large">

@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Merhaba,
-    <br />
-    <br />
+</p>
+<p>
     Bu posta size gönderildi, çünkü <b>{{owner}}</b> sizi {{project}} için <b>{{team}}</b> ekibinde takım üyesi olmaya davet etmek istedi.
-    <br />
-    <br />
+</p>
+<p>
     Aşağıdaki bağlantıyı takip ederek <b>{{team}}</b> takımına takılın:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Eğer ilgilenmiyorsanız, bu mesajı yok sayabilirsiniz.
-    <br />
-    <br />
+</p>
+<p>
     Teşekkürler,
     <br />
     {{project}} takımı
-</div>
+</p>

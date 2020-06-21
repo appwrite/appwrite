@@ -2,16 +2,50 @@
 
 ## Features
 
+<<<<<<< HEAD
 - New route in Locale API to fetch a list of languages
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
   - ** - might be changed before merging to master
   
+=======
+- New route in Locale API to fetch a list of languages (@TorstenDittmann)
+- Added Google Fonts to Appwrite for offline availability
+- Added a new route in the Avatars API to get user initials avatar
+- Added option to delete team from the console
+- Added option to view team members from the console
+- Added option to join a user to any team from the console
+- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
+- New UI micro-interactions and CSS fixes (@AnatoleLucet)
+- UI performance & accessibility improvments (#406)
+- Updated ClamAV conntainer to version 1.0.9
+- New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
+- All emails are now sent asynchronously for improved performance (@TorstenDittmann)
+- Updated grid for OAuth2 providers list in the console
+- Upgraded Redis Resque queue library to version 1.3.6
+- Added container names to docker-compose.yml (@drandell)
+- Upgraded ClamAV container image to version 1.0.9
+>>>>>>> 0abfa5e5fc2ff2d43a43426fbdaf90b62315c8e9
 
 ## Bug Fixes
 
 - Fixed output of /v1/health/queue/certificates returning wrong data
+- Fixed bug where team members count was wrong in some cases
+- Fixed network calculation for uploaded files
+- Fixed a UI bug preventing float values in numeric fields
+- Fixed scroll positioning when moving rules order up & down
+- Fixed missing validation for database documents key length (32 chars)
+- Grammer fix for pt-br email templates (@rubensdemelo)
+- Fixed update form labels and tooltips for Flutter Android apps
+- Fixed missing custom scopes param for OAuth2 session create API route
+- Fixed wrong JSON validation when creating and updating database documnets
+
+## Security
+
+- Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
+- Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
+- Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 
 # Version 0.6.2 (PRE-RELEASE)
 

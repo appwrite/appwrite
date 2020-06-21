@@ -38,7 +38,7 @@ $callbacks = [
                 'orderCast' => 'string',
             ]);
 
-            $sum = count($all);
+            $sum = \count($all);
             
             Console::log('Migrating: '.$offset.' / '.$projectDB->getSum());
             
@@ -97,17 +97,17 @@ function fixDocument(Document $document) {
 
     if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_PROJECTS){
         foreach($providers as $key => $provider) {
-            if(!empty($document->getAttribute('usersOauth'.ucfirst($key).'Appid'))) {
+            if(!empty($document->getAttribute('usersOauth'.\ucfirst($key).'Appid'))) {
                 $document
-                    ->setAttribute('usersOauth2'.ucfirst($key).'Appid', $document->getAttribute('usersOauth'.ucfirst($key).'Appid', ''))
-                    ->removeAttribute('usersOauth'.ucfirst($key).'Appid')
+                    ->setAttribute('usersOauth2'.\ucfirst($key).'Appid', $document->getAttribute('usersOauth'.\ucfirst($key).'Appid', ''))
+                    ->removeAttribute('usersOauth'.\ucfirst($key).'Appid')
                 ;
             }
 
-            if(!empty($document->getAttribute('usersOauth'.ucfirst($key).'Secret'))) {
+            if(!empty($document->getAttribute('usersOauth'.\ucfirst($key).'Secret'))) {
                 $document
-                    ->setAttribute('usersOauth2'.ucfirst($key).'Secret', $document->getAttribute('usersOauth'.ucfirst($key).'Secret', ''))
-                    ->removeAttribute('usersOauth'.ucfirst($key).'Secret')
+                    ->setAttribute('usersOauth2'.\ucfirst($key).'Secret', $document->getAttribute('usersOauth'.\ucfirst($key).'Secret', ''))
+                    ->removeAttribute('usersOauth'.\ucfirst($key).'Secret')
                 ;
             }
         }
@@ -115,17 +115,17 @@ function fixDocument(Document $document) {
 
     if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_USERS) {
         foreach($providers as $key => $provider) {
-            if(!empty($document->getAttribute('oauth'.ucfirst($key)))) {
+            if(!empty($document->getAttribute('oauth'.\ucfirst($key)))) {
                 $document
-                    ->setAttribute('oauth2'.ucfirst($key), $document->getAttribute('oauth'.ucfirst($key), ''))
-                    ->removeAttribute('oauth'.ucfirst($key))
+                    ->setAttribute('oauth2'.\ucfirst($key), $document->getAttribute('oauth'.\ucfirst($key), ''))
+                    ->removeAttribute('oauth'.\ucfirst($key))
                 ;
             }
 
-            if(!empty($document->getAttribute('oauth'.ucfirst($key).'AccessToken'))) {
+            if(!empty($document->getAttribute('oauth'.\ucfirst($key).'AccessToken'))) {
                 $document
-                    ->setAttribute('oauth2'.ucfirst($key).'AccessToken', $document->getAttribute('oauth'.ucfirst($key).'AccessToken', ''))
-                    ->removeAttribute('oauth'.ucfirst($key).'AccessToken')
+                    ->setAttribute('oauth2'.\ucfirst($key).'AccessToken', $document->getAttribute('oauth'.\ucfirst($key).'AccessToken', ''))
+                    ->removeAttribute('oauth'.\ucfirst($key).'AccessToken')
                 ;
             }
         }
@@ -141,7 +141,7 @@ function fixDocument(Document $document) {
     if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_PLATFORMS) {
         if($document->getAttribute('url', null) !== null) {
             $document
-                ->setAttribute('hostname', parse_url($document->getAttribute('url', $document->getAttribute('hostname', '')), PHP_URL_HOST))
+                ->setAttribute('hostname', \parse_url($document->getAttribute('url', $document->getAttribute('hostname', '')), PHP_URL_HOST))
                 ->removeAttribute('url')
             ;
         }
@@ -159,7 +159,7 @@ function fixDocument(Document $document) {
             $attr = fixDocument($attr);
         }
 
-        if(is_array($attr)) {
+        if(\is_array($attr)) {
             foreach($attr as &$child) {
                 if($child instanceof Document) {
                     $child = fixDocument($child);
@@ -207,7 +207,7 @@ $cli
                 ],
             ]);
 
-            $sum = count($projects);
+            $sum = \count($projects);
             $offset = $offset + $limit;
 
             Console::log('Fetched '.$sum.' projects...');

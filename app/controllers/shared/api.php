@@ -10,6 +10,10 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
 
     $route = $utopia->match($request);
 
+    if(empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
+        throw new Exception('Missing or unknown project ID', 400);
+    }
+
     /*
      * Abuse Check
      */
@@ -27,12 +31,13 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
     //TODO make sure we get array here
 
     foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-        $timeLimit->setParam('{param-'.$key.'}', (is_array($value)) ? json_encode($value) : $value);
+        $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
     }
 
     $abuse = new Abuse($timeLimit);
 
     if ($timeLimit->limit()) {
+        
         $response
             ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
             ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())

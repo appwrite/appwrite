@@ -75,14 +75,14 @@ class Authorization extends Validator
         $permission = null;
 
         foreach ($permissions[$this->action] as $permission) {
-            $permission = str_replace(':{self}', ':'.$this->document->getId(), $permission);
+            $permission = \str_replace(':{self}', ':'.$this->document->getId(), $permission);
 
-            if (in_array($permission, self::getRoles())) {
+            if (\in_array($permission, self::getRoles())) {
                 return true;
             }
         }
 
-        $this->message = 'User is missing '.$this->action.' for "'.$permission.'" permission. Only this scopes "'.json_encode(self::getRoles()).'" is given and only this are allowed "'.json_encode($permissions[$this->action]).'".';
+        $this->message = 'User is missing '.$this->action.' for "'.$permission.'" permission. Only this scopes "'.\json_encode(self::getRoles()).'" is given and only this are allowed "'.\json_encode($permissions[$this->action]).'".';
 
         return false;
     }

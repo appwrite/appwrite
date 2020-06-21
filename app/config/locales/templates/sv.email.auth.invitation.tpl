@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hej,
-    <br />
-    <br />
+</p>
+<p>
     <b>{{owner}}</b> vill bjuda in dig att bli del av <b>{{team}}</b>-teamet inom {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Följ denna länk för att bli del av <b>{{team}}</b>-teamet:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Om du inte är intresserad så kan du ignorera detta meddelande.
-    <br />
-    <br />
+</p>
+<p>
     Tack,
     <br />
     {{project}}-teamet
-</div>
+</p>

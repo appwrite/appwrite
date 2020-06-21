@@ -41,7 +41,7 @@ $collections = [
                 '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
                 'name' => 'Current Host',
                 'type' => 'web',
-                'hostname' => parse_url('https://'.$request->getServer('HTTP_HOST'), PHP_URL_HOST),
+                'hostname' => \parse_url('https://'.$request->getServer('HTTP_HOST'), PHP_URL_HOST),
             ],
         ],
         'legalName' => '',
@@ -50,9 +50,9 @@ $collections = [
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
-        'authWhitelistEmails' => (!empty($request->getServer('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty($request->getServer('_APP_CONSOLE_WHITELIST_IPS', null))) ? explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'authWhitelistDomains' => (!empty($request->getServer('_APP_CONSOLE_WHITELIST_DOMAINS', null))) ? explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_DOMAINS', null)) : [],
+        'authWhitelistEmails' => (!empty($request->getServer('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (!empty($request->getServer('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'authWhitelistDomains' => (!empty($request->getServer('_APP_CONSOLE_WHITELIST_DOMAINS', null))) ? \explode(',', $request->getServer('_APP_CONSOLE_WHITELIST_DOMAINS', null)) : [],
     ],
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
@@ -1199,8 +1199,8 @@ foreach ($providers as $index => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($index).' ID',
-        'key' => 'usersOauth2'.ucfirst($index).'Appid',
+        'label' => 'OAuth2 '.\ucfirst($index).' ID',
+        'key' => 'usersOauth2'.\ucfirst($index).'Appid',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1209,8 +1209,8 @@ foreach ($providers as $index => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_PROJECTS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($index).' Secret',
-        'key' => 'usersOauth2'.ucfirst($index).'Secret',
+        'label' => 'OAuth2 '.\ucfirst($index).' Secret',
+        'key' => 'usersOauth2'.\ucfirst($index).'Secret',
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1219,8 +1219,8 @@ foreach ($providers as $index => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($index).' ID',
-        'key' => 'oauth2'.ucfirst($index),
+        'label' => 'OAuth2 '.\ucfirst($index).' ID',
+        'key' => 'oauth2'.\ucfirst($index),
         'type' => 'text',
         'default' => '',
         'required' => false,
@@ -1229,8 +1229,8 @@ foreach ($providers as $index => $provider) {
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
         '$collection' => Database::SYSTEM_COLLECTION_RULES,
-        'label' => 'OAuth2 '.ucfirst($index).' Access Token',
-        'key' => 'oauth2'.ucfirst($index).'AccessToken',
+        'label' => 'OAuth2 '.\ucfirst($index).' Access Token',
+        'key' => 'oauth2'.\ucfirst($index).'AccessToken',
         'type' => 'text',
         'default' => '',
         'required' => false,

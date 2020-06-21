@@ -36,11 +36,11 @@ class Microsoft extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.http_build_query([
+        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
-            'state'=> json_encode($this->state),
-            'scope'=> implode(' ', $this->getScopes()),
+            'state'=> \json_encode($this->state),
+            'scope'=> \implode(' ', $this->getScopes()),
             'response_type' => 'code',
             'response_mode' => 'query'
         ]);
@@ -59,17 +59,17 @@ class Microsoft extends OAuth2
             'POST',
             'https://login.microsoftonline.com/common/oauth2/v2.0/token',
             $headers,
-            http_build_query([
+            \http_build_query([
                 'code' => $code,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'redirect_uri' => $this->callback,
-                'scope' => implode(' ', $this->getScopes()),
+                'scope' => \implode(' ', $this->getScopes()),
                 'grant_type' => 'authorization_code'
             ])
         );
 
-        $accessToken = json_decode($accessToken, true);
+        $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -134,9 +134,9 @@ class Microsoft extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers[] = 'Authorization: Bearer '. urlencode($accessToken);
+            $headers[] = 'Authorization: Bearer '. \urlencode($accessToken);
             $user = $this->request('GET', 'https://graph.microsoft.com/v1.0/me', $headers);
-            $this->user = json_decode($user, true);
+            $this->user = \json_decode($user, true);
         }
 
         return $this->user;

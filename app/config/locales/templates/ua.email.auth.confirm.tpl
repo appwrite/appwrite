@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Вітаємо {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Перейдіть за цим посиланням, та підтвердіть свою електронну адресу
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Якщо ви не запитували підтвердження цієї адреси, проігноруйте це повідомлення.
-    <br />
-    <br />
+</p>
+<p>
     Дякуємо,
     <br />
     команда {{project}}
-</div>
+</p>

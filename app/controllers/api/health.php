@@ -3,7 +3,7 @@
 global $utopia, $request, $response, $register, $project;
 
 use Utopia\Exception;
-use Appwrite\Storage\Devices\Local;
+use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
 
@@ -17,6 +17,15 @@ $utopia->get('/v1/health')
     ->action(
         function () use ($response) {
             $response->json(['status' => 'OK']);
+        }
+    );
+
+$utopia->get('/v1/health/version')
+    ->desc('Get Version')
+    ->label('scope', 'public')
+    ->action(
+        function () use ($response) {
+            $response->json(['version' => APP_VERSION_STABLE]);
         }
     );
 
@@ -66,34 +75,34 @@ $utopia->get('/v1/health/time')
             $gap = 60; // Allow [X] seconds gap
 
             /* Create a socket and connect to NTP server */
-            $sock = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+            $sock = \socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
 
-            socket_connect($sock, $host, 123);
+            \socket_connect($sock, $host, 123);
 
             /* Send request */
-            $msg = "\010".str_repeat("\0", 47);
+            $msg = "\010".\str_repeat("\0", 47);
 
-            socket_send($sock, $msg, strlen($msg), 0);
+            \socket_send($sock, $msg, \strlen($msg), 0);
 
             /* Receive response and close socket */
-            socket_recv($sock, $recv, 48, MSG_WAITALL);
-            socket_close($sock);
+            \socket_recv($sock, $recv, 48, MSG_WAITALL);
+            \socket_close($sock);
 
             /* Interpret response */
-            $data = unpack('N12', $recv);
-            $timestamp = sprintf('%u', $data[9]);
+            $data = \unpack('N12', $recv);
+            $timestamp = \sprintf('%u', $data[9]);
 
             /* NTP is number of seconds since 0000 UT on 1 January 1900
                Unix time is seconds since 0000 UT on 1 January 1970 */
             $timestamp -= 2208988800;
 
-            $diff = ($timestamp - time());
+            $diff = ($timestamp - \time());
 
             if ($diff > $gap || $diff < ($gap * -1)) {
                 throw new Exception('Server time gaps detected');
             }
 
-            $response->json(['remote' => $timestamp, 'local' => time(), 'diff' => $diff]);
+            $response->json(['remote' => $timestamp, 'local' => \time(), 'diff' => $diff]);
         }
     );
 
@@ -124,7 +133,7 @@ $utopia->get('/v1/health/queue/tasks')
     );
 
 $utopia->get('/v1/health/queue/logs')
-->desc('Get Logs Queue')
+    ->desc('Get Logs Queue')
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -184,26 +193,22 @@ $utopia->get('/v1/health/storage/local')
     ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->action(
         function () use ($response) {
-            $device = new Local(APP_STORAGE_UPLOADS.'/');
 
-            if (!is_readable($device->getRoot().'/..')) {
-                throw new Exception('Device is not readable');
-            }
-            
-            if (!is_writable($device->getRoot().'/../uploads')) {
-                throw new Exception('Device uploads dir is not writable');
-            }
-            
-            if (!is_writable($device->getRoot().'/../cache')) {
-                throw new Exception('Device cache dir is not writable');
-            }
+            foreach ([
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES
+            ] as $key => $volume) {
+                $device = new Local($volume);
 
-            if (!is_writable($device->getRoot().'/../config')) {
-                throw new Exception('Device config dir is not writable');
-            }
+                if (!\is_readable($device->getRoot())) {
+                    throw new Exception('Device '.$key.' dir is not readable');
+                }
 
-            if (!is_writable($device->getRoot().'/../certificates')) {
-                throw new Exception('Device certificates dir is not writable');
+                if (!\is_writable($device->getRoot())) {
+                    throw new Exception('Device '.$key.' dir is not writable');
+                }
             }
 
             $response->json(['status' => 'OK']);
@@ -250,7 +255,7 @@ $utopia->get('/v1/health/stats') // Currently only used internally
                 ->json([
                     'server' => [
                         'name' => 'nginx',
-                        'version' => shell_exec('nginx -v 2>&1'),
+                        'version' => \shell_exec('nginx -v 2>&1'),
                     ],
                     'storage' => [
                         'used' => Storage::human($device->getDirectorySize($device->getRoot().'/')),
