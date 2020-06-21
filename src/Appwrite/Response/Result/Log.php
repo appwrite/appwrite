@@ -5,7 +5,7 @@ namespace Appwrite\Response\Result;
 use Appwrite\Database\Database;
 use Appwrite\Response\Result;
 
-class Logs extends Result
+class Log extends Result
 {
     public function __construct()
     {
