@@ -3,6 +3,7 @@
 global $utopia, $request, $response;
 
 use Utopia\Exception;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
@@ -11,7 +12,6 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\Resize\Resize;
 use Appwrite\URL\URL as URLParse;
-use Appwrite\Utopia\Validator\Boolean;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;

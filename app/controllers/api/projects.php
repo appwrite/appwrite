@@ -5,10 +5,10 @@ global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -19,7 +19,6 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Network\Validator\CNAME;
-use Appwrite\Utopia\Validator\Boolean;
 use Cron\CronExpression;
 
 include_once __DIR__ . '/../shared/api.php';
