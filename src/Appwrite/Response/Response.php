@@ -4,7 +4,7 @@ namespace Appwrite\Response;
 
 use Exception;
 use Appwrite\Database\Document;
-use Appwrite\Response\Results\User;
+use Appwrite\Response\Result\User;
 use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse

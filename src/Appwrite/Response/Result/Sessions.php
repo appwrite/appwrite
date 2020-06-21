@@ -1,11 +1,11 @@
 <?php
 
-namespace Appwrite\Response\Results;
+namespace Appwrite\Response\Result;
 
 use Appwrite\Database\Database;
 use Appwrite\Response\Result;
 
-class Session extends Result
+class Sessions extends Result
 {
     public function __construct()
     {

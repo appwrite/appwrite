@@ -94,7 +94,7 @@ RUN \
   add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
-  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
+  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom php$PHP_VERSION-yaml webp certbot && \
   # Nginx
   wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
   tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \

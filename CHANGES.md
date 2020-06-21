@@ -2,14 +2,6 @@
 
 ## Features
 
-<<<<<<< HEAD
-- New route in Locale API to fetch a list of languages
-- New and consistent response format for all API object + new response examples in the docs
-  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
-  - Removed type attribute from session object response (used only internally)
-  - ** - might be changed before merging to master
-  
-=======
 - New route in Locale API to fetch a list of languages (@TorstenDittmann)
 - Added Google Fonts to Appwrite for offline availability
 - Added a new route in the Avatars API to get user initials avatar
@@ -26,7 +18,10 @@
 - Upgraded Redis Resque queue library to version 1.3.6
 - Added container names to docker-compose.yml (@drandell)
 - Upgraded ClamAV container image to version 1.0.9
->>>>>>> 0abfa5e5fc2ff2d43a43426fbdaf90b62315c8e9
+- - New and consistent response format for all API object + new response examples in the docs
+  - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
+  - Removed type attribute from session object response (used only internally)
+  - ** - might be changed before merging to master
 
 ## Bug Fixes
 

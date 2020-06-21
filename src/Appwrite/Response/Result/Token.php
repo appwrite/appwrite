@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Response\Results;
+namespace Appwrite\Response\Result;
 
 use Appwrite\Database\Database;
 use Appwrite\Response\Result;
