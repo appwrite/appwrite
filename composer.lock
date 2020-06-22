@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9deec50e5a99197511b5efbcaa9593bd",
+    "content-hash": "b2678886d7c1aa5f4edfdd1ad1558f14",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1546,16 +1546,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
+                "reference": "98e85296867a59c9d712d6ed768a5c5b2b297b43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/98e85296867a59c9d712d6ed768a5c5b2b297b43",
+                "reference": "98e85296867a59c9d712d6ed768a5c5b2b297b43",
                 "shasum": ""
             },
             "require": {
@@ -1592,7 +1592,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-02-23T07:40:02+00:00"
+            "time": "2020-06-20T11:47:04+00:00"
         },
         {
             "name": "utopia-php/framework",
@@ -1730,6 +1730,62 @@
                 "utopia"
             ],
             "time": "2020-06-20T11:46:06+00:00"
+        },
+        {
+            "name": "webonyx/graphql-php",
+            "version": "v14.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webonyx/graphql-php.git",
+                "reference": "45d84562433613c6ee41e2421c95409d2b2664d6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/45d84562433613c6ee41e2421c95409d2b2664d6",
+                "reference": "45d84562433613c6ee41e2421c95409d2b2664d6",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": "^7.1||^8.0"
+            },
+            "require-dev": {
+                "amphp/amp": "^2.3",
+                "doctrine/coding-standard": "^6.0",
+                "nyholm/psr7": "^1.2",
+                "phpbench/phpbench": "^0.14",
+                "phpstan/extension-installer": "^1.0",
+                "phpstan/phpstan": "0.12.18",
+                "phpstan/phpstan-phpunit": "0.12.6",
+                "phpstan/phpstan-strict-rules": "0.12.2",
+                "phpunit/phpunit": "^7.2|^8.5",
+                "psr/http-message": "^1.0",
+                "react/promise": "2.*",
+                "simpod/php-coveralls-mirror": "^3.0",
+                "squizlabs/php_codesniffer": "3.5.4"
+            },
+            "suggest": {
+                "psr/http-message": "To use standard GraphQL server",
+                "react/promise": "To leverage async resolving on React PHP platform"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GraphQL\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A PHP port of GraphQL reference implementation",
+            "homepage": "https://github.com/webonyx/graphql-php",
+            "keywords": [
+                "api",
+                "graphql"
+            ],
+            "time": "2020-06-21T12:53:32+00:00"
         }
     ],
     "packages-dev": [

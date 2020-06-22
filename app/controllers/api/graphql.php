@@ -1,6 +1,14 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-global $utopia;
+use GraphQL\GraphQL;
+use GraphQL\Type\Schema;
+use GraphQL\Type\Definition\ObjectType;
+use GraphQL\Type\Definition\Type;
+
+global $utopia, $request, $response;
 
 /**
  * TODO:
@@ -10,13 +18,108 @@ global $utopia;
  *  4. Handle errors if any
  *  5. Returen JSON response
  *  6. Write tests!
+ * 
+ * Demo
+ *  curl -H "Content-Type: application/json" http://localhost/v1/graphql -d '{"query": "query { echo(message: \"Hello World\") }" }'
+ *  
+ * Explorers:
+ *  - https://shopify.dev/tools/graphiql-admin-api
+ *  - https://developer.github.com/v4/explorer/
+ *  - http://localhost:4000
+ * 
+ * Docs
+ *  - Overview
+ *  - Query
+ *  - Mutation
+ *  - Objects
  */
 
 $utopia->post('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->label('scope', 'public')
     ->action(
-        function () {
-            throw new Exception('GraphQL support is coming soon!', 502);
+        function () use ($request, $response) {
+            $userType = new ObjectType([
+                'name' => 'User',
+                'fields' => [
+                    'name' => [
+                        'type' => Type::string(),
+                    ],
+                ],
+            ]);
+
+            $queryType = new ObjectType([
+                'name' => 'Query',
+                'fields' => [
+                    'echo' => [
+                        'type' => Type::string(),
+                        'args' => [
+                            'message' => ['type' => Type::string()],
+                        ],
+                        'resolve' => function ($rootValue, $args) {
+                            return $rootValue['prefix'] . $args['message'];
+                        }
+                    ],
+                    'users' => [
+                        'type' => Type::listOf($userType),
+                        //'type' => $userType,
+                        'args' => [
+                            'message' => ['type' => Type::string()],
+                        ],
+                        'resolve' => function ($rootValue, $args) {
+                            return ['name' => 'Eldad Fux'];
+                            return [
+                                ['name' => 'Eldad Fux'],
+                                ['name' => 'Sharon Kapon'],
+                            ];
+                        }
+                    ],
+                ],
+            ]);
+
+            $mutationType = new ObjectType([
+                'name' => 'Mutation',
+                'fields' => [
+                    'sum' => [
+                        'type' => Type::int(),
+                        'args' => [
+                            'x' => ['type' => Type::int()],
+                            'y' => ['type' => Type::int()],
+                        ],
+                        'resolve' => function ($calc, $args) {
+                            return $args['x'] + $args['y'];
+                        },
+                    ],
+                ],
+            ]);
+
+            $schema = new Schema([
+                'query' => $queryType,
+                'mutation' => $mutationType,
+            ]);
+
+            $query = $request->getPayload('query', '');
+            $variables = $request->getPayload('variables', null);
+
+            try {
+                $rootValue = [];
+                $result = GraphQL::executeQuery($schema, $query, $rootValue, null, $variables);
+                $output = $result->toArray();
+            } catch (\Exception $error) {
+                $output = [
+                    'errors' => [
+                        [
+                            'message' => $error->getMessage().'xxx',
+                            'code' => $error->getCode(),
+                            'file' => $error->getFile(),
+                            'line' => $error->getLine(),
+                            'trace' => $error->getTrace(),
+                        ]
+                    ]
+                ];
+            }
+            
+            $response->json($output);
+            echo "\n"; //TODO REMOVE THIS
         }
     );
