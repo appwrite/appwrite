@@ -197,6 +197,14 @@ services:
     - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
     - GH_ORGS=appwrite
 
+  graphiql:
+    container_name: graphiql
+    ports:
+        - '4000:4000'
+    environment:
+        - API_URL=http://192.168.1.102/v1/graphql
+    image: npalm/graphiql
+
 networks:
   gateway:
   appwrite:
