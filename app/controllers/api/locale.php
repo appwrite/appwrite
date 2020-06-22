@@ -2,6 +2,7 @@
 
 global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit;
 
+use Appwrite\Database\Document;
 use Utopia\App;
 use Utopia\Locale\Locale;
 use GeoIp2\Database\Reader;
@@ -30,6 +31,7 @@ $utopia->get('/v1/locale')
                 $ip = '79.177.241.94';
             }
 
+            $output['$collection'] = 'locale';
             $output['ip'] = $ip;
 
             $currency = null;
@@ -43,7 +45,7 @@ $utopia->get('/v1/locale')
                 $output['continentCode'] = $record->continent->code;
                 $output['eu'] = (\in_array($record->country->isoCode, $eu)) ? true : false;
 
-                foreach ($currencies as $code => $element) {
+                foreach ($currencies as $element) {
                     if (isset($element['locations']) && isset($element['code']) && \in_array($record->country->isoCode, $element['locations'])) {
                         $currency = $element['code'];
                     }
@@ -62,7 +64,9 @@ $utopia->get('/v1/locale')
             $response
                 ->addHeader('Cache-Control', 'public, max-age='.$time)
                 ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
-                ->json($output);
+            ;
+
+            $response->dynamic(new Document($output));
         }
     );
 

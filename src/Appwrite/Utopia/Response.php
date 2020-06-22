@@ -6,6 +6,7 @@ use Exception;
 use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Result;
 use Appwrite\Utopia\Response\Result\User;
+use Appwrite\Utopia\Response\Result\Locale;
 use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse
@@ -15,6 +16,7 @@ class Response extends UtopiaResponse
     {
         $this
             ->setResult(new User())
+            ->setResult(new Locale())
         ;
     }
 
