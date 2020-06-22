@@ -21,6 +21,18 @@ class User extends Result
                 'default' => '',
                 'example' => 'John Doe',
             ])
+            ->addRule('registration', [
+                'type' => 'integer',
+                'description' => 'User registration date in unix timestamp.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('status', [
+                'type' => 'integer',
+                'description' => 'User status. 0 for Unavtivated, 1 for active and 2 is blocked.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('email', [
                 'type' => 'string',
                 'description' => 'User email address.',
