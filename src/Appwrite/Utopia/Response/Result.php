@@ -33,13 +33,15 @@ abstract class Result
     /**
      * Add a New Rule
      */
-    protected function addRule(string $key, string $type, string $description, string $example): self
+    protected function addRule(string $key, array $options): self
     {
-        $this->rules[$key] = [
-            'type' => $type,
-            'description' => $description,
-            'example' => $example,
-        ];
+        $this->rules[$key] = array_merge([
+            'type' => '',
+            'description' => '',
+            'default' => null,
+            'example' => '',
+            'array' => false,
+        ], $options);
 
         return $this;
     }

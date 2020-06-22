@@ -10,11 +10,42 @@ class User extends Result
     public function __construct()
     {
         $this
-            ->addRule('$id', 'string', 'User ID.', '5e5ea5c16897e')
-            ->addRule('name', 'string', 'User name.', 'John Doe')
-            ->addRule('email', 'string', 'User email address.', 'john@appwrite.io')
-            ->addRule('emailVerification', 'string', 'Email verification status.', true)
-            ->addRule('registration', 'integer', 'User registration date in UNIX format.', 1583261121)
+            ->addRule('$id', [
+                'type' => 'string',
+                'description' => 'User ID.',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('name', [
+                'type' => 'string',
+                'description' => 'User name.',
+                'default' => '',
+                'example' => 'John Doe',
+            ])
+            ->addRule('email', [
+                'type' => 'string',
+                'description' => 'User email address.',
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('emailVerification', [
+                'type' => 'boolean',
+                'description' => 'Email verification status.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('prefs', [
+                'type' => 'json',
+                'description' => 'User preferences as a key-value object',
+                'default' => new \stdClass,
+                'example' => ['theme' => 'dark', 'timezone' => 'UTC'],
+            ])
+            ->addRule('roles', [
+                'type' => 'string',
+                'description' => 'User list of roles',
+                'default' => [],
+                'example' => [],
+                'array' => true,
+            ])
         ;
     }
 
