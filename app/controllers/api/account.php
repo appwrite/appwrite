@@ -709,15 +709,7 @@ $utopia->patch('/v1/account/name')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user);
         }
     );
 
@@ -751,15 +743,7 @@ $utopia->patch('/v1/account/password')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user);
         }
     );
 
@@ -809,15 +793,7 @@ $utopia->patch('/v1/account/email')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user);
         }
     );
 
