@@ -67,7 +67,12 @@ class Response extends UtopiaResponse
 
         foreach($result->getRules() as $key => $rule) {
             if(!isset($data[$key])) {
-                throw new Exception('Missing response key: ' . $key);
+                if(!is_null($rule['default'])) {
+                    $data[$key] = $rule['default'];
+                }
+                else {
+                    throw new Exception('Missing response key: ' . $key);
+                }
             }
 
             $output[$key] = $data[$key];
