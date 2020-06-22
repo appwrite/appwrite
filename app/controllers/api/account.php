@@ -25,6 +25,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Utopia\Response as UtopiaResponse;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
@@ -133,8 +134,8 @@ $utopia->post('/v1/account')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->json($user->getArrayCopy());
-            //$response->dynamic($user);
+            $response->setStatusCode(UtopiaResponse::STATUS_CODE_CREATED);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
         }
     );
 
@@ -528,7 +529,7 @@ $utopia->get('/v1/account')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
         function () use ($response, &$user, $oauth2Keys) {
-            $response->dynamic($user);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
         }
     );
 
@@ -709,7 +710,7 @@ $utopia->patch('/v1/account/name')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->dynamic($user);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
         }
     );
 
@@ -743,7 +744,7 @@ $utopia->patch('/v1/account/password')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->dynamic($user);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
         }
     );
 
@@ -793,7 +794,7 @@ $utopia->patch('/v1/account/email')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->dynamic($user);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));$response->dynamic($user);
         }
     );
 

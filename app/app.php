@@ -180,8 +180,6 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         }
     }, $user->getAttribute('memberships', []));
 
-    $user->setAttribute('roles', Authorization::getRoles());
-
     // TDOO Check if user is god
 
     if (!\in_array($scope, $scopes)) {
