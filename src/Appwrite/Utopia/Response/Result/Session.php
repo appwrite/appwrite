@@ -1,11 +1,11 @@
 <?php
 
-namespace Appwrite\Response\Result;
+namespace Appwrite\Utopia\Response\Result;
 
 use Appwrite\Database\Database;
-use Appwrite\Response\Result;
+use Appwrite\Utopia\Response\Result;
 
-class Log extends Result
+class Session extends Result
 {
     public function __construct()
     {

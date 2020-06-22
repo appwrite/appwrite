@@ -1,9 +1,9 @@
 <?php
 
-namespace Appwrite\Response\Result;
+namespace Appwrite\Utopia\Response\Result;
 
 use Appwrite\Database\Database;
-use Appwrite\Response\Result;
+use Appwrite\Utopia\Response\Result;
 
 class Prefs extends Result
 {

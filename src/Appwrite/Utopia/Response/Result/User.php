@@ -1,9 +1,9 @@
 <?php
 
-namespace Appwrite\Response\Result;
+namespace Appwrite\Utopia\Response\Result;
 
 use Appwrite\Database\Database;
-use Appwrite\Response\Result;
+use Appwrite\Utopia\Response\Result;
 
 class User extends Result
 {
@@ -35,6 +35,6 @@ class User extends Result
      */
     public function getCollection():string
     {
-        return Database::SYSTEM_COLLECTION_TOKENS;
+        return Database::SYSTEM_COLLECTION_USERS;
     }
 }

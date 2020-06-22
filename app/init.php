@@ -22,7 +22,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Response\Response;
+use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';

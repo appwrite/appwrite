@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Response;
+namespace Appwrite\Utopia\Response;
 
 abstract class Result
 {

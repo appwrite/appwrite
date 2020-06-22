@@ -133,7 +133,8 @@ $utopia->post('/v1/account')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->dynamic($user);
+            $response->json($user->getArrayCopy());
+            //$response->dynamic($user);
         }
     );
 

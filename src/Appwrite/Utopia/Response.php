@@ -1,10 +1,11 @@
 <?php
 
-namespace Appwrite\Response;
+namespace Appwrite\Utopia;
 
 use Exception;
 use Appwrite\Database\Document;
-use Appwrite\Response\Result\User;
+use Appwrite\Utopia\Response\Result;
+use Appwrite\Utopia\Response\Result\User;
 use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse
@@ -13,7 +14,7 @@ class Response extends UtopiaResponse
     public function __construct()
     {
         $this
-            ->setResult(new User)
+            ->setResult(new User())
         ;
     }
 
@@ -47,7 +48,7 @@ class Response extends UtopiaResponse
     public function getResult(string $key): Result
     {
         if(!isset($this->results[$key])) {
-            throw new Exception('Undefined result');
+            throw new Exception('Undefined result: '.$key);
         }
 
         return $this->results[$key];
@@ -66,7 +67,7 @@ class Response extends UtopiaResponse
 
         foreach($result->getRules() as $key => $rule) {
             if(!isset($data[$key])) {
-                throw new Exception('Missing result key');
+                throw new Exception('Missing response key: ' . $key);
             }
 
             $output[$key] = $data[$key];
