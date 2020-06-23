@@ -13,10 +13,34 @@ use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse
 {
+    // General
+    const MODEL_LOG = 'log';
     const MODEL_ERROR = 'error';
     const MODEL_ERROR_DEV = 'errorDev';
+    
+    // Users
     const MODEL_USER = 'user';
+    const MODEL_SESSION = 'session';
+    const MODEL_TOKEN = 'token';
+
+    // Database
+    const MODEL_COLLECTION = 'collection';
+    
+    // Locale
     const MODEL_LOCALE = 'locale';
+    const MODEL_COUNTRY = 'country';
+    const MODEL_CONTINENT = 'continent';
+    const MODEL_CURRENCY = 'currency';
+    const MODEL_LANGUAGE = 'langauge';
+    const MODEL_PHONE = 'phone';
+
+    // Storage
+    const MODEL_FILE = 'file';
+    const MODEL_BUCKET = 'bucket';
+
+    // Teams
+    const MODEL_TEAM = 'team';
+    const MODEL_MEMBERSHIP = 'membership';
 
     public function __construct()
     {
