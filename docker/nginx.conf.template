@@ -9,6 +9,8 @@ events {
 	# multi_accept on;
 }
 
+# File limit: %_APP_STORAGE_LIMIT%
+
 http {
 	# Basic Settings
 	sendfile on;
@@ -16,7 +18,7 @@ http {
 	tcp_nodelay on;
 	keepalive_timeout 65;
 	types_hash_max_size 2048;
-	client_max_body_size 10M;
+	client_max_body_size %_APP_STORAGE_LIMIT%;
 
 	# server_names_hash_bucket_size 64;
 	# server_name_in_redirect off;

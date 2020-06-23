@@ -31,14 +31,12 @@ RUN \
   git clone https://github.com/eustas/ngx_brotli.git && \
   cd ngx_brotli && git submodule update --init && cd ..
 
+
 WORKDIR /usr/local/src/
 
 # Updating PHP Dependencies and Auto-loading...
-
 ENV TESTING=$TESTING
-
 COPY composer.* /usr/local/src/
-
 RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
@@ -130,13 +128,12 @@ RUN \
 # Set Upload Limit (default to 100MB)
 RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 
 # Add logs file
 RUN echo "" >> /var/log/appwrite.log
 
 # Nginx Configuration (with self-signed ssl certificates)
-COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY ./docker/ssl/cert.pem /etc/nginx/ssl/cert.pem
 COPY ./docker/ssl/key.pem /etc/nginx/ssl/key.pem
 
