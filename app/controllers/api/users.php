@@ -80,7 +80,7 @@ $utopia->post('/v1/users')
             }
 
             $response->setStatusCode(Response::STATUS_CODE_CREATED);
-            $response->dynamic($user);
+            $response->dynamic($user, Response::MODEL_USER);
         }
     );
     

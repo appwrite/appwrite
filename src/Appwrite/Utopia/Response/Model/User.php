@@ -1,11 +1,11 @@
 <?php
 
-namespace Appwrite\Utopia\Response\Result;
+namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Database\Database;
-use Appwrite\Utopia\Response\Result;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 
-class User extends Result
+class User extends Model
 {
     public function __construct()
     {
@@ -76,8 +76,8 @@ class User extends Result
      * 
      * @return string
      */
-    public function getCollection():string
+    public function getType():string
     {
-        return Database::SYSTEM_COLLECTION_USERS;
+        return Response::MODEL_USER;
     }
 }

@@ -1,10 +1,11 @@
 <?php
 
-namespace Appwrite\Utopia\Response\Result;
+namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Utopia\Response\Result;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model;
 
-class Locale extends Result
+class Locale extends Model
 {
     public function __construct()
     {
@@ -56,7 +57,7 @@ class Locale extends Result
      */
     public function getName():string
     {
-        return 'User';
+        return 'Locale';
     }
 
     /**
@@ -64,8 +65,8 @@ class Locale extends Result
      * 
      * @return string
      */
-    public function getCollection():string
+    public function getType():string
     {
-        return 'locale';
+        return Response::MODEL_LOCALE;
     }
 }

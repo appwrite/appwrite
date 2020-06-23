@@ -3,6 +3,7 @@
 global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit;
 
 use Appwrite\Database\Document;
+use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Locale\Locale;
 use GeoIp2\Database\Reader;
@@ -31,7 +32,6 @@ $utopia->get('/v1/locale')
                 $ip = '79.177.241.94';
             }
 
-            $output['$collection'] = 'locale';
             $output['ip'] = $ip;
 
             $currency = null;
@@ -66,7 +66,7 @@ $utopia->get('/v1/locale')
                 ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
             ;
 
-            $response->dynamic(new Document($output));
+            $response->dynamic(new Document($output), Response::MODEL_LOCALE);
         }
     );
 

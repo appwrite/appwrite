@@ -4,19 +4,27 @@ namespace Appwrite\Utopia;
 
 use Exception;
 use Appwrite\Database\Document;
-use Appwrite\Utopia\Response\Result;
-use Appwrite\Utopia\Response\Result\User;
-use Appwrite\Utopia\Response\Result\Locale;
+use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Error;
+use Appwrite\Utopia\Response\Model\ErrorDev;
+use Appwrite\Utopia\Response\Model\User;
+use Appwrite\Utopia\Response\Model\Locale;
 use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse
 {
+    const MODEL_ERROR = 'error';
+    const MODEL_ERROR_DEV = 'errorDev';
+    const MODEL_USER = 'user';
+    const MODEL_LOCALE = 'locale';
 
     public function __construct()
     {
         $this
-            ->setResult(new User())
-            ->setResult(new Locale())
+            ->setModel(new Error())
+            ->setModel(new ErrorDev())
+            ->setModel(new User())
+            ->setModel(new Locale())
         ;
     }
 
@@ -28,71 +36,63 @@ class Response extends UtopiaResponse
     /**
      * List of defined output objects
      */
-    protected $results = [];
+    protected $models = [];
 
     /**
-     * Set Result Object
+     * Set Model Object
      * 
      * @return self
      */
-    public function setResult(Result $result): self
+    public function setModel(Model $instance): self
     {
-        $this->results[$result->getCollection()] = $result;
+        $this->models[$instance->getType()] = $instance;
 
         return $this;
     }
 
     /**
-     * Get Result Object
+     * Get Model Object
      * 
-     * @return Result
+     * @return Model
      */
-    public function getResult(string $key): Result
+    public function getModel(string $key): Model
     {
-        if(!isset($this->results[$key])) {
-            throw new Exception('Undefined result: '.$key);
+        if(!isset($this->models[$key])) {
+            throw new Exception('Undefined model: '.$key);
         }
 
-        return $this->results[$key];
+        return $this->models[$key];
     }
 
     /**
      * Validate response objects and outputs
      *  the response according to given format type
      */
-    public function dynamic(Document $document, $type = self::CONTENT_TYPE_JSON)
+    public function dynamic(Document $document, string $model)
     {
-        $collection = $document->getCollection();
         $data       = $document->getArrayCopy();
-        $result     = $this->getResult($collection);
+        $model      = $this->getModel($model);
         $output     = [];
 
-        foreach($result->getRules() as $key => $rule) {
+        foreach($model->getRules() as $key => $rule) {
             if(!isset($data[$key])) {
                 if(!is_null($rule['default'])) {
                     $data[$key] = $rule['default'];
                 }
                 else {
-                    throw new Exception('Missing response key: ' . $key);
+                    throw new Exception('Missing response key: '.$key);
                 }
             }
 
+            if($rule['array'] && !is_array($data[$key])) {
+                throw new Exception($key.' must be an array of '.$rule['type'].' types');
+            }
+            
             $output[$key] = $data[$key];
         }
 
-        switch ($type) {
-            case self::CONTENT_TYPE_JSON:
-                return $this->json($output);
-                break;
-            
-            case self::CONTENT_TYPE_YAML:
-                return $this->yaml($output);
-                break;
-            
-            default:
-                throw new Exception('Unknown content type');
-                break;
-        }
+        return $this->json($output);
+        //return $this->yaml($output);
     }
 
     /**

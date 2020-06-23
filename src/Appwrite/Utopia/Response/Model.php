@@ -2,7 +2,7 @@
 
 namespace Appwrite\Utopia\Response;
 
-abstract class Result
+abstract class Model
 {
     protected $rules = [];
 
@@ -18,7 +18,7 @@ abstract class Result
      * 
      * @return string
      */
-    abstract public function getCollection():string;
+    abstract public function getType():string;
 
     /**
      * Get Rules

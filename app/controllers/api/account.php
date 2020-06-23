@@ -4,7 +4,6 @@ global $utopia, $register, $request, $response, $user, $audit,
     $webhook, $mail, $project, $projectDB, $clients;
 
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
@@ -25,7 +24,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
-use Appwrite\Utopia\Response as UtopiaResponse;
+use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
@@ -134,8 +133,8 @@ $utopia->post('/v1/account')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->setStatusCode(UtopiaResponse::STATUS_CODE_CREATED);
-            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
+            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -529,7 +528,7 @@ $utopia->get('/v1/account')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
         function () use ($response, &$user, $oauth2Keys) {
-            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -710,7 +709,7 @@ $utopia->patch('/v1/account/name')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -744,7 +743,7 @@ $utopia->patch('/v1/account/password')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -794,7 +793,7 @@ $utopia->patch('/v1/account/email')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()));$response->dynamic($user);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
