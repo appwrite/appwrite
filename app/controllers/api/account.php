@@ -225,7 +225,7 @@ $utopia->post('/v1/account/sessions')
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
             ;
 
-            $response->json($session->getArrayCopy());
+            $response->dynamic($session, Response::MODEL_SESSION);
         }
     );
 

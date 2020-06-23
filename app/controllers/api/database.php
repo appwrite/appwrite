@@ -115,25 +115,6 @@ $utopia->get('/v1/database/collections')
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
         function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            /*$vl = new Structure($projectDB);
-
-            var_dump($vl->isValid(new Document([
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['*'],
-                ],
-                'label' => 'Platforms',
-                'key' => 'platforms',
-                'type' => 'document',
-                'default' => [],
-                'required' => false,
-                'array' => true,
-                'options' => [Database::SYSTEM_COLLECTION_PLATFORMS],
-            ])));
-
-            var_dump($vl->getDescription());*/
-
             $results = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
