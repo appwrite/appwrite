@@ -4,6 +4,8 @@ export PHP_VERSION=$PHP_VERSION
 
 chown -Rf www-data.www-data /usr/share/nginx/html/
 
+sed 's/%_APP_STORAGE_LIMIT%/'$_APP_STORAGE_LIMIT'/g' /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+
 # Function to update the fpm configuration to make the service environment variables available
 function setEnvironmentVariable() {
     if [ -z "$2" ]; then
