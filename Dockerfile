@@ -94,7 +94,7 @@ RUN \
   add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
-  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
+  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom php$PHP_VERSION-yaml webp certbot && \
   # Nginx
   wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
   tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \
@@ -130,13 +130,12 @@ RUN \
 # Set Upload Limit (default to 100MB)
 RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 
 # Add logs file
 RUN echo "" >> /var/log/appwrite.log
 
 # Nginx Configuration (with self-signed ssl certificates)
-COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY ./docker/ssl/cert.pem /etc/nginx/ssl/cert.pem
 COPY ./docker/ssl/key.pem /etc/nginx/ssl/key.pem
 

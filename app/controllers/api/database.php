@@ -115,25 +115,6 @@ $utopia->get('/v1/database/collections')
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(
         function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            /*$vl = new Structure($projectDB);
-
-            var_dump($vl->isValid(new Document([
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['*'],
-                ],
-                'label' => 'Platforms',
-                'key' => 'platforms',
-                'type' => 'document',
-                'default' => [],
-                'required' => false,
-                'array' => true,
-                'options' => [Database::SYSTEM_COLLECTION_PLATFORMS],
-            ])));
-
-            var_dump($vl->getDescription());*/
-
             $results = $projectDB->getCollection([
                 'limit' => $limit,
                 'offset' => $offset,
@@ -357,7 +338,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
-    ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
+    ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. **append** or **prepend** should be set when the parent property is array. Use when you want your new document to be a child of a parent document.', true)
     ->action(
         function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
             $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array

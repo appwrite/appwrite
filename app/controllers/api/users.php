@@ -3,7 +3,6 @@
 global $utopia, $response, $projectDB;
 
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Email;
@@ -18,6 +17,7 @@ use Appwrite\Auth\Validator\Password;
 use Appwrite\Database\Database;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
+use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
@@ -79,16 +79,8 @@ $utopia->post('/v1/users')
                 $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
             }
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json(\array_merge($user->getArrayCopy(\array_merge([
-                    '$id',
-                    'status',
-                    'email',
-                    'registration',
-                    'emailVerification',
-                    'name',
-                ], $oauth2Keys)), ['roles' => []]));
+            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            $response->dynamic($user, Response::MODEL_USER);
         }
     );
     
