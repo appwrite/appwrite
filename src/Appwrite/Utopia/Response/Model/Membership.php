@@ -20,7 +20,7 @@ class Membership extends Model
                 'description' => 'User ID.',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('userId', [
+            ->addRule('teamId', [
                 'type' => 'string',
                 'description' => 'Team ID.',
                 'example' => '5e5ea5c16897e',
