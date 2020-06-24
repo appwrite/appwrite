@@ -213,7 +213,6 @@ $utopia->get('/console/database/collection')
             ->addHeader('Expires', 0)
             ->addHeader('Pragma', 'no-cache')
         ;
-
     });
 
 $utopia->get('/console/database/document')

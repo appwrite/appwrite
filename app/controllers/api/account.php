@@ -45,7 +45,6 @@ $utopia->init(function() use (&$oauth2Keys) {
         $oauth2Keys[] = 'oauth2'.\ucfirst($key);
         $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
     }
-
 });
 
 $utopia->post('/v1/account')
@@ -223,7 +222,7 @@ $utopia->post('/v1/account/sessions')
                 ->setParam('resource', 'users/'.$profile->getId())
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
                 ;
@@ -500,13 +499,13 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setParam('data', ['provider' => $provider])
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
             }
 
-            if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
+            if ($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
                 $state['success'] = URLParser::parse($state['success']);
                 $query = URLParser::parseQuery($state['success']['query']);
                 $query['project'] = $project->getId();
@@ -920,7 +919,7 @@ $utopia->delete('/v1/account')
                 ])
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([]))
                 ;
@@ -972,7 +971,7 @@ $utopia->delete('/v1/account/sessions/:sessionId')
                         ])
                     ;
 
-                    if(!Config::getParam('domainVerification')) {
+                    if (!Config::getParam('domainVerification')) {
                         $response
                             ->addHeader('X-Fallback-Cookies', \json_encode([]))
                         ;
@@ -1025,7 +1024,7 @@ $utopia->delete('/v1/account/sessions')
                     ])
                 ;
 
-                if(!Config::getParam('domainVerification')) {
+                if (!Config::getParam('domainVerification')) {
                     $response
                         ->addHeader('X-Fallback-Cookies', \json_encode([]))
                     ;

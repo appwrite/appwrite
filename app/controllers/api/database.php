@@ -425,7 +425,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
                 $key = (isset($rule['key'])) ? $rule['key'] : '';
                 $default = (isset($rule['default'])) ? $rule['default'] : null;
 
-                if(!isset($data[$key])) {
+                if (!isset($data[$key])) {
                     $data[$key] = $default;
                 }
             }

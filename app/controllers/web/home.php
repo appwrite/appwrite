@@ -183,11 +183,11 @@ $utopia->get('/open-api-2.json')
             }
 
             foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
-                if($tests && !isset($service['tests'])) {
+                if ($tests && !isset($service['tests'])) {
                     continue;
                 }
 
-                if($tests && !$service['tests']) {
+                if ($tests && !$service['tests']) {
                     continue;
                 }
                 
@@ -347,19 +347,19 @@ $utopia->get('/open-api-2.json')
             ];
 
             if ($extensions) {
-                if(isset($output['securityDefinitions']['Project'])) {
+                if (isset($output['securityDefinitions']['Project'])) {
                     $output['securityDefinitions']['Project']['extensions'] = ['demo' => '5df5acd0d48c2'];
                 }
                 
-                if(isset($output['securityDefinitions']['Key'])) {
+                if (isset($output['securityDefinitions']['Key'])) {
                     $output['securityDefinitions']['Key']['extensions'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
                 }
                 
-                if(isset($output['securityDefinitions']['Locale'])) {
+                if (isset($output['securityDefinitions']['Locale'])) {
                     $output['securityDefinitions']['Locale']['extensions'] = ['demo' => 'en'];
                 }
 
-                if(isset($output['securityDefinitions']['Mode'])) {
+                if (isset($output['securityDefinitions']['Mode'])) {
                     $output['securityDefinitions']['Mode']['extensions'] = ['demo' => ''];
                 }
             }
@@ -374,7 +374,7 @@ $utopia->get('/open-api-2.json')
                         continue;
                     }
 
-                    if($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
                         continue;
                     }
 

@@ -100,7 +100,8 @@ $utopia->get('/v1/avatars/credit-cards/:code')
     ->label('sdk.method', 'getCreditCard')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('credit-cards', $code, $width, $height, $quality);
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
+        return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/browsers/:code')
@@ -115,7 +116,8 @@ $utopia->get('/v1/avatars/browsers/:code')
     ->label('sdk.method', 'getBrowser')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-browser.md')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('browsers', $code, $width, $height, $quality);
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
+        return $avatarCallback('browsers', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/flags/:code')
@@ -130,7 +132,8 @@ $utopia->get('/v1/avatars/flags/:code')
     ->label('sdk.method', 'getFlag')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-flag.md')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('flags', $code, $width, $height, $quality);
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
+        return $avatarCallback('flags', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/image')
@@ -424,7 +427,7 @@ $utopia->get('/v1/avatars/initials')
                 $initials .= (isset($w[0])) ? $w[0] : '';
                 $code += (isset($w[0])) ? \ord($w[0]) : 0;
 
-                if($key == 1) {
+                if ($key == 1) {
                     break;
                 }
             }

@@ -193,7 +193,6 @@ $utopia->get('/v1/health/storage/local')
     ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->action(
         function () use ($response) {
-
             foreach ([
                 'Uploads' => APP_STORAGE_UPLOADS,
                 'Cache' => APP_STORAGE_CACHE,
@@ -224,7 +223,7 @@ $utopia->get('/v1/health/anti-virus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->action(
         function () use ($request, $response) {
-            if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+            if ($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
                 throw new Exception('Anitvirus is disabled');
             }
 

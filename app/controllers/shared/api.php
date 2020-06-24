@@ -7,10 +7,9 @@ use Utopia\Abuse\Adapters\TimeLimit;
 global $utopia, $request, $response, $register, $user, $project;
 
 $utopia->init(function () use ($utopia, $request, $response, $register, $user, $project) {
-
     $route = $utopia->match($request);
 
-    if(empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
+    if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
         throw new Exception('Missing or unknown project ID', 400);
     }
 
@@ -37,7 +36,6 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
     $abuse = new Abuse($timeLimit);
 
     if ($timeLimit->limit()) {
-        
         $response
             ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
             ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())

@@ -198,7 +198,7 @@ $utopia->post('/v1/storage/files')
 
             $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
-            if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+            if ($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
                 $antiVirus = new Network('clamav', 3310);
     
                 // Check if file size is exceeding allowed limit
@@ -216,7 +216,7 @@ $utopia->post('/v1/storage/files')
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-            if(!$device->write($path, $data)) {
+            if (!$device->write($path, $data)) {
                 throw new Exception('Failed to save file', 500);
             }
 
@@ -370,7 +370,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             $cipher = $file->getAttribute('fileOpenSSLCipher');
             $mime = $file->getAttribute('mimeType');
 
-            if(!\in_array($mime, $inputs)) {
+            if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
                 $algorithm = null;
                 $cipher = null;

@@ -415,7 +415,7 @@ $utopia->delete('/v1/projects/:projectId')
 
             $deletes->setParam('document', $project->getArrayCopy());
 
-            foreach(['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
+            foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
                 $list = $project->getAttribute('webhooks', []);
 
                 foreach ($list as $document) { /* @var $document Document */
@@ -1250,7 +1250,7 @@ $utopia->post('/v1/projects/:projectId/domains')
 
             $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
-            if(!$target->isKnown() || $target->isTest()) {
+            if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
             }
 
@@ -1357,18 +1357,18 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
 
             $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
-            if(!$target->isKnown() || $target->isTest()) {
+            if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
             }
 
-            if($domain->getAttribute('verification') === true) {
+            if ($domain->getAttribute('verification') === true) {
                 return $response->json($domain->getArrayCopy());
             }
 
             // Verify Domain with DNS records
             $validator = new CNAME($target->get());
 
-            if(!$validator->isValid($domain->getAttribute('domain', ''))) {
+            if (!$validator->isValid($domain->getAttribute('domain', ''))) {
                 throw new Exception('Failed to verify domain', 401);
             }
 

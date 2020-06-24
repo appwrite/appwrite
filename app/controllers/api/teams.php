@@ -306,12 +306,11 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'secret' => Auth::hash($secret),
             ]);
 
-            if(APP_MODE_ADMIN === $mode) { // Allow admin to create membership
+            if (APP_MODE_ADMIN === $mode) { // Allow admin to create membership
                 Authorization::disable();
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
                 Authorization::reset();
-            }
-            else {
+            } else {
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
             }
 
@@ -344,7 +343,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{text-cta}}', '#ffffff')
             ;
 
-            if(APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
+            if (APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
                 $mail
                     ->setParam('event', 'teams.membership.create')
                     ->setParam('recipient', $email)
@@ -433,7 +432,6 @@ $utopia->get('/v1/teams/:teamId/memberships')
             }
 
             $response->json(['sum' => $projectDB->getSum(), 'memberships' => $users]);
-
         }
     );
 
@@ -544,7 +542,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ->setParam('resource', 'teams/'.$teamId)
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;

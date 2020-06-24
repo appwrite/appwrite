@@ -22,7 +22,6 @@ $utopia->get('/v1/mock/tests/foo')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -37,7 +36,6 @@ $utopia->post('/v1/mock/tests/foo')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -52,7 +50,6 @@ $utopia->patch('/v1/mock/tests/foo')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -67,7 +64,6 @@ $utopia->put('/v1/mock/tests/foo')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -82,7 +78,6 @@ $utopia->delete('/v1/mock/tests/foo')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -97,7 +92,6 @@ $utopia->get('/v1/mock/tests/bar')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -112,7 +106,6 @@ $utopia->post('/v1/mock/tests/bar')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -127,7 +120,6 @@ $utopia->patch('/v1/mock/tests/bar')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -142,7 +134,6 @@ $utopia->put('/v1/mock/tests/bar')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -157,7 +148,6 @@ $utopia->delete('/v1/mock/tests/bar')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->action(
         function ($x, $y, $z) {
-
         }
     );
 
@@ -180,19 +170,19 @@ $utopia->post('/v1/mock/tests/general/upload')
             $file['size'] = (\is_array($file['size'])) ? $file['size'] : [$file['size']];
 
             foreach ($file['name'] as $i => $name) {
-                if($name !== 'file.png') {
+                if ($name !== 'file.png') {
                     throw new Exception('Wrong file name', 400);
                 }
             }
 
             foreach ($file['size'] as $i => $size) {
-                if($size !== 38756) {
+                if ($size !== 38756) {
                     throw new Exception('Wrong file size', 400);
                 }
             }
 
             foreach ($file['tmp_name'] as $i => $tmpName) {
-                if(\md5(\file_get_contents($tmpName)) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
+                if (\md5(\file_get_contents($tmpName)) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
                     throw new Exception('Wrong file uploaded', 400);
                 }
             }
@@ -242,7 +232,7 @@ $utopia->get('/v1/mock/tests/general/get-cookie')
     ->label('sdk.description', 'Mock a get cookie request for SDK tests')
     ->action(
         function () use ($request) {
-            if($request->getCookie('cookieName', '') !== 'cookieValue') {
+            if ($request->getCookie('cookieName', '') !== 'cookieValue') {
                 throw new Exception('Missing cookie value', 400);
             }
         }
@@ -285,15 +275,15 @@ $utopia->get('/v1/mock/tests/general/oauth2/token')
     ->param('code', '', function () { return new Text(100); }, 'OAuth2 state.')
     ->action(
         function ($clientId, $redirectURI, $clientSecret, $code) use ($response) {
-            if($clientId != '1') {
+            if ($clientId != '1') {
                 throw new Exception('Invalid client ID');
             }
 
-            if($clientSecret != '123456') {
+            if ($clientSecret != '123456') {
                 throw new Exception('Invalid client secret');
             }
 
-            if($code != 'abcdef') {
+            if ($code != 'abcdef') {
                 throw new Exception('Invalid token');
             }
 
@@ -308,7 +298,7 @@ $utopia->get('/v1/mock/tests/general/oauth2/user')
     ->param('token', '', function () { return new Text(100); }, 'OAuth2 Access Token.')
     ->action(
         function ($token) use ($response) {
-            if($token != '123456') {
+            if ($token != '123456') {
                 throw new Exception('Invalid token');
             }
 
@@ -345,12 +335,11 @@ $utopia->get('/v1/mock/tests/general/oauth2/failure')
     );
 
 $utopia->shutdown(function() use ($response, $request, &$result, $utopia) {
-    
     $route  = $utopia->match($request);
     $path   = APP_STORAGE_CACHE.'/tests.json';
     $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
     
-    if(!\is_array($tests)) {
+    if (!\is_array($tests)) {
         throw new Exception('Failed to read results', 500);
     }
 
@@ -358,7 +347,7 @@ $utopia->shutdown(function() use ($response, $request, &$result, $utopia) {
 
     $tests = \array_merge($tests, $result);
 
-    if(!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
+    if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
         throw new Exception('Failed to save resutls', 500);
     }
 
