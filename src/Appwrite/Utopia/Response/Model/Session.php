@@ -9,6 +9,13 @@ class Session extends Model
 {
     public function __construct()
     {
+        $this->addRule('roles', [
+            'type' => 'string',
+            'description' => 'User list of roles',
+            'default' => [],
+            'example' => [],
+            'array' => true,
+        ]);
     }
 
     /**
@@ -28,6 +35,6 @@ class Session extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_LOCALE;
+        return Response::MODEL_SESSION;
     }
 }
