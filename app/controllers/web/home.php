@@ -303,27 +303,27 @@ $utopia->get('/open-api-2.json')
                 'securityDefinitions' => $keys[$platform],
                 'paths' => [],
                 'definitions' => [
-                    // 'Pet' => [
-                    //     'required' => ['id', 'name'],
-                    //     'properties' => [
-                    //         'id' => [
-                    //             'type' => 'integer',
-                    //             'format' => 'int64',
-                    //         ],
-                    //         'name' => [
-                    //             'type' => 'string',
-                    //         ],
-                    //         'tag' => [
-                    //             'type' => 'string',
-                    //         ],
-                    //     ],
-                    // ],
-                    // 'Pets' => array(
-                    //         'type' => 'array',
-                    //         'items' => array(
-                    //                 '$ref' => '#/definitions/Pet',
-                    //             ),
-                    //     ),
+                    'Pet' => [
+                        'required' => ['id', 'name'],
+                        'properties' => [
+                            'id' => [
+                                'type' => 'integer',
+                                'format' => 'int64',
+                            ],
+                            'name' => [
+                                'type' => 'string',
+                            ],
+                            'tag' => [
+                                'type' => 'string',
+                            ],
+                        ],
+                    ],
+                    'Pets' => array(
+                            'type' => 'array',
+                            'items' => array(
+                                    '$ref' => '#/definitions/Pet',
+                                ),
+                        ),
                     'Error' => array(
                             'required' => array(
                                     0 => 'code',
@@ -396,14 +396,14 @@ $utopia->get('/open-api-2.json')
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
                         
-                        // 'responses' => [
-                        //     200 => [
-                        //         'description' => 'An paged array of pets',
-                        //         'schema' => [
-                        //             '$ref' => '#/definitions/Pet',
-                        //         ],
-                        //     ],
-                        // ],
+                        'responses' => [
+                            200 => [
+                                'description' => 'An paged array of pets',
+                                'schema' => [
+                                    '$ref' => '#/definitions/Pet',
+                                ],
+                            ],
+                        ],
                     ];
 
                     if ($extensions) {
@@ -545,10 +545,6 @@ $utopia->get('/open-api-2.json')
                     $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
                 }
             }
-
-            /*foreach ($consoleDB->getMocks() as $mock) {
-                var_dump($mock['name']);
-            }*/
 
             \ksort($output['paths']);
 

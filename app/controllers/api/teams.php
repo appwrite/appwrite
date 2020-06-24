@@ -3,7 +3,6 @@
 global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mail, $mode, $clients;
 
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Validator\Email;
 use Utopia\Validator\Text;
@@ -19,6 +18,7 @@ use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Response;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -78,10 +78,8 @@ $utopia->post('/v1/teams')
                 }
             }
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($team->getArrayCopy())
-            ;
+            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            $response->dynamic($team, Response::MODEL_TEAM);
         }
     );
 
@@ -130,7 +128,7 @@ $utopia->get('/v1/teams/:teamId')
                 throw new Exception('Team not found', 404);
             }
 
-            $response->json($team->getArrayCopy([]));
+            $response->dynamic($team, Response::MODEL_TEAM);
         }
     );
 
@@ -159,7 +157,7 @@ $utopia->put('/v1/teams/:teamId')
                 throw new Exception('Failed saving team to DB', 500);
             }
 
-            $response->json($team->getArrayCopy());
+            $response->dynamic($team, Response::MODEL_TEAM);
         }
     );
 
