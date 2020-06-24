@@ -44,7 +44,7 @@ abstract class OAuth2
         $this->appSecret = $appSecret;
         $this->callback = $callback;
         $this->state = $state;
-        foreach($scopes as $scope) {
+        foreach ($scopes as $scope) {
             $this->addScope($scope);
         }
     }
@@ -95,15 +95,15 @@ abstract class OAuth2
     protected function addScope(string $scope):OAuth2
     {
         // Add a scope to the scopes array if it isn't already present 
-        if (!\in_array($scope, $this->scopes)){
-            $this->scopes[] = $scope; 
+        if (!\in_array($scope, $this->scopes)) {
+            $this->scopes[] = $scope;
         }
         return $this;
     }
 
-     /**
-      * @return array
-      */
+    /**
+     * @return array
+     */
     protected function getScopes():array
     {
         return $this->scopes;

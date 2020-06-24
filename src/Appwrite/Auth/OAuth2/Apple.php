@@ -166,7 +166,9 @@ class Apple extends OAuth2
 
         $success = \openssl_sign($payload, $signature, $pkey, OPENSSL_ALGO_SHA256);
 
-        if (!$success) return '';
+        if (!$success) {
+            return '';
+        }
 
         return $payload.'.'.$this->encode($this->fromDER($signature, 64));
     }
@@ -205,8 +207,7 @@ class Apple extends OAuth2
 
         if ('81' === \mb_substr($hex, 2, 2, '8bit')) { // LENGTH > 128
             $hex = \mb_substr($hex, 6, null, '8bit');
-        }
-        else {
+        } else {
             $hex = \mb_substr($hex, 4, null, '8bit');
         }
         if ('02' !== \mb_substr($hex, 0, 2, '8bit')) { // INTEGER

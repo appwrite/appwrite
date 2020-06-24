@@ -56,7 +56,7 @@ class Origin extends Validator
      */
     public function __construct($platforms)
     {
-        foreach($platforms as $platform) {
+        foreach ($platforms as $platform) {
             $type = (isset($platform['type'])) ? $platform['type'] : '';
             
             switch ($type) {
@@ -81,7 +81,7 @@ class Origin extends Validator
 
     public function getDescription()
     {
-        if(!\array_key_exists($this->client, $this->platforms)) {
+        if (!\array_key_exists($this->client, $this->platforms)) {
             return 'Unsupported platform';
         }
 
@@ -105,11 +105,11 @@ class Origin extends Validator
         $this->host = $host;
         $this->client = $scheme;
 
-        if(empty($host)) {
+        if (empty($host)) {
             return true;
         }
 
-        if(\in_array($host, $this->clients)) {
+        if (\in_array($host, $this->clients)) {
             return true;
         }
 
