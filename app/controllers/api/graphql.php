@@ -29,8 +29,11 @@ global $utopia, $request, $response;
  * 
  * Docs
  *  - Overview
- *  - Query
- *  - Mutation
+ *  - Clients
+ * 
+ *  - Queries
+ *  - Mutations
+ * 
  *  - Objects
  */
 
