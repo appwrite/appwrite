@@ -8,6 +8,8 @@ use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\User;
+use Appwrite\Utopia\Response\Model\Team;
+use Appwrite\Utopia\Response\Model\TeamList;
 use Appwrite\Utopia\Response\Model\Locale;
 use Utopia\Response as UtopiaResponse;
 
@@ -17,6 +19,7 @@ class Response extends UtopiaResponse
     const MODEL_LOG = 'log';
     const MODEL_ERROR = 'error';
     const MODEL_ERROR_DEV = 'errorDev';
+    const MODEL_BASE_LIST = 'baseList';
     
     // Users
     const MODEL_USER = 'user';
@@ -40,7 +43,9 @@ class Response extends UtopiaResponse
 
     // Teams
     const MODEL_TEAM = 'team';
+    const MODEL_TEAM_LIST = 'teamList';
     const MODEL_MEMBERSHIP = 'membership';
+    const MODEL_MEMBERSHIP_LIST = 'membershipList';
 
     public function __construct()
     {
@@ -49,6 +54,8 @@ class Response extends UtopiaResponse
             ->setModel(new ErrorDev())
             ->setModel(new User())
             ->setModel(new Locale())
+            ->setModel(new Team())
+            ->setModel(new TeamList())
         ;
     }
 
@@ -116,7 +123,6 @@ class Response extends UtopiaResponse
         }
 
         return $this->json($output);
-        //return $this->yaml($output);
     }
 
     /**
