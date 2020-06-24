@@ -108,7 +108,10 @@ $utopia->get('/v1/teams')
                 ],
             ]);
 
-            $response->json(['sum' => $projectDB->getSum(), 'teams' => $results]);
+            $response->dynamic(new Document([
+                'sum' => $projectDB->getSum(),
+                'teams' => $results
+            ]), Response::MODEL_TEAM_LIST);
         }
     );
 

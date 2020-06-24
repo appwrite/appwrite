@@ -101,28 +101,44 @@ class Response extends UtopiaResponse
      */
     public function dynamic(Document $document, string $model)
     {
-        $data       = $document->getArrayCopy();
+        return $this->json($this->output($document, $model));
+    }
+
+    /**
+     * Generate valid response object from document data
+     */
+    protected function output(Document $document, string $model): array
+    {
+        $data       = $document;
         $model      = $this->getModel($model);
         $output     = [];
 
         foreach($model->getRules() as $key => $rule) {
-            if(!isset($data[$key])) {
+            if(!$document->isSet($key)) {
                 if(!is_null($rule['default'])) {
-                    $data[$key] = $rule['default'];
+                    $document->setAttribute($key, $rule['default']);
                 }
                 else {
                     throw new Exception('Missing response key: '.$key);
                 }
             }
 
-            if($rule['array'] && !is_array($data[$key])) {
-                throw new Exception($key.' must be an array of '.$rule['type'].' types');
+            if($rule['array']) {
+                if(!is_array($data[$key])) {
+                    throw new Exception($key.' must be an array of '.$rule['type'].' types');
+                }
+
+                foreach ($data[$key] as &$item) {
+                    if(array_key_exists($rule['type'], $this->models) && $item instanceof Document) {
+                        $item = $this->output($item, $rule['type']);
+                    }
+                }
             }
             
             $output[$key] = $data[$key];
         }
 
-        return $this->json($output);
+        return $output;
     }
 
     /**

@@ -11,9 +11,9 @@ abstract class BaseList extends Model
     {
         $this
             ->addRule('sum', [
-                'type' => 'intgere',
+                'type' => 'integer',
                 'description' => 'Total sum of items in the list.',
-                'example' => '5e5ea5c16897e',
+                'example' => '5',
             ])
         ;
     }

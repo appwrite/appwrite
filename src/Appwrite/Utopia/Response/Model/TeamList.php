@@ -8,6 +8,7 @@ class TeamList extends BaseList
 {
     public function __construct()
     {
+        parent::__construct();
         $this
             ->addRule('teams', [
                 'type' => Response::MODEL_TEAM,
