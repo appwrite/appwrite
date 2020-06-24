@@ -367,7 +367,7 @@ class Database
     /**
      * Get Last Modified.
      *
-     * Return unix timestamp of last time a node queried in current session has been changed
+     * Return Unix timestamp of last time a node queried in current session has been changed
      *
      * @return int
      */

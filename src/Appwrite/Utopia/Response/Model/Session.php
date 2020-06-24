@@ -17,7 +17,7 @@ class Session extends Model
             ])
             ->addRule('expire', [
                 'type' => 'string',
-                'description' => 'Session expiration date in unix timestamp.',
+                'description' => 'Session expiration date in Unix timestamp.',
                 'example' => 1592981250,
             ])
             ->addRule('ip', [

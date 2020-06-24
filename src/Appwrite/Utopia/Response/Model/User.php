@@ -23,7 +23,7 @@ class User extends Model
             ])
             ->addRule('registration', [
                 'type' => 'integer',
-                'description' => 'User registration date in unix timestamp.',
+                'description' => 'User registration date in Unix timestamp.',
                 'example' => 1592981250,
             ])
             ->addRule('status', [
