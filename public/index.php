@@ -16,7 +16,6 @@ ini_set('display_errors', 0);
 // error_reporting(E_ALL);
 
 $path = (isset($_GET['q'])) ? explode('/', $_GET['q']) : [];
-$domain = (isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : '';
 
 array_shift($path);
 $version = array_shift($path);
