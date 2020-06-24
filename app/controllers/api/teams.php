@@ -362,21 +362,12 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('resource', 'teams/'.$teamId)
             ;
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED) // TODO change response of this endpoint
-                ->json(\array_merge($membership->getArrayCopy([
-                    '$id',
-                    'userId',
-                    'teamId',
-                    'roles',
-                    'invited',
-                    'joined',
-                    'confirm',
-                ]), [
-                    'email' => $email,
-                    'name' => $name,
-                ]))
-            ;
+            $response->setStatusCode(Response::STATUS_CODE_CREATED); // TODO change response of this endpoint
+
+            $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
+                'email' => $email,
+                'name' => $name,
+            ])), Response::MODEL_MEMBERSHIP);
         }
     );
 
@@ -422,19 +413,10 @@ $utopia->get('/v1/teams/:teamId/memberships')
 
                 $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
 
-                $users[] = \array_merge($temp, $membership->getArrayCopy([
-                    '$id',
-                    'userId',
-                    'teamId',
-                    'roles',
-                    'invited',
-                    'joined',
-                    'confirm',
-                ]));
+                $users[] = new Document(\array_merge($temp, $membership->getArrayCopy()));
             }
 
-            $response->json(['sum' => $projectDB->getSum(), 'memberships' => $users]);
-
+            $response->dynamic(new Document(['sum' => $projectDB->getSum(), 'memberships' => $users]), Response::MODEL_MEMBERSHIP_LIST);
         }
     );
 
@@ -554,19 +536,12 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             $response
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
-                ->json(\array_merge($membership->getArrayCopy([
-                    '$id',
-                    'userId',
-                    'teamId',
-                    'roles',
-                    'invited',
-                    'joined',
-                    'confirm',
-                ]), [
-                    'email' => $user->getAttribute('email'),
-                    'name' => $user->getAttribute('name'),
-                ]))
             ;
+
+            $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
+                'email' => $user->getAttribute('email'),
+                'name' => $user->getAttribute('name'),
+            ])), Response::MODEL_MEMBERSHIP);
         }
     );
 
