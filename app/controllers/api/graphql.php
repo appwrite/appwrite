@@ -41,7 +41,16 @@ $utopia->post('/v1/graphql')
     ->desc('GraphQL Endpoint')
     ->label('scope', 'public')
     ->action(
-        function () use ($request, $response) {
+        function () use ($request, $response, $utopia) {
+
+            foreach ($utopia->getRoutes() as $method => $routes) {
+                var_dump($method);
+
+                foreach ($routes as $key => $route) {
+                    var_dump($key);
+                }
+            }
+
             $userType = new ObjectType([
                 'name' => 'User',
                 'fields' => [
