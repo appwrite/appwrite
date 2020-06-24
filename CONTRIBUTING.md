@@ -169,7 +169,6 @@ Improve PHP exeution time by using [fully-qualified function calls](https://veew
 
 ```bash
 php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
-php-cs-fixer fix src/ --rules=no_unused_imports --dry-run
 ```
 
 ## Tutorials
