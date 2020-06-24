@@ -24,14 +24,12 @@ class Team extends Model
             ->addRule('dateCreated', [
                 'type' => 'integer',
                 'description' => 'Team creation date in unix timestamp.',
-                'default' => false,
-                'example' => true,
+                'example' => 1592981250,
             ])
             ->addRule('sum', [ // TODO change key name?
                 'type' => 'integer',
                 'description' => 'Total sum of team members.',
-                'default' => false,
-                'example' => true,
+                'example' => 7,
             ])
         ;
     }

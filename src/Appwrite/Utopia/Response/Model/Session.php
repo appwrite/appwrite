@@ -9,13 +9,23 @@ class Session extends Model
 {
     public function __construct()
     {
-        $this->addRule('roles', [
-            'type' => 'string',
-            'description' => 'User list of roles',
-            'default' => [],
-            'example' => [],
-            'array' => true,
-        ]);
+        $this
+            ->addRule('$id', [
+                'type' => 'string',
+                'description' => 'Session ID.',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('expire', [
+                'type' => 'string',
+                'description' => 'Session expiration date in unix timestamp.',
+                'example' => 1592981250,
+            ])
+            ->addRule('ip', [
+                'type' => 'string',
+                'description' => 'IP session in use when the session was created.',
+                'example' => '127.0.0.1',
+            ])
+        ;
     }
 
     /**
