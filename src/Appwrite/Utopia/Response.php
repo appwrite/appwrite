@@ -8,6 +8,7 @@ use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\User;
+use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TeamList;
 use Appwrite\Utopia\Response\Model\Locale;
@@ -53,6 +54,7 @@ class Response extends UtopiaResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             ->setModel(new User())
+            ->setModel(new Session())
             ->setModel(new Locale())
             ->setModel(new Team())
             ->setModel(new TeamList())
