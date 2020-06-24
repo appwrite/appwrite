@@ -86,8 +86,6 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     echo $data;
 
     unset($resize);
-
-    exit(0);
 };
 
 $utopia->get('/v1/avatars/credit-cards/:code')
@@ -199,8 +197,6 @@ $utopia->get('/v1/avatars/image')
             echo $data;
 
             unset($resize);
-
-            exit(0);
         }
     );
 
@@ -353,8 +349,6 @@ $utopia->get('/v1/avatars/favicon')
             echo $data;
 
             unset($resize);
-
-            exit(0);
         }
     );
 
