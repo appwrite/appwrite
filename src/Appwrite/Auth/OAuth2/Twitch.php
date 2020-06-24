@@ -139,8 +139,11 @@ class Twitch extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET',
-                $this->resourceEndpoint, ['Authorization: Bearer '.\urlencode($accessToken)]), true)['data']['0'];
+            $this->user = \json_decode($this->request(
+                'GET',
+                $this->resourceEndpoint,
+                ['Authorization: Bearer '.\urlencode($accessToken)]
+            ), true)['data']['0'];
         }
 
         return $this->user;

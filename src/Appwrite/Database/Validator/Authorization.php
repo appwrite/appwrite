@@ -111,7 +111,7 @@ class Authorization extends Validator
     /**
      * Default value in case we need
      *  to reset Authorization status
-     * 
+     *
      * @var bool
      */
     public static $statusDefault = true;
@@ -119,7 +119,7 @@ class Authorization extends Validator
     /**
      * Change default status.
      * This will be used for the
-     *  value set on the self::reset() method 
+     *  value set on the self::reset() method
      */
     public static function setDefaultStatus($status)
     {

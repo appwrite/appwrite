@@ -92,7 +92,7 @@ class Origin extends Validator
     /**
      * Check if Origin has been whiltlisted
      *  for access to the API
-     * 
+     *
      * @param string $origin
      *
      * @return bool

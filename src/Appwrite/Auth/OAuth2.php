@@ -89,12 +89,12 @@ abstract class OAuth2
 
     /**
      * @param $scope
-     * 
+     *
      * @return $this
      */
     protected function addScope(string $scope):OAuth2
     {
-        // Add a scope to the scopes array if it isn't already present 
+        // Add a scope to the scopes array if it isn't already present
         if (!\in_array($scope, $this->scopes)) {
             $this->scopes[] = $scope;
         }

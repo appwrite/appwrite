@@ -19,7 +19,7 @@ class Apple extends OAuth2
      * @var array
      */
     protected $scopes = [
-        "name", 
+        "name",
         "email"
     ];
 

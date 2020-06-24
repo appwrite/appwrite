@@ -26,7 +26,7 @@ class CNAME extends Validator
 
     /**
      * Check if CNAME record target value matches selected target
-     * 
+     *
      * @param string $domain
      *
      * @return bool

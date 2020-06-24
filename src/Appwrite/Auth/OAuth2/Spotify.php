@@ -137,8 +137,11 @@ class Spotify extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET',
-                $this->resourceEndpoint . "me", ['Authorization: Bearer '.\urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request(
+                'GET',
+                $this->resourceEndpoint . "me",
+                ['Authorization: Bearer '.\urlencode($accessToken)]
+            ), true);
         }
 
         return $this->user;
