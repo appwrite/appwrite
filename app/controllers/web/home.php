@@ -9,21 +9,23 @@ use Utopia\Config\Config;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 
-$header = new View(__DIR__.'/../../views/home/comps/header.phtml');
-$footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
+$utopia->init(function () use ($layout) {
+    $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
+    $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
-$footer
-    ->setParam('version', Config::getParam('version'))
-;
+    $footer
+        ->setParam('version', Config::getParam('version'))
+    ;
 
-$layout
-    ->setParam('title', APP_NAME)
-    ->setParam('description', '')
-    ->setParam('class', 'home')
-    ->setParam('platforms', Config::getParam('platforms'))
-    ->setParam('header', [$header])
-    ->setParam('footer', [$footer])
-;
+    $layout
+        ->setParam('title', APP_NAME)
+        ->setParam('description', '')
+        ->setParam('class', 'home')
+        ->setParam('platforms', Config::getParam('platforms'))
+        ->setParam('header', [$header])
+        ->setParam('footer', [$footer])
+    ;
+});
 
 $utopia->shutdown(function () use ($response, $layout) {
     $response->send($layout->render());
