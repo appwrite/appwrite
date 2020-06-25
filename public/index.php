@@ -20,14 +20,4 @@ $path = (isset($_GET['q'])) ? explode('/', $_GET['q']) : [];
 array_shift($path);
 $version = array_shift($path);
 
-switch ($version) { // Switch between API version
-    case 'v1':
-        $service = $version . '/' . array_shift($path);
-        include __DIR__ . '/../app/app.php';
-    break;
-    case 'console':
-        default:
-        $service = $version . '/';
-        include __DIR__ . '/../app/app.php';
-        break;
-}
+include __DIR__ . '/../app/app.php';
