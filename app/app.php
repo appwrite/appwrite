@@ -3,7 +3,7 @@
 // Init
 require_once __DIR__.'/init.php';
 
-global $utopia, $request, $response, $register, $consoleDB, $project, $service;
+global $utopia, $request, $response, $register, $consoleDB, $project;
 
 use Utopia\App;
 use Utopia\Request;
@@ -34,9 +34,9 @@ $deletes = new Event('v1-deletes', 'DeletesV1');
  * Get All verified client URLs for both console and current projects
  * + Filter for duplicated entries
  */
-$clientsConsole = array_map(function ($node) {
+$clientsConsole = \array_map(function ($node) {
         return $node['hostname'];
-    }, array_filter($console->getAttribute('platforms', []), function ($node) {
+    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
             return true;
         }
@@ -44,9 +44,9 @@ $clientsConsole = array_map(function ($node) {
         return false;
     }));
 
-$clients = array_unique(array_merge($clientsConsole, array_map(function ($node) {
+$clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
         return $node['hostname'];
-    }, array_filter($project->getAttribute('platforms', []), function ($node) {
+    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
             return true;
         }
@@ -63,11 +63,11 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     }
 
     $referrer = $request->getServer('HTTP_REFERER', '');
-    $origin = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
-    $protocol = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_SCHEME);
-    $port = parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_PORT);
+    $origin = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
+    $protocol = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_PORT);
 
-    $refDomain = $protocol.'://'.((in_array($origin, $clients))
+    $refDomain = $protocol.'://'.((\in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
     $selfDomain = new Domain(Config::getParam('hostname'));
@@ -83,7 +83,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      * As recommended at:
      * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
      */
-    if ($request->getServer('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+    if ($utopia->getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if(Config::getParam('protocol') !== 'https') {
            return $response->redirect('https://' . Config::getParam('domain').$request->getServer('REQUEST_URI'));
         }
@@ -93,7 +93,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
 
     $response
         ->addHeader('Server', 'Appwrite')
-        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.urlencode($request->getServer('REQUEST_URI')))
+        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.\urlencode($request->getServer('REQUEST_URI')))
         //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
@@ -109,10 +109,10 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      *  Skip this check for non-web platforms which are not requiredto send an origin header
      */
     $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
-    $originValidator = new Origin(array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+    $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
     if(!$originValidator->isValid($origin)
-        && in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
+        && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
         && empty($request->getHeader('X-Appwrite-Key', ''))) {
             throw new Exception($originValidator->getDescription(), 403);
@@ -162,7 +162,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         ]);
 
         $role = Auth::USER_ROLE_APP;
-        $scopes = array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+        $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
         Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
@@ -170,7 +170,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     Authorization::setRole('user:'.$user->getId());
     Authorization::setRole('role:'.$role);
 
-    array_map(function ($node) {
+    \array_map(function ($node) {
         if (isset($node['teamId']) && isset($node['roles'])) {
             Authorization::setRole('team:'.$node['teamId']);
 
@@ -182,12 +182,12 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
 
     // TDOO Check if user is god
 
-    if (!in_array($scope, $scopes)) {
+    if (!\in_array($scope, $scopes)) {
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
         }
         
-        throw new Exception($user->getAttribute('email', 'User').' (role: '.strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
+        throw new Exception($user->getAttribute('email', 'User').' (role: '.\strtolower($roles[$role]['label']).') missing scope ('.$scope.')', 401);
     }
 
     if (Auth::USER_STATUS_BLOCKED == $user->getAttribute('status')) { // Account has not been activated
@@ -292,7 +292,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
 
     $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
-    $output = ((App::ENV_TYPE_DEVELOPMENT == $env)) ? [
+    $output = ((App::MODE_TYPE_DEVELOPMENT == $env)) ? [
         'message' => $error->getMessage(),
         'code' => $error->getCode(),
         'file' => $error->getFile(),
@@ -396,9 +396,9 @@ $utopia->get('/.well-known/acme-challenge')
     ->label('docs', false)
     ->action(
         function () use ($request, $response) {
-            $base = realpath(APP_STORAGE_CERTIFICATES);
-            $path = str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
-            $absolute = realpath($base.'/.well-known/acme-challenge/'.$path);
+            $base = \realpath(APP_STORAGE_CERTIFICATES);
+            $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
+            $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
             if(!$base) {
                 throw new Exception('Storage error', 500);
@@ -408,15 +408,15 @@ $utopia->get('/.well-known/acme-challenge')
                 throw new Exception('Unknown path', 404);
             }
 
-            if(!substr($absolute, 0, strlen($base)) === $base) {
+            if(!\substr($absolute, 0, \strlen($base)) === $base) {
                 throw new Exception('Invalid path', 401);
             }
 
-            if(!file_exists($absolute)) {
+            if(!\file_exists($absolute)) {
                 throw new Exception('Unknown path', 404);
             }
 
-            $content = @file_get_contents($absolute);
+            $content = @\file_get_contents($absolute);
 
             if(!$content) {
                 throw new Exception('Failed to get contents', 500);
@@ -426,14 +426,11 @@ $utopia->get('/.well-known/acme-challenge')
         }
     );
 
-$name = APP_NAME;
+include_once __DIR__ . '/controllers/shared/api.php';
+include_once __DIR__ . '/controllers/shared/web.php';
 
-if (array_key_exists($service, $services)) { /** @noinspection PhpIncludeInspection */
-    include_once $services[$service]['controller'];
-    $name = APP_NAME.' '.ucfirst($services[$service]['name']);
-} else {
-    /** @noinspection PhpIncludeInspection */
-    include_once $services['/']['controller'];
+foreach($services as $key => $service) {
+    include_once $services[$key]['controller'];
 }
 
 $utopia->run($request, $response);

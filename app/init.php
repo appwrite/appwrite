@@ -7,7 +7,7 @@
  * Set configuration, framework resources, app constants
  * 
  */
-if (file_exists(__DIR__.'/../vendor/autoload.php')) {
+if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
@@ -50,6 +50,9 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 $register = new Registry();
 $request = new Request();
 $response = new Response();
+$utopia = new App('Asia/Tel_Aviv');
+
+$utopia->setMode($utopia->getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
 /*
  * ENV vars
@@ -60,29 +63,27 @@ Config::load('platforms', __DIR__.'/../app/config/platforms.php');
 Config::load('locales', __DIR__.'/../app/config/locales.php');
 Config::load('collections', __DIR__.'/../app/config/collections.php');
 
-Config::setParam('env', $request->getServer('_APP_ENV', App::ENV_TYPE_PRODUCTION));
+Config::setParam('env', $utopia->getMode());
 Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
 Config::setParam('domainVerification', false);
 Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
 Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
-Config::setParam('port', (string) parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
-Config::setParam('hostname', parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
-
-$utopia = new App('Asia/Tel_Aviv', Config::getParam('env'));
+Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
+Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
 
 Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
     .':'.$request->getServer('_APP_REDIS_PORT', ''));
 
-define('COOKIE_DOMAIN', 
+\define('COOKIE_DOMAIN', 
     (
         $request->getServer('HTTP_HOST', null) === 'localhost' ||
         $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
-        (filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
+        (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
     )
         ? null
         : '.'.Config::getParam('hostname')
     );
-define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
+\define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
  * Registry
@@ -151,7 +152,7 @@ $register->set('smtp', function () use ($request) {
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
-    $from = urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
+    $from = \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
     $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
@@ -165,7 +166,7 @@ $register->set('smtp', function () use ($request) {
 /*
  * Localization
  */
-$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', null));
+$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
 
 Locale::$exceptions = false;
 
@@ -218,14 +219,14 @@ Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
 
 Locale::setDefault('en');
 
-if (in_array($locale, Config::getParam('locales'))) {
+if (\in_array($locale, Config::getParam('locales'))) {
     Locale::setDefault($locale);
 }
 
-stream_context_set_default([ // Set global user agent and http settings
+\stream_context_set_default([ // Set global user agent and http settings
     'http' => [
         'method' => 'GET',
-        'user_agent' => sprintf(APP_USERAGENT,
+        'user_agent' => \sprintf(APP_USERAGENT,
             Config::getParam('version'),
             $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
@@ -242,7 +243,7 @@ $consoleDB->setNamespace('app_console'); // Should be replaced with param if we 
 $consoleDB->setMocks(Config::getParam('collections', []));
 Authorization::disable();
 
-$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', null)));
+$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
 
 Authorization::enable();
 
@@ -266,8 +267,8 @@ $response->addHeader('X-Debug-Fallback', 'false');
 
 if(empty($session['id']) && empty($session['secret'])) {
     $response->addHeader('X-Debug-Fallback', 'true');
-    $fallback = $request->getHeader('X-Fallback-Cookies', null);
-    $fallback = json_decode($fallback, true);
+    $fallback = $request->getHeader('X-Fallback-Cookies', '');
+    $fallback = \json_decode($fallback, true);
     $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
 }
 
@@ -309,7 +310,7 @@ $register->get('smtp')
     ->setFrom(
         $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
         ($project->getId() === 'console')
-            ? urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
-            : sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
+            ? \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
+            : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
         )
     );

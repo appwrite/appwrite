@@ -29,7 +29,7 @@ class UID extends Validator
      */
     public function isValid($value)
     {
-        if (is_numeric($value)) {
+        if (\is_numeric($value)) {
             //return false;
         }
 

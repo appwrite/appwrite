@@ -29,20 +29,20 @@ $cli
     ->action(function () use ($warning, $version) {
         function getSSLPage($url)
         {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_HEADER, false);
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $result = curl_exec($ch);
-            curl_close($ch);
+            $ch = \curl_init();
+            \curl_setopt($ch, CURLOPT_HEADER, false);
+            \curl_setopt($ch, CURLOPT_URL, $url);
+            \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $result = \curl_exec($ch);
+            \curl_close($ch);
 
             return $result;
         }
 
         $platforms = Config::getParam('platforms');
-        $selected = strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
         $message = Console::confirm('Please enter your commit message:');
         $production = (Console::confirm('Type "Appwrite" to deploy for production') == 'Appwrite');
 
@@ -63,14 +63,14 @@ $cli
                 $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$language['family']);
                 $spec = getSSLPage('https://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
 
-                $result = realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
-                $target = realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
-                $readme = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
-                $readme = ($readme) ? file_get_contents($readme) : '';
-                $examples = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/EXAMPLES.md');
-                $examples = ($examples) ? file_get_contents($examples) : '';
-                $changelog = realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
-                $changelog = ($changelog) ? file_get_contents($changelog) : '# Change Log';
+                $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
+                $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
+                $readme = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/README.md');
+                $readme = ($readme) ? \file_get_contents($readme) : '';
+                $examples = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/EXAMPLES.md');
+                $examples = ($examples) ? \file_get_contents($examples) : '';
+                $changelog = \realpath(__DIR__ . '/../../docs/sdks/'.$language['key'].'/CHANGELOG.md');
+                $changelog = ($changelog) ? \file_get_contents($changelog) : '# Change Log';
                 $warning = ($language['beta']) ? '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**' : '';
                 $license = 'BSD-3-Clause';
                 $licenseContent = 'Copyright (c) 2019 Appwrite (https://appwrite.io) and individual contributors.
@@ -186,7 +186,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     $gitUrl = 'git@github.com:aw-tests/'.$language['gitRepoName'].'.git';
                 }
 
-                exec('rm -rf '.$target.' && \
+                \exec('rm -rf '.$target.' && \
                     mkdir -p '.$target.' && \
                     cd '.$target.' && \
                     git init && \
@@ -201,7 +201,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
          
-                exec('rm -rf '.$target);
+                \exec('rm -rf '.$target);
 
                 Console::success("Remove temp directory '{$target}' for {$language['name']} SDK");
             }

@@ -178,8 +178,28 @@ You can use WRK Docker image to benchmark the server performance. Benchmarking i
     -v, --version          Print version details    
 ``` 
 
-```
+```bash
 docker run --rm skandyla/wrk -t5 -c10 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
+```
+
+## Code Maintenance  
+
+We use some automation tools to help us keep a healthy code base.
+
+Improve PHP exeution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
+
+```bash
+php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
+```
+
+Coding Standards:
+
+```bash
+php-cs-fixer fix app/controllers --rules='{"braces": {"allow_single_line_closure": true}}'
+```
+
+```bash
+php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
 ```
 
 ## Tutorials

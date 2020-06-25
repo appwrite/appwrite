@@ -46,12 +46,12 @@ class Spotify extends OAuth2
     public function getLoginURL():string
     {
         return $this->endpoint . 'authorize?'.
-            http_build_query([
+            \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => implode(' ', $this->getScopes()),
+                'scope' => \implode(' ', $this->getScopes()),
                 'redirect_uri' => $this->callback,
-                'state' => json_encode($this->state)
+                'state' => \json_encode($this->state)
             ]);
     }
 
@@ -62,12 +62,12 @@ class Spotify extends OAuth2
      */
     public function getAccessToken(string $code):string
     {
-        $header = "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret);
-        $result = json_decode($this->request(
+        $header = "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret);
+        $result = \json_decode($this->request(
             'POST',
             $this->endpoint . 'api/token',
             [$header],
-            http_build_query([
+            \http_build_query([
                 "code" => $code,
                 "grant_type" => "authorization_code",
                 "redirect_uri" => $this->callback
@@ -137,8 +137,11 @@ class Spotify extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = json_decode($this->request('GET',
-                $this->resourceEndpoint . "me", ['Authorization: Bearer '.urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request(
+                'GET',
+                $this->resourceEndpoint . "me",
+                ['Authorization: Bearer '.\urlencode($accessToken)]
+            ), true);
         }
 
         return $this->user;

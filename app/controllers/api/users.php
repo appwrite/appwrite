@@ -21,10 +21,9 @@ use Appwrite\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $utopia->post('/v1/users')
     ->desc('Create User')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -59,8 +58,8 @@ $utopia->post('/v1/users')
                     'emailVerification' => false,
                     'status' => Auth::USER_STATUS_UNACTIVATED,
                     'password' => Auth::passwordHash($password),
-                    'password-update' => time(),
-                    'registration' => time(),
+                    'password-update' => \time(),
+                    'registration' => \time(),
                     'reset' => false,
                     'name' => $name,
                 ], ['email' => $email]);
@@ -75,13 +74,13 @@ $utopia->post('/v1/users')
                     continue;
                 }
 
-                $oauth2Keys[] = 'oauth2'.ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
             }
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json(array_merge($user->getArrayCopy(array_merge([
+                ->json(\array_merge($user->getArrayCopy(\array_merge([
                     '$id',
                     'status',
                     'email',
@@ -94,6 +93,7 @@ $utopia->post('/v1/users')
     
 $utopia->get('/v1/users')
     ->desc('List Users')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -124,12 +124,12 @@ $utopia->get('/v1/users')
                     continue;
                 }
 
-                $oauth2Keys[] = 'oauth2'.ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
             }
 
-            $results = array_map(function ($value) use ($oauth2Keys) { /* @var $value \Database\Document */
-                return $value->getArrayCopy(array_merge(
+            $results = \array_map(function ($value) use ($oauth2Keys) { /* @var $value \Database\Document */
+                return $value->getArrayCopy(\array_merge(
                     [
                         '$id',
                         'status',
@@ -148,6 +148,7 @@ $utopia->get('/v1/users')
 
 $utopia->get('/v1/users/:userId')
     ->desc('Get User')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -169,11 +170,11 @@ $utopia->get('/v1/users/:userId')
                     continue;
                 }
 
-                $oauth2Keys[] = 'oauth2'.ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
             }
 
-            $response->json(array_merge($user->getArrayCopy(array_merge(
+            $response->json(\array_merge($user->getArrayCopy(\array_merge(
                 [
                     '$id',
                     'status',
@@ -189,6 +190,7 @@ $utopia->get('/v1/users/:userId')
 
 $utopia->get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -206,7 +208,7 @@ $utopia->get('/v1/users/:userId/prefs')
             $prefs = $user->getAttribute('prefs', '');
 
             try {
-                $prefs = json_decode($prefs, true);
+                $prefs = \json_decode($prefs, true);
                 $prefs = ($prefs) ? $prefs : [];
             } catch (\Exception $error) {
                 throw new Exception('Failed to parse prefs', 500);
@@ -218,6 +220,7 @@ $utopia->get('/v1/users/:userId/prefs')
 
 $utopia->get('/v1/users/:userId/sessions')
     ->desc('Get User Sessions')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -265,7 +268,7 @@ $utopia->get('/v1/users/:userId/sessions')
 
                 try {
                     $record = $reader->country($token->getAttribute('ip', ''));
-                    $sessions[$index]['geo']['isoCode'] = strtolower($record->country->isoCode);
+                    $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
                     $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
                 } catch (\Exception $e) {
                     $sessions[$index]['geo']['isoCode'] = '--';
@@ -281,6 +284,7 @@ $utopia->get('/v1/users/:userId/sessions')
 
 $utopia->get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -335,7 +339,7 @@ $utopia->get('/v1/users/:userId/logs')
                 $output[$i] = [
                     'event' => $log['event'],
                     'ip' => $log['ip'],
-                    'time' => strtotime($log['time']),
+                    'time' => \strtotime($log['time']),
                     'OS' => $dd->getOs(),
                     'client' => $dd->getClient(),
                     'device' => $dd->getDevice(),
@@ -346,7 +350,7 @@ $utopia->get('/v1/users/:userId/logs')
 
                 try {
                     $record = $reader->country($log['ip']);
-                    $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
+                    $output[$i]['geo']['isoCode'] = \strtolower($record->country->isoCode);
                     $output[$i]['geo']['country'] = $record->country->name;
                     $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
                 } catch (\Exception $e) {
@@ -361,6 +365,7 @@ $utopia->get('/v1/users/:userId/logs')
 
 $utopia->patch('/v1/users/:userId/status')
     ->desc('Update User Status')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -376,7 +381,7 @@ $utopia->patch('/v1/users/:userId/status')
                 throw new Exception('User not found', 404);
             }
 
-            $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
+            $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
                 'status' => (int)$status,
             ]));
 
@@ -391,12 +396,12 @@ $utopia->patch('/v1/users/:userId/status')
                     continue;
                 }
 
-                $oauth2Keys[] = 'oauth2'.ucfirst($key);
-                $oauth2Keys[] = 'oauth2'.ucfirst($key).'AccessToken';
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key);
+                $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
             }
 
             $response
-                ->json(array_merge($user->getArrayCopy(array_merge([
+                ->json(\array_merge($user->getArrayCopy(\array_merge([
                     '$id',
                     'status',
                     'email',
@@ -409,6 +414,7 @@ $utopia->patch('/v1/users/:userId/status')
 
 $utopia->patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -424,11 +430,11 @@ $utopia->patch('/v1/users/:userId/prefs')
                 throw new Exception('User not found', 404);
             }
 
-            $old = json_decode($user->getAttribute('prefs', '{}'), true);
+            $old = \json_decode($user->getAttribute('prefs', '{}'), true);
             $old = ($old) ? $old : [];
 
-            $user = $projectDB->updateDocument(array_merge($user->getArrayCopy(), [
-                'prefs' => json_encode(array_merge($old, $prefs)),
+            $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+                'prefs' => \json_encode(\array_merge($old, $prefs)),
             ]));
 
             if (false === $user) {
@@ -438,7 +444,7 @@ $utopia->patch('/v1/users/:userId/prefs')
             $prefs = $user->getAttribute('prefs', '');
 
             try {
-                $prefs = json_decode($prefs, true);
+                $prefs = \json_decode($prefs, true);
                 $prefs = ($prefs) ? $prefs : [];
             } catch (\Exception $error) {
                 throw new Exception('Failed to parse prefs', 500);
@@ -451,6 +457,7 @@ $utopia->patch('/v1/users/:userId/prefs')
 
 $utopia->delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')
@@ -483,6 +490,7 @@ $utopia->delete('/v1/users/:userId/sessions/:sessionId')
 
 $utopia->delete('/v1/users/:userId/sessions')
     ->desc('Delete User Sessions')
+    ->groups(['api', 'users'])
     ->label('scope', 'users.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'users')

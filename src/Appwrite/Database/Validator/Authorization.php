@@ -75,14 +75,14 @@ class Authorization extends Validator
         $permission = null;
 
         foreach ($permissions[$this->action] as $permission) {
-            $permission = str_replace(':{self}', ':'.$this->document->getId(), $permission);
+            $permission = \str_replace(':{self}', ':'.$this->document->getId(), $permission);
 
-            if (in_array($permission, self::getRoles())) {
+            if (\in_array($permission, self::getRoles())) {
                 return true;
             }
         }
 
-        $this->message = 'User is missing '.$this->action.' for "'.$permission.'" permission. Only this scopes "'.json_encode(self::getRoles()).'" is given and only this are allowed "'.json_encode($permissions[$this->action]).'".';
+        $this->message = 'User is missing '.$this->action.' for "'.$permission.'" permission. Only this scopes "'.\json_encode(self::getRoles()).'" is given and only this are allowed "'.\json_encode($permissions[$this->action]).'".';
 
         return false;
     }
@@ -111,7 +111,7 @@ class Authorization extends Validator
     /**
      * Default value in case we need
      *  to reset Authorization status
-     * 
+     *
      * @var bool
      */
     public static $statusDefault = true;
@@ -119,9 +119,10 @@ class Authorization extends Validator
     /**
      * Change default status.
      * This will be used for the
-     *  value set on the self::reset() method 
+     *  value set on the self::reset() method
      */
-    public static function setDefaultStatus($status) {
+    public static function setDefaultStatus($status)
+    {
         self::$statusDefault = $status;
         self::$status = $status;
     }

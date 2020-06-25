@@ -56,7 +56,7 @@ class Local extends Device
         $path = '';
 
         for ($i = 0; $i < 4; ++$i) {
-            $path = ($i < strlen($filename)) ? $path.DIRECTORY_SEPARATOR.$filename[$i] : $path.DIRECTORY_SEPARATOR.'x';
+            $path = ($i < \strlen($filename)) ? $path.DIRECTORY_SEPARATOR.$filename[$i] : $path.DIRECTORY_SEPARATOR.'x';
         }
 
         return $this->getRoot().$path.DIRECTORY_SEPARATOR.$filename;
@@ -76,13 +76,13 @@ class Local extends Device
      */
     public function upload($source, $path):bool
     {
-        if (!file_exists(dirname($path))) { // Checks if directory path to file exists
-            if (!@mkdir(dirname($path), 0755, true)) {
-                throw new Exception('Can\'t create directory: '.dirname($path));
+        if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
+            if (!@\mkdir(\dirname($path), 0755, true)) {
+                throw new Exception('Can\'t create directory: '.\dirname($path));
             }
         }
 
-        if (move_uploaded_file($source, $path)) {
+        if (\move_uploaded_file($source, $path)) {
             return true;
         }
 
@@ -98,7 +98,7 @@ class Local extends Device
      */
     public function read(string $path):string
     {
-        return file_get_contents($path);
+        return \file_get_contents($path);
     }
 
     /**
@@ -111,13 +111,13 @@ class Local extends Device
      */
     public function write(string $path, string $data):bool
     {
-        if (!file_exists(dirname($path))) { // Checks if directory path to file exists
-            if (!@mkdir(dirname($path), 0755, true)) {
-                throw new Exception('Can\'t create directory '.dirname($path));
+        if (!\file_exists(\dirname($path))) { // Checks if directory path to file exists
+            if (!@\mkdir(\dirname($path), 0755, true)) {
+                throw new Exception('Can\'t create directory '.\dirname($path));
             }
         }
 
-        return file_put_contents($path, $data);
+        return \file_put_contents($path, $data);
     }
 
     /**
@@ -132,13 +132,13 @@ class Local extends Device
      */
     public function move(string $source, string $target):bool
     {
-        if (!file_exists(dirname($target))) { // Checks if directory path to file exists
-            if (!@mkdir(dirname($target), 0755, true)) {
-                throw new Exception('Can\'t create directory '.dirname($target));
+        if (!\file_exists(\dirname($target))) { // Checks if directory path to file exists
+            if (!@\mkdir(\dirname($target), 0755, true)) {
+                throw new Exception('Can\'t create directory '.\dirname($target));
             }
         }
 
-        if (rename($source, $target)) {
+        if (\rename($source, $target)) {
             return true;
         }
 
@@ -157,17 +157,16 @@ class Local extends Device
      */
     public function delete(string $path, bool $recursive = false):bool
     {
-        if(is_dir($path) && $recursive) {
-            $files = glob($path.'*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
+        if (\is_dir($path) && $recursive) {
+            $files = \glob($path.'*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
     
-            foreach($files as $file) {
-                $this->delete($file, true);      
+            foreach ($files as $file) {
+                $this->delete($file, true);
             }
     
-            rmdir($path);
-        }
-        elseif(is_file($path)) {
-            return unlink($path);
+            \rmdir($path);
+        } elseif (\is_file($path)) {
+            return \unlink($path);
         }
 
         return false;
@@ -184,7 +183,7 @@ class Local extends Device
      */
     public function getFileSize(string $path):int
     {
-        return filesize($path);
+        return \filesize($path);
     }
 
     /**
@@ -198,7 +197,7 @@ class Local extends Device
      */
     public function getFileMimeType(string $path):string
     {
-        return mime_content_type($path);
+        return \mime_content_type($path);
     }
 
     /**
@@ -212,7 +211,7 @@ class Local extends Device
      */
     public function getFileHash(string $path):string
     {
-        return md5_file($path);
+        return \md5_file($path);
     }
 
     /**
@@ -230,27 +229,27 @@ class Local extends Device
     {
         $size = 0;
 
-        $directory = opendir($path);
+        $directory = \opendir($path);
 
         if (!$directory) {
             return -1;
         }
 
-        while (($file = readdir($directory)) !== false) {
+        while (($file = \readdir($directory)) !== false) {
             // Skip file pointers
             if ($file[0] == '.') {
                 continue;
             }
 
             // Go recursive down, or add the file size
-            if (is_dir($path.$file)) {
+            if (\is_dir($path.$file)) {
                 $size += $this->getDirectorySize($path.$file.DIRECTORY_SEPARATOR);
             } else {
-                $size += filesize($path.$file);
+                $size += \filesize($path.$file);
             }
         }
 
-        closedir($directory);
+        \closedir($directory);
 
         return $size;
     }
@@ -264,7 +263,7 @@ class Local extends Device
      */
     public function getPartitionFreeSpace():float
     {
-        return disk_free_space($this->getRoot());
+        return \disk_free_space($this->getRoot());
     }
 
     /**
@@ -276,6 +275,6 @@ class Local extends Device
      */
     public function getPartitionTotalSpace():float
     {
-        return disk_total_space($this->getRoot());
+        return \disk_total_space($this->getRoot());
     }
 }

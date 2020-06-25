@@ -7,10 +7,9 @@ use Utopia\Abuse\Adapters\TimeLimit;
 global $utopia, $request, $response, $register, $user, $project;
 
 $utopia->init(function () use ($utopia, $request, $response, $register, $user, $project) {
-
     $route = $utopia->match($request);
 
-    if(empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
+    if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
         throw new Exception('Missing or unknown project ID', 400);
     }
 
@@ -31,13 +30,12 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
     //TODO make sure we get array here
 
     foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-        $timeLimit->setParam('{param-'.$key.'}', (is_array($value)) ? json_encode($value) : $value);
+        $timeLimit->setParam('{param-'.$key.'}', (\is_array($value)) ? \json_encode($value) : $value);
     }
 
     $abuse = new Abuse($timeLimit);
 
     if ($timeLimit->limit()) {
-        
         $response
             ->addHeader('X-RateLimit-Limit', $timeLimit->limit())
             ->addHeader('X-RateLimit-Remaining', $timeLimit->remaining())
@@ -48,4 +46,4 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
     if ($abuse->check() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         throw new Exception('Too many requests', 429);
     }
-});
+}, 'api');

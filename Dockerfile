@@ -128,7 +128,7 @@ RUN \
   rm -rf /var/lib/apt/lists/*
 
 # Nginx Configuration (with self-signed ssl certificates)
-COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY ./docker/ssl/cert.pem /etc/nginx/ssl/cert.pem
 COPY ./docker/ssl/key.pem /etc/nginx/ssl/key.pem
 

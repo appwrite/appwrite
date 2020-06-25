@@ -65,19 +65,19 @@ return [
     ],
     ROLE_MEMBER => [
         'label' => 'Member',
-        'scopes' => array_merge($logged, []),
+        'scopes' => \array_merge($logged, []),
     ],
     ROLE_ADMIN => [
         'label' => 'Admin',
-        'scopes' => array_merge($admins, []),
+        'scopes' => \array_merge($admins, []),
     ],
     ROLE_DEVELOPER => [
         'label' => 'Developer',
-        'scopes' => array_merge($admins, []),
+        'scopes' => \array_merge($admins, []),
     ],
     ROLE_OWNER => [
         'label' => 'Owner',
-        'scopes' => array_merge($logged, $admins, []),
+        'scopes' => \array_merge($logged, $admins, []),
     ],
     ROLE_APP => [
         'label' => 'Application',

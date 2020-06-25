@@ -3,21 +3,22 @@
 ## Features
 
 - New route in Locale API to fetch a list of languages (@TorstenDittmann)
-- Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Added Google Fonts to Appwrite for offline availability
 - Added a new route in the Avatars API to get user initials avatar
 - Added option to delete team from the console
 - Added option to view team members from the console
 - Added option to join a user to any team from the console
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
-- New UI micro-interactions and styles fixes (@AnatoleLucet)
-- UI performance & accessibility improvments
+- New UI micro-interactions and CSS fixes (@AnatoleLucet)
+- UI performance & accessibility improvments (#406)
 - Updated ClamAV conntainer to version 1.0.9
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 - Updated grid for OAuth2 providers list in the console
 - Upgraded Redis Resque queue library to version 1.3.6
 - Added container names to docker-compose.yml (@drandell)
+- Upgraded ClamAV container image to version 1.0.9
+- Optimised function execution by using fully-qualified function calls
 
 ## Bug Fixes
 
@@ -30,10 +31,15 @@
 - Grammer fix for pt-br email templates (@rubensdemelo)
 - Fixed update form labels and tooltips for Flutter Android apps
 - Fixed missing custom scopes param for OAuth2 session create API route
+- Fixed wrong JSON validation when creating and updating database documnets
+- Fixed bug where max file size was limited to max of 10MB
+- Fixed bug preventing the deletion of the project logo
 
 ## Security
 
 - Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
+- Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
+- Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 
 # Version 0.6.2 (PRE-RELEASE)
 

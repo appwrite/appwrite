@@ -23,8 +23,6 @@ use Appwrite\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
 
-include_once __DIR__ . '/../shared/api.php';
-
 Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
@@ -135,6 +133,7 @@ $mimes = [
 
 $utopia->post('/v1/storage/files')
     ->desc('Create File')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('webhook', 'storage.files.create')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -165,9 +164,9 @@ $utopia->post('/v1/storage/files')
             }
 
             // Make sure we handle a single file and multiple files the same way
-            $file['name'] = (is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-            $file['tmp_name'] = (is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-            $file['size'] = (is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+            $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+            $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+            $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
             // Check if file type is allowed (feature for project settings?)
             //if (!$fileType->isValid($file['tmp_name'])) {
@@ -190,7 +189,7 @@ $utopia->post('/v1/storage/files')
 
             // Save to storage
             $size = $device->getFileSize($file['tmp_name']);
-            $path = $device->getPath(uniqid().'.'.pathinfo($file['name'], PATHINFO_EXTENSION));
+            $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
             
             if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
                 throw new Exception('Failed moving file', 500);
@@ -198,7 +197,7 @@ $utopia->post('/v1/storage/files')
 
             $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
-            if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+            if ($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
                 $antiVirus = new Network('clamav', 3310);
     
                 // Check if file size is exceeding allowed limit
@@ -216,7 +215,7 @@ $utopia->post('/v1/storage/files')
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
-            if(!$device->write($path, $data)) {
+            if (!$device->write($path, $data)) {
                 throw new Exception('Failed to save file', 500);
             }
 
@@ -228,7 +227,7 @@ $utopia->post('/v1/storage/files')
                     'read' => $read,
                     'write' => $write,
                 ],
-                'dateCreated' => time(),
+                'dateCreated' => \time(),
                 'folderId' => $folderId,
                 'name' => $file['name'],
                 'path' => $path,
@@ -237,12 +236,12 @@ $utopia->post('/v1/storage/files')
                 'sizeOriginal' => $size,
                 'sizeActual' => $sizeActual,
                 'algorithm' => $compressor->getName(),
-                'token' => bin2hex(random_bytes(64)),
+                'token' => \bin2hex(\random_bytes(64)),
                 'comment' => '',
                 'fileOpenSSLVersion' => '1',
                 'fileOpenSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-                'fileOpenSSLTag' => bin2hex($tag),
-                'fileOpenSSLIV' => bin2hex($iv),
+                'fileOpenSSLTag' => \bin2hex($tag),
+                'fileOpenSSLIV' => \bin2hex($iv),
             ]);
 
             if (false === $file) {
@@ -271,6 +270,7 @@ $utopia->post('/v1/storage/files')
 
 $utopia->get('/v1/storage/files')
     ->desc('List Files')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
@@ -294,7 +294,7 @@ $utopia->get('/v1/storage/files')
                 ],
             ]);
 
-            $results = array_map(function ($value) { /* @var $value \Database\Document */
+            $results = \array_map(function ($value) { /* @var $value \Database\Document */
                 return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
             }, $results);
 
@@ -304,6 +304,7 @@ $utopia->get('/v1/storage/files')
 
 $utopia->get('/v1/storage/files/:fileId')
     ->desc('Get File')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
@@ -324,6 +325,7 @@ $utopia->get('/v1/storage/files/:fileId')
 
 $utopia->get('/v1/storage/files/:fileId/preview')
     ->desc('Get File Preview')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
@@ -336,14 +338,12 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('output', null, function () use ($outputs) { return new WhiteList(array_merge(array_keys($outputs), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
-    //->param('storage', 'local', function () {return new WhiteList(array('local'));}, 'Selected storage device. defaults to local')
-    //->param('token', '', function () {return new Text(128);}, 'Preview token', true)
+    ->param('output', null, function () use ($outputs) { return new WhiteList(\array_merge(\array_keys($outputs), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(
         function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
             $storage = 'local';
 
-            if (!extension_loaded('imagick')) {
+            if (!\extension_loaded('imagick')) {
                 throw new Exception('Imagick extension is missing', 500);
             }
 
@@ -351,12 +351,12 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 throw new Exception('No such storage device', 400);
             }
 
-            if ((strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
+            if ((\strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
                 $output = 'jpg';
             }
 
-            $date = date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-            $key = md5($fileId.$width.$height.$quality.$background.$storage.$output);
+            $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
+            $key = \md5($fileId.$width.$height.$quality.$background.$storage.$output);
 
             $file = $projectDB->getDocument($fileId);
 
@@ -365,24 +365,24 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             $path = $file->getAttribute('path');
-            $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
             $algorithm = $file->getAttribute('algorithm');
             $cipher = $file->getAttribute('fileOpenSSLCipher');
             $mime = $file->getAttribute('mimeType');
 
-            if(!in_array($mime, $inputs)) {
-                $path = (array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
+            if (!\in_array($mime, $inputs)) {
+                $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
                 $algorithm = null;
                 $cipher = null;
                 $background = (empty($background)) ? 'eceff1' : $background;
-                $type = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-                $key = md5($path.$width.$height.$quality.$background.$storage.$output);
+                $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
+                $key = \md5($path.$width.$height.$quality.$background.$storage.$output);
             }
 
             $compressor = new GZIP();
             $device = Storage::getDevice('local');
 
-            if (!file_exists($path)) {
+            if (!\file_exists($path)) {
                 throw new Exception('File not found', 404);
             }
 
@@ -393,7 +393,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 $output = (empty($output)) ? $type : $output;
 
                 $response
-                    ->setContentType((in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
+                    ->setContentType((\in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                     ->addHeader('Expires', $date)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->send($data)
@@ -410,8 +410,8 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                     $file->getAttribute('fileOpenSSLCipher'),
                     $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
-                    hex2bin($file->getAttribute('fileOpenSSLIV')),
-                    hex2bin($file->getAttribute('fileOpenSSLTag'))
+                    \hex2bin($file->getAttribute('fileOpenSSLIV')),
+                    \hex2bin($file->getAttribute('fileOpenSSLTag'))
                 );
             }
 
@@ -448,6 +448,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
 $utopia->get('/v1/storage/files/:fileId/download')
     ->desc('Get File for Download')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
@@ -466,7 +467,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
 
             $path = $file->getAttribute('path', '');
 
-            if (!file_exists($path)) {
+            if (!\file_exists($path)) {
                 throw new Exception('File not found in '.$path, 404);
             }
 
@@ -481,8 +482,8 @@ $utopia->get('/v1/storage/files/:fileId/download')
                     $file->getAttribute('fileOpenSSLCipher'),
                     $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
-                    hex2bin($file->getAttribute('fileOpenSSLIV')),
-                    hex2bin($file->getAttribute('fileOpenSSLTag'))
+                    \hex2bin($file->getAttribute('fileOpenSSLIV')),
+                    \hex2bin($file->getAttribute('fileOpenSSLTag'))
                 );
             }
 
@@ -492,8 +493,8 @@ $utopia->get('/v1/storage/files/:fileId/download')
             $response
                 ->setContentType($file->getAttribute('mimeType'))
                 ->addHeader('Content-Disposition', 'attachment; filename="'.$file->getAttribute('name', '').'"')
-                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
-                ->addHeader('X-Peak', memory_get_peak_usage())
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+                ->addHeader('X-Peak', \memory_get_peak_usage())
                 ->send($source)
             ;
         }
@@ -501,6 +502,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
 
 $utopia->get('/v1/storage/files/:fileId/view')
     ->desc('Get File for View')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'storage')
@@ -520,7 +522,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
 
             $path = $file->getAttribute('path', '');
 
-            if (!file_exists($path)) {
+            if (!\file_exists($path)) {
                 throw new Exception('File not found in '.$path, 404);
             }
 
@@ -529,7 +531,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
 
             $contentType = 'text/plain';
 
-            if (in_array($file->getAttribute('mimeType'), $mimes)) {
+            if (\in_array($file->getAttribute('mimeType'), $mimes)) {
                 $contentType = $file->getAttribute('mimeType');
             }
 
@@ -541,8 +543,8 @@ $utopia->get('/v1/storage/files/:fileId/view')
                     $file->getAttribute('fileOpenSSLCipher'),
                     $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
-                    hex2bin($file->getAttribute('fileOpenSSLIV')),
-                    hex2bin($file->getAttribute('fileOpenSSLTag'))
+                    \hex2bin($file->getAttribute('fileOpenSSLIV')),
+                    \hex2bin($file->getAttribute('fileOpenSSLTag'))
                 );
             }
 
@@ -554,7 +556,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
                 'text' => 'text/plain',
             ];
 
-            $contentType = (array_key_exists($as, $contentTypes)) ? $contentTypes[$as] : $contentType;
+            $contentType = (\array_key_exists($as, $contentTypes)) ? $contentTypes[$as] : $contentType;
 
             // Response
             $response
@@ -562,8 +564,8 @@ $utopia->get('/v1/storage/files/:fileId/view')
                 ->addHeader('Content-Security-Policy', 'script-src none;')
                 ->addHeader('X-Content-Type-Options', 'nosniff')
                 ->addHeader('Content-Disposition', 'inline; filename="'.$fileName.'"')
-                ->addHeader('Expires', date('D, d M Y H:i:s', time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
-                ->addHeader('X-Peak', memory_get_peak_usage())
+                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT') // 45 days cache
+                ->addHeader('X-Peak', \memory_get_peak_usage())
                 ->send($output)
             ;
         }
@@ -571,6 +573,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
 
 $utopia->put('/v1/storage/files/:fileId')
     ->desc('Update File')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('webhook', 'storage.files.update')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -589,7 +592,7 @@ $utopia->put('/v1/storage/files/:fileId')
                 throw new Exception('File not found', 404);
             }
 
-            $file = $projectDB->updateDocument(array_merge($file->getArrayCopy(), [
+            $file = $projectDB->updateDocument(\array_merge($file->getArrayCopy(), [
                 '$permissions' => [
                     'read' => $read,
                     'write' => $write,
@@ -616,6 +619,7 @@ $utopia->put('/v1/storage/files/:fileId')
 
 $utopia->delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('webhook', 'storage.files.delete')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -658,6 +662,7 @@ $utopia->delete('/v1/storage/files/:fileId')
 
 // $utopia->get('/v1/storage/files/:fileId/scan')
 //     ->desc('Scan Storage')
+//     ->groups(['api', 'storage'])
 //     ->label('scope', 'god')
 //     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
 //     ->label('sdk.namespace', 'storage')
