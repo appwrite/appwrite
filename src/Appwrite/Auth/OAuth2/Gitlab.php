@@ -4,7 +4,7 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-// Reference Material 
+// Reference Material
 // https://docs.gitlab.com/ee/api/oauth2.html
 
 class Gitlab extends OAuth2

@@ -157,16 +157,15 @@ class Local extends Device
      */
     public function delete(string $path, bool $recursive = false):bool
     {
-        if(\is_dir($path) && $recursive) {
+        if (\is_dir($path) && $recursive) {
             $files = \glob($path.'*', GLOB_MARK); // GLOB_MARK adds a slash to directories returned
     
-            foreach($files as $file) {
-                $this->delete($file, true);      
+            foreach ($files as $file) {
+                $this->delete($file, true);
             }
     
             \rmdir($path);
-        }
-        elseif(\is_file($path)) {
+        } elseif (\is_file($path)) {
             return \unlink($path);
         }
 

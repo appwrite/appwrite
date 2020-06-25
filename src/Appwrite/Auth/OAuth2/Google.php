@@ -4,7 +4,7 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-// Reference Material 
+// Reference Material
 // https://developers.google.com/oauthplayground/
 // https://developers.google.com/identity/protocols/OAuth2
 // https://developers.google.com/identity/protocols/OAuth2WebServer

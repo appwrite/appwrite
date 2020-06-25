@@ -3,7 +3,7 @@
 // Init
 require_once __DIR__.'/init.php';
 
-global $utopia, $request, $response, $register, $consoleDB, $project, $service;
+global $utopia, $request, $response, $register, $consoleDB, $project;
 
 use Utopia\App;
 use Utopia\Request;
@@ -426,14 +426,8 @@ $utopia->get('/.well-known/acme-challenge')
         }
     );
 
-$name = APP_NAME;
-
-if (\array_key_exists($service, $services)) { /** @noinspection PhpIncludeInspection */
-    include_once $services[$service]['controller'];
-    $name = APP_NAME.' '.\ucfirst($services[$service]['name']);
-} else {
-    /** @noinspection PhpIncludeInspection */
-    include_once $services['/']['controller'];
+foreach($services as $key => $service) {
+    include_once $services[$key]['controller'];
 }
 
 $utopia->run($request, $response);

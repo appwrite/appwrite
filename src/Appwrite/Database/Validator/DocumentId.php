@@ -60,19 +60,19 @@ class DocumentId extends Validator
     {
         $document = $this->database->getDocument($id);
         
-        if(!$document) {
+        if (!$document) {
             return false;
         }
         
-        if(!$document instanceof Document) {
+        if (!$document instanceof Document) {
             return false;
         }
 
-        if(!$document->getId()) {
+        if (!$document->getId()) {
             return false;
         }
 
-        if($document->getCollection() !== $this->collection) {
+        if ($document->getCollection() !== $this->collection) {
             return false;
         }
 

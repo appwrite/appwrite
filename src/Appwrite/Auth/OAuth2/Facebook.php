@@ -58,7 +58,7 @@ class Facebook extends OAuth2
                 'redirect_uri' => $this->callback,
                 'client_secret' => $this->appSecret,
                 'code' => $code
-            ])  
+            ])
         );
 
         $accessToken = \json_decode($accessToken, true);

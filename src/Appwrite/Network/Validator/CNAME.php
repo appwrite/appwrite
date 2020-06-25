@@ -26,7 +26,7 @@ class CNAME extends Validator
 
     /**
      * Check if CNAME record target value matches selected target
-     * 
+     *
      * @param string $domain
      *
      * @return bool
@@ -39,12 +39,12 @@ class CNAME extends Validator
             return false;
         }
 
-        if(!$records || !\is_array($records)) {
+        if (!$records || !\is_array($records)) {
             return false;
         }
 
-        foreach($records as $record) {
-            if(isset($record['target']) && $record['target'] === $this->target) {
+        foreach ($records as $record) {
+            if (isset($record['target']) && $record['target'] === $this->target) {
                 return true;
             }
         }
