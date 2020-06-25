@@ -47,8 +47,8 @@ class Response extends UtopiaResponse
     // Teams
     const MODEL_TEAM = 'team';
     const MODEL_TEAM_LIST = 'teamList';
-    const MODEL_MEMBERSHIP = 'membership'; // - Missing
-    const MODEL_MEMBERSHIP_LIST = 'membershipList'; // - Missing
+    const MODEL_MEMBERSHIP = 'membership';
+    const MODEL_MEMBERSHIP_LIST = 'membershipList';
 
     public function __construct()
     {
