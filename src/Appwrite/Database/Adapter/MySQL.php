@@ -175,7 +175,7 @@ class MySQL extends Adapter
 
             $result = $st->fetch();
 
-            if($result && isset($result['signature'])) {
+            if ($result && isset($result['signature'])) {
                 $oldSignature = $result['signature'];
 
                 if ($signature === $oldSignature) {
@@ -187,14 +187,14 @@ class MySQL extends Adapter
         /**
          * Check Unique Keys
          */
-        foreach($unique as $key => $value) {
+        foreach ($unique as $key => $value) {
             $st = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.unique`
                 SET `key` = :key;
             ');
             
             $st->bindValue(':key', \md5($data['$collection'].':'.$key.'='.$value), PDO::PARAM_STR);
 
-            if(!$st->execute()) {
+            if (!$st->execute()) {
                 throw new Duplicate('Duplicated Property: '.$key.'='.$value);
             }
         }

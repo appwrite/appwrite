@@ -6,14 +6,14 @@ class URL
 {
     /**
      * Parse URL
-     * 
+     *
      * Take a URL string and split it to array parts
-     * 
+     *
      * @param string $url
-     * 
+     *
      * @return array
      */
-    static public function parse(string $url):array
+    public static function parse(string $url):array
     {
         $default = [
             'scheme' => '',
@@ -31,15 +31,15 @@ class URL
     
     /**
      * Un-Parse URL
-     * 
+     *
      * Take URL parts and combine them to a valid string
-     * 
+     *
      * @param array $url
      * @param array $ommit
-     * 
+     *
      * @return string
      */
-    static public function unparse(array $url, array $ommit = []):string
+    public static function unparse(array $url, array $ommit = []):string
     {
         if (isset($url['path']) && \mb_substr($url['path'], 0, 1) !== '/') {
             $url['path'] = '/'.$url['path'];
@@ -78,14 +78,14 @@ class URL
 
     /**
      * Parse Query String
-     * 
+     *
      * Convert query string to array
-     * 
+     *
      * @param string $query
-     * 
+     *
      * @return array
      */
-    static public function parseQuery(string $query):array
+    public static function parseQuery(string $query):array
     {
         \parse_str($query, $result);
 
@@ -94,14 +94,14 @@ class URL
 
     /**
      * Un-Parse Query String
-     * 
+     *
      * Convert query string array to string
-     * 
+     *
      * @param string $query
-     * 
+     *
      * @return array
      */
-    static public function unparseQuery(array $query):string
+    public static function unparseQuery(array $query):string
     {
         return \http_build_query($query);
     }

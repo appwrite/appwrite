@@ -134,7 +134,7 @@ class Document extends ArrayObject
      */
     public function removeAttribute($key)
     {
-        if(isset($this[$key])) {
+        if (isset($this[$key])) {
             unset($this[$key]);
         }
 

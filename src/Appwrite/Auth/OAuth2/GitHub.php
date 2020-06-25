@@ -37,7 +37,6 @@ class Github extends OAuth2
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state)
         ]);
-
     }
 
     /**

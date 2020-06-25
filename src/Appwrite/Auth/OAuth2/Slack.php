@@ -15,8 +15,8 @@ class Slack extends OAuth2
      * @var array
      */
     protected $scopes = [
-        'identity.avatar', 
-        'identity.basic', 
+        'identity.avatar',
+        'identity.basic',
         'identity.email',
         'identity.team'
     ];
@@ -125,7 +125,6 @@ class Slack extends OAuth2
      */
     protected function getUser(string $accessToken):array
     {
-
         if (empty($this->user)) {
             // https://api.slack.com/methods/users.identity
             $user = $this->request(

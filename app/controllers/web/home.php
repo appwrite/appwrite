@@ -1,7 +1,5 @@
 <?php
 
-include_once __DIR__ . '/../shared/web.php';
-
 global $utopia, $response, $request, $layout;
 
 use Utopia\View;
@@ -9,27 +7,30 @@ use Utopia\Config\Config;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 
-$header = new View(__DIR__.'/../../views/home/comps/header.phtml');
-$footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
+$utopia->init(function () use ($layout) {
+    $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
+    $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
-$footer
-    ->setParam('version', Config::getParam('version'))
-;
+    $footer
+        ->setParam('version', Config::getParam('version'))
+    ;
 
-$layout
-    ->setParam('title', APP_NAME)
-    ->setParam('description', '')
-    ->setParam('class', 'home')
-    ->setParam('platforms', Config::getParam('platforms'))
-    ->setParam('header', [$header])
-    ->setParam('footer', [$footer])
-;
+    $layout
+        ->setParam('title', APP_NAME)
+        ->setParam('description', '')
+        ->setParam('class', 'home')
+        ->setParam('platforms', Config::getParam('platforms'))
+        ->setParam('header', [$header])
+        ->setParam('footer', [$footer])
+    ;
+}, 'home');
 
 $utopia->shutdown(function () use ($response, $layout) {
     $response->send($layout->render());
-});
+}, 'home');
 
 $utopia->get('/')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(
@@ -39,7 +40,7 @@ $utopia->get('/')
     );
 
 $utopia->get('/auth/signin')
-    ->desc('Login page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -51,7 +52,7 @@ $utopia->get('/auth/signin')
     });
 
 $utopia->get('/auth/signup')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -63,7 +64,7 @@ $utopia->get('/auth/signup')
     });
 
 $utopia->get('/auth/recovery')
-    ->desc('Password recovery page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($request, $layout) {
@@ -75,7 +76,7 @@ $utopia->get('/auth/recovery')
     });
 
 $utopia->get('/auth/confirm')
-    ->desc('Account confirmation page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -87,7 +88,7 @@ $utopia->get('/auth/confirm')
     });
 
 $utopia->get('/auth/join')
-    ->desc('Account team join page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -99,7 +100,7 @@ $utopia->get('/auth/join')
     });
 
 $utopia->get('/auth/recovery/reset')
-    ->desc('Password recovery page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -112,7 +113,7 @@ $utopia->get('/auth/recovery/reset')
 
 
 $utopia->get('/auth/oauth2/success')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -127,7 +128,7 @@ $utopia->get('/auth/oauth2/success')
     });
 
 $utopia->get('/auth/oauth2/failure')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -142,7 +143,7 @@ $utopia->get('/auth/oauth2/failure')
     });
 
 $utopia->get('/error/:code')
-    ->desc('Error page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
@@ -159,6 +160,7 @@ $utopia->get('/error/:code')
     });
 
 $utopia->get('/open-api-2.json')
+    ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('platform', APP_PLATFORM_CLIENT, function () {return new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE]);}, 'Choose target platform.', true)
@@ -183,11 +185,11 @@ $utopia->get('/open-api-2.json')
             }
 
             foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
-                if($tests && !isset($service['tests'])) {
+                if ($tests && !isset($service['tests'])) {
                     continue;
                 }
 
-                if($tests && !$service['tests']) {
+                if ($tests && !$service['tests']) {
                     continue;
                 }
                 
@@ -347,19 +349,19 @@ $utopia->get('/open-api-2.json')
             ];
 
             if ($extensions) {
-                if(isset($output['securityDefinitions']['Project'])) {
+                if (isset($output['securityDefinitions']['Project'])) {
                     $output['securityDefinitions']['Project']['extensions'] = ['demo' => '5df5acd0d48c2'];
                 }
                 
-                if(isset($output['securityDefinitions']['Key'])) {
+                if (isset($output['securityDefinitions']['Key'])) {
                     $output['securityDefinitions']['Key']['extensions'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
                 }
                 
-                if(isset($output['securityDefinitions']['Locale'])) {
+                if (isset($output['securityDefinitions']['Locale'])) {
                     $output['securityDefinitions']['Locale']['extensions'] = ['demo' => 'en'];
                 }
 
-                if(isset($output['securityDefinitions']['Mode'])) {
+                if (isset($output['securityDefinitions']['Mode'])) {
                     $output['securityDefinitions']['Mode']['extensions'] = ['demo' => ''];
                 }
             }
@@ -374,7 +376,7 @@ $utopia->get('/open-api-2.json')
                         continue;
                     }
 
-                    if($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
                         continue;
                     }
 
