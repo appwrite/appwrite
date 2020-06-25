@@ -352,4 +352,4 @@ $utopia->shutdown(function() use ($response, $request, &$result, $utopia) {
     }
 
     $response->json(['result' => $route->getMethod() . ':' . $route->getURL() . ':passed']);
-});
+}, 'mock');

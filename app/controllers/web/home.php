@@ -25,13 +25,14 @@ $utopia->init(function () use ($layout) {
         ->setParam('header', [$header])
         ->setParam('footer', [$footer])
     ;
-});
+}, 'home');
 
 $utopia->shutdown(function () use ($response, $layout) {
     $response->send($layout->render());
-});
+}, 'home');
 
 $utopia->get('/')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(
@@ -41,7 +42,7 @@ $utopia->get('/')
     );
 
 $utopia->get('/auth/signin')
-    ->desc('Login page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -53,7 +54,7 @@ $utopia->get('/auth/signin')
     });
 
 $utopia->get('/auth/signup')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -65,7 +66,7 @@ $utopia->get('/auth/signup')
     });
 
 $utopia->get('/auth/recovery')
-    ->desc('Password recovery page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($request, $layout) {
@@ -77,7 +78,7 @@ $utopia->get('/auth/recovery')
     });
 
 $utopia->get('/auth/confirm')
-    ->desc('Account confirmation page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -89,7 +90,7 @@ $utopia->get('/auth/confirm')
     });
 
 $utopia->get('/auth/join')
-    ->desc('Account team join page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -101,7 +102,7 @@ $utopia->get('/auth/join')
     });
 
 $utopia->get('/auth/recovery/reset')
-    ->desc('Password recovery page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -114,7 +115,7 @@ $utopia->get('/auth/recovery/reset')
 
 
 $utopia->get('/auth/oauth2/success')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -129,7 +130,7 @@ $utopia->get('/auth/oauth2/success')
     });
 
 $utopia->get('/auth/oauth2/failure')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -144,7 +145,7 @@ $utopia->get('/auth/oauth2/failure')
     });
 
 $utopia->get('/error/:code')
-    ->desc('Error page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
@@ -161,6 +162,7 @@ $utopia->get('/error/:code')
     });
 
 $utopia->get('/open-api-2.json')
+    ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('platform', APP_PLATFORM_CLIENT, function () {return new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE]);}, 'Choose target platform.', true)

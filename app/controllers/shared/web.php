@@ -42,4 +42,4 @@ $utopia->init(function () use ($utopia, $response, $request, $layout) {
         ->setParam('isDev', $isDev)
         ->setParam('class', $scope)
     ;
-});
+}, 'web');
