@@ -23,8 +23,6 @@ use Appwrite\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
 
-include_once __DIR__ . '/../shared/api.php';
-
 Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554

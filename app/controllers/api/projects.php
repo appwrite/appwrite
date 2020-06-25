@@ -21,8 +21,6 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Network\Validator\CNAME;
 use Cron\CronExpression;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $scopes = include __DIR__.'/../../../app/config/scopes.php';
 
 $utopia->post('/v1/projects')

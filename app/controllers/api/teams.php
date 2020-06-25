@@ -20,8 +20,6 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Template\Template;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $utopia->post('/v1/teams')
     ->desc('Create Team')
     ->groups(['api', 'teams'])

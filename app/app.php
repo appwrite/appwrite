@@ -426,6 +426,9 @@ $utopia->get('/.well-known/acme-challenge')
         }
     );
 
+include_once __DIR__ . '/controllers/shared/api.php';
+include_once __DIR__ . '/controllers/shared/web.php';
+
 foreach($services as $key => $service) {
     include_once $services[$key]['controller'];
 }

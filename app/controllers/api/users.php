@@ -21,8 +21,6 @@ use Appwrite\Database\Validator\UID;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $utopia->post('/v1/users')
     ->desc('Create User')
     ->groups(['api', 'users'])
