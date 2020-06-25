@@ -155,6 +155,22 @@ class S3 extends Device
     }
 
     /**
+     * Get directory size in bytes.
+     *
+     * Return -1 on error
+     *
+     * Based on http://www.jonasjohn.de/snippets/php/dir-size.htm
+     *
+     * @param $path
+     *
+     * @return int
+     */
+    public function getDirectorySize(string $path):int
+    {
+        return 0;
+    }
+    
+    /**
      * Get Partition Free Space.
      *
      * disk_free_space — Returns available space on filesystem or disk partition
