@@ -18,8 +18,6 @@ use BaconQrCode\Writer;
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $types = [
     'browsers' => include __DIR__.'/../../config/avatars/browsers.php',
     'credit-cards' => include __DIR__.'/../../config/avatars/credit-cards.php',

@@ -25,8 +25,6 @@ use Appwrite\Database\Exception\Structure as StructureException;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $utopia->post('/v1/database/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])

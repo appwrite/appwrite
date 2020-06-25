@@ -29,8 +29,6 @@ use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $oauthDefaultSuccess = $request->getServer('_APP_HOME').'/auth/oauth2/success';
 $oauthDefaultFailure = $request->getServer('_APP_HOME').'/auth/oauth2/failure';
 

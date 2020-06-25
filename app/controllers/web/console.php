@@ -1,7 +1,5 @@
 <?php
 
-include_once __DIR__ . '/../shared/web.php';
-
 global $utopia, $response, $request, $layout, $projectDB;
 
 use Utopia\View;
