@@ -5,25 +5,31 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Session extends Model
+class Team extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => 'string',
-                'description' => 'Session ID.',
+                'description' => 'Team ID.',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('expire', [
+            ->addRule('name', [
                 'type' => 'string',
-                'description' => 'Session expiration date in Unix timestamp.',
+                'description' => 'Team name.',
+                'default' => '',
+                'example' => 'VIP',
+            ])
+            ->addRule('dateCreated', [
+                'type' => 'integer',
+                'description' => 'Team creation date in Unix timestamp.',
                 'example' => 1592981250,
             ])
-            ->addRule('ip', [
-                'type' => 'string',
-                'description' => 'IP session in use when the session was created.',
-                'example' => '127.0.0.1',
+            ->addRule('sum', [ // TODO change key name?
+                'type' => 'integer',
+                'description' => 'Total sum of team members.',
+                'example' => 7,
             ])
         ;
     }
@@ -35,7 +41,7 @@ class Session extends Model
      */
     public function getName():string
     {
-        return 'Session';
+        return 'Team';
     }
 
     /**
@@ -45,6 +51,6 @@ class Session extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_SESSION;
+        return Response::MODEL_TEAM;
     }
 }

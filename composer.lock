@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b2678886d7c1aa5f4edfdd1ad1558f14",
+    "content-hash": "7f6cbe77fe2e0f8bdff33c37a4d9ca11",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -459,24 +459,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "89b1a76b7fda5853401297dc4b2a093cba1fda23"
+                "reference": "bbf3b200bc83c1e9298580a9f99b9be248543467"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/89b1a76b7fda5853401297dc4b2a093cba1fda23",
-                "reference": "89b1a76b7fda5853401297dc4b2a093cba1fda23",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/bbf3b200bc83c1e9298580a9f99b9be248543467",
+                "reference": "bbf3b200bc83c1e9298580a9f99b9be248543467",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.6"
+                "php": ">=5.5"
             },
             "require-dev": {
-                "phpunit/phpunit": "^5.7.27 || ^7.5"
+                "phpunit/phpunit": "^4.8.36 || ^5.7.27 || ^7.5"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.4-dev"
+                    "dev-master": "1.3-dev"
                 }
             },
             "autoload": {
@@ -502,7 +502,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2020-02-15T23:33:03+00:00"
+            "time": "2020-06-21T23:10:57+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -1596,16 +1596,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.3.5",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "ca2ebe37936983d786f57bae8ee6e006299f4942"
+                "reference": "30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/ca2ebe37936983d786f57bae8ee6e006299f4942",
-                "reference": "ca2ebe37936983d786f57bae8ee6e006299f4942",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
+                "reference": "30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
                 "shasum": ""
             },
             "require": {
@@ -1636,7 +1636,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-06-20T11:33:46+00:00"
+            "time": "2020-06-25T18:21:48+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -3363,12 +3363,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2"
+                "reference": "f32950c872a995a93807909bab69387f47afaa25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/3beabd64bdc91558b41f140cc4b14925f0416cb2",
-                "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/f32950c872a995a93807909bab69387f47afaa25",
+                "reference": "f32950c872a995a93807909bab69387f47afaa25",
                 "shasum": ""
             },
             "require": {
@@ -3420,7 +3420,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-06-08T10:41:25+00:00"
+            "time": "2020-06-22T15:25:21+00:00"
         },
         {
             "name": "webmozart/assert",

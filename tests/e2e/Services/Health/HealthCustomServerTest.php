@@ -173,7 +173,7 @@ class HealthCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['size']);
-        $this->assertLessThan(100, $response['body']['size']);
+        $this->assertLessThan(120, $response['body']['size']);
 
         /**
          * Test for FAILURE

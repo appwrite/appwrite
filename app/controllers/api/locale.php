@@ -8,10 +8,9 @@ use Utopia\App;
 use Utopia\Locale\Locale;
 use GeoIp2\Database\Reader;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $utopia->get('/v1/locale')
     ->desc('Get User Locale')
+    ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
@@ -72,6 +71,7 @@ $utopia->get('/v1/locale')
 
 $utopia->get('/v1/locale/countries')
     ->desc('List Countries')
+    ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
@@ -89,6 +89,7 @@ $utopia->get('/v1/locale/countries')
 
 $utopia->get('/v1/locale/countries/eu')
     ->desc('List EU Countries')
+    ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
@@ -114,6 +115,7 @@ $utopia->get('/v1/locale/countries/eu')
 
 $utopia->get('/v1/locale/countries/phones')
     ->desc('List Countries Phone Codes')
+    ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
@@ -139,6 +141,7 @@ $utopia->get('/v1/locale/countries/phones')
 
 $utopia->get('/v1/locale/continents')
     ->desc('List Continents')
+    ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
@@ -157,6 +160,7 @@ $utopia->get('/v1/locale/continents')
 
 $utopia->get('/v1/locale/currencies')
     ->desc('List Currencies')
+    ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')
@@ -173,6 +177,7 @@ $utopia->get('/v1/locale/currencies')
 
 $utopia->get('/v1/locale/languages')
     ->desc('List Languages')
+    ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'locale')

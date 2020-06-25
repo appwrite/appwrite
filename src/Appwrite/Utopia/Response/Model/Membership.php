@@ -5,32 +5,31 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class User extends Model
+class Membership extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => 'string',
+                'description' => 'Membership ID.',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('userId', [
+                'type' => 'string',
                 'description' => 'User ID.',
+                'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('teamId', [
+                'type' => 'string',
+                'description' => 'Team ID.',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => 'string',
                 'description' => 'User name.',
                 'default' => '',
-                'example' => 'John Doe',
-            ])
-            ->addRule('registration', [
-                'type' => 'integer',
-                'description' => 'User registration date in Unix timestamp.',
-                'example' => 1592981250,
-            ])
-            ->addRule('status', [
-                'type' => 'integer',
-                'description' => 'User status. 0 for Unavtivated, 1 for active and 2 is blocked.',
-                'default' => false,
-                'example' => true,
+                'example' => 'VIP',
             ])
             ->addRule('email', [
                 'type' => 'string',
@@ -38,17 +37,20 @@ class User extends Model
                 'default' => '',
                 'example' => 'john@appwrite.io',
             ])
-            ->addRule('emailVerification', [
-                'type' => 'boolean',
-                'description' => 'Email verification status.',
-                'default' => false,
-                'example' => true,
+            ->addRule('invited', [
+                'type' => 'integer',
+                'description' => 'Date, the user has been invited to join the team in Unix timestamp.',
+                'example' => 1592981250,
             ])
-            ->addRule('prefs', [
-                'type' => 'json',
-                'description' => 'User preferences as a key-value object',
-                'default' => new \stdClass,
-                'example' => ['theme' => 'dark', 'timezone' => 'UTC'],
+            ->addRule('joined', [
+                'type' => 'integer',
+                'description' => 'Date, the user has accepted the invitation to join the team in Unix timestamp.',
+                'example' => 1592981250,
+            ])
+            ->addRule('confirm', [
+                'type' => 'boolean',
+                'description' => 'User confirmation status, true if the user has joined the team or false otherwise.',
+                'example' => false,
             ])
             ->addRule('roles', [
                 'type' => 'string',
@@ -67,7 +69,7 @@ class User extends Model
      */
     public function getName():string
     {
-        return 'User';
+        return 'Membership';
     }
 
     /**
@@ -77,6 +79,6 @@ class User extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_USER;
+        return Response::MODEL_MEMBERSHIP;
     }
 }
