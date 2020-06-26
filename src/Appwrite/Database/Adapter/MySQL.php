@@ -774,7 +774,7 @@ class MySQL extends Adapter
     /**
      * Last Modified.
      *
-     * Return unix timestamp of last time a node queried in corrent session has been changed
+     * Return Unix timestamp of last time a node queried in corrent session has been changed
      *
      * @return int
      */

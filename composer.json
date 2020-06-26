@@ -23,6 +23,7 @@
         "ext-imagick": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
+        "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
         "ext-pdo": "*",

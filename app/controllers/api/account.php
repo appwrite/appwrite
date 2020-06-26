@@ -4,7 +4,6 @@ global $utopia, $register, $request, $response, $user, $audit,
     $webhook, $mail, $project, $projectDB, $clients;
 
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
@@ -25,6 +24,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Template\Template;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
@@ -132,17 +132,8 @@ $utopia->post('/v1/account')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json(\array_merge($user->getArrayCopy(\array_merge(
-                    [
-                        '$id',
-                        'email',
-                        'registration',
-                        'name',
-                    ],
-                    $oauth2Keys
-                )), ['roles' => Authorization::getRoles()]));
+            $response->setStatusCode(Response::STATUS_CODE_CREATED);
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -232,8 +223,9 @@ $utopia->post('/v1/account/sessions')
                 ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($session->getArrayCopy(['$id', 'type', 'expire']))
             ;
+
+            $response->dynamic($session, Response::MODEL_SESSION);
         }
     );
 
@@ -541,16 +533,7 @@ $utopia->get('/v1/account')
     ->label('sdk.response', ['200' => 'user'])
     ->action(
         function () use ($response, &$user, $oauth2Keys) {
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'emailVerification',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -735,15 +718,7 @@ $utopia->patch('/v1/account/name')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -778,15 +753,7 @@ $utopia->patch('/v1/account/password')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
@@ -837,15 +804,7 @@ $utopia->patch('/v1/account/email')
                 ->setParam('resource', 'users/'.$user->getId())
             ;
 
-            $response->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+            $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 

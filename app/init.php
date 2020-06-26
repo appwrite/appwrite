@@ -13,7 +13,6 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
 
 use Utopia\App;
 use Utopia\Request;
-use Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
@@ -23,6 +22,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';

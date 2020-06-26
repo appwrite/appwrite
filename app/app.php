@@ -16,6 +16,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Response;
 
 /*
  * Configuration files
@@ -267,7 +268,6 @@ $utopia->options(function () use ($request, $response) {
 });
 
 $utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
-    $env = Config::getParam('env');
     $version = Config::getParam('version');
 
     switch ($error->getCode()) {
@@ -289,7 +289,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
 
     $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
-    $output = ((App::MODE_TYPE_DEVELOPMENT == $env)) ? [
+    $output = ($utopia->isDevelopment()) ? [
         'message' => $error->getMessage(),
         'code' => $error->getCode(),
         'file' => $error->getFile(),
@@ -334,9 +334,8 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
         $response->send($layout->render());
     }
 
-    $response
-        ->json($output)
-    ;
+    $response->dynamic(new Document($output),
+        $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_LOCALE);
 });
 
 $utopia->get('/manifest.json')
