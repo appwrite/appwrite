@@ -232,9 +232,8 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ],
             ]);
 
-            $invitee = $projectDB->getCollection([ // Get user by email address
+            $invitee = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     'email='.$email,
@@ -480,9 +479,8 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
             }
 
             if (empty($user->getId())) {
-                $user = $projectDB->getCollection([ // Get user
+                $user = $projectDB->getCollectionFirst([ // Get user
                     'limit' => 1,
-                    'first' => true,
                     'filters' => [
                         '$collection='.Database::SYSTEM_COLLECTION_USERS,
                         '$id='.$userId,
