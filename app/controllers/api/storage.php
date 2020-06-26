@@ -23,8 +23,6 @@ use Appwrite\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
 
-Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-
 $fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
     'default' => __DIR__.'/../../config/files/none.png',
     
@@ -130,6 +128,10 @@ $mimes = [
     // Adobe PDF
     'application/pdf',
 ];
+
+$utopia->init(function () use ($project) {
+    Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
+}, 'storage');
 
 $utopia->post('/v1/storage/files')
     ->desc('Create File')

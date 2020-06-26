@@ -29,8 +29,8 @@ use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
 
-$oauthDefaultSuccess = $request->getServer('_APP_HOME').'/auth/oauth2/success';
-$oauthDefaultFailure = $request->getServer('_APP_HOME').'/auth/oauth2/failure';
+$oauthDefaultSuccess = $utopia->getEnv('_APP_HOME').'/auth/oauth2/success';
+$oauthDefaultFailure = $utopia->getEnv('_APP_HOME').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 

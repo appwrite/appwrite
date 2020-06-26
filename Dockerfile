@@ -130,10 +130,9 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 
 EXPOSE 9501
 
-# CMD [ "php" , "app/server.php" ]
-CMD [ "php" , "-i" ]
+CMD [ "php" , "app/server.php" ]
+# CMD [ "php" , "-i" ]
 
 # static files: https://gist.github.com/ezimuel/a2e0ff7308952f2aa946f828a1302a63
 
-# docker build -t saw .
-# docker run -it --rm --name saw-run saw
+# docker build -t saw . && docker run -it -p 9501:9501 --rm --name saw-run saw

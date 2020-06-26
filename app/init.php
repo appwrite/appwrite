@@ -25,6 +25,11 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 
+$locale = 'en';
+$clients = [];
+$console = new Document([]);
+$mode = '';
+
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
@@ -47,11 +52,6 @@ const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://discord.gg/GSeTUeA';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 
-$register = new Registry();
-$request = new Request();
-$response = new Response();
-$utopia = new App('Asia/Tel_Aviv');
-
 $utopia->setMode($utopia->getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
 /*
@@ -66,20 +66,20 @@ Config::load('roles', __DIR__.'/../app/config/roles.php');  // User roles and sc
 Config::load('services', __DIR__.'/../app/config/services.php');  // List of services
 
 Config::setParam('env', $utopia->getMode());
-Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
+Config::setParam('domain', $utopia->getEnv('HTTP_HOST', ''));
 Config::setParam('domainVerification', false);
-Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
-Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
-Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
-Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
+Config::setParam('version', $utopia->getEnv('_APP_VERSION', 'UNKNOWN'));
+Config::setParam('protocol', $utopia->getEnv('HTTP_X_FORWARDED_PROTO', $utopia->getEnv('REQUEST_SCHEME', 'https')));
+Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$utopia->getEnv('HTTP_HOST', ''), PHP_URL_PORT));
+Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$utopia->getEnv('HTTP_HOST', null), PHP_URL_HOST));
 
-Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
-    .':'.$request->getServer('_APP_REDIS_PORT', ''));
+Resque::setBackend($utopia->getEnv('_APP_REDIS_HOST', '')
+    .':'.$utopia->getEnv('_APP_REDIS_PORT', ''));
 
 \define('COOKIE_DOMAIN', 
     (
-        $request->getServer('HTTP_HOST', null) === 'localhost' ||
-        $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
+        $utopia->getEnv('HTTP_HOST', null) === 'localhost' ||
+        $utopia->getEnv('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
         (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
     )
         ? null
@@ -90,11 +90,11 @@ Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
 /*
  * Registry
  */
-$register->set('db', function () use ($request) { // Register DB connection
-    $dbHost = $request->getServer('_APP_DB_HOST', '');
-    $dbUser = $request->getServer('_APP_DB_USER', '');
-    $dbPass = $request->getServer('_APP_DB_PASS', '');
-    $dbScheme = $request->getServer('_APP_DB_SCHEMA', '');
+$register->set('db', function () use ($utopia) { // Register DB connection
+    $dbHost = $utopia->getEnv('_APP_DB_HOST', '');
+    $dbUser = $utopia->getEnv('_APP_DB_USER', '');
+    $dbPass = $utopia->getEnv('_APP_DB_PASS', '');
+    $dbScheme = $utopia->getEnv('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
@@ -107,9 +107,9 @@ $register->set('db', function () use ($request) { // Register DB connection
 
     return $pdo;
 });
-$register->set('influxdb', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_INFLUXDB_HOST', '');
-    $port = $request->getServer('_APP_INFLUXDB_PORT', '');
+$register->set('influxdb', function () use ($utopia) { // Register DB connection
+    $host = $utopia->getEnv('_APP_INFLUXDB_HOST', '');
+    $port = $utopia->getEnv('_APP_INFLUXDB_PORT', '');
 
     if (empty($host) || empty($port)) {
         return;
@@ -119,43 +119,43 @@ $register->set('influxdb', function () use ($request) { // Register DB connectio
 
     return $client;
 });
-$register->set('statsd', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_STATSD_HOST', 'telegraf');
-    $port = $request->getServer('_APP_STATSD_PORT', 8125);
+$register->set('statsd', function () use ($utopia) { // Register DB connection
+    $host = $utopia->getEnv('_APP_STATSD_HOST', 'telegraf');
+    $port = $utopia->getEnv('_APP_STATSD_PORT', 8125);
 
     $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
 });
-$register->set('cache', function () use ($request) { // Register cache connection
+$register->set('cache', function () use ($utopia) { // Register cache connection
     $redis = new Redis();
 
-    $redis->connect($request->getServer('_APP_REDIS_HOST', ''),
-        $request->getServer('_APP_REDIS_PORT', ''));
+    $redis->connect($utopia->getEnv('_APP_REDIS_HOST', ''),
+        $utopia->getEnv('_APP_REDIS_PORT', ''));
 
     return $redis;
 });
-$register->set('smtp', function () use ($request) {
+$register->set('smtp', function () use ($utopia) {
     $mail = new PHPMailer(true);
 
     $mail->isSMTP();
 
-    $username = $request->getServer('_APP_SMTP_USERNAME', null);
-    $password = $request->getServer('_APP_SMTP_PASSWORD', null);
+    $username = $utopia->getEnv('_APP_SMTP_USERNAME', null);
+    $password = $utopia->getEnv('_APP_SMTP_PASSWORD', null);
 
     $mail->XMailer = 'Appwrite Mailer';
-    $mail->Host = $request->getServer('_APP_SMTP_HOST', 'smtp');
-    $mail->Port = $request->getServer('_APP_SMTP_PORT', 25);
+    $mail->Host = $utopia->getEnv('_APP_SMTP_HOST', 'smtp');
+    $mail->Port = $utopia->getEnv('_APP_SMTP_PORT', 25);
     $mail->SMTPAuth = (!empty($username) && !empty($password));
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
+    $mail->SMTPSecure = $utopia->getEnv('_APP_SMTP_SECURE', false);
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
-    $from = \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
-    $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+    $from = \urldecode($utopia->getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
+    $email = $utopia->getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
     $mail->addReplyTo($email, $from);
@@ -168,7 +168,7 @@ $register->set('smtp', function () use ($request) {
 /*
  * Localization
  */
-$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
+// $locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
 
 Locale::$exceptions = false;
 
@@ -230,89 +230,89 @@ if (\in_array($locale, Config::getParam('locales'))) {
         'method' => 'GET',
         'user_agent' => \sprintf(APP_USERAGENT,
             Config::getParam('version'),
-            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
+            $utopia->getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
     ],
 ]);
 
-/*
- * Auth & Project Scope
- */
-$consoleDB = new Database();
-$consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
+// /*
+//  * Auth & Project Scope
+//  */
+// $consoleDB = new Database();
+// $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+// $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
 
-$consoleDB->setMocks(Config::getParam('collections', []));
-Authorization::disable();
+// $consoleDB->setMocks(Config::getParam('collections', []));
+// Authorization::disable();
 
-$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
+// $project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
 
-Authorization::enable();
+// Authorization::enable();
 
-$console = $consoleDB->getDocument('console');
+// $console = $consoleDB->getDocument('console');
 
-$mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+// $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 
-Auth::setCookieName('a_session_'.$project->getId());
+// Auth::setCookieName('a_session_'.$project->getId());
 
-if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a_session_'.$console->getId());
-}
+// if (APP_MODE_ADMIN === $mode) {
+//     Auth::setCookieName('a_session_'.$console->getId());
+// }
 
-$session = Auth::decodeSession(
-    $request->getCookie(Auth::$cookieName, // Get sessions
-        $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+// $session = Auth::decodeSession(
+//     $request->getCookie(Auth::$cookieName, // Get sessions
+//         $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
+//             $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
 
-// Get fallback session from clients who block 3rd-party cookies
-$response->addHeader('X-Debug-Fallback', 'false');
+// // Get fallback session from clients who block 3rd-party cookies
+// $response->addHeader('X-Debug-Fallback', 'false');
 
-if(empty($session['id']) && empty($session['secret'])) {
-    $response->addHeader('X-Debug-Fallback', 'true');
-    $fallback = $request->getHeader('X-Fallback-Cookies', '');
-    $fallback = \json_decode($fallback, true);
-    $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
-}
+// if(empty($session['id']) && empty($session['secret'])) {
+//     $response->addHeader('X-Debug-Fallback', 'true');
+//     $fallback = $request->getHeader('X-Fallback-Cookies', '');
+//     $fallback = \json_decode($fallback, true);
+//     $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+// }
 
-Auth::$unique = $session['id'];
-Auth::$secret = $session['secret'];
+// Auth::$unique = $session['id'];
+// Auth::$secret = $session['secret'];
 
-$projectDB = new Database();
-$projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_'.$project->getId());
-$projectDB->setMocks(Config::getParam('collections', []));
+// $projectDB = new Database();
+// $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+// $projectDB->setNamespace('app_'.$project->getId());
+// $projectDB->setMocks(Config::getParam('collections', []));
 
-if (APP_MODE_ADMIN !== $mode) {
-    $user = $projectDB->getDocument(Auth::$unique);
-}
-else {
-    $user = $consoleDB->getDocument(Auth::$unique);
+// if (APP_MODE_ADMIN !== $mode) {
+//     $user = $projectDB->getDocument(Auth::$unique);
+// }
+// else {
+//     $user = $consoleDB->getDocument(Auth::$unique);
 
-    $user
-        ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-    ;
-}
+//     $user
+//         ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
+//     ;
+// }
 
-if (empty($user->getId()) // Check a document has been found in the DB
-    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-    || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-    $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-}
+// if (empty($user->getId()) // Check a document has been found in the DB
+//     || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+//     || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
+//     $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+// }
 
-if (APP_MODE_ADMIN === $mode) {
-    if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
-        Authorization::disable();
-    } else {
-        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-    }
-}
+// if (APP_MODE_ADMIN === $mode) {
+//     if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+//         Authorization::disable();
+//     } else {
+//         $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+//     }
+// }
 
-// Set project mail
-$register->get('smtp')
-    ->setFrom(
-        $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-        ($project->getId() === 'console')
-            ? \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
-            : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
-        )
-    );
+// // Set project mail
+// $register->get('smtp')
+//     ->setFrom(
+//         $utopia->getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+//         ($project->getId() === 'console')
+//             ? \urldecode($utopia->getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
+//             : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
+//         )
+//     );

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "950a131ba83024caad4b96de7c184b58",
+    "content-hash": "06dff1e6bbf24c18592e978fd9baab7d",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -3461,6 +3461,7 @@
         "ext-imagick": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
+        "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
         "ext-pdo": "*",

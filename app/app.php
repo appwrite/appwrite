@@ -31,28 +31,29 @@ $deletes = new Event('v1-deletes', 'DeletesV1');
  * Get All verified client URLs for both console and current projects
  * + Filter for duplicated entries
  */
-$clientsConsole = \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
+// $clientsConsole = \array_map(function ($node) {
+//         return $node['hostname'];
+//     }, \array_filter($console->getAttribute('platforms', []), function ($node) {
+//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+//             return true;
+//         }
 
-        return false;
-    }));
+//         return false;
+//     }));
 
-$clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
+// $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
+//         return $node['hostname'];
+//     }, \array_filter($project->getAttribute('platforms', []), function ($node) {
+//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+//             return true;
+//         }
 
-        return false;
-    }))));
+//         return false;
+//     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $mail, $audit, $usage, $clients) {
-    
+$utopia->init(function () {
+    global $utopia, $request, $response, $user, $project, $console, $webhook, $audit, $usage, $clients;
+    var_dump(1);
     $route = $utopia->match($request);
 
     if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
@@ -428,5 +429,3 @@ include_once __DIR__ . '/controllers/shared/web.php';
 foreach(Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
-
-$utopia->run($request, $response);
