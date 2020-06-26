@@ -96,6 +96,7 @@ $register->set('db', function () use ($request) { // Register DB connection
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDO::ATTR_PERSISTENT => true,
         PDO::ATTR_TIMEOUT => 5, // Seconds
     ));
 
@@ -129,7 +130,7 @@ $register->set('statsd', function () use ($request) { // Register DB connection
 $register->set('cache', function () use ($request) { // Register cache connection
     $redis = new Redis();
 
-    $redis->connect($request->getServer('_APP_REDIS_HOST', ''),
+    $redis->pconnect($request->getServer('_APP_REDIS_HOST', ''),
         $request->getServer('_APP_REDIS_PORT', ''));
 
     return $redis;
