@@ -29,8 +29,8 @@ use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
 
-$oauthDefaultSuccess = $request->getServer('_APP_HOME').'/auth/oauth2/success';
-$oauthDefaultFailure = $request->getServer('_APP_HOME').'/auth/oauth2/failure';
+$oauthDefaultSuccess = $utopia->getEnv('_APP_HOME').'/auth/oauth2/success';
+$oauthDefaultFailure = $utopia->getEnv('_APP_HOME').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
@@ -256,7 +256,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->param('failure', $oauthDefaultFailure, function () use ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true)
     ->param('scopes', [], function () { return new ArrayList(new Text(128)); }, 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->action(
-        function ($provider, $success, $failure, $scopes) use ($response, $request, $project) {
+        function ($provider, $success, $failure, $scopes) use ($response, $request, $utopia, $project) {
             $protocol = Config::getParam('protocol');
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
@@ -265,7 +265,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
             $appSecret = \json_decode($appSecret, true);
 
             if (!empty($appSecret) && isset($appSecret['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+                $key = $utopia->getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
                 $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
             }
 
@@ -348,7 +348,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(
-        function ($provider, $code, $state) use ($response, $request, $user, $projectDB, $project, $audit, $oauthDefaultSuccess) {
+        function ($provider, $code, $state) use ($response, $request, $utopia, $user, $projectDB, $project, $audit, $oauthDefaultSuccess) {
             $protocol = Config::getParam('protocol');
             $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
             $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -360,7 +360,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             $appSecret = \json_decode($appSecret, true);
 
             if (!empty($appSecret) && isset($appSecret['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+                $key = $utopia->getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
                 $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
             }
 

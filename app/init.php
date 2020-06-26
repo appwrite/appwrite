@@ -68,13 +68,13 @@ Config::load('services', __DIR__.'/../app/config/services.php');  // List of ser
 Config::setParam('env', $utopia->getMode());
 Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
 Config::setParam('domainVerification', false);
-Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
+Config::setParam('version', $utopia->getEnv('_APP_VERSION', 'UNKNOWN'));
 Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
 Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
 Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
 
-Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
-    .':'.$request->getServer('_APP_REDIS_PORT', ''));
+Resque::setBackend($utopia->getEnv('_APP_REDIS_HOST', '')
+    .':'.$utopia->getEnv('_APP_REDIS_PORT', ''));
 
 \define('COOKIE_DOMAIN', 
     (
@@ -90,11 +90,11 @@ Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
 /*
  * Registry
  */
-$register->set('db', function () use ($request) { // Register DB connection
-    $dbHost = $request->getServer('_APP_DB_HOST', '');
-    $dbUser = $request->getServer('_APP_DB_USER', '');
-    $dbPass = $request->getServer('_APP_DB_PASS', '');
-    $dbScheme = $request->getServer('_APP_DB_SCHEMA', '');
+$register->set('db', function () use ($utopia) { // Register DB connection
+    $dbHost = $utopia->getEnv('_APP_DB_HOST', '');
+    $dbUser = $utopia->getEnv('_APP_DB_USER', '');
+    $dbPass = $utopia->getEnv('_APP_DB_PASS', '');
+    $dbScheme = $utopia->getEnv('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
@@ -107,9 +107,9 @@ $register->set('db', function () use ($request) { // Register DB connection
 
     return $pdo;
 });
-$register->set('influxdb', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_INFLUXDB_HOST', '');
-    $port = $request->getServer('_APP_INFLUXDB_PORT', '');
+$register->set('influxdb', function () use ($utopia) { // Register DB connection
+    $host = $utopia->getEnv('_APP_INFLUXDB_HOST', '');
+    $port = $utopia->getEnv('_APP_INFLUXDB_PORT', '');
 
     if (empty($host) || empty($port)) {
         return;
@@ -119,43 +119,43 @@ $register->set('influxdb', function () use ($request) { // Register DB connectio
 
     return $client;
 });
-$register->set('statsd', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_STATSD_HOST', 'telegraf');
-    $port = $request->getServer('_APP_STATSD_PORT', 8125);
+$register->set('statsd', function () use ($utopia) { // Register DB connection
+    $host = $utopia->getEnv('_APP_STATSD_HOST', 'telegraf');
+    $port = $utopia->getEnv('_APP_STATSD_PORT', 8125);
 
     $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
 });
-$register->set('cache', function () use ($request) { // Register cache connection
+$register->set('cache', function () use ($utopia) { // Register cache connection
     $redis = new Redis();
 
-    $redis->connect($request->getServer('_APP_REDIS_HOST', ''),
-        $request->getServer('_APP_REDIS_PORT', ''));
+    $redis->connect($utopia->getEnv('_APP_REDIS_HOST', ''),
+        $utopia->getEnv('_APP_REDIS_PORT', ''));
 
     return $redis;
 });
-$register->set('smtp', function () use ($request) {
+$register->set('smtp', function () use ($utopia) {
     $mail = new PHPMailer(true);
 
     $mail->isSMTP();
 
-    $username = $request->getServer('_APP_SMTP_USERNAME', null);
-    $password = $request->getServer('_APP_SMTP_PASSWORD', null);
+    $username = $utopia->getEnv('_APP_SMTP_USERNAME', null);
+    $password = $utopia->getEnv('_APP_SMTP_PASSWORD', null);
 
     $mail->XMailer = 'Appwrite Mailer';
-    $mail->Host = $request->getServer('_APP_SMTP_HOST', 'smtp');
-    $mail->Port = $request->getServer('_APP_SMTP_PORT', 25);
+    $mail->Host = $utopia->getEnv('_APP_SMTP_HOST', 'smtp');
+    $mail->Port = $utopia->getEnv('_APP_SMTP_PORT', 25);
     $mail->SMTPAuth = (!empty($username) && !empty($password));
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
+    $mail->SMTPSecure = $utopia->getEnv('_APP_SMTP_SECURE', false);
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
-    $from = \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
-    $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+    $from = \urldecode($utopia->getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
+    $email = $utopia->getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
     $mail->addReplyTo($email, $from);
@@ -230,7 +230,7 @@ if (\in_array($locale, Config::getParam('locales'))) {
         'method' => 'GET',
         'user_agent' => \sprintf(APP_USERAGENT,
             Config::getParam('version'),
-            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
+            $utopia->getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
     ],
 ]);
@@ -310,9 +310,9 @@ if (APP_MODE_ADMIN === $mode) {
 // Set project mail
 $register->get('smtp')
     ->setFrom(
-        $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+        $utopia->getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
         ($project->getId() === 'console')
-            ? \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
+            ? \urldecode($utopia->getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
             : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
         )
     );
