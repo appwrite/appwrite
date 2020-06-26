@@ -1,56 +1,56 @@
-FROM ubuntu:18.04 AS builder
-
-LABEL maintainer="team@appwrite.io"
+FROM composer:2.0 as step0
 
 ARG TESTING=false
-
-ENV TZ=Asia/Tel_Aviv \
-    DEBIAN_FRONTEND=noninteractive \
-    PHP_VERSION=7.4 \
-    PHP_REDIS_VERSION=5.2.1
-
-RUN \
-  apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget git openssl && \
-  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests make php$PHP_VERSION php$PHP_VERSION-dev zip unzip php$PHP_VERSION-zip && \
-  # Redis Extension
-  wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
-  tar -xf $PHP_REDIS_VERSION.tar.gz && \
-  cd phpredis-$PHP_REDIS_VERSION && \
-  phpize$PHP_VERSION && \
-  ./configure && \
-  make && \
-  # Composer
-  wget https://getcomposer.org/composer.phar && \
-  chmod +x ./composer.phar && \
-  mv ./composer.phar /usr/bin/composer && \
-  #Brotli
-  cd / && \
-  git clone https://github.com/eustas/ngx_brotli.git && \
-  cd ngx_brotli && git submodule update --init && cd ..
+ENV TESTING=$TESTING
 
 WORKDIR /usr/local/src/
 
-# Updating PHP Dependencies and Auto-loading...
-
-ENV TESTING=$TESTING
-
-COPY composer.* /usr/local/src/
+COPY composer.lock /usr/local/src/
+COPY composer.json /usr/local/src/
 
 RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM ubuntu:18.04
+FROM php:7.4-cli as step1
+
+ENV TZ=Asia/Tel_Aviv \
+    DEBIAN_FRONTEND=noninteractive \
+    PHP_REDIS_VERSION=5.2.1 \
+    PHP_SWOOLE_VERSION=4.5.2
+
+RUN \
+  apt-get update && \
+  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget git openssl make zip unzip
+  
+RUN docker-php-ext-install sockets
+
+RUN \
+  # Redis Extension
+  wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
+  tar -xf $PHP_REDIS_VERSION.tar.gz && \
+  cd phpredis-$PHP_REDIS_VERSION && \
+  phpize && \
+  ./configure && \
+  make && make install && \
+  cd .. && \
+  ## Swoole Extension
+  git clone https://github.com/swoole/swoole-src.git && \
+  cd swoole-src && \
+  git checkout v$PHP_SWOOLE_VERSION && \
+  phpize && \
+  ./configure --enable-sockets --enable-http2 && \
+  make && make install
+  ## Brotli Extension
+
+FROM php:7.4-cli as final
+
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
 
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
-    PHP_VERSION=7.4 \
     _APP_ENV=production \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
@@ -80,77 +80,32 @@ ENV TZ=Asia/Tel_Aviv \
 #ENV _APP_SMTP_USERNAME ''
 #ENV _APP_SMTP_PASSWORD ''
 
-COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
-COPY --from=builder /phpredis-5.2.1/modules/redis.so /usr/lib/php/20190902/
-COPY --from=builder /ngx_brotli /ngx_brotli
-
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests wget ca-certificates software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev openssl gnupg htop supervisor && \
-  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php && \
-  add-apt-repository universe && \
-  add-apt-repository ppa:certbot/certbot && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
-  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
-  # Nginx
-  wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
-  tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \
-  cd nginx-1.19.0 && \
-  ./configure --prefix=/usr/share/nginx \
-    --sbin-path=/usr/sbin/nginx \
-    --modules-path=/usr/lib/nginx/modules \
-    --conf-path=/etc/nginx/nginx.conf \
-    --error-log-path=/var/log/nginx/error.log \
-    --http-log-path=/var/log/nginx/access.log \
-    --pid-path=/run/nginx.pid \
-    --lock-path=/var/lock/nginx.lock \
-    --user=www-data \
-    --group=www-data \
-    --build=Ubuntu \
-    --with-http_gzip_static_module \
-    --with-http_ssl_module \
-    --with-http_v2_module \
-    --add-module=/ngx_brotli && \
-  make && \
-  make install && \
-  rm -rf ../nginx-1.19.0 && \
-  # Redis Extension
-  echo extension=redis.so >> /etc/php/$PHP_VERSION/fpm/conf.d/redis.ini && \
-  echo extension=redis.so >> /etc/php/$PHP_VERSION/cli/conf.d/redis.ini && \
-  # Cleanup
-  cd ../ && \
-  apt-get purge -y --auto-remove wget software-properties-common build-essential libpcre3-dev zlib1g-dev libssl-dev gnupg && \
-  apt-get clean && \
-  rm -rf /ngx_brotli && \
-  rm -rf /var/lib/apt/lists/*
+  apt-get install -y --no-install-recommends --no-install-suggests webp certbot \
+  libonig-dev libcurl4-gnutls-dev libmagickwand-dev libyaml-dev && \
+  pecl install imagick yaml && \ 
+  docker-php-ext-enable imagick yaml
 
-# Set Upload Limit (default to 100MB)
-RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN docker-php-ext-install sockets curl pdo opcache
 
-# Add logs file
-RUN echo "" >> /var/log/appwrite.log
+WORKDIR /usr/src/code
 
-# Nginx Configuration (with self-signed ssl certificates)
-COPY ./docker/nginx.conf.template /etc/nginx/nginx.conf.template
-COPY ./docker/ssl/cert.pem /etc/nginx/ssl/cert.pem
-COPY ./docker/ssl/key.pem /etc/nginx/ssl/key.pem
+COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 
-# PHP Configuration
-RUN mkdir -p /var/run/php
-COPY ./docker/www.conf /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
-
-# Add PHP Source Code
-COPY ./app /usr/share/nginx/html/app
+# Add Source Code
+COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
-COPY ./docs /usr/share/nginx/html/docs
-COPY ./public /usr/share/nginx/html/public
-COPY ./src /usr/share/nginx/html/src
-COPY --from=builder /usr/local/src/vendor /usr/share/nginx/html/vendor
+COPY ./docs /usr/src/code/docs
+COPY ./public /usr/src/code/public
+COPY ./src /usr/src/code/src
 
+# Set Volumes
 RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
@@ -159,9 +114,6 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
     chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates
-
-# Supervisord Conf
-COPY ./docker/supervisord.conf /etc/supervisord.conf
 
 # Executables
 RUN chmod +x /usr/local/bin/start
@@ -172,8 +124,16 @@ RUN chmod +x /usr/local/bin/test
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
-EXPOSE 80
+# Enable Extensions
+RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
+RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 
-WORKDIR /usr/share/nginx/html
+EXPOSE 9501
 
-CMD ["/bin/bash", "/usr/local/bin/start"]
+# CMD [ "php" , "app/server.php" ]
+CMD [ "php" , "-i" ]
+
+# static files: https://gist.github.com/ezimuel/a2e0ff7308952f2aa946f828a1302a63
+
+# docker build -t saw .
+# docker run -it --rm --name saw-run saw
