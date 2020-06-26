@@ -34,7 +34,7 @@ class Key extends Validator
      */
     public function isValid($value)
     {
-        if(!\is_string($value)) {
+        if (!\is_string($value)) {
             return false;
         }
         

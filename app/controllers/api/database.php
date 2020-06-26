@@ -25,12 +25,9 @@ use Appwrite\Database\Exception\Structure as StructureException;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
-include_once __DIR__ . '/../shared/api.php';
-
-$isDev = (App::MODE_TYPE_PRODUCTION !== $utopia->getMode());
-
 $utopia->post('/v1/database/collections')
     ->desc('Create Collection')
+    ->groups(['api', 'database'])
     ->label('webhook', 'database.collections.create')
     ->label('scope', 'collections.write')
     ->label('sdk.namespace', 'database')
@@ -104,6 +101,7 @@ $utopia->post('/v1/database/collections')
 
 $utopia->get('/v1/database/collections')
     ->desc('List Collections')
+    ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -152,6 +150,7 @@ $utopia->get('/v1/database/collections')
 
 $utopia->get('/v1/database/collections/:collectionId')
     ->desc('Get Collection')
+    ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -172,6 +171,7 @@ $utopia->get('/v1/database/collections/:collectionId')
 
 // $utopia->get('/v1/database/collections/:collectionId/logs')
 //     ->desc('Get Collection Logs')
+//     ->groups(['api', 'database'])
 //     ->label('scope', 'collections.read')
 //     ->label('sdk.platform', [APP_PLATFORM_SERVER])
 //     ->label('sdk.namespace', 'database')
@@ -180,7 +180,7 @@ $utopia->get('/v1/database/collections/:collectionId')
 //     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
 //     ->action(
 //         function ($collectionId) use ($response, $register, $projectDB, $project) {
-//             $collection = $projectDB->getDocument($collectionId);
+//             $collection = $projectDB->getDocument($collectionId, false);
 
 //             if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
 //                 throw new Exception('Collection not found', 404);
@@ -236,6 +236,7 @@ $utopia->get('/v1/database/collections/:collectionId')
 
 $utopia->put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
+    ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('webhook', 'database.collections.update')
     ->label('sdk.namespace', 'database')
@@ -308,6 +309,7 @@ $utopia->put('/v1/database/collections/:collectionId')
 
 $utopia->delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
+    ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('webhook', 'database.collections.delete')
     ->label('sdk.namespace', 'database')
@@ -345,6 +347,7 @@ $utopia->delete('/v1/database/collections/:collectionId')
 
 $utopia->post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
+    ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.create')
     ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
@@ -370,7 +373,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
                 throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
             }
             
-            $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
+            $collection = $projectDB->getDocument($collectionId, false);
 
             if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
@@ -385,7 +388,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
             // Read parent document + validate not 404 + validate read / write permission like patch method
             // Add payload to parent document property
             if ((!empty($parentDocument)) && (!empty($parentProperty))) {
-                $parentDocument = $projectDB->getDocument($parentDocument);
+                $parentDocument = $projectDB->getDocument($parentDocument, false);
 
                 if (empty($parentDocument->getArrayCopy())) { // Check empty
                     throw new Exception('No parent document found', 404);
@@ -425,7 +428,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
                 $key = (isset($rule['key'])) ? $rule['key'] : '';
                 $default = (isset($rule['default'])) ? $rule['default'] : null;
 
-                if(!isset($data[$key])) {
+                if (!isset($data[$key])) {
                     $data[$key] = $default;
                 }
             }
@@ -464,6 +467,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
 
 $utopia->get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
+    ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -478,8 +482,8 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
     ->action(
-        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search) use ($response, $projectDB, $isDev) {
-            $collection = $projectDB->getDocument($collectionId, $isDev);
+        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search) use ($response, $projectDB, $utopia) {
+            $collection = $projectDB->getDocument($collectionId, false);
 
             if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
                 throw new Exception('Collection not found', 404);
@@ -497,7 +501,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
                 ]),
             ]);
 
-            if ($isDev) {
+            if ($utopia->isDevelopment()) {
                 $collection
                     ->setAttribute('debug', $projectDB->getDebug())
                     ->setAttribute('limit', $limit)
@@ -523,6 +527,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
 
 $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
+    ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('sdk.namespace', 'database')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -531,9 +536,9 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(
-        function ($collectionId, $documentId) use ($response, $request, $projectDB, $isDev) {
-            $document = $projectDB->getDocument($documentId, $isDev);
-            $collection = $projectDB->getDocument($collectionId, $isDev);
+        function ($collectionId, $documentId) use ($response, $request, $projectDB) {
+            $document = $projectDB->getDocument($documentId, false);
+            $collection = $projectDB->getDocument($collectionId, false);
 
             if (empty($document->getArrayCopy()) || $document->getCollection() != $collection->getId()) { // Check empty
                 throw new Exception('No document found', 404);
@@ -568,6 +573,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
 
 $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
+    ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.update')
     ->label('scope', 'documents.write')
     ->label('sdk.namespace', 'database')
@@ -580,9 +586,9 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(
-        function ($collectionId, $documentId, $data, $read, $write) use ($response, $projectDB, &$output, $webhook, $audit, $isDev) {
-            $collection = $projectDB->getDocument($collectionId/*, $isDev*/);
-            $document = $projectDB->getDocument($documentId, $isDev);
+        function ($collectionId, $documentId, $data, $read, $write) use ($response, $projectDB, $webhook, $audit) {
+            $collection = $projectDB->getDocument($collectionId, false);
+            $document = $projectDB->getDocument($documentId, false);
 
             $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -647,6 +653,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
 
 $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
+    ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('webhook', 'database.documents.delete')
     ->label('sdk.namespace', 'database')
@@ -656,9 +663,9 @@ $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(
-        function ($collectionId, $documentId) use ($response, $projectDB, $audit, $webhook, $isDev) {
-            $collection = $projectDB->getDocument($collectionId, $isDev);
-            $document = $projectDB->getDocument($documentId, $isDev);
+        function ($collectionId, $documentId) use ($response, $projectDB, $audit, $webhook) {
+            $collection = $projectDB->getDocument($collectionId, false);
+            $document = $projectDB->getDocument($documentId, false);
 
             if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
                 throw new Exception('No document found', 404);

@@ -29,8 +29,6 @@ use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $oauthDefaultSuccess = $request->getServer('_APP_HOME').'/auth/oauth2/success';
 $oauthDefaultFailure = $request->getServer('_APP_HOME').'/auth/oauth2/failure';
 
@@ -45,11 +43,11 @@ $utopia->init(function() use (&$oauth2Keys) {
         $oauth2Keys[] = 'oauth2'.\ucfirst($key);
         $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
     }
-
-});
+}, 'account');
 
 $utopia->post('/v1/account')
     ->desc('Create Account')
+    ->groups(['api', 'account'])
     ->label('webhook', 'account.create')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -149,6 +147,7 @@ $utopia->post('/v1/account')
 
 $utopia->post('/v1/account/sessions')
     ->desc('Create Account Session')
+    ->groups(['api', 'account'])
     ->label('webhook', 'account.sessions.create')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -221,7 +220,7 @@ $utopia->post('/v1/account/sessions')
                 ->setParam('resource', 'users/'.$profile->getId())
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
                 ;
@@ -238,6 +237,7 @@ $utopia->post('/v1/account/sessions')
 
 $utopia->get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create Account Session with OAuth2')
+    ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -288,6 +288,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
 
 $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
+    ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -310,6 +311,7 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 
 $utopia->post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
+    ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('origin', '*')
@@ -333,6 +335,7 @@ $utopia->post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
 
 $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
+    ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('webhook', 'account.sessions.create')
     ->label('scope', 'public')
@@ -496,13 +499,13 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setParam('data', ['provider' => $provider])
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
             }
 
-            if($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
+            if ($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
                 $state['success'] = URLParser::parse($state['success']);
                 $query = URLParser::parseQuery($state['success']['query']);
                 $query['project'] = $project->getId();
@@ -525,6 +528,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
 
 $utopia->get('/v1/account')
     ->desc('Get Account')
+    ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -548,6 +552,7 @@ $utopia->get('/v1/account')
 
 $utopia->get('/v1/account/prefs')
     ->desc('Get Account Preferences')
+    ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -570,6 +575,7 @@ $utopia->get('/v1/account/prefs')
 
 $utopia->get('/v1/account/sessions')
     ->desc('Get Account Sessions')
+    ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -628,6 +634,7 @@ $utopia->get('/v1/account/sessions')
 
 $utopia->get('/v1/account/logs')
     ->desc('Get Account Logs')
+    ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -700,6 +707,7 @@ $utopia->get('/v1/account/logs')
 
 $utopia->patch('/v1/account/name')
     ->desc('Update Account Name')
+    ->groups(['api', 'account'])
     ->label('webhook', 'account.update.name')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -737,6 +745,7 @@ $utopia->patch('/v1/account/name')
 
 $utopia->patch('/v1/account/password')
     ->desc('Update Account Password')
+    ->groups(['api', 'account'])
     ->label('webhook', 'account.update.password')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -779,6 +788,7 @@ $utopia->patch('/v1/account/password')
 
 $utopia->patch('/v1/account/email')
     ->desc('Update Account Email')
+    ->groups(['api', 'account'])
     ->label('webhook', 'account.update.email')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -836,6 +846,7 @@ $utopia->patch('/v1/account/email')
 
 $utopia->patch('/v1/account/prefs')
     ->desc('Update Account Preferences')
+    ->groups(['api', 'account'])
     ->label('webhook', 'account.update.prefs')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -876,6 +887,7 @@ $utopia->patch('/v1/account/prefs')
 
 $utopia->delete('/v1/account')
     ->desc('Delete Account')
+    ->groups(['api', 'account'])
     ->label('webhook', 'account.delete')
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -915,7 +927,7 @@ $utopia->delete('/v1/account')
                 ])
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([]))
                 ;
@@ -931,6 +943,7 @@ $utopia->delete('/v1/account')
 
 $utopia->delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
+    ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('webhook', 'account.sessions.delete')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -967,7 +980,7 @@ $utopia->delete('/v1/account/sessions/:sessionId')
                         ])
                     ;
 
-                    if(!Config::getParam('domainVerification')) {
+                    if (!Config::getParam('domainVerification')) {
                         $response
                             ->addHeader('X-Fallback-Cookies', \json_encode([]))
                         ;
@@ -990,6 +1003,7 @@ $utopia->delete('/v1/account/sessions/:sessionId')
 
 $utopia->delete('/v1/account/sessions')
     ->desc('Delete All Account Sessions')
+    ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('webhook', 'account.sessions.delete')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
@@ -1020,7 +1034,7 @@ $utopia->delete('/v1/account/sessions')
                     ])
                 ;
 
-                if(!Config::getParam('domainVerification')) {
+                if (!Config::getParam('domainVerification')) {
                     $response
                         ->addHeader('X-Fallback-Cookies', \json_encode([]))
                     ;
@@ -1040,6 +1054,7 @@ $utopia->delete('/v1/account/sessions')
 
 $utopia->post('/v1/account/recovery')
     ->desc('Create Password Recovery')
+    ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -1138,6 +1153,7 @@ $utopia->post('/v1/account/recovery')
 
 $utopia->put('/v1/account/recovery')
     ->desc('Complete Password Recovery')
+    ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -1207,6 +1223,7 @@ $utopia->put('/v1/account/recovery')
 
 $utopia->post('/v1/account/verification')
     ->desc('Create Email Verification')
+    ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
@@ -1293,6 +1310,7 @@ $utopia->post('/v1/account/verification')
 
 $utopia->put('/v1/account/verification')
     ->desc('Complete Email Verification')
+    ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')

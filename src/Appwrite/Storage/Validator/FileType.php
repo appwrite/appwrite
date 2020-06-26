@@ -64,7 +64,7 @@ class FileType extends Validator
      */
     public function isValid($path)
     {
-        if(!\is_readable($path)) {
+        if (!\is_readable($path)) {
             return false;
         }
 

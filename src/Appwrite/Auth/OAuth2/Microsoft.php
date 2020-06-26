@@ -19,7 +19,7 @@ class Microsoft extends OAuth2
      * @var array
      */
     protected $scopes = [
-        'offline_access', 
+        'offline_access',
         'user.read'
     ];
 

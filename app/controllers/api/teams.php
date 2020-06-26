@@ -20,10 +20,9 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Template\Template;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $utopia->post('/v1/teams')
     ->desc('Create Team')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -87,6 +86,7 @@ $utopia->post('/v1/teams')
 
 $utopia->get('/v1/teams')
     ->desc('List Teams')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -116,6 +116,7 @@ $utopia->get('/v1/teams')
 
 $utopia->get('/v1/teams/:teamId')
     ->desc('Get Team')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -136,6 +137,7 @@ $utopia->get('/v1/teams/:teamId')
 
 $utopia->put('/v1/teams/:teamId')
     ->desc('Update Team')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -165,6 +167,7 @@ $utopia->put('/v1/teams/:teamId')
 
 $utopia->delete('/v1/teams/:teamId')
     ->desc('Delete Team')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -204,6 +207,7 @@ $utopia->delete('/v1/teams/:teamId')
 
 $utopia->post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -305,12 +309,11 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'secret' => Auth::hash($secret),
             ]);
 
-            if(APP_MODE_ADMIN === $mode) { // Allow admin to create membership
+            if (APP_MODE_ADMIN === $mode) { // Allow admin to create membership
                 Authorization::disable();
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
                 Authorization::reset();
-            }
-            else {
+            } else {
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
             }
 
@@ -343,7 +346,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{text-cta}}', '#ffffff')
             ;
 
-            if(APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
+            if (APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
                 $mail
                     ->setParam('event', 'teams.membership.create')
                     ->setParam('recipient', $email)
@@ -380,6 +383,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
 
 $utopia->get('/v1/teams/:teamId/memberships')
     ->desc('Get Team Memberships')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')
@@ -432,12 +436,12 @@ $utopia->get('/v1/teams/:teamId/memberships')
             }
 
             $response->json(['sum' => $projectDB->getSum(), 'memberships' => $users]);
-
         }
     );
 
 $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->desc('Update Team Membership Status')
+    ->groups(['api', 'teams'])
     ->label('scope', 'public')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'teams')
@@ -542,7 +546,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
                 ->setParam('resource', 'teams/'.$teamId)
             ;
 
-            if(!Config::getParam('domainVerification')) {
+            if (!Config::getParam('domainVerification')) {
                 $response
                     ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
@@ -569,6 +573,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
 
 $utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
     ->desc('Delete Team Membership')
+    ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'teams')

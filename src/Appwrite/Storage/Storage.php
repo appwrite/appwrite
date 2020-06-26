@@ -78,7 +78,7 @@ class Storage
      *
      * @return string
      */
-    static public function human($bytes, $decimals = 2)
+    public static function human($bytes, $decimals = 2)
     {
         $units = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
         $step = 1024;
