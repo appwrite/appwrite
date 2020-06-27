@@ -15,7 +15,7 @@ class Github extends OAuth2
      * @var array
      */
     protected $scopes = [
-        'user',
+        'user:email',
     ];
 
     /**
