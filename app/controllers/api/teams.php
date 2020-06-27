@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit, $mail, $mode, $clients;
+global $utopia, $request, $response, $projectDB, $project, $user, $audit, $mail, $mode, $clients;
 
 use Utopia\Exception;
 use Utopia\Response;

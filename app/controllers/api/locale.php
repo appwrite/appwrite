@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $register, $request, $response, $projectDB, $project, $user, $audit;
+global $utopia, $request, $response, $user;
 
 use Utopia\App;
 use Utopia\Locale\Locale;

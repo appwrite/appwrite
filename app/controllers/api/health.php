@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register, $project;
+global $utopia, $request, $response, $register;
 
 use Utopia\Exception;
 use Appwrite\Storage\Device\Local;
