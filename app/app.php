@@ -2,7 +2,7 @@
 
 require_once __DIR__.'/init.php';
 
-global $utopia, $request, $response, $register, $consoleDB, $project;
+global $utopia, $request, $response, $register, $project;
 
 use Utopia\App;
 use Utopia\Request;
