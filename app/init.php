@@ -23,6 +23,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\Event\Event;
 use PHPMailer\PHPMailer\PHPMailer;
 
 const APP_NAME = 'Appwrite';
@@ -166,6 +167,21 @@ $register->set('smtp', function () use ($utopia) {
     $mail->isHTML(true);
 
     return $mail;
+});
+$register->set('queue-webhooks', function () {
+    return new Event('v1-webhooks', 'WebhooksV1');
+});
+$register->set('queue-audits', function () {
+    return new Event('v1-audits', 'AuditsV1');
+});
+$register->set('queue-usage', function () {
+    return new Event('v1-usage', 'UsageV1');
+});
+$register->set('queue-mails', function () {
+    return new Event('v1-mails', 'MailsV1');
+});
+$register->set('queue-deletes', function () {
+    return new Event('v1-deletes', 'DeletesV1');
 });
 
 /*
