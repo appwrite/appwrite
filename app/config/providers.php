@@ -74,7 +74,7 @@ return [ // Ordered by ABC.
         'mock' => false,
     ],
     'google' => [
-        'developers' => 'https://developers.google.com/',
+        'developers' => 'https://support.google.com/googleapi/answer/6158849',
         'icon' => 'icon-google',
         'enabled' => true,
         'form' => false,

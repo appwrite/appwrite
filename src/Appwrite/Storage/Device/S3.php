@@ -40,7 +40,7 @@ class S3 extends Device
         $path = '';
 
         for ($i = 0; $i < 4; ++$i) {
-            $path = ($i < strlen($filename)) ? $path.DIRECTORY_SEPARATOR.$filename[$i] : $path.DIRECTORY_SEPARATOR.'x';
+            $path = ($i < \strlen($filename)) ? $path.DIRECTORY_SEPARATOR.$filename[$i] : $path.DIRECTORY_SEPARATOR.'x';
         }
 
         return $this->getRoot().$path.DIRECTORY_SEPARATOR.$filename;

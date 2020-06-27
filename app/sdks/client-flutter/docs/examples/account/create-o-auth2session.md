@@ -10,7 +10,7 @@ void main() { // Init SDK
   ;
 
   Future result = account.createOAuth2Session(
-    provider: 'bitbucket',
+    provider: 'amazon',
   );
 
   result

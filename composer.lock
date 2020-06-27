@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "303e23dd212555ca04c7f386a9f87256",
+    "content-hash": "7f6cbe77fe2e0f8bdff33c37a4d9ca11",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -101,110 +101,17 @@
             "time": "2018-04-25T17:53:56+00:00"
         },
         {
-            "name": "chrisboulton/php-resque",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/chrisboulton/php-resque.git",
-                "reference": "968b7e6a307a2079051dfc571d2fc2be0546209f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/chrisboulton/php-resque/zipball/968b7e6a307a2079051dfc571d2fc2be0546209f",
-                "reference": "968b7e6a307a2079051dfc571d2fc2be0546209f",
-                "shasum": ""
-            },
-            "require": {
-                "colinmollenhour/credis": "~1.7",
-                "ext-pcntl": "*",
-                "php": ">=5.3.0",
-                "psr/log": "~1.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "3.7.*"
-            },
-            "suggest": {
-                "ext-proctitle": "Allows php-resque to rename the title of UNIX processes to show the status of a worker.",
-                "ext-redis": "Native PHP extension for Redis connectivity. Credis will automatically utilize when available."
-            },
-            "bin": [
-                "bin/resque"
-            ],
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Resque": "lib"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Chris Boulton",
-                    "email": "chris@bigcommerce.com"
-                }
-            ],
-            "description": "Redis backed library for creating background jobs and processing them later. Based on resque for Ruby.",
-            "homepage": "http://www.github.com/chrisboulton/php-resque/",
-            "keywords": [
-                "background",
-                "job",
-                "redis",
-                "resque"
-            ],
-            "abandoned": "resque/php-resque",
-            "time": "2017-04-12T21:58:19+00:00"
-        },
-        {
-            "name": "chrisboulton/php-resque-scheduler",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/chrisboulton/php-resque-scheduler.git",
-                "reference": "5954c989026f1bbc6443c02078a655333e152242"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/chrisboulton/php-resque-scheduler/zipball/5954c989026f1bbc6443c02078a655333e152242",
-                "reference": "5954c989026f1bbc6443c02078a655333e152242",
-                "shasum": ""
-            },
-            "require": {
-                "chrisboulton/php-resque": "dev-master"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "ResqueScheduler": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Chris Boulton",
-                    "email": "chris@bgigcommerce.com"
-                }
-            ],
-            "description": "php-resque-scheduler is a PHP port of resque-scheduler, which adds support for scheduling items in the future to Resque.",
-            "time": "2016-11-28T22:38:06+00:00"
-        },
-        {
             "name": "colinmollenhour/credis",
-            "version": "1.11.1",
+            "version": "1.11.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/colinmollenhour/credis.git",
-                "reference": "bd1da4698ab1918477f9e71e5ff0062b9a345008"
+                "reference": "b8b2bd6b87d2d4df67065f3510efb80d5f9c4e53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/bd1da4698ab1918477f9e71e5ff0062b9a345008",
-                "reference": "bd1da4698ab1918477f9e71e5ff0062b9a345008",
+                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/b8b2bd6b87d2d4df67065f3510efb80d5f9c4e53",
+                "reference": "b8b2bd6b87d2d4df67065f3510efb80d5f9c4e53",
                 "shasum": ""
             },
             "require": {
@@ -231,7 +138,7 @@
             ],
             "description": "Credis is a lightweight interface to the Redis key-value store which wraps the phpredis library when available for better performance.",
             "homepage": "https://github.com/colinmollenhour/credis",
-            "time": "2019-11-26T18:09:45+00:00"
+            "time": "2020-06-15T19:25:47+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -485,12 +392,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
+<<<<<<< HEAD
                 "reference": "23730ab1005ca1e760dcdfbd7d853e6c3f1035d6"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/guzzle/guzzle/zipball/23730ab1005ca1e760dcdfbd7d853e6c3f1035d6",
                 "reference": "23730ab1005ca1e760dcdfbd7d853e6c3f1035d6",
+=======
+                "reference": "9d4290de1cfd701f38099ef7e183b64b4b7b0c5e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/9d4290de1cfd701f38099ef7e183b64b4b7b0c5e",
+                "reference": "9d4290de1cfd701f38099ef7e183b64b4b7b0c5e",
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
                 "shasum": ""
             },
             "require": {
@@ -544,7 +460,11 @@
                 "rest",
                 "web service"
             ],
+<<<<<<< HEAD
             "time": "2020-06-06T12:11:37+00:00"
+=======
+            "time": "2020-06-16T21:01:06+00:00"
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "guzzlehttp/promises",
@@ -552,24 +472,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "89b1a76b7fda5853401297dc4b2a093cba1fda23"
+                "reference": "bbf3b200bc83c1e9298580a9f99b9be248543467"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/89b1a76b7fda5853401297dc4b2a093cba1fda23",
-                "reference": "89b1a76b7fda5853401297dc4b2a093cba1fda23",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/bbf3b200bc83c1e9298580a9f99b9be248543467",
+                "reference": "bbf3b200bc83c1e9298580a9f99b9be248543467",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.6"
+                "php": ">=5.5"
             },
             "require-dev": {
-                "phpunit/phpunit": "^5.7.27 || ^7.5"
+                "phpunit/phpunit": "^4.8.36 || ^5.7.27 || ^7.5"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.4-dev"
+                    "dev-master": "1.3-dev"
                 }
             },
             "autoload": {
@@ -595,7 +515,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2020-02-15T23:33:03+00:00"
+            "time": "2020-06-21T23:10:57+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -1136,17 +1056,96 @@
             "time": "2019-03-08T08:55:37+00:00"
         },
         {
+            "name": "resque/php-resque",
+            "version": "v1.3.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/resque/php-resque.git",
+                "reference": "fe41c04763699b1318d97ed14cc78583e9380161"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/resque/php-resque/zipball/fe41c04763699b1318d97ed14cc78583e9380161",
+                "reference": "fe41c04763699b1318d97ed14cc78583e9380161",
+                "shasum": ""
+            },
+            "require": {
+                "colinmollenhour/credis": "~1.7",
+                "php": ">=5.6.0",
+                "psr/log": "~1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5.7"
+            },
+            "suggest": {
+                "ext-pcntl": "REQUIRED for forking processes on platforms that support it (so anything but Windows).",
+                "ext-proctitle": "Allows php-resque to rename the title of UNIX processes to show the status of a worker.",
+                "ext-redis": "Native PHP extension for Redis connectivity. Credis will automatically utilize when available."
+            },
+            "bin": [
+                "bin/resque",
+                "bin/resque-scheduler"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Resque": "lib",
+                    "ResqueScheduler": "lib"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Dan Hunsaker",
+                    "email": "danhunsaker+resque@gmail.com",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Rajib Ahmed",
+                    "homepage": "https://github.com/rajibahmed",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Steve Klabnik",
+                    "email": "steve@steveklabnik.com",
+                    "role": "Maintainer"
+                },
+                {
+                    "name": "Chris Boulton",
+                    "email": "chris@bigcommerce.com",
+                    "role": "Creator"
+                }
+            ],
+            "description": "Redis backed library for creating background jobs and processing them later. Based on resque for Ruby.",
+            "homepage": "http://www.github.com/resque/php-resque/",
+            "keywords": [
+                "background",
+                "job",
+                "redis",
+                "resque"
+            ],
+            "time": "2020-04-16T16:39:50+00:00"
+        },
+        {
             "name": "symfony/polyfill-intl-idn",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-idn.git",
-                "reference": "3bff59ea7047e925be6b7f2059d60af31bb46d6a"
+                "reference": "a57f8161502549a742a63c09f0a604997bf47027"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-intl-idn/zipball/3bff59ea7047e925be6b7f2059d60af31bb46d6a",
-                "reference": "3bff59ea7047e925be6b7f2059d60af31bb46d6a",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-idn/zipball/a57f8161502549a742a63c09f0a604997bf47027",
+                "reference": "a57f8161502549a742a63c09f0a604997bf47027",
                 "shasum": ""
             },
             "require": {
@@ -1161,6 +1160,10 @@
             "extra": {
                 "branch-alias": {
                     "dev-master": "1.17-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
                 }
             },
             "autoload": {
@@ -1195,7 +1198,7 @@
                 "portable",
                 "shim"
             ],
-            "time": "2020-05-12T16:47:27+00:00"
+            "time": "2020-06-06T08:46:27+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -1203,12 +1206,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
+<<<<<<< HEAD
                 "reference": "3ed80deaf77c304010e3f637bc1842c85fd6c485"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/3ed80deaf77c304010e3f637bc1842c85fd6c485",
                 "reference": "3ed80deaf77c304010e3f637bc1842c85fd6c485",
+=======
+                "reference": "7110338d81ce1cbc3e273136e4574663627037a7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/7110338d81ce1cbc3e273136e4574663627037a7",
+                "reference": "7110338d81ce1cbc3e273136e4574663627037a7",
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
                 "shasum": ""
             },
             "require": {
@@ -1221,6 +1233,10 @@
             "extra": {
                 "branch-alias": {
                     "dev-master": "1.17-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
                 }
             },
             "autoload": {
@@ -1254,7 +1270,11 @@
                 "portable",
                 "shim"
             ],
+<<<<<<< HEAD
             "time": "2020-06-04T17:06:46+00:00"
+=======
+            "time": "2020-06-06T08:46:27+00:00"
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "symfony/polyfill-php72",
@@ -1262,12 +1282,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php72.git",
-                "reference": "f048e612a3905f34931127360bdd2def19a5e582"
+                "reference": "3d9c70ff1b9f6bb618f9954b2f7f760220c2b38a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/f048e612a3905f34931127360bdd2def19a5e582",
-                "reference": "f048e612a3905f34931127360bdd2def19a5e582",
+                "url": "https://api.github.com/repos/symfony/polyfill-php72/zipball/3d9c70ff1b9f6bb618f9954b2f7f760220c2b38a",
+                "reference": "3d9c70ff1b9f6bb618f9954b2f7f760220c2b38a",
                 "shasum": ""
             },
             "require": {
@@ -1277,6 +1297,10 @@
             "extra": {
                 "branch-alias": {
                     "dev-master": "1.17-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
                 }
             },
             "autoload": {
@@ -1309,20 +1333,20 @@
                 "portable",
                 "shim"
             ],
-            "time": "2020-05-12T16:47:27+00:00"
+            "time": "2020-06-06T08:46:27+00:00"
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "8a014449fe92b5275ef5006ac7f7ecaaec23e64d"
+                "reference": "b485eddeda335c4f7d1a16fbf5544e37bdf195ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/8a014449fe92b5275ef5006ac7f7ecaaec23e64d",
-                "reference": "8a014449fe92b5275ef5006ac7f7ecaaec23e64d",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b485eddeda335c4f7d1a16fbf5544e37bdf195ac",
+                "reference": "b485eddeda335c4f7d1a16fbf5544e37bdf195ac",
                 "shasum": ""
             },
             "require": {
@@ -1356,20 +1380,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-28T19:43:47+00:00"
+            "time": "2020-06-20T11:35:08+00:00"
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "ed624c324835859b68521099de13c01c6928703f"
+                "reference": "7bcceba05ed640fe910e7b6b0c82d998fb9d6495"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/ed624c324835859b68521099de13c01c6928703f",
-                "reference": "ed624c324835859b68521099de13c01c6928703f",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/7bcceba05ed640fe910e7b6b0c82d998fb9d6495",
+                "reference": "7bcceba05ed640fe910e7b6b0c82d998fb9d6495",
                 "shasum": ""
             },
             "require": {
@@ -1403,20 +1427,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-04-17T19:42:29+00:00"
+            "time": "2020-06-20T11:36:43+00:00"
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "7c0dbf1ae1c216a2ab8c3fdb7f2c0166a2e0988d"
+                "reference": "52a20ae1d5e3f5be11492c4bb0af9cf2a2c07e5d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/7c0dbf1ae1c216a2ab8c3fdb7f2c0166a2e0988d",
-                "reference": "7c0dbf1ae1c216a2ab8c3fdb7f2c0166a2e0988d",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/52a20ae1d5e3f5be11492c4bb0af9cf2a2c07e5d",
+                "reference": "52a20ae1d5e3f5be11492c4bb0af9cf2a2c07e5d",
                 "shasum": ""
             },
             "require": {
@@ -1450,25 +1474,25 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-09T13:02:50+00:00"
+            "time": "2020-06-20T11:43:40+00:00"
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.5.0",
+            "version": "0.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "c66255fed87f00c5a8f7cc0c482cdb082260cd32"
+                "reference": "8ad0371ce045b60034ebcb2b001b6e88bdcc3670"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/c66255fed87f00c5a8f7cc0c482cdb082260cd32",
-                "reference": "c66255fed87f00c5a8f7cc0c482cdb082260cd32",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/8ad0371ce045b60034ebcb2b001b6e88bdcc3670",
+                "reference": "8ad0371ce045b60034ebcb2b001b6e88bdcc3670",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.1",
-                "utopia-php/framework": "0.2.*"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.0"
@@ -1498,20 +1522,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-05-05T09:02:10+00:00"
+            "time": "2020-06-20T11:37:51+00:00"
         },
         {
             "name": "utopia-php/config",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/config.git",
-                "reference": "f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d"
+                "reference": "48c5009c33b8426260ee7425100e716d7ed7f693"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/config/zipball/f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d",
-                "reference": "f1f41d3863eb00bd2837b45c2e17e8b5da1cf46d",
+                "url": "https://api.github.com/repos/utopia-php/config/zipball/48c5009c33b8426260ee7425100e716d7ed7f693",
+                "reference": "48c5009c33b8426260ee7425100e716d7ed7f693",
                 "shasum": ""
             },
             "require": {
@@ -1544,20 +1568,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-03-28T10:24:18+00:00"
+            "time": "2020-06-20T11:38:58+00:00"
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
+                "reference": "98e85296867a59c9d712d6ed768a5c5b2b297b43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/98e85296867a59c9d712d6ed768a5c5b2b297b43",
+                "reference": "98e85296867a59c9d712d6ed768a5c5b2b297b43",
                 "shasum": ""
             },
             "require": {
@@ -1594,20 +1618,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-02-23T07:40:02+00:00"
+            "time": "2020-06-20T11:47:04+00:00"
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.2.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "e3d88b794badbd5ededcf62d708b31009111f860"
+                "reference": "30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e3d88b794badbd5ededcf62d708b31009111f860",
-                "reference": "e3d88b794badbd5ededcf62d708b31009111f860",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
+                "reference": "30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
                 "shasum": ""
             },
             "require": {
@@ -1638,20 +1662,20 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-03-08T15:42:21+00:00"
+            "time": "2020-06-25T18:21:48+00:00"
         },
         {
             "name": "utopia-php/locale",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/locale.git",
-                "reference": "e3e5f16b190e0ddc654ef2fd86f6280d7acc41b1"
+                "reference": "f2ed7f0b50fe961d65600871e8f8d9dea3167500"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/locale/zipball/e3e5f16b190e0ddc654ef2fd86f6280d7acc41b1",
-                "reference": "e3e5f16b190e0ddc654ef2fd86f6280d7acc41b1",
+                "url": "https://api.github.com/repos/utopia-php/locale/zipball/f2ed7f0b50fe961d65600871e8f8d9dea3167500",
+                "reference": "f2ed7f0b50fe961d65600871e8f8d9dea3167500",
                 "shasum": ""
             },
             "require": {
@@ -1684,20 +1708,20 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-09T13:03:33+00:00"
+            "time": "2020-06-20T11:41:46+00:00"
         },
         {
             "name": "utopia-php/registry",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "ca38e4b9b1079fb375463c6a7df3eecc2cb91d10"
+                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/ca38e4b9b1079fb375463c6a7df3eecc2cb91d10",
-                "reference": "ca38e4b9b1079fb375463c6a7df3eecc2cb91d10",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
+                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
                 "shasum": ""
             },
             "require": {
@@ -1731,7 +1755,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2019-12-09T13:04:53+00:00"
+            "time": "2020-06-20T11:46:06+00:00"
         }
     ],
     "packages-dev": [
@@ -1741,7 +1765,11 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
+<<<<<<< HEAD
                 "reference": "3d7b25ca411d0cc6d1847b4ffced8e7f4d549995"
+=======
+                "reference": "2b9a55bc447b8b856a8b9dc8c5c86a2c61a6ed3a"
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
             },
             "require": {
                 "ext-curl": "*",
@@ -1771,7 +1799,11 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
+<<<<<<< HEAD
             "time": "2020-06-13T15:59:15+00:00"
+=======
+            "time": "2020-06-20T07:38:05+00:00"
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "doctrine/instantiator",
@@ -1779,12 +1811,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/instantiator.git",
-                "reference": "a390fde13fc9bc2ffb73340bb8f07201a8e85af8"
+                "reference": "3e7a22aed197e9333cc929e7f6b4300bdae91fcc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/a390fde13fc9bc2ffb73340bb8f07201a8e85af8",
-                "reference": "a390fde13fc9bc2ffb73340bb8f07201a8e85af8",
+                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/3e7a22aed197e9333cc929e7f6b4300bdae91fcc",
+                "reference": "3e7a22aed197e9333cc929e7f6b4300bdae91fcc",
                 "shasum": ""
             },
             "require": {
@@ -1827,7 +1859,7 @@
                 "constructor",
                 "instantiate"
             ],
-            "time": "2020-05-30T16:47:47+00:00"
+            "time": "2020-06-15T18:51:04+00:00"
         },
         {
             "name": "matthiasmullie/minify",
@@ -2094,12 +2126,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionCommon.git",
-                "reference": "985f414b55eca4296ffc99db960a97b3cc8fbcea"
+                "reference": "cf8df60735d98fd18070b7cab0019ba0831e219c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/985f414b55eca4296ffc99db960a97b3cc8fbcea",
-                "reference": "985f414b55eca4296ffc99db960a97b3cc8fbcea",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/cf8df60735d98fd18070b7cab0019ba0831e219c",
+                "reference": "cf8df60735d98fd18070b7cab0019ba0831e219c",
                 "shasum": ""
             },
             "require": {
@@ -2135,7 +2167,7 @@
                 "reflection",
                 "static analysis"
             ],
-            "time": "2020-04-27T09:34:19+00:00"
+            "time": "2020-06-19T17:42:03+00:00"
         },
         {
             "name": "phpdocumentor/reflection-docblock",
@@ -2143,12 +2175,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e"
+                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
-                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
+                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
                 "shasum": ""
             },
             "require": {
@@ -2188,7 +2220,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-02-22T12:28:44+00:00"
+            "time": "2020-06-19T18:58:43+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -2196,12 +2228,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "95d8782070ccd738295bbe4483f8760f998ad64d"
+                "reference": "94f3ddc5d77e49daadadd33b798b933e52dde82c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/95d8782070ccd738295bbe4483f8760f998ad64d",
-                "reference": "95d8782070ccd738295bbe4483f8760f998ad64d",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/94f3ddc5d77e49daadadd33b798b933e52dde82c",
+                "reference": "94f3ddc5d77e49daadadd33b798b933e52dde82c",
                 "shasum": ""
             },
             "require": {
@@ -2234,7 +2266,7 @@
                 }
             ],
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
-            "time": "2020-05-13T13:46:15+00:00"
+            "time": "2020-06-19T19:40:27+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -3207,12 +3239,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
-                "reference": "e94c8b1bbe2bc77507a1056cdb06451c75b427f9"
+                "reference": "2edd75b8b35d62fd3eeabba73b26b8f1f60ce13d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/e94c8b1bbe2bc77507a1056cdb06451c75b427f9",
-                "reference": "e94c8b1bbe2bc77507a1056cdb06451c75b427f9",
+                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/2edd75b8b35d62fd3eeabba73b26b8f1f60ce13d",
+                "reference": "2edd75b8b35d62fd3eeabba73b26b8f1f60ce13d",
                 "shasum": ""
             },
             "require": {
@@ -3225,6 +3257,10 @@
             "extra": {
                 "branch-alias": {
                     "dev-master": "1.17-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
                 }
             },
             "autoload": {
@@ -3257,7 +3293,7 @@
                 "polyfill",
                 "portable"
             ],
-            "time": "2020-05-12T16:14:59+00:00"
+            "time": "2020-06-06T08:46:27+00:00"
         },
         {
             "name": "theseer/tokenizer",
@@ -3305,12 +3341,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
+<<<<<<< HEAD
                 "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/twigphp/Twig/zipball/3beabd64bdc91558b41f140cc4b14925f0416cb2",
                 "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2",
+=======
+                "reference": "f32950c872a995a93807909bab69387f47afaa25"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/f32950c872a995a93807909bab69387f47afaa25",
+                "reference": "f32950c872a995a93807909bab69387f47afaa25",
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
                 "shasum": ""
             },
             "require": {
@@ -3362,20 +3407,24 @@
             "keywords": [
                 "templating"
             ],
+<<<<<<< HEAD
             "time": "2020-06-08T10:41:25+00:00"
+=======
+            "time": "2020-06-22T15:25:21+00:00"
+>>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "webmozart/assert",
-            "version": "1.8.0",
+            "version": "1.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozart/assert.git",
-                "reference": "ab2cb0b3b559010b75981b1bdce728da3ee90ad6"
+                "reference": "9dc4f203e36f2b486149058bade43c851dd97451"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/assert/zipball/ab2cb0b3b559010b75981b1bdce728da3ee90ad6",
-                "reference": "ab2cb0b3b559010b75981b1bdce728da3ee90ad6",
+                "url": "https://api.github.com/repos/webmozart/assert/zipball/9dc4f203e36f2b486149058bade43c851dd97451",
+                "reference": "9dc4f203e36f2b486149058bade43c851dd97451",
                 "shasum": ""
             },
             "require": {
@@ -3383,6 +3432,7 @@
                 "symfony/polyfill-ctype": "^1.8"
             },
             "conflict": {
+                "phpstan/phpstan": "<0.12.20",
                 "vimeo/psalm": "<3.9.1"
             },
             "require-dev": {
@@ -3410,7 +3460,7 @@
                 "check",
                 "validate"
             ],
-            "time": "2020-04-18T12:12:48+00:00"
+            "time": "2020-06-16T10:16:42+00:00"
         }
     ],
     "aliases": [],

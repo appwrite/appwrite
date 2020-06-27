@@ -38,16 +38,16 @@ class Collection extends Structure
     public function isValid($document)
     {
         $document = new Document(
-            array_merge($this->merge, ($document instanceof Document) ? $document->getArrayCopy() : $document)
+            \array_merge($this->merge, ($document instanceof Document) ? $document->getArrayCopy() : $document)
         );
 
-        if (is_null($document->getCollection())) {
+        if (\is_null($document->getCollection())) {
             $this->message = 'Missing collection attribute $collection';
 
             return false;
         }
 
-        if (!in_array($document->getCollection(), $this->collections)) {
+        if (!\in_array($document->getCollection(), $this->collections)) {
             $this->message = 'Collection is not allowed';
 
             return false;

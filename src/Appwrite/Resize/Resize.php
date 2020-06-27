@@ -112,9 +112,9 @@ class Resize
     public function save(string $path = null, string $type = '', int $quality = 75)
     {
         // Create directory with write permissions
-        if (null !== $path && !file_exists(dirname($path))) {
-            if (!@mkdir(dirname($path), 0755, true)) {
-                throw new Exception('Can\'t create directory '.dirname($path));
+        if (null !== $path && !\file_exists(\dirname($path))) {
+            if (!@\mkdir(\dirname($path), 0755, true)) {
+                throw new Exception('Can\'t create directory '.\dirname($path));
             }
         }
 
@@ -134,30 +134,30 @@ class Resize
                 //$this->image->setImageFormat('webp');
 
                 $signature = $this->image->getImageSignature();
-                $temp = '/tmp/temp-'.$signature.'.'.strtolower($this->image->getImageFormat());
+                $temp = '/tmp/temp-'.$signature.'.'.\strtolower($this->image->getImageFormat());
                 $output = '/tmp/output-'.$signature.'.webp';
 
                 // save temp
                 $this->image->writeImages($temp, true);
 
                 // convert temp
-                exec("cwebp -quiet -metadata none -q $quality $temp -o $output");
+                \exec("cwebp -quiet -metadata none -q $quality $temp -o $output");
 
-                $data = file_get_contents($output);
+                $data = \file_get_contents($output);
 
                 //load webp
                 if (empty($path)) {
                     return $data;
                 } else {
-                    file_put_contents($path, $data, LOCK_EX);
+                    \file_put_contents($path, $data, LOCK_EX);
                 }
 
                 $this->image->clear();
                 $this->image->destroy();
 
                 //delete webp
-                unlink($output);
-                unlink($temp);
+                \unlink($output);
+                \unlink($temp);
 
                 return;
 
@@ -165,7 +165,7 @@ class Resize
 
             case 'png':
                 /* Scale quality from 0-100 to 0-9 */
-                $scaleQuality = round(($quality / 100) * 9);
+                $scaleQuality = \round(($quality / 100) * 9);
 
                 /* Invert quality setting as 0 is best, not 9 */
                 $invertScaleQuality = 9 - $scaleQuality;

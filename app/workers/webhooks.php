@@ -7,7 +7,7 @@ use Appwrite\Database\Validator\Authorization;
 
 require_once __DIR__.'/../init.php';
 
-cli_set_process_title('Webhooks V1 Worker');
+\cli_set_process_title('Webhooks V1 Worker');
 
 Console::success(APP_NAME.' webhooks worker v1 has started');
 
@@ -28,7 +28,7 @@ class WebhooksV1
         // Event
         $projectId = $this->args['projectId'];
         $event = $this->args['event'];
-        $payload = json_encode($this->args['payload']);
+        $payload = \json_encode($this->args['payload']);
 
         // Webhook
 
@@ -38,12 +38,12 @@ class WebhooksV1
 
         Authorization::enable();
 
-        if (is_null($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
+        if (\is_null($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
             throw new Exception('Project Not Found');
         }
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if (!(isset($webhook['events']) && is_array($webhook['events']) && in_array($event, $webhook['events']))) {
+            if (!(isset($webhook['events']) && \is_array($webhook['events']) && \in_array($event, $webhook['events']))) {
                 continue;
             }
 
@@ -54,22 +54,22 @@ class WebhooksV1
             $httpUser = (isset($webhook['httpUser'])) ? $webhook['httpUser'] : null;
             $httpPass = (isset($webhook['httpPass'])) ? $webhook['httpPass'] : null;
 
-            $ch = curl_init($url);
+            $ch = \curl_init($url);
 
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-            curl_setopt($ch, CURLOPT_HEADER, 0);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_USERAGENT, sprintf(APP_USERAGENT,
+            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+            \curl_setopt($ch, CURLOPT_HEADER, 0);
+            \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
                 Config::getParam('version'),
                 $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ));
-            curl_setopt(
+            \curl_setopt(
                 $ch,
                 CURLOPT_HTTPHEADER,
                 [
                     'Content-Type: application/json',
-                    'Content-Length: '.strlen($payload),
+                    'Content-Length: '.\strlen($payload),
                     'X-'.APP_NAME.'-Webhook-Event: '.$event,
                     'X-'.APP_NAME.'-Webhook-Name: '.$name,
                     'X-'.APP_NAME.'-Webhook-Signature: '.$signature,
@@ -77,24 +77,24 @@ class WebhooksV1
             );
 
             if (!$security) {
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             }
 
             if (!empty($httpUser) && !empty($httpPass)) {
-                curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
-                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+                \curl_setopt($ch, CURLOPT_USERPWD, "$httpUser:$httpPass");
+                \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
             }
 
-            if (false === curl_exec($ch)) {
-                $errors[] = curl_error($ch).' in event '.$event.' for webhook '.$name;
+            if (false === \curl_exec($ch)) {
+                $errors[] = \curl_error($ch).' in event '.$event.' for webhook '.$name;
             }
 
-            curl_close($ch);
+            \curl_close($ch);
         }
 
         if (!empty($errors)) {
-            throw new Exception(implode(" / \n\n", $errors));
+            throw new Exception(\implode(" / \n\n", $errors));
         }
     }
 

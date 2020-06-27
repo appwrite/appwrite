@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hej {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Vänligen följ länken nedan för att verifiera din epostadress.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Om du inte vill verifiera din epostadress så kan du ignorera detta meddelande.
-    <br />
-    <br />
+</p>
+<p>
     Tack,
     <br />
     {{project}}-teamet
-</div>
+</p>

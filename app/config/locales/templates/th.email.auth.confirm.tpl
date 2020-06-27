@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     สวัสดี {{name}},
-    <br />
-    <br />
+</p>
+<p>
     ตามไปยังลิงค์นี้เพื่อยืนยันที่อยู่อีเมลของคุณ
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
    หากคุณไม่ได้ขอให้ยืนยันที่อยู่นี้คุณสามารถเพิกเฉยต่อข้อความนี้ได้
-    <br />
-    <br />
+</p>
+<p>
     ขอบคุณ,
     <br />
     ทีม {{project}} 
-</div>
+</p>

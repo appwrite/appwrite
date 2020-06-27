@@ -6,10 +6,6 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.account.createOAuth2Session('amazon');
+// Go to OAuth provider login page
+sdk.account.createOAuth2Session('amazon');
 
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});

@@ -143,7 +143,7 @@ class Database
      */
     public function getCollection(array $options)
     {
-        $options = array_merge([
+        $options = \array_merge([
             'offset' => 0,
             'limit' => 15,
             'search' => '',
@@ -163,11 +163,11 @@ class Database
         }
 
         if ($options['first']) {
-            $results = reset($results);
+            $results = \reset($results);
         }
 
         if ($options['last']) {
-            $results = end($results);
+            $results = \end($results);
         }
 
         return $results;
@@ -181,7 +181,7 @@ class Database
      */
     public function getDocument($id, $mock = true, $decode = true)
     {
-        if (is_null($id)) {
+        if (\is_null($id)) {
             return new Document([]);
         }
 
@@ -357,7 +357,7 @@ class Database
      */
     public function getCount(array $options)
     {
-        $options = array_merge([
+        $options = \array_merge([
             'filters' => [],
         ], $options);
 

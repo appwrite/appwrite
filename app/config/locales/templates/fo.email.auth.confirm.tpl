@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halló {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Fylg hesa lenka fyrið at verifisera teldupostur
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Om tú ikke spurdi om at verifisera hesa teldupostur, kannst tú ignorera hesa boð.
-    <br />
-    <br />
+</p>
+<p>
     Takk,
     <br />
     {{project}} lið
-</div>
+</p>

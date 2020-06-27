@@ -88,6 +88,7 @@
         var remove = (function(result) {
           return function(event) {
             render(result.$id);
+            element.value = '';
           };
         })(result);
 

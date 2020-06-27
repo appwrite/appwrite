@@ -56,7 +56,7 @@ class Origin extends Validator
      */
     public function __construct($platforms)
     {
-        foreach($platforms as $platform) {
+        foreach ($platforms as $platform) {
             $type = (isset($platform['type'])) ? $platform['type'] : '';
             
             switch ($type) {
@@ -81,35 +81,35 @@ class Origin extends Validator
 
     public function getDescription()
     {
-        if(!array_key_exists($this->client, $this->platforms)) {
+        if (!\array_key_exists($this->client, $this->platforms)) {
             return 'Unsupported platform';
         }
 
-        return 'Inavlid Origin. Register your new client ('.$this->host.') as a new '
-            .$this->platforms[$this->client].' platform on your project console';
+        return 'Invalid Origin. Register your new client ('.$this->host.') as a new '
+            .$this->platforms[$this->client].' platform on your project console dashboard';
     }
 
     /**
      * Check if Origin has been whiltlisted
      *  for access to the API
-     * 
+     *
      * @param string $origin
      *
      * @return bool
      */
     public function isValid($origin)
     {
-        $scheme = parse_url($origin, PHP_URL_SCHEME);
-        $host = parse_url($origin, PHP_URL_HOST);
+        $scheme = \parse_url($origin, PHP_URL_SCHEME);
+        $host = \parse_url($origin, PHP_URL_HOST);
 
         $this->host = $host;
         $this->client = $scheme;
 
-        if(empty($host)) {
+        if (empty($host)) {
             return true;
         }
 
-        if(in_array($host, $this->clients)) {
+        if (\in_array($host, $this->clients)) {
             return true;
         }
 

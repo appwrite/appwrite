@@ -64,6 +64,7 @@ trait AccountBase
      */
     public function testCreateAccountSession($data):array
     {
+        sleep(10);
         $email = (isset($data['email'])) ? $data['email'] : '';
         $password = (isset($data['password'])) ? $data['password'] : '';
 
@@ -658,7 +659,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(2, $response['body']['type']);
         $this->assertIsNumeric($response['body']['expire']);
-        
+
         $lastEmail = $this->getLastEmail();
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
@@ -950,7 +951,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(3, $response['body']['type']);
         $this->assertIsNumeric($response['body']['expire']);
-        
+
         $lastEmail = $this->getLastEmail();
 
         $this->assertEquals($email, $lastEmail['to'][0]['address']);

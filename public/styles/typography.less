@@ -18,23 +18,17 @@ a, .link {
   border-left: 2px solid transparent;
   border-right: 2px solid transparent;
   transition: 200ms;
-  display: inline-block;
   cursor: pointer;
 
   &:hover {
-    transform: translateY(-2px);
+    //transform: translateY(-2px);
   }
 
   &.disabled {
     opacity: .5;
   }
 
-  &.disabled:hover {
-    .link.link-animation-disabled();
-  }
-
   &.tag:hover {
-    .link.link-animation-disabled();
     opacity: .9;
   }
 
@@ -43,16 +37,16 @@ a, .link {
   }
 }
 
-a.link-animation-disabled,
-.link.link-animation-disabled {
+a.link-animation-enabled,
+.link.link-animation-enabled {
+  display: inline-block;
+  
   &:hover {
-    transform: translateY(0);
+    transform: translateY(-2px);
   }
 }
 
 .func-link-return-animation(@pos) {
-  .link.link-animation-disabled();
-
   & > i {
     display: inline-block;
     transition: 200ms;

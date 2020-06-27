@@ -1,7 +1,5 @@
 <?php
 
-include_once __DIR__ . '/../shared/web.php';
-
 global $utopia, $response, $request, $layout;
 
 use Utopia\View;
@@ -9,27 +7,30 @@ use Utopia\Config\Config;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 
-$header = new View(__DIR__.'/../../views/home/comps/header.phtml');
-$footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
+$utopia->init(function () use ($layout) {
+    $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
+    $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
-$footer
-    ->setParam('version', Config::getParam('version'))
-;
+    $footer
+        ->setParam('version', Config::getParam('version'))
+    ;
 
-$layout
-    ->setParam('title', APP_NAME)
-    ->setParam('description', '')
-    ->setParam('class', 'home')
-    ->setParam('platforms', Config::getParam('platforms'))
-    ->setParam('header', [$header])
-    ->setParam('footer', [$footer])
-;
+    $layout
+        ->setParam('title', APP_NAME)
+        ->setParam('description', '')
+        ->setParam('class', 'home')
+        ->setParam('platforms', Config::getParam('platforms'))
+        ->setParam('header', [$header])
+        ->setParam('footer', [$footer])
+    ;
+}, 'home');
 
 $utopia->shutdown(function () use ($response, $layout) {
     $response->send($layout->render());
-});
+}, 'home');
 
 $utopia->get('/')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(
@@ -39,7 +40,7 @@ $utopia->get('/')
     );
 
 $utopia->get('/auth/signin')
-    ->desc('Login page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -51,7 +52,7 @@ $utopia->get('/auth/signin')
     });
 
 $utopia->get('/auth/signup')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -63,7 +64,7 @@ $utopia->get('/auth/signup')
     });
 
 $utopia->get('/auth/recovery')
-    ->desc('Password recovery page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($request, $layout) {
@@ -75,7 +76,7 @@ $utopia->get('/auth/recovery')
     });
 
 $utopia->get('/auth/confirm')
-    ->desc('Account confirmation page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -87,7 +88,7 @@ $utopia->get('/auth/confirm')
     });
 
 $utopia->get('/auth/join')
-    ->desc('Account team join page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -99,7 +100,7 @@ $utopia->get('/auth/join')
     });
 
 $utopia->get('/auth/recovery/reset')
-    ->desc('Password recovery page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -112,7 +113,7 @@ $utopia->get('/auth/recovery/reset')
 
 
 $utopia->get('/auth/oauth2/success')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -127,7 +128,7 @@ $utopia->get('/auth/oauth2/success')
     });
 
 $utopia->get('/auth/oauth2/failure')
-    ->desc('Registration page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function () use ($layout) {
@@ -142,7 +143,7 @@ $utopia->get('/auth/oauth2/failure')
     });
 
 $utopia->get('/error/:code')
-    ->desc('Error page')
+    ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
@@ -159,35 +160,38 @@ $utopia->get('/error/:code')
     });
 
 $utopia->get('/open-api-2.json')
+    ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('platform', APP_PLATFORM_CLIENT, function () {return new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE]);}, 'Choose target platform.', true)
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
-        function ($platform, $extensions, $tests) use ($response, $request, $utopia, $services) {
+        function ($platform, $extensions, $tests) use ($response, $request, $utopia) {
+            $services = Config::getParam('services', []);
+            
             function fromCamelCase($input)
             {
-                preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
+                \preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
                 $ret = $matches[0];
                 foreach ($ret as &$match) {
-                    $match = $match == strtoupper($match) ? strtolower($match) : lcfirst($match);
+                    $match = $match == \strtoupper($match) ? \strtolower($match) : \lcfirst($match);
                 }
 
-                return implode('_', $ret);
+                return \implode('_', $ret);
             }
 
             function fromCamelCaseToDash($input)
             {
-                return str_replace([' ', '_'], '-', strtolower(preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
+                return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
             }
 
             foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
-                if($tests && !isset($service['tests'])) {
+                if ($tests && !isset($service['tests'])) {
                     continue;
                 }
 
-                if($tests && !$service['tests']) {
+                if ($tests && !$service['tests']) {
                     continue;
                 }
                 
@@ -196,7 +200,7 @@ $utopia->get('/open-api-2.json')
                 }
              
                 /** @noinspection PhpIncludeInspection */
-                include_once realpath(__DIR__.'/../../'.$service['controller']);
+                include_once \realpath(__DIR__.'/../../'.$service['controller']);
             }
 
             $security = [
@@ -295,7 +299,7 @@ $utopia->get('/open-api-2.json')
                         'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                     ],
                 ],
-                'host' => parse_url($request->getServer('_APP_HOME', Config::getParam('domain')), PHP_URL_HOST),
+                'host' => \parse_url($request->getServer('_APP_HOME', Config::getParam('domain')), PHP_URL_HOST),
                 'basePath' => '/v1',
                 'schemes' => ['https'],
                 'consumes' => ['application/json', 'multipart/form-data'],
@@ -347,19 +351,19 @@ $utopia->get('/open-api-2.json')
             ];
 
             if ($extensions) {
-                if(isset($output['securityDefinitions']['Project'])) {
+                if (isset($output['securityDefinitions']['Project'])) {
                     $output['securityDefinitions']['Project']['extensions'] = ['demo' => '5df5acd0d48c2'];
                 }
                 
-                if(isset($output['securityDefinitions']['Key'])) {
+                if (isset($output['securityDefinitions']['Key'])) {
                     $output['securityDefinitions']['Key']['extensions'] = ['demo' => '919c2d18fb5d4...a2ae413da83346ad2'];
                 }
                 
-                if(isset($output['securityDefinitions']['Locale'])) {
+                if (isset($output['securityDefinitions']['Locale'])) {
                     $output['securityDefinitions']['Locale']['extensions'] = ['demo' => 'en'];
                 }
 
-                if(isset($output['securityDefinitions']['Mode'])) {
+                if (isset($output['securityDefinitions']['Mode'])) {
                     $output['securityDefinitions']['Mode']['extensions'] = ['demo' => ''];
                 }
             }
@@ -374,11 +378,11 @@ $utopia->get('/open-api-2.json')
                         continue;
                     }
 
-                    if($platform !== APP_PLATFORM_CONSOLE && !in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $route->getLabel('sdk.platform', []))) {
                         continue;
                     }
 
-                    $url = str_replace('/v1', '', $route->getURL());
+                    $url = \str_replace('/v1', '', $route->getURL());
                     $scope = $route->getLabel('scope', '');
                     $hide = $route->getLabel('sdk.hide', false);
                     $consumes = ['application/json'];
@@ -387,14 +391,14 @@ $utopia->get('/open-api-2.json')
                         continue;
                     }
 
-                    $desc = (!empty($route->getLabel('sdk.description', ''))) ? realpath('../'.$route->getLabel('sdk.description', '')) : null;
+                    $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath('../'.$route->getLabel('sdk.description', '')) : null;
         
                     $temp = [
                         'summary' => $route->getDesc(),
-                        'operationId' => $route->getLabel('sdk.method', uniqid()),
+                        'operationId' => $route->getLabel('sdk.method', \uniqid()),
                         'consumes' => [],
                         'tags' => [$route->getLabel('sdk.namespace', 'default')],
-                        'description' => ($desc) ? file_get_contents($desc) : '',
+                        'description' => ($desc) ? \file_get_contents($desc) : '',
                         
                         // 'responses' => [
                         //     200 => [
@@ -440,7 +444,7 @@ $utopia->get('/open-api-2.json')
                     ];
 
                     foreach ($route->getParams() as $name => $param) {
-                        $validator = (is_callable($param['validator'])) ? $param['validator']() : $param['validator']; /* @var $validator \Utopia\Validator */
+                        $validator = (\is_callable($param['validator'])) ? $param['validator']() : $param['validator']; /* @var $validator \Utopia\Validator */
 
                         $node = [
                             'name' => $name,
@@ -448,14 +452,14 @@ $utopia->get('/open-api-2.json')
                             'required' => !$param['optional'],
                         ];
 
-                        switch ((!empty($validator)) ? get_class($validator) : '') {
+                        switch ((!empty($validator)) ? \get_class($validator) : '') {
                             case 'Utopia\Validator\Text':
                                 $node['type'] = 'string';
-                                $node['x-example'] = '['.strtoupper(fromCamelCase($node['name'])).']';
+                                $node['x-example'] = '['.\strtoupper(fromCamelCase($node['name'])).']';
                                 break;
                             case 'Appwrite\Database\Validator\UID':
                                 $node['type'] = 'string';
-                                $node['x-example'] = '['.strtoupper(fromCamelCase($node['name'])).']';
+                                $node['x-example'] = '['.\strtoupper(fromCamelCase($node['name'])).']';
                                 break;
                             case 'Utopia\Validator\Email':
                                 $node['type'] = 'string';
@@ -517,11 +521,11 @@ $utopia->get('/open-api-2.json')
                                 break;
                         }
 
-                        if ($param['optional'] && !is_null($param['default'])) { // Param has default value
+                        if ($param['optional'] && !\is_null($param['default'])) { // Param has default value
                             $node['default'] = $param['default'];
                         }
 
-                        if (false !== strpos($url, ':'.$name)) { // Param is in URL path
+                        if (false !== \strpos($url, ':'.$name)) { // Param is in URL path
                             $node['in'] = 'path';
                             $temp['parameters'][] = $node;
                         } elseif ($key == 'GET') { // Param is in query
@@ -537,12 +541,12 @@ $utopia->get('/open-api-2.json')
                             }
                         }
 
-                        $url = str_replace(':'.$name, '{'.$name.'}', $url);
+                        $url = \str_replace(':'.$name, '{'.$name.'}', $url);
                     }
 
                     $temp['consumes'] = $consumes;
 
-                    $output['paths'][$url][strtolower($route->getMethod())] = $temp;
+                    $output['paths'][$url][\strtolower($route->getMethod())] = $temp;
                 }
             }
 
@@ -550,7 +554,7 @@ $utopia->get('/open-api-2.json')
                 var_dump($mock['name']);
             }*/
 
-            ksort($output['paths']);
+            \ksort($output['paths']);
 
             $response
                 ->json($output);

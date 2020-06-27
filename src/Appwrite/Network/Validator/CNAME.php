@@ -21,12 +21,12 @@ class CNAME extends Validator
 
     public function getDescription()
     {
-        return 'Inavlid CNAME record';
+        return 'Invalid CNAME record';
     }
 
     /**
      * Check if CNAME record target value matches selected target
-     * 
+     *
      * @param string $domain
      *
      * @return bool
@@ -34,17 +34,17 @@ class CNAME extends Validator
     public function isValid($domain)
     {
         try {
-            $records = dns_get_record($domain, DNS_CNAME);
+            $records = \dns_get_record($domain, DNS_CNAME);
         } catch (\Throwable $th) {
             return false;
         }
 
-        if(!$records || !is_array($records)) {
+        if (!$records || !\is_array($records)) {
             return false;
         }
 
-        foreach($records as $record) {
-            if(isset($record['target']) && $record['target'] === $this->target) {
+        foreach ($records as $record) {
+            if (isset($record['target']) && $record['target'] === $this->target) {
                 return true;
             }
         }

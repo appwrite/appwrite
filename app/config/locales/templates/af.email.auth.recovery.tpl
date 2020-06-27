@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hallo {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Volg hierdie web adres om jou wagwoord te verander vir {{project}}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     As jy nie gevra het om you wagwoord te verander nie, kan jy hierdie boodskap ignoreer.
-    <br />
-    <br />
+</p>
+<p>
     Baie dankie,
     <br />
     {{project}} span
-</div>
+</p>

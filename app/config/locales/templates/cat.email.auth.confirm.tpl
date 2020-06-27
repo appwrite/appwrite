@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hola {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Segueix aquest enllaç per verificar la teva direcció de correu:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Si no has solicitat verificar aquesta direcció, pots ignorar aquest missatge.
-    <br />
-    <br />
+</p>
+<p>
     Gràcies,
     <br />
     Equip {{project}} 
-</div>
+</p>

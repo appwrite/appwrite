@@ -32,18 +32,17 @@
 
         "appwrite/php-clamav": "1.0.*",
 
-        "utopia-php/framework": "0.2.*",
+        "utopia-php/framework": "0.4.0",
         "utopia-php/abuse": "0.2.*",
         "utopia-php/audit": "0.3.*",
         "utopia-php/cache": "0.2.*",
-        "utopia-php/cli": "0.5.*",
+        "utopia-php/cli": "0.6.2",
         "utopia-php/config": "0.2.*",
         "utopia-php/locale": "0.2.*",
         "utopia-php/registry": "0.2.*",
         "utopia-php/domains": "0.2.*",
 
-        "chrisboulton/php-resque": "*",
-        "chrisboulton/php-resque-scheduler": "*",
+        "resque/php-resque": "1.3.6",
         "geoip2/geoip2": "2.9.0",
         "piwik/device-detector": "3.5.1",
         "dragonmantank/cron-expression": "2.2.0",

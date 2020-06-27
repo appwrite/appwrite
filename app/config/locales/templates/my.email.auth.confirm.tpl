@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hello {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Ikuti pautan ini untuk mengesahkan alamat e-mel anda.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Jika anda tidak meminta untuk mengesahkan alamat ini, anda boleh mengabaikan mesej ini.
-    <br />
-    <br />
+</p>
+<p>
     Terima kasih,
     <br />
     Kumpulan {{project}} 
-</div>
+</p>

@@ -20,7 +20,7 @@ class OpenSSL
      */
     public static function encrypt($data, $method, $key, $options = 0, $iv = '', &$tag = null, $aad = '', $tag_length = 16)
     {
-        return openssl_encrypt($data, $method, $key, $options, $iv, $tag, $aad, $tag_length);
+        return \openssl_encrypt($data, $method, $key, $options, $iv, $tag, $aad, $tag_length);
     }
 
     /**
@@ -36,7 +36,7 @@ class OpenSSL
      */
     public static function decrypt($data, $method, $password, $options = 1, $iv = '', $tag = '', $aad = '')
     {
-        return openssl_decrypt($data, $method, $password, $options, $iv, $tag, $aad);
+        return \openssl_decrypt($data, $method, $password, $options, $iv, $tag, $aad);
     }
 
     /**
@@ -46,7 +46,7 @@ class OpenSSL
      */
     public static function cipherIVLength($method)
     {
-        return openssl_cipher_iv_length($method);
+        return \openssl_cipher_iv_length($method);
     }
 
     /**
@@ -57,6 +57,6 @@ class OpenSSL
      */
     public static function randomPseudoBytes($length, &$crypto_strong = null)
     {
-        return openssl_random_pseudo_bytes($length, $crypto_strong);
+        return \openssl_random_pseudo_bytes($length, $crypto_strong);
     }
 }

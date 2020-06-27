@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     ਸਤ ਸ੍ਰੀ ਅਕਾਲ,
-    <br />
-    <br />
+</p>
+<p>
     ਇਹ ਮੇਲ ਤੁਹਾਨੂੰ ਇਸ ਲਈ ਭੇਜਿਆ ਗਿਆ ਸੀ ਕਿਉਂਕਿ <b> {{owner}} </ b> ਤੁਹਾਨੂੰ <b> {{team} at </b> ਟੀਮ {{project}} 'ਤੇ ਟੀਮ ਦੇ ਮੈਂਬਰ ਬਣਨ ਲਈ ਸੱਦਾ ਦੇਣਾ ਚਾਹੁੰਦਾ ਸੀ.
-    <br />
-    <br />
+</p>
+<p>
    <b> {{team}} </ b> ਟੀਮ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਣ ਲਈ ਇਸ ਲਿੰਕ ਦਾ ਪਾਲਣ ਕਰੋ:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     ਜੇ ਤੁਸੀਂ ਦਿਲਚਸਪੀ ਨਹੀਂ ਰੱਖਦੇ, ਤਾਂ ਤੁਸੀਂ ਇਸ ਸੰਦੇਸ਼ ਨੂੰ ਨਜ਼ਰ ਅੰਦਾਜ਼ ਕਰ ਸਕਦੇ ਹੋ.
-    <br />
-    <br />
+</p>
+<p>
    ਧੰਨਵਾਦ,
     <br />
     {{project}} ਟੀਮ
-</div>
+</p>
