@@ -392,21 +392,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-<<<<<<< HEAD
-                "reference": "23730ab1005ca1e760dcdfbd7d853e6c3f1035d6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/23730ab1005ca1e760dcdfbd7d853e6c3f1035d6",
-                "reference": "23730ab1005ca1e760dcdfbd7d853e6c3f1035d6",
-=======
                 "reference": "9d4290de1cfd701f38099ef7e183b64b4b7b0c5e"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/guzzle/guzzle/zipball/9d4290de1cfd701f38099ef7e183b64b4b7b0c5e",
                 "reference": "9d4290de1cfd701f38099ef7e183b64b4b7b0c5e",
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
                 "shasum": ""
             },
             "require": {
@@ -460,11 +451,7 @@
                 "rest",
                 "web service"
             ],
-<<<<<<< HEAD
-            "time": "2020-06-06T12:11:37+00:00"
-=======
             "time": "2020-06-16T21:01:06+00:00"
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "guzzlehttp/promises",
@@ -1206,21 +1193,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-<<<<<<< HEAD
-                "reference": "3ed80deaf77c304010e3f637bc1842c85fd6c485"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/3ed80deaf77c304010e3f637bc1842c85fd6c485",
-                "reference": "3ed80deaf77c304010e3f637bc1842c85fd6c485",
-=======
                 "reference": "7110338d81ce1cbc3e273136e4574663627037a7"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/7110338d81ce1cbc3e273136e4574663627037a7",
                 "reference": "7110338d81ce1cbc3e273136e4574663627037a7",
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
                 "shasum": ""
             },
             "require": {
@@ -1270,11 +1248,7 @@
                 "portable",
                 "shim"
             ],
-<<<<<<< HEAD
-            "time": "2020-06-04T17:06:46+00:00"
-=======
             "time": "2020-06-06T08:46:27+00:00"
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "symfony/polyfill-php72",
@@ -1765,11 +1739,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-<<<<<<< HEAD
-                "reference": "3d7b25ca411d0cc6d1847b4ffced8e7f4d549995"
-=======
                 "reference": "2b9a55bc447b8b856a8b9dc8c5c86a2c61a6ed3a"
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
             },
             "require": {
                 "ext-curl": "*",
@@ -1799,11 +1769,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-<<<<<<< HEAD
-            "time": "2020-06-13T15:59:15+00:00"
-=======
             "time": "2020-06-20T07:38:05+00:00"
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "doctrine/instantiator",
@@ -3341,21 +3307,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-<<<<<<< HEAD
-                "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/3beabd64bdc91558b41f140cc4b14925f0416cb2",
-                "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2",
-=======
                 "reference": "f32950c872a995a93807909bab69387f47afaa25"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/twigphp/Twig/zipball/f32950c872a995a93807909bab69387f47afaa25",
                 "reference": "f32950c872a995a93807909bab69387f47afaa25",
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
                 "shasum": ""
             },
             "require": {
@@ -3407,11 +3364,7 @@
             "keywords": [
                 "templating"
             ],
-<<<<<<< HEAD
-            "time": "2020-06-08T10:41:25+00:00"
-=======
             "time": "2020-06-22T15:25:21+00:00"
->>>>>>> 40888326cc19cb5b928c5908a58900831bfc9160
         },
         {
             "name": "webmozart/assert",
