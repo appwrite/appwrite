@@ -18,21 +18,16 @@ use BaconQrCode\Writer;
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
 
-$types = [
-    'browsers' => include __DIR__.'/../../config/avatars/browsers.php',
-    'credit-cards' => include __DIR__.'/../../config/avatars/credit-cards.php',
-    'flags' => include __DIR__.'/../../config/avatars/flags.php',
-];
-
-$avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response) {
+$avatarCallback = function ($type, $code, $width, $height, $quality) use ($response) {
     $code = \strtolower($code);
     $type = \strtolower($type);
+    $set  = Config::getParam('avatar-'.$type, []);
 
-    if (!\array_key_exists($type, $types)) {
+    if (empty($set)) {
         throw new Exception('Avatar set not found', 404);
     }
 
-    if (!\array_key_exists($code, $types[$type])) {
+    if (!\array_key_exists($code, $set)) {
         throw new Exception('Avatar not found', 404);
     }
 
@@ -43,7 +38,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     $output = 'png';
     $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
     $key = \md5('/v1/avatars/:type/:code-'.$code.$width.$height.$quality.$output);
-    $path = $types[$type][$code];
+    $path = $set[$code];
     $type = 'png';
 
     if (!\is_readable($path)) {
@@ -89,7 +84,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
 $utopia->get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
     ->groups(['api', 'avatars'])
-    ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['credit-cards'])); }, 'Credit Card Code. Possible values: '.\implode(', ', \array_keys($types['credit-cards'])).'.')
+    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))); }, 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
@@ -106,7 +101,7 @@ $utopia->get('/v1/avatars/credit-cards/:code')
 $utopia->get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
     ->groups(['api', 'avatars'])
-    ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['browsers'])); }, 'Browser Code.')
+    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-browsers'))); }, 'Browser Code.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
@@ -123,7 +118,7 @@ $utopia->get('/v1/avatars/browsers/:code')
 $utopia->get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
     ->groups(['api', 'avatars'])
-    ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['flags'])); }, 'Country Code. ISO Alpha-2 country code format.')
+    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-flags'))); }, 'Country Code. ISO Alpha-2 country code format.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)

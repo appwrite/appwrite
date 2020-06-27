@@ -50,7 +50,7 @@ $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($nod
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $mail, $audit, $usage, $clients) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 

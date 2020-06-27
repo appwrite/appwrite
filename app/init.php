@@ -64,6 +64,9 @@ Config::load('locales', __DIR__.'/../app/config/locales.php');
 Config::load('collections', __DIR__.'/../app/config/collections.php');
 Config::load('roles', __DIR__.'/../app/config/roles.php');  // User roles and scopes
 Config::load('services', __DIR__.'/../app/config/services.php');  // List of services
+Config::load('avatar-browsers', __DIR__.'/../app/config/avatars/browsers.php'); 
+Config::load('avatar-credit-cards', __DIR__.'/../app/config/avatars/credit-cards.php'); 
+Config::load('avatar-flags', __DIR__.'/../app/config/avatars/flags.php'); 
 
 Config::setParam('env', $utopia->getMode());
 Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
