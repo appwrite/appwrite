@@ -29,8 +29,8 @@ use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
 
-$oauthDefaultSuccess = $request->getServer('_APP_HOME').'/auth/oauth2/success';
-$oauthDefaultFailure = $request->getServer('_APP_HOME').'/auth/oauth2/failure';
+$oauthDefaultSuccess = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/success';
+$oauthDefaultFailure = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
@@ -509,7 +509,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 ;
             }
 
-            if ($state['success'] === $oauthDefaultSuccess) { // Add keys for non-web platforms
+            if (substr($state['success'], 0, strlen($oauthDefaultSuccess) === $oauthDefaultSuccess)) { // Add keys for non-web platforms
                 $state['success'] = URLParser::parse($state['success']);
                 $query = URLParser::parseQuery($state['success']['query']);
                 $query['project'] = $project->getId();
