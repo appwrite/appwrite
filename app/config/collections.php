@@ -1,6 +1,6 @@
 <?php
 
-global $utopia;
+global $utopia, $request;
 
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
