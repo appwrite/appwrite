@@ -170,7 +170,7 @@ App::init(function () use ($utopia, $request, $response, &$user, $project, $cons
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => \parse_url('https://'.$request->getServer('HTTP_HOST'), PHP_URL_HOST),
-    ]);
+    ], Document::SET_TYPE_APPEND);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
     $origin = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
