@@ -29,8 +29,8 @@ use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
 
-$oauthDefaultSuccess = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/success';
-$oauthDefaultFailure = Config::getParam('protocol').'://'.Config::getParam('domain').'/auth/oauth2/failure';
+$oauthDefaultSuccess = '/auth/oauth2/success';
+$oauthDefaultFailure = '/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
@@ -508,8 +508,9 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                     ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
                 ;
             }
-
-            if (substr($state['success'], 0, strlen($oauthDefaultSuccess) === $oauthDefaultSuccess)) { // Add keys for non-web platforms
+            
+            // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
+            if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
                 $state['success'] = URLParser::parse($state['success']);
                 $query = URLParser::parseQuery($state['success']['query']);
                 $query['project'] = $project->getId();
