@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
-    "content-hash": "1df9fdb337c6030db4bb5f0e9868f9c3",
-=======
     "content-hash": "7f6cbe77fe2e0f8bdff33c37a4d9ca11",
->>>>>>> 17b9dc76a60403ef4e680ee92f3c845a5762effd
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1600,18 +1596,6 @@
         },
         {
             "name": "utopia-php/framework",
-<<<<<<< HEAD
-            "version": "0.3.7",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/framework.git",
-                "reference": "23156b3d604fd9586f2e8c6c449b2fc6a82c10bc"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/23156b3d604fd9586f2e8c6c449b2fc6a82c10bc",
-                "reference": "23156b3d604fd9586f2e8c6c449b2fc6a82c10bc",
-=======
             "version": "0.4.0",
             "source": {
                 "type": "git",
@@ -1622,7 +1606,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/utopia-php/framework/zipball/30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
                 "reference": "30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
->>>>>>> 17b9dc76a60403ef4e680ee92f3c845a5762effd
                 "shasum": ""
             },
             "require": {
@@ -1653,11 +1636,7 @@
                 "php",
                 "upf"
             ],
-<<<<<<< HEAD
-            "time": "2020-06-21T11:29:58+00:00"
-=======
             "time": "2020-06-25T18:21:48+00:00"
->>>>>>> 17b9dc76a60403ef4e680ee92f3c845a5762effd
         },
         {
             "name": "utopia-php/locale",
