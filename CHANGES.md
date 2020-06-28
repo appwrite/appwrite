@@ -34,6 +34,8 @@
 - Fixed wrong JSON validation when creating and updating database documnets
 - Fixed bug where max file size was limited to max of 10MB
 - Fixed bug preventing the deletion of the project logo
+- Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
+- Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
 
 ## Security
 
