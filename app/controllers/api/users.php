@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $response, $projectDB;
+global $response, $projectDB;
 
 use Utopia\App;
 use Utopia\Exception;

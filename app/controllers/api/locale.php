@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $user;
+global $request, $response, $user;
 
 use Utopia\App;
 use Utopia\Locale\Locale;
@@ -15,7 +15,7 @@ App::get('/v1/locale')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
     ->action(
-        function () use ($response, $request, $utopia) {
+        function () use ($response, $request) {
             $eu = include __DIR__.'/../../config/eu.php';
             $currencies = include __DIR__.'/../../config/currencies.php';
             $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');

@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $deletes;
+global $response, $register, $user, $consoleDB, $projectDB, $deletes;
 
 use Utopia\App;
 use Utopia\Exception;
@@ -42,7 +42,7 @@ App::post('/v1/projects')
     ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal Address.', true)
     ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal Tax ID.', true)
     ->action(
-        function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $user, $consoleDB, $projectDB) {
+        function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId) use ($response, $consoleDB, $projectDB) {
             $team = $projectDB->getDocument($teamId);
 
             if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
@@ -94,7 +94,7 @@ App::get('/v1/projects')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'list')
     ->action(
-        function () use ($request, $response, $consoleDB) {
+        function () use ($response, $consoleDB) {
             $results = $consoleDB->getCollection([
                 'limit' => 20,
                 'offset' => 0,
@@ -111,7 +111,7 @@ App::get('/v1/projects')
                     $secret = \json_decode($project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}'), true);
 
                     if (!empty($secret) && isset($secret['version'])) {
-                        $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
+                        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$secret['version']);
                         $project->setAttribute('usersOauth2'.\ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, \hex2bin($secret['iv']), \hex2bin($secret['tag'])));
                     }
                 }
@@ -129,7 +129,7 @@ App::get('/v1/projects/:projectId')
     ->label('sdk.method', 'get')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
+        function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -140,7 +140,7 @@ App::get('/v1/projects/:projectId')
                 $secret = \json_decode($project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}'), true);
 
                 if (!empty($secret) && isset($secret['version'])) {
-                    $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
+                    $key = App::getEnv('_APP_OPENSSL_KEY_V'.$secret['version']);
                     $project->setAttribute('usersOauth2'.\ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, \hex2bin($secret['iv']), \hex2bin($secret['tag'])));
                 }
             }
@@ -368,14 +368,14 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
     ->param('secret', '', function () { return new text(512); }, 'Provider secret key.', true)
     ->action(
-        function ($projectId, $provider, $appId, $secret) use ($request, $response, $consoleDB) {
+        function ($projectId, $provider, $appId, $secret) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
                 throw new Exception('Project not found', 404);
             }
 
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
             $secret = \json_encode([
@@ -459,7 +459,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(
-        function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
+        function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -467,7 +467,7 @@ App::post('/v1/projects/:projectId/webhooks')
             }
 
             $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
             $httpPass = \json_encode([
@@ -519,7 +519,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->label('sdk.method', 'listWebhooks')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
+        function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -535,7 +535,7 @@ App::get('/v1/projects/:projectId/webhooks')
                     continue;
                 }
 
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
+                $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
 
                 $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
@@ -553,7 +553,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->action(
-        function ($projectId, $webhookId) use ($request, $response, $consoleDB) {
+        function ($projectId, $webhookId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -569,7 +569,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             $httpPass = \json_decode($webhook->getAttribute('httpPass', '{}'), true);
 
             if (!empty($httpPass) && isset($httpPass['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
+                $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
                 $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
 
@@ -592,7 +592,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(
-        function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
+        function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -600,7 +600,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             }
 
             $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
             $httpPass = \json_encode([
@@ -843,7 +843,7 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
     ->action(
-        function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
+        function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -854,7 +854,7 @@ App::post('/v1/projects/:projectId/tasks')
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
             $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
             $httpPass = \json_encode([
@@ -918,7 +918,7 @@ App::get('/v1/projects/:projectId/tasks')
     ->label('sdk.method', 'listTasks')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(
-        function ($projectId) use ($request, $response, $consoleDB) {
+        function ($projectId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -934,7 +934,7 @@ App::get('/v1/projects/:projectId/tasks')
                     continue;
                 }
 
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
+                $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
 
                 $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
@@ -952,7 +952,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->action(
-        function ($projectId, $taskId) use ($request, $response, $consoleDB) {
+        function ($projectId, $taskId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -968,7 +968,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
             $httpPass = \json_decode($task->getAttribute('httpPass', '{}'), true);
 
             if (!empty($httpPass) && isset($httpPass['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
+                $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
                 $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
 
@@ -994,7 +994,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
     ->action(
-        function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
+        function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -1011,7 +1011,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
             $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
             $httpPass = \json_encode([
@@ -1264,7 +1264,7 @@ App::post('/v1/projects/:projectId/domains')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domain', null, function () { return new DomainValidator(); }, 'Domain name.')
     ->action(
-        function ($projectId, $domain) use ($request, $response, $consoleDB) {
+        function ($projectId, $domain) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -1277,7 +1277,7 @@ App::post('/v1/projects/:projectId/domains')
                 throw new Exception('Domain already exists', 409);
             }
 
-            $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
             if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
@@ -1374,7 +1374,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(
-        function ($projectId, $domainId) use ($request, $response, $consoleDB) {
+        function ($projectId, $domainId) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
 
             if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
@@ -1387,7 +1387,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
                 throw new Exception('Domain not found', 404);
             }
 
-            $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
             if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);

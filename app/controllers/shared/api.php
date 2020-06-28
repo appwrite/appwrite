@@ -44,7 +44,7 @@ App::init(function () use ($utopia, $request, $response, $register, $user, $proj
         ;
     }
 
-    if ($abuse->check() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         throw new Exception('Too many requests', 429);
     }
 }, 'api');

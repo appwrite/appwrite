@@ -1,11 +1,10 @@
 <?php
 
-global $utopia, $register, $request, $response, $webhook, $audit, $projectDB;
+global $request, $response, $webhook, $audit, $projectDB;
 
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -484,7 +483,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
     ->action(
-        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search) use ($response, $projectDB, $utopia) {
+        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search) use ($response, $projectDB) {
             $collection = $projectDB->getDocument($collectionId, false);
 
             if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {

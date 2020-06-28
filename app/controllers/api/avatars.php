@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response;
+global $response;
 
 use Utopia\App;
 use Utopia\Exception;
@@ -213,7 +213,7 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
-        function ($url) use ($response, $request) {
+        function ($url) use ($response) {
             $width = 56;
             $height = 56;
             $quality = 80;
@@ -246,7 +246,7 @@ App::get('/v1/avatars/favicon')
                 CURLOPT_URL => $url,
                 CURLOPT_USERAGENT => \sprintf(APP_USERAGENT,
                     Config::getParam('version'),
-                    $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                    App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
                 ),
             ]);
 

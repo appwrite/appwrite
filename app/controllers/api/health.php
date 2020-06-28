@@ -1,6 +1,6 @@
 <?php
 
-global $utopia, $request, $response, $register;
+global $request, $response, $register;
 
 use Utopia\App;
 use Utopia\Exception;

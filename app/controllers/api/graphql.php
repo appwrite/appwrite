@@ -1,7 +1,5 @@
 <?php
 
-global $utopia;
-
 use Utopia\App;
 
 /**
