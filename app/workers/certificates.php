@@ -23,7 +23,7 @@ class CertificatesV1
 
     public function perform()
     {
-        global $request, $consoleDB;
+        global $consoleDB;
 
         /**
          * 1. Get new domain document - DONE
@@ -62,7 +62,7 @@ class CertificatesV1
         }
 
         if($validateTarget) {
-            $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
     
             if(!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.');
@@ -107,7 +107,7 @@ class CertificatesV1
         $staging = (Config::getParam('env') === App::MODE_TYPE_PRODUCTION) ? '' : ' --dry-run';
 
         $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
-            --email ".$request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', 'security@localhost.test')." \
+            --email ".App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', 'security@localhost.test')." \
             -w ".APP_STORAGE_CERTIFICATES." \
             -d {$domain->get()}");
 

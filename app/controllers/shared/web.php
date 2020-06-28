@@ -16,8 +16,8 @@ App::init(function () use ($utopia, $response, $request, $layout) {
         ->setParam('title', APP_NAME)
         ->setParam('protocol', Config::getParam('protocol'))
         ->setParam('domain', Config::getParam('domain'))
-        ->setParam('home', $request->getServer('_APP_HOME'))
-        ->setParam('setup', $request->getServer('_APP_SETUP'))
+        ->setParam('home', App::getEnv('_APP_HOME'))
+        ->setParam('setup', App::getEnv('_APP_SETUP'))
         ->setParam('class', 'unknown')
         ->setParam('icon', '/images/favicon.png')
         ->setParam('roles', [

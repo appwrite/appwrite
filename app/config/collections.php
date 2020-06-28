@@ -1,7 +1,5 @@
 <?php
 
-global $request;
-
 use Utopia\App;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
@@ -37,13 +35,7 @@ $collections = [
                 'name' => 'Localhost',
                 'type' => 'web',
                 'hostname' => 'localhost',
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
-                'name' => 'Current Host',
-                'type' => 'web',
-                'hostname' => \parse_url('https://'.$request->getServer('HTTP_HOST'), PHP_URL_HOST),
-            ],
+            ], // Current host is added on app init
         ],
         'legalName' => '',
         'legalCountry' => '',

@@ -537,8 +537,9 @@ App::get('/v1/account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
+    ->inject('response')
     ->action(
-        function () use ($response, &$user, $oauth2Keys) {
+        function ($response) use (&$user, $oauth2Keys) {
             $response->json(\array_merge($user->getArrayCopy(\array_merge(
                 [
                     '$id',

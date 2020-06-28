@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../init.php';
 
+use Utopia\App;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
@@ -24,7 +25,7 @@ class TasksV1
 
     public function perform()
     {
-        global $consoleDB, $request;
+        global $consoleDB;
 
         /*
          * 1. Get Original Task
@@ -96,7 +97,7 @@ class TasksV1
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
             Config::getParam('version'),
-            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
         ));
         \curl_setopt(
             $ch,

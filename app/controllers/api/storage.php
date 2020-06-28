@@ -696,7 +696,7 @@ App::delete('/v1/storage/files/:fileId')
 //                 $source = OpenSSL::decrypt(
 //                     $source,
 //                     $file->getAttribute('fileOpenSSLCipher'),
-//                     $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+//                     App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
 //                     0,
 //                     hex2bin($file->getAttribute('fileOpenSSLIV')),
 //                     hex2bin($file->getAttribute('fileOpenSSLTag'))

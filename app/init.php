@@ -12,15 +12,10 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
 }
 
 use Utopia\App;
-use Utopia\Request;
-use Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
-use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
@@ -49,9 +44,6 @@ const APP_SOCIAL_DISCORD = 'https://discord.gg/GSeTUeA';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 
 $register = new Registry();
-$request = new Request();
-$response = new Response();
-$utopia = new App('Asia/Tel_Aviv');
 
 App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
@@ -69,32 +61,13 @@ Config::load('avatar-browsers', __DIR__.'/../app/config/avatars/browsers.php');
 Config::load('avatar-credit-cards', __DIR__.'/../app/config/avatars/credit-cards.php'); 
 Config::load('avatar-flags', __DIR__.'/../app/config/avatars/flags.php'); 
 
-Config::setParam('env', App::getMode());
-Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
-Config::setParam('domainVerification', false);
-Config::setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'));
-Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
-Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
-Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
-
 Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
     .':'.App::getEnv('_APP_REDIS_PORT', ''));
-
-\define('COOKIE_DOMAIN', 
-    (
-        $request->getServer('HTTP_HOST', null) === 'localhost' ||
-        $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
-        (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
-    )
-        ? null
-        : '.'.Config::getParam('hostname')
-    );
-\define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 /*
  * Registry
  */
-$register->set('db', function () use ($utopia) { // Register DB connection
+$register->set('db', function () { // Register DB connection
     $dbHost = App::getEnv('_APP_DB_HOST', '');
     $dbUser = App::getEnv('_APP_DB_USER', '');
     $dbPass = App::getEnv('_APP_DB_PASS', '');
@@ -111,7 +84,7 @@ $register->set('db', function () use ($utopia) { // Register DB connection
 
     return $pdo;
 });
-$register->set('influxdb', function () use ($utopia) { // Register DB connection
+$register->set('influxdb', function () { // Register DB connection
     $host = App::getEnv('_APP_INFLUXDB_HOST', '');
     $port = App::getEnv('_APP_INFLUXDB_PORT', '');
 
@@ -123,7 +96,7 @@ $register->set('influxdb', function () use ($utopia) { // Register DB connection
 
     return $client;
 });
-$register->set('statsd', function () use ($utopia) { // Register DB connection
+$register->set('statsd', function () { // Register DB connection
     $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
     $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
@@ -132,7 +105,7 @@ $register->set('statsd', function () use ($utopia) { // Register DB connection
 
     return $statsd;
 });
-$register->set('cache', function () use ($utopia) { // Register cache connection
+$register->set('cache', function () { // Register cache connection
     $redis = new Redis();
 
     $redis->connect(App::getEnv('_APP_REDIS_HOST', ''),
@@ -140,7 +113,7 @@ $register->set('cache', function () use ($utopia) { // Register cache connection
 
     return $redis;
 });
-$register->set('smtp', function () use ($utopia) {
+$register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
     $mail->isSMTP();
@@ -187,10 +160,7 @@ $register->set('queue-deletes', function () {
 /*
  * Localization
  */
-$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
-
 Locale::$exceptions = false;
-
 Locale::setLanguage('af', include __DIR__.'/config/locales/af.php');
 Locale::setLanguage('ar', include __DIR__.'/config/locales/ar.php');
 Locale::setLanguage('bn', include __DIR__.'/config/locales/bn.php');
@@ -240,10 +210,6 @@ Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
 
 Locale::setDefault('en');
 
-if (\in_array($locale, Config::getParam('locales'))) {
-    Locale::setDefault($locale);
-}
-
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [
         'method' => 'GET',
@@ -262,76 +228,3 @@ $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register))
 $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
 
 $consoleDB->setMocks(Config::getParam('collections', []));
-Authorization::disable();
-
-$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
-
-Authorization::enable();
-
-$console = $consoleDB->getDocument('console');
-
-$mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
-
-Auth::setCookieName('a_session_'.$project->getId());
-
-if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a_session_'.$console->getId());
-}
-
-$session = Auth::decodeSession(
-    $request->getCookie(Auth::$cookieName, // Get sessions
-        $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
-
-// Get fallback session from clients who block 3rd-party cookies
-$response->addHeader('X-Debug-Fallback', 'false');
-
-if(empty($session['id']) && empty($session['secret'])) {
-    $response->addHeader('X-Debug-Fallback', 'true');
-    $fallback = $request->getHeader('X-Fallback-Cookies', '');
-    $fallback = \json_decode($fallback, true);
-    $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
-}
-
-Auth::$unique = $session['id'];
-Auth::$secret = $session['secret'];
-
-$projectDB = new Database();
-$projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_'.$project->getId());
-$projectDB->setMocks(Config::getParam('collections', []));
-
-if (APP_MODE_ADMIN !== $mode) {
-    $user = $projectDB->getDocument(Auth::$unique);
-}
-else {
-    $user = $consoleDB->getDocument(Auth::$unique);
-
-    $user
-        ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-    ;
-}
-
-if (empty($user->getId()) // Check a document has been found in the DB
-    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-    || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-    $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-}
-
-if (APP_MODE_ADMIN === $mode) {
-    if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
-        Authorization::disable();
-    } else {
-        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-    }
-}
-
-// Set project mail
-$register->get('smtp')
-    ->setFrom(
-        App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-        ($project->getId() === 'console')
-            ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
-            : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
-        )
-    );

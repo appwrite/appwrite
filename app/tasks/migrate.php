@@ -3,7 +3,7 @@
 
 require_once __DIR__.'/../init.php';
 
-global $register, $projectDB, $console, $request;
+global $register, $projectDB, $console;
 
 use Utopia\Config\Config;
 use Utopia\CLI\CLI;

@@ -18,12 +18,12 @@ App::init(function () use ($layout) {
     ;
 }, 'console');
 
-App::shutdown(function () use ($response, $request, $layout) {
+App::shutdown(function () use ($response, $layout) {
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
 
     $footer
-        ->setParam('home', $request->getServer('_APP_HOME', ''))
+        ->setParam('home', App::getEnv('_APP_HOME', ''))
         ->setParam('version', Config::getParam('version'))
     ;
 
@@ -56,11 +56,11 @@ App::get('/console')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout, $request) {
+    ->action(function () use ($layout) {
         $page = new View(__DIR__.'/../../views/console/index.phtml');
 
         $page
-            ->setParam('home', $request->getServer('_APP_HOME', ''))
+            ->setParam('home', App::getEnv('_APP_HOME', ''))
         ;
 
         $layout
@@ -114,8 +114,8 @@ App::get('/console/settings')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($request, $layout) {
-        $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
+    ->action(function () use ($layout) {
+        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
 
         $page = new View(__DIR__.'/../../views/console/settings/index.phtml');
 
@@ -254,9 +254,9 @@ App::get('/console/storage')
         $page = new View(__DIR__.'/../../views/console/storage/index.phtml');
         
         $page
-            ->setParam('home', $request->getServer('_APP_HOME', 0))
-            ->setParam('fileLimit', $request->getServer('_APP_STORAGE_LIMIT', 0))
-            ->setParam('fileLimitHuman', Storage::human($request->getServer('_APP_STORAGE_LIMIT', 0)))
+            ->setParam('home', App::getEnv('_APP_HOME', 0))
+            ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
+            ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
         ;
 
         $layout

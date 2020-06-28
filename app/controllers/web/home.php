@@ -168,7 +168,7 @@ App::get('/open-api-2.json')
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(
-        function ($platform, $extensions, $tests) use ($response, $request, $utopia) {
+        function ($platform, $extensions, $tests) use ($response, $utopia) {
             $services = Config::getParam('services', []);
             
             function fromCamelCase($input)
@@ -293,14 +293,14 @@ App::get('/open-api-2.json')
                     'contact' => [
                         'name' => 'Appwrite Team',
                         'url' => 'https://appwrite.io/support',
-                        'email' => $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+                        'email' => App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
                     ],
                     'license' => [
                         'name' => 'BSD-3-Clause',
                         'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                     ],
                 ],
-                'host' => \parse_url($request->getServer('_APP_HOME', Config::getParam('domain')), PHP_URL_HOST),
+                'host' => \parse_url(App::getEnv('_APP_HOME', Config::getParam('domain')), PHP_URL_HOST),
                 'basePath' => '/v1',
                 'schemes' => ['https'],
                 'consumes' => ['application/json', 'multipart/form-data'],
