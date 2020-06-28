@@ -5,14 +5,15 @@ global $utopia, $register, $request, $response, $webhook, $audit, $projectDB;
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
-use Utopia\Locale\Locale;
-use Utopia\Audit\Audit;
-use Utopia\Audit\Adapters\MySQL as AuditAdapter;
+// use Utopia\Locale\Locale;
+// use Utopia\Audit\Audit;
+// use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
@@ -22,8 +23,9 @@ use Appwrite\Database\Validator\Collection;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
 use Appwrite\Database\Exception\Structure as StructureException;
-use DeviceDetector\DeviceDetector;
-use GeoIp2\Database\Reader;
+
+// use DeviceDetector\DeviceDetector;
+// use GeoIp2\Database\Reader;
 
 $utopia->post('/v1/database/collections')
     ->desc('Create Collection')

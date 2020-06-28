@@ -138,7 +138,7 @@ abstract class OAuth2
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        \curl_setopt($ch, CURLOPT_USERAGENT, '');
+        \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
 
         if (!empty($payload)) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
