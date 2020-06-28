@@ -25,7 +25,7 @@ use Appwrite\Database\Exception\Structure as StructureException;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
-$utopia->post('/v1/database/collections')
+App::post('/v1/database/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.collections.create')
@@ -99,7 +99,7 @@ $utopia->post('/v1/database/collections')
         }
     );
 
-$utopia->get('/v1/database/collections')
+App::get('/v1/database/collections')
     ->desc('List Collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -148,7 +148,7 @@ $utopia->get('/v1/database/collections')
         }
     );
 
-$utopia->get('/v1/database/collections/:collectionId')
+App::get('/v1/database/collections/:collectionId')
     ->desc('Get Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -169,7 +169,7 @@ $utopia->get('/v1/database/collections/:collectionId')
         }
     );
 
-// $utopia->get('/v1/database/collections/:collectionId/logs')
+// App::get('/v1/database/collections/:collectionId/logs')
 //     ->desc('Get Collection Logs')
 //     ->groups(['api', 'database'])
 //     ->label('scope', 'collections.read')
@@ -234,7 +234,7 @@ $utopia->get('/v1/database/collections/:collectionId')
 //         }
 //     );
 
-$utopia->put('/v1/database/collections/:collectionId')
+App::put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -307,7 +307,7 @@ $utopia->put('/v1/database/collections/:collectionId')
         }
     );
 
-$utopia->delete('/v1/database/collections/:collectionId')
+App::delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -345,7 +345,7 @@ $utopia->delete('/v1/database/collections/:collectionId')
         }
     );
 
-$utopia->post('/v1/database/collections/:collectionId/documents')
+App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.create')
@@ -465,7 +465,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
         }
     );
 
-$utopia->get('/v1/database/collections/:collectionId/documents')
+App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -508,7 +508,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
             if ($first || $last) {
                 $response->json((!empty($list) ? $list->getArrayCopy() : []));
             } else {
-                if ($utopia->isDevelopment()) {
+                if (App::isDevelopment()) {
                     $collection
                         ->setAttribute('debug', $projectDB->getDebug())
                         ->setAttribute('limit', $limit)
@@ -533,7 +533,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
         }
     );
 
-$utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
+App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -579,7 +579,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
         }
     );
 
-$utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
+App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.update')
@@ -659,7 +659,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
         }
     );
 
-$utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
+App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')

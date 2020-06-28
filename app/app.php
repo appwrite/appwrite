@@ -50,7 +50,7 @@ $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($nod
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $audit, $usage, $clients) {
+App::init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 
@@ -79,7 +79,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
      * As recommended at:
      * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
      */
-    if ($utopia->getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+    if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if(Config::getParam('protocol') !== 'https') {
            return $response->redirect('https://' . Config::getParam('domain').$request->getServer('REQUEST_URI'));
         }
@@ -224,7 +224,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
+App::shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
 
     /*
      * Trigger events for background workers
@@ -254,7 +254,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     }
 });
 
-$utopia->options(function () use ($request, $response) {
+App::options(function () use ($request, $response) {
     $origin = $request->getServer('HTTP_ORIGIN');
 
     $response
@@ -266,7 +266,7 @@ $utopia->options(function () use ($request, $response) {
         ->send();
 });
 
-$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
+App::error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
     $env = Config::getParam('env');
     $version = Config::getParam('version');
 
@@ -339,7 +339,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
     ;
 });
 
-$utopia->get('/manifest.json')
+App::get('/manifest.json')
     ->desc('Progressive app manifest file')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -365,7 +365,7 @@ $utopia->get('/manifest.json')
         }
     );
 
-$utopia->get('/robots.txt')
+App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -376,7 +376,7 @@ $utopia->get('/robots.txt')
         }
     );
 
-$utopia->get('/humans.txt')
+App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -387,7 +387,7 @@ $utopia->get('/humans.txt')
         }
     );
 
-$utopia->get('/.well-known/acme-challenge')
+App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)

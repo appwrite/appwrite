@@ -2,6 +2,7 @@
 
 global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $deletes;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
@@ -23,7 +24,7 @@ use Cron\CronExpression;
 
 $scopes = include __DIR__.'/../../../app/config/scopes.php';
 
-$utopia->post('/v1/projects')
+App::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -86,7 +87,7 @@ $utopia->post('/v1/projects')
         }
     );
 
-$utopia->get('/v1/projects')
+App::get('/v1/projects')
     ->desc('List Projects')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -120,7 +121,7 @@ $utopia->get('/v1/projects')
         }
     );
 
-$utopia->get('/v1/projects/:projectId')
+App::get('/v1/projects/:projectId')
     ->desc('Get Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -148,7 +149,7 @@ $utopia->get('/v1/projects/:projectId')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/usage')
+App::get('/v1/projects/:projectId/usage')
     ->desc('Get Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -310,7 +311,7 @@ $utopia->get('/v1/projects/:projectId/usage')
         }
     );
 
-$utopia->patch('/v1/projects/:projectId')
+App::patch('/v1/projects/:projectId')
     ->desc('Update Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -356,7 +357,7 @@ $utopia->patch('/v1/projects/:projectId')
         }
     );
 
-$utopia->patch('/v1/projects/:projectId/oauth2')
+App::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -398,7 +399,7 @@ $utopia->patch('/v1/projects/:projectId/oauth2')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId')
+App::delete('/v1/projects/:projectId')
     ->desc('Delete Project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -444,7 +445,7 @@ $utopia->delete('/v1/projects/:projectId')
 
 // Webhooks
 
-$utopia->post('/v1/projects/:projectId/webhooks')
+App::post('/v1/projects/:projectId/webhooks')
     ->desc('Create Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -509,7 +510,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/webhooks')
+App::get('/v1/projects/:projectId/webhooks')
     ->desc('List Webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -542,7 +543,7 @@ $utopia->get('/v1/projects/:projectId/webhooks')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
+App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -576,7 +577,7 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
     );
 
 
-$utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
+App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -632,7 +633,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
+App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete Webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -664,7 +665,7 @@ $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 // Keys
 
-$utopia->post('/v1/projects/:projectId/keys')
+App::post('/v1/projects/:projectId/keys')
     ->desc('Create Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -711,7 +712,7 @@ $utopia->post('/v1/projects/:projectId/keys')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/keys')
+App::get('/v1/projects/:projectId/keys')
     ->desc('List Keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -730,7 +731,7 @@ $utopia->get('/v1/projects/:projectId/keys')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/keys/:keyId')
+App::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -756,7 +757,7 @@ $utopia->get('/v1/projects/:projectId/keys/:keyId')
         }
     );
 
-$utopia->put('/v1/projects/:projectId/keys/:keyId')
+App::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -793,7 +794,7 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/keys/:keyId')
+App::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete Key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -825,7 +826,7 @@ $utopia->delete('/v1/projects/:projectId/keys/:keyId')
 
 // Tasks
 
-$utopia->post('/v1/projects/:projectId/tasks')
+App::post('/v1/projects/:projectId/tasks')
     ->desc('Create Task')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -908,7 +909,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/tasks')
+App::get('/v1/projects/:projectId/tasks')
     ->desc('List Tasks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -941,7 +942,7 @@ $utopia->get('/v1/projects/:projectId/tasks')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/tasks/:taskId')
+App::get('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Get Task')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -974,7 +975,7 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
         }
     );
 
-$utopia->put('/v1/projects/:projectId/tasks/:taskId')
+App::put('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Update Task')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1045,7 +1046,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/tasks/:taskId')
+App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Delete Task')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1077,7 +1078,7 @@ $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
 
 // Platforms
 
-$utopia->post('/v1/projects/:projectId/platforms')
+App::post('/v1/projects/:projectId/platforms')
     ->desc('Create Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1131,7 +1132,7 @@ $utopia->post('/v1/projects/:projectId/platforms')
         }
     );
     
-$utopia->get('/v1/projects/:projectId/platforms')
+App::get('/v1/projects/:projectId/platforms')
     ->desc('List Platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1152,7 +1153,7 @@ $utopia->get('/v1/projects/:projectId/platforms')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/platforms/:platformId')
+App::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1178,7 +1179,7 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
         }
     );
 
-$utopia->put('/v1/projects/:projectId/platforms/:platformId')
+App::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1220,7 +1221,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/platforms/:platformId')
+App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete Platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1252,7 +1253,7 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
 
 // Domains
 
-$utopia->post('/v1/projects/:projectId/domains')
+App::post('/v1/projects/:projectId/domains')
     ->desc('Create Domain')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1315,7 +1316,7 @@ $utopia->post('/v1/projects/:projectId/domains')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/domains')
+App::get('/v1/projects/:projectId/domains')
     ->desc('List Domains')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1336,7 +1337,7 @@ $utopia->get('/v1/projects/:projectId/domains')
         }
     );
 
-$utopia->get('/v1/projects/:projectId/domains/:domainId')
+App::get('/v1/projects/:projectId/domains/:domainId')
     ->desc('Get Domain')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1362,7 +1363,7 @@ $utopia->get('/v1/projects/:projectId/domains/:domainId')
         }
     );
 
-$utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
+App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1419,7 +1420,7 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
     );
 
-$utopia->delete('/v1/projects/:projectId/domains/:domainId')
+App::delete('/v1/projects/:projectId/domains/:domainId')
     ->desc('Delete Domain')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')

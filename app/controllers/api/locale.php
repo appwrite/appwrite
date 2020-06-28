@@ -6,7 +6,7 @@ use Utopia\App;
 use Utopia\Locale\Locale;
 use GeoIp2\Database\Reader;
 
-$utopia->get('/v1/locale')
+App::get('/v1/locale')
     ->desc('Get User Locale')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -25,7 +25,7 @@ $utopia->get('/v1/locale')
             $countries = Locale::getText('countries');
             $continents = Locale::getText('continents');
 
-            if (App::MODE_TYPE_PRODUCTION !== $utopia->getMode()) {
+            if (!App::isProduction()) {
                 $ip = '79.177.241.94';
             }
 
@@ -65,7 +65,7 @@ $utopia->get('/v1/locale')
         }
     );
 
-$utopia->get('/v1/locale/countries')
+App::get('/v1/locale/countries')
     ->desc('List Countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -83,7 +83,7 @@ $utopia->get('/v1/locale/countries')
         }
     );
 
-$utopia->get('/v1/locale/countries/eu')
+App::get('/v1/locale/countries/eu')
     ->desc('List EU Countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -109,7 +109,7 @@ $utopia->get('/v1/locale/countries/eu')
         }
     );
 
-$utopia->get('/v1/locale/countries/phones')
+App::get('/v1/locale/countries/phones')
     ->desc('List Countries Phone Codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -135,7 +135,7 @@ $utopia->get('/v1/locale/countries/phones')
         }
     );
 
-$utopia->get('/v1/locale/continents')
+App::get('/v1/locale/continents')
     ->desc('List Continents')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -154,7 +154,7 @@ $utopia->get('/v1/locale/continents')
     );
 
 
-$utopia->get('/v1/locale/currencies')
+App::get('/v1/locale/currencies')
     ->desc('List Currencies')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
@@ -171,7 +171,7 @@ $utopia->get('/v1/locale/currencies')
     );
 
 
-$utopia->get('/v1/locale/languages')
+App::get('/v1/locale/languages')
     ->desc('List Languages')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')

@@ -2,12 +2,13 @@
 
 global $utopia, $response, $request, $layout;
 
+use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 
-$utopia->init(function () use ($layout) {
+App::init(function () use ($layout) {
     $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
@@ -25,11 +26,11 @@ $utopia->init(function () use ($layout) {
     ;
 }, 'home');
 
-$utopia->shutdown(function () use ($response, $layout) {
+App::shutdown(function () use ($response, $layout) {
     $response->send($layout->render());
 }, 'home');
 
-$utopia->get('/')
+App::get('/')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -39,7 +40,7 @@ $utopia->get('/')
         }
     );
 
-$utopia->get('/auth/signin')
+App::get('/auth/signin')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -51,7 +52,7 @@ $utopia->get('/auth/signin')
             ->setParam('body', $page);
     });
 
-$utopia->get('/auth/signup')
+App::get('/auth/signup')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -63,7 +64,7 @@ $utopia->get('/auth/signup')
             ->setParam('body', $page);
     });
 
-$utopia->get('/auth/recovery')
+App::get('/auth/recovery')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -75,7 +76,7 @@ $utopia->get('/auth/recovery')
             ->setParam('body', $page);
     });
 
-$utopia->get('/auth/confirm')
+App::get('/auth/confirm')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -87,7 +88,7 @@ $utopia->get('/auth/confirm')
             ->setParam('body', $page);
     });
 
-$utopia->get('/auth/join')
+App::get('/auth/join')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -99,7 +100,7 @@ $utopia->get('/auth/join')
             ->setParam('body', $page);
     });
 
-$utopia->get('/auth/recovery/reset')
+App::get('/auth/recovery/reset')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -112,7 +113,7 @@ $utopia->get('/auth/recovery/reset')
     });
 
 
-$utopia->get('/auth/oauth2/success')
+App::get('/auth/oauth2/success')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -127,7 +128,7 @@ $utopia->get('/auth/oauth2/success')
         ;
     });
 
-$utopia->get('/auth/oauth2/failure')
+App::get('/auth/oauth2/failure')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -142,7 +143,7 @@ $utopia->get('/auth/oauth2/failure')
         ;
     });
 
-$utopia->get('/error/:code')
+App::get('/error/:code')
     ->groups(['web', 'home'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -159,7 +160,7 @@ $utopia->get('/error/:code')
             ->setParam('body', $page);
     });
 
-$utopia->get('/open-api-2.json')
+App::get('/open-api-2.json')
     ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)

@@ -2,6 +2,7 @@
 
 global $utopia, $request, $response;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -81,7 +82,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($respo
     unset($resize);
 };
 
-$utopia->get('/v1/avatars/credit-cards/:code')
+App::get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
     ->groups(['api', 'avatars'])
     ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))); }, 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
@@ -98,7 +99,7 @@ $utopia->get('/v1/avatars/credit-cards/:code')
         return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
 
-$utopia->get('/v1/avatars/browsers/:code')
+App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
     ->groups(['api', 'avatars'])
     ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-browsers'))); }, 'Browser Code.')
@@ -115,7 +116,7 @@ $utopia->get('/v1/avatars/browsers/:code')
         return $avatarCallback('browsers', $code, $width, $height, $quality);
     });
 
-$utopia->get('/v1/avatars/flags/:code')
+App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
     ->groups(['api', 'avatars'])
     ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-flags'))); }, 'Country Code. ISO Alpha-2 country code format.')
@@ -132,7 +133,7 @@ $utopia->get('/v1/avatars/flags/:code')
         return $avatarCallback('flags', $code, $width, $height, $quality);
     });
 
-$utopia->get('/v1/avatars/image')
+App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
     ->groups(['api', 'avatars'])
     ->param('url', '', function () { return new URL(); }, 'Image URL which you want to crop.')
@@ -200,7 +201,7 @@ $utopia->get('/v1/avatars/image')
         }
     );
 
-$utopia->get('/v1/avatars/favicon')
+App::get('/v1/avatars/favicon')
     ->desc('Get Favicon')
     ->groups(['api', 'avatars'])
     ->param('url', '', function () { return new URL(); }, 'Website URL which you want to fetch the favicon from.')
@@ -353,7 +354,7 @@ $utopia->get('/v1/avatars/favicon')
         }
     );
 
-$utopia->get('/v1/avatars/qr')
+App::get('/v1/avatars/qr')
     ->desc('Get QR Code')
     ->groups(['api', 'avatars'])
     ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image.')
@@ -387,7 +388,7 @@ $utopia->get('/v1/avatars/qr')
         }
     );
 
-$utopia->get('/v1/avatars/initials')
+App::get('/v1/avatars/initials')
     ->desc('Get User Initials')
     ->groups(['api', 'avatars'])
     ->param('name', '', function () { return new Text(512); }, 'Full Name. When empty, current user name or email will be used.', true)

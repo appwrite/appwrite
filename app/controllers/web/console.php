@@ -2,6 +2,7 @@
 
 global $utopia, $response, $request, $layout, $projectDB;
 
+use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -10,14 +11,14 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
 
-$utopia->init(function () use ($layout) {
+App::init(function () use ($layout) {
     $layout
         ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
         ->setParam('analytics', 'UA-26264668-5')
     ;
 }, 'console');
 
-$utopia->shutdown(function () use ($response, $request, $layout) {
+App::shutdown(function () use ($response, $request, $layout) {
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/console/comps/footer.phtml');
 
@@ -34,7 +35,7 @@ $utopia->shutdown(function () use ($response, $request, $layout) {
     $response->send($layout->render());
 }, 'console');
 
-$utopia->get('/error/:code')
+App::get('/error/:code')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'home')
@@ -51,7 +52,7 @@ $utopia->get('/error/:code')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console')
+App::get('/console')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -67,7 +68,7 @@ $utopia->get('/console')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/account')
+App::get('/console/account')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -85,7 +86,7 @@ $utopia->get('/console/account')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/notifications')
+App::get('/console/notifications')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -97,7 +98,7 @@ $utopia->get('/console/notifications')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/home')
+App::get('/console/home')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -109,7 +110,7 @@ $utopia->get('/console/home')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/settings')
+App::get('/console/settings')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -128,7 +129,7 @@ $utopia->get('/console/settings')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/webhooks')
+App::get('/console/webhooks')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -144,7 +145,7 @@ $utopia->get('/console/webhooks')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/keys')
+App::get('/console/keys')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -159,7 +160,7 @@ $utopia->get('/console/keys')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/tasks')
+App::get('/console/tasks')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -171,7 +172,7 @@ $utopia->get('/console/tasks')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/database')
+App::get('/console/database')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -183,7 +184,7 @@ $utopia->get('/console/database')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/database/collection')
+App::get('/console/database/collection')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -215,7 +216,7 @@ $utopia->get('/console/database/collection')
         ;
     });
 
-$utopia->get('/console/database/document')
+App::get('/console/database/document')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -245,7 +246,7 @@ $utopia->get('/console/database/document')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/storage')
+App::get('/console/storage')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -263,7 +264,7 @@ $utopia->get('/console/storage')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users')
+App::get('/console/users')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -277,7 +278,7 @@ $utopia->get('/console/users')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users/user')
+App::get('/console/users/user')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -289,7 +290,7 @@ $utopia->get('/console/users/user')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users/teams/team')
+App::get('/console/users/teams/team')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')

@@ -2,12 +2,13 @@
 
 global $utopia, $request, $response, $register;
 
+use Utopia\App;
 use Utopia\Exception;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Appwrite\ClamAV\Network;
 
-$utopia->get('/v1/health')
+App::get('/v1/health')
     ->desc('Get HTTP')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -21,7 +22,7 @@ $utopia->get('/v1/health')
         }
     );
 
-$utopia->get('/v1/health/version')
+App::get('/v1/health/version')
     ->desc('Get Version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
@@ -31,7 +32,7 @@ $utopia->get('/v1/health/version')
         }
     );
 
-$utopia->get('/v1/health/db')
+App::get('/v1/health/db')
     ->desc('Get DB')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -47,7 +48,7 @@ $utopia->get('/v1/health/db')
         }
     );
 
-$utopia->get('/v1/health/cache')
+App::get('/v1/health/cache')
     ->desc('Get Cache')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -63,7 +64,7 @@ $utopia->get('/v1/health/cache')
         }
     );
 
-$utopia->get('/v1/health/time')
+App::get('/v1/health/time')
     ->desc('Get Time')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -111,7 +112,7 @@ $utopia->get('/v1/health/time')
         }
     );
 
-$utopia->get('/v1/health/queue/webhooks')
+App::get('/v1/health/queue/webhooks')
     ->desc('Get Webhooks Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -125,7 +126,7 @@ $utopia->get('/v1/health/queue/webhooks')
         }
     );
 
-$utopia->get('/v1/health/queue/tasks')
+App::get('/v1/health/queue/tasks')
     ->desc('Get Tasks Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -139,7 +140,7 @@ $utopia->get('/v1/health/queue/tasks')
         }
     );
 
-$utopia->get('/v1/health/queue/logs')
+App::get('/v1/health/queue/logs')
     ->desc('Get Logs Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -153,7 +154,7 @@ $utopia->get('/v1/health/queue/logs')
         }
     );
 
-$utopia->get('/v1/health/queue/usage')
+App::get('/v1/health/queue/usage')
     ->desc('Get Usage Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -167,7 +168,7 @@ $utopia->get('/v1/health/queue/usage')
         }
     );
 
-$utopia->get('/v1/health/queue/certificates')
+App::get('/v1/health/queue/certificates')
     ->desc('Get Certificate Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -181,7 +182,7 @@ $utopia->get('/v1/health/queue/certificates')
         }
     );
 
-$utopia->get('/v1/health/queue/functions')
+App::get('/v1/health/queue/functions')
     ->desc('Get Functions Queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -195,7 +196,7 @@ $utopia->get('/v1/health/queue/functions')
         }
     );
 
-$utopia->get('/v1/health/storage/local')
+App::get('/v1/health/storage/local')
     ->desc('Get Local Storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -226,7 +227,7 @@ $utopia->get('/v1/health/storage/local')
         }
     );
 
-$utopia->get('/v1/health/anti-virus')
+App::get('/v1/health/anti-virus')
     ->desc('Get Anti virus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -249,7 +250,7 @@ $utopia->get('/v1/health/anti-virus')
         }
     );
 
-$utopia->get('/v1/health/stats') // Currently only used internally
+App::get('/v1/health/stats') // Currently only used internally
     ->desc('Get System Stats')
     ->groups(['api', 'health'])
     ->label('scope', 'god')

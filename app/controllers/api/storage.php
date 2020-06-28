@@ -2,6 +2,7 @@
 
 global $utopia, $request, $response, $user, $audit, $usage, $project, $projectDB;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
@@ -129,11 +130,11 @@ $mimes = [
     'application/pdf',
 ];
 
-$utopia->init(function () use ($project) {
+App::init(function () use ($project) {
     Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 }, 'storage');
 
-$utopia->post('/v1/storage/files')
+App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -270,7 +271,7 @@ $utopia->post('/v1/storage/files')
         }
     );
 
-$utopia->get('/v1/storage/files')
+App::get('/v1/storage/files')
     ->desc('List Files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -304,7 +305,7 @@ $utopia->get('/v1/storage/files')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId')
+App::get('/v1/storage/files/:fileId')
     ->desc('Get File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -325,7 +326,7 @@ $utopia->get('/v1/storage/files/:fileId')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId/preview')
+App::get('/v1/storage/files/:fileId/preview')
     ->desc('Get File Preview')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -448,7 +449,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId/download')
+App::get('/v1/storage/files/:fileId/download')
     ->desc('Get File for Download')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -502,7 +503,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId/view')
+App::get('/v1/storage/files/:fileId/view')
     ->desc('Get File for View')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -573,7 +574,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
         }
     );
 
-$utopia->put('/v1/storage/files/:fileId')
+App::put('/v1/storage/files/:fileId')
     ->desc('Update File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -619,7 +620,7 @@ $utopia->put('/v1/storage/files/:fileId')
         }
     );
 
-$utopia->delete('/v1/storage/files/:fileId')
+App::delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -662,7 +663,7 @@ $utopia->delete('/v1/storage/files/:fileId')
         }
     );
 
-// $utopia->get('/v1/storage/files/:fileId/scan')
+// App::get('/v1/storage/files/:fileId/scan')
 //     ->desc('Scan Storage')
 //     ->groups(['api', 'storage'])
 //     ->label('scope', 'god')

@@ -2,6 +2,7 @@
 
 global $utopia, $request, $response, $projectDB, $project, $user, $audit, $mail, $mode, $clients;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Config\Config;
@@ -20,7 +21,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Template\Template;
 
-$utopia->post('/v1/teams')
+App::post('/v1/teams')
     ->desc('Create Team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
@@ -84,7 +85,7 @@ $utopia->post('/v1/teams')
         }
     );
 
-$utopia->get('/v1/teams')
+App::get('/v1/teams')
     ->desc('List Teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -114,7 +115,7 @@ $utopia->get('/v1/teams')
         }
     );
 
-$utopia->get('/v1/teams/:teamId')
+App::get('/v1/teams/:teamId')
     ->desc('Get Team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -135,7 +136,7 @@ $utopia->get('/v1/teams/:teamId')
         }
     );
 
-$utopia->put('/v1/teams/:teamId')
+App::put('/v1/teams/:teamId')
     ->desc('Update Team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
@@ -165,7 +166,7 @@ $utopia->put('/v1/teams/:teamId')
         }
     );
 
-$utopia->delete('/v1/teams/:teamId')
+App::delete('/v1/teams/:teamId')
     ->desc('Delete Team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
@@ -205,7 +206,7 @@ $utopia->delete('/v1/teams/:teamId')
         }
     );
 
-$utopia->post('/v1/teams/:teamId/memberships')
+App::post('/v1/teams/:teamId/memberships')
     ->desc('Create Team Membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')
@@ -382,7 +383,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
         }
     );
 
-$utopia->get('/v1/teams/:teamId/memberships')
+App::get('/v1/teams/:teamId/memberships')
     ->desc('Get Team Memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -440,7 +441,7 @@ $utopia->get('/v1/teams/:teamId/memberships')
         }
     );
 
-$utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
+App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->desc('Update Team Membership Status')
     ->groups(['api', 'teams'])
     ->label('scope', 'public')
@@ -573,7 +574,7 @@ $utopia->patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
     );
 
-$utopia->delete('/v1/teams/:teamId/memberships/:inviteId')
+App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->desc('Delete Team Membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.write')

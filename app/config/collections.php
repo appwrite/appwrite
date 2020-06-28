@@ -1,7 +1,8 @@
 <?php
 
-global $utopia, $request;
+global $request;
 
+use Utopia\App;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
 
@@ -50,9 +51,9 @@ $collections = [
         'legalCity' => '',
         'legalAddress' => '',
         'legalTaxId' => '',
-        'authWhitelistEmails' => (!empty($utopia->getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', $utopia->getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty($utopia->getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', $utopia->getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'authWhitelistDomains' => (!empty($utopia->getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null))) ? \explode(',', $utopia->getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null)) : [],
+        'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'authWhitelistDomains' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_DOMAINS', null)) : [],
     ],
     Database::SYSTEM_COLLECTION_COLLECTIONS => [
         '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
