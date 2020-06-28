@@ -21,12 +21,11 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Network\Validator\CNAME;
 use Cron\CronExpression;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $scopes = include __DIR__.'/../../../app/config/scopes.php';
 
 $utopia->post('/v1/projects')
     ->desc('Create Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'create')
@@ -89,6 +88,7 @@ $utopia->post('/v1/projects')
 
 $utopia->get('/v1/projects')
     ->desc('List Projects')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'list')
@@ -122,6 +122,7 @@ $utopia->get('/v1/projects')
 
 $utopia->get('/v1/projects/:projectId')
     ->desc('Get Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'get')
@@ -149,6 +150,7 @@ $utopia->get('/v1/projects/:projectId')
 
 $utopia->get('/v1/projects/:projectId/usage')
     ->desc('Get Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
@@ -310,6 +312,7 @@ $utopia->get('/v1/projects/:projectId/usage')
 
 $utopia->patch('/v1/projects/:projectId')
     ->desc('Update Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'update')
@@ -355,6 +358,7 @@ $utopia->patch('/v1/projects/:projectId')
 
 $utopia->patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateOAuth2')
@@ -396,6 +400,7 @@ $utopia->patch('/v1/projects/:projectId/oauth2')
 
 $utopia->delete('/v1/projects/:projectId')
     ->desc('Delete Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'delete')
@@ -415,7 +420,7 @@ $utopia->delete('/v1/projects/:projectId')
 
             $deletes->setParam('document', $project->getArrayCopy());
 
-            foreach(['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
+            foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
                 $list = $project->getAttribute('webhooks', []);
 
                 foreach ($list as $document) { /* @var $document Document */
@@ -441,6 +446,7 @@ $utopia->delete('/v1/projects/:projectId')
 
 $utopia->post('/v1/projects/:projectId/webhooks')
     ->desc('Create Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createWebhook')
@@ -506,6 +512,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
 
 $utopia->get('/v1/projects/:projectId/webhooks')
     ->desc('List Webhooks')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listWebhooks')
@@ -538,6 +545,7 @@ $utopia->get('/v1/projects/:projectId/webhooks')
 
 $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getWebhook')
@@ -571,6 +579,7 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
 
 $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateWebhook')
@@ -626,6 +635,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
 
 $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteWebhook')
@@ -657,6 +667,7 @@ $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 $utopia->post('/v1/projects/:projectId/keys')
     ->desc('Create Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
@@ -703,6 +714,7 @@ $utopia->post('/v1/projects/:projectId/keys')
 
 $utopia->get('/v1/projects/:projectId/keys')
     ->desc('List Keys')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
@@ -721,6 +733,7 @@ $utopia->get('/v1/projects/:projectId/keys')
 
 $utopia->get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
@@ -746,6 +759,7 @@ $utopia->get('/v1/projects/:projectId/keys/:keyId')
 
 $utopia->put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
@@ -782,6 +796,7 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
 
 $utopia->delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
@@ -813,6 +828,7 @@ $utopia->delete('/v1/projects/:projectId/keys/:keyId')
 
 $utopia->post('/v1/projects/:projectId/tasks')
     ->desc('Create Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createTask')
@@ -895,6 +911,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
 
 $utopia->get('/v1/projects/:projectId/tasks')
     ->desc('List Tasks')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listTasks')
@@ -927,6 +944,7 @@ $utopia->get('/v1/projects/:projectId/tasks')
 
 $utopia->get('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Get Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getTask')
@@ -959,6 +977,7 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
 
 $utopia->put('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Update Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateTask')
@@ -1030,6 +1049,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
 
 $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Delete Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteTask')
@@ -1061,6 +1081,7 @@ $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
 
 $utopia->post('/v1/projects/:projectId/platforms')
     ->desc('Create Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
@@ -1114,6 +1135,7 @@ $utopia->post('/v1/projects/:projectId/platforms')
     
 $utopia->get('/v1/projects/:projectId/platforms')
     ->desc('List Platforms')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
@@ -1134,6 +1156,7 @@ $utopia->get('/v1/projects/:projectId/platforms')
 
 $utopia->get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
@@ -1159,6 +1182,7 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
 
 $utopia->put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
@@ -1200,6 +1224,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
 
 $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
@@ -1231,6 +1256,7 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
 
 $utopia->post('/v1/projects/:projectId/domains')
     ->desc('Create Domain')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createDomain')
@@ -1252,7 +1278,7 @@ $utopia->post('/v1/projects/:projectId/domains')
 
             $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
-            if(!$target->isKnown() || $target->isTest()) {
+            if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
             }
 
@@ -1293,6 +1319,7 @@ $utopia->post('/v1/projects/:projectId/domains')
 
 $utopia->get('/v1/projects/:projectId/domains')
     ->desc('List Domains')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listDomains')
@@ -1313,6 +1340,7 @@ $utopia->get('/v1/projects/:projectId/domains')
 
 $utopia->get('/v1/projects/:projectId/domains/:domainId')
     ->desc('Get Domain')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getDomain')
@@ -1338,6 +1366,7 @@ $utopia->get('/v1/projects/:projectId/domains/:domainId')
 
 $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateDomainVerification')
@@ -1359,18 +1388,18 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
 
             $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
-            if(!$target->isKnown() || $target->isTest()) {
+            if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
             }
 
-            if($domain->getAttribute('verification') === true) {
+            if ($domain->getAttribute('verification') === true) {
                 return $response->json($domain->getArrayCopy());
             }
 
             // Verify Domain with DNS records
             $validator = new CNAME($target->get());
 
-            if(!$validator->isValid($domain->getAttribute('domain', ''))) {
+            if (!$validator->isValid($domain->getAttribute('domain', ''))) {
                 throw new Exception('Failed to verify domain', 401);
             }
 
@@ -1394,6 +1423,7 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
 
 $utopia->delete('/v1/projects/:projectId/domains/:domainId')
     ->desc('Delete Domain')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteDomain')

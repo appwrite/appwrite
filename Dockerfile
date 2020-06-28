@@ -130,13 +130,12 @@ RUN \
 # Set Upload Limit (default to 100MB)
 RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
-RUN echo "env[TESTME] = your-secret-key" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 
 # Add logs file
 RUN echo "" >> /var/log/appwrite.log
 
 # Nginx Configuration (with self-signed ssl certificates)
-COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY ./docker/ssl/cert.pem /etc/nginx/ssl/cert.pem
 COPY ./docker/ssl/key.pem /etc/nginx/ssl/key.pem
 

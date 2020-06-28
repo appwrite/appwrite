@@ -18,6 +18,7 @@
 - Upgraded Redis Resque queue library to version 1.3.6
 - Added container names to docker-compose.yml (@drandell)
 - Upgraded ClamAV container image to version 1.0.9
+- Optimised function execution by using fully-qualified function calls
 
 ## Bug Fixes
 
@@ -31,6 +32,11 @@
 - Fixed update form labels and tooltips for Flutter Android apps
 - Fixed missing custom scopes param for OAuth2 session create API route
 - Fixed wrong JSON validation when creating and updating database documnets
+- Fixed bug where max file size was limited to max of 10MB
+- Fixed bug preventing the deletion of the project logo
+- Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
+- Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
+- Fixed bug denying authentication with Github OAuth provider
 
 ## Security
 

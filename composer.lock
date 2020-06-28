@@ -4,7 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+<<<<<<< HEAD
     "content-hash": "1df9fdb337c6030db4bb5f0e9868f9c3",
+=======
+    "content-hash": "7f6cbe77fe2e0f8bdff33c37a4d9ca11",
+>>>>>>> 17b9dc76a60403ef4e680ee92f3c845a5762effd
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -459,24 +463,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "89b1a76b7fda5853401297dc4b2a093cba1fda23"
+                "reference": "bbf3b200bc83c1e9298580a9f99b9be248543467"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/89b1a76b7fda5853401297dc4b2a093cba1fda23",
-                "reference": "89b1a76b7fda5853401297dc4b2a093cba1fda23",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/bbf3b200bc83c1e9298580a9f99b9be248543467",
+                "reference": "bbf3b200bc83c1e9298580a9f99b9be248543467",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.6"
+                "php": ">=5.5"
             },
             "require-dev": {
-                "phpunit/phpunit": "^5.7.27 || ^7.5"
+                "phpunit/phpunit": "^4.8.36 || ^5.7.27 || ^7.5"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.4-dev"
+                    "dev-master": "1.3-dev"
                 }
             },
             "autoload": {
@@ -502,7 +506,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2020-02-15T23:33:03+00:00"
+            "time": "2020-06-21T23:10:57+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -1596,6 +1600,7 @@
         },
         {
             "name": "utopia-php/framework",
+<<<<<<< HEAD
             "version": "0.3.7",
             "source": {
                 "type": "git",
@@ -1606,6 +1611,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/utopia-php/framework/zipball/23156b3d604fd9586f2e8c6c449b2fc6a82c10bc",
                 "reference": "23156b3d604fd9586f2e8c6c449b2fc6a82c10bc",
+=======
+            "version": "0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/framework.git",
+                "reference": "30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
+                "reference": "30aeb2aeecf8ea2ab83242efad0f5f9fab8d4be5",
+>>>>>>> 17b9dc76a60403ef4e680ee92f3c845a5762effd
                 "shasum": ""
             },
             "require": {
@@ -1636,7 +1653,11 @@
                 "php",
                 "upf"
             ],
+<<<<<<< HEAD
             "time": "2020-06-21T11:29:58+00:00"
+=======
+            "time": "2020-06-25T18:21:48+00:00"
+>>>>>>> 17b9dc76a60403ef4e680ee92f3c845a5762effd
         },
         {
             "name": "utopia-php/locale",
@@ -2141,24 +2162,23 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c"
+                "reference": "664187301bfbc87e686df212094e6817805c3ab8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
-                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/664187301bfbc87e686df212094e6817805c3ab8",
+                "reference": "664187301bfbc87e686df212094e6817805c3ab8",
                 "shasum": ""
             },
             "require": {
-                "ext-filter": "^7.1",
-                "php": "^7.2",
+                "ext-filter": "*",
+                "php": "^7.2 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0",
                 "phpdocumentor/type-resolver": "^1.0",
                 "webmozart/assert": "^1"
             },
             "require-dev": {
-                "doctrine/instantiator": "^1",
-                "mockery/mockery": "^1"
+                "mockery/mockery": "1.3.*"
             },
             "type": "library",
             "extra": {
@@ -2186,7 +2206,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-06-19T18:58:43+00:00"
+            "time": "2020-06-27T17:33:53+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -3307,12 +3327,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2"
+                "reference": "f32950c872a995a93807909bab69387f47afaa25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/3beabd64bdc91558b41f140cc4b14925f0416cb2",
-                "reference": "3beabd64bdc91558b41f140cc4b14925f0416cb2",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/f32950c872a995a93807909bab69387f47afaa25",
+                "reference": "f32950c872a995a93807909bab69387f47afaa25",
                 "shasum": ""
             },
             "require": {
@@ -3364,7 +3384,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-06-08T10:41:25+00:00"
+            "time": "2020-06-22T15:25:21+00:00"
         },
         {
             "name": "webmozart/assert",

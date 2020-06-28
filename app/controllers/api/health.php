@@ -9,6 +9,7 @@ use Appwrite\ClamAV\Network;
 
 $utopia->get('/v1/health')
     ->desc('Get HTTP')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -22,6 +23,7 @@ $utopia->get('/v1/health')
 
 $utopia->get('/v1/health/version')
     ->desc('Get Version')
+    ->groups(['api', 'health'])
     ->label('scope', 'public')
     ->action(
         function () use ($response) {
@@ -31,6 +33,7 @@ $utopia->get('/v1/health/version')
 
 $utopia->get('/v1/health/db')
     ->desc('Get DB')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -46,6 +49,7 @@ $utopia->get('/v1/health/db')
 
 $utopia->get('/v1/health/cache')
     ->desc('Get Cache')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -61,6 +65,7 @@ $utopia->get('/v1/health/cache')
 
 $utopia->get('/v1/health/time')
     ->desc('Get Time')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -108,6 +113,7 @@ $utopia->get('/v1/health/time')
 
 $utopia->get('/v1/health/queue/webhooks')
     ->desc('Get Webhooks Queue')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -121,6 +127,7 @@ $utopia->get('/v1/health/queue/webhooks')
 
 $utopia->get('/v1/health/queue/tasks')
     ->desc('Get Tasks Queue')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -134,6 +141,7 @@ $utopia->get('/v1/health/queue/tasks')
 
 $utopia->get('/v1/health/queue/logs')
     ->desc('Get Logs Queue')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -147,6 +155,7 @@ $utopia->get('/v1/health/queue/logs')
 
 $utopia->get('/v1/health/queue/usage')
     ->desc('Get Usage Queue')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -160,6 +169,7 @@ $utopia->get('/v1/health/queue/usage')
 
 $utopia->get('/v1/health/queue/certificates')
     ->desc('Get Certificate Queue')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -173,6 +183,7 @@ $utopia->get('/v1/health/queue/certificates')
 
 $utopia->get('/v1/health/queue/functions')
     ->desc('Get Functions Queue')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -186,6 +197,7 @@ $utopia->get('/v1/health/queue/functions')
 
 $utopia->get('/v1/health/storage/local')
     ->desc('Get Local Storage')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -193,7 +205,6 @@ $utopia->get('/v1/health/storage/local')
     ->label('sdk.description', '/docs/references/health/get-storage-local.md')
     ->action(
         function () use ($response) {
-
             foreach ([
                 'Uploads' => APP_STORAGE_UPLOADS,
                 'Cache' => APP_STORAGE_CACHE,
@@ -217,6 +228,7 @@ $utopia->get('/v1/health/storage/local')
 
 $utopia->get('/v1/health/anti-virus')
     ->desc('Get Anti virus')
+    ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'health')
@@ -224,7 +236,7 @@ $utopia->get('/v1/health/anti-virus')
     ->label('sdk.description', '/docs/references/health/get-storage-anti-virus.md')
     ->action(
         function () use ($request, $response) {
-            if($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+            if ($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
                 throw new Exception('Anitvirus is disabled');
             }
 
@@ -239,6 +251,7 @@ $utopia->get('/v1/health/anti-virus')
 
 $utopia->get('/v1/health/stats') // Currently only used internally
     ->desc('Get System Stats')
+    ->groups(['api', 'health'])
     ->label('scope', 'god')
     // ->label('sdk.platform', [APP_PLATFORM_SERVER])
     // ->label('sdk.namespace', 'health')

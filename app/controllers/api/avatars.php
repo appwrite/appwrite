@@ -19,15 +19,13 @@ use BaconQrCode\Writer;
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
 
-include_once __DIR__ . '/../shared/api.php';
-
 $types = [
     'browsers' => include __DIR__.'/../../config/avatars/browsers.php',
     'credit-cards' => include __DIR__.'/../../config/avatars/credit-cards.php',
     'flags' => include __DIR__.'/../../config/avatars/flags.php',
 ];
 
-$avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response, $request) {
+$avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response) {
     $code = \strtolower($code);
     $type = \strtolower($type);
 
@@ -87,12 +85,11 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     echo $data;
 
     unset($resize);
-
-    exit(0);
 };
 
 $utopia->get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
+    ->groups(['api', 'avatars'])
     ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['credit-cards'])); }, 'Credit Card Code. Possible values: '.\implode(', ', \array_keys($types['credit-cards'])).'.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -103,11 +100,13 @@ $utopia->get('/v1/avatars/credit-cards/:code')
     ->label('sdk.method', 'getCreditCard')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-credit-card.md')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('credit-cards', $code, $width, $height, $quality);
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
+        return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
+    ->groups(['api', 'avatars'])
     ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['browsers'])); }, 'Browser Code.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -118,11 +117,13 @@ $utopia->get('/v1/avatars/browsers/:code')
     ->label('sdk.method', 'getBrowser')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-browser.md')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('browsers', $code, $width, $height, $quality);
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
+        return $avatarCallback('browsers', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
+    ->groups(['api', 'avatars'])
     ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['flags'])); }, 'Country Code. ISO Alpha-2 country code format.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -133,11 +134,13 @@ $utopia->get('/v1/avatars/flags/:code')
     ->label('sdk.method', 'getFlag')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-flag.md')
-    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) { return $avatarCallback('flags', $code, $width, $height, $quality);
+    ->action(function ($code, $width, $height, $quality) use ($avatarCallback) {
+        return $avatarCallback('flags', $code, $width, $height, $quality);
     });
 
 $utopia->get('/v1/avatars/image')
     ->desc('Get Image from URL')
+    ->groups(['api', 'avatars'])
     ->param('url', '', function () { return new URL(); }, 'Image URL which you want to crop.')
     ->param('width', 400, function () { return new Range(0, 2000); }, 'Resize preview image width, Pass an integer between 0 to 2000.', true)
     ->param('height', 400, function () { return new Range(0, 2000); }, 'Resize preview image height, Pass an integer between 0 to 2000.', true)
@@ -200,13 +203,12 @@ $utopia->get('/v1/avatars/image')
             echo $data;
 
             unset($resize);
-
-            exit(0);
         }
     );
 
 $utopia->get('/v1/avatars/favicon')
     ->desc('Get Favicon')
+    ->groups(['api', 'avatars'])
     ->param('url', '', function () { return new URL(); }, 'Website URL which you want to fetch the favicon from.')
     ->label('scope', 'avatars.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
@@ -354,13 +356,12 @@ $utopia->get('/v1/avatars/favicon')
             echo $data;
 
             unset($resize);
-
-            exit(0);
         }
     );
 
 $utopia->get('/v1/avatars/qr')
     ->desc('Get QR Code')
+    ->groups(['api', 'avatars'])
     ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image.')
     ->param('size', 400, function () { return new Range(0, 1000); }, 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
     ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
@@ -396,6 +397,7 @@ $utopia->get('/v1/avatars/qr')
 
 $utopia->get('/v1/avatars/initials')
     ->desc('Get User Initials')
+    ->groups(['api', 'avatars'])
     ->param('name', '', function () { return new Text(512); }, 'Full Name. When empty, current user name or email will be used.', true)
     ->param('width', 500, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 500, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
@@ -433,7 +435,7 @@ $utopia->get('/v1/avatars/initials')
                 $initials .= (isset($w[0])) ? $w[0] : '';
                 $code += (isset($w[0])) ? \ord($w[0]) : 0;
 
-                if($key == 1) {
+                if ($key == 1) {
                     break;
                 }
             }
