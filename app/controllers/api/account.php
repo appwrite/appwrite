@@ -78,9 +78,8 @@ $utopia->post('/v1/account')
                 }
             }
 
-            $profile = $projectDB->getCollection([ // Get user by email address
+            $profile = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     'email='.$email,
@@ -162,9 +161,8 @@ $utopia->post('/v1/account/sessions')
     ->action(
         function ($email, $password) use ($response, $request, $projectDB, $audit, $webhook) {
             $protocol = Config::getParam('protocol');
-            $profile = $projectDB->getCollection([ // Get user by email address
+            $profile = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     'email='.$email,
@@ -417,9 +415,8 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
             }
 
-            $user = (empty($user->getId())) ? $projectDB->getCollection([ // Get user by provider id
+            $user = (empty($user->getId())) ? $projectDB->getCollectionFirst([ // Get user by provider id
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     'oauth2'.\ucfirst($provider).'='.$oauth2ID,
@@ -430,9 +427,8 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
                 $name = $oauth2->getUserName($accessToken);
                 $email = $oauth2->getUserEmail($accessToken);
 
-                $user = $projectDB->getCollection([ // Get user by provider email address
+                $user = $projectDB->getCollectionFirst([ // Get user by provider email address
                     'limit' => 1,
-                    'first' => true,
                     'filters' => [
                         '$collection='.Database::SYSTEM_COLLECTION_USERS,
                         'email='.$email,
@@ -808,9 +804,8 @@ $utopia->patch('/v1/account/email')
                 throw new Exception('Invalid credentials', 401);
             }
 
-            $profile = $projectDB->getCollection([ // Get user by email address
+            $profile = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     'email='.$email,
@@ -1072,9 +1067,8 @@ $utopia->post('/v1/account/recovery')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.')
     ->action(
         function ($email, $url) use ($request, $response, $projectDB, $mail, $audit, $project) {
-            $profile = $projectDB->getCollection([ // Get user by email address
+            $profile = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     'email='.$email,
@@ -1178,9 +1172,8 @@ $utopia->put('/v1/account/recovery')
                 throw new Exception('Passwords must match', 400);
             }
 
-            $profile = $projectDB->getCollection([ // Get user by email address
+            $profile = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     '$id='.$userId,
@@ -1330,9 +1323,8 @@ $utopia->put('/v1/account/verification')
     ->param('secret', '', function () { return new Text(256); }, 'Valid verification token.')
     ->action(
         function ($userId, $secret) use ($response, $user, $projectDB, $audit) {
-            $profile = $projectDB->getCollection([ // Get user by email address
+            $profile = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     '$id='.$userId,

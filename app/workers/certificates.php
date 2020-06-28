@@ -77,7 +77,7 @@ class CertificatesV1
             }
         }
 
-        $certificate = $consoleDB->getCollection([
+        $certificate = $consoleDB->getCollectionFirst([
             'limit' => 1,
             'offset' => 0,
             'orderField' => 'id',
@@ -87,7 +87,6 @@ class CertificatesV1
                 '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
                 'domain='.$domain->get(),
             ],
-            'first' => true,
         ]);
 
         // $condition = ($certificate

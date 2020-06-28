@@ -130,8 +130,6 @@ class Database
             'orderField' => '$id',
             'orderType' => 'ASC',
             'orderCast' => 'int',
-            'first' => false,
-            'last' => false,
             'filters' => [],
         ], $options);
 
@@ -141,15 +139,29 @@ class Database
             $node = new Document($node);
         }
 
-        if ($options['first']) {
-            $results = \reset($results);
-        }
-
-        if ($options['last']) {
-            $results = \end($results);
-        }
-
         return $results;
+    }
+
+    /**
+     * @param array $options
+     *
+     * @return Document
+     */
+    public function getCollectionFirst(array $options)
+    {
+        $results = $this->getCollection($options);
+        return \reset($results);
+    }
+
+    /**
+     * @param array $options
+     *
+     * @return Document
+     */
+    public function getCollectionLast(array $options)
+    {
+        $results = $this->getCollection($options);
+        return \end($results);
     }
 
     /**
