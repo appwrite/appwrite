@@ -457,6 +457,10 @@ $utopia->get('/open-api-2.json')
                                 $node['type'] = 'string';
                                 $node['x-example'] = '['.\strtoupper(fromCamelCase($node['name'])).']';
                                 break;
+                            case 'Utopia\Validator\Boolean':
+                                $node['type'] = 'boolean';
+                                $node['x-example'] = false;
+                                break;
                             case 'Appwrite\Database\Validator\UID':
                                 $node['type'] = 'string';
                                 $node['x-example'] = '['.\strtoupper(fromCamelCase($node['name'])).']';

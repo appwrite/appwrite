@@ -19,6 +19,7 @@
 - Added container names to docker-compose.yml (@drandell)
 - Upgraded ClamAV container image to version 1.0.9
 - Optimised function execution by using fully-qualified function calls
+- Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
@@ -38,6 +39,12 @@
 - Fixed wrong JSON validation when creating and updating database documnets
 - Fixed bug where max file size was limited to max of 10MB
 - Fixed bug preventing the deletion of the project logo
+- Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
+- Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
+- Fixed bug denying authentication with Github OAuth provider
+
+## Breaking Changes
+- **Deprecated** `first` and `last` query params for documents list route in the database API
 
 ## Security
 
