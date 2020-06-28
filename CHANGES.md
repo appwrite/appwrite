@@ -19,6 +19,7 @@
 - Added container names to docker-compose.yml (@drandell)
 - Upgraded ClamAV container image to version 1.0.9
 - Optimised function execution by using fully-qualified function calls
+- Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
 
 ## Bug Fixes
 
