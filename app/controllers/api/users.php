@@ -188,6 +188,38 @@ $utopia->get('/v1/users/:userId')
         }
     );
 
+$utopia->delete('/v1/users/:userId')
+    ->desc('Delete User')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.write')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'deleteUser')
+    ->label('sdk.description', '/docs/references/users/delete-user.md')
+    ->label('abuse-limit', 100)
+    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->action(
+        function ($userId) use ($response, $request, $projectDB) {
+            $user = $projectDB->getDocument($userId);
+
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+                throw new Exception('User not found', 404);
+            }
+            if (!$projectDB->deleteDocument($userId)) {
+                throw new Exception('Failed to remove file from DB', 500);
+            }
+            $tokens = $user->getAttribute('tokens', []);
+
+            foreach ($tokens as $token) {
+                if (!$projectDB->deleteDocument($token->getId())) {
+                    throw new Exception('Failed to remove token from DB', 500);
+                }
+            }
+
+            $response->noContent();
+        }
+    );
+
 $utopia->get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
