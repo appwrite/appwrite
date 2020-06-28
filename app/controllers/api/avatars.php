@@ -4,6 +4,7 @@ global $utopia, $request, $response;
 
 use Utopia\App;
 use Utopia\Exception;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
@@ -360,7 +361,7 @@ App::get('/v1/avatars/qr')
     ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image.')
     ->param('size', 400, function () { return new Range(0, 1000); }, 'QR code size. Pass an integer between 0 to 1000. Defaults to 400.', true)
     ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
-    ->param('download', 0, function () { return new Range(0, 1); }, 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
+    ->param('download', false, function () { return new Boolean(true); }, 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->label('scope', 'avatars.read')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'avatars')
@@ -369,6 +370,8 @@ App::get('/v1/avatars/qr')
     ->label('sdk.description', '/docs/references/avatars/get-qr.md')
     ->action(
         function ($text, $size, $margin, $download) use ($response) {
+            $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
+
             $renderer = new ImageRenderer(
                 new RendererStyle($size, $margin),
                 new ImagickImageBackEnd('png', 100)

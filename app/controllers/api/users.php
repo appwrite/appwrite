@@ -35,9 +35,8 @@ App::post('/v1/users')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(
         function ($email, $password, $name) use ($response, $projectDB) {
-            $profile = $projectDB->getCollection([ // Get user by email address
+            $profile = $projectDB->getCollectionFirst([ // Get user by email address
                 'limit' => 1,
-                'first' => true,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
                     'email='.$email,

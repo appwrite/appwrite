@@ -6,10 +6,10 @@ use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -455,7 +455,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name.')
     ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list.')
     ->param('url', null, function () { return new Text(2000); }, 'Webhook URL.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(
@@ -466,6 +466,7 @@ App::post('/v1/projects/:projectId/webhooks')
                 throw new Exception('Project not found', 404);
             }
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
@@ -588,8 +589,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name.')
     ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list.')
     ->param('url', null, function () { return new Text(2000); }, 'Webhook URL.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
-    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(
         function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
@@ -599,6 +599,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
                 throw new Exception('Project not found', 404);
             }
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
@@ -836,8 +837,7 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('name', null, function () { return new Text(256); }, 'Task name.')
     ->param('status', null, function () { return new WhiteList(['play', 'pause']); }, 'Task status.')
     ->param('schedule', null, function () { return new Cron(); }, 'Task schedule CRON syntax.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
-    ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
     ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL')
     ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
@@ -853,6 +853,7 @@ App::post('/v1/projects/:projectId/tasks')
             $cron = CronExpression::factory($schedule);
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
@@ -986,7 +987,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('name', null, function () { return new Text(256); }, 'Task name.')
     ->param('status', null, function () { return new WhiteList(['play', 'pause']); }, 'Task status.')
     ->param('schedule', null, function () { return new Cron(); }, 'Task schedule CRON syntax.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
     ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL.')
     ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
@@ -1009,6 +1010,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             $cron = CronExpression::factory($schedule);
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;

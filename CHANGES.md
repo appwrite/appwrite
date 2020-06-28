@@ -19,6 +19,7 @@
 - Added container names to docker-compose.yml (@drandell)
 - Upgraded ClamAV container image to version 1.0.9
 - Optimised function execution by using fully-qualified function calls
+- Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
 
 ## Bug Fixes
 
@@ -37,6 +38,9 @@
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
 - Fixed bug denying authentication with Github OAuth provider
+
+## Breaking Changes
+- **Deprecated** `first` and `last` query params for documents list route in the database API
 
 ## Security
 
