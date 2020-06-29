@@ -1,7 +1,5 @@
 <?php
 
-global $response, $register, $user, $consoleDB, $projectDB, $deletes;
-
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;

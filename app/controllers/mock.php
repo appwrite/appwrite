@@ -10,8 +10,6 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Host;
 use Appwrite\Storage\Validator\File;
 
-$result = [];
-
 App::get('/v1/mock/tests/foo')
     ->desc('Mock a get request for SDK tests')
     ->label('scope', 'public')
@@ -335,7 +333,8 @@ App::get('/v1/mock/tests/general/oauth2/failure')
         }
     );
 
-App::shutdown(function() use ($response, $request, &$result, $utopia) {
+App::shutdown(function($response, $request, $utopia) {
+    $result = [];
     $route  = $utopia->match($request);
     $path   = APP_STORAGE_CACHE.'/tests.json';
     $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
@@ -353,4 +352,4 @@ App::shutdown(function() use ($response, $request, &$result, $utopia) {
     }
 
     $response->json(['result' => $route->getMethod() . ':' . $route->getURL() . ':passed']);
-}, 'mock');
+}, ['response', 'request', 'utopia'], 'mock');

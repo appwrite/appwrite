@@ -60,6 +60,8 @@ Config::load('services', __DIR__.'/../app/config/services.php');  // List of ser
 Config::load('avatar-browsers', __DIR__.'/../app/config/avatars/browsers.php'); 
 Config::load('avatar-credit-cards', __DIR__.'/../app/config/avatars/credit-cards.php'); 
 Config::load('avatar-flags', __DIR__.'/../app/config/avatars/flags.php'); 
+Config::load('storage-logos', __DIR__.'/../app/config/storage/logos.php'); 
+Config::load('storage-mimes', __DIR__.'/../app/config/storage/mimes.php'); 
 
 Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
     .':'.App::getEnv('_APP_REDIS_PORT', ''));
@@ -141,10 +143,10 @@ $register->set('smtp', function () {
 
     return $mail;
 });
-$register->set('queue-webhooks', function () {
+$register->set('queue-webhook', function () {
     return new Event('v1-webhooks', 'WebhooksV1');
 });
-$register->set('queue-audits', function () {
+$register->set('queue-audit', function () {
     return new Event('v1-audits', 'AuditsV1');
 });
 $register->set('queue-usage', function () {
@@ -207,8 +209,6 @@ Locale::setLanguage('ua', include __DIR__.'/config/locales/ua.php');
 Locale::setLanguage('vi', include __DIR__.'/config/locales/vi.php');
 Locale::setLanguage('zh-cn', include __DIR__.'/config/locales/zh-cn.php');
 Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
-
-Locale::setDefault('en');
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [

@@ -1,7 +1,5 @@
 <?php
 
-global $response, $projectDB;
-
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;

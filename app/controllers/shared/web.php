@@ -4,9 +4,7 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 
-$layout = new View(__DIR__.'/../../views/layouts/default.phtml');
-
-App::init(function () use ($utopia, $response, $request, $layout) {
+App::init(function ($utopia, $response, $request, $layout) {
 
     /* AJAX check  */
     if (!empty($request->getQuery('version', ''))) {
@@ -29,7 +27,6 @@ App::init(function () use ($utopia, $response, $request, $layout) {
     ;
 
     $time = (60 * 60 * 24 * 45); // 45 days cache
-    $isDev = (\Utopia\App::MODE_TYPE_DEVELOPMENT == Config::getParam('env'));
 
     $response
         ->addHeader('Cache-Control', 'public, max-age='.$time)
@@ -40,7 +37,7 @@ App::init(function () use ($utopia, $response, $request, $layout) {
     $scope = $route->getLabel('scope', '');
     $layout
         ->setParam('version', Config::getParam('version'))
-        ->setParam('isDev', $isDev)
+        ->setParam('isDev', App::isDevelopment())
         ->setParam('class', $scope)
     ;
-}, 'web');
+}, ['utopia', 'response', 'request', 'layout'], 'web');

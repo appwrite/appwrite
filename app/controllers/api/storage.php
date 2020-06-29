@@ -1,7 +1,5 @@
 <?php
 
-global $request, $response, $user, $audit, $usage, $project, $projectDB;
-
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
@@ -23,48 +21,7 @@ use Appwrite\Storage\Validator\Upload;
 use Appwrite\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
-
-$fileLogos = [ // Based on this list @see http://stackoverflow.com/a/4212908/2299554
-    'default' => __DIR__.'/../../config/files/none.png',
-    
-    // Video Files
-    'video/mp4' => __DIR__.'/../../config/files/video.png',
-    'video/x-flv' => __DIR__.'/../../config/files/video.png',
-    'application/x-mpegURL' => __DIR__.'/../../config/files/video.png',
-    'video/MP2T' => __DIR__.'/../../config/files/video.png',
-    'video/3gpp' => __DIR__.'/../../config/files/video.png',
-    'video/quicktime' => __DIR__.'/../../config/files/video.png',
-    'video/x-msvideo' => __DIR__.'/../../config/files/video.png',
-    'video/x-ms-wmv' => __DIR__.'/../../config/files/video.png',
-
-    // // Microsoft Word
-    'application/msword' =>  __DIR__.'/../../config/files/word.png',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' =>  __DIR__.'/../../config/files/word.png',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.template' =>  __DIR__.'/../../config/files/word.png',
-    'application/vnd.ms-word.document.macroEnabled.12' =>  __DIR__.'/../../config/files/word.png',
-
-    // // Microsoft Excel
-    'application/vnd.ms-excel' =>  __DIR__.'/../../config/files/excel.png',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' =>  __DIR__.'/../../config/files/excel.png',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.template' =>  __DIR__.'/../../config/files/excel.png',
-    'application/vnd.ms-excel.sheet.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
-    'application/vnd.ms-excel.template.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
-    'application/vnd.ms-excel.addin.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
-    'application/vnd.ms-excel.sheet.binary.macroEnabled.12' =>  __DIR__.'/../../config/files/excel.png',
-
-    // // Microsoft Power Point
-    'application/vnd.ms-powerpoint' =>  __DIR__.'/../../config/files/ppt.png',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation' =>  __DIR__.'/../../config/files/ppt.png',
-    'application/vnd.openxmlformats-officedocument.presentationml.template' =>  __DIR__.'/../../config/files/ppt.png',
-    'application/vnd.openxmlformats-officedocument.presentationml.slideshow' =>  __DIR__.'/../../config/files/ppt.png',
-    'application/vnd.ms-powerpoint.addin.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
-    'application/vnd.ms-powerpoint.presentation.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
-    'application/vnd.ms-powerpoint.template.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
-    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12' =>  __DIR__.'/../../config/files/ppt.png',
-
-    // Adobe PDF
-    'application/pdf' =>  __DIR__.'/../../config/files/pdf.png',
-];
+use Utopia\Config\Config;
 
 $inputs = [
     'jpg' => 'image/jpeg',
@@ -81,58 +38,9 @@ $outputs = [
     'webp' => 'image/webp',
 ];
 
-$mimes = [
-    'image/jpeg',
-    'image/jpeg',
-    'image/gif',
-    'image/png',
-    'image/webp',
-
-    // Video Files
-    'video/mp4',
-    'video/x-flv',
-    'application/x-mpegURL',
-    'video/MP2T',
-    'video/3gpp',
-    'video/quicktime',
-    'video/x-msvideo',
-    'video/x-ms-wmv',
-    
-    // Microsoft Word
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
-    'application/vnd.ms-word.document.macroEnabled.12',
-
-    // Microsoft Excel
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
-    'application/vnd.ms-excel.sheet.macroEnabled.12',
-    'application/vnd.ms-excel.template.macroEnabled.12',
-    'application/vnd.ms-excel.addin.macroEnabled.12',
-    'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
-
-    // Microsoft Power Point
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'application/vnd.openxmlformats-officedocument.presentationml.template',
-    'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
-    'application/vnd.ms-powerpoint.addin.macroEnabled.12',
-    'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
-    'application/vnd.ms-powerpoint.template.macroEnabled.12',
-    'application/vnd.ms-powerpoint.slideshow.macroEnabled.12',
-
-    // Microsoft Access
-    'application/vnd.ms-access',
-
-    // Adobe PDF
-    'application/pdf',
-];
-
-App::init(function () use ($project) {
+App::init(function ($project) {
     Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-}, 'storage');
+}, ['project'], 'storage');
 
 App::post('/v1/storage/files')
     ->desc('Create File')
@@ -148,128 +56,133 @@ App::post('/v1/storage/files')
     ->param('file', [], function () { return new File(); }, 'Binary File.', false)
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    // ->param('folderId', '', function () { return new UID(); }, 'Folder to associate files with.', true)
-    ->action(
-        function ($file, $read, $write, $folderId = '') use ($request, $response, $user, $projectDB, $webhook, $audit, $usage) {
-            $file = $request->getFiles('file');
-            $read = (empty($read)) ? ['user:'.$user->getId()] : $read;
-            $write = (empty($write)) ? ['user:'.$user->getId()] : $write;
+    ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhook, $audit, $usage) {
+        /** @var Utopia\Request $request */
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Document $user */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $usage */
 
-            /*
-             * Validators
-             */
-            //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
-            $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
-            $upload = new Upload();
+        $file = $request->getFiles('file');
+        $read = (empty($read)) ? ['user:'.$user->getId()] : $read;
+        $write = (empty($write)) ? ['user:'.$user->getId()] : $write;
 
-            if (empty($file)) {
-                throw new Exception('No file sent', 400);
-            }
+        /*
+            * Validators
+            */
+        //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
+        $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $upload = new Upload();
 
-            // Make sure we handle a single file and multiple files the same way
-            $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
-            $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
-            $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+        if (empty($file)) {
+            throw new Exception('No file sent', 400);
+        }
 
-            // Check if file type is allowed (feature for project settings?)
-            //if (!$fileType->isValid($file['tmp_name'])) {
-            //throw new Exception('File type not allowed', 400);
-            //}
+        // Make sure we handle a single file and multiple files the same way
+        $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+        $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+
+        // Check if file type is allowed (feature for project settings?)
+        //if (!$fileType->isValid($file['tmp_name'])) {
+        //throw new Exception('File type not allowed', 400);
+        //}
+
+        // Check if file size is exceeding allowed limit
+        if (!$fileSize->isValid($file['size'])) {
+            throw new Exception('File size not allowed', 400);
+        }
+
+        /*
+            * Models
+            */
+        $device = Storage::getDevice('local');
+
+        if (!$upload->isValid($file['tmp_name'])) {
+            throw new Exception('Invalid file', 403);
+        }
+
+        // Save to storage
+        $size = $device->getFileSize($file['tmp_name']);
+        $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+            throw new Exception('Failed moving file', 500);
+        }
+
+        $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
+
+        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+            $antiVirus = new Network('clamav', 3310);
 
             // Check if file size is exceeding allowed limit
-            if (!$fileSize->isValid($file['size'])) {
-                throw new Exception('File size not allowed', 400);
-            }
-
-            /*
-             * Models
-             */
-            $device = Storage::getDevice('local');
-
-            if (!$upload->isValid($file['tmp_name'])) {
+            if (!$antiVirus->fileScan($path)) {
+                $device->delete($path);
                 throw new Exception('Invalid file', 403);
             }
-
-            // Save to storage
-            $size = $device->getFileSize($file['tmp_name']);
-            $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
-            
-            if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
-                throw new Exception('Failed moving file', 500);
-            }
-
-            $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
-
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
-                $antiVirus = new Network('clamav', 3310);
-    
-                // Check if file size is exceeding allowed limit
-                if (!$antiVirus->fileScan($path)) {
-                    $device->delete($path);
-                    throw new Exception('Invalid file', 403);
-                }
-            }
-
-            // Compression
-            $compressor = new GZIP();
-            $data = $device->read($path);
-            $data = $compressor->compress($data);
-            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-            $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-            $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
-
-            if (!$device->write($path, $data)) {
-                throw new Exception('Failed to save file', 500);
-            }
-
-            $sizeActual = $device->getFileSize($path);
-            
-            $file = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_FILES,
-                '$permissions' => [
-                    'read' => $read,
-                    'write' => $write,
-                ],
-                'dateCreated' => \time(),
-                'folderId' => $folderId,
-                'name' => $file['name'],
-                'path' => $path,
-                'signature' => $device->getFileHash($path),
-                'mimeType' => $mimeType,
-                'sizeOriginal' => $size,
-                'sizeActual' => $sizeActual,
-                'algorithm' => $compressor->getName(),
-                'token' => \bin2hex(\random_bytes(64)),
-                'comment' => '',
-                'fileOpenSSLVersion' => '1',
-                'fileOpenSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
-                'fileOpenSSLTag' => \bin2hex($tag),
-                'fileOpenSSLIV' => \bin2hex($iv),
-            ]);
-
-            if (false === $file) {
-                throw new Exception('Failed saving file to DB', 500);
-            }
-
-            $webhook
-                ->setParam('payload', $file->getArrayCopy())
-            ;
-
-            $audit
-                ->setParam('event', 'storage.files.create')
-                ->setParam('resource', 'storage/files/'.$file->getId())
-            ;
-
-            $usage
-                ->setParam('storage', $sizeActual)
-            ;
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($file->getArrayCopy())
-            ;
         }
-    );
+
+        // Compression
+        $compressor = new GZIP();
+        $data = $device->read($path);
+        $data = $compressor->compress($data);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
+
+        if (!$device->write($path, $data)) {
+            throw new Exception('Failed to save file', 500);
+        }
+
+        $sizeActual = $device->getFileSize($path);
+        
+        $file = $projectDB->createDocument([
+            '$collection' => Database::SYSTEM_COLLECTION_FILES,
+            '$permissions' => [
+                'read' => $read,
+                'write' => $write,
+            ],
+            'dateCreated' => \time(),
+            'folderId' => '',
+            'name' => $file['name'],
+            'path' => $path,
+            'signature' => $device->getFileHash($path),
+            'mimeType' => $mimeType,
+            'sizeOriginal' => $size,
+            'sizeActual' => $sizeActual,
+            'algorithm' => $compressor->getName(),
+            'token' => \bin2hex(\random_bytes(64)),
+            'comment' => '',
+            'fileOpenSSLVersion' => '1',
+            'fileOpenSSLCipher' => OpenSSL::CIPHER_AES_128_GCM,
+            'fileOpenSSLTag' => \bin2hex($tag),
+            'fileOpenSSLIV' => \bin2hex($iv),
+        ]);
+
+        if (false === $file) {
+            throw new Exception('Failed saving file to DB', 500);
+        }
+
+        $webhook
+            ->setParam('payload', $file->getArrayCopy())
+        ;
+
+        $audit
+            ->setParam('event', 'storage.files.create')
+            ->setParam('resource', 'storage/files/'.$file->getId())
+        ;
+
+        $usage
+            ->setParam('storage', $sizeActual)
+        ;
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->json($file->getArrayCopy())
+        ;
+    }, ['request', 'response', 'user', 'projectDB', 'webhook', 'audit', 'usage']);
 
 App::get('/v1/storage/files')
     ->desc('List Files')
@@ -283,27 +196,28 @@ App::get('/v1/storage/files')
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'dateCreated',
-                'orderType' => $orderType,
-                'orderCast' => 'int',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_FILES,
-                ],
-            ]);
+    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            $results = \array_map(function ($value) { /* @var $value \Database\Document */
-                return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
-            }, $results);
+        $results = $projectDB->getCollection([
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderField' => 'dateCreated',
+            'orderType' => $orderType,
+            'orderCast' => 'int',
+            'search' => $search,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_FILES,
+            ],
+        ]);
 
-            $response->json(['sum' => $projectDB->getSum(), 'files' => $results]);
-        }
-    );
+        $results = \array_map(function ($value) { /* @var $value \Database\Document */
+            return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
+        }, $results);
+
+        $response->json(['sum' => $projectDB->getSum(), 'files' => $results]);
+    }, ['response', 'projectDB']);
 
 App::get('/v1/storage/files/:fileId')
     ->desc('Get File')
@@ -314,17 +228,18 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.method', 'getFile')
     ->label('sdk.description', '/docs/references/storage/get-file.md')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->action(
-        function ($fileId) use ($response, $projectDB) {
-            $file = $projectDB->getDocument($fileId);
+    ->action(function ($fileId, $response, $projectDB) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
-                throw new Exception('File not found', 404);
-            }
+        $file = $projectDB->getDocument($fileId);
 
-            $response->json($file->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']));
+        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+            throw new Exception('File not found', 404);
         }
-    );
+
+        $response->json($file->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']));
+    }, ['response', 'projectDB']);
 
 App::get('/v1/storage/files/:fileId/preview')
     ->desc('Get File Preview')
@@ -343,7 +258,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', null, function () use ($outputs) { return new WhiteList(\array_merge(\array_keys($outputs), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(
-        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
+        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs) {
             $storage = 'local';
 
             if (!\extension_loaded('imagick')) {
@@ -372,6 +287,7 @@ App::get('/v1/storage/files/:fileId/preview')
             $algorithm = $file->getAttribute('algorithm');
             $cipher = $file->getAttribute('fileOpenSSLCipher');
             $mime = $file->getAttribute('mimeType');
+            $fileLogos = Config::getParam('storage-logos');
 
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
@@ -516,8 +432,9 @@ App::get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->param('as', '', function () { return new WhiteList(['pdf', /*'html',*/ 'text']); }, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(
-        function ($fileId, $as) use ($response, $projectDB, $mimes) {
-            $file = $projectDB->getDocument($fileId);
+        function ($fileId, $as) use ($response, $projectDB) {
+            $file  = $projectDB->getDocument($fileId);
+            $mimes = Config::getParam('storage-mimes');
 
             if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
                 throw new Exception('File not found', 404);

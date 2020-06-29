@@ -8,7 +8,7 @@ use Utopia\Config\Config;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
 
-App::init(function () use ($layout) {
+App::init(function ($layout) {
     $header = new View(__DIR__.'/../../views/home/comps/header.phtml');
     $footer = new View(__DIR__.'/../../views/home/comps/footer.phtml');
 
@@ -24,11 +24,11 @@ App::init(function () use ($layout) {
         ->setParam('header', [$header])
         ->setParam('footer', [$footer])
     ;
-}, 'home');
+}, ['layout'], 'home');
 
-App::shutdown(function () use ($response, $layout) {
+App::shutdown(function ($response, $layout) {
     $response->send($layout->render());
-}, 'home');
+}, ['response', 'layout'], 'home');
 
 App::get('/')
     ->groups(['web', 'home'])

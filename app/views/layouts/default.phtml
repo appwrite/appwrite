@@ -11,6 +11,7 @@ $litespeed  = $this->getParam('litespeed', true);
 $analytics  = $this->getParam('analytics', 'UA-26264668-9');
 $env        = $this->getParam('env', '');
 $canonical  = $this->getParam('canonical', '');
+$locale     = $this->getParam('locale', null);
 
 if(!empty($platforms)) {
     $platforms = array_map(function($platform) {
@@ -30,14 +31,14 @@ if(!empty($platforms)) {
 }
 
 ?><!DOCTYPE html><!--
-<?php echo Locale::getText('settings.inspire'); ?>
+<?php echo $locale->getText('settings.inspire'); ?>
 
---><html lang="<?php echo Locale::getText('settings.locale'); ?>" class="<?php echo $this->getParam('class', 'none'); ?>  <?php echo $env; ?>">
+--><html lang="<?php echo $locale->getText('settings.locale'); ?>" class="<?php echo $this->getParam('class', 'none'); ?>  <?php echo $env; ?>">
 <head>
     <link rel="manifest" href="/manifest.json">
     <title><?php echo $this->getParam('title', ''); ?></title>
     <meta name="description" content="<?php echo $this->getParam('description', ''); ?>" />
-    <link rel="stylesheet" media="all" type="text/css" href="/dist/styles/default-<?php echo Locale::getText('settings.direction'); ?>.css?v=<?php echo APP_CACHE_BUSTER; ?>.<?php echo $version; ?>" />
+    <link rel="stylesheet" media="all" type="text/css" href="/dist/styles/default-<?php echo $locale->getText('settings.direction'); ?>.css?v=<?php echo APP_CACHE_BUSTER; ?>.<?php echo $version; ?>" />
     <link rel="icon" type="image/png" href="<?php echo $this->escape($this->getParam('icon', '')); ?>?v=<?php echo APP_CACHE_BUSTER; ?>" />
     <link rel="apple-touch-icon" href="/images/apple.png">
     <!-- <link rel="preconnect" href="" /> -->
@@ -76,7 +77,7 @@ if(!empty($platforms)) {
             API: '/v1',
             PROJECT: 'console',
             PLATFORMS: <?php echo json_encode($platforms); ?>,
-            LOCALE: '<?php echo $this->escape(Locale::getText('settings.locale')); ?>',
+            LOCALE: '<?php echo $this->escape($locale->getText('settings.locale')); ?>',
             PREFIX: '<?php echo $this->escape($this->getParam('prefix')); ?>',
             ROLES: <?PHP echo json_encode($this->getParam('roles', [])); ?>,
             PAGING_LIMIT: <?PHP echo APP_PAGING_LIMIT; ?>

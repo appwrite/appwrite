@@ -2,7 +2,7 @@
 
 require_once __DIR__.'/init.php';
 
-global $request, $response, $register, $project;
+global $register, $project;
 
 use Utopia\App;
 use Utopia\Request;
@@ -18,147 +18,133 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
-use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
 
-$request = new Request();
-$response = new Response();
+// Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
+// Config::setParam('domainVerification', false);
+// Config::setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'));
+// Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
+// Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
+// Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
 
-$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
+// \define('COOKIE_DOMAIN', 
+//     (
+//         $request->getServer('HTTP_HOST', null) === 'localhost' ||
+//         $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
+//         (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
+//     )
+//         ? null
+//         : '.'.Config::getParam('hostname')
+//     );
+// \define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
-if (\in_array($locale, Config::getParam('locales'))) {
-    Locale::setDefault($locale);
-}
+// Authorization::disable();
 
-Config::setParam('env', App::getMode());
-Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
-Config::setParam('domainVerification', false);
-Config::setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'));
-Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
-Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
-Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
+// $project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
 
-\define('COOKIE_DOMAIN', 
-    (
-        $request->getServer('HTTP_HOST', null) === 'localhost' ||
-        $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
-        (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
-    )
-        ? null
-        : '.'.Config::getParam('hostname')
-    );
-\define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
+// Authorization::enable();
 
-Authorization::disable();
+// $console = $consoleDB->getDocument('console');
 
-$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
+// $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 
-Authorization::enable();
+// Auth::setCookieName('a_session_'.$project->getId());
 
-$console = $consoleDB->getDocument('console');
+// if (APP_MODE_ADMIN === $mode) {
+//     Auth::setCookieName('a_session_'.$console->getId());
+// }
 
-$mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+// $session = Auth::decodeSession(
+//     $request->getCookie(Auth::$cookieName, // Get sessions
+//         $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
+//             $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
 
-Auth::setCookieName('a_session_'.$project->getId());
+// // Get fallback session from clients who block 3rd-party cookies
+// $response->addHeader('X-Debug-Fallback', 'false');
 
-if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a_session_'.$console->getId());
-}
+// if(empty($session['id']) && empty($session['secret'])) {
+//     $response->addHeader('X-Debug-Fallback', 'true');
+//     $fallback = $request->getHeader('X-Fallback-Cookies', '');
+//     $fallback = \json_decode($fallback, true);
+//     $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+// }
 
-$session = Auth::decodeSession(
-    $request->getCookie(Auth::$cookieName, // Get sessions
-        $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+// Auth::$unique = $session['id'];
+// Auth::$secret = $session['secret'];
 
-// Get fallback session from clients who block 3rd-party cookies
-$response->addHeader('X-Debug-Fallback', 'false');
+// $projectDB = new Database();
+// $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+// $projectDB->setNamespace('app_'.$project->getId());
+// $projectDB->setMocks(Config::getParam('collections', []));
 
-if(empty($session['id']) && empty($session['secret'])) {
-    $response->addHeader('X-Debug-Fallback', 'true');
-    $fallback = $request->getHeader('X-Fallback-Cookies', '');
-    $fallback = \json_decode($fallback, true);
-    $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
-}
+// if (APP_MODE_ADMIN !== $mode) {
+//     $user = $projectDB->getDocument(Auth::$unique);
+// }
+// else {
+//     $user = $consoleDB->getDocument(Auth::$unique);
 
-Auth::$unique = $session['id'];
-Auth::$secret = $session['secret'];
+//     $user
+//         ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
+//     ;
+// }
 
-$projectDB = new Database();
-$projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_'.$project->getId());
-$projectDB->setMocks(Config::getParam('collections', []));
+// if (empty($user->getId()) // Check a document has been found in the DB
+//     || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+//     || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
+//     $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+// }
 
-if (APP_MODE_ADMIN !== $mode) {
-    $user = $projectDB->getDocument(Auth::$unique);
-}
-else {
-    $user = $consoleDB->getDocument(Auth::$unique);
+// if (APP_MODE_ADMIN === $mode) {
+//     if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+//         Authorization::disable();
+//     } else {
+//         $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+//     }
+// }
 
-    $user
-        ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-    ;
-}
-
-if (empty($user->getId()) // Check a document has been found in the DB
-    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-    || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-    $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-}
-
-if (APP_MODE_ADMIN === $mode) {
-    if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
-        Authorization::disable();
-    } else {
-        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-    }
-}
-
-// Set project mail
-$register->get('smtp')
-    ->setFrom(
-        App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-        ($project->getId() === 'console')
-            ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
-            : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
-        )
-    );
-
-/*
- * Configuration files
- */
-$utopia = new App('Asia/Tel_Aviv');
-$webhook = new Event('v1-webhooks', 'WebhooksV1');
-$audit = new Event('v1-audits', 'AuditsV1');
-$usage = new Event('v1-usage', 'UsageV1');
-$mail = new Event('v1-mails', 'MailsV1');
-$deletes = new Event('v1-deletes', 'DeletesV1');
+// // Set project mail
+// $register->get('smtp')
+//     ->setFrom(
+//         App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+//         ($project->getId() === 'console')
+//             ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
+//             : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
+//         )
+//     );
 
 /**
  * Get All verified client URLs for both console and current projects
  * + Filter for duplicated entries
  */
-$clientsConsole = \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
+// $clientsConsole = \array_map(function ($node) {
+//         return $node['hostname'];
+//     }, \array_filter($console->getAttribute('platforms', []), function ($node) {
+//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+//             return true;
+//         }
 
-        return false;
-    }));
+//         return false;
+//     }));
 
-$clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
-        return $node['hostname'];
-    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
-        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-            return true;
-        }
+// $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
+//         return $node['hostname'];
+//     }, \array_filter($project->getAttribute('platforms', []), function ($node) {
+//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+//             return true;
+//         }
 
-        return false;
-    }))));
+//         return false;
+//     }))));
 
-App::init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $audit, $usage, $clients) {
+App::init(function ($utopia, $request, $response, $user, $project, $console, $webhooks, $audits, $usage, $clients, $locale) {
     
+    /** @var $locale Utopia\Locale\Locale */
+    $localeParam = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
+    
+    if (\in_array($localeParam, Config::getParam('locales'))) {
+        $locale->setDefault($localeParam);
+    };
+
     $route = $utopia->match($request);
 
     if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
@@ -312,13 +298,13 @@ App::init(function () use ($utopia, $request, $response, &$user, $project, $cons
     /*
      * Background Jobs
      */
-    $webhook
+    $webhooks
         ->setParam('projectId', $project->getId())
         ->setParam('event', $route->getLabel('webhook', ''))
         ->setParam('payload', [])
     ;
 
-    $audit
+    $audits
         ->setParam('projectId', $project->getId())
         ->setParam('userId', $user->getId())
         ->setParam('event', '')
@@ -336,10 +322,9 @@ App::init(function () use ($utopia, $request, $response, &$user, $project, $cons
         ->setParam('response', 0)
         ->setParam('storage', 0)
     ;
-});
+}, ['utopia', 'request', 'response', 'user', 'project', 'console', 'webhook', 'audit', 'usage', 'clients', 'locale']);
 
-App::shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
-
+App::shutdown(function ($utopia, $response, $request, $webhook, $audit, $usage, $deletes, $mode, $project) {
     /*
      * Trigger events for background workers
      */
@@ -366,9 +351,9 @@ App::shutdown(function () use ($response, $request, $webhook, $audit, $usage, $d
             ->trigger()
         ;
     }
-});
+}, ['utopia', 'response', 'request', 'webhook', 'audit', 'usage', 'deletes', 'mode', 'project']);
 
-App::options(function () use ($request, $response) {
+App::options(function ($request, $response) {
     $origin = $request->getServer('HTTP_ORIGIN');
 
     $response
@@ -378,9 +363,11 @@ App::options(function () use ($request, $response) {
         ->addHeader('Access-Control-Allow-Origin', $origin)
         ->addHeader('Access-Control-Allow-Credentials', 'true')
         ->send();
-});
+}, ['request', 'response']);
 
-App::error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
+App::error(function ($error, $utopia, $request, $response, $project) {
+    /** @var Exception $error */
+
     $version = Config::getParam('version');
 
     switch ($error->getCode()) {
@@ -450,91 +437,85 @@ App::error(function ($error /* @var $error Exception */) use ($request, $respons
     $response
         ->json($output)
     ;
-});
+}, ['error', 'utopia', 'request', 'response', 'project']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->action(
-        function () use ($response) {
-            $response->json([
-                'name' => APP_NAME,
-                'short_name' => APP_NAME,
-                'start_url' => '.',
-                'url' => 'https://appwrite.io/',
-                'display' => 'standalone',
-                'background_color' => '#fff',
-                'theme_color' => '#f02e65',
-                'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
-                'icons' => [
-                    [
-                        'src' => 'images/favicon.png',
-                        'sizes' => '256x256',
-                        'type' => 'image/png',
-                    ],
+    ->action(function ($response) {
+        /** @var Utopia\Response $response */
+
+        $response->json([
+            'name' => APP_NAME,
+            'short_name' => APP_NAME,
+            'start_url' => '.',
+            'url' => 'https://appwrite.io/',
+            'display' => 'standalone',
+            'background_color' => '#fff',
+            'theme_color' => '#f02e65',
+            'description' => 'End to end backend server for frontend and mobile apps. 👩‍💻👨‍💻',
+            'icons' => [
+                [
+                    'src' => 'images/favicon.png',
+                    'sizes' => '256x256',
+                    'type' => 'image/png',
                 ],
-            ]);
-        }
-    );
+            ],
+        ]);
+    }, ['response']);
 
 App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->action(
-        function () use ($response) {
-            $template = new View(__DIR__.'/views/general/robots.phtml');
-            $response->text($template->render(false));
-        }
-    );
+    ->action(function ($response) {
+        $template = new View(__DIR__.'/views/general/robots.phtml');
+        $response->text($template->render(false));
+    }, ['response']);
 
 App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->action(
-        function () use ($response) {
-            $template = new View(__DIR__.'/views/general/humans.phtml');
-            $response->text($template->render(false));
-        }
-    );
+    ->action(function ($response) {
+        $template = new View(__DIR__.'/views/general/humans.phtml');
+        $response->text($template->render(false));
+    }, ['response']);
 
 App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->action(
-        function () use ($request, $response) {
-            $base = \realpath(APP_STORAGE_CERTIFICATES);
-            $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
-            $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
+    ->action(function ($request, $response) {
+        $base = \realpath(APP_STORAGE_CERTIFICATES);
+        $path = \str_replace('/.well-known/acme-challenge/', '', $request->getParam('q'));
+        $absolute = \realpath($base.'/.well-known/acme-challenge/'.$path);
 
-            if(!$base) {
-                throw new Exception('Storage error', 500);
-            }
-
-            if(!$absolute) {
-                throw new Exception('Unknown path', 404);
-            }
-
-            if(!\substr($absolute, 0, \strlen($base)) === $base) {
-                throw new Exception('Invalid path', 401);
-            }
-
-            if(!\file_exists($absolute)) {
-                throw new Exception('Unknown path', 404);
-            }
-
-            $content = @\file_get_contents($absolute);
-
-            if(!$content) {
-                throw new Exception('Failed to get contents', 500);
-            }
-
-            $response->text($content);
+        if(!$base) {
+            throw new Exception('Storage error', 500);
         }
-    );
+
+        if(!$absolute) {
+            throw new Exception('Unknown path', 404);
+        }
+
+        if(!\substr($absolute, 0, \strlen($base)) === $base) {
+            throw new Exception('Invalid path', 401);
+        }
+
+        if(!\file_exists($absolute)) {
+            throw new Exception('Unknown path', 404);
+        }
+
+        $content = @\file_get_contents($absolute);
+
+        if(!$content) {
+            throw new Exception('Failed to get contents', 500);
+        }
+
+        $response->text($content);
+    }, ['request', 'response']);
 
 include_once __DIR__ . '/controllers/shared/api.php';
 include_once __DIR__ . '/controllers/shared/web.php';
@@ -543,9 +524,30 @@ foreach(Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
 
-App::setResource('utopia', function() use ($utopia) {return $utopia;});
-App::setResource('request', function() use ($request) {return $request;});
-App::setResource('response', function() use ($response) {return $response;});
-App::setResource('register', function() use ($register) {return $register;});
+// Runtime Execution
 
-$utopia->run($request, $response);
+App::setResource('register', function() use ($register) { return $register; });
+App::setResource('layout', function($locale) {
+    $layout = new View(__DIR__.'/views/layouts/default.phtml');
+    $layout->setParam('locale', $locale);
+    return $layout; }, ['locale']);
+App::setResource('locale', function($request) { return new Locale('en'); }, ['request']);
+
+// Queues
+App::setResource('webhook', function($register) { return $register->get('queue-webhook'); }, ['register']);
+App::setResource('audit', function($register) { return $register->get('queue-audit'); }, ['register']);
+App::setResource('usage', function($register) { return $register->get('queue-usage'); }, ['register']);
+App::setResource('mail', function($register) { return $register->get('queue-mails'); }, ['register']);
+App::setResource('deletes', function($register) { return $register->get('queue-deletes'); }, ['register']);
+
+// Test Mock
+App::setResource('clients', function() { return []; });
+App::setResource('user', function() { return new Document([]); });
+App::setResource('project', function() { return new Document([]); });
+App::setResource('console', function() { return new Document([]); });
+App::setResource('consoleDB', function() { return new Database(); });
+App::setResource('projectDB', function() { return new Database([]); });
+App::setResource('mode', function() { return false; });
+
+$app = new App('Asia/Tel_Aviv');
+$app->run(new Request(), new Response());
