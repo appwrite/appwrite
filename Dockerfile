@@ -89,7 +89,7 @@ RUN \
   pecl install imagick yaml && \ 
   docker-php-ext-enable imagick yaml
 
-RUN docker-php-ext-install sockets curl pdo opcache
+RUN docker-php-ext-install sockets curl opcache pdo pdo_mysql
 
 WORKDIR /usr/src/code
 

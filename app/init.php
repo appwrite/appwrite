@@ -21,11 +21,6 @@ use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use PHPMailer\PHPMailer\PHPMailer;
 
-$locale = 'en';
-$clients = [];
-$console = new Document([]);
-$mode = '';
-
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address

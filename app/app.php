@@ -5,8 +5,8 @@ require_once __DIR__.'/init.php';
 global $request, $response, $register, $project;
 
 use Utopia\App;
-use Utopia\Request;
-use Utopia\Response;
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
@@ -20,7 +20,6 @@ use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Utopia\Response;
 
 $request = new Request();
 $response = new Response();
