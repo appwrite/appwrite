@@ -17,7 +17,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 $http = new Server("localhost", 9501);
-
+echo 'test';
 $http
     ->set([
         'open_http2_protocol' => true,
@@ -41,7 +41,7 @@ $http->on('AfterReload', function($serv, $workerId) {
 
 $http->on('start', function (Server $http) {
     Console::success('Server started succefully');
-    printf("master pid %d, manager pid %d\n", $http->master_pid, $http->manager_pid);
+    printf("x master pid %d, manager pid %d\n", $http->master_pid, $http->manager_pid);
 
     // listen ctrl + c
     Process::signal(2, function () use ($http) {
@@ -50,24 +50,26 @@ $http->on('start', function (Server $http) {
     });
 });
 
-$register = new Registry();
-$utopia = new App('Asia/Tel_Aviv');
-/**
- * @var $request Request
- */
-$request &= null;
-$response &= null;
+// $register = new Registry();
+// $utopia = new App('Asia/Tel_Aviv');
+// /**
+//  * @var $request Request
+//  */
+// $request &= null;
+// $response &= null;
 
-include 'init.php';
-include 'app.php';
+// include 'init.php';
+// include 'app.php';
 
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
-    global $request, $response, $utopia;
-    $request = new Request($swooleRequest);
-    $response = new Response($swooleResponse);
-    
+$counter = 0;
+
+$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use (&$counter) {
+    // global $request, $response, $utopia;
+    // $request = new Request($swooleRequest);
+    // $response = new Response($swooleResponse);
+    $swooleResponse->end('test: '.$counter++);
     try {
-        $utopia->run($request, $response);
+        //$utopia->run($request, $response);
     } catch (\Throwable $th) {
         var_dump($th->getMessage());
         var_dump($th->getFile());
