@@ -1,11 +1,10 @@
 <?php
 
-global $utopia, $register, $request, $response, $webhook, $audit, $projectDB;
+global $request, $response, $webhook, $audit, $projectDB;
 
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -27,7 +26,7 @@ use Appwrite\Database\Exception\Structure as StructureException;
 // use DeviceDetector\DeviceDetector;
 // use GeoIp2\Database\Reader;
 
-$utopia->post('/v1/database/collections')
+App::post('/v1/database/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.collections.create')
@@ -101,7 +100,7 @@ $utopia->post('/v1/database/collections')
         }
     );
 
-$utopia->get('/v1/database/collections')
+App::get('/v1/database/collections')
     ->desc('List Collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -131,7 +130,7 @@ $utopia->get('/v1/database/collections')
         }
     );
 
-$utopia->get('/v1/database/collections/:collectionId')
+App::get('/v1/database/collections/:collectionId')
     ->desc('Get Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -152,7 +151,7 @@ $utopia->get('/v1/database/collections/:collectionId')
         }
     );
 
-// $utopia->get('/v1/database/collections/:collectionId/logs')
+// App::get('/v1/database/collections/:collectionId/logs')
 //     ->desc('Get Collection Logs')
 //     ->groups(['api', 'database'])
 //     ->label('scope', 'collections.read')
@@ -217,7 +216,7 @@ $utopia->get('/v1/database/collections/:collectionId')
 //         }
 //     );
 
-$utopia->put('/v1/database/collections/:collectionId')
+App::put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -290,7 +289,7 @@ $utopia->put('/v1/database/collections/:collectionId')
         }
     );
 
-$utopia->delete('/v1/database/collections/:collectionId')
+App::delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -328,7 +327,7 @@ $utopia->delete('/v1/database/collections/:collectionId')
         }
     );
 
-$utopia->post('/v1/database/collections/:collectionId/documents')
+App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.create')
@@ -448,7 +447,7 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
         }
     );
 
-$utopia->get('/v1/database/collections/:collectionId/documents')
+App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -465,7 +464,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
     ->action(
-        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search) use ($response, $projectDB, $utopia) {
+        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search) use ($response, $projectDB) {
             $collection = $projectDB->getDocument($collectionId, false);
 
             if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
@@ -484,7 +483,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
                 ]),
             ]);
 
-            if ($utopia->isDevelopment()) {
+            if (App::isDevelopment()) {
                 $collection
                     ->setAttribute('debug', $projectDB->getDebug())
                     ->setAttribute('limit', $limit)
@@ -508,7 +507,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
         }
     );
 
-$utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
+App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -554,7 +553,7 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
         }
     );
 
-$utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
+App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.update')
@@ -634,7 +633,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
         }
     );
 
-$utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
+App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')

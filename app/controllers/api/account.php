@@ -1,8 +1,9 @@
 <?php
 
-global $utopia, $register, $request, $response, $user, $audit,
+global $register, $request, $response, $user, $audit,
     $webhook, $mail, $project, $projectDB, $clients;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Validator\Assoc;
@@ -34,7 +35,7 @@ $oauthDefaultFailure = '/auth/oauth2/failure';
 
 $oauth2Keys = [];
 
-$utopia->init(function() use (&$oauth2Keys) {
+App::init(function() use (&$oauth2Keys) {
     foreach (Config::getParam('providers') as $key => $provider) {
         if (!$provider['enabled']) {
             continue;
@@ -45,7 +46,7 @@ $utopia->init(function() use (&$oauth2Keys) {
     }
 }, 'account');
 
-$utopia->post('/v1/account')
+App::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account'])
     ->label('webhook', 'account.create')
@@ -136,7 +137,7 @@ $utopia->post('/v1/account')
         }
     );
 
-$utopia->post('/v1/account/sessions')
+App::post('/v1/account/sessions')
     ->desc('Create Account Session')
     ->groups(['api', 'account'])
     ->label('webhook', 'account.sessions.create')
@@ -227,7 +228,7 @@ $utopia->post('/v1/account/sessions')
         }
     );
 
-$utopia->get('/v1/account/sessions/oauth2/:provider')
+App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create Account Session with OAuth2')
     ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
@@ -255,7 +256,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
             $appSecret = \json_decode($appSecret, true);
 
             if (!empty($appSecret) && isset($appSecret['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+                $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
                 $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
             }
 
@@ -278,7 +279,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider')
         }
     );
 
-$utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
@@ -301,7 +302,7 @@ $utopia->get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         }
     );
 
-$utopia->post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
     ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
@@ -325,7 +326,7 @@ $utopia->post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         }
     );
 
-$utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
+App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
     ->groups(['api', 'account'])
     ->label('error', __DIR__.'/../../views/general/error.phtml')
@@ -350,7 +351,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
             $appSecret = \json_decode($appSecret, true);
 
             if (!empty($appSecret) && isset($appSecret['version'])) {
-                $key = $request->getServer('_APP_OPENSSL_KEY_V'.$appSecret['version']);
+                $key = App::getEnv('_APP_OPENSSL_KEY_V'.$appSecret['version']);
                 $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
             }
 
@@ -519,7 +520,7 @@ $utopia->get('/v1/account/sessions/oauth2/:provider/redirect')
         }
     );
 
-$utopia->get('/v1/account')
+App::get('/v1/account')
     ->desc('Get Account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -528,13 +529,14 @@ $utopia->get('/v1/account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
+    ->inject('response')
     ->action(
         function () use ($response, &$user, $oauth2Keys) {
             $response->dynamic($user->setAttribute('roles', Authorization::getRoles()), Response::MODEL_USER);
         }
     );
 
-$utopia->get('/v1/account/prefs')
+App::get('/v1/account/prefs')
     ->desc('Get Account Preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -557,7 +559,7 @@ $utopia->get('/v1/account/prefs')
         }
     );
 
-$utopia->get('/v1/account/sessions')
+App::get('/v1/account/sessions')
     ->desc('Get Account Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -616,7 +618,7 @@ $utopia->get('/v1/account/sessions')
         }
     );
 
-$utopia->get('/v1/account/logs')
+App::get('/v1/account/logs')
     ->desc('Get Account Logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -689,7 +691,7 @@ $utopia->get('/v1/account/logs')
         }
     );
 
-$utopia->patch('/v1/account/name')
+App::patch('/v1/account/name')
     ->desc('Update Account Name')
     ->groups(['api', 'account'])
     ->label('webhook', 'account.update.name')
@@ -719,7 +721,7 @@ $utopia->patch('/v1/account/name')
         }
     );
 
-$utopia->patch('/v1/account/password')
+App::patch('/v1/account/password')
     ->desc('Update Account Password')
     ->groups(['api', 'account'])
     ->label('webhook', 'account.update.password')
@@ -754,7 +756,7 @@ $utopia->patch('/v1/account/password')
         }
     );
 
-$utopia->patch('/v1/account/email')
+App::patch('/v1/account/email')
     ->desc('Update Account Email')
     ->groups(['api', 'account'])
     ->label('webhook', 'account.update.email')
@@ -804,7 +806,7 @@ $utopia->patch('/v1/account/email')
         }
     );
 
-$utopia->patch('/v1/account/prefs')
+App::patch('/v1/account/prefs')
     ->desc('Update Account Preferences')
     ->groups(['api', 'account'])
     ->label('webhook', 'account.update.prefs')
@@ -845,7 +847,7 @@ $utopia->patch('/v1/account/prefs')
         }
     );
 
-$utopia->delete('/v1/account')
+App::delete('/v1/account')
     ->desc('Delete Account')
     ->groups(['api', 'account'])
     ->label('webhook', 'account.delete')
@@ -901,7 +903,7 @@ $utopia->delete('/v1/account')
         }
     );
 
-$utopia->delete('/v1/account/sessions/:sessionId')
+App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -961,7 +963,7 @@ $utopia->delete('/v1/account/sessions/:sessionId')
         }
     );
 
-$utopia->delete('/v1/account/sessions')
+App::delete('/v1/account/sessions')
     ->desc('Delete All Account Sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1012,7 +1014,7 @@ $utopia->delete('/v1/account/sessions')
         }
     );
 
-$utopia->post('/v1/account/recovery')
+App::post('/v1/account/recovery')
     ->desc('Create Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -1111,7 +1113,7 @@ $utopia->post('/v1/account/recovery')
         }
     );
 
-$utopia->put('/v1/account/recovery')
+App::put('/v1/account/recovery')
     ->desc('Complete Password Recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -1181,7 +1183,7 @@ $utopia->put('/v1/account/recovery')
         }
     );
 
-$utopia->post('/v1/account/verification')
+App::post('/v1/account/verification')
     ->desc('Create Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1268,7 +1270,7 @@ $utopia->post('/v1/account/verification')
         }
     );
 
-$utopia->put('/v1/account/verification')
+App::put('/v1/account/verification')
     ->desc('Complete Email Verification')
     ->groups(['api', 'account'])
     ->label('scope', 'public')

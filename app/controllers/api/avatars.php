@@ -1,7 +1,8 @@
 <?php
 
-global $utopia, $request, $response;
+global $response;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -19,21 +20,16 @@ use BaconQrCode\Writer;
 use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
 
-$types = [
-    'browsers' => include __DIR__.'/../../config/avatars/browsers.php',
-    'credit-cards' => include __DIR__.'/../../config/avatars/credit-cards.php',
-    'flags' => include __DIR__.'/../../config/avatars/flags.php',
-];
-
-$avatarCallback = function ($type, $code, $width, $height, $quality) use ($types, $response) {
+$avatarCallback = function ($type, $code, $width, $height, $quality) use ($response) {
     $code = \strtolower($code);
     $type = \strtolower($type);
+    $set  = Config::getParam('avatar-'.$type, []);
 
-    if (!\array_key_exists($type, $types)) {
+    if (empty($set)) {
         throw new Exception('Avatar set not found', 404);
     }
 
-    if (!\array_key_exists($code, $types[$type])) {
+    if (!\array_key_exists($code, $set)) {
         throw new Exception('Avatar not found', 404);
     }
 
@@ -44,7 +40,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     $output = 'png';
     $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
     $key = \md5('/v1/avatars/:type/:code-'.$code.$width.$height.$quality.$output);
-    $path = $types[$type][$code];
+    $path = $set[$code];
     $type = 'png';
 
     if (!\is_readable($path)) {
@@ -87,10 +83,10 @@ $avatarCallback = function ($type, $code, $width, $height, $quality) use ($types
     unset($resize);
 };
 
-$utopia->get('/v1/avatars/credit-cards/:code')
+App::get('/v1/avatars/credit-cards/:code')
     ->desc('Get Credit Card Icon')
     ->groups(['api', 'avatars'])
-    ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['credit-cards'])); }, 'Credit Card Code. Possible values: '.\implode(', ', \array_keys($types['credit-cards'])).'.')
+    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-credit-cards'))); }, 'Credit Card Code. Possible values: '.\implode(', ', \array_keys(Config::getParam('avatar-credit-cards'))).'.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
@@ -104,10 +100,10 @@ $utopia->get('/v1/avatars/credit-cards/:code')
         return $avatarCallback('credit-cards', $code, $width, $height, $quality);
     });
 
-$utopia->get('/v1/avatars/browsers/:code')
+App::get('/v1/avatars/browsers/:code')
     ->desc('Get Browser Icon')
     ->groups(['api', 'avatars'])
-    ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['browsers'])); }, 'Browser Code.')
+    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-browsers'))); }, 'Browser Code.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
@@ -121,10 +117,10 @@ $utopia->get('/v1/avatars/browsers/:code')
         return $avatarCallback('browsers', $code, $width, $height, $quality);
     });
 
-$utopia->get('/v1/avatars/flags/:code')
+App::get('/v1/avatars/flags/:code')
     ->desc('Get Country Flag')
     ->groups(['api', 'avatars'])
-    ->param('code', '', function () use ($types) { return new WhiteList(\array_keys($types['flags'])); }, 'Country Code. ISO Alpha-2 country code format.')
+    ->param('code', '', function () { return new WhiteList(\array_keys(Config::getParam('avatar-flags'))); }, 'Country Code. ISO Alpha-2 country code format.')
     ->param('width', 100, function () { return new Range(0, 2000); }, 'Image width. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('height', 100, function () { return new Range(0, 2000); }, 'Image height. Pass an integer between 0 to 2000. Defaults to 100.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
@@ -138,7 +134,7 @@ $utopia->get('/v1/avatars/flags/:code')
         return $avatarCallback('flags', $code, $width, $height, $quality);
     });
 
-$utopia->get('/v1/avatars/image')
+App::get('/v1/avatars/image')
     ->desc('Get Image from URL')
     ->groups(['api', 'avatars'])
     ->param('url', '', function () { return new URL(); }, 'Image URL which you want to crop.')
@@ -206,7 +202,7 @@ $utopia->get('/v1/avatars/image')
         }
     );
 
-$utopia->get('/v1/avatars/favicon')
+App::get('/v1/avatars/favicon')
     ->desc('Get Favicon')
     ->groups(['api', 'avatars'])
     ->param('url', '', function () { return new URL(); }, 'Website URL which you want to fetch the favicon from.')
@@ -217,7 +213,7 @@ $utopia->get('/v1/avatars/favicon')
     ->label('sdk.methodType', 'location')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->action(
-        function ($url) use ($response, $request) {
+        function ($url) use ($response) {
             $width = 56;
             $height = 56;
             $quality = 80;
@@ -250,7 +246,7 @@ $utopia->get('/v1/avatars/favicon')
                 CURLOPT_URL => $url,
                 CURLOPT_USERAGENT => \sprintf(APP_USERAGENT,
                     Config::getParam('version'),
-                    $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+                    App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
                 ),
             ]);
 
@@ -359,7 +355,7 @@ $utopia->get('/v1/avatars/favicon')
         }
     );
 
-$utopia->get('/v1/avatars/qr')
+App::get('/v1/avatars/qr')
     ->desc('Get QR Code')
     ->groups(['api', 'avatars'])
     ->param('text', '', function () { return new Text(512); }, 'Plain text to be converted to QR code image.')
@@ -395,7 +391,7 @@ $utopia->get('/v1/avatars/qr')
         }
     );
 
-$utopia->get('/v1/avatars/initials')
+App::get('/v1/avatars/initials')
     ->desc('Get User Initials')
     ->groups(['api', 'avatars'])
     ->param('name', '', function () { return new Text(512); }, 'Full Name. When empty, current user name or email will be used.', true)

@@ -1,11 +1,12 @@
 <?php
 
+use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 
 $layout = new View(__DIR__.'/../../views/layouts/default.phtml');
 
-$utopia->init(function () use ($utopia, $response, $request, $layout) {
+App::init(function () use ($utopia, $response, $request, $layout) {
 
     /* AJAX check  */
     if (!empty($request->getQuery('version', ''))) {
@@ -15,8 +16,8 @@ $utopia->init(function () use ($utopia, $response, $request, $layout) {
         ->setParam('title', APP_NAME)
         ->setParam('protocol', Config::getParam('protocol'))
         ->setParam('domain', Config::getParam('domain'))
-        ->setParam('home', $request->getServer('_APP_HOME'))
-        ->setParam('setup', $request->getServer('_APP_SETUP'))
+        ->setParam('home', App::getEnv('_APP_HOME'))
+        ->setParam('setup', App::getEnv('_APP_SETUP'))
         ->setParam('class', 'unknown')
         ->setParam('icon', '/images/favicon.png')
         ->setParam('roles', [
@@ -24,7 +25,7 @@ $utopia->init(function () use ($utopia, $response, $request, $layout) {
             ['type' => 'developer', 'label' => 'Developer'],
             ['type' => 'admin', 'label' => 'Admin'],
         ])
-        ->setParam('env', $utopia->getMode())
+        ->setParam('env', App::getMode())
     ;
 
     $time = (60 * 60 * 24 * 45); // 45 days cache

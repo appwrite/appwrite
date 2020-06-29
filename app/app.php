@@ -2,25 +2,132 @@
 
 require_once __DIR__.'/init.php';
 
-global $utopia, $request, $response, $register, $consoleDB, $project;
+global $request, $response, $register, $project;
 
 use Utopia\App;
 use Utopia\Request;
+use Utopia\Response;
 use Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response;
 
+$request = new Request();
+$response = new Response();
+
+$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
+
+if (\in_array($locale, Config::getParam('locales'))) {
+    Locale::setDefault($locale);
+}
+
+Config::setParam('env', App::getMode());
+Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
+Config::setParam('domainVerification', false);
+Config::setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'));
+Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
+Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
+Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
+
+\define('COOKIE_DOMAIN', 
+    (
+        $request->getServer('HTTP_HOST', null) === 'localhost' ||
+        $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
+        (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
+    )
+        ? null
+        : '.'.Config::getParam('hostname')
+    );
+\define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
+
+Authorization::disable();
+
+$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
+
+Authorization::enable();
+
+$console = $consoleDB->getDocument('console');
+
+$mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+
+Auth::setCookieName('a_session_'.$project->getId());
+
+if (APP_MODE_ADMIN === $mode) {
+    Auth::setCookieName('a_session_'.$console->getId());
+}
+
+$session = Auth::decodeSession(
+    $request->getCookie(Auth::$cookieName, // Get sessions
+        $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
+            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+
+// Get fallback session from clients who block 3rd-party cookies
+$response->addHeader('X-Debug-Fallback', 'false');
+
+if(empty($session['id']) && empty($session['secret'])) {
+    $response->addHeader('X-Debug-Fallback', 'true');
+    $fallback = $request->getHeader('X-Fallback-Cookies', '');
+    $fallback = \json_decode($fallback, true);
+    $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+}
+
+Auth::$unique = $session['id'];
+Auth::$secret = $session['secret'];
+
+$projectDB = new Database();
+$projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+$projectDB->setNamespace('app_'.$project->getId());
+$projectDB->setMocks(Config::getParam('collections', []));
+
+if (APP_MODE_ADMIN !== $mode) {
+    $user = $projectDB->getDocument(Auth::$unique);
+}
+else {
+    $user = $consoleDB->getDocument(Auth::$unique);
+
+    $user
+        ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
+    ;
+}
+
+if (empty($user->getId()) // Check a document has been found in the DB
+    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+    || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
+    $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+}
+
+if (APP_MODE_ADMIN === $mode) {
+    if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+        Authorization::disable();
+    } else {
+        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+    }
+}
+
+// Set project mail
+$register->get('smtp')
+    ->setFrom(
+        App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
+        ($project->getId() === 'console')
+            ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
+            : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
+        )
+    );
+
 /*
  * Configuration files
  */
+$utopia = new App('Asia/Tel_Aviv');
 $webhook = new Event('v1-webhooks', 'WebhooksV1');
 $audit = new Event('v1-audits', 'AuditsV1');
 $usage = new Event('v1-usage', 'UsageV1');
@@ -31,34 +138,40 @@ $deletes = new Event('v1-deletes', 'DeletesV1');
  * Get All verified client URLs for both console and current projects
  * + Filter for duplicated entries
  */
-// $clientsConsole = \array_map(function ($node) {
-//         return $node['hostname'];
-//     }, \array_filter($console->getAttribute('platforms', []), function ($node) {
-//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-//             return true;
-//         }
+$clientsConsole = \array_map(function ($node) {
+        return $node['hostname'];
+    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-//         return false;
-//     }));
+        return false;
+    }));
 
-// $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
-//         return $node['hostname'];
-//     }, \array_filter($project->getAttribute('platforms', []), function ($node) {
-//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-//             return true;
-//         }
+$clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
+        return $node['hostname'];
+    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-//         return false;
-//     }))));
+        return false;
+    }))));
 
-$utopia->init(function () {
-    global $utopia, $request, $response, $user, $project, $console, $webhook, $audit, $usage, $clients;
-    var_dump(1);
+App::init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $audit, $usage, $clients) {
+    
     $route = $utopia->match($request);
 
     if(!empty($route->getLabel('sdk.platform', [])) && empty($project->getId()) && ($route->getLabel('scope', '') !== 'public')) {
         throw new Exception('Missing or unknown project ID', 400);
     }
+
+    $console->setAttribute('platforms', [ // Allways allow current host
+        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        'name' => 'Current Host',
+        'type' => 'web',
+        'hostname' => \parse_url('https://'.$request->getServer('HTTP_HOST'), PHP_URL_HOST),
+    ], Document::SET_TYPE_APPEND);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
     $origin = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
@@ -81,7 +194,7 @@ $utopia->init(function () {
      * As recommended at:
      * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
      */
-    if ($utopia->getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+    if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if(Config::getParam('protocol') !== 'https') {
            return $response->redirect('https://' . Config::getParam('domain').$request->getServer('REQUEST_URI'));
         }
@@ -226,7 +339,7 @@ $utopia->init(function () {
     ;
 });
 
-$utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
+App::shutdown(function () use ($response, $request, $webhook, $audit, $usage, $deletes, $mode, $project, $utopia) {
 
     /*
      * Trigger events for background workers
@@ -256,7 +369,7 @@ $utopia->shutdown(function () use ($response, $request, $webhook, $audit, $usage
     }
 });
 
-$utopia->options(function () use ($request, $response) {
+App::options(function () use ($request, $response) {
     $origin = $request->getServer('HTTP_ORIGIN');
 
     $response
@@ -268,7 +381,8 @@ $utopia->options(function () use ($request, $response) {
         ->send();
 });
 
-$utopia->error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
+App::error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
+    $env = Config::getParam('env');
     $version = Config::getParam('version');
 
     switch ($error->getCode()) {
@@ -339,7 +453,7 @@ $utopia->error(function ($error /* @var $error Exception */) use ($request, $res
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_LOCALE);
 });
 
-$utopia->get('/manifest.json')
+App::get('/manifest.json')
     ->desc('Progressive app manifest file')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -365,7 +479,7 @@ $utopia->get('/manifest.json')
         }
     );
 
-$utopia->get('/robots.txt')
+App::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -376,7 +490,7 @@ $utopia->get('/robots.txt')
         }
     );
 
-$utopia->get('/humans.txt')
+App::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -387,7 +501,7 @@ $utopia->get('/humans.txt')
         }
     );
 
-$utopia->get('/.well-known/acme-challenge')
+App::get('/.well-known/acme-challenge')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -429,3 +543,10 @@ include_once __DIR__ . '/controllers/shared/web.php';
 foreach(Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
+
+App::setResource('utopia', function() use ($utopia) {return $utopia;});
+App::setResource('request', function() use ($request) {return $request;});
+App::setResource('response', function() use ($response) {return $response;});
+App::setResource('register', function() use ($register) {return $register;});
+
+$utopia->run($request, $response);

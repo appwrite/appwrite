@@ -1,7 +1,8 @@
 <?php
 
-global $utopia, $request, $response, $register, $user, $audit, $usage, $project, $projectDB;
+global $request, $response, $user, $audit, $usage, $project, $projectDB;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
@@ -129,11 +130,11 @@ $mimes = [
     'application/pdf',
 ];
 
-$utopia->init(function () use ($project) {
+App::init(function () use ($project) {
     Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 }, 'storage');
 
-$utopia->post('/v1/storage/files')
+App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -158,7 +159,7 @@ $utopia->post('/v1/storage/files')
              * Validators
              */
             //$fileType = new FileType(array(FileType::FILE_TYPE_PNG, FileType::FILE_TYPE_GIF, FileType::FILE_TYPE_JPEG));
-            $fileSize = new FileSize($request->getServer('_APP_STORAGE_LIMIT', 0));
+            $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
             $upload = new Upload();
 
             if (empty($file)) {
@@ -199,7 +200,7 @@ $utopia->post('/v1/storage/files')
 
             $mimeType = $device->getFileMimeType($path); // Get mime-type before compression and encryption
 
-            if ($request->getServer('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
                 $antiVirus = new Network('clamav', 3310);
     
                 // Check if file size is exceeding allowed limit
@@ -213,7 +214,7 @@ $utopia->post('/v1/storage/files')
             $compressor = new GZIP();
             $data = $device->read($path);
             $data = $compressor->compress($data);
-            $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+            $key = App::getEnv('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
 
@@ -270,7 +271,7 @@ $utopia->post('/v1/storage/files')
         }
     );
 
-$utopia->get('/v1/storage/files')
+App::get('/v1/storage/files')
     ->desc('List Files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -304,7 +305,7 @@ $utopia->get('/v1/storage/files')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId')
+App::get('/v1/storage/files/:fileId')
     ->desc('Get File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -325,7 +326,7 @@ $utopia->get('/v1/storage/files/:fileId')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId/preview')
+App::get('/v1/storage/files/:fileId/preview')
     ->desc('Get File Preview')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -410,7 +411,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 $source = OpenSSL::decrypt(
                     $source,
                     $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+                    App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
                     \hex2bin($file->getAttribute('fileOpenSSLIV')),
                     \hex2bin($file->getAttribute('fileOpenSSLTag'))
@@ -448,7 +449,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId/download')
+App::get('/v1/storage/files/:fileId/download')
     ->desc('Get File for Download')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -460,7 +461,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->action(
-        function ($fileId) use ($response, $request, $projectDB) {
+        function ($fileId) use ($response, $projectDB) {
             $file = $projectDB->getDocument($fileId);
 
             if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
@@ -482,7 +483,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
                 $source = OpenSSL::decrypt(
                     $source,
                     $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+                    App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
                     \hex2bin($file->getAttribute('fileOpenSSLIV')),
                     \hex2bin($file->getAttribute('fileOpenSSLTag'))
@@ -502,7 +503,7 @@ $utopia->get('/v1/storage/files/:fileId/download')
         }
     );
 
-$utopia->get('/v1/storage/files/:fileId/view')
+App::get('/v1/storage/files/:fileId/view')
     ->desc('Get File for View')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -515,7 +516,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->param('as', '', function () { return new WhiteList(['pdf', /*'html',*/ 'text']); }, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(
-        function ($fileId, $as) use ($response, $request, $projectDB, $mimes) {
+        function ($fileId, $as) use ($response, $projectDB, $mimes) {
             $file = $projectDB->getDocument($fileId);
 
             if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
@@ -543,7 +544,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
                 $source = OpenSSL::decrypt(
                     $source,
                     $file->getAttribute('fileOpenSSLCipher'),
-                    $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+                    App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
                     0,
                     \hex2bin($file->getAttribute('fileOpenSSLIV')),
                     \hex2bin($file->getAttribute('fileOpenSSLTag'))
@@ -573,7 +574,7 @@ $utopia->get('/v1/storage/files/:fileId/view')
         }
     );
 
-$utopia->put('/v1/storage/files/:fileId')
+App::put('/v1/storage/files/:fileId')
     ->desc('Update File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -619,7 +620,7 @@ $utopia->put('/v1/storage/files/:fileId')
         }
     );
 
-$utopia->delete('/v1/storage/files/:fileId')
+App::delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -662,7 +663,7 @@ $utopia->delete('/v1/storage/files/:fileId')
         }
     );
 
-// $utopia->get('/v1/storage/files/:fileId/scan')
+// App::get('/v1/storage/files/:fileId/scan')
 //     ->desc('Scan Storage')
 //     ->groups(['api', 'storage'])
 //     ->label('scope', 'god')
@@ -695,7 +696,7 @@ $utopia->delete('/v1/storage/files/:fileId')
 //                 $source = OpenSSL::decrypt(
 //                     $source,
 //                     $file->getAttribute('fileOpenSSLCipher'),
-//                     $request->getServer('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
+//                     App::getEnv('_APP_OPENSSL_KEY_V'.$file->getAttribute('fileOpenSSLVersion')),
 //                     0,
 //                     hex2bin($file->getAttribute('fileOpenSSLIV')),
 //                     hex2bin($file->getAttribute('fileOpenSSLTag'))

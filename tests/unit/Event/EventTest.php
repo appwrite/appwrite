@@ -2,9 +2,9 @@
 
 namespace Appwrite\Tests;
 
-use Utopia\Request;
 use Appwrite\Event\Event;
 use PHPUnit\Framework\TestCase;
+use Utopia\App;
 
 class EventTest extends TestCase
 {
@@ -20,9 +20,8 @@ class EventTest extends TestCase
 
     public function setUp()
     {
-        $request = new Request();
-        $redisHost = $request->getServer('_APP_REDIS_HOST', '');
-        $redisPort = $request->getServer('_APP_REDIS_PORT', '');
+        $redisHost = App::getEnv('_APP_REDIS_HOST', '');
+        $redisPort = App::getEnv('_APP_REDIS_PORT', '');
         \Resque::setBackend($redisHost.':'.$redisPort);
         
         $this->queue = 'v1-tests' . uniqid();

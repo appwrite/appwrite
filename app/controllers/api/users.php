@@ -1,7 +1,8 @@
 <?php
 
-global $utopia, $response, $projectDB;
+global $response, $projectDB;
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
@@ -21,7 +22,7 @@ use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
 use GeoIp2\Database\Reader;
 
-$utopia->post('/v1/users')
+App::post('/v1/users')
     ->desc('Create User')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -82,7 +83,7 @@ $utopia->post('/v1/users')
         }
     );
     
-$utopia->get('/v1/users')
+App::get('/v1/users')
     ->desc('List Users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -137,7 +138,7 @@ $utopia->get('/v1/users')
         }
     );
 
-$utopia->get('/v1/users/:userId')
+App::get('/v1/users/:userId')
     ->desc('Get User')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -179,7 +180,7 @@ $utopia->get('/v1/users/:userId')
         }
     );
 
-$utopia->get('/v1/users/:userId/prefs')
+App::get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -209,7 +210,7 @@ $utopia->get('/v1/users/:userId/prefs')
         }
     );
 
-$utopia->get('/v1/users/:userId/sessions')
+App::get('/v1/users/:userId/sessions')
     ->desc('Get User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -273,7 +274,7 @@ $utopia->get('/v1/users/:userId/sessions')
         }
     );
 
-$utopia->get('/v1/users/:userId/logs')
+App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
@@ -354,7 +355,7 @@ $utopia->get('/v1/users/:userId/logs')
         }
     );
 
-$utopia->patch('/v1/users/:userId/status')
+App::patch('/v1/users/:userId/status')
     ->desc('Update User Status')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -403,7 +404,7 @@ $utopia->patch('/v1/users/:userId/status')
         }
     );
 
-$utopia->patch('/v1/users/:userId/prefs')
+App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -446,7 +447,7 @@ $utopia->patch('/v1/users/:userId/prefs')
     );
 
 
-$utopia->delete('/v1/users/:userId/sessions/:sessionId')
+App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -479,7 +480,7 @@ $utopia->delete('/v1/users/:userId/sessions/:sessionId')
         }
     );
 
-$utopia->delete('/v1/users/:userId/sessions')
+App::delete('/v1/users/:userId/sessions')
     ->desc('Delete User Sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')

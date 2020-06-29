@@ -2,16 +2,17 @@
 
 global $utopia, $request, $response;
 
+use Utopia\App;
+use Utopia\Response;
 use Utopia\Validator\Numeric;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
-use Utopia\Response;
 use Utopia\Validator\Host;
 use Appwrite\Storage\Validator\File;
 
 $result = [];
 
-$utopia->get('/v1/mock/tests/foo')
+App::get('/v1/mock/tests/foo')
     ->desc('Mock a get request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'foo')
@@ -25,7 +26,7 @@ $utopia->get('/v1/mock/tests/foo')
         }
     );
 
-$utopia->post('/v1/mock/tests/foo')
+App::post('/v1/mock/tests/foo')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'foo')
@@ -39,7 +40,7 @@ $utopia->post('/v1/mock/tests/foo')
         }
     );
 
-$utopia->patch('/v1/mock/tests/foo')
+App::patch('/v1/mock/tests/foo')
     ->desc('Mock a patch request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'foo')
@@ -53,7 +54,7 @@ $utopia->patch('/v1/mock/tests/foo')
         }
     );
 
-$utopia->put('/v1/mock/tests/foo')
+App::put('/v1/mock/tests/foo')
     ->desc('Mock a put request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'foo')
@@ -67,7 +68,7 @@ $utopia->put('/v1/mock/tests/foo')
         }
     );
 
-$utopia->delete('/v1/mock/tests/foo')
+App::delete('/v1/mock/tests/foo')
     ->desc('Mock a delete request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'foo')
@@ -81,7 +82,7 @@ $utopia->delete('/v1/mock/tests/foo')
         }
     );
 
-$utopia->get('/v1/mock/tests/bar')
+App::get('/v1/mock/tests/bar')
     ->desc('Mock a get request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'bar')
@@ -95,7 +96,7 @@ $utopia->get('/v1/mock/tests/bar')
         }
     );
 
-$utopia->post('/v1/mock/tests/bar')
+App::post('/v1/mock/tests/bar')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'bar')
@@ -109,7 +110,7 @@ $utopia->post('/v1/mock/tests/bar')
         }
     );
 
-$utopia->patch('/v1/mock/tests/bar')
+App::patch('/v1/mock/tests/bar')
     ->desc('Mock a patch request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'bar')
@@ -123,7 +124,7 @@ $utopia->patch('/v1/mock/tests/bar')
         }
     );
 
-$utopia->put('/v1/mock/tests/bar')
+App::put('/v1/mock/tests/bar')
     ->desc('Mock a put request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'bar')
@@ -137,7 +138,7 @@ $utopia->put('/v1/mock/tests/bar')
         }
     );
 
-$utopia->delete('/v1/mock/tests/bar')
+App::delete('/v1/mock/tests/bar')
     ->desc('Mock a delete request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'bar')
@@ -151,7 +152,7 @@ $utopia->delete('/v1/mock/tests/bar')
         }
     );
 
-$utopia->post('/v1/mock/tests/general/upload')
+App::post('/v1/mock/tests/general/upload')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -189,7 +190,7 @@ $utopia->post('/v1/mock/tests/general/upload')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/redirect')
+App::get('/v1/mock/tests/general/redirect')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -201,7 +202,7 @@ $utopia->get('/v1/mock/tests/general/redirect')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/redirected')
+App::get('/v1/mock/tests/general/redirected')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -212,7 +213,7 @@ $utopia->get('/v1/mock/tests/general/redirected')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/set-cookie')
+App::get('/v1/mock/tests/general/set-cookie')
     ->desc('Mock a cookie request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -224,7 +225,7 @@ $utopia->get('/v1/mock/tests/general/set-cookie')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/get-cookie')
+App::get('/v1/mock/tests/general/get-cookie')
     ->desc('Mock a cookie request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -238,7 +239,7 @@ $utopia->get('/v1/mock/tests/general/get-cookie')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/empty')
+App::get('/v1/mock/tests/general/empty')
     ->desc('Mock a post request for SDK tests')
     ->label('scope', 'public')
     ->label('sdk.namespace', 'general')
@@ -251,7 +252,7 @@ $utopia->get('/v1/mock/tests/general/empty')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth2')
+App::get('/v1/mock/tests/general/oauth2')
     ->desc('Mock an OAuth2 login route')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -265,7 +266,7 @@ $utopia->get('/v1/mock/tests/general/oauth2')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth2/token')
+App::get('/v1/mock/tests/general/oauth2/token')
     ->desc('Mock an OAuth2 login route')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -291,7 +292,7 @@ $utopia->get('/v1/mock/tests/general/oauth2/token')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth2/user')
+App::get('/v1/mock/tests/general/oauth2/user')
     ->desc('Mock an OAuth2 user route')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -310,7 +311,7 @@ $utopia->get('/v1/mock/tests/general/oauth2/user')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth2/success')
+App::get('/v1/mock/tests/general/oauth2/success')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
@@ -321,7 +322,7 @@ $utopia->get('/v1/mock/tests/general/oauth2/success')
         }
     );
 
-$utopia->get('/v1/mock/tests/general/oauth2/failure')
+App::get('/v1/mock/tests/general/oauth2/failure')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(
@@ -334,7 +335,7 @@ $utopia->get('/v1/mock/tests/general/oauth2/failure')
         }
     );
 
-$utopia->shutdown(function() use ($response, $request, &$result, $utopia) {
+App::shutdown(function() use ($response, $request, &$result, $utopia) {
     $route  = $utopia->match($request);
     $path   = APP_STORAGE_CACHE.'/tests.json';
     $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];

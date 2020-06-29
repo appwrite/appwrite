@@ -20,8 +20,6 @@ class DeletesV1
 
     public function perform()
     {
-        global $consoleDB, $request;
-
         $document = $this->args['document'];
         $document = new Document($document);
         

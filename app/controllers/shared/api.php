@@ -1,12 +1,13 @@
 <?php
 
+use Utopia\App;
 use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 
 global $utopia, $request, $response, $register, $user, $project;
 
-$utopia->init(function () use ($utopia, $request, $response, $register, $user, $project) {
+App::init(function () use ($utopia, $request, $response, $register, $user, $project) {
     $route = $utopia->match($request);
 
     if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
@@ -43,7 +44,7 @@ $utopia->init(function () use ($utopia, $request, $response, $register, $user, $
         ;
     }
 
-    if ($abuse->check() && $request->getServer('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         throw new Exception('Too many requests', 429);
     }
 }, 'api');
