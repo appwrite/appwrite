@@ -381,7 +381,6 @@ App::options(function () use ($request, $response) {
 });
 
 App::error(function ($error /* @var $error Exception */) use ($request, $response, $utopia, $project) {
-    $env = Config::getParam('env');
     $version = Config::getParam('version');
 
     switch ($error->getCode()) {
@@ -403,7 +402,7 @@ App::error(function ($error /* @var $error Exception */) use ($request, $respons
 
     $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
-    $output = ((App::MODE_TYPE_DEVELOPMENT == $env)) ? [
+    $output = ((App::isDevelopment())) ? [
         'message' => $error->getMessage(),
         'code' => $error->getCode(),
         'file' => $error->getFile(),
