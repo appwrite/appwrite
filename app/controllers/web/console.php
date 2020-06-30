@@ -331,7 +331,7 @@ App::get('/console/users/teams/team')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->action(function () use ($layout) {
+    ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/users/team.phtml');
