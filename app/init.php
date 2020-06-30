@@ -52,20 +52,25 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 /*
  * ENV vars
  */
-Config::load('events', __DIR__.'/../app/config/events.php');
-Config::load('providers', __DIR__.'/../app/config/providers.php');
-Config::load('platforms', __DIR__.'/../app/config/platforms.php');
-Config::load('locales', __DIR__.'/../app/config/locales.php');
-Config::load('collections', __DIR__.'/../app/config/collections.php');
-Config::load('roles', __DIR__.'/../app/config/roles.php');  // User roles and scopes
-Config::load('services', __DIR__.'/../app/config/services.php');  // List of services
-Config::load('avatar-browsers', __DIR__.'/../app/config/avatars/browsers.php'); 
-Config::load('avatar-credit-cards', __DIR__.'/../app/config/avatars/credit-cards.php'); 
-Config::load('avatar-flags', __DIR__.'/../app/config/avatars/flags.php'); 
-Config::load('storage-logos', __DIR__.'/../app/config/storage/logos.php'); 
-Config::load('storage-mimes', __DIR__.'/../app/config/storage/mimes.php'); 
-Config::load('storage-inputs', __DIR__.'/../app/config/storage/inputs.php'); 
-Config::load('storage-outputs', __DIR__.'/../app/config/storage/outputs.php'); 
+Config::load('events', __DIR__.'/config/events.php');
+Config::load('providers', __DIR__.'/config/providers.php');
+Config::load('platforms', __DIR__.'/config/platforms.php');
+Config::load('collections', __DIR__.'/config/collections.php');
+Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
+Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
+Config::load('services', __DIR__.'/config/services.php');  // List of services
+Config::load('avatar-browsers', __DIR__.'/config/avatars/browsers.php'); 
+Config::load('avatar-credit-cards', __DIR__.'/config/avatars/credit-cards.php'); 
+Config::load('avatar-flags', __DIR__.'/config/avatars/flags.php'); 
+Config::load('locale-codes', __DIR__.'/config/locale/codes.php'); 
+Config::load('locale-currencies', __DIR__.'/config/locale/currencies.php'); 
+Config::load('locale-eu', __DIR__.'/config/locale/eu.php'); 
+Config::load('locale-languages', __DIR__.'/config/locale/languages.php'); 
+Config::load('locale-phones', __DIR__.'/config/locale/phones.php'); 
+Config::load('storage-logos', __DIR__.'/config/storage/logos.php'); 
+Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php'); 
+Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
 
 Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
     .':'.App::getEnv('_APP_REDIS_PORT', ''));
@@ -167,51 +172,51 @@ $register->set('queue-deletes', function () {
  * Localization
  */
 Locale::$exceptions = false;
-Locale::setLanguage('af', include __DIR__.'/config/locales/af.php');
-Locale::setLanguage('ar', include __DIR__.'/config/locales/ar.php');
-Locale::setLanguage('bn', include __DIR__.'/config/locales/bn.php');
-Locale::setLanguage('cat', include __DIR__.'/config/locales/cat.php');
-Locale::setLanguage('cz', include __DIR__.'/config/locales/cz.php');
-Locale::setLanguage('de', include __DIR__.'/config/locales/de.php');
-Locale::setLanguage('en', include __DIR__.'/config/locales/en.php');
-Locale::setLanguage('es', include __DIR__.'/config/locales/es.php');
-Locale::setLanguage('fi', include __DIR__.'/config/locales/fi.php');
-Locale::setLanguage('fo', include __DIR__.'/config/locales/fo.php');
-Locale::setLanguage('fr', include __DIR__.'/config/locales/fr.php');
-Locale::setLanguage('gr', include __DIR__.'/config/locales/gr.php');
-Locale::setLanguage('he', include __DIR__.'/config/locales/he.php');
-Locale::setLanguage('hi', include __DIR__.'/config/locales/hi.php');
-Locale::setLanguage('hu', include __DIR__.'/config/locales/hu.php');
-Locale::setLanguage('hy', include __DIR__.'/config/locales/hy.php');
-Locale::setLanguage('id', include __DIR__.'/config/locales/id.php');
-Locale::setLanguage('is', include __DIR__.'/config/locales/is.php');
-Locale::setLanguage('it', include __DIR__.'/config/locales/it.php');
-Locale::setLanguage('ja', include __DIR__.'/config/locales/ja.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locales/jv.php');
-Locale::setLanguage('km', include __DIR__.'/config/locales/km.php');
-Locale::setLanguage('ko', include __DIR__.'/config/locales/ko.php');
-Locale::setLanguage('lt', include __DIR__.'/config/locales/lt.php');
-Locale::setLanguage('ml', include __DIR__.'/config/locales/ml.php');
-Locale::setLanguage('ms', include __DIR__.'/config/locales/ms.php');
-Locale::setLanguage('nl', include __DIR__.'/config/locales/nl.php');
-Locale::setLanguage('no', include __DIR__.'/config/locales/no.php');
-Locale::setLanguage('ph', include __DIR__.'/config/locales/ph.php');
-Locale::setLanguage('pl', include __DIR__.'/config/locales/pl.php');
-Locale::setLanguage('pt-br', include __DIR__.'/config/locales/pt-br.php');
-Locale::setLanguage('pt-pt', include __DIR__.'/config/locales/pt-pt.php');
-Locale::setLanguage('ro', include __DIR__.'/config/locales/ro.php');
-Locale::setLanguage('ru', include __DIR__ . '/config/locales/ru.php');
-Locale::setLanguage('si', include __DIR__ . '/config/locales/si.php');
-Locale::setLanguage('sl', include __DIR__ . '/config/locales/sl.php');
-Locale::setLanguage('sq', include __DIR__ . '/config/locales/sq.php');
-Locale::setLanguage('sv', include __DIR__ . '/config/locales/sv.php');
-Locale::setLanguage('ta', include __DIR__ . '/config/locales/ta.php');
-Locale::setLanguage('th', include __DIR__.'/config/locales/th.php');
-Locale::setLanguage('tr', include __DIR__.'/config/locales/tr.php');
-Locale::setLanguage('ua', include __DIR__.'/config/locales/ua.php');
-Locale::setLanguage('vi', include __DIR__.'/config/locales/vi.php');
-Locale::setLanguage('zh-cn', include __DIR__.'/config/locales/zh-cn.php');
-Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
+Locale::setLanguage('af', include __DIR__.'/config/locale/translations/af.php');
+Locale::setLanguage('ar', include __DIR__.'/config/locale/translations/ar.php');
+Locale::setLanguage('bn', include __DIR__.'/config/locale/translations/bn.php');
+Locale::setLanguage('cat', include __DIR__.'/config/locale/translations/cat.php');
+Locale::setLanguage('cz', include __DIR__.'/config/locale/translations/cz.php');
+Locale::setLanguage('de', include __DIR__.'/config/locale/translations/de.php');
+Locale::setLanguage('en', include __DIR__.'/config/locale/translations/en.php');
+Locale::setLanguage('es', include __DIR__.'/config/locale/translations/es.php');
+Locale::setLanguage('fi', include __DIR__.'/config/locale/translations/fi.php');
+Locale::setLanguage('fo', include __DIR__.'/config/locale/translations/fo.php');
+Locale::setLanguage('fr', include __DIR__.'/config/locale/translations/fr.php');
+Locale::setLanguage('gr', include __DIR__.'/config/locale/translations/gr.php');
+Locale::setLanguage('he', include __DIR__.'/config/locale/translations/he.php');
+Locale::setLanguage('hi', include __DIR__.'/config/locale/translations/hi.php');
+Locale::setLanguage('hu', include __DIR__.'/config/locale/translations/hu.php');
+Locale::setLanguage('hy', include __DIR__.'/config/locale/translations/hy.php');
+Locale::setLanguage('id', include __DIR__.'/config/locale/translations/id.php');
+Locale::setLanguage('is', include __DIR__.'/config/locale/translations/is.php');
+Locale::setLanguage('it', include __DIR__.'/config/locale/translations/it.php');
+Locale::setLanguage('ja', include __DIR__.'/config/locale/translations/ja.php');
+Locale::setLanguage('jv', include __DIR__.'/config/locale/translations/jv.php');
+Locale::setLanguage('km', include __DIR__.'/config/locale/translations/km.php');
+Locale::setLanguage('ko', include __DIR__.'/config/locale/translations/ko.php');
+Locale::setLanguage('lt', include __DIR__.'/config/locale/translations/lt.php');
+Locale::setLanguage('ml', include __DIR__.'/config/locale/translations/ml.php');
+Locale::setLanguage('ms', include __DIR__.'/config/locale/translations/ms.php');
+Locale::setLanguage('nl', include __DIR__.'/config/locale/translations/nl.php');
+Locale::setLanguage('no', include __DIR__.'/config/locale/translations/no.php');
+Locale::setLanguage('ph', include __DIR__.'/config/locale/translations/ph.php');
+Locale::setLanguage('pl', include __DIR__.'/config/locale/translations/pl.php');
+Locale::setLanguage('pt-br', include __DIR__.'/config/locale/translations/pt-br.php');
+Locale::setLanguage('pt-pt', include __DIR__.'/config/locale/translations/pt-pt.php');
+Locale::setLanguage('ro', include __DIR__.'/config/locale/translations/ro.php');
+Locale::setLanguage('ru', include __DIR__ . '/config/locale/translations/ru.php');
+Locale::setLanguage('si', include __DIR__ . '/config/locale/translations/si.php');
+Locale::setLanguage('sl', include __DIR__ . '/config/locale/translations/sl.php');
+Locale::setLanguage('sq', include __DIR__ . '/config/locale/translations/sq.php');
+Locale::setLanguage('sv', include __DIR__ . '/config/locale/translations/sv.php');
+Locale::setLanguage('ta', include __DIR__ . '/config/locale/translations/ta.php');
+Locale::setLanguage('th', include __DIR__.'/config/locale/translations/th.php');
+Locale::setLanguage('tr', include __DIR__.'/config/locale/translations/tr.php');
+Locale::setLanguage('ua', include __DIR__.'/config/locale/translations/ua.php');
+Locale::setLanguage('vi', include __DIR__.'/config/locale/translations/vi.php');
+Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/translations/zh-cn.php');
+Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/translations/zh-tw.php');
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [

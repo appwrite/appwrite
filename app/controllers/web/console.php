@@ -171,7 +171,7 @@ App::get('/console/keys')
     ->action(function ($layout) {
         /** @var Utopia\View $layout */
 
-        $scopes = include __DIR__.'/../../../app/config/scopes.php';
+        $scopes = Config::getParam('scopes');
         $page = new View(__DIR__.'/../../views/console/keys/index.phtml');
 
         $page->setParam('scopes', $scopes);

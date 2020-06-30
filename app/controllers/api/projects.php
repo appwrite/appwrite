@@ -20,8 +20,6 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Network\Validator\CNAME;
 use Cron\CronExpression;
 
-$scopes = include __DIR__.'/../../../app/config/scopes.php';
-
 App::post('/v1/projects')
     ->desc('Create Project')
     ->groups(['api', 'projects'])
@@ -672,7 +670,7 @@ App::post('/v1/projects/:projectId/keys')
     ->label('sdk.method', 'createKey')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Key name.')
-    ->param('scopes', null, function () use ($scopes) { return new ArrayList(new WhiteList($scopes)); }, 'Key scopes list.')
+    ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'))); }, 'Key scopes list.')
     ->action(
         function ($projectId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);
@@ -765,7 +763,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Key name.')
-    ->param('scopes', null, function () use ($scopes) { return new ArrayList(new WhiteList($scopes)); }, 'Key scopes list')
+    ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'))); }, 'Key scopes list')
     ->action(
         function ($projectId, $keyId, $name, $scopes) use ($response, $consoleDB) {
             $project = $consoleDB->getDocument($projectId);

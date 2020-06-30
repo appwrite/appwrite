@@ -2,6 +2,7 @@
 
 use Utopia\App;
 use GeoIp2\Database\Reader;
+use Utopia\Config\Config;
 
 App::get('/v1/locale')
     ->desc('Get User Locale')
@@ -16,8 +17,8 @@ App::get('/v1/locale')
         /** @var Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
-        $eu = include __DIR__.'/../../config/eu.php';
-        $currencies = include __DIR__.'/../../config/currencies.php';
+        $eu = Config::getParam('locale-eu');
+        $currencies = Config::getParam('locale-currencies');
         $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
         $output = [];
         $ip = $request->getIP();
@@ -96,7 +97,7 @@ App::get('/v1/locale/countries/eu')
         /** @var Utopia\Locale\Locale $locale */
 
         $countries = $locale->getText('countries'); /* @var $countries array */
-        $eu = include __DIR__.'/../../config/eu.php';
+        $eu = Config::getParam('locale-eu');
         $list = [];
 
         foreach ($eu as $code) {
@@ -122,7 +123,7 @@ App::get('/v1/locale/countries/phones')
         /** @var Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
-        $list = include __DIR__.'/../../config/phones.php'; /* @var $list array */
+        $list = Config::getParam('locale-phones'); /* @var $list array */
 
         $countries = $locale->getText('countries'); /* @var $countries array */
 
@@ -168,7 +169,7 @@ App::get('/v1/locale/currencies')
     ->action(function ($response) {
         /** @var Utopia\Response $response */
 
-        $currencies = include __DIR__.'/../../config/currencies.php';
+        $currencies = Config::getParam('locale-currencies');
 
         $response->json($currencies);
     }, ['response']);
@@ -185,7 +186,7 @@ App::get('/v1/locale/languages')
     ->action(function ($response) {
         /** @var Utopia\Response $response */
 
-        $languages = include __DIR__.'/../../config/languages.php';
+        $languages = Config::getParam('locale-languages');
 
         $response->json($languages);
     }, ['response']);

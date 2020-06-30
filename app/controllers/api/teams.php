@@ -324,9 +324,9 @@ App::post('/v1/teams/:teamId/memberships')
             $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['inviteId' => $membership->getId(), 'teamId' => $team->getId(), 'userId' => $invitee->getId(), 'secret' => $secret, 'teamId' => $teamId]);
             $url = Template::unParseURL($url);
 
-            $body = new Template(__DIR__.'/../../config/locales/templates/_base.tpl');
-            $content = new Template(__DIR__.'/../../config/locales/templates/'.Locale::getText('account.emails.invitation.body'));
-            $cta = new Template(__DIR__.'/../../config/locales/templates/_cta.tpl');
+            $body = new Template(__DIR__.'/../../config/locale/templates/email-base.tpl');
+            $content = new Template(__DIR__.'/../../config/locale/translations/templates/'.Locale::getText('account.emails.invitation.body'));
+            $cta = new Template(__DIR__.'/../../config/locale/templates/email-cta.tpl');
 
             $body
                 ->setParam('{{content}}', $content->render())

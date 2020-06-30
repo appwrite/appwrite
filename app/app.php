@@ -135,8 +135,8 @@ App::init(function ($utopia, $request, $response, $user, $project, $console, $we
     
     /** @var $locale Utopia\Locale\Locale */
     $localeParam = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
-    
-    if (\in_array($localeParam, Config::getParam('locales'))) {
+
+    if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
     };
 
