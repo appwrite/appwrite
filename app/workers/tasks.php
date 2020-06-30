@@ -96,7 +96,7 @@ class TasksV1
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
-            Config::getParam('version'),
+            App::getEnv('_APP_VERSION', 'UNKNOWN'),
             App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
         ));
         \curl_setopt(

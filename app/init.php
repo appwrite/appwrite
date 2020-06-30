@@ -222,7 +222,7 @@ Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/translations/zh-tw.
     'http' => [
         'method' => 'GET',
         'user_agent' => \sprintf(APP_USERAGENT,
-            Config::getParam('version'),
+            App::getEnv('_APP_VERSION', 'UNKNOWN'),
             App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
     ],

@@ -6,7 +6,6 @@ require_once __DIR__.'/../init.php';
 
 echo APP_NAME.' webhooks worker v1 has started';
 
-use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Utopia\App;
@@ -61,7 +60,7 @@ class WebhooksV1
             \curl_setopt($ch, CURLOPT_HEADER, 0);
             \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(APP_USERAGENT,
-                Config::getParam('version'),
+                App::getEnv('_APP_VERSION', 'UNKNOWN'),
                 App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
             ));
             \curl_setopt(

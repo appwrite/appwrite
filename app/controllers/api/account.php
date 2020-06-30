@@ -167,7 +167,7 @@ App::post('/v1/account/sessions')
         /** @var Appwrite\Event\Event $webhook */
         /** @var Appwrite\Event\Event $audit */
 
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
@@ -264,7 +264,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
 
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
         $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
@@ -304,16 +304,19 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
-    ->action(function ($projectId, $provider, $code, $state, $response) {
+    ->action(function ($projectId, $provider, $code, $state, $request, $response) {
+        /** @var Utopia\Request $request */
+        /** @var Utopia\Response $response */
+
         $domain = Config::getParam('domain');
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
                 .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
-    }, ['response']);
+    }, ['request', 'response']);
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 Callback')
@@ -326,16 +329,19 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
-    ->action(function ($projectId, $provider, $code, $state, $response) {
+    ->action(function ($projectId, $provider, $code, $state, $request, $response) {
+        /** @var Utopia\Request $request */
+        /** @var Utopia\Response $response */
+
         $domain = Config::getParam('domain');
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($protocol.'://'.$domain.'/v1/account/sessions/oauth2/'.$provider.'/redirect?'
                 .\http_build_query(['project' => $projectId, 'code' => $code, 'state' => $state]));
-    }, ['response']);
+    }, ['request', 'response']);
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 Redirect')
@@ -357,7 +363,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audit */
         
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
@@ -923,14 +929,15 @@ App::delete('/v1/account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
-    ->action(function ($response, $user, $projectDB, $audit, $webhook) {
+    ->action(function ($request, $response, $user, $projectDB, $audit, $webhook) {
+        /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audit */
         /** @var Appwrite\Event\Event $webhook */
 
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'status' => Auth::USER_STATUS_BLOCKED,
         ]));
@@ -972,7 +979,7 @@ App::delete('/v1/account')
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', COOKIE_DOMAIN, ('https' == $protocol), true, COOKIE_SAMESITE)
             ->noContent()
         ;
-    }, ['response', 'user', 'projectDB', 'audit', 'webhook']);
+    }, ['request', 'response', 'user', 'projectDB', 'audit', 'webhook']);
 
 App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
@@ -985,14 +992,15 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
     ->label('abuse-limit', 100)
     ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
-    ->action(function ($sessionId, $response, $user, $projectDB, $audit, $webhook) {
+    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audit, $webhook) {
+        /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audit */
         /** @var Appwrite\Event\Event $webhook */
 
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
             ? Auth::tokenVerify($user->getAttribute('tokens'), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)
             : $sessionId;
@@ -1036,7 +1044,7 @@ App::delete('/v1/account/sessions/:sessionId')
         }
 
         throw new Exception('Session not found', 404);
-    }, ['response', 'user', 'projectDB', 'audit', 'webhook']);
+    }, ['request', 'response', 'user', 'projectDB', 'audit', 'webhook']);
 
 App::delete('/v1/account/sessions')
     ->desc('Delete All Account Sessions')
@@ -1048,14 +1056,15 @@ App::delete('/v1/account/sessions')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
-    ->action(function ($response, $user, $projectDB, $audit, $webhook) {
+    ->action(function ($request, $response, $user, $projectDB, $audit, $webhook) {
+        /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audit */
         /** @var Appwrite\Event\Event $webhook */
 
-        $protocol = Config::getParam('protocol');
+        $protocol = $request->getProtocol();
         $tokens = $user->getAttribute('tokens', []);
 
         foreach ($tokens as $token) { /* @var $token Document */
@@ -1091,7 +1100,7 @@ App::delete('/v1/account/sessions')
         }
 
         $response->noContent();
-    }, ['response', 'user', 'projectDB', 'audit', 'webhook']);
+    }, ['request', 'response', 'user', 'projectDB', 'audit', 'webhook']);
 
 App::post('/v1/account/recovery')
     ->desc('Create Password Recovery')

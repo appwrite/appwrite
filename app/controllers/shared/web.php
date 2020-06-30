@@ -4,7 +4,11 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 
-App::init(function ($utopia, $response, $request, $layout) {
+App::init(function ($utopia, $request, $response, $layout) {
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Request $request */
+    /** @var Utopia\Response $response */
+    /** @var Utopia\View $layout */
 
     /* AJAX check  */
     if (!empty($request->getQuery('version', ''))) {
@@ -12,7 +16,7 @@ App::init(function ($utopia, $response, $request, $layout) {
     }
     $layout
         ->setParam('title', APP_NAME)
-        ->setParam('protocol', Config::getParam('protocol'))
+        ->setParam('protocol', $request->getProtocol())
         ->setParam('domain', Config::getParam('domain'))
         ->setParam('home', App::getEnv('_APP_HOME'))
         ->setParam('setup', App::getEnv('_APP_SETUP'))
@@ -36,8 +40,8 @@ App::init(function ($utopia, $response, $request, $layout) {
     $route = $utopia->match($request);
     $scope = $route->getLabel('scope', '');
     $layout
-        ->setParam('version', Config::getParam('version'))
+        ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
         ->setParam('isDev', App::isDevelopment())
         ->setParam('class', $scope)
     ;
-}, ['utopia', 'response', 'request', 'layout'], 'web');
+}, ['utopia', 'request', 'response', 'layout'], 'web');

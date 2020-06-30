@@ -29,7 +29,7 @@ App::shutdown(function ($response, $layout) {
 
     $footer
         ->setParam('home', App::getEnv('_APP_HOME', ''))
-        ->setParam('version', Config::getParam('version'))
+        ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
     ;
 
     $layout

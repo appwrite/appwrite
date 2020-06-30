@@ -1,6 +1,6 @@
 <?php
 
-use Utopia\Config\Config;
+use Utopia\App;
 
 require_once __DIR__.'/../init.php';
 
@@ -31,7 +31,7 @@ class UsageV1
 
         $statsd = $register->get('statsd', true);
 
-        $tags = ",project={$projectId},version=".Config::getParam('version').'';
+        $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
 
         // the global namespace is prepended to every key (optional)
         $statsd->setNamespace('appwrite.usage');

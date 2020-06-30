@@ -17,7 +17,6 @@ use Appwrite\Network\Validator\Origin;
 
 // Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
 // Config::setParam('domainVerification', false);
-// Config::setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'));
 // Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
 // Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
 // Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
@@ -131,10 +130,22 @@ use Appwrite\Network\Validator\Origin;
 //         return false;
 //     }))));
 
-App::init(function ($utopia, $request, $response, $user, $project, $console, $webhooks, $audits, $usage, $clients, $locale) {
-    
-    /** @var $locale Utopia\Locale\Locale */
-    $localeParam = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
+    /** @var Utopia\Request $request */
+    /** @var Utopia\Response $response */
+    /** @var Appwrite\Database\Document $console */
+    /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Locale\Locale $locale */
+    /** @var Appwrite\Event\Event $webhook */
+    /** @var Appwrite\Event\Event $audit */
+    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $mail */
+    /** @var Appwrite\Event\Event $deletes */
+    /** @var bool $mode */
+    /** @var array $clients */
+
+    $localeParam = (string)$request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
@@ -175,7 +186,7 @@ App::init(function ($utopia, $request, $response, $user, $project, $console, $we
      * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-        if(Config::getParam('protocol') !== 'https') {
+        if($request->getProtocol() !== 'https') {
            return $response->redirect('https://' . Config::getParam('domain').$request->getServer('REQUEST_URI'));
         }
 
@@ -317,7 +328,7 @@ App::init(function ($utopia, $request, $response, $user, $project, $console, $we
         ->setParam('response', 0)
         ->setParam('storage', 0)
     ;
-}, ['utopia', 'request', 'response', 'user', 'project', 'console', 'webhook', 'audit', 'usage', 'clients', 'locale']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhook', 'audit', 'usage', 'clients']);
 
 App::shutdown(function ($utopia, $response, $request, $webhook, $audit, $usage, $deletes, $mode, $project) {
     /*
@@ -363,7 +374,7 @@ App::options(function ($request, $response) {
 App::error(function ($error, $utopia, $request, $response, $project) {
     /** @var Exception $error */
 
-    $version = Config::getParam('version');
+    $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
     switch ($error->getCode()) {
         case 400: // Error allowed publicly
