@@ -41,6 +41,7 @@
 
 ## Breaking Changes
 - **Deprecated** `first` and `last` query params for documents list route in the database API
+- **Deprecated** Deprectaed Pubjabi Translations ('pn')
 
 ## Security
 
