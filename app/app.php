@@ -15,86 +15,33 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 
+Config::setParam('domain', $_SERVER['HTTP_HOST']);
+Config::setParam('domainVerification', false);
 // Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
 // Config::setParam('domainVerification', false);
-// Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
-// Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
-// Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
+
+\define('COOKIE_DOMAIN', 
+    (
+        $_SERVER['HTTP_HOST'] === 'localhost' ||
+        $_SERVER['HTTP_HOST'] === 'localhost:'.$request->getPort() ||
+        (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
+    )
+        ? null
+        : '.'.$request->getHostname()
+    );
+\define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 // \define('COOKIE_DOMAIN', 
 //     (
 //         $request->getServer('HTTP_HOST', null) === 'localhost' ||
-//         $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
-//         (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
+//         $request->getServer('HTTP_HOST', null) === 'localhost:'.$request->getPort() ||
+//         (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
 //     )
 //         ? null
-//         : '.'.Config::getParam('hostname')
+//         : '.'.$request->getHostname()
 //     );
 // \define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
-// Authorization::disable();
-
-// $project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
-
-// Authorization::enable();
-
-// $console = $consoleDB->getDocument('console');
-
-// $mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
-
-// Auth::setCookieName('a_session_'.$project->getId());
-
-// if (APP_MODE_ADMIN === $mode) {
-//     Auth::setCookieName('a_session_'.$console->getId());
-// }
-
-// $session = Auth::decodeSession(
-//     $request->getCookie(Auth::$cookieName, // Get sessions
-//         $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-//             $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
-
-// // Get fallback session from clients who block 3rd-party cookies
-// $response->addHeader('X-Debug-Fallback', 'false');
-
-// if(empty($session['id']) && empty($session['secret'])) {
-//     $response->addHeader('X-Debug-Fallback', 'true');
-//     $fallback = $request->getHeader('X-Fallback-Cookies', '');
-//     $fallback = \json_decode($fallback, true);
-//     $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
-// }
-
-// Auth::$unique = $session['id'];
-// Auth::$secret = $session['secret'];
-
-// $projectDB = new Database();
-// $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-// $projectDB->setNamespace('app_'.$project->getId());
-// $projectDB->setMocks(Config::getParam('collections', []));
-
-// if (APP_MODE_ADMIN !== $mode) {
-//     $user = $projectDB->getDocument(Auth::$unique);
-// }
-// else {
-//     $user = $consoleDB->getDocument(Auth::$unique);
-
-//     $user
-//         ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-//     ;
-// }
-
-// if (empty($user->getId()) // Check a document has been found in the DB
-//     || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-//     || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-//     $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-// }
-
-// if (APP_MODE_ADMIN === $mode) {
-//     if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
-//         Authorization::disable();
-//     } else {
-//         $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-//     }
-// }
 
 // // Set project mail
 // $register->get('smtp')
@@ -106,29 +53,6 @@ use Appwrite\Network\Validator\Origin;
 //         )
 //     );
 
-/**
- * Get All verified client URLs for both console and current projects
- * + Filter for duplicated entries
- */
-// $clientsConsole = \array_map(function ($node) {
-//         return $node['hostname'];
-//     }, \array_filter($console->getAttribute('platforms', []), function ($node) {
-//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-//             return true;
-//         }
-
-//         return false;
-//     }));
-
-// $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
-//         return $node['hostname'];
-//     }, \array_filter($project->getAttribute('platforms', []), function ($node) {
-//         if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
-//             return true;
-//         }
-
-//         return false;
-//     }))));
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
     /** @var Utopia\Request $request */

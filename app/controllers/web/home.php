@@ -188,8 +188,9 @@ App::get('/open-api-2.json')
     ->param('platform', APP_PLATFORM_CLIENT, function () {return new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE]);}, 'Choose target platform.', true)
     ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
-    ->action(function ($platform, $extensions, $tests, $utopia, $response) {
+    ->action(function ($platform, $extensions, $tests, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
+        /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
 
         $services = Config::getParam('services', []);
@@ -370,7 +371,7 @@ App::get('/open-api-2.json')
             ],
             'externalDocs' => [
                 'description' => 'Full API docs, specs and tutorials',
-                'url' => Config::getParam('protocol').'://'.Config::getParam('domain').'/docs',
+                'url' => $request->getProtocol().'://'.Config::getParam('domain').'/docs',
             ],
         ];
 
@@ -586,4 +587,4 @@ App::get('/open-api-2.json')
 
         $response
             ->json($output);
-    }, ['utopia', 'response']);
+    }, ['utopia', 'request', 'response']);

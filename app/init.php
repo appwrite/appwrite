@@ -11,6 +11,7 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
@@ -19,6 +20,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\View;
@@ -268,13 +270,101 @@ App::setResource('deletes', function($register) {
 }, ['register']);
 
 // Test Mock
-App::setResource('clients', function() { return []; });
+App::setResource('clients', function($console, $project) {
+    /**
+     * Get All verified client URLs for both console and current projects
+     * + Filter for duplicated entries
+     */
+    $clientsConsole = \array_map(function ($node) {
+        return $node['hostname'];
+    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-App::setResource('user', function() { return new Document([]); });
+        return false;
+    }));
 
-App::setResource('project', function() { return new Document([]); });
+    $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
+        return $node['hostname'];
+    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-App::setResource('console', function() { return new Document([]); });
+        return false;
+    }))));
+
+    return $clients;
+}, ['console', 'project']);
+
+App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
+
+    Auth::setCookieName('a_session_'.$project->getId());
+
+    if (APP_MODE_ADMIN === $mode) {
+        Auth::setCookieName('a_session_'.$console->getId());
+    }
+
+    $session = Auth::decodeSession(
+        $request->getCookie(Auth::$cookieName, // Get sessions
+            $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
+                $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+
+    // Get fallback session from clients who block 3rd-party cookies
+    $response->addHeader('X-Debug-Fallback', 'false');
+
+    if(empty($session['id']) && empty($session['secret'])) {
+        $response->addHeader('X-Debug-Fallback', 'true');
+        $fallback = $request->getHeader('X-Fallback-Cookies', '');
+        $fallback = \json_decode($fallback, true);
+        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+    }
+    Auth::$unique = $session['id'];
+    Auth::$secret = $session['secret'];
+
+    if (APP_MODE_ADMIN !== $mode) {
+        $user = $projectDB->getDocument(Auth::$unique);
+    }
+    else {
+        $user = $consoleDB->getDocument(Auth::$unique);
+
+        $user
+            ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
+        ;
+    }
+
+    if (empty($user->getId()) // Check a document has been found in the DB
+        || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+        || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
+        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+    }
+
+    if (APP_MODE_ADMIN === $mode) {
+        if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+            Authorization::disable();
+        } else {
+            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        }
+    }
+
+    return $user;
+}, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
+
+App::setResource('project', function($consoleDB, $request) {
+    Authorization::disable();
+
+    $project = $consoleDB->getDocument($request->getParam('project',
+        $request->getHeader('X-Appwrite-Project', '')));
+
+    Authorization::enable();
+
+    return $project;
+}, ['consoleDB', 'request']);
+
+App::setResource('console', function($consoleDB) {
+    return $consoleDB->getDocument('console');
+}, ['consoleDB']);
 
 App::setResource('consoleDB', function($register) {
     $consoleDB = new Database();
@@ -282,8 +372,19 @@ App::setResource('consoleDB', function($register) {
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
     
     $consoleDB->setMocks(Config::getParam('collections', []));
+
+    return $consoleDB;
 }, ['register']);
 
-App::setResource('projectDB', function() { return new Database([]); });
+App::setResource('projectDB', function($register, $project) {
+    $projectDB = new Database();
+    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $projectDB->setNamespace('app_'.$project->getId());
+    $projectDB->setMocks(Config::getParam('collections', []));
 
-App::setResource('mode', function() { return false; });
+    return $projectDB;
+}, ['register', 'project']);
+
+App::setResource('mode', function($request) {
+    return $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+}, ['request']);

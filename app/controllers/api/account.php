@@ -565,7 +565,7 @@ App::get('/v1/account')
             ],
             $oauth2Keys
         )), ['roles' => Authorization::getRoles()]));
-    }, ['response', ['user']]);
+    }, ['response', 'user']);
 
 App::get('/v1/account/prefs')
     ->desc('Get Account Preferences')
