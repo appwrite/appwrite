@@ -1,6 +1,6 @@
 <?php
 
-return [
+return [ // Accepted outputs files
     'jpg' => 'image/jpeg',
     'jpeg' => 'image/jpeg',
     'gif' => 'image/gif',
