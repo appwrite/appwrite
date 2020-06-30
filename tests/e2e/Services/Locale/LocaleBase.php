@@ -227,7 +227,7 @@ trait LocaleBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-locale' => $lang,
             ]);
-            
+
             foreach ($response['body'] as $i => $code) {
                 $this->assertArrayHasKey($i, $defaultCountries, $i . ' country should be removed from ' . $lang);
             }
