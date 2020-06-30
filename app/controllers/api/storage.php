@@ -577,7 +577,7 @@ App::delete('/v1/storage/files/:fileId')
         ;
 
         $response->noContent();
-    }, ['fileId', 'response', 'projectDB', 'webhook', 'audit', 'usage']);
+    }, ['response', 'projectDB', 'webhook', 'audit', 'usage']);
 
 // App::get('/v1/storage/files/:fileId/scan')
 //     ->desc('Scan Storage')

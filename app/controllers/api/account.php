@@ -660,7 +660,7 @@ App::get('/v1/account/logs')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/account/get-logs.md')
-    ->action(function ($response, $register, $project, $user) {
+    ->action(function ($response, $register, $project, $user, $locale) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
@@ -726,7 +726,7 @@ App::get('/v1/account/logs')
         }
 
         $response->json($output);
-    }, ['response', 'register', 'project', 'user']);
+    }, ['response', 'register', 'project', 'user', 'locale']);
 
 App::patch('/v1/account/name')
     ->desc('Update Account Name')
