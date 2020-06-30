@@ -32,13 +32,13 @@
 
         "appwrite/php-clamav": "1.0.*",
 
-        "utopia-php/framework": "0.4.0",
+        "utopia-php/framework": "0.7.2",
         "utopia-php/abuse": "0.2.*",
         "utopia-php/audit": "0.3.*",
         "utopia-php/cache": "0.2.*",
         "utopia-php/cli": "0.6.2",
         "utopia-php/config": "0.2.*",
-        "utopia-php/locale": "0.2.*",
+        "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.2.*",
         "utopia-php/domains": "0.2.*",
 

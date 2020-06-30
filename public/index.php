@@ -11,13 +11,9 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
-
-$path = (isset($_GET['q'])) ? explode('/', $_GET['q']) : [];
-
-array_shift($path);
-$version = array_shift($path);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+//trigger_error('hide errors in prod', E_USER_NOTICE);
 
 include __DIR__ . '/../app/app.php';

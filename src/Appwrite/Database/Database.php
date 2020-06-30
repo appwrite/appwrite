@@ -118,7 +118,7 @@ class Database
     /**
      * @param array $options
      *
-     * @return Document[]|Document
+     * @return Document[]
      */
     public function getCollection(array $options)
     {

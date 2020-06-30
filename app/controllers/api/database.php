@@ -1,11 +1,8 @@
 <?php
 
-global $utopia, $register, $request, $response, $webhook, $audit, $projectDB;
-
 use Utopia\App;
 use Utopia\Exception;
 use Utopia\Response;
-use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -24,10 +21,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
 use Appwrite\Database\Exception\Structure as StructureException;
 
-// use DeviceDetector\DeviceDetector;
-// use GeoIp2\Database\Reader;
-
-$utopia->post('/v1/database/collections')
+App::post('/v1/database/collections')
     ->desc('Create Collection')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.collections.create')
@@ -39,69 +33,72 @@ $utopia->post('/v1/database/collections')
     ->param('name', '', function () { return new Text(256); }, 'Collection name.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.')
-    ->action(
-        function ($name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
-            $parsedRules = [];
+    ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', false, ['projectDB'])
+    ->action(function ($name, $read, $write, $rules, $response, $projectDB, $webhook, $audit) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audit */
 
-            foreach ($rules as &$rule) {
-                $parsedRules[] = \array_merge([
-                    '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                    '$permissions' => [
-                        'read' => $read,
-                        'write' => $write,
-                    ],
-                ], $rule);
-            }
+        $parsedRules = [];
 
-            try {
-                $data = $projectDB->createDocument([
-                    '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-                    'name' => $name,
-                    'dateCreated' => \time(),
-                    'dateUpdated' => \time(),
-                    'structure' => true,
-                    '$permissions' => [
-                        'read' => $read,
-                        'write' => $write,
-                    ],
-                    'rules' => $parsedRules,
-                ]);
-            } catch (AuthorizationException $exception) {
-                throw new Exception('Unauthorized action', 401);
-            } catch (StructureException $exception) {
-                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-            } catch (\Exception $exception) {
-                throw new Exception('Failed saving document to DB', 500);
-            }
-
-            if (false === $data) {
-                throw new Exception('Failed saving collection to DB', 500);
-            }
-
-            $data = $data->getArrayCopy();
-
-            $webhook
-                ->setParam('payload', $data)
-            ;
-
-            $audit
-                ->setParam('event', 'database.collections.create')
-                ->setParam('resource', 'database/collection/'.$data['$id'])
-                ->setParam('data', $data)
-            ;
-
-            /*
-             * View
-             */
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($data)
-            ;
+        foreach ($rules as &$rule) {
+            $parsedRules[] = \array_merge([
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                '$permissions' => [
+                    'read' => $read,
+                    'write' => $write,
+                ],
+            ], $rule);
         }
-    );
 
-$utopia->get('/v1/database/collections')
+        try {
+            $data = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
+                'name' => $name,
+                'dateCreated' => \time(),
+                'dateUpdated' => \time(),
+                'structure' => true,
+                '$permissions' => [
+                    'read' => $read,
+                    'write' => $write,
+                ],
+                'rules' => $parsedRules,
+            ]);
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized action', 401);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed saving document to DB', 500);
+        }
+
+        if (false === $data) {
+            throw new Exception('Failed saving collection to DB', 500);
+        }
+
+        $data = $data->getArrayCopy();
+
+        $webhook
+            ->setParam('payload', $data)
+        ;
+
+        $audit
+            ->setParam('event', 'database.collections.create')
+            ->setParam('resource', 'database/collection/'.$data['$id'])
+            ->setParam('data', $data)
+        ;
+
+        /*
+            * View
+            */
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->json($data)
+        ;
+    }, ['response', 'projectDB', 'webhook', 'audit']);
+
+App::get('/v1/database/collections')
     ->desc('List Collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -113,44 +110,26 @@ $utopia->get('/v1/database/collections')
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 40000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            /*$vl = new Structure($projectDB);
+    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            var_dump($vl->isValid(new Document([
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                '$permissions' => [
-                    'read' => ['*'],
-                    'write' => ['*'],
-                ],
-                'label' => 'Platforms',
-                'key' => 'platforms',
-                'type' => 'document',
-                'default' => [],
-                'required' => false,
-                'array' => true,
-                'options' => [Database::SYSTEM_COLLECTION_PLATFORMS],
-            ])));
+        $results = $projectDB->getCollection([
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderField' => 'name',
+            'orderType' => $orderType,
+            'orderCast' => 'string',
+            'search' => $search,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
+            ],
+        ]);
 
-            var_dump($vl->getDescription());*/
+        $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
+    }, ['response', 'projectDB']);
 
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'name',
-                'orderType' => $orderType,
-                'orderCast' => 'string',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
-                ],
-            ]);
-
-            $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
-        }
-    );
-
-$utopia->get('/v1/database/collections/:collectionId')
+App::get('/v1/database/collections/:collectionId')
     ->desc('Get Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -159,19 +138,20 @@ $utopia->get('/v1/database/collections/:collectionId')
     ->label('sdk.method', 'getCollection')
     ->label('sdk.description', '/docs/references/database/get-collection.md')
     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(
-        function ($collectionId) use ($response, $projectDB) {
-            $collection = $projectDB->getDocument($collectionId, false);
+    ->action(function ($collectionId, $response, $projectDB) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
+        $collection = $projectDB->getDocument($collectionId, false);
 
-            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
-
-            $response->json($collection->getArrayCopy());
+        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
         }
-    );
 
-// $utopia->get('/v1/database/collections/:collectionId/logs')
+        $response->json($collection->getArrayCopy());
+    }, ['response', 'projectDB']);
+
+// App::get('/v1/database/collections/:collectionId/logs')
 //     ->desc('Get Collection Logs')
 //     ->groups(['api', 'database'])
 //     ->label('scope', 'collections.read')
@@ -236,7 +216,7 @@ $utopia->get('/v1/database/collections/:collectionId')
 //         }
 //     );
 
-$utopia->put('/v1/database/collections/:collectionId')
+App::put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -249,67 +229,70 @@ $utopia->put('/v1/database/collections/:collectionId')
     ->param('name', null, function () { return new Text(256); }, 'Collection name.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions(/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('rules', [], function () use ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', true)
-    ->action(
-        function ($collectionId, $name, $read, $write, $rules) use ($response, $projectDB, $webhook, $audit) {
-            $collection = $projectDB->getDocument($collectionId, false);
+    ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', true, ['projectDB'])
+    ->action(function ($collectionId, $name, $read, $write, $rules, $response, $projectDB, $webhook, $audit) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audit */
 
-            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
+        $collection = $projectDB->getDocument($collectionId, false);
 
-            $parsedRules = [];
-
-            foreach ($rules as &$rule) {
-                $parsedRules[] = \array_merge([
-                    '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                    '$permissions' => [
-                        'read' => $read,
-                        'write' => $write,
-                    ],
-                ], $rule);
-            }
-
-            try {
-                $collection = $projectDB->updateDocument(\array_merge($collection->getArrayCopy(), [
-                    'name' => $name,
-                    'structure' => true,
-                    'dateUpdated' => \time(),
-                    '$permissions' => [
-                        'read' => $read,
-                        'write' => $write,
-                    ],
-                    'rules' => $parsedRules,
-                ]));
-            } catch (AuthorizationException $exception) {
-                throw new Exception('Unauthorized action', 401);
-            } catch (StructureException $exception) {
-                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-            } catch (\Exception $exception) {
-                throw new Exception('Failed saving document to DB', 500);
-            }
-
-            if (false === $collection) {
-                throw new Exception('Failed saving collection to DB', 500);
-            }
-
-            $data = $collection->getArrayCopy();
-
-            $webhook
-                ->setParam('payload', $data)
-            ;
-
-            $audit
-                ->setParam('event', 'database.collections.update')
-                ->setParam('resource', 'database/collections/'.$data['$id'])
-                ->setParam('data', $data)
-            ;
-
-            $response->json($collection->getArrayCopy());
+        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
         }
-    );
 
-$utopia->delete('/v1/database/collections/:collectionId')
+        $parsedRules = [];
+
+        foreach ($rules as &$rule) {
+            $parsedRules[] = \array_merge([
+                '$collection' => Database::SYSTEM_COLLECTION_RULES,
+                '$permissions' => [
+                    'read' => $read,
+                    'write' => $write,
+                ],
+            ], $rule);
+        }
+
+        try {
+            $collection = $projectDB->updateDocument(\array_merge($collection->getArrayCopy(), [
+                'name' => $name,
+                'structure' => true,
+                'dateUpdated' => \time(),
+                '$permissions' => [
+                    'read' => $read,
+                    'write' => $write,
+                ],
+                'rules' => $parsedRules,
+            ]));
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized action', 401);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed saving document to DB', 500);
+        }
+
+        if (false === $collection) {
+            throw new Exception('Failed saving collection to DB', 500);
+        }
+
+        $data = $collection->getArrayCopy();
+
+        $webhook
+            ->setParam('payload', $data)
+        ;
+
+        $audit
+            ->setParam('event', 'database.collections.update')
+            ->setParam('resource', 'database/collections/'.$data['$id'])
+            ->setParam('data', $data)
+        ;
+
+        $response->json($collection->getArrayCopy());
+    }, ['response', 'projectDB', 'webhook', 'audit']);
+
+App::delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
@@ -319,35 +302,38 @@ $utopia->delete('/v1/database/collections/:collectionId')
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(
-        function ($collectionId) use ($response, $projectDB, $webhook, $audit) {
-            $collection = $projectDB->getDocument($collectionId, false);
+    ->action(function ($collectionId, $response, $projectDB, $webhook, $audit) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audit */
 
-            if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
+        $collection = $projectDB->getDocument($collectionId, false);
 
-            if (!$projectDB->deleteDocument($collectionId)) {
-                throw new Exception('Failed to remove collection from DB', 500);
-            }
-            
-            $data = $collection->getArrayCopy();
-
-            $webhook
-                ->setParam('payload', $data)
-            ;
-
-            $audit
-                ->setParam('event', 'database.collections.delete')
-                ->setParam('resource', 'database/collections/'.$data['$id'])
-                ->setParam('data', $data)
-            ;
-
-            $response->noContent();
+        if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
         }
-    );
 
-$utopia->post('/v1/database/collections/:collectionId/documents')
+        if (!$projectDB->deleteDocument($collectionId)) {
+            throw new Exception('Failed to remove collection from DB', 500);
+        }
+        
+        $data = $collection->getArrayCopy();
+
+        $webhook
+            ->setParam('payload', $data)
+        ;
+
+        $audit
+            ->setParam('event', 'database.collections.delete')
+            ->setParam('resource', 'database/collections/'.$data['$id'])
+            ->setParam('data', $data)
+        ;
+
+        $response->noContent();
+    }, ['response', 'projectDB', 'webhook', 'audit']);
+
+App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.create')
@@ -363,111 +349,114 @@ $utopia->post('/v1/database/collections/:collectionId/documents')
     ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
-    ->action(
-        function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType) use ($response, $projectDB, $webhook, $audit) {
-            $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+    ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $webhook, $audit) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audit */
+    
+        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
-            if (empty($data)) {
-                throw new Exception('Missing payload', 400);
+        if (empty($data)) {
+            throw new Exception('Missing payload', 400);
+        }
+
+        if (isset($data['$id'])) {
+            throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
+        }
+        
+        $collection = $projectDB->getDocument($collectionId, false);
+
+        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
+        $data['$permissions'] = [
+            'read' => $read,
+            'write' => $write,
+        ];
+
+        // Read parent document + validate not 404 + validate read / write permission like patch method
+        // Add payload to parent document property
+        if ((!empty($parentDocument)) && (!empty($parentProperty))) {
+            $parentDocument = $projectDB->getDocument($parentDocument, false);
+
+            if (empty($parentDocument->getArrayCopy())) { // Check empty
+                throw new Exception('No parent document found', 404);
             }
-
-            if (isset($data['$id'])) {
-                throw new Exception('$id is not allowed for creating new documents, try update instead', 400);
-            }
-            
-            $collection = $projectDB->getDocument($collectionId, false);
-
-            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
-
-            $data['$collection'] = $collectionId; // Adding this param to make API easier for developers
-            $data['$permissions'] = [
-                'read' => $read,
-                'write' => $write,
-            ];
-
-            // Read parent document + validate not 404 + validate read / write permission like patch method
-            // Add payload to parent document property
-            if ((!empty($parentDocument)) && (!empty($parentProperty))) {
-                $parentDocument = $projectDB->getDocument($parentDocument, false);
-
-                if (empty($parentDocument->getArrayCopy())) { // Check empty
-                    throw new Exception('No parent document found', 404);
-                }
-
-                /*
-                 * 1. Check child has valid structure,
-                 * 2. Check user have write permission for parent document
-                 * 3. Assign parent data (including child) to $data
-                 * 4. Validate the combined result has valid structure (inside $projectDB->createDocument method)
-                 */
-
-                $new = new Document($data);
-
-                $structure = new Structure($projectDB);
-
-                if (!$structure->isValid($new)) {
-                    throw new Exception('Invalid data structure: '.$structure->getDescription(), 400);
-                }
-
-                $authorization = new Authorization($parentDocument, 'write');
-
-                if (!$authorization->isValid($new->getPermissions())) {
-                    throw new Exception('Unauthorized action', 401);
-                }
-
-                $parentDocument
-                    ->setAttribute($parentProperty, $data, $parentPropertyType);
-
-                $data = $parentDocument->getArrayCopy();
-            }
-
-            /**
-             * Set default collection values
-             */
-            foreach ($collection->getAttribute('rules') as $key => $rule) {
-                $key = (isset($rule['key'])) ? $rule['key'] : '';
-                $default = (isset($rule['default'])) ? $rule['default'] : null;
-
-                if (!isset($data[$key])) {
-                    $data[$key] = $default;
-                }
-            }
-
-            try {
-                $data = $projectDB->createDocument($data);
-            } catch (AuthorizationException $exception) {
-                throw new Exception('Unauthorized action', 401);
-            } catch (StructureException $exception) {
-                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-            } catch (\Exception $exception) {
-                throw new Exception('Failed saving document to DB'.$exception->getMessage(), 500);
-            }
-
-            $data = $data->getArrayCopy();
-
-            $webhook
-                ->setParam('payload', $data)
-            ;
-
-            $audit
-                ->setParam('event', 'database.documents.create')
-                ->setParam('resource', 'database/document/'.$data['$id'])
-                ->setParam('data', $data)
-            ;
 
             /*
-             * View
-             */
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($data)
-            ;
-        }
-    );
+                * 1. Check child has valid structure,
+                * 2. Check user have write permission for parent document
+                * 3. Assign parent data (including child) to $data
+                * 4. Validate the combined result has valid structure (inside $projectDB->createDocument method)
+                */
 
-$utopia->get('/v1/database/collections/:collectionId/documents')
+            $new = new Document($data);
+
+            $structure = new Structure($projectDB);
+
+            if (!$structure->isValid($new)) {
+                throw new Exception('Invalid data structure: '.$structure->getDescription(), 400);
+            }
+
+            $authorization = new Authorization($parentDocument, 'write');
+
+            if (!$authorization->isValid($new->getPermissions())) {
+                throw new Exception('Unauthorized action', 401);
+            }
+
+            $parentDocument
+                ->setAttribute($parentProperty, $data, $parentPropertyType);
+
+            $data = $parentDocument->getArrayCopy();
+        }
+
+        /**
+         * Set default collection values
+         */
+        foreach ($collection->getAttribute('rules') as $key => $rule) {
+            $key = (isset($rule['key'])) ? $rule['key'] : '';
+            $default = (isset($rule['default'])) ? $rule['default'] : null;
+
+            if (!isset($data[$key])) {
+                $data[$key] = $default;
+            }
+        }
+
+        try {
+            $data = $projectDB->createDocument($data);
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized action', 401);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed saving document to DB'.$exception->getMessage(), 500);
+        }
+
+        $data = $data->getArrayCopy();
+
+        $webhook
+            ->setParam('payload', $data)
+        ;
+
+        $audit
+            ->setParam('event', 'database.documents.create')
+            ->setParam('resource', 'database/document/'.$data['$id'])
+            ->setParam('data', $data)
+        ;
+
+        /*
+            * View
+            */
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->json($data)
+        ;
+    }, ['response', 'projectDB', 'webhook', 'audit']);
+
+App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -483,51 +472,52 @@ $utopia->get('/v1/database/collections/:collectionId/documents')
     ->param('orderType', 'ASC', function () { return new WhiteList(array('DESC', 'ASC')); }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
-    ->action(
-        function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search) use ($response, $projectDB, $utopia) {
-            $collection = $projectDB->getDocument($collectionId, false);
+    ->action(function ($collectionId, $filters, $offset, $limit, $orderField, $orderType, $orderCast, $search, $response, $projectDB) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
+        $collection = $projectDB->getDocument($collectionId, false);
 
-            $list = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => $orderField,
-                'orderType' => $orderType,
-                'orderCast' => $orderCast,
-                'search' => $search,
-                'filters' => \array_merge($filters, [
-                    '$collection='.$collectionId,
-                ]),
-            ]);
-
-            if ($utopia->isDevelopment()) {
-                $collection
-                    ->setAttribute('debug', $projectDB->getDebug())
-                    ->setAttribute('limit', $limit)
-                    ->setAttribute('offset', $offset)
-                    ->setAttribute('orderField', $orderField)
-                    ->setAttribute('orderType', $orderType)
-                    ->setAttribute('orderCast', $orderCast)
-                    ->setAttribute('filters', $filters)
-                ;
-            }
-
-            $collection
-                ->setAttribute('sum', $projectDB->getSum())
-                ->setAttribute('documents', $list)
-            ;
-
-            /*
-             * View
-             */
-            $response->json($collection->getArrayCopy(/*['$id', '$collection', 'name', 'documents']*/[], ['rules']));
+        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
         }
-    );
 
-$utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
+        $list = $projectDB->getCollection([
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderField' => $orderField,
+            'orderType' => $orderType,
+            'orderCast' => $orderCast,
+            'search' => $search,
+            'filters' => \array_merge($filters, [
+                '$collection='.$collectionId,
+            ]),
+        ]);
+
+        if (App::isDevelopment()) {
+            $collection
+                ->setAttribute('debug', $projectDB->getDebug())
+                ->setAttribute('limit', $limit)
+                ->setAttribute('offset', $offset)
+                ->setAttribute('orderField', $orderField)
+                ->setAttribute('orderType', $orderType)
+                ->setAttribute('orderCast', $orderCast)
+                ->setAttribute('filters', $filters)
+            ;
+        }
+
+        $collection
+            ->setAttribute('sum', $projectDB->getSum())
+            ->setAttribute('documents', $list)
+        ;
+
+        /*
+         * View
+         */
+        $response->json($collection->getArrayCopy(/*['$id', '$collection', 'name', 'documents']*/[], ['rules']));
+    }, ['response', 'projectDB']);
+
+App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Get Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
@@ -537,43 +527,45 @@ $utopia->get('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.description', '/docs/references/database/get-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
-    ->action(
-        function ($collectionId, $documentId) use ($response, $request, $projectDB) {
-            $document = $projectDB->getDocument($documentId, false);
-            $collection = $projectDB->getDocument($collectionId, false);
+    ->action(function ($collectionId, $documentId, $request, $response, $projectDB) {
+        /** @var Utopia\Request $request */
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
 
-            if (empty($document->getArrayCopy()) || $document->getCollection() != $collection->getId()) { // Check empty
+        $document = $projectDB->getDocument($documentId, false);
+        $collection = $projectDB->getDocument($collectionId, false);
+
+        if (empty($document->getArrayCopy()) || $document->getCollection() != $collection->getId()) { // Check empty
+            throw new Exception('No document found', 404);
+        }
+
+        $output = $document->getArrayCopy();
+
+        $paths = \explode('/', $request->getParam('q', ''));
+        $paths = \array_slice($paths, 7, \count($paths));
+        
+        if (\count($paths) > 0) {
+            if (\count($paths) % 2 == 1) {
+                $output = $document->getAttribute(\implode('.', $paths));
+            } else {
+                $id = (int) \array_pop($paths);
+                $output = $document->search('$id', $id, $document->getAttribute(\implode('.', $paths)));
+            }
+
+            $output = ($output instanceof Document) ? $output->getArrayCopy() : $output;
+
+            if (!\is_array($output)) {
                 throw new Exception('No document found', 404);
             }
-
-            $output = $document->getArrayCopy();
-
-            $paths = \explode('/', $request->getParam('q', ''));
-            $paths = \array_slice($paths, 7, \count($paths));
-            
-            if (\count($paths) > 0) {
-                if (\count($paths) % 2 == 1) {
-                    $output = $document->getAttribute(\implode('.', $paths));
-                } else {
-                    $id = (int) \array_pop($paths);
-                    $output = $document->search('$id', $id, $document->getAttribute(\implode('.', $paths)));
-                }
-
-                $output = ($output instanceof Document) ? $output->getArrayCopy() : $output;
-
-                if (!\is_array($output)) {
-                    throw new Exception('No document found', 404);
-                }
-            }
-
-            /*
-             * View
-             */
-            $response->json($output);
         }
-    );
 
-$utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
+        /*
+         * View
+         */
+        $response->json($output);
+    }, ['request', 'response', 'projectDB']);
+
+App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Update Document')
     ->groups(['api', 'database'])
     ->label('webhook', 'database.documents.update')
@@ -587,73 +579,76 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('data', [], function () { return new JSON(); }, 'Document data as JSON object.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(
-        function ($collectionId, $documentId, $data, $read, $write) use ($response, $projectDB, $webhook, $audit) {
-            $collection = $projectDB->getDocument($collectionId, false);
-            $document = $projectDB->getDocument($documentId, false);
+    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $projectDB, $webhook, $audit) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audit */
 
-            $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
+        $collection = $projectDB->getDocument($collectionId, false);
+        $document = $projectDB->getDocument($documentId, false);
 
-            if (!\is_array($data)) {
-                throw new Exception('Data param should be a valid JSON', 400);
-            }
+        $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
-            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
-
-            if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
-                throw new Exception('No document found', 404);
-            }
-
-            //TODO check merge read write permissions
-
-            if (!empty($read)) { // Overwrite permissions only when passed
-                $data['$permissions']['read'] = $read;
-            }
-
-            if (!empty($write)) { // Overwrite permissions only when passed
-                $data['$permissions']['write'] = $read;
-            }
-
-            $data = \array_merge($document->getArrayCopy(), $data);
-
-            $data['$collection'] = $collection->getId(); // Make sure user don't switch collectionID
-            $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
-
-            if (empty($data)) {
-                throw new Exception('Missing payload', 400);
-            }
-            try {
-                $data = $projectDB->updateDocument($data);
-            } catch (AuthorizationException $exception) {
-                throw new Exception('Unauthorized action', 401);
-            } catch (StructureException $exception) {
-                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-            } catch (\Exception $exception) {
-                throw new Exception('Failed saving document to DB', 500);
-            }
-
-            $data = $data->getArrayCopy();
-
-            $webhook
-                ->setParam('payload', $data)
-            ;
-
-            $audit
-                ->setParam('event', 'database.documents.update')
-                ->setParam('resource', 'database/document/'.$data['$id'])
-                ->setParam('data', $data)
-            ;
-
-            /*
-             * View
-             */
-            $response->json($data);
+        if (!\is_array($data)) {
+            throw new Exception('Data param should be a valid JSON', 400);
         }
-    );
 
-$utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
+        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
+            throw new Exception('No document found', 404);
+        }
+
+        //TODO check merge read write permissions
+
+        if (!empty($read)) { // Overwrite permissions only when passed
+            $data['$permissions']['read'] = $read;
+        }
+
+        if (!empty($write)) { // Overwrite permissions only when passed
+            $data['$permissions']['write'] = $read;
+        }
+
+        $data = \array_merge($document->getArrayCopy(), $data);
+
+        $data['$collection'] = $collection->getId(); // Make sure user don't switch collectionID
+        $data['$id'] = $document->getId(); // Make sure user don't switch document unique ID
+
+        if (empty($data)) {
+            throw new Exception('Missing payload', 400);
+        }
+        try {
+            $data = $projectDB->updateDocument($data);
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized action', 401);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed saving document to DB', 500);
+        }
+
+        $data = $data->getArrayCopy();
+
+        $webhook
+            ->setParam('payload', $data)
+        ;
+
+        $audit
+            ->setParam('event', 'database.documents.update')
+            ->setParam('resource', 'database/document/'.$data['$id'])
+            ->setParam('data', $data)
+        ;
+
+        /*
+            * View
+            */
+        $response->json($data);
+    }, ['response', 'projectDB', 'webhook', 'audit']);
+
+App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
@@ -664,41 +659,44 @@ $utopia->delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
-    ->action(
-        function ($collectionId, $documentId) use ($response, $projectDB, $audit, $webhook) {
-            $collection = $projectDB->getDocument($collectionId, false);
-            $document = $projectDB->getDocument($documentId, false);
+    ->action(function ($collectionId, $documentId, $response, $projectDB, $webhook, $audit) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audit */
 
-            if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
-                throw new Exception('No document found', 404);
-            }
+        $collection = $projectDB->getDocument($collectionId, false);
+        $document = $projectDB->getDocument($documentId, false);
 
-            if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-                throw new Exception('Collection not found', 404);
-            }
-
-            try {
-                $projectDB->deleteDocument($documentId);
-            } catch (AuthorizationException $exception) {
-                throw new Exception('Unauthorized action', 401);
-            } catch (StructureException $exception) {
-                throw new Exception('Bad structure. '.$exception->getMessage(), 400);
-            } catch (\Exception $exception) {
-                throw new Exception('Failed to remove document from DB', 500);
-            }
-
-            $data = $document->getArrayCopy();
-
-            $webhook
-                ->setParam('payload', $data)
-            ;
-
-            $audit
-                ->setParam('event', 'database.documents.delete')
-                ->setParam('resource', 'database/document/'.$data['$id'])
-                ->setParam('data', $data) // Audit document in case of malicious or disastrous action
-            ;
-
-            $response->noContent();
+        if (empty($document->getArrayCopy()) || $document->getCollection() != $collectionId) { // Check empty
+            throw new Exception('No document found', 404);
         }
-    );
+
+        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+            throw new Exception('Collection not found', 404);
+        }
+
+        try {
+            $projectDB->deleteDocument($documentId);
+        } catch (AuthorizationException $exception) {
+            throw new Exception('Unauthorized action', 401);
+        } catch (StructureException $exception) {
+            throw new Exception('Bad structure. '.$exception->getMessage(), 400);
+        } catch (\Exception $exception) {
+            throw new Exception('Failed to remove document from DB', 500);
+        }
+
+        $data = $document->getArrayCopy();
+
+        $webhook
+            ->setParam('payload', $data)
+        ;
+
+        $audit
+            ->setParam('event', 'database.documents.delete')
+            ->setParam('resource', 'database/document/'.$data['$id'])
+            ->setParam('data', $data) // Audit document in case of malicious or disastrous action
+        ;
+
+        $response->noContent();
+    }, ['response', 'projectDB', 'webhook', 'audit']);

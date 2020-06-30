@@ -37,21 +37,7 @@ $home = $this->getParam('home', '');
                     
                     <p data-ls-if="({{project.platforms.length}})" class="text-fade text-size-small" data-ls-bind="{{project.platforms.length}} apps"></p>
                     <p data-ls-if="(!{{project.platforms.length}})" class="text-fade text-size-small">&nbsp;</p>
-                    <!-- <ul data-ls-loop="project.platforms" data-ls-as="platform" class="clear margin-bottom" style="min-height: 30px; overflow: hidden;">
-                        <li class="pull-start">
-                            <div data-ls-if="{{platform.type}} === 'web'" class="corner">
-                                <img src="" data-ls-attrs="src=/images/clients/web.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xxs no-shadow" loading="lazy" width="30" height="30" />&nbsp;
-                            </div>
-                            
-                            <div data-ls-if="{{platform.type}} === 'flutter-ios'" class="corner">
-                                <img src="" data-ls-attrs="src=/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xxs no-shadow" loading="lazy" width="30" height="30" />&nbsp;
-                            </div>
-                            
-                            <div data-ls-if="{{platform.type}} === 'flutter-android'" class="corner">
-                                <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xxs no-shadow" loading="lazy" width="30" height="30" />&nbsp;
-                            </div>
-                        </li>
-                    </ul> -->
+
                     <div>
                         <i class="icon-right-open"></i>
                     </div>

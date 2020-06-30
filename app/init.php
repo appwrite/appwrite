@@ -11,19 +11,19 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
     require_once __DIR__.'/../vendor/autoload.php';
 }
 
+use Appwrite\Auth\Auth;
 use Utopia\App;
-use Utopia\Request;
-use Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
-use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
-use Appwrite\Database\Document;
-use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
+use Appwrite\Event\Event;
 use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\View;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -48,53 +48,43 @@ const APP_SOCIAL_DISCORD = 'https://discord.gg/GSeTUeA';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 
 $register = new Registry();
-$request = new Request();
-$response = new Response();
-$utopia = new App('Asia/Tel_Aviv');
 
-$utopia->setMode($utopia->getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
 /*
  * ENV vars
  */
-Config::load('events', __DIR__.'/../app/config/events.php');
-Config::load('providers', __DIR__.'/../app/config/providers.php');
-Config::load('platforms', __DIR__.'/../app/config/platforms.php');
-Config::load('locales', __DIR__.'/../app/config/locales.php');
-Config::load('collections', __DIR__.'/../app/config/collections.php');
-Config::load('roles', __DIR__.'/../app/config/roles.php');  // User roles and scopes
-Config::load('services', __DIR__.'/../app/config/services.php');  // List of services
+Config::load('events', __DIR__.'/config/events.php');
+Config::load('providers', __DIR__.'/config/providers.php');
+Config::load('platforms', __DIR__.'/config/platforms.php');
+Config::load('collections', __DIR__.'/config/collections.php');
+Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
+Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
+Config::load('services', __DIR__.'/config/services.php');  // List of services
+Config::load('avatar-browsers', __DIR__.'/config/avatars/browsers.php'); 
+Config::load('avatar-credit-cards', __DIR__.'/config/avatars/credit-cards.php'); 
+Config::load('avatar-flags', __DIR__.'/config/avatars/flags.php'); 
+Config::load('locale-codes', __DIR__.'/config/locale/codes.php'); 
+Config::load('locale-currencies', __DIR__.'/config/locale/currencies.php'); 
+Config::load('locale-eu', __DIR__.'/config/locale/eu.php'); 
+Config::load('locale-languages', __DIR__.'/config/locale/languages.php'); 
+Config::load('locale-phones', __DIR__.'/config/locale/phones.php'); 
+Config::load('storage-logos', __DIR__.'/config/storage/logos.php'); 
+Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php'); 
+Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php'); 
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php'); 
 
-Config::setParam('env', $utopia->getMode());
-Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
-Config::setParam('domainVerification', false);
-Config::setParam('version', $request->getServer('_APP_VERSION', 'UNKNOWN'));
-Config::setParam('protocol', $request->getServer('HTTP_X_FORWARDED_PROTO', $request->getServer('REQUEST_SCHEME', 'https')));
-Config::setParam('port', (string) \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', ''), PHP_URL_PORT));
-Config::setParam('hostname', \parse_url(Config::getParam('protocol').'://'.$request->getServer('HTTP_HOST', null), PHP_URL_HOST));
-
-Resque::setBackend($request->getServer('_APP_REDIS_HOST', '')
-    .':'.$request->getServer('_APP_REDIS_PORT', ''));
-
-\define('COOKIE_DOMAIN', 
-    (
-        $request->getServer('HTTP_HOST', null) === 'localhost' ||
-        $request->getServer('HTTP_HOST', null) === 'localhost:'.Config::getParam('port') ||
-        (\filter_var(Config::getParam('hostname'), FILTER_VALIDATE_IP) !== false)
-    )
-        ? null
-        : '.'.Config::getParam('hostname')
-    );
-\define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
+Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
+    .':'.App::getEnv('_APP_REDIS_PORT', ''));
 
 /*
  * Registry
  */
-$register->set('db', function () use ($request) { // Register DB connection
-    $dbHost = $request->getServer('_APP_DB_HOST', '');
-    $dbUser = $request->getServer('_APP_DB_USER', '');
-    $dbPass = $request->getServer('_APP_DB_PASS', '');
-    $dbScheme = $request->getServer('_APP_DB_SCHEMA', '');
+$register->set('db', function () { // Register DB connection
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
@@ -107,9 +97,9 @@ $register->set('db', function () use ($request) { // Register DB connection
 
     return $pdo;
 });
-$register->set('influxdb', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_INFLUXDB_HOST', '');
-    $port = $request->getServer('_APP_INFLUXDB_PORT', '');
+$register->set('influxdb', function () { // Register DB connection
+    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
+    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
 
     if (empty($host) || empty($port)) {
         return;
@@ -119,43 +109,43 @@ $register->set('influxdb', function () use ($request) { // Register DB connectio
 
     return $client;
 });
-$register->set('statsd', function () use ($request) { // Register DB connection
-    $host = $request->getServer('_APP_STATSD_HOST', 'telegraf');
-    $port = $request->getServer('_APP_STATSD_PORT', 8125);
+$register->set('statsd', function () { // Register DB connection
+    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
+    $port = App::getEnv('_APP_STATSD_PORT', 8125);
 
     $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
     $statsd = new \Domnikl\Statsd\Client($connection);
 
     return $statsd;
 });
-$register->set('cache', function () use ($request) { // Register cache connection
+$register->set('cache', function () { // Register cache connection
     $redis = new Redis();
 
-    $redis->connect($request->getServer('_APP_REDIS_HOST', ''),
-        $request->getServer('_APP_REDIS_PORT', ''));
+    $redis->connect(App::getEnv('_APP_REDIS_HOST', ''),
+        App::getEnv('_APP_REDIS_PORT', ''));
 
     return $redis;
 });
-$register->set('smtp', function () use ($request) {
+$register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
     $mail->isSMTP();
 
-    $username = $request->getServer('_APP_SMTP_USERNAME', null);
-    $password = $request->getServer('_APP_SMTP_PASSWORD', null);
+    $username = App::getEnv('_APP_SMTP_USERNAME', null);
+    $password = App::getEnv('_APP_SMTP_PASSWORD', null);
 
     $mail->XMailer = 'Appwrite Mailer';
-    $mail->Host = $request->getServer('_APP_SMTP_HOST', 'smtp');
-    $mail->Port = $request->getServer('_APP_SMTP_PORT', 25);
+    $mail->Host = App::getEnv('_APP_SMTP_HOST', 'smtp');
+    $mail->Port = App::getEnv('_APP_SMTP_PORT', 25);
     $mail->SMTPAuth = (!empty($username) && !empty($password));
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = $request->getServer('_APP_SMTP_SECURE', false);
+    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', false);
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
-    $from = \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
-    $email = $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+    $from = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
+    $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
     $mail->addReplyTo($email, $from);
@@ -164,154 +154,237 @@ $register->set('smtp', function () use ($request) {
 
     return $mail;
 });
+$register->set('queue-webhook', function () {
+    return new Event('v1-webhooks', 'WebhooksV1');
+});
+$register->set('queue-audit', function () {
+    return new Event('v1-audits', 'AuditsV1');
+});
+$register->set('queue-usage', function () {
+    return new Event('v1-usage', 'UsageV1');
+});
+$register->set('queue-mails', function () {
+    return new Event('v1-mails', 'MailsV1');
+});
+$register->set('queue-deletes', function () {
+    return new Event('v1-deletes', 'DeletesV1');
+});
 
 /*
  * Localization
  */
-$locale = $request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
-
 Locale::$exceptions = false;
-
-Locale::setLanguage('af', include __DIR__.'/config/locales/af.php');
-Locale::setLanguage('ar', include __DIR__.'/config/locales/ar.php');
-Locale::setLanguage('bn', include __DIR__.'/config/locales/bn.php');
-Locale::setLanguage('cat', include __DIR__.'/config/locales/cat.php');
-Locale::setLanguage('cz', include __DIR__.'/config/locales/cz.php');
-Locale::setLanguage('de', include __DIR__.'/config/locales/de.php');
-Locale::setLanguage('en', include __DIR__.'/config/locales/en.php');
-Locale::setLanguage('es', include __DIR__.'/config/locales/es.php');
-Locale::setLanguage('fi', include __DIR__.'/config/locales/fi.php');
-Locale::setLanguage('fo', include __DIR__.'/config/locales/fo.php');
-Locale::setLanguage('fr', include __DIR__.'/config/locales/fr.php');
-Locale::setLanguage('gr', include __DIR__.'/config/locales/gr.php');
-Locale::setLanguage('he', include __DIR__.'/config/locales/he.php');
-Locale::setLanguage('hi', include __DIR__.'/config/locales/hi.php');
-Locale::setLanguage('hu', include __DIR__.'/config/locales/hu.php');
-Locale::setLanguage('hy', include __DIR__.'/config/locales/hy.php');
-Locale::setLanguage('id', include __DIR__.'/config/locales/id.php');
-Locale::setLanguage('is', include __DIR__.'/config/locales/is.php');
-Locale::setLanguage('it', include __DIR__.'/config/locales/it.php');
-Locale::setLanguage('ja', include __DIR__.'/config/locales/ja.php');
-Locale::setLanguage('jv', include __DIR__.'/config/locales/jv.php');
-Locale::setLanguage('km', include __DIR__.'/config/locales/km.php');
-Locale::setLanguage('ko', include __DIR__.'/config/locales/ko.php');
-Locale::setLanguage('lt', include __DIR__.'/config/locales/lt.php');
-Locale::setLanguage('ml', include __DIR__.'/config/locales/ml.php');
-Locale::setLanguage('ms', include __DIR__.'/config/locales/ms.php');
-Locale::setLanguage('nl', include __DIR__.'/config/locales/nl.php');
-Locale::setLanguage('no', include __DIR__.'/config/locales/no.php');
-Locale::setLanguage('ph', include __DIR__.'/config/locales/ph.php');
-Locale::setLanguage('pl', include __DIR__.'/config/locales/pl.php');
-Locale::setLanguage('pt-br', include __DIR__.'/config/locales/pt-br.php');
-Locale::setLanguage('pt-pt', include __DIR__.'/config/locales/pt-pt.php');
-Locale::setLanguage('ro', include __DIR__.'/config/locales/ro.php');
-Locale::setLanguage('ru', include __DIR__ . '/config/locales/ru.php');
-Locale::setLanguage('si', include __DIR__ . '/config/locales/si.php');
-Locale::setLanguage('sl', include __DIR__ . '/config/locales/sl.php');
-Locale::setLanguage('sq', include __DIR__ . '/config/locales/sq.php');
-Locale::setLanguage('sv', include __DIR__ . '/config/locales/sv.php');
-Locale::setLanguage('ta', include __DIR__ . '/config/locales/ta.php');
-Locale::setLanguage('th', include __DIR__.'/config/locales/th.php');
-Locale::setLanguage('tr', include __DIR__.'/config/locales/tr.php');
-Locale::setLanguage('ua', include __DIR__.'/config/locales/ua.php');
-Locale::setLanguage('vi', include __DIR__.'/config/locales/vi.php');
-Locale::setLanguage('zh-cn', include __DIR__.'/config/locales/zh-cn.php');
-Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
-
-Locale::setDefault('en');
-
-if (\in_array($locale, Config::getParam('locales'))) {
-    Locale::setDefault($locale);
-}
+Locale::setLanguage('af', include __DIR__.'/config/locale/translations/af.php');
+Locale::setLanguage('ar', include __DIR__.'/config/locale/translations/ar.php');
+Locale::setLanguage('bn', include __DIR__.'/config/locale/translations/bn.php');
+Locale::setLanguage('cat', include __DIR__.'/config/locale/translations/cat.php');
+Locale::setLanguage('cz', include __DIR__.'/config/locale/translations/cz.php');
+Locale::setLanguage('de', include __DIR__.'/config/locale/translations/de.php');
+Locale::setLanguage('en', include __DIR__.'/config/locale/translations/en.php');
+Locale::setLanguage('es', include __DIR__.'/config/locale/translations/es.php');
+Locale::setLanguage('fi', include __DIR__.'/config/locale/translations/fi.php');
+Locale::setLanguage('fo', include __DIR__.'/config/locale/translations/fo.php');
+Locale::setLanguage('fr', include __DIR__.'/config/locale/translations/fr.php');
+Locale::setLanguage('gr', include __DIR__.'/config/locale/translations/gr.php');
+Locale::setLanguage('he', include __DIR__.'/config/locale/translations/he.php');
+Locale::setLanguage('hi', include __DIR__.'/config/locale/translations/hi.php');
+Locale::setLanguage('hu', include __DIR__.'/config/locale/translations/hu.php');
+Locale::setLanguage('hy', include __DIR__.'/config/locale/translations/hy.php');
+Locale::setLanguage('id', include __DIR__.'/config/locale/translations/id.php');
+Locale::setLanguage('is', include __DIR__.'/config/locale/translations/is.php');
+Locale::setLanguage('it', include __DIR__.'/config/locale/translations/it.php');
+Locale::setLanguage('ja', include __DIR__.'/config/locale/translations/ja.php');
+Locale::setLanguage('jv', include __DIR__.'/config/locale/translations/jv.php');
+Locale::setLanguage('km', include __DIR__.'/config/locale/translations/km.php');
+Locale::setLanguage('ko', include __DIR__.'/config/locale/translations/ko.php');
+Locale::setLanguage('lt', include __DIR__.'/config/locale/translations/lt.php');
+Locale::setLanguage('ml', include __DIR__.'/config/locale/translations/ml.php');
+Locale::setLanguage('ms', include __DIR__.'/config/locale/translations/ms.php');
+Locale::setLanguage('nl', include __DIR__.'/config/locale/translations/nl.php');
+Locale::setLanguage('no', include __DIR__.'/config/locale/translations/no.php');
+Locale::setLanguage('ph', include __DIR__.'/config/locale/translations/ph.php');
+Locale::setLanguage('pl', include __DIR__.'/config/locale/translations/pl.php');
+Locale::setLanguage('pt-br', include __DIR__.'/config/locale/translations/pt-br.php');
+Locale::setLanguage('pt-pt', include __DIR__.'/config/locale/translations/pt-pt.php');
+Locale::setLanguage('ro', include __DIR__.'/config/locale/translations/ro.php');
+Locale::setLanguage('ru', include __DIR__ . '/config/locale/translations/ru.php');
+Locale::setLanguage('si', include __DIR__ . '/config/locale/translations/si.php');
+Locale::setLanguage('sl', include __DIR__ . '/config/locale/translations/sl.php');
+Locale::setLanguage('sq', include __DIR__ . '/config/locale/translations/sq.php');
+Locale::setLanguage('sv', include __DIR__ . '/config/locale/translations/sv.php');
+Locale::setLanguage('ta', include __DIR__ . '/config/locale/translations/ta.php');
+Locale::setLanguage('th', include __DIR__.'/config/locale/translations/th.php');
+Locale::setLanguage('tr', include __DIR__.'/config/locale/translations/tr.php');
+Locale::setLanguage('ua', include __DIR__.'/config/locale/translations/ua.php');
+Locale::setLanguage('vi', include __DIR__.'/config/locale/translations/vi.php');
+Locale::setLanguage('zh-cn', include __DIR__.'/config/locale/translations/zh-cn.php');
+Locale::setLanguage('zh-tw', include __DIR__.'/config/locale/translations/zh-tw.php');
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [
         'method' => 'GET',
         'user_agent' => \sprintf(APP_USERAGENT,
-            Config::getParam('version'),
-            $request->getServer('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
+            App::getEnv('_APP_VERSION', 'UNKNOWN'),
+            App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)),
         'timeout' => 2,
     ],
 ]);
 
-/*
- * Auth & Project Scope
- */
-$consoleDB = new Database();
-$consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
 
-$consoleDB->setMocks(Config::getParam('collections', []));
-Authorization::disable();
+// Runtime Execution
 
-$project = $consoleDB->getDocument($request->getParam('project', $request->getHeader('X-Appwrite-Project', '')));
+App::setResource('register', function() use ($register) {
+    return $register;
+});
 
-Authorization::enable();
+App::setResource('layout', function($locale) {
+    $layout = new View(__DIR__.'/views/layouts/default.phtml');
+    $layout->setParam('locale', $locale);
 
-$console = $consoleDB->getDocument('console');
+    return $layout;
+}, ['locale']);
 
-$mode = $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+App::setResource('locale', function() {
+    return new Locale('en');
+});
 
-Auth::setCookieName('a_session_'.$project->getId());
+// Queues
+App::setResource('webhook', function($register) {
+    return $register->get('queue-webhook');
+}, ['register']);
 
-if (APP_MODE_ADMIN === $mode) {
-    Auth::setCookieName('a_session_'.$console->getId());
-}
+App::setResource('audit', function($register) {
+    return $register->get('queue-audit');
+}, ['register']);
 
-$session = Auth::decodeSession(
-    $request->getCookie(Auth::$cookieName, // Get sessions
-        $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-            $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+App::setResource('usage', function($register) {
+    return $register->get('queue-usage');
+}, ['register']);
 
-// Get fallback session from clients who block 3rd-party cookies
-$response->addHeader('X-Debug-Fallback', 'false');
+App::setResource('mail', function($register) {
+    return $register->get('queue-mails');
+}, ['register']);
 
-if(empty($session['id']) && empty($session['secret'])) {
-    $response->addHeader('X-Debug-Fallback', 'true');
-    $fallback = $request->getHeader('X-Fallback-Cookies', '');
-    $fallback = \json_decode($fallback, true);
-    $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
-}
+App::setResource('deletes', function($register) {
+    return $register->get('queue-deletes');
+}, ['register']);
 
-Auth::$unique = $session['id'];
-Auth::$secret = $session['secret'];
+// Test Mock
+App::setResource('clients', function($console, $project) {
+    /**
+     * Get All verified client URLs for both console and current projects
+     * + Filter for duplicated entries
+     */
+    $clientsConsole = \array_map(function ($node) {
+        return $node['hostname'];
+    }, \array_filter($console->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-$projectDB = new Database();
-$projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$projectDB->setNamespace('app_'.$project->getId());
-$projectDB->setMocks(Config::getParam('collections', []));
+        return false;
+    }));
 
-if (APP_MODE_ADMIN !== $mode) {
-    $user = $projectDB->getDocument(Auth::$unique);
-}
-else {
-    $user = $consoleDB->getDocument(Auth::$unique);
+    $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($node) {
+        return $node['hostname'];
+    }, \array_filter($project->getAttribute('platforms', []), function ($node) {
+        if (isset($node['type']) && $node['type'] === 'web' && isset($node['hostname']) && !empty($node['hostname'])) {
+            return true;
+        }
 
-    $user
-        ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
-    ;
-}
+        return false;
+    }))));
 
-if (empty($user->getId()) // Check a document has been found in the DB
-    || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
-    || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-    $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
-}
+    return $clients;
+}, ['console', 'project']);
 
-if (APP_MODE_ADMIN === $mode) {
-    if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
-        Authorization::disable();
-    } else {
+App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
+
+    Auth::setCookieName('a_session_'.$project->getId());
+
+    if (APP_MODE_ADMIN === $mode) {
+        Auth::setCookieName('a_session_'.$console->getId());
+    }
+
+    $session = Auth::decodeSession(
+        $request->getCookie(Auth::$cookieName, // Get sessions
+            $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
+                $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+
+    // Get fallback session from clients who block 3rd-party cookies
+    $response->addHeader('X-Debug-Fallback', 'false');
+
+    if(empty($session['id']) && empty($session['secret'])) {
+        $response->addHeader('X-Debug-Fallback', 'true');
+        $fallback = $request->getHeader('X-Fallback-Cookies', '');
+        $fallback = \json_decode($fallback, true);
+        $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
+    }
+    Auth::$unique = $session['id'];
+    Auth::$secret = $session['secret'];
+
+    if (APP_MODE_ADMIN !== $mode) {
+        $user = $projectDB->getDocument(Auth::$unique);
+    }
+    else {
+        $user = $consoleDB->getDocument(Auth::$unique);
+
+        $user
+            ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
+        ;
+    }
+
+    if (empty($user->getId()) // Check a document has been found in the DB
+        || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+        || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
         $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
     }
-}
 
-// Set project mail
-$register->get('smtp')
-    ->setFrom(
-        $request->getServer('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-        ($project->getId() === 'console')
-            ? \urldecode($request->getServer('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
-            : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
-        )
-    );
+    if (APP_MODE_ADMIN === $mode) {
+        if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
+            Authorization::disable();
+        } else {
+            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        }
+    }
+
+    return $user;
+}, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
+
+App::setResource('project', function($consoleDB, $request) {
+    Authorization::disable();
+
+    $project = $consoleDB->getDocument($request->getParam('project',
+        $request->getHeader('X-Appwrite-Project', '')));
+
+    Authorization::enable();
+
+    return $project;
+}, ['consoleDB', 'request']);
+
+App::setResource('console', function($consoleDB) {
+    return $consoleDB->getDocument('console');
+}, ['consoleDB']);
+
+App::setResource('consoleDB', function($register) {
+    $consoleDB = new Database();
+    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
+    
+    $consoleDB->setMocks(Config::getParam('collections', []));
+
+    return $consoleDB;
+}, ['register']);
+
+App::setResource('projectDB', function($register, $project) {
+    $projectDB = new Database();
+    $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $projectDB->setNamespace('app_'.$project->getId());
+    $projectDB->setMocks(Config::getParam('collections', []));
+
+    return $projectDB;
+}, ['register', 'project']);
+
+App::setResource('mode', function($request) {
+    return $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+}, ['request']);
