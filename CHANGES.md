@@ -11,13 +11,12 @@
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
 - UI performance & accessibility improvments (#406)
-- Updated ClamAV conntainer to version 1.0.9
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 - Updated grid for OAuth2 providers list in the console
 - Upgraded Redis Resque queue library to version 1.3.6
 - Added container names to docker-compose.yml (@drandell)
-- Upgraded ClamAV container image to version 1.0.9
+- Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Optimised function execution by using fully-qualified function calls
 - Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
 
