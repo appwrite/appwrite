@@ -23,21 +23,6 @@ use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Config\Config;
 
-$inputs = [
-    'jpg' => 'image/jpeg',
-    'jpeg' => 'image/jpeg',
-    'gif' => 'image/gif',
-    'png' => 'image/png',
-];
-
-$outputs = [
-    'jpg' => 'image/jpeg',
-    'jpeg' => 'image/jpeg',
-    'gif' => 'image/gif',
-    'png' => 'image/png',
-    'webp' => 'image/webp',
-];
-
 App::init(function ($project) {
     Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 }, ['project'], 'storage');
@@ -256,9 +241,9 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('output', null, function () use ($outputs) { return new WhiteList(\array_merge(\array_keys($outputs), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->param('output', null, function () { return new WhiteList(\array_merge(\array_keys(Config::getParam('storage-outputs')), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(
-        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs) {
+        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project) {
             $storage = 'local';
 
             if (!\extension_loaded('imagick')) {
@@ -272,6 +257,10 @@ App::get('/v1/storage/files/:fileId/preview')
             if ((\strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
                 $output = 'jpg';
             }
+
+            $inputs = Config::getParam('storage-inputs');
+            $outputs = Config::getParam('storage-outputs');
+            $fileLogos = Config::getParam('storage-logos');
 
             $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
             $key = \md5($fileId.$width.$height.$quality.$background.$storage.$output);
@@ -287,7 +276,6 @@ App::get('/v1/storage/files/:fileId/preview')
             $algorithm = $file->getAttribute('algorithm');
             $cipher = $file->getAttribute('fileOpenSSLCipher');
             $mime = $file->getAttribute('mimeType');
-            $fileLogos = Config::getParam('storage-logos');
 
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
