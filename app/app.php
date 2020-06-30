@@ -1,6 +1,5 @@
 <?php
 
-// Init
 require_once __DIR__.'/init.php';
 
 global $utopia, $request, $response, $register, $consoleDB, $project;
@@ -21,9 +20,6 @@ use Appwrite\Network\Validator\Origin;
 /*
  * Configuration files
  */
-$roles = include __DIR__.'/config/roles.php'; // User roles and scopes
-$services = include __DIR__.'/config/services.php'; // List of services
-
 $webhook = new Event('v1-webhooks', 'WebhooksV1');
 $audit = new Event('v1-audits', 'AuditsV1');
 $usage = new Event('v1-usage', 'UsageV1');
@@ -54,7 +50,7 @@ $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($nod
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $roles, $webhook, $mail, $audit, $usage, $clients) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $mail, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 
@@ -142,6 +138,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
         }
     }
 
+    $roles = Config::getParam('roles', []);
     $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
     
@@ -429,8 +426,8 @@ $utopia->get('/.well-known/acme-challenge')
 include_once __DIR__ . '/controllers/shared/api.php';
 include_once __DIR__ . '/controllers/shared/web.php';
 
-foreach($services as $key => $service) {
-    include_once $services[$key]['controller'];
+foreach(Config::getParam('services', []) as $service) {
+    include_once $service['controller'];
 }
 
 $utopia->run($request, $response);

@@ -62,6 +62,8 @@ Config::load('providers', __DIR__.'/../app/config/providers.php');
 Config::load('platforms', __DIR__.'/../app/config/platforms.php');
 Config::load('locales', __DIR__.'/../app/config/locales.php');
 Config::load('collections', __DIR__.'/../app/config/collections.php');
+Config::load('roles', __DIR__.'/../app/config/roles.php');  // User roles and scopes
+Config::load('services', __DIR__.'/../app/config/services.php');  // List of services
 
 Config::setParam('env', $utopia->getMode());
 Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
@@ -200,7 +202,6 @@ Locale::setLanguage('nl', include __DIR__.'/config/locales/nl.php');
 Locale::setLanguage('no', include __DIR__.'/config/locales/no.php');
 Locale::setLanguage('ph', include __DIR__.'/config/locales/ph.php');
 Locale::setLanguage('pl', include __DIR__.'/config/locales/pl.php');
-Locale::setLanguage('pn', include __DIR__.'/config/locales/pn.php');
 Locale::setLanguage('pt-br', include __DIR__.'/config/locales/pt-br.php');
 Locale::setLanguage('pt-pt', include __DIR__.'/config/locales/pt-pt.php');
 Locale::setLanguage('ro', include __DIR__.'/config/locales/ro.php');

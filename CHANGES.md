@@ -11,14 +11,14 @@
 - Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
 - New UI micro-interactions and CSS fixes (@AnatoleLucet)
 - UI performance & accessibility improvments (#406)
-- Updated ClamAV conntainer to version 1.0.9
 - New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
 - All emails are now sent asynchronously for improved performance (@TorstenDittmann)
 - Updated grid for OAuth2 providers list in the console
 - Upgraded Redis Resque queue library to version 1.3.6
 - Added container names to docker-compose.yml (@drandell)
-- Upgraded ClamAV container image to version 1.0.9
+- Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Optimised function execution by using fully-qualified function calls
+- Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
 
 ## Bug Fixes
 
@@ -34,6 +34,13 @@
 - Fixed wrong JSON validation when creating and updating database documnets
 - Fixed bug where max file size was limited to max of 10MB
 - Fixed bug preventing the deletion of the project logo
+- Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
+- Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
+- Fixed bug denying authentication with Github OAuth provider
+
+## Breaking Changes
+- **Deprecated** `first` and `last` query params for documents list route in the database API
+- **Deprecated** Deprectaed Pubjabi Translations ('pn')
 
 ## Security
 

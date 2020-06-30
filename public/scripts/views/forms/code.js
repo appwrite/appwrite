@@ -20,26 +20,26 @@
       pre.className = "line-numbers";
       code.className = "prism language-" + lang;
       copy.className = "icon-docs copy";
-
+      copy.textContent = "Click Here to Copy";
       copy.title = "Copy to Clipboard";
 
       copy.addEventListener("click", function() {
-        element.disabled = false;
+        window.getSelection().removeAllRanges();
 
-        element.focus();
-        element.select();
+        let range = document.createRange();
 
-        document.execCommand("Copy");
+        range.selectNode(code);
 
-        if (document.selection) {
-          document.selection.empty();
-        } else if (window.getSelection) {
-          window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        try {
+          document.execCommand("copy");
+          alerts.add({ text: "Copied to clipboard", class: "" }, 3000);
+        } catch (err) {
+          alerts.add({ text: "Failed to copy text ", class: "error" }, 3000);
         }
 
-        element.disabled = true;
-
-        alerts.add({ text: "Copied to clipboard", class: "" }, 3000);
+        window.getSelection().removeAllRanges();
       });
 
       let check = function() {
