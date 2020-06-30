@@ -18,8 +18,10 @@ use Utopia\Registry\Registry;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\Database\Document;
 use Appwrite\Event\Event;
 use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\View;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -62,6 +64,8 @@ Config::load('avatar-credit-cards', __DIR__.'/../app/config/avatars/credit-cards
 Config::load('avatar-flags', __DIR__.'/../app/config/avatars/flags.php'); 
 Config::load('storage-logos', __DIR__.'/../app/config/storage/logos.php'); 
 Config::load('storage-mimes', __DIR__.'/../app/config/storage/mimes.php'); 
+Config::load('storage-inputs', __DIR__.'/../app/config/storage/inputs.php'); 
+Config::load('storage-outputs', __DIR__.'/../app/config/storage/outputs.php'); 
 
 Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
     .':'.App::getEnv('_APP_REDIS_PORT', ''));
@@ -220,11 +224,62 @@ Locale::setLanguage('zh-tw', include __DIR__.'/config/locales/zh-tw.php');
     ],
 ]);
 
-/*
- * Auth & Project Scope
- */
-$consoleDB = new Database();
-$consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-$consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
 
-$consoleDB->setMocks(Config::getParam('collections', []));
+// Runtime Execution
+
+App::setResource('register', function() use ($register) {
+    return $register;
+});
+
+App::setResource('layout', function($locale) {
+    $layout = new View(__DIR__.'/views/layouts/default.phtml');
+    $layout->setParam('locale', $locale);
+
+    return $layout;
+}, ['locale']);
+
+App::setResource('locale', function() {
+    return new Locale('en');
+});
+
+// Queues
+App::setResource('webhook', function($register) {
+    return $register->get('queue-webhook');
+}, ['register']);
+
+App::setResource('audit', function($register) {
+    return $register->get('queue-audit');
+}, ['register']);
+
+App::setResource('usage', function($register) {
+    return $register->get('queue-usage');
+}, ['register']);
+
+App::setResource('mail', function($register) {
+    return $register->get('queue-mails');
+}, ['register']);
+
+App::setResource('deletes', function($register) {
+    return $register->get('queue-deletes');
+}, ['register']);
+
+// Test Mock
+App::setResource('clients', function() { return []; });
+
+App::setResource('user', function() { return new Document([]); });
+
+App::setResource('project', function() { return new Document([]); });
+
+App::setResource('console', function() { return new Document([]); });
+
+App::setResource('consoleDB', function($register) {
+    $consoleDB = new Database();
+    $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+    $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
+    
+    $consoleDB->setMocks(Config::getParam('collections', []));
+}, ['register']);
+
+App::setResource('projectDB', function() { return new Database([]); });
+
+App::setResource('mode', function() { return false; });

@@ -2,8 +2,6 @@
 
 require_once __DIR__.'/init.php';
 
-global $register, $project;
-
 use Utopia\App;
 use Utopia\Request;
 use Utopia\Response;
@@ -11,13 +9,10 @@ use Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Utopia\Locale\Locale;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
-use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Network\Validator\Origin;
 
 // Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
@@ -524,30 +519,6 @@ foreach(Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
 
-// Runtime Execution
-
-App::setResource('register', function() use ($register) { return $register; });
-App::setResource('layout', function($locale) {
-    $layout = new View(__DIR__.'/views/layouts/default.phtml');
-    $layout->setParam('locale', $locale);
-    return $layout; }, ['locale']);
-App::setResource('locale', function($request) { return new Locale('en'); }, ['request']);
-
-// Queues
-App::setResource('webhook', function($register) { return $register->get('queue-webhook'); }, ['register']);
-App::setResource('audit', function($register) { return $register->get('queue-audit'); }, ['register']);
-App::setResource('usage', function($register) { return $register->get('queue-usage'); }, ['register']);
-App::setResource('mail', function($register) { return $register->get('queue-mails'); }, ['register']);
-App::setResource('deletes', function($register) { return $register->get('queue-deletes'); }, ['register']);
-
-// Test Mock
-App::setResource('clients', function() { return []; });
-App::setResource('user', function() { return new Document([]); });
-App::setResource('project', function() { return new Document([]); });
-App::setResource('console', function() { return new Document([]); });
-App::setResource('consoleDB', function() { return new Database(); });
-App::setResource('projectDB', function() { return new Database([]); });
-App::setResource('mode', function() { return false; });
-
 $app = new App('Asia/Tel_Aviv');
+
 $app->run(new Request(), new Response());
