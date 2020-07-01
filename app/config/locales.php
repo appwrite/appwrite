@@ -31,7 +31,6 @@ return [
     'no', // Norwegian
     'ph', // Filipino
     'pl', // Polish
-    'pn', // Punjabi
     'pt-br', // Portuguese - Brazil	
     'pt-pt', // Portuguese - Portugal
     'ro', // Romanian
