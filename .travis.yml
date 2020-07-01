@@ -30,4 +30,6 @@ install:
 
 script:
 - docker ps
+- docker exec appwrite ls '/usr/share/nginx/html/vendor'
+- docker exec appwrite ls '/usr/share/nginx/html/vendor/bin'
 - docker exec appwrite /bin/bash -c '/usr/share/nginx/html/vendor/bin/phpunit'
