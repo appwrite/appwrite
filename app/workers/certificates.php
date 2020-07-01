@@ -104,7 +104,7 @@ class CertificatesV1
                 throw new Exception('Renew isn\'t required');
         }
 
-        $staging = (Config::getParam('env') === App::MODE_TYPE_PRODUCTION) ? '' : ' --dry-run';
+        $staging = (App::isProduction()) ? '' : ' --dry-run';
 
         $response = \shell_exec("certbot certonly --webroot --noninteractive --agree-tos{$staging} \
             --email ".App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', 'security@localhost.test')." \

@@ -4,9 +4,11 @@ use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
 
-$layout = new View(__DIR__.'/../../views/layouts/default.phtml');
-
-App::init(function () use ($utopia, $response, $request, $layout) {
+App::init(function ($utopia, $request, $response, $layout) {
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Request $request */
+    /** @var Utopia\Response $response */
+    /** @var Utopia\View $layout */
 
     /* AJAX check  */
     if (!empty($request->getQuery('version', ''))) {
@@ -14,7 +16,7 @@ App::init(function () use ($utopia, $response, $request, $layout) {
     }
     $layout
         ->setParam('title', APP_NAME)
-        ->setParam('protocol', Config::getParam('protocol'))
+        ->setParam('protocol', $request->getProtocol())
         ->setParam('domain', Config::getParam('domain'))
         ->setParam('home', App::getEnv('_APP_HOME'))
         ->setParam('setup', App::getEnv('_APP_SETUP'))
@@ -29,7 +31,6 @@ App::init(function () use ($utopia, $response, $request, $layout) {
     ;
 
     $time = (60 * 60 * 24 * 45); // 45 days cache
-    $isDev = (\Utopia\App::MODE_TYPE_DEVELOPMENT == Config::getParam('env'));
 
     $response
         ->addHeader('Cache-Control', 'public, max-age='.$time)
@@ -39,8 +40,8 @@ App::init(function () use ($utopia, $response, $request, $layout) {
     $route = $utopia->match($request);
     $scope = $route->getLabel('scope', '');
     $layout
-        ->setParam('version', Config::getParam('version'))
-        ->setParam('isDev', $isDev)
+        ->setParam('version', App::getEnv('_APP_VERSION', 'UNKNOWN'))
+        ->setParam('isDev', App::isDevelopment())
         ->setParam('class', $scope)
     ;
-}, 'web');
+}, ['utopia', 'request', 'response', 'layout'], 'web');

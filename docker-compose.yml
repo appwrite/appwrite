@@ -52,7 +52,7 @@ services:
       - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
       - ./tests:/usr/share/nginx/html/tests
       - ./app:/usr/share/nginx/html/app
-      - ./vendor:/usr/share/nginx/html/vendor
+      # - ./vendor:/usr/share/nginx/html/vendor
       - ./docs:/usr/share/nginx/html/docs
       - ./public:/usr/share/nginx/html/public
       - ./src:/usr/share/nginx/html/src

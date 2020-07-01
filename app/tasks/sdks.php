@@ -1,8 +1,7 @@
 #!/bin/env php
 <?php
 
-require_once __DIR__.'/../../vendor/autoload.php';
-require_once __DIR__.'/../../app/init.php';
+require_once __DIR__.'/../init.php';
 
 use Utopia\Config\Config;
 use Utopia\CLI\CLI;
