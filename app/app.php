@@ -15,20 +15,12 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 
-Config::setParam('domain', $_SERVER['HTTP_HOST']);
+Config::setParam('domain', 'localhost');
 Config::setParam('domainVerification', false);
 // Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
 // Config::setParam('domainVerification', false);
 
-\define('COOKIE_DOMAIN', 
-    (
-        $_SERVER['HTTP_HOST'] === 'localhost' ||
-        $_SERVER['HTTP_HOST'] === 'localhost:'.$request->getPort() ||
-        (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-    )
-        ? null
-        : '.'.$request->getHostname()
-    );
+\define('COOKIE_DOMAIN', 'localhost');
 \define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
 
 // \define('COOKIE_DOMAIN', 
@@ -453,7 +445,3 @@ include_once __DIR__ . '/controllers/shared/web.php';
 foreach(Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
-
-$app = new App('Asia/Tel_Aviv');
-
-$app->run(new Request(), new Response());

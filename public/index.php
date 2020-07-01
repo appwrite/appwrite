@@ -8,6 +8,10 @@
  * ― Rick Cook, The Wizardry Compiled
  */
 
+use Utopia\App;
+use Utopia\Request;
+use Utopia\Response;
+
 error_reporting(0);
 ini_set('display_errors', 0);
 
@@ -17,3 +21,7 @@ error_reporting(E_ALL);
 //trigger_error('hide errors in prod', E_USER_NOTICE);
 
 include __DIR__ . '/../app/app.php';
+
+$app = new App('Asia/Tel_Aviv');
+
+$app->run(new Request(), new Response());

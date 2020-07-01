@@ -18,8 +18,12 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
 
 use Appwrite\Preloader\Preloader;
 
+include 'init.php';
+include 'app.php';
+
 (new Preloader())
     ->paths(realpath(__DIR__ . '/../app/config'))
+    ->paths(realpath(__DIR__ . '/../app/controllers'))
     ->paths(realpath(__DIR__ . '/../src'))
     ->ignore(realpath(__DIR__ . '/../vendor/twig/twig'))
     ->ignore(realpath(__DIR__ . '/../vendor/guzzlehttp/guzzle'))
