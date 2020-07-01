@@ -152,6 +152,7 @@ class Request extends UtopiaRequest
      */
     public function getFiles($key): array
     {
+        $key = strtolower($key);
         return (isset($this->swoole->files[$key])) ? $this->swoole->files[$key] : [];
     }
 
@@ -166,6 +167,7 @@ class Request extends UtopiaRequest
      */
     public function getCookie(string $key, string $default = ''): string
     {
+        $key = strtolower($key);
         return (isset($this->swoole->cookie[$key])) ? $this->swoole->cookie[$key] : $default;
     }
 
@@ -180,7 +182,8 @@ class Request extends UtopiaRequest
      */
     public function getHeader(string $key, string $default = ''): string
     {
-        return (isset($this->swoole->headers[$key])) ? $this->swoole->headers[$key] : $default;
+        $key = strtolower($key);
+        return (isset($this->swoole->header[$key])) ? $this->swoole->header[$key] : $default;
     }
 
     /**

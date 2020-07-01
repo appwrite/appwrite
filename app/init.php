@@ -298,6 +298,12 @@ App::setResource('clients', function($console, $project) {
 }, ['console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
+    /** @var Utopia\Request $request */
+    /** @var Utopia\Response $response */
+    /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Database\Database $consoleDB */
+    /** @var Appwrite\Database\Database $projectDB */
+    /** @var bool $mode */
 
     Auth::setCookieName('a_session_'.$project->getId());
 
@@ -351,6 +357,9 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 }, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
 
 App::setResource('project', function($consoleDB, $request) {
+    /** @var Appwrite\Utopia\Request $request */
+    /** @var Appwrite\Database\Database $consoleDB */
+
     Authorization::disable();
 
     $project = $consoleDB->getDocument($request->getParam('project',

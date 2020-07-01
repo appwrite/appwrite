@@ -10,7 +10,7 @@ class Authorization extends Validator
     /**
      * @var array
      */
-    protected static $roles = ['*'];
+    static $roles = ['*'];
 
     /**
      * @var Document

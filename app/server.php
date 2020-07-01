@@ -10,14 +10,13 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Registry\Registry;
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 $http = new Server("localhost", 9501);
-echo 'test';
+
 $http
     ->set([
         'open_http2_protocol' => true,
@@ -50,6 +49,8 @@ $http->on('start', function (Server $http) {
     });
 });
 
+$data = file_get_contents('../public/test.html');
+
 // $register = new Registry();
 // $utopia = new App('Asia/Tel_Aviv');
 // /**
@@ -63,13 +64,19 @@ $http->on('start', function (Server $http) {
 
 $counter = 0;
 
+include __DIR__ . '/app.php';
+
+
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use (&$counter) {
-    // global $request, $response, $utopia;
-    // $request = new Request($swooleRequest);
-    // $response = new Response($swooleResponse);
-    $swooleResponse->end('test: '.$counter++);
+    $request = new Request($swooleRequest);
+    $response = new Response($swooleResponse);
+
+    //$swooleResponse->write($counter++);
+
+    $app = new App('Asia/Tel_Aviv');
+    
     try {
-        //$utopia->run($request, $response);
+        $app->run($request, $response);
     } catch (\Throwable $th) {
         var_dump($th->getMessage());
         var_dump($th->getFile());

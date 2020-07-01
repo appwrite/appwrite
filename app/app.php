@@ -31,6 +31,8 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 //     );
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
+    Authorization::$roles = ['*'];
+    
     /** @var Utopia\Request $request */
     /** @var Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
