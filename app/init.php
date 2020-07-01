@@ -12,18 +12,20 @@ if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
 }
 
 use Appwrite\Auth\Auth;
-use Utopia\App;
-use Utopia\Config\Config;
-use Utopia\Locale\Locale;
-use Utopia\Registry\Registry;
 use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
-use PHPMailer\PHPMailer\PHPMailer;
+use Appwrite\Extend\PDO;
+use Utopia\App;
 use Utopia\View;
+use Utopia\Config\Config;
+use Utopia\Locale\Locale;
+use Utopia\Registry\Registry;
+use PHPMailer\PHPMailer\PHPMailer;
+use PDO as PDONative;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -87,13 +89,13 @@ $register->set('db', function () { // Register DB connection
     $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDO::ATTR_TIMEOUT => 5, // Seconds
+        PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+        PDONative::ATTR_TIMEOUT => 5, // Seconds
     ));
 
     // Connection settings
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);   // Return arrays
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
+    $pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
+    $pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
 
     return $pdo;
 });

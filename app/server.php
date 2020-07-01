@@ -15,7 +15,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$http = new Server("localhost", 9501);
+$http = new Server("localhost", 80);
 
 $http
     ->set([
@@ -49,39 +49,25 @@ $http->on('start', function (Server $http) {
     });
 });
 
-$data = file_get_contents('../public/test.html');
-
-// $register = new Registry();
-// $utopia = new App('Asia/Tel_Aviv');
-// /**
-//  * @var $request Request
-//  */
-// $request &= null;
-// $response &= null;
-
-// include 'init.php';
-// include 'app.php';
-
-$counter = 0;
-
 include __DIR__ . '/app.php';
 
-
-$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use (&$counter) {
+$http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
-
-    //$swooleResponse->write($counter++);
 
     $app = new App('Asia/Tel_Aviv');
     
     try {
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        var_dump($th->getMessage());
-        var_dump($th->getFile());
-        var_dump($th->getLine());
-        $swooleResponse->end('error: '.$th->getMessage());
+        if(App::isDevelopment()) {
+            var_dump($th->getMessage());
+            var_dump($th->getFile());
+            var_dump($th->getLine());
+            $swooleResponse->end('error: '.$th->getMessage());
+        }
+        
+        $swooleResponse->end('500: Server Error');
     }
 });
 

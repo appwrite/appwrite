@@ -37,7 +37,7 @@ services:
         - VERSION=dev
     restart: unless-stopped
     ports: 
-      - 9501:9501
+      - 9501:80
     networks:
       - appwrite
     labels:

@@ -906,7 +906,7 @@ class MySQL extends Adapter
      *
      * @throws Exception
      */
-    protected function getPDO():PDO
+    protected function getPDO()
     {
         return $this->register->get('db');
     }
