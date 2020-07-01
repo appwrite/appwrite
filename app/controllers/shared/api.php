@@ -5,8 +5,6 @@ use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 
-global $utopia, $request, $response, $register, $user, $project;
-
 App::init(function ($utopia, $request, $response, $register, $user, $project) {
     $route = $utopia->match($request);
 

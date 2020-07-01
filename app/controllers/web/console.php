@@ -1,7 +1,5 @@
 <?php
 
-global $utopia, $response, $request, $layout, $projectDB;
-
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
