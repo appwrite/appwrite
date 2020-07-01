@@ -17,23 +17,8 @@ use Appwrite\Network\Validator\Origin;
 
 Config::setParam('domain', 'localhost');
 Config::setParam('domainVerification', false);
-// Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
-// Config::setParam('domainVerification', false);
-
-\define('COOKIE_DOMAIN', 'localhost');
-\define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
-
-// \define('COOKIE_DOMAIN', 
-//     (
-//         $request->getServer('HTTP_HOST', null) === 'localhost' ||
-//         $request->getServer('HTTP_HOST', null) === 'localhost:'.$request->getPort() ||
-//         (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
-//     )
-//         ? null
-//         : '.'.$request->getHostname()
-//     );
-// \define('COOKIE_SAMESITE', Response::COOKIE_SAMESITE_NONE);
-
+Config::setParam('cookieDomain', 'localhost');
+Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 // // Set project mail
 // $register->get('smtp')
@@ -44,7 +29,6 @@ Config::setParam('domainVerification', false);
 //             : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
 //         )
 //     );
-
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
     /** @var Utopia\Request $request */
@@ -91,10 +75,20 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $selfDomain = new Domain(Config::getParam('hostname'));
     $endDomain = new Domain($origin);
 
+    Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
+
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
             $endDomain->getRegisterable() !== '');
         
+    Config::setParam('cookieDomain', (
+        $request->getServer('HTTP_HOST', null) === 'localhost' ||
+        $request->getServer('HTTP_HOST', null) === 'localhost:'.$request->getPort() ||
+        (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
+    )
+        ? null
+        : '.'.$request->getHostname()
+    );
     /*
      * Security Headers
      *
