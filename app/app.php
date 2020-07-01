@@ -53,7 +53,6 @@ Config::setParam('domainVerification', false);
 //         )
 //     );
 
-
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
     /** @var Utopia\Request $request */
     /** @var Utopia\Response $response */
@@ -453,7 +452,3 @@ include_once __DIR__ . '/controllers/shared/web.php';
 foreach(Config::getParam('services', []) as $service) {
     include_once $service['controller'];
 }
-
-$app = new App('Asia/Tel_Aviv');
-
-$app->run(new Request(), new Response());
