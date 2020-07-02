@@ -15,7 +15,6 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
 
-Config::setParam('domain', 'localhost');
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
@@ -33,8 +32,8 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
     Authorization::$roles = ['*'];
     
-    /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Appwrite\Utopia\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
@@ -66,19 +65,19 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
-    $referrer = $request->getServer('HTTP_REFERER', '');
-    $origin = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_HOST);
-    $protocol = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_SCHEME);
-    $port = \parse_url($request->getServer('HTTP_ORIGIN', $referrer), PHP_URL_PORT);
+    $referrer = $request->getReferer();
+    $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
+    $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
+    $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
     $refDomain = $protocol.'://'.((\in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
-    $selfDomain = new Domain(Config::getParam('hostname'));
+    $selfDomain = new Domain($request->getHostname());
     $endDomain = new Domain($origin);
 
-    Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
-
+    // var_dump('referer', $referrer);
+    // var_dump('origin', $origin);
     // var_dump('port', $request->getPort());
     // var_dump('hostname', $request->getHostname());
     // var_dump('protocol', $request->getProtocol());
@@ -87,18 +86,21 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     // var_dump('-----------------');
     // var_dump($request->debug());
 
+    var_dump($selfDomain->getRegisterable());
+    var_dump($endDomain->getRegisterable());
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
             $endDomain->getRegisterable() !== '');
         
     Config::setParam('cookieDomain', (
-        $request->getServer('HTTP_HOST', null) === 'localhost' ||
-        $request->getServer('HTTP_HOST', null) === 'localhost:'.$request->getPort() ||
+        $request->getHostname() === 'localhost' ||
+        $request->getHostname() === 'localhost:'.$request->getPort() ||
         (\filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false)
     )
         ? null
         : '.'.$request->getHostname()
     );
+
     /*
      * Security Headers
      *
@@ -107,7 +109,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if($request->getProtocol() !== 'https') {
-           return $response->redirect('https://' . Config::getParam('domain').$request->getServer('REQUEST_URI'));
+           return $response->redirect('https://'.$request->getHostname().$request->getServer('REQUEST_URI'));
         }
 
         $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
@@ -179,7 +181,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         $user = new Document([
             '$id' => 0,
             'status' => Auth::USER_STATUS_ACTIVATED,
-            'email' => 'app.'.$project->getId().'@service.'.Config::getParam('domain'),
+            'email' => 'app.'.$project->getId().'@service.'.$request->getHostname(),
             'password' => '',
             'name' => $project->getAttribute('name', 'Untitled'),
         ]);

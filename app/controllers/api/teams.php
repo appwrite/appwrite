@@ -567,29 +567,18 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             $response
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
             ;
-
-            $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
-                'email' => $user->getAttribute('email'),
-                'name' => $user->getAttribute('name'),
-            ])), Response::MODEL_MEMBERSHIP);
         }
 
         $response
             ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->json(\array_merge($membership->getArrayCopy([
-                '$id',
-                'userId',
-                'teamId',
-                'roles',
-                'invited',
-                'joined',
-                'confirm',
-            ]), [
-                'email' => $user->getAttribute('email'),
-                'name' => $user->getAttribute('name'),
-            ]))
         ;
+
+        $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
+            'email' => $user->getAttribute('email'),
+            'name' => $user->getAttribute('name'),
+        ])), Response::MODEL_MEMBERSHIP);
+        
     }, ['request', 'response', 'user', 'projectDB', 'audit']);
 
 App::delete('/v1/teams/:teamId/memberships/:inviteId')

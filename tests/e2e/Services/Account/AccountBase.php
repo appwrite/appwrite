@@ -83,7 +83,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         /**
          * Test for FAILURE
@@ -774,7 +774,7 @@ trait AccountBase
         ]);
 
         $sessionNewId = $response['body']['$id'];
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -840,7 +840,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $sessionNew = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -922,7 +922,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $data['session'] = $this->client->parseCookie($response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
+        $data['session'] = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         return $data;
     }

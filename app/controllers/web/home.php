@@ -322,7 +322,7 @@ App::get('/open-api-2.json')
                     'url' => 'https://raw.githubusercontent.com/appwrite/appwrite/master/LICENSE',
                 ],
             ],
-            'host' => \parse_url(App::getEnv('_APP_HOME', Config::getParam('domain')), PHP_URL_HOST),
+            'host' => \parse_url(App::getEnv('_APP_HOME', $request->getHostname()), PHP_URL_HOST),
             'basePath' => '/v1',
             'schemes' => ['https'],
             'consumes' => ['application/json', 'multipart/form-data'],
@@ -369,7 +369,7 @@ App::get('/open-api-2.json')
             ],
             'externalDocs' => [
                 'description' => 'Full API docs, specs and tutorials',
-                'url' => $request->getProtocol().'://'.Config::getParam('domain').'/docs',
+                'url' => $request->getProtocol().'://'.$request->getHostname().'/docs',
             ],
         ];
 

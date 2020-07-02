@@ -1,8 +1,6 @@
 <?php
 
 use Utopia\App;
-use Utopia\View;
-use Utopia\Config\Config;
 
 App::init(function ($utopia, $request, $response, $layout) {
     /** @var Utopia\App $utopia */
@@ -18,7 +16,7 @@ App::init(function ($utopia, $request, $response, $layout) {
     $layout
         ->setParam('title', APP_NAME)
         ->setParam('protocol', $request->getProtocol())
-        ->setParam('domain', Config::getParam('domain'))
+        ->setParam('domain', $request->getHostname())
         ->setParam('home', App::getEnv('_APP_HOME'))
         ->setParam('setup', App::getEnv('_APP_SETUP'))
         ->setParam('class', 'unknown')

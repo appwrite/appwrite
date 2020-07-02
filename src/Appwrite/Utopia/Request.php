@@ -120,7 +120,7 @@ class Request extends UtopiaRequest
 
     public function debug()
     {
-        return $this->swoole->server;
+        return $this->swoole->header;
     }
 
     /**
@@ -184,9 +184,33 @@ class Request extends UtopiaRequest
      *
      * @return string
      */
-    public function getMethod():string
+    public function getMethod(): string
     {
         return $this->getServer('request_method', 'UNKNOWN');
+    }
+
+    /**
+     * Get Referer
+     *
+     * Return HTTP referer header
+     *
+     * @return string
+     */
+    public function getReferer(string $default = ''): string
+    {
+        return $this->getHeader('referer', '');
+    }
+
+    /**
+     * Get Origin
+     *
+     * Return HTTP origin header
+     *
+     * @return string
+     */
+    public function getOrigin(string $default = ''): string
+    {
+        return $this->getHeader('origin', $default);
     }
 
     /**

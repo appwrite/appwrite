@@ -160,8 +160,8 @@ App::post('/v1/account/sessions')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->action(function ($email, $password, $request, $response, $projectDB, $webhook, $audit) {
-        /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Request $request */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhook */
         /** @var Appwrite\Event\Event $audit */
@@ -230,15 +230,15 @@ App::post('/v1/account/sessions')
             $response
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($profile->getId(), $secret)]))
             ;
-
-            $response->dynamic($session, Response::MODEL_SESSION);
         }
         
         $response
             ->addCookie(Auth::$cookieName.'_legacy', Auth::encodeSession($profile->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($session->getArrayCopy(['$id', 'type', 'expire']))
+        ;
+        
+        $response->dynamic($session, Response::MODEL_SESSION);
         ;
     }, ['request', 'response', 'projectDB', 'webhook', 'audit']);
 
@@ -309,7 +309,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
 
-        $domain = Config::getParam('domain');
+        $domain = $request->getHostname();
         $protocol = $request->getProtocol();
         
         $response
@@ -334,7 +334,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
 
-        $domain = Config::getParam('domain');
+        $domain = $request->getHostname();
         $protocol = $request->getProtocol();
         
         $response
