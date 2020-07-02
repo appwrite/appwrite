@@ -14,6 +14,7 @@ App::init(function ($utopia, $request, $response, $layout) {
     if (!empty($request->getQuery('version', ''))) {
         $layout->setPath(__DIR__.'/../../views/layouts/empty.phtml');
     }
+
     $layout
         ->setParam('title', APP_NAME)
         ->setParam('protocol', $request->getProtocol())

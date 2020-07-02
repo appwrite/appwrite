@@ -57,7 +57,7 @@ class Request extends UtopiaRequest
      */
     public function getParams(): array
     {
-        switch($this->getServer('REQUEST_METHOD', '')) {
+        switch($this->getMethod()) {
             case self::METHOD_GET:
                 return (!empty($this->swoole->get)) ? $this->swoole->get : [];
                 break;
@@ -118,6 +118,11 @@ class Request extends UtopiaRequest
         return (isset($this->swoole->server) && isset($this->swoole->server[$key])) ? $this->swoole->server[$key] : $default;
     }
 
+    public function debug()
+    {
+        return $this->swoole->server;
+    }
+
     /**
      * Get IP
      *
@@ -127,7 +132,49 @@ class Request extends UtopiaRequest
      */
     public function getIP(): string
     {
-        return $this->getServer('http_x_forwarded_for', $this->getServer('remote_addr', '0.0.0.0'));
+        return $this->getHeader('x-forwarded-for', $this->getServer('remote_addr', '0.0.0.0'));
+    }
+
+    /**
+     * Get Protocol
+     *
+     * Returns request protocol.
+     * Support HTTP_X_FORWARDED_PROTO header usually return
+     *  from different proxy servers or PHP default REQUEST_SCHEME
+     *
+     * @return string
+     */
+    public function getProtocol(): string
+    {
+        if($this->getServer('server_protocol', '') === 'HTTP/1.1') {
+            return 'http';
+        }
+
+        return $this->getHeader('x-forwarded-proto', 'https');
+    }
+
+    /**
+     * Get Port
+     *
+     * Returns request port.
+     *
+     * @return string
+     */
+    public function getPort(): string
+    {
+        return $this->getHeader('x-forwarded-port', \parse_url($this->getProtocol().'//'.$this->getHeader('x-forwarded-host', $this->getHeader('host')), PHP_URL_PORT));
+    }
+
+    /**
+     * Get Hostname
+     *
+     * Returns request hostname.
+     *
+     * @return string
+     */
+    public function getHostname(): string
+    {
+        return \parse_url($this->getProtocol().'://'.$this->getHeader('x-forwarded-host', $this->getHeader('host')), PHP_URL_HOST);
     }
 
     /**

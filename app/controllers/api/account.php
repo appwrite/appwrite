@@ -267,7 +267,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         /** @var Appwrite\Database\Document $project */
 
         $protocol = $request->getProtocol();
-        $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $appId = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Appid', '');
         $appSecret = $project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}');
 

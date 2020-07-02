@@ -5,7 +5,14 @@ use Utopia\Exception;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
 
-App::init(function ($utopia, $request, $response, $register, $user, $project) {
+App::init(function ($utopia, $request, $response, $project, $user, $register) {
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Request $request */
+    /** @var Utopia\Response $response */
+    /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Database\Document $user */
+    /** @var Utopia\Registry\Registry $register */
+
     $route = $utopia->match($request);
 
     if (empty($project->getId()) && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
@@ -23,7 +30,7 @@ App::init(function ($utopia, $request, $response, $register, $user, $project) {
         ->setParam('{userId}', $user->getId())
         ->setParam('{userAgent}', $request->getServer('HTTP_USER_AGENT', ''))
         ->setParam('{ip}', $request->getIP())
-        ->setParam('{url}', $request->getServer('HTTP_HOST', '').$route->getURL())
+        ->setParam('{url}', $request->getHostname().$route->getURL())
     ;
 
     //TODO make sure we get array here
@@ -45,4 +52,4 @@ App::init(function ($utopia, $request, $response, $register, $user, $project) {
     if ($abuse->check() && App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         throw new Exception('Too many requests', 429);
     }
-}, ['utopia', 'request', 'response', 'register', 'user', 'project'], 'api');
+}, ['utopia', 'request', 'response', 'project', 'user', 'register'], 'api');

@@ -63,7 +63,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
         'name' => 'Current Host',
         'type' => 'web',
-        'hostname' => \parse_url('https://'.$request->getServer('HTTP_HOST'), PHP_URL_HOST),
+        'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
     $referrer = $request->getServer('HTTP_REFERER', '');
@@ -78,6 +78,14 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $endDomain = new Domain($origin);
 
     Config::setParam('domain', $request->getServer('HTTP_HOST', ''));
+
+    // var_dump('port', $request->getPort());
+    // var_dump('hostname', $request->getHostname());
+    // var_dump('protocol', $request->getProtocol());
+    // var_dump('method', $request->getMethod());
+    // var_dump('ip', $request->getIP());
+    // var_dump('-----------------');
+    // var_dump($request->debug());
 
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
@@ -235,7 +243,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $usage
         ->setParam('projectId', $project->getId())
         ->setParam('url', $request->getServer('HTTP_HOST', '').$request->getServer('REQUEST_URI', ''))
-        ->setParam('method', $request->getServer('REQUEST_METHOD', 'UNKNOWN'))
+        ->setParam('method', $request->getMethod())
         ->setParam('request', 0)
         ->setParam('response', 0)
         ->setParam('storage', 0)
