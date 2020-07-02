@@ -16,7 +16,7 @@ class Storage
     public static $devices = array();
 
     /**
-     * Add Device.
+     * Set Device.
      *
      * Add device by name
      *
@@ -25,12 +25,8 @@ class Storage
      *
      * @throws Exception
      */
-    public static function addDevice($name, Device $device)
+    public static function setDevice($name, Device $device)
     {
-        if (\array_key_exists($name, self::$devices)) {
-            throw new Exception('The device "'.$name.'" is already listed');
-        }
-
         self::$devices[$name] = $device;
     }
 

@@ -24,7 +24,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Config\Config;
 
 App::init(function ($project) {
-    Storage::addDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
+    Storage::setDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 }, ['project'], 'storage');
 
 App::post('/v1/storage/files')
