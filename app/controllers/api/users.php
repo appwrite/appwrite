@@ -17,7 +17,6 @@ use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
-use GeoIp2\Database\Reader;
 
 App::post('/v1/users')
     ->desc('Create User')

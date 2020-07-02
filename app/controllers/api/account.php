@@ -23,7 +23,6 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as URLParser;
 use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
-use GeoIp2\Database\Reader;
 use Utopia\Validator\ArrayList;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
