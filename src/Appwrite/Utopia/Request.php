@@ -205,7 +205,7 @@ class Request extends UtopiaRequest
 
             switch ($contentType) {
                 case 'application/json':
-                    $this->payload = json_decode($this->swoole->rawContent());
+                    $this->payload = json_decode($this->swoole->rawContent(), true);
                     break;
 
                 default:
