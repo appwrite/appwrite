@@ -4,7 +4,7 @@ namespace Appwrite\Extend;
 
 use PDO as PDONative;
 
-class PDO
+class PDO extends PDONative
 {
     /**
      * @var PDONative

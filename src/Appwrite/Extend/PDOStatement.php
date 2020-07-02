@@ -5,7 +5,7 @@ namespace Appwrite\Extend;
 use PDO as PDONative;
 use PDOStatement as PDOStatementNative;
 
-class PDOStatement
+class PDOStatement extends PDOStatementNative
 {
     /**
      * @var PDO
@@ -50,6 +50,7 @@ class PDOStatement
             $result = $this->PDOStatement->execute($input_parameters);
         } catch (\Throwable $th) {
             // throw new Exception('My Error: ' .$th->getMessage());
+            sleep(1);
             $this->pdo->reconnect();
             $result = $this->PDOStatement->execute($input_parameters);
         }
