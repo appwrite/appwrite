@@ -78,7 +78,7 @@ $avatarCallback = function ($type, $code, $width, $height, $quality, $response) 
 
     $cache->save($key, $data);
 
-    echo $data;
+    $response->send($data, null);
 
     unset($resize);
 };
@@ -190,14 +190,13 @@ App::get('/v1/avatars/image')
             ->setContentType('image/png')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send('', null)
         ;
 
         $data = $resize->output($output, $quality);
 
         $cache->save($key, $data);
 
-        echo $data;
+        $response->send($data, null);
 
         unset($resize);
     }, ['response']);
@@ -343,14 +342,13 @@ App::get('/v1/avatars/favicon')
             ->setContentType('image/png')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send('', null)
         ;
 
         $data = $resize->output($output, $quality);
 
         $cache->save($key, $data);
 
-        echo $data;
+        $response->send($data, null);
 
         unset($resize);
     }, ['response']);
