@@ -29,6 +29,9 @@ class DeletesV1
             case Database::SYSTEM_COLLECTION_PROJECTS:
                 $this->deleteProject($document);
                 break;
+            case Database::SYSTEM_COLLECTION_USERS:
+                $this->deleteUser($document);
+                break;
             
             default:
                 break;
@@ -51,5 +54,33 @@ class DeletesV1
 
         $uploads->delete($uploads->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
+    }
+
+    protected function deleteUser(Document $user)
+    {
+        global $projectDB;
+
+        $tokens = $user->getAttribute('tokens', []);
+
+        foreach ($tokens as $token) {
+            if (!$projectDB->deleteDocument($token->getId())) {
+                throw new Exception('Failed to remove token from DB', 500);
+            }
+        }
+
+        $memberships = $projectDB->getCollection([
+            'limit' => 2000, // TODO add members limit
+            'offset' => 0,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                'userId='.$user->getId(),
+            ],
+        ]);
+
+        foreach ($memberships as $membership) {
+            if (!$projectDB->deleteDocument($membership->getId())) {
+                throw new Exception('Failed to remove team membership from DB', 500);
+            }
+        }
     }
 }

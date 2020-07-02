@@ -199,14 +199,14 @@ $utopia->delete('/v1/users/:userId')
     ->label('abuse-limit', 100)
     ->param('userId', '', function () {return new UID();}, 'User unique ID.')
     ->action(
-        function ($userId) use ($response, $request, $projectDB) {
+        function ($userId) use ($response, $deletes, $projectDB) {
             $user = $projectDB->getDocument($userId);
 
             if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
                 throw new Exception('User not found', 404);
             }
             if (!$projectDB->deleteDocument($userId)) {
-                throw new Exception('Failed to remove file from DB', 500);
+                throw new Exception('Failed to remove user from DB', 500);
             }
 
             $reservedId = $projectDB->createDocument([
@@ -221,28 +221,7 @@ $utopia->delete('/v1/users/:userId')
                 throw new Exception('Failed saving reserved id to DB', 500);
             }
 
-            $tokens = $user->getAttribute('tokens', []);
-
-            foreach ($tokens as $token) {
-                if (!$projectDB->deleteDocument($token->getId())) {
-                    throw new Exception('Failed to remove token from DB', 500);
-                }
-            }
-
-            $memberships = $projectDB->getCollection([
-                'limit' => 2000,
-                'offset' => 0,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
-                    'userId='.$userId,
-                ],
-            ]);
-
-            foreach ($memberships as $membership) {
-                if (!$projectDB->deleteDocument($membership->getId())) {
-                    throw new Exception('Failed to remove team membership from DB', 500);
-                }
-            }
+            $deletes->setParam('document', $user);
 
             $response->noContent();
         }
