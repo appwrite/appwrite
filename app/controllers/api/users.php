@@ -208,11 +208,39 @@ $utopia->delete('/v1/users/:userId')
             if (!$projectDB->deleteDocument($userId)) {
                 throw new Exception('Failed to remove file from DB', 500);
             }
+
+            $reservedId = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_RESERVED,
+                '$id' => $userId,
+                '$permissions' => [
+                    'read' => ['*'],
+                ],
+            ]);
+
+            if (false === $reservedId) {
+                throw new Exception('Failed saving reserved id to DB', 500);
+            }
+
             $tokens = $user->getAttribute('tokens', []);
 
             foreach ($tokens as $token) {
                 if (!$projectDB->deleteDocument($token->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
+                }
+            }
+
+            $memberships = $projectDB->getCollection([
+                'limit' => 2000,
+                'offset' => 0,
+                'filters' => [
+                    '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                    'userId='.$userId,
+                ],
+            ]);
+
+            foreach ($memberships as $membership) {
+                if (!$projectDB->deleteDocument($membership->getId())) {
+                    throw new Exception('Failed to remove team membership from DB', 500);
                 }
             }
 
