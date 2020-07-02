@@ -49,9 +49,9 @@ class PDO extends PDONative
         return $this->pdo->setAttribute($attribute, $value);
     }
 
-    public function prepare($statement, array $driver_options = [])
+    public function prepare($statement, $driver_options = NULL)
     {
-        return new PDOStatement($this, $this->pdo->prepare($statement, $driver_options));
+        return new PDOStatement($this, $this->pdo->prepare($statement, []));
     }
 
     public function quote($string, $parameter_type = PDONative::PARAM_STR)
