@@ -282,7 +282,7 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $response->json($sessions);
-    }, ['response', 'projectDB', 'locale']);
+    }, ['response', 'projectDB', 'locale', 'geodb']);
 
 App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
