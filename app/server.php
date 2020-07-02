@@ -15,7 +15,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$http = new Server("localhost", 80);
+$http = new Server("localhost", 9501);
 
 $http
     ->set([
@@ -23,6 +23,8 @@ $http
         'document_root' => __DIR__ . '/../public',
         'enable_static_handler' => true,
         'timeout' => 4,
+        'http_compression' => true,
+        'http_compression_level' => 6,
     ])
 ;
 
