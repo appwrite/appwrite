@@ -14,7 +14,7 @@ class ErrorDev extends Error
             ->addRule('file', [
                 'type' => 'string',
                 'description' => 'File path.',
-                'example' => '/usr/share/nginx/html/vendor/utopia-php/framework/src/App.php',
+                'example' => '/usr/code/vendor/utopia-php/framework/src/App.php',
             ])
             ->addRule('line', [
                 'type' => 'integer',

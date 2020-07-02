@@ -343,7 +343,6 @@ App::get('/v1/avatars/favicon')
             ->setContentType('image/png')
             ->addHeader('Expires', $date)
             ->addHeader('X-Appwrite-Cache', 'miss')
-            ->addHeader('X-Appwrite-Debug', '1')
             ->send($data);
 
         unset($resize);
