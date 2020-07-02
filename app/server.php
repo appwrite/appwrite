@@ -15,7 +15,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$http = new Server("localhost", 9501);
+$http = new Server("localhost", 80);
 
 $http
     ->set([
@@ -63,6 +63,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $app->run($request, $response);
     } catch (\Throwable $th) {
         if(App::isDevelopment()) {
+            var_dump(get_class($th));
             var_dump($th->getMessage());
             var_dump($th->getFile());
             var_dump($th->getLine());
