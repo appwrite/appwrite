@@ -36,8 +36,8 @@ services:
         - TESTING=true
         - VERSION=dev
     restart: unless-stopped
-    ports: 
-      - 9501:9501
+    # ports: 
+    #   - 9501:9501
     networks:
       - appwrite
     labels:
