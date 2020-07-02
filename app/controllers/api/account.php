@@ -601,13 +601,13 @@ App::get('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
-    ->action(function ($response, $user, $locale) {
+    ->action(function ($response, $user, $locale, $geodb) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var GeoIp2\Database\Reader $geodb */
 
         $tokens = $user->getAttribute('tokens', []);
-        $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
         $sessions = [];
         $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
         $index = 0;
@@ -640,7 +640,7 @@ App::get('/v1/account/sessions')
             ];
 
             try {
-                $record = $reader->country($token->getAttribute('ip', ''));
+                $record = $geodb->country($token->getAttribute('ip', ''));
                 $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
                 $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
             } catch (\Exception $e) {
@@ -652,7 +652,7 @@ App::get('/v1/account/sessions')
         }
 
         $response->json($sessions);
-    }, ['response', 'user', 'locale']);
+    }, ['response', 'user', 'locale', 'geodb']);
 
 App::get('/v1/account/logs')
     ->desc('Get Account Logs')
@@ -662,11 +662,12 @@ App::get('/v1/account/logs')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/account/get-logs.md')
-    ->action(function ($response, $register, $project, $user, $locale) {
+    ->action(function ($response, $register, $project, $user, $locale, $geodb) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var GeoIp2\Database\Reader $geodb */
 
         $adapter = new AuditAdapter($register->get('db'));
         $adapter->setNamespace('app_'.$project->getId());
@@ -692,7 +693,6 @@ App::get('/v1/account/logs')
             'teams.membership.delete',
         ]);
 
-        $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
         $output = [];
 
         foreach ($logs as $i => &$log) {
@@ -717,7 +717,7 @@ App::get('/v1/account/logs')
             ];
 
             try {
-                $record = $reader->country($log['ip']);
+                $record = $geodb->country($log['ip']);
                 $output[$i]['geo']['isoCode'] = \strtolower($record->country->isoCode);
                 $output[$i]['geo']['country'] = $record->country->name;
                 $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
@@ -728,7 +728,7 @@ App::get('/v1/account/logs')
         }
 
         $response->json($output);
-    }, ['response', 'register', 'project', 'user', 'locale']);
+    }, ['response', 'register', 'project', 'user', 'locale', 'geodb']);
 
 App::patch('/v1/account/name')
     ->desc('Update Account Name')

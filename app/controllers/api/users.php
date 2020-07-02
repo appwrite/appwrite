@@ -228,10 +228,11 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(function ($userId, $response, $projectDB, $locale) {
+    ->action(function ($userId, $response, $projectDB, $locale, $geodb) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var GeoIp2\Database\Reader $geodb */
 
         $user = $projectDB->getDocument($userId);
 
@@ -240,7 +241,6 @@ App::get('/v1/users/:userId/sessions')
         }
 
         $tokens = $user->getAttribute('tokens', []);
-        $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
         $sessions = [];
         $index = 0;
         $countries = $locale->getText('countries');
@@ -271,7 +271,7 @@ App::get('/v1/users/:userId/sessions')
             ];
 
             try {
-                $record = $reader->country($token->getAttribute('ip', ''));
+                $record = $geodb->country($token->getAttribute('ip', ''));
                 $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
                 $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
             } catch (\Exception $e) {
@@ -294,12 +294,13 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/users/get-user-logs.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(function ($userId, $response, $register, $project, $projectDB, $locale) {
+    ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
         /** @var Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var GeoIp2\Database\Reader $geodb */
         
         $user = $projectDB->getDocument($userId);
 
@@ -332,7 +333,6 @@ App::get('/v1/users/:userId/logs')
             'teams.membership.delete',
         ]);
 
-        $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
         $output = [];
 
         foreach ($logs as $i => &$log) {
@@ -357,7 +357,7 @@ App::get('/v1/users/:userId/logs')
             ];
 
             try {
-                $record = $reader->country($log['ip']);
+                $record = $geodb->country($log['ip']);
                 $output[$i]['geo']['isoCode'] = \strtolower($record->country->isoCode);
                 $output[$i]['geo']['country'] = $record->country->name;
                 $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
@@ -368,7 +368,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->json($output);
-    }, ['response', 'register', 'project', 'projectDB', 'locale']);
+    }, ['response', 'register', 'project', 'projectDB', 'locale', 'geodb']);
 
 App::patch('/v1/users/:userId/status')
     ->desc('Update User Status')

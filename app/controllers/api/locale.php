@@ -1,7 +1,6 @@
 <?php
 
 use Utopia\App;
-use GeoIp2\Database\Reader;
 use Utopia\Config\Config;
 
 App::get('/v1/locale')
@@ -12,14 +11,14 @@ App::get('/v1/locale')
     ->label('sdk.namespace', 'locale')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
-    ->action(function ($request, $response, $locale) {
+    ->action(function ($request, $response, $locale, $geodb) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
+        /** @var GeoIp2\Database\Reader $geodb */
 
         $eu = Config::getParam('locale-eu');
         $currencies = Config::getParam('locale-currencies');
-        $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
         $output = [];
         $ip = $request->getIP();
         $time = (60 * 60 * 24 * 45); // 45 days cache
@@ -35,7 +34,7 @@ App::get('/v1/locale')
         $currency = null;
 
         try {
-            $record = $reader->country($ip);
+            $record = $geodb->country($ip);
             $output['countryCode'] = $record->country->isoCode;
             $output['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
             //$output['countryTimeZone'] = DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, $record->country->isoCode);
@@ -63,7 +62,7 @@ App::get('/v1/locale')
             ->addHeader('Cache-Control', 'public, max-age='.$time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
             ->json($output);
-    }, ['request', 'response', 'locale']);
+    }, ['request', 'response', 'locale', 'geodb']);
 
 App::get('/v1/locale/countries')
     ->desc('List Countries')

@@ -24,6 +24,7 @@ use Utopia\View;
 use Utopia\Config\Config;
 use Utopia\Locale\Locale;
 use Utopia\Registry\Registry;
+use GeoIp2\Database\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use PDO as PDONative;
 
@@ -396,4 +397,8 @@ App::setResource('projectDB', function($register, $project) {
 
 App::setResource('mode', function($request) {
     return $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+}, ['request']);
+
+App::setResource('geodb', function($request) {
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
 }, ['request']);
