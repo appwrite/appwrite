@@ -123,7 +123,7 @@ $register->set('statsd', function () { // Register DB connection
 $register->set('cache', function () { // Register cache connection
     $redis = new Redis();
 
-    $redis->connect(App::getEnv('_APP_REDIS_HOST', ''),
+    $redis->pconnect(App::getEnv('_APP_REDIS_HOST', ''),
         App::getEnv('_APP_REDIS_PORT', ''));
 
     return $redis;
