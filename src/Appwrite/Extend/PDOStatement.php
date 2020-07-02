@@ -8,7 +8,7 @@ use PDOStatement as PDOStatementNative;
 class PDOStatement
 {
     /**
-     * @var PDONative
+     * @var PDO
      */
     protected $pdo;
 
@@ -17,7 +17,7 @@ class PDOStatement
      */
     protected $PDOStatement;
 
-    public function __construct(PDONative &$pdo, PDOStatementNative $PDOStatement)
+    public function __construct(PDO &$pdo, PDOStatementNative $PDOStatement)
     {
         $this->pdo = $pdo;
         $this->PDOStatement = $PDOStatement;
@@ -46,7 +46,13 @@ class PDOStatement
 
     public function execute($input_parameters = null)
     {
-        $result = $this->PDOStatement->execute($input_parameters);
+        try {
+            $result = $this->PDOStatement->execute($input_parameters);
+        } catch (\Throwable $th) {
+            // throw new Exception('My Error: ' .$th->getMessage());
+            $this->pdo->reconnect();
+            $result = $this->PDOStatement->execute($input_parameters);
+        }
 
         return $result;
     }

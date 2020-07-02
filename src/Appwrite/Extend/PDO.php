@@ -51,7 +51,7 @@ class PDO
 
     public function prepare($statement, array $driver_options = [])
     {
-        return new PDOStatement($this->pdo, $this->pdo->prepare($statement, $driver_options));
+        return new PDOStatement($this, $this->pdo->prepare($statement, $driver_options));
     }
 
     public function quote($string, $parameter_type = PDONative::PARAM_STR)

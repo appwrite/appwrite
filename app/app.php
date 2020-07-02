@@ -305,7 +305,7 @@ App::error(function ($error, $utopia, $request, $response, $project) {
             $message = 'Server Error';
     }
 
-    $_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
+    //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
 
     $output = ((App::isDevelopment())) ? [
         'message' => $error->getMessage(),
