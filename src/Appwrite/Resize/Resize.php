@@ -131,35 +131,35 @@ class Resize
                 break;
 
             case 'webp':
-                //$this->image->setImageFormat('webp');
+                $this->image->setImageFormat('webp');
 
-                $signature = $this->image->getImageSignature();
-                $temp = '/tmp/temp-'.$signature.'.'.\strtolower($this->image->getImageFormat());
-                $output = '/tmp/output-'.$signature.'.webp';
+                // $signature = $this->image->getImageSignature();
+                // $temp = '/tmp/temp-'.$signature.'.'.\strtolower($this->image->getImageFormat());
+                // $output = '/tmp/output-'.$signature.'.webp';
 
-                // save temp
-                $this->image->writeImages($temp, true);
+                // // save temp
+                // $this->image->writeImages($temp, true);
 
-                // convert temp
-                \exec("cwebp -quiet -metadata none -q $quality $temp -o $output");
+                // // convert temp
+                // \exec("cwebp -quiet -metadata none -q $quality $temp -o $output");
 
-                $data = \file_get_contents($output);
+                // $data = \file_get_contents($output);
 
-                //load webp
-                if (empty($path)) {
-                    return $data;
-                } else {
-                    \file_put_contents($path, $data, LOCK_EX);
-                }
+                // //load webp
+                // if (empty($path)) {
+                //     return $data;
+                // } else {
+                //     \file_put_contents($path, $data, LOCK_EX);
+                // }
 
-                $this->image->clear();
-                $this->image->destroy();
+                // $this->image->clear();
+                // $this->image->destroy();
 
-                //delete webp
-                \unlink($output);
-                \unlink($temp);
+                // //delete webp
+                // \unlink($output);
+                // \unlink($temp);
 
-                return;
+                // return;
 
                 break;
 
