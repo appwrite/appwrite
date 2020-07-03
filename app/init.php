@@ -327,6 +327,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
     }
+
     Auth::$unique = $session['id'];
     Auth::$secret = $session['secret'];
 
@@ -349,7 +350,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 
     if (APP_MODE_ADMIN === $mode) {
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
-            Authorization::disable();
+            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
         }
@@ -367,7 +368,7 @@ App::setResource('project', function($consoleDB, $request) {
     $project = $consoleDB->getDocument($request->getParam('project',
         $request->getHeader('X-Appwrite-Project', '')));
 
-    Authorization::enable();
+    Authorization::reset();
 
     return $project;
 }, ['consoleDB', 'request']);
@@ -396,6 +397,7 @@ App::setResource('projectDB', function($register, $project) {
 }, ['register', 'project']);
 
 App::setResource('mode', function($request) {
+    /** @var Utopia\Request $request */
     return $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
 }, ['request']);
 
