@@ -222,7 +222,6 @@ class Request extends UtopiaRequest
      */
     public function getUserAgent(string $default = ''): string
     {
-        var_dump('ua:', $this->getHeader('user-agent', '$default'));
         return $this->getHeader('user-agent', $default);
     }
 
