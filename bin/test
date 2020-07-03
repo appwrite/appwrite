@@ -1,4 +1,4 @@
 
 #!/bin/bash
 
-/usr/share/nginx/html/vendor/bin/phpunit --configuration /usr/share/nginx/html/phpunit.xml
+/usr/src/code/vendor/bin/phpunit --configuration /usr/src/code/phpunit.xml
