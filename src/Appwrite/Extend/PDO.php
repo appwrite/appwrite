@@ -61,6 +61,12 @@ class PDO extends PDONative
 
     public function reconnect()
     {
-        return $this->pdo = new PDONative($this->dsn, $this->username, $this->passwd, $this->options);
+        $this->pdo = new PDONative($this->dsn, $this->username, $this->passwd, $this->options);
+        
+        // Connection settings
+        $this->pdo->setAttribute(PDONative::ATTR_DEFAULT_FETCH_MODE, PDONative::FETCH_ASSOC);   // Return arrays
+        $this->pdo->setAttribute(PDONative::ATTR_ERRMODE, PDONative::ERRMODE_EXCEPTION);        // Handle all errors with exceptions
+
+        return $this->pdo;
     }
 }
