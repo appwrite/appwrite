@@ -291,8 +291,13 @@ App::options(function ($request, $response) {
         ->send();
 }, ['request', 'response']);
 
-App::error(function ($error, $utopia, $request, $response, $project) {
+App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Exception $error */
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Request $request */
+    /** @var Utopia\Response $response */
+    /** @var Utopia\View $layout */
+    /** @var Appwrite\Database\Document $project */
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -339,7 +344,6 @@ App::error(function ($error, $utopia, $request, $response, $project) {
     $template = ($route) ? $route->getLabel('error', null) : null;
 
     if ($template) {
-        $layout = new View(__DIR__.'/views/layouts/default.phtml');
         $comp = new View($template);
 
         $comp
@@ -362,7 +366,8 @@ App::error(function ($error, $utopia, $request, $response, $project) {
 
     $response->dynamic(new Document($output),
         $utopia->isDevelopment() ? Response::MODEL_ERROR_DEV : Response::MODEL_LOCALE);
-}, ['error', 'utopia', 'request', 'response', 'project']);
+        
+}, ['error', 'utopia', 'request', 'response', 'layout', 'project']);
 
 App::get('/manifest.json')
     ->desc('Progressive app manifest file')
