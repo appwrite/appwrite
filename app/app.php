@@ -130,7 +130,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      *  Adding Appwrite API domains to allow XDOMAIN communication
      *  Skip this check for non-web platforms which are not requiredto send an origin header
      */
-    $origin = $request->getServer('HTTP_ORIGIN', $request->getServer('HTTP_REFERER', ''));
+    $origin = $request->getOrigin($request->getReferer(''));
     $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
     if(!$originValidator->isValid($origin)
@@ -235,7 +235,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->setParam('userId', $user->getId())
         ->setParam('event', '')
         ->setParam('resource', '')
-        ->setParam('userAgent', $request->getServer('HTTP_USER_AGENT', ''))
+        ->setParam('userAgent', $request->getUserAgent(''))
         ->setParam('ip', $request->getIP())
         ->setParam('data', [])
     ;
@@ -280,7 +280,10 @@ App::shutdown(function ($utopia, $response, $request, $webhook, $audit, $usage, 
 }, ['utopia', 'response', 'request', 'webhook', 'audit', 'usage', 'deletes', 'mode', 'project']);
 
 App::options(function ($request, $response) {
-    $origin = $request->getServer('HTTP_ORIGIN');
+    /** @var Appwrite\Utopia\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
+
+    $origin = $request->getOrigin('');
 
     $response
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')

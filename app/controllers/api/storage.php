@@ -258,7 +258,7 @@ App::get('/v1/storage/files/:fileId/preview')
             throw new Exception('No such storage device', 400);
         }
 
-        if ((\strpos($request->getHeader('accept'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
+        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
             $output = 'jpg';
         }
 

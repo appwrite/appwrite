@@ -28,7 +28,7 @@ App::init(function ($utopia, $request, $response, $project, $user, $register) {
     $timeLimit->setNamespace('app_'.$project->getId());
     $timeLimit
         ->setParam('{userId}', $user->getId())
-        ->setParam('{userAgent}', $request->getServer('HTTP_USER_AGENT', ''))
+        ->setParam('{userAgent}', $request->getUserAgent(''))
         ->setParam('{ip}', $request->getIP())
         ->setParam('{url}', $request->getHostname().$route->getURL())
     ;

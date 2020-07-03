@@ -214,6 +214,31 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Get User Agent
+     *
+     * Return HTTP user agent header
+     *
+     * @return string
+     */
+    public function getUserAgent(string $default = ''): string
+    {
+        var_dump('ua:', $this->getHeader('user-agent', '$default'));
+        return $this->getHeader('user-agent', $default);
+    }
+
+    /**
+     * Get Accept
+     *
+     * Return HTTP accept header
+     *
+     * @return string
+     */
+    public function getAccept(string $default = ''): string
+    {
+        return $this->getHeader('accept', $default);
+    }
+
+    /**
      * Get files
      *
      * Method for querying upload files data. If $key is not found empty array will be returned.

@@ -193,7 +193,7 @@ App::post('/v1/account/sessions')
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
             'expire' => $expiry,
-            'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
 
@@ -490,7 +490,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
             'expire' => $expiry,
-            'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
 
@@ -1143,7 +1143,7 @@ App::post('/v1/account/recovery')
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_RECOVERY,
-            'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
             
@@ -1309,7 +1309,7 @@ App::post('/v1/account/verification')
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // On way hash encryption to protect DB leak
             'expire' => \time() + Auth::TOKEN_EXPIRATION_CONFIRM,
-            'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]);
             

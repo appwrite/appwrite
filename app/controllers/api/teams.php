@@ -533,7 +533,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
             'expire' => $expiry,
-            'userAgent' => $request->getServer('HTTP_USER_AGENT', 'UNKNOWN'),
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
         ]), Document::SET_TYPE_APPEND);
 
