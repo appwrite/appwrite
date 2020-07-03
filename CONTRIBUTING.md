@@ -153,12 +153,39 @@ bash ./build.sh 1.0.0
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
 
+**Build for multicore**
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/multicore:0.0.0 --push
+```
+
 ## Tests
 
 To run tests manually, run phpunit from your command line:
 
 ```bash
 docker exec appwrite test
+```
+
+## Benchmarking
+
+You can use WRK Docker image to benchmark the server performance. Benchmarking is extremely useful when you want to compare how the server behaves before and after a change has been applied. Replace [APPWRITE_HOSTNAME_OR_IP] with your Appwrite server hostname or IP. Note that localhost is not accessible from inside the WRK container.
+
+```
+  Options:                                            
+    -c, --connections <N>  Connections to keep open   
+    -d, --duration    <T>  Duration of test           
+    -t, --threads     <N>  Number of threads to use   
+                                                      
+    -s, --script      <S>  Load Lua script file       
+    -H, --header      <H>  Add header to request      
+        --latency          Print latency statistics   
+        --timeout     <T>  Socket/request timeout     
+    -v, --version          Print version details    
+``` 
+
+```bash
+docker run --rm skandyla/wrk -t5 -c10 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 ```
 
 ## Code Maintenance  

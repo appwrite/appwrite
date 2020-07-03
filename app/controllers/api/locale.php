@@ -156,7 +156,6 @@ App::get('/v1/locale/continents')
         $response->json($list);
     }, ['response', 'locale']);
 
-
 App::get('/v1/locale/currencies')
     ->desc('List Currencies')
     ->groups(['api', 'locale'])
