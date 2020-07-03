@@ -307,6 +307,8 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     /** @var Appwrite\Database\Database $projectDB */
     /** @var bool $mode */
 
+    Authorization::setDefaultStatus(true);
+
     Auth::setCookieName('a_session_'.$project->getId());
 
     if (APP_MODE_ADMIN === $mode) {
