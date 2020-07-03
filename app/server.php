@@ -15,7 +15,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$http = new Server("localhost", 80);
+$http = new Server("0.0.0.0", 80);
 
 $http
     ->set([
