@@ -49,8 +49,6 @@ class PDOStatement extends PDOStatementNative
         try {
             $result = $this->PDOStatement->execute($input_parameters);
         } catch (\Throwable $th) {
-            // throw new Exception('My Error: ' .$th->getMessage());
-            sleep(1);
             $this->pdo->reconnect();
             $result = $this->PDOStatement->execute($input_parameters);
         }

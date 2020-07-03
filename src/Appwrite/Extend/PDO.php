@@ -61,6 +61,8 @@ class PDO extends PDONative
 
     public function reconnect()
     {
+        sleep(3);
+        
         $this->pdo = new PDONative($this->dsn, $this->username, $this->passwd, $this->options);
         
         // Connection settings
