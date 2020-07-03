@@ -58,7 +58,7 @@ class TasksV1
 
         $task = $consoleDB->getDocument($taskId);
 
-        Authorization::enable();
+        Authorization::reset();
 
         if (\is_null($task->getId()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
             throw new Exception('Task Not Found');
@@ -188,7 +188,7 @@ class TasksV1
             throw new Exception('Failed saving tasks to DB');
         }
 
-        Authorization::enable();
+        Authorization::reset();
 
         // ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());  // Sync task rescheduale
 
