@@ -241,7 +241,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('output', null, function () { return new WhiteList(\array_merge(\array_keys(Config::getParam('storage-outputs')), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->param('output', '', function () { return new WhiteList(\array_keys(Config::getParam('storage-outputs'))); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(function ($fileId, $width, $height, $quality, $background, $output, $request, $response, $project, $projectDB) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -258,7 +258,7 @@ App::get('/v1/storage/files/:fileId/preview')
             throw new Exception('No such storage device', 400);
         }
 
-        if ((\strpos($request->getServer('HTTP_ACCEPT'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
+        if ((\strpos($request->getHeader('accept'), 'image/webp') === false) && ('webp' == $output)) { // Fallback webp to jpeg when no browser support
             $output = 'jpg';
         }
 
@@ -304,7 +304,7 @@ App::get('/v1/storage/files/:fileId/preview')
             $output = (empty($output)) ? $type : $output;
 
             return $response
-                ->setContentType((\in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
+                ->setContentType((\array_key_exists($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
                 ->send($data)
