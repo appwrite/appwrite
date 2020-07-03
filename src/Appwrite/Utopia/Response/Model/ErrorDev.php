@@ -21,13 +21,13 @@ class ErrorDev extends Error
                 'description' => 'Line number.',
                 'example' => 209,
             ])
-            // ->addRule('trace', [
-            //     'type' => 'string',
-            //     'description' => 'Error trace.',
-            //     'example' => [
-            //         ''
-            //     ],
-            // ])
+            ->addRule('trace', [
+                'type' => 'string',
+                'description' => 'Error trace.',
+                'example' => [
+                    ''
+                ],
+            ])
         ;
     }
 

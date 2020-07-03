@@ -78,7 +78,6 @@ class Github extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        var_dump($user);
         if (isset($user['id'])) {
             return $user['id'];
         }

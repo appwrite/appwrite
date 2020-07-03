@@ -86,8 +86,6 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     // var_dump('-----------------');
     // var_dump($request->debug());
 
-    var_dump($selfDomain->getRegisterable());
-    var_dump($endDomain->getRegisterable());
     Config::setParam('domainVerification',
         ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
             $endDomain->getRegisterable() !== '');

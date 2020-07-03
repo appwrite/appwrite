@@ -303,14 +303,12 @@ App::get('/v1/storage/files/:fileId/preview')
         if ($data) {
             $output = (empty($output)) ? $type : $output;
 
-            $response
+            return $response
                 ->setContentType((\in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
                 ->addHeader('Expires', $date)
                 ->addHeader('X-Appwrite-Cache', 'hit')
                 ->send($data)
             ;
-
-            return;
         }
 
         $source = $device->read($path);
@@ -340,18 +338,16 @@ App::get('/v1/storage/files/:fileId/preview')
 
         $output = (empty($output)) ? $type : $output;
 
-        $response
-            ->setContentType($outputs[$output])
-            ->addHeader('Expires', $date)
-            ->addHeader('X-Appwrite-Cache', 'miss')
-            ->send('')
-        ;
-
         $data = $resize->output($output, $quality);
 
         $cache->save($key, $data);
 
-        echo $data;
+        $response
+            ->setContentType($outputs[$output])
+            ->addHeader('Expires', $date)
+            ->addHeader('X-Appwrite-Cache', 'miss')
+            ->send($data)
+        ;
 
         unset($resize);
     }, ['request', 'response', 'project', 'projectDB']);
