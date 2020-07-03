@@ -365,7 +365,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         /** @var Appwrite\Event\Event $audit */
         
         $protocol = $request->getProtocol();
-        $callback = $protocol.'://'.$request->getServer('HTTP_HOST').'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
+        $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
 

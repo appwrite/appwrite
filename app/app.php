@@ -242,7 +242,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $usage
         ->setParam('projectId', $project->getId())
-        ->setParam('url', $request->getServer('HTTP_HOST', '').$request->getServer('REQUEST_URI', ''))
+        ->setParam('url', $request->getHostname().$request->getServer('REQUEST_URI', ''))
         ->setParam('method', $request->getMethod())
         ->setParam('request', 0)
         ->setParam('response', 0)
