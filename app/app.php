@@ -30,8 +30,6 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 //     );
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
-    Authorization::$roles = ['*'];
-    
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
@@ -45,6 +43,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $deletes */
     /** @var bool $mode */
     /** @var array $clients */
+    
+    Authorization::$roles = ['*'];
 
     $localeParam = (string)$request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
 
@@ -301,6 +301,11 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
+
+    var_dump(get_class($error));
+    var_dump($error->getMessage());
+    var_dump($error->getFile());
+    var_dump($error->getLine());
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
