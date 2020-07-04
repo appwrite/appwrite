@@ -91,7 +91,8 @@ $register->set('db', function () { // Register DB connection
 
     $pdo = new PDO("mysql:host={$dbHost};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
         PDONative::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
-        PDONative::ATTR_TIMEOUT => 5, // Seconds
+        PDONative::ATTR_TIMEOUT => 3, // Seconds
+        PDONative::ATTR_PERSISTENT => true
     ));
 
     // Connection settings
