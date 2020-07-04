@@ -33,6 +33,14 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'box' => [
+        'developers' => 'https://developer.box.com/reference/',
+        'icon' => 'icon-box',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     'discord' => [
         'developers' => 'https://discordapp.com/developers/docs/topics/oauth2',
         'icon' => 'icon-discord',
