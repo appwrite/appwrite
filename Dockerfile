@@ -155,8 +155,8 @@ RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/c
 RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
 # RUN echo "xdebug.profiler_enable = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
 # RUN echo "xdebug.profiler_output_dir = /tmp/" >> /usr/local/etc/php/conf.d/appwrite.ini
-RUN echo "xdebug.profiler_enable_trigger = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
-RUN echo "xdebug.trace_format = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+# RUN echo "xdebug.profiler_enable_trigger = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+# RUN echo "xdebug.trace_format = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 
