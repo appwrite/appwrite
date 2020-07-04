@@ -250,10 +250,17 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     ;
 }, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhook', 'audit', 'usage', 'clients']);
 
-App::shutdown(function ($utopia, $response, $request, $webhook, $audit, $usage, $deletes, $mode, $project) {
-    /*
-     * Trigger events for background workers
-     */
+App::shutdown(function ($utopia, $request, $response, $project, $webhook, $audit, $usage, $deletes, $mode) {
+    /** @var Utopia\App $utopia */
+    /** @var Utopia\Request $request */
+    /** @var Utopia\Response $response */
+    /** @var Appwrite\Database\Document $project */
+    /** @var Appwrite\Event\Event $webhook */
+    /** @var Appwrite\Event\Event $audit */
+    /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $deletes */
+    /** @var bool $mode */
+
     if (!empty($webhook->getParam('event'))) {
         $webhook->trigger();
     }
@@ -277,7 +284,7 @@ App::shutdown(function ($utopia, $response, $request, $webhook, $audit, $usage, 
             ->trigger()
         ;
     }
-}, ['utopia', 'response', 'request', 'webhook', 'audit', 'usage', 'deletes', 'mode', 'project']);
+}, ['utopia', 'request', 'response', 'project', 'webhook', 'audit', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
     /** @var Appwrite\Utopia\Request $request */
