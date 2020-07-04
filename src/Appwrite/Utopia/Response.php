@@ -75,6 +75,8 @@ class Response extends UtopiaResponse
             ->setModel(new Membership())
             ->setModel(new MembershipList())
         ;
+
+        $this->startTime = \microtime(true);
     }
 
     /**
