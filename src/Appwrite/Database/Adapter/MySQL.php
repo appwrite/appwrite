@@ -29,20 +29,6 @@ class MySQL extends Adapter
     protected $register;
 
     /**
-     * Saved nodes.
-     *
-     * @var array
-     */
-    protected $nodes = [];
-
-    /**
-     * Count documents get usage.
-     *
-     * @var int
-     */
-    protected $count = 0;
-
-    /**
      * Last modified.
      *
      * Read node with most recent changes
@@ -79,8 +65,6 @@ class MySQL extends Adapter
      */
     public function getDocument($id)
     {
-        ++$this->count;
-
         // Get fields abstraction
         $st = $this->getPDO()->prepare('SELECT * FROM `'.$this->getNamespace().'.database.documents` a
             WHERE a.uid = :uid AND a.status = 0
@@ -653,7 +637,6 @@ class MySQL extends Adapter
             ->setDebug('joins', \substr_count($query, 'JOIN'))
             ->setDebug('count', \count($results['data']))
             ->setDebug('sum', (int) $count['sum'])
-            ->setDebug('documents', $this->count)
         ;
 
         return $results['data'];
