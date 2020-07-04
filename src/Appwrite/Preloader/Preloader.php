@@ -99,7 +99,7 @@ class Preloader
         if ($this->shouldIgnore($path)) {
             return;
         }
-        echo "[Preloader] Preloaded `{$path}`" . PHP_EOL;
+        // echo "[Preloader] Preloaded `{$path}`" . PHP_EOL;
         // Finally we require the path,
         // causing all its dependencies to be loaded as well
         try {
