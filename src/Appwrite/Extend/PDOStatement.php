@@ -49,7 +49,9 @@ class PDOStatement extends PDOStatementNative
         try {
             $result = $this->PDOStatement->execute($input_parameters);
         } catch (\Throwable $th) {
-            $this->pdo->reconnect();
+            $this->pdo = $this->pdo->reconnect();
+            //$this->PDOStatement = $this->pdo->prepare($this->PDOStatement->queryString, []);
+
             $result = $this->PDOStatement->execute($input_parameters);
         }
 
