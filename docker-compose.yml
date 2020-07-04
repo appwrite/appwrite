@@ -52,10 +52,11 @@ services:
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
-      # - ./vendor:/usr/src/code/vendor
+      - ./vendor:/usr/src/code/vendor
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
+      - ./debug:/tmp
     depends_on:
       - mariadb
       - redis
@@ -197,6 +198,13 @@ services:
     - GH_CLIENT_ID=d86f7145a41eacfc52cc
     - GH_CLIENT_SECRET=9e0081062367a2134e7f2ea95ba1a32d08b6c8ab
     - GH_ORGS=appwrite
+
+  webgrind:
+    image: 'jokkedk/webgrind:latest'
+    volumes:
+      - './debug:/tmp'
+    ports:
+      - '3001:80'
 
 networks:
   gateway:
