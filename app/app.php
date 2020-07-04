@@ -107,7 +107,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
         if($request->getProtocol() !== 'https') {
-           return $response->redirect('https://'.$request->getHostname().$request->getServer('REQUEST_URI'));
+           return $response->redirect('https://'.$request->getHostname().$request->getURI());
         }
 
         $response->addHeader('Strict-Transport-Security', 'max-age='.(60 * 60 * 24 * 126)); // 126 days
@@ -115,7 +115,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $response
         ->addHeader('Server', 'Appwrite')
-        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.\urlencode($request->getServer('REQUEST_URI')))
+        ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url='.\urlencode($request->getURI()))
         //->addHeader('X-Frame-Options', ($refDomain == 'http://localhost') ? 'SAMEORIGIN' : 'ALLOW-FROM ' . $refDomain)
         ->addHeader('X-Content-Type-Options', 'nosniff')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
@@ -242,7 +242,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $usage
         ->setParam('projectId', $project->getId())
-        ->setParam('url', $request->getHostname().$request->getServer('REQUEST_URI', ''))
+        ->setParam('url', $request->getHostname().$request->getURI())
         ->setParam('method', $request->getMethod())
         ->setParam('request', 0)
         ->setParam('response', 0)

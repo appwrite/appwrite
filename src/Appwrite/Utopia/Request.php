@@ -33,7 +33,7 @@ class Request extends UtopiaRequest
      */
     public function getParam(string $key, $default = null)
     {
-        switch($this->getServer('request_method', '')) {
+        switch($this->getMethod()) {
             case self::METHOD_GET:
                 return $this->getQuery($key, $default);
                 break;
@@ -114,7 +114,6 @@ class Request extends UtopiaRequest
      */
     public function getServer(string $key, $default = null)
     {
-        $key = strtolower($key);
         return (isset($this->swoole->server) && isset($this->swoole->server[$key])) ? $this->swoole->server[$key] : $default;
     }
 
@@ -187,6 +186,18 @@ class Request extends UtopiaRequest
     public function getMethod(): string
     {
         return $this->getServer('request_method', 'UNKNOWN');
+    }
+
+    /**
+     * Get URI
+     *
+     * Return HTTP request URI
+     *
+     * @return string
+     */
+    public function getURI(): string
+    {
+        return $this->getServer('request_uri', '');
     }
 
     /**
