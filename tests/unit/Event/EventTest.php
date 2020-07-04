@@ -41,8 +41,8 @@ class EventTest extends TestCase
 
         $this->object->trigger();
 
-        $this->assertEquals('value1', $this->object->getParam('key1'));
-        $this->assertEquals('value2', $this->object->getParam('key2'));
+        $this->assertEquals(null, $this->object->getParam('key1'));
+        $this->assertEquals(null, $this->object->getParam('key2'));
         $this->assertEquals(null, $this->object->getParam('key3'));
         $this->assertEquals(\Resque::size($this->queue), 1);
     }
