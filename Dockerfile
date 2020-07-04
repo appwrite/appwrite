@@ -17,7 +17,8 @@ FROM php:7.4-cli as step1
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
     PHP_REDIS_VERSION=5.3.0 \
-    PHP_SWOOLE_VERSION=4.5.2
+    PHP_SWOOLE_VERSION=4.5.2 \
+    PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
   apt-get update && \
@@ -40,8 +41,24 @@ RUN \
   git checkout v$PHP_SWOOLE_VERSION && \
   phpize && \
   ./configure --enable-sockets --enable-http2 && \
-  make && make install
-  ## Brotli Extension
+  make && make install && \
+  cd ..
+  ## XDebug Extension
+  # git clone https://github.com/swoole/sdebug.git && \
+  # cd sdebug && \
+  # git checkout $PHP_XDEBUG_VERSION && \
+  # phpize && \
+  # ./configure --enable-xdebug && \
+  # make clean && make && make install
+  # cd .. && \
+  # Meminfo Extension
+  # git clone https://github.com/BitOne/php-meminfo.git && \
+  # cd php-meminfo && \
+  # git checkout v1.0.5 && \
+  # cd extension/php7 && \
+  # phpize && \
+  # ./configure --enable-meminfo && \
+  # make && make install
 
 FROM php:7.4-cli as final
 
@@ -84,7 +101,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests webp certbot \
+  apt-get install -y --no-install-recommends --no-install-suggests webp certbot htop \
   libonig-dev libcurl4-gnutls-dev libmagickwand-dev libyaml-dev libbrotli-dev libz-dev && \
   pecl install imagick yaml && \ 
   docker-php-ext-enable imagick yaml
@@ -96,7 +113,8 @@ WORKDIR /usr/src/code
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+# COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+# COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/meminfo.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -110,10 +128,12 @@ RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/cache && \
     mkdir -p /storage/config && \
     mkdir -p /storage/certificates && \
+    mkdir -p /storage/debug && \
     chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
     chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
     chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
-    chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates
+    chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
+    chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
 RUN chmod +x /usr/local/bin/start
@@ -127,7 +147,19 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
+# RUN echo zend_extension=xdebug.so >> /usr/local/etc/php/conf.d/xdebug.ini
+# RUN echo extension=meminfo.so >> /usr/local/etc/php/conf.d/meminfo.ini
+
+RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+# RUN echo "xdebug.profiler_enable = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+# RUN echo "xdebug.profiler_enable_trigger = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+# RUN echo "xdebug.profiler_output_dir = /tmp/" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 
-CMD [ "php" , "app/server.php" ]
+#, "-dxdebug.auto_trace=1"
+#, "-dxdebug.profiler_enable = 1",
+
+CMD [ "php", "app/server.php", "-dopcache.preload=opcache.preload=/usr/src/code/app/preload.php" ]
