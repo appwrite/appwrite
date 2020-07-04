@@ -46,7 +46,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     
     Authorization::$roles = ['*'];
 
-    $localeParam = (string)$request->getParam('locale', $request->getHeader('X-Appwrite-Locale', ''));
+    $localeParam = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
 
     if (\in_array($localeParam, Config::getParam('locale-codes'))) {
         $locale->setDefault($localeParam);
@@ -136,7 +136,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     if(!$originValidator->isValid($origin)
         && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
         && $route->getLabel('origin', false) !== '*'
-        && empty($request->getHeader('X-Appwrite-Key', ''))) {
+        && empty($request->getHeader('x-appwrite-key', ''))) {
             throw new Exception($originValidator->getDescription(), 403);
     }
     
@@ -169,7 +169,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
     
     // Check if given key match project API keys
-    $key = $project->search('secret', $request->getHeader('X-Appwrite-Key', ''), $project->getAttribute('keys', []));
+    $key = $project->search('secret', $request->getHeader('x-appwrite-key', ''), $project->getAttribute('keys', []));
     
     /*
      * Try app auth when we have project key and no user

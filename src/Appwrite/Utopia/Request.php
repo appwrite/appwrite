@@ -117,11 +117,6 @@ class Request extends UtopiaRequest
         return (isset($this->swoole->server) && isset($this->swoole->server[$key])) ? $this->swoole->server[$key] : $default;
     }
 
-    public function debug()
-    {
-        return $this->swoole->header;
-    }
-
     /**
      * Get IP
      *
@@ -288,7 +283,6 @@ class Request extends UtopiaRequest
      */
     public function getHeader(string $key, string $default = ''): string
     {
-        $key = strtolower($key);
         return (isset($this->swoole->header[$key])) ? $this->swoole->header[$key] : $default;
     }
 

@@ -319,14 +319,14 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     $session = Auth::decodeSession(
         $request->getCookie(Auth::$cookieName, // Get sessions
             $request->getCookie(Auth::$cookieName.'_legacy', // Get fallback session from old clients (no SameSite support)
-                $request->getHeader('X-Appwrite-Key', '')))); // Get API Key
+                $request->getHeader('x-appwrite-key', '')))); // Get API Key
 
     // Get fallback session from clients who block 3rd-party cookies
     $response->addHeader('X-Debug-Fallback', 'false');
 
     if(empty($session['id']) && empty($session['secret'])) {
         $response->addHeader('X-Debug-Fallback', 'true');
-        $fallback = $request->getHeader('X-Fallback-Cookies', '');
+        $fallback = $request->getHeader('x-fallback-cookies', '');
         $fallback = \json_decode($fallback, true);
         $session = Auth::decodeSession(((isset($fallback[Auth::$cookieName])) ? $fallback[Auth::$cookieName] : ''));
     }
@@ -369,7 +369,7 @@ App::setResource('project', function($consoleDB, $request) {
     Authorization::disable();
 
     $project = $consoleDB->getDocument($request->getParam('project',
-        $request->getHeader('X-Appwrite-Project', '')));
+        $request->getHeader('x-appwrite-project', '')));
 
     Authorization::reset();
 
@@ -401,7 +401,7 @@ App::setResource('projectDB', function($register, $project) {
 
 App::setResource('mode', function($request) {
     /** @var Utopia\Request $request */
-    return $request->getParam('mode', $request->getHeader('X-Appwrite-Mode', 'default'));
+    return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
 }, ['request']);
 
 App::setResource('geodb', function($request) {
