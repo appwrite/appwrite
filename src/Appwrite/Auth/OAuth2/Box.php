@@ -65,7 +65,7 @@ class Box extends OAuth2
                 "client_secret" => $this->appSecret,
                 "code" => $code,
                 "grant_type" => "authorization_code",
-                "scope" => 'manage_app_users',
+                "scope" =>  \implode(',', $this->getScopes()),
                 "redirect_uri" => $this->callback
             ])
         );
