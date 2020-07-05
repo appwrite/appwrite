@@ -7,8 +7,11 @@ require_once __DIR__.'/../init.php';
 echo APP_NAME.' webhooks worker v1 has started'."\n";
 
 use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Utopia\App;
+use Utopia\Config\Config;
 
 class WebhooksV1
 {
@@ -20,8 +23,13 @@ class WebhooksV1
 
     public function perform()
     {
-        global $consoleDB;
+        global $register;
 
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
+    
         $errors = [];
 
         // Event

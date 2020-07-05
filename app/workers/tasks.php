@@ -4,7 +4,10 @@ require_once __DIR__.'/../init.php';
 
 use Utopia\App;
 use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Utopia\Config\Config;
 use Cron\CronExpression;
 
 \cli_set_process_title('Tasks V1 Worker');
@@ -24,7 +27,12 @@ class TasksV1
 
     public function perform()
     {
-        global $consoleDB;
+        global $register;
+
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
 
         /*
          * 1. Get Original Task

@@ -7,8 +7,11 @@ require_once __DIR__.'/../init.php';
 echo APP_NAME.' deletes worker v1 has started'."\n";
 
 use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
 use Appwrite\Storage\Device\Local;
+use Utopia\Config\Config;
 
 class DeletesV1
 {
@@ -40,7 +43,12 @@ class DeletesV1
 
     protected function deleteProject(Document $document)
     {
-        global $consoleDB;
+        global $register;
+
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
 
         // Delete all DBs
         $consoleDB->deleteNamespace($document->getId());

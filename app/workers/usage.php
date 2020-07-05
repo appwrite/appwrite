@@ -23,13 +23,13 @@ class UsageV1
     {
         global $register;
 
+        $statsd = $register->get('statsd', true);
+
         $projectId = $this->args['projectId'];
         $method = $this->args['method'];
         $request = $this->args['request'];
         $response = $this->args['response'];
         $storage = $this->args['storage'];
-
-        $statsd = $register->get('statsd', true);
 
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
 

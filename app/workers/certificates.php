@@ -3,8 +3,11 @@
 use Utopia\App;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\CNAME;
+use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
@@ -22,7 +25,12 @@ class CertificatesV1
 
     public function perform()
     {
-        global $consoleDB;
+        global $register;
+
+        $consoleDB = new Database();
+        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $consoleDB->setNamespace('app_console'); // Main DB
+        $consoleDB->setMocks(Config::getParam('collections', []));
 
         /**
          * 1. Get new domain document - DONE
