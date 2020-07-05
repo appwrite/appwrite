@@ -3,7 +3,6 @@
 require_once __DIR__.'/../init.php';
 
 use Utopia\App;
-use Utopia\Config\Config;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;
 use Cron\CronExpression;

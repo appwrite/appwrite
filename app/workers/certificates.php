@@ -1,7 +1,6 @@
 <?php
 
 use Utopia\App;
-use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;

@@ -20,7 +20,7 @@ class WebhooksV1
 
     public function perform()
     {
-        global $consoleDB, $request;
+        global $consoleDB;
 
         $errors = [];
 
