@@ -30,4 +30,4 @@ install:
 
 script:
 - docker ps
-- docker exec appwrite /usr/src/code/vendor/bin/phpunit --configuration /usr/src/code/phpunit.xml
+- docker exec appwrite test
