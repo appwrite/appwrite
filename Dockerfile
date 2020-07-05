@@ -140,6 +140,14 @@ RUN chmod +x /usr/local/bin/start
 RUN chmod +x /usr/local/bin/doctor
 RUN chmod +x /usr/local/bin/migrate
 RUN chmod +x /usr/local/bin/test
+RUN chmod +x /usr/local/bin/schedule
+RUN chmod +x /usr/local/bin/worker-audits
+RUN chmod +x /usr/local/bin/worker-certificates
+RUN chmod +x /usr/local/bin/worker-deletes
+RUN chmod +x /usr/local/bin/worker-mails
+RUN chmod +x /usr/local/bin/worker-tasks
+RUN chmod +x /usr/local/bin/worker-usage
+RUN chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
