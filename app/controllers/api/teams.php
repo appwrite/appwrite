@@ -223,13 +223,13 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('name', '', function () { return new Text(100); }, 'New team member name.', true)
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
-    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audit, $mail, $mode) {
+    ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audits, $mails, $mode) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
-        /** @var Appwrite\Event\Event $mail */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $mails */
         /** @var bool $mode */
 
         $name = (empty($name)) ? $email : $name;
@@ -359,7 +359,7 @@ App::post('/v1/teams/:teamId/memberships')
         ;
 
         if (APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
-            $mail
+            $mails
                 ->setParam('event', 'teams.membership.create')
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
@@ -369,7 +369,7 @@ App::post('/v1/teams/:teamId/memberships')
             ;
         }
 
-        $audit
+        $audits
             ->setParam('userId', $invitee->getId())
             ->setParam('event', 'teams.membership.create')
             ->setParam('resource', 'teams/'.$teamId)
@@ -390,7 +390,7 @@ App::post('/v1/teams/:teamId/memberships')
                 'name' => $name,
             ]))
         ;
-    }, ['response', 'project', 'user', 'projectDB', 'locale', 'audit', 'mail', 'mode']);
+    }, ['response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails', 'mode']);
 
 App::get('/v1/teams/:teamId/memberships')
     ->desc('Get Team Memberships')
@@ -463,12 +463,12 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('secret', '', function () { return new Text(256); }, 'Secret key.')
-    ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $audit) {
+    ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $audits) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
         $membership = $projectDB->getDocument($inviteId);
@@ -557,7 +557,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             throw new Exception('Failed saving team to DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'teams.membership.update')
             ->setParam('resource', 'teams/'.$teamId)
@@ -579,7 +579,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'name' => $user->getAttribute('name'),
         ])), Response::MODEL_MEMBERSHIP);
         
-    }, ['request', 'response', 'user', 'projectDB', 'audit']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits']);
 
 App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->desc('Delete Team Membership')
@@ -591,10 +591,10 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
     ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
-    ->action(function ($teamId, $inviteId, $response, $projectDB, $audit) {
+    ->action(function ($teamId, $inviteId, $response, $projectDB, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
 
         $membership = $projectDB->getDocument($inviteId);
 
@@ -626,11 +626,11 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
             throw new Exception('Failed saving team to DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $membership->getAttribute('userId'))
             ->setParam('event', 'teams.membership.delete')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'audit']);
+    }, ['response', 'projectDB', 'audits']);

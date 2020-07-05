@@ -157,10 +157,10 @@ $register->set('smtp', function () {
 
     return $mail;
 });
-$register->set('queue-webhook', function () {
+$register->set('queue-webhooks', function () {
     return new Event('v1-webhooks', 'WebhooksV1');
 });
-$register->set('queue-audit', function () {
+$register->set('queue-audits', function () {
     return new Event('v1-audits', 'AuditsV1');
 });
 $register->set('queue-usage', function () {
@@ -251,19 +251,19 @@ App::setResource('locale', function() {
 });
 
 // Queues
-App::setResource('webhook', function($register) {
-    return $register->get('queue-webhook');
+App::setResource('webhooks', function($register) {
+    return $register->get('queue-webhooks');
 }, ['register']);
 
-App::setResource('audit', function($register) {
-    return $register->get('queue-audit');
+App::setResource('audits', function($register) {
+    return $register->get('queue-audits');
 }, ['register']);
 
 App::setResource('usage', function($register) {
     return $register->get('queue-usage');
 }, ['register']);
 
-App::setResource('mail', function($register) {
+App::setResource('mails', function($register) {
     return $register->get('queue-mails');
 }, ['register']);
 

@@ -36,11 +36,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
     /** @var Utopia\Locale\Locale $locale */
-    /** @var Appwrite\Event\Event $webhook */
-    /** @var Appwrite\Event\Event $audit */
+    /** @var Appwrite\Event\Event $webhooks */
+    /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
-    /** @var Appwrite\Event\Event $mail */
-    /** @var Appwrite\Event\Event $deletes */
     /** @var bool $mode */
     /** @var array $clients */
     
@@ -248,25 +246,25 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->setParam('response', 0)
         ->setParam('storage', 0)
     ;
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhook', 'audit', 'usage', 'clients']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'clients']);
 
-App::shutdown(function ($utopia, $request, $response, $project, $webhook, $audit, $usage, $deletes, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Request $request */
     /** @var Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
-    /** @var Appwrite\Event\Event $webhook */
-    /** @var Appwrite\Event\Event $audit */
+    /** @var Appwrite\Event\Event $webhooks */
+    /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
     /** @var bool $mode */
 
-    if (!empty($webhook->getParam('event'))) {
-        $webhook->trigger();
+    if (!empty($webhooks->getParam('event'))) {
+        $webhooks->trigger();
     }
     
-    if (!empty($audit->getParam('event'))) {
-        $audit->trigger();
+    if (!empty($audits->getParam('event'))) {
+        $audits->trigger();
     }
     
     if (!empty($deletes->getParam('document'))) {
@@ -284,7 +282,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhook, $audit
             ->trigger()
         ;
     }
-}, ['utopia', 'request', 'response', 'project', 'webhook', 'audit', 'usage', 'deletes', 'mode']);
+}, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
     /** @var Appwrite\Utopia\Request $request */

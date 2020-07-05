@@ -34,11 +34,11 @@ App::post('/v1/database/collections')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', false, ['projectDB'])
-    ->action(function ($name, $read, $write, $rules, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($name, $read, $write, $rules, $response, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         $parsedRules = [];
 
@@ -79,11 +79,11 @@ App::post('/v1/database/collections')
 
         $data = $data->getArrayCopy();
 
-        $webhook
+        $webhooks
             ->setParam('payload', $data)
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'database.collections.create')
             ->setParam('resource', 'database/collection/'.$data['$id'])
             ->setParam('data', $data)
@@ -96,7 +96,7 @@ App::post('/v1/database/collections')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($data)
         ;
-    }, ['response', 'projectDB', 'webhook', 'audit']);
+    }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/database/collections')
     ->desc('List Collections')
@@ -230,11 +230,11 @@ App::put('/v1/database/collections/:collectionId')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions(/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', true, ['projectDB'])
-    ->action(function ($collectionId, $name, $read, $write, $rules, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($collectionId, $name, $read, $write, $rules, $response, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
 
@@ -279,18 +279,18 @@ App::put('/v1/database/collections/:collectionId')
 
         $data = $collection->getArrayCopy();
 
-        $webhook
+        $webhooks
             ->setParam('payload', $data)
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'database.collections.update')
             ->setParam('resource', 'database/collections/'.$data['$id'])
             ->setParam('data', $data)
         ;
 
         $response->json($collection->getArrayCopy());
-    }, ['response', 'projectDB', 'webhook', 'audit']);
+    }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/database/collections/:collectionId')
     ->desc('Delete Collection')
@@ -302,11 +302,11 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.method', 'deleteCollection')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
-    ->action(function ($collectionId, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($collectionId, $response, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
 
@@ -320,18 +320,18 @@ App::delete('/v1/database/collections/:collectionId')
         
         $data = $collection->getArrayCopy();
 
-        $webhook
+        $webhooks
             ->setParam('payload', $data)
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'database.collections.delete')
             ->setParam('resource', 'database/collections/'.$data['$id'])
             ->setParam('data', $data)
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhook', 'audit']);
+    }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::post('/v1/database/collections/:collectionId/documents')
     ->desc('Create Document')
@@ -349,11 +349,11 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->param('parentDocument', '', function () { return new UID(); }, 'Parent document unique ID. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
-    ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
     
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -437,11 +437,11 @@ App::post('/v1/database/collections/:collectionId/documents')
 
         $data = $data->getArrayCopy();
 
-        $webhook
+        $webhooks
             ->setParam('payload', $data)
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'database.documents.create')
             ->setParam('resource', 'database/document/'.$data['$id'])
             ->setParam('data', $data)
@@ -454,7 +454,7 @@ App::post('/v1/database/collections/:collectionId/documents')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($data)
         ;
-    }, ['response', 'projectDB', 'webhook', 'audit']);
+    }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/database/collections/:collectionId/documents')
     ->desc('List Documents')
@@ -579,11 +579,11 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('data', [], function () { return new JSON(); }, 'Document data as JSON object.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
         $document = $projectDB->getDocument($documentId, false);
@@ -632,11 +632,11 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
 
         $data = $data->getArrayCopy();
 
-        $webhook
+        $webhooks
             ->setParam('payload', $data)
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'database.documents.update')
             ->setParam('resource', 'database/document/'.$data['$id'])
             ->setParam('data', $data)
@@ -646,7 +646,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             * View
             */
         $response->json($data);
-    }, ['response', 'projectDB', 'webhook', 'audit']);
+    }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->desc('Delete Document')
@@ -659,11 +659,11 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->label('sdk.description', '/docs/references/database/delete-document.md')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
-    ->action(function ($collectionId, $documentId, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($collectionId, $documentId, $response, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         $collection = $projectDB->getDocument($collectionId, false);
         $document = $projectDB->getDocument($documentId, false);
@@ -688,15 +688,15 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
 
         $data = $document->getArrayCopy();
 
-        $webhook
+        $webhooks
             ->setParam('payload', $data)
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'database.documents.delete')
             ->setParam('resource', 'database/document/'.$data['$id'])
             ->setParam('data', $data) // Audit document in case of malicious or disastrous action
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhook', 'audit']);
+    }, ['response', 'projectDB', 'webhooks', 'audits']);

@@ -41,13 +41,13 @@ App::post('/v1/storage/files')
     ->param('file', [], function () { return new File(); }, 'Binary File.', false)
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhook, $audit, $usage) {
+    ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhooks, $audits, $usage) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
         $file = $request->getFiles('file');
@@ -150,11 +150,11 @@ App::post('/v1/storage/files')
             throw new Exception('Failed saving file to DB', 500);
         }
 
-        $webhook
+        $webhooks
             ->setParam('payload', $file->getArrayCopy())
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'storage.files.create')
             ->setParam('resource', 'storage/files/'.$file->getId())
         ;
@@ -167,7 +167,7 @@ App::post('/v1/storage/files')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($file->getArrayCopy())
         ;
-    }, ['request', 'response', 'user', 'projectDB', 'webhook', 'audit', 'usage']);
+    }, ['request', 'response', 'user', 'projectDB', 'webhooks', 'audits', 'usage']);
 
 App::get('/v1/storage/files')
     ->desc('List Files')
@@ -492,11 +492,11 @@ App::put('/v1/storage/files/:fileId')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(function ($fileId, $read, $write, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($fileId, $read, $write, $response, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         $file = $projectDB->getDocument($fileId);
 
@@ -516,17 +516,17 @@ App::put('/v1/storage/files/:fileId')
             throw new Exception('Failed saving file to DB', 500);
         }
 
-        $webhook
+        $webhooks
             ->setParam('payload', $file->getArrayCopy())
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'storage.files.update')
             ->setParam('resource', 'storage/files/'.$file->getId())
         ;
 
         $response->json($file->getArrayCopy());
-    }, ['response', 'projectDB', 'webhook', 'audit']);
+    }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/storage/files/:fileId')
     ->desc('Delete File')
@@ -538,11 +538,11 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.method', 'deleteFile')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->action(function ($fileId, $response, $projectDB, $webhook, $audit, $usage) {
+    ->action(function ($fileId, $response, $projectDB, $webhooks, $audits, $usage) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
         
         $file = $projectDB->getDocument($fileId);
@@ -559,11 +559,11 @@ App::delete('/v1/storage/files/:fileId')
             }
         }
 
-        $webhook
+        $webhooks
             ->setParam('payload', $file->getArrayCopy())
         ;
 
-        $audit
+        $audits
             ->setParam('event', 'storage.files.delete')
             ->setParam('resource', 'storage/files/'.$file->getId())
         ;
@@ -573,7 +573,7 @@ App::delete('/v1/storage/files/:fileId')
         ;
 
         $response->noContent();
-    }, ['response', 'projectDB', 'webhook', 'audit', 'usage']);
+    }, ['response', 'projectDB', 'webhooks', 'audits', 'usage']);
 
 // App::get('/v1/storage/files/:fileId/scan')
 //     ->desc('Scan Storage')

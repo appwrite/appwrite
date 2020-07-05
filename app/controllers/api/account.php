@@ -54,13 +54,13 @@ App::post('/v1/account')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhook, $audit) use ($oauth2Keys) {
+    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) use ($oauth2Keys) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         if ('console' === $project->getId()) {
             $whitlistEmails = $project->getAttribute('authWhitelistEmails');
@@ -120,14 +120,14 @@ App::post('/v1/account')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $webhook
+        $webhooks
             ->setParam('payload', [
                 'name' => $name,
                 'email' => $email,
             ])
         ;
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.create')
             ->setParam('resource', 'users/'.$user->getId())
@@ -144,7 +144,7 @@ App::post('/v1/account')
                 ],
                 $oauth2Keys
             )), ['roles' => Authorization::getRoles()]));
-    }, ['request', 'response', 'project', 'projectDB', 'webhook', 'audit']);
+    }, ['request', 'response', 'project', 'projectDB', 'webhooks', 'audits']);
 
 App::post('/v1/account/sessions')
     ->desc('Create Account Session')
@@ -159,12 +159,12 @@ App::post('/v1/account/sessions')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->action(function ($email, $password, $request, $response, $projectDB, $webhook, $audit) {
+    ->action(function ($email, $password, $request, $response, $projectDB, $webhooks, $audits) {
         /** @var Appwrite\Utopia\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhook */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $webhooks */
+        /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -176,7 +176,7 @@ App::post('/v1/account/sessions')
         ]);
 
         if (false == $profile || !Auth::passwordVerify($password, $profile->getAttribute('password'))) {
-            $audit
+            $audits
                 //->setParam('userId', $profile->getId())
                 ->setParam('event', 'account.sesssions.failed')
                 ->setParam('resource', 'users/'.($profile ? $profile->getId() : ''))
@@ -213,14 +213,14 @@ App::post('/v1/account/sessions')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $webhook
+        $webhooks
             ->setParam('payload', [
                 'name' => $profile->getAttribute('name', ''),
                 'email' => $profile->getAttribute('email', ''),
             ])
         ;
 
-        $audit
+        $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
             ->setParam('resource', 'users/'.$profile->getId())
@@ -240,7 +240,7 @@ App::post('/v1/account/sessions')
         
         $response->dynamic($session, Response::MODEL_SESSION);
         ;
-    }, ['request', 'response', 'projectDB', 'webhook', 'audit']);
+    }, ['request', 'response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create Account Session with OAuth2')
@@ -356,13 +356,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $audit) use ($oauthDefaultSuccess) {
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $audits) use ($oauthDefaultSuccess) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
         
         $protocol = $request->getProtocol();
         $callback = $protocol.'://'.$request->getHostname().'/v1/account/sessions/oauth2/callback/'.$provider.'/'.$project->getId();
@@ -509,7 +509,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.sessions.create')
             ->setParam('resource', 'users/'.$user->getId())
@@ -541,7 +541,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'audit']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'audits']);
 
 App::get('/v1/account')
     ->desc('Get Account')
@@ -739,11 +739,11 @@ App::patch('/v1/account/name')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
     ->param('name', '', function () { return new Text(100); }, 'User name.')
-    ->action(function ($name, $response, $user, $projectDB, $audit) use ($oauth2Keys) {
+    ->action(function ($name, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
             'name' => $name,
@@ -753,7 +753,7 @@ App::patch('/v1/account/name')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
             ->setParam('resource', 'users/'.$user->getId())
@@ -768,7 +768,7 @@ App::patch('/v1/account/name')
             ],
             $oauth2Keys
         )), ['roles' => Authorization::getRoles()]));
-    }, ['response', 'user', 'projectDB', 'audit']);
+    }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/password')
     ->desc('Update Account Password')
@@ -781,11 +781,11 @@ App::patch('/v1/account/password')
     ->label('sdk.description', '/docs/references/account/update-password.md')
     ->param('password', '', function () { return new Password(); }, 'New user password. Must be between 6 to 32 chars.')
     ->param('oldPassword', '', function () { return new Password(); }, 'Old user password. Must be between 6 to 32 chars.')
-    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audit) use ($oauth2Keys) {
+    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
 
         if (!Auth::passwordVerify($oldPassword, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401);
@@ -799,7 +799,7 @@ App::patch('/v1/account/password')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.password')
             ->setParam('resource', 'users/'.$user->getId())
@@ -814,7 +814,7 @@ App::patch('/v1/account/password')
             ],
             $oauth2Keys
         )), ['roles' => Authorization::getRoles()]));
-    }, ['response', 'user', 'projectDB', 'audit']);
+    }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/email')
     ->desc('Update Account Email')
@@ -827,11 +827,11 @@ App::patch('/v1/account/email')
     ->label('sdk.description', '/docs/references/account/update-email.md')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->action(function ($email, $password, $response, $user, $projectDB, $audit) use ($oauth2Keys) {
+    ->action(function ($email, $password, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
 
         if (!Auth::passwordVerify($password, $user->getAttribute('password'))) { // Double check user password
             throw new Exception('Invalid credentials', 401);
@@ -860,7 +860,7 @@ App::patch('/v1/account/email')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.email')
             ->setParam('resource', 'users/'.$user->getId())
@@ -875,7 +875,7 @@ App::patch('/v1/account/email')
             ],
             $oauth2Keys
         )), ['roles' => Authorization::getRoles()]));
-    }, ['response', 'user', 'projectDB', 'audit']);
+    }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/prefs')
     ->desc('Update Account Preferences')
@@ -887,11 +887,11 @@ App::patch('/v1/account/prefs')
     ->label('sdk.method', 'updatePrefs')
     ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
-    ->action(function ($prefs, $response, $user, $projectDB, $audit) {
+    ->action(function ($prefs, $response, $user, $projectDB, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
 
         $old = \json_decode($user->getAttribute('prefs', '{}'), true);
         $old = ($old) ? $old : [];
@@ -904,7 +904,7 @@ App::patch('/v1/account/prefs')
             throw new Exception('Failed saving user to DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('event', 'account.update.prefs')
             ->setParam('resource', 'users/'.$user->getId())
         ;
@@ -919,7 +919,7 @@ App::patch('/v1/account/prefs')
         }
 
         $response->json($prefs);
-    }, ['response', 'user', 'projectDB', 'audit']);
+    }, ['response', 'user', 'projectDB', 'audits']);
 
 App::delete('/v1/account')
     ->desc('Delete Account')
@@ -930,13 +930,13 @@ App::delete('/v1/account')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
-    ->action(function ($request, $response, $user, $projectDB, $audit, $webhook) {
+    ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
-        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
 
         $protocol = $request->getProtocol();
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
@@ -955,14 +955,14 @@ App::delete('/v1/account')
          * * Memberships
          */
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.delete')
             ->setParam('resource', 'users/'.$user->getId())
             ->setParam('data', $user->getArrayCopy())
         ;
 
-        $webhook
+        $webhooks
             ->setParam('payload', [
                 'name' => $user->getAttribute('name', ''),
                 'email' => $user->getAttribute('email', ''),
@@ -980,7 +980,7 @@ App::delete('/v1/account')
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->noContent()
         ;
-    }, ['request', 'response', 'user', 'projectDB', 'audit', 'webhook']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
 
 App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete Account Session')
@@ -993,13 +993,13 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
     ->label('abuse-limit', 100)
     ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
-    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audit, $webhook) {
+    ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $webhooks) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
-        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -1014,13 +1014,13 @@ App::delete('/v1/account/sessions/:sessionId')
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
-                $audit
+                $audits
                     ->setParam('userId', $user->getId())
                     ->setParam('event', 'account.sessions.delete')
                     ->setParam('resource', '/user/'.$user->getId())
                 ;
 
-                $webhook
+                $webhooks
                     ->setParam('payload', [
                         'name' => $user->getAttribute('name', ''),
                         'email' => $user->getAttribute('email', ''),
@@ -1045,7 +1045,7 @@ App::delete('/v1/account/sessions/:sessionId')
         }
 
         throw new Exception('Session not found', 404);
-    }, ['request', 'response', 'user', 'projectDB', 'audit', 'webhook']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
 
 App::delete('/v1/account/sessions')
     ->desc('Delete All Account Sessions')
@@ -1057,13 +1057,13 @@ App::delete('/v1/account/sessions')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
-    ->action(function ($request, $response, $user, $projectDB, $audit, $webhook) {
+    ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
-        /** @var Appwrite\Event\Event $webhook */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $webhooks */
 
         $protocol = $request->getProtocol();
         $tokens = $user->getAttribute('tokens', []);
@@ -1073,13 +1073,13 @@ App::delete('/v1/account/sessions')
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
-            $audit
+            $audits
                 ->setParam('userId', $user->getId())
                 ->setParam('event', 'account.sessions.delete')
                 ->setParam('resource', '/user/'.$user->getId())
             ;
 
-            $webhook
+            $webhooks
                 ->setParam('payload', [
                     'name' => $user->getAttribute('name', ''),
                     'email' => $user->getAttribute('email', ''),
@@ -1101,7 +1101,7 @@ App::delete('/v1/account/sessions')
         }
 
         $response->noContent();
-    }, ['request', 'response', 'user', 'projectDB', 'audit', 'webhook']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'webhooks']);
 
 App::post('/v1/account/recovery')
     ->desc('Create Password Recovery')
@@ -1115,14 +1115,14 @@ App::post('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
-    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mail, $audit) {
+    ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $project */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $mail */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $mails */
+        /** @var Appwrite\Event\Event $audits */
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -1187,7 +1187,7 @@ App::post('/v1/account/recovery')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        $mail
+        $mails
             ->setParam('event', 'account.recovery.create')
             ->setParam('recipient', $profile->getAttribute('email', ''))
             ->setParam('name', $profile->getAttribute('name', ''))
@@ -1196,7 +1196,7 @@ App::post('/v1/account/recovery')
             ->trigger();
         ;
 
-        $audit
+        $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.create')
             ->setParam('resource', 'users/'.$profile->getId())
@@ -1206,7 +1206,7 @@ App::post('/v1/account/recovery')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($recovery->getArrayCopy(['$id', 'type', 'expire']))
         ;
-    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mail', 'audit']);
+    }, ['request', 'response', 'projectDB', 'project', 'locale', 'mails', 'audits']);
 
 App::put('/v1/account/recovery')
     ->desc('Complete Password Recovery')
@@ -1222,10 +1222,10 @@ App::put('/v1/account/recovery')
     ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')
     ->param('password', '', function () { return new Password(); }, 'New password. Must be between 6 to 32 chars.')
     ->param('passwordAgain', '', function () {return new Password(); }, 'New password again. Must be between 6 to 32 chars.')
-    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $projectDB, $audit) {
+    ->action(function ($userId, $secret, $password, $passwordAgain, $response, $projectDB, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
     
         if ($password !== $passwordAgain) {
             throw new Exception('Passwords must match', 400);
@@ -1269,7 +1269,7 @@ App::put('/v1/account/recovery')
             throw new Exception('Failed to remove recovery from DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.recovery.update')
             ->setParam('resource', 'users/'.$profile->getId())
@@ -1278,7 +1278,7 @@ App::put('/v1/account/recovery')
         $recovery = $profile->search('$id', $recovery, $profile->getAttribute('tokens', []));
 
         $response->json($recovery->getArrayCopy(['$id', 'type', 'expire']));
-    }, ['response', 'projectDB', 'audit']);
+    }, ['response', 'projectDB', 'audits']);
 
 App::post('/v1/account/verification')
     ->desc('Create Email Verification')
@@ -1291,15 +1291,15 @@ App::post('/v1/account/verification')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
-    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audit, $mail) {
+    ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var Appwrite\Event\Event $audit */
-        /** @var Appwrite\Event\Event $mail */
+        /** @var Appwrite\Event\Event $audits */
+        /** @var Appwrite\Event\Event $mails */
 
         $verificationSecret = Auth::tokenGenerator();
         
@@ -1353,7 +1353,7 @@ App::post('/v1/account/verification')
             ->setParam('{{text-cta}}', '#ffffff')
         ;
 
-        $mail
+        $mails
             ->setParam('event', 'account.verification.create')
             ->setParam('recipient', $user->getAttribute('email'))
             ->setParam('name', $user->getAttribute('name'))
@@ -1362,7 +1362,7 @@ App::post('/v1/account/verification')
             ->trigger()
         ;
 
-        $audit
+        $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.verification.create')
             ->setParam('resource', 'users/'.$user->getId())
@@ -1372,7 +1372,7 @@ App::post('/v1/account/verification')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($verification->getArrayCopy(['$id', 'type', 'expire']))
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audit', 'mail']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails']);
 
 App::put('/v1/account/verification')
     ->desc('Complete Email Verification')
@@ -1386,11 +1386,11 @@ App::put('/v1/account/verification')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('secret', '', function () { return new Text(256); }, 'Valid verification token.')
-    ->action(function ($userId, $secret, $response, $user, $projectDB, $audit) {
+    ->action(function ($userId, $secret, $response, $user, $projectDB, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $audit */
+        /** @var Appwrite\Event\Event $audits */
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
             'limit' => 1,
@@ -1428,7 +1428,7 @@ App::put('/v1/account/verification')
             throw new Exception('Failed to remove verification from DB', 500);
         }
 
-        $audit
+        $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.verification.update')
             ->setParam('resource', 'users/'.$user->getId())
@@ -1437,4 +1437,4 @@ App::put('/v1/account/verification')
         $verification = $profile->search('$id', $verification, $profile->getAttribute('tokens', []));
 
         $response->json($verification->getArrayCopy(['$id', 'type', 'expire']));
-    }, ['response', 'user', 'projectDB', 'audit']);
+    }, ['response', 'user', 'projectDB', 'audits']);
