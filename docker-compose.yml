@@ -60,11 +60,8 @@ services:
     depends_on:
       - mariadb
       - redis
-      # - smtp
-      - maildev
       - clamav
       - influxdb
-      - telegraf
     environment:
       - _APP_ENV
       - _APP_OPTIONS_ABUSE

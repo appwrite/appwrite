@@ -361,6 +361,7 @@ App::post('/v1/teams/:teamId/memberships')
         if (APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
             $mails
                 ->setParam('event', 'teams.membership.create')
+                ->setParam('from', ($project->getId() === 'console') ? '' : \sprintf($locale->getText('account.emails.team'), $project->getAttribute('name')))
                 ->setParam('recipient', $email)
                 ->setParam('name', $name)
                 ->setParam('subject', \sprintf($locale->getText('account.emails.invitation.title'), $team->getAttribute('name', '[TEAM-NAME]'), $project->getAttribute('name', ['[APP-NAME]'])))
