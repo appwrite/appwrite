@@ -9,7 +9,7 @@ use Cron\CronExpression;
 
 \cli_set_process_title('Tasks V1 Worker');
 
-echo APP_NAME.' tasks worker v1 has started';
+echo APP_NAME.' tasks worker v1 has started'."\n";
 
 class TasksV1
 {

@@ -92,6 +92,7 @@ services:
       - appwrite
     depends_on:
       - redis
+      - telegraf
     environment:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -108,6 +109,27 @@ services:
       - appwrite
     depends_on:
       - redis
+      - mariadb
+    environment:
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-audits:
+    entrypoint: worker-audits
+    container_name: appwrite-worker-audits
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
     environment:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT

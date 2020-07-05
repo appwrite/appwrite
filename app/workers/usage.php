@@ -6,7 +6,7 @@ require_once __DIR__.'/../init.php';
 
 \cli_set_process_title('Usage V1 Worker');
 
-echo APP_NAME.' usage worker v1 has started';
+echo APP_NAME.' usage worker v1 has started'."\n";
 
 class UsageV1
 {

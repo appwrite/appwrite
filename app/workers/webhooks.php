@@ -4,7 +4,7 @@ require_once __DIR__.'/../init.php';
 
 \cli_set_process_title('Webhooks V1 Worker');
 
-echo APP_NAME.' webhooks worker v1 has started';
+echo APP_NAME.' webhooks worker v1 has started'."\n";
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\Authorization;

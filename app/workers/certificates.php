@@ -10,7 +10,7 @@ require_once __DIR__.'/../init.php';
 
 \cli_set_process_title('Certificates V1 Worker');
 
-echo APP_NAME.' certificates worker v1 has started';
+echo APP_NAME.' certificates worker v1 has started'."\n";
 
 class CertificatesV1
 {
