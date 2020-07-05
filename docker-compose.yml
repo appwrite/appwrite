@@ -99,6 +99,26 @@ services:
       - _APP_STATSD_HOST
       - _APP_STATSD_PORT
 
+  appwrite-worker-audits:
+    entrypoint: worker-audits
+    container_name: appwrite-worker-audits
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
     container_name: appwrite-worker-webhooks
@@ -119,9 +139,9 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-worker-audits:
-    entrypoint: worker-audits
-    container_name: appwrite-worker-audits
+  appwrite-worker-mails:
+    entrypoint: worker-mails
+    container_name: appwrite-worker-mails
     build:
       context: .
     restart: unless-stopped
@@ -129,15 +149,13 @@ services:
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - maildev
+      # - smtp
     environment:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
-      - _APP_DB_HOST
-      - _APP_DB_PORT
-      - _APP_DB_SCHEMA
-      - _APP_DB_USER
-      - _APP_DB_PASS
+      - _APP_SMTP_HOST
+      - _APP_SMTP_PORT
 
   mariadb:
     image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
