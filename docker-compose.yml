@@ -169,9 +169,9 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=rootsecretpassword
-      - MYSQL_DATABASE="${_APP_DB_SCHEMA}"
-      - MYSQL_USER="${_APP_DB_USER}"
-      - MYSQL_PASSWORD="${_APP_DB_PASS}"
+      - MYSQL_DATABASE=appwrite
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
     command: 'mysqld --innodb-flush-method=fsync'
 
   maildev:
