@@ -31,6 +31,7 @@ before_install:
 # - docker save -o docker_images/images.tar appwrite_appwrite
 
 install:
+- docker --version
 - docker-compose up -d
 - sleep 90
 
