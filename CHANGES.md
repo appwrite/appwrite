@@ -37,6 +37,7 @@
 - Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
 - Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
 - Fixed bug denying authentication with Github OAuth provider
+- New OAuth adapter for Box.com
 
 ## Breaking Changes
 - **Deprecated** `first` and `last` query params for documents list route in the database API
