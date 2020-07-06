@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7fe8eb603ac13489edb3843a93ee3356",
+    "content-hash": "6faf79daa7c1931e3977c49baa44200b",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1596,16 +1596,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.7.5",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "a1fcf67f2bd04094490277b6e4516b67e90c9b06"
+                "reference": "de93b6391ad93e46a5a6573527d0d82d93fb2c1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/a1fcf67f2bd04094490277b6e4516b67e90c9b06",
-                "reference": "a1fcf67f2bd04094490277b6e4516b67e90c9b06",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/de93b6391ad93e46a5a6573527d0d82d93fb2c1a",
+                "reference": "de93b6391ad93e46a5a6573527d0d82d93fb2c1a",
                 "shasum": ""
             },
             "require": {
@@ -1636,7 +1636,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-07-04T13:46:40+00:00"
+            "time": "2020-07-04T22:01:06+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -1686,16 +1686,16 @@
         },
         {
             "name": "utopia-php/registry",
-            "version": "0.2.1",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/registry.git",
-                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5"
+                "reference": "948aa82942a1bde8b97ec74fdc1a83fb24122788"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/registry/zipball/2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
-                "reference": "2cd2d318067a6b310c35c9f3ad73d2ce3c1ca7d5",
+                "url": "https://api.github.com/repos/utopia-php/registry/zipball/948aa82942a1bde8b97ec74fdc1a83fb24122788",
+                "reference": "948aa82942a1bde8b97ec74fdc1a83fb24122788",
                 "shasum": ""
             },
             "require": {
@@ -1729,7 +1729,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-06-20T11:46:06+00:00"
+            "time": "2020-07-04T22:14:07+00:00"
         }
     ],
     "packages-dev": [
@@ -1739,7 +1739,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "2b9a55bc447b8b856a8b9dc8c5c86a2c61a6ed3a"
+                "reference": "8d95a65c802b106f1afd80001d98ea4d92d9faba"
             },
             "require": {
                 "ext-curl": "*",
@@ -1769,7 +1769,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-06-20T07:38:05+00:00"
+            "time": "2020-07-06T05:12:37+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -2239,24 +2239,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/prophecy.git",
-                "reference": "69782012a282be8cc263fd56a8b19341b88cc4b4"
+                "reference": "693f7f27d9bc2a1fac369ea20e6aff2cc7d96e9f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/69782012a282be8cc263fd56a8b19341b88cc4b4",
-                "reference": "69782012a282be8cc263fd56a8b19341b88cc4b4",
+                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/693f7f27d9bc2a1fac369ea20e6aff2cc7d96e9f",
+                "reference": "693f7f27d9bc2a1fac369ea20e6aff2cc7d96e9f",
                 "shasum": ""
             },
             "require": {
-                "doctrine/instantiator": "^1.0.2",
-                "php": "^5.3|^7.0",
-                "phpdocumentor/reflection-docblock": "^2.0|^3.0.2|^4.0|^5.0",
-                "sebastian/comparator": "^1.2.3|^2.0|^3.0|^4.0",
-                "sebastian/recursion-context": "^1.0|^2.0|^3.0|^4.0"
+                "doctrine/instantiator": "^1.2",
+                "php": "^7.2",
+                "phpdocumentor/reflection-docblock": "^5.0",
+                "sebastian/comparator": "^3.0 || ^4.0",
+                "sebastian/recursion-context": "^3.0 || ^4.0"
             },
             "require-dev": {
-                "phpspec/phpspec": "^2.5 || ^3.2",
-                "phpunit/phpunit": "^4.8.35 || ^5.7 || ^6.5 || ^7.1"
+                "phpspec/phpspec": "^6.0",
+                "phpunit/phpunit": "^8.0"
             },
             "type": "library",
             "extra": {
@@ -2294,7 +2294,7 @@
                 "spy",
                 "stub"
             ],
-            "time": "2020-07-02T09:43:19+00:00"
+            "time": "2020-07-05T07:41:56+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -3340,12 +3340,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "f32950c872a995a93807909bab69387f47afaa25"
+                "reference": "d190c2e7f7a0475ab86f3185ef34f958d341c5b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/f32950c872a995a93807909bab69387f47afaa25",
-                "reference": "f32950c872a995a93807909bab69387f47afaa25",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d190c2e7f7a0475ab86f3185ef34f958d341c5b4",
+                "reference": "d190c2e7f7a0475ab86f3185ef34f958d341c5b4",
                 "shasum": ""
             },
             "require": {
@@ -3397,7 +3397,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-06-22T15:25:21+00:00"
+            "time": "2020-07-05T13:32:43+00:00"
         },
         {
             "name": "webmozart/assert",

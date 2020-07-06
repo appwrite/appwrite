@@ -136,6 +136,72 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
+  appwrite-worker-tasks:
+    entrypoint: worker-tasks
+    container_name: appwrite-worker-tasks
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-deletes:
+    entrypoint: worker-deletes
+    container_name: appwrite-worker-deletes
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    volumes: 
+      - appwrite-uploads:/storage/uploads:rw
+      - appwrite-cache:/storage/cache:rw
+    environment:
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
+  appwrite-worker-certificates:
+    entrypoint: worker-certificates
+    container_name: appwrite-worker-certificates
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    volumes: 
+      - appwrite-config:/storage/config:rw
+      - appwrite-certificates:/storage/certificates:rw
+    environment:
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+
   appwrite-worker-mails:
     entrypoint: worker-mails
     container_name: appwrite-worker-mails
@@ -153,6 +219,20 @@ services:
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
+
+  appwrite-schedule:
+    entrypoint: schedule
+    container_name: appwrite-schedule
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+    environment:
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
 
   mariadb:
     image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
