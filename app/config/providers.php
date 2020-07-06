@@ -113,9 +113,9 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
-    'paypal_sandbox' => [
+    'paypalSandbox' => [
         'developers' => 'https://developer.paypal.com/docs/api/overview/',
-        'icon' => 'icon-paypal_sandbox',
+        'icon' => 'icon-paypal-sandbox',
         'enabled' => true,
         'form' => false,
         'beta' => false,

@@ -14,6 +14,6 @@ class PaypalSandbox extends Paypal
      */
     public function getName(): string
     {
-        return 'paypal_sandbox';
+        return 'paypalSandbox';
     }
 }
