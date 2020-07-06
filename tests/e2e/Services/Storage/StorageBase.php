@@ -78,7 +78,7 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file2['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $file2['headers']['content-type']);
+        $this->assertEquals('image/png', $file2['headers']['content-type']);
         $this->assertNotEmpty($file2['body']);
 
         $file3 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/download', array_merge([
@@ -88,7 +88,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file3['headers']['status-code']);
         $this->assertEquals('attachment; filename="logo.png"', $file3['headers']['content-disposition']);
-        $this->assertEquals('image/png; charset=UTF-8', $file3['headers']['content-type']);
+        $this->assertEquals('image/png', $file3['headers']['content-type']);
         $this->assertNotEmpty($file3['body']);
 
         $file4 = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'] . '/view', array_merge([
@@ -97,7 +97,7 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file4['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $file4['headers']['content-type']);
+        $this->assertEquals('image/png', $file4['headers']['content-type']);
         $this->assertNotEmpty($file4['body']);
 
         /**
