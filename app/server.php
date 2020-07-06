@@ -2,6 +2,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+use Appwrite\Utopia\Files;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Process;
@@ -24,8 +25,8 @@ $http = new Server("0.0.0.0", 80);
 $http
     ->set([
         'open_http2_protocol' => true,
-        'document_root' => __DIR__ . '/../public',
-        'enable_static_handler' => true,
+        // 'document_root' => __DIR__.'/../public',
+        // 'enable_static_handler' => true,
         'timeout' => 7,
         'http_compression' => true,
         'http_compression_level' => 6,
@@ -55,11 +56,26 @@ $http->on('start', function (Server $http) {
     });
 });
 
+Files::load(__DIR__ . '/../public');
+
 include __DIR__ . '/app.php';
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) {
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
+
+    if(Files::isFileLoaded($request->getURI())) {
+        $time = (60 * 60 * 24 * 45); // 45 days cache
+
+        $response
+            ->setContentType(Files::getFileMimeType($request->getURI()))
+            ->addHeader('Cache-Control', 'public, max-age='.$time)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
+            ->send(Files::getFileContents($request->getURI()))
+        ;
+
+        return;
+    }
 
     $app = new App('Asia/Tel_Aviv');
     

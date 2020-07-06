@@ -226,7 +226,7 @@ class Response extends UtopiaResponse
 
         // Send content type header
         $this
-            ->addHeader('Content-Type', $this->contentType . '; charset=UTF-8')
+            ->addHeader('Content-Type', $this->contentType)
         ;
 
         // Set application headers

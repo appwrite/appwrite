@@ -17,6 +17,62 @@ class Files
     static protected $count = 0;
 
     /**
+     * @var array
+     */
+    static protected $mimeTypes = [];
+
+    /**
+     * @var array
+     */
+    static protected $extensions = [
+        'css' => 'text/css',
+        'js' => 'text/javascript',
+        'svg' => 'image/svg+xml',
+    ];
+
+    /**
+     * Add MimeType
+     * 
+     * @var string $mimeType
+     */
+    public static function addMimeType(string $mimeType)
+    {
+        self::$mimeTypes[$mimeType] = true;
+    }
+
+    /**
+     * Remove MimeType
+     * 
+     * @var string $mimeType
+     */
+    public static function removeMimeType(string $mimeType)
+    {
+        if(isset(self::$mimeTypes[$mimeType])) {
+            unset(self::$mimeTypes[$mimeType]);
+        }
+    }
+
+    /**
+     * Get MimeType List
+     * 
+     * @return array
+     */
+    public static function getMimeTypes(): array
+    {
+        return self::$mimeTypes;
+    }
+
+    /**
+     * Get Files Loaded Count
+     * 
+     * @return int
+     */
+    public static function getCount(): int
+    {
+        return self::$count;
+    }
+
+    /**
      * Load
      * 
      * @var string $path
@@ -34,12 +90,13 @@ class Files
         $handle = opendir($directory);
 
         while ($path = readdir($handle)) {
+            $extension = pathinfo($path, PATHINFO_EXTENSION);
 
             if (in_array($path, ['.', '..'])) {
                 continue;
             }
 
-            if (in_array(pathinfo($path, PATHINFO_EXTENSION), ['php', 'phtml'])) {
+            if (in_array($extension, ['php', 'phtml'])) {
                 continue;
             }
 
@@ -54,7 +111,12 @@ class Files
     
             self::$count++;
 
-            self::$loaded[substr($directory.'/'.$path , strlen($root))] = file_get_contents($directory.'/'.$path);
+            self::$loaded[substr($directory.'/'.$path , strlen($root))] = [
+                'contents' => file_get_contents($directory.'/'.$path),
+                'mimeType' => (array_key_exists($extension, self::$extensions))
+                    ? self::$extensions[$extension]
+                    : mime_content_type($directory.'/'.$path)
+                ];
         }
 
         closedir($handle);
@@ -62,5 +124,47 @@ class Files
         if($directory === $root) {
             echo '[Static Files] Loadded '.self::$count.' files'.PHP_EOL;
         }
+    }
+
+    /**
+     * Is File Loaded
+     * 
+     * @var string $uri
+     */
+    public static function isFileLoaded(string $uri): bool
+    {
+        if(!array_key_exists($uri, self::$loaded)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get File Contants
+     * 
+     * @var string $uri
+     */
+    public static function getFileContents(string $uri): string
+    {
+        if(!array_key_exists($uri, self::$loaded)) {
+            throw new Exception('File not found or not loaded: '.$uri);
+        }
+
+        return self::$loaded[$uri]['contents'];
+    }
+
+    /**
+     * Get File MimeType
+     * 
+     * @var string $uri
+     */
+    public static function getFileMimeType(string $uri): string
+    {
+        if(!array_key_exists($uri, self::$loaded)) {
+            throw new Exception('File not found or not loaded: '.$uri);
+        }
+
+        return self::$loaded[$uri]['mimeType'];
     }
 }
