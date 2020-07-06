@@ -94,7 +94,7 @@ RUN \
   add-apt-repository ppa:certbot/certbot && \
   apt-get update && \
   apt-get install -y --no-install-recommends --no-install-suggests php$PHP_VERSION php$PHP_VERSION-fpm \
-  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom webp certbot && \
+  php$PHP_VERSION-mysqlnd php$PHP_VERSION-curl php$PHP_VERSION-imagick php$PHP_VERSION-mbstring php$PHP_VERSION-dom certbot && \
   # Nginx
   wget http://nginx.org/download/nginx-1.19.0.tar.gz && \
   tar -xzvf nginx-1.19.0.tar.gz && rm nginx-1.19.0.tar.gz && \
@@ -144,12 +144,12 @@ RUN mkdir -p /var/run/php
 COPY ./docker/www.conf /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
 
 # Add PHP Source Code
-COPY ./app /usr/share/nginx/html/app
+COPY ./app /usr/src/code/app
 COPY ./bin /usr/local/bin
-COPY ./docs /usr/share/nginx/html/docs
-COPY ./public /usr/share/nginx/html/public
-COPY ./src /usr/share/nginx/html/src
-COPY --from=builder /usr/local/src/vendor /usr/share/nginx/html/vendor
+COPY ./docs /usr/src/code/docs
+COPY ./public /usr/src/code/public
+COPY ./src /usr/src/code/src
+COPY --from=builder /usr/local/src/vendor /usr/src/code/vendor
 
 RUN mkdir -p /storage/uploads && \
     mkdir -p /storage/cache && \
@@ -174,6 +174,6 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 EXPOSE 80
 
-WORKDIR /usr/share/nginx/html
+WORKDIR /usr/src/code
 
 CMD ["/bin/bash", "/usr/local/bin/start"]
