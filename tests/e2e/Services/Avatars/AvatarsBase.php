@@ -16,7 +16,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
@@ -27,7 +27,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/visa', [
@@ -39,7 +39,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         /**
@@ -79,7 +79,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
@@ -90,7 +90,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/ch', [
@@ -102,7 +102,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
         
         /**
@@ -142,7 +142,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
@@ -153,7 +153,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/flags/us', [
@@ -165,7 +165,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
         
         /**
@@ -206,7 +206,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
@@ -218,7 +218,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
@@ -231,7 +231,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
         
         /**
@@ -276,7 +276,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         // $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
@@ -286,7 +286,7 @@ trait AvatarsBase
         // ]);
 
         // $this->assertEquals(200, $response['headers']['status-code']);
-        // $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        // $this->assertEquals('image/png', $response['headers']['content-type']);
         // $this->assertNotEmpty($response['body']);
 
         // $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
@@ -296,7 +296,7 @@ trait AvatarsBase
         // ]);
 
         // $this->assertEquals(200, $response['headers']['status-code']);
-        // $this->assertEquals('image/x-icon; charset=UTF-8', $response['headers']['content-type']);
+        // $this->assertEquals('image/x-icon', $response['headers']['content-type']);
         // $this->assertNotEmpty($response['body']);
 
         /**
@@ -333,7 +333,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -344,7 +344,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -356,7 +356,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
@@ -370,7 +370,7 @@ trait AvatarsBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('attachment; filename="qr.png"', $response['headers']['content-disposition']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
         
         /**
@@ -423,7 +423,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
@@ -434,7 +434,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
@@ -446,7 +446,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
@@ -460,7 +460,7 @@ trait AvatarsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png; charset=UTF-8', $response['headers']['content-type']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         /**
