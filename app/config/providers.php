@@ -113,6 +113,14 @@ return [ // Ordered by ABC.
         'beta' => false,
         'mock' => false
     ],
+    'paypal_sandbox' => [
+        'developers' => 'https://developer.paypal.com/docs/api/overview/',
+        'icon' => 'icon-paypal_sandbox',
+        'enabled' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false
+    ],
     'salesforce' => [
         'developers' => 'https://developer.salesforce.com/docs/',
         'icon' => 'icon-salesforce',

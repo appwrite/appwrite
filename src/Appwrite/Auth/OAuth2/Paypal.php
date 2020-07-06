@@ -22,7 +22,7 @@ class Paypal extends OAuth2
         'live' => 'https://api.paypal.com/v1/',
     ];
 
-    private $environment = 'live';
+    protected $environment = 'live';
 
     /**
      * @var array
