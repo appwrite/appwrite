@@ -5,35 +5,22 @@ namespace Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2;
 
 // Reference Material
-// https://developer.paypal.com/docs/api/overview/
+// https://developer.box.com/reference/
 
-class Paypal extends OAuth2
+class Box extends OAuth2
 {
-    /**
-     * @var string
-     */
-    private $endpoint= [
-        'sandbox' => 'https://www.sandbox.paypal.com/',
-        'live' => 'https://www.paypal.com/',
-    ];
 
-    private $resourceEndpoint = [
-        'sandbox' => 'https://api.sandbox.paypal.com/v1/',
-        'live' => 'https://api.paypal.com/v1/',
-    ];
+    private $endpoint = 'https://account.box.com/api/oauth2/';
 
-    protected $environment = 'live';
+    private $resourceEndpoint = 'https://api.box.com/2.0/';
 
     /**
      * @var array
      */
     protected $user = [];
 
-
     protected $scopes = [
-            'openid',
-            'profile',
-            'email'
+        'manage_app_users',    
     ];
 
     /**
@@ -41,7 +28,7 @@ class Paypal extends OAuth2
      */
     public function getName(): string
     {
-        return 'paypal';
+        return 'box';
     }
 
     /**
@@ -49,14 +36,12 @@ class Paypal extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint[$this->environment] . 'connect/?'.
-            \http_build_query([
-                'flowEntry' => 'static',
+        $url = $this->endpoint . 'authorize?'.
+            \http_build_query([                
                 'response_type' => 'code',
                 'client_id' => $this->appID,
-                'scope' => \implode(' ', $this->getScopes()),
-                // paypal is not accepting localhost string into return uri
-                'redirect_uri' => \str_replace("localhost", "127.0.0.1", $this->callback),
+                'scope' => \implode(',', $this->getScopes()),                
+                'redirect_uri' => $this->callback,
                 'state' => \json_encode($this->state),
             ]);
 
@@ -70,21 +55,24 @@ class Paypal extends OAuth2
      */
     public function getAccessToken(string $code): string
     {
+        $header = "Content-Type: application/x-www-form-urlencoded";
         $accessToken = $this->request(
             'POST',
-            $this->resourceEndpoint[$this->environment] . 'oauth2/token',
-            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+            $this->endpoint . 'token',
+            [$header],
             \http_build_query([
-                'code' => $code,
-                'grant_type' => 'authorization_code',
+                "client_id" => $this->appID,
+                "client_secret" => $this->appSecret,
+                "code" => $code,
+                "grant_type" => "authorization_code",
+                "scope" =>  \implode(',', $this->getScopes()),
+                "redirect_uri" => $this->callback
             ])
         );
 
-
         $accessToken = \json_decode($accessToken, true);
 
-
-        if (isset($accessToken['access_token'])) {
+        if (array_key_exists('access_token', $accessToken)) {
             return $accessToken['access_token'];
         }
 
@@ -100,8 +88,8 @@ class Paypal extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['payer_id'])) {
-            return $user['payer_id'];
+        if (isset($user['id'])) {
+            return $user['id'];
         }
 
         return '';
@@ -116,8 +104,8 @@ class Paypal extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        if (isset($user['emails'])) {
-            return $user['emails'][0]['value'];
+        if (isset($user['login'])) {
+            return $user['login'];
         }
 
         return '';
@@ -147,13 +135,12 @@ class Paypal extends OAuth2
     protected function getUser(string $accessToken): array
     {
         $header = [
-            'Content-Type: application/json',
             'Authorization: Bearer '.\urlencode($accessToken),
         ];
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->resourceEndpoint[$this->environment] . 'identity/oauth2/userinfo?schema=paypalv1.1',
+                $this->resourceEndpoint . 'me',
                 $header
             );
             $this->user = \json_decode($user, true);
@@ -161,4 +148,5 @@ class Paypal extends OAuth2
 
         return $this->user;
     }
+
 }

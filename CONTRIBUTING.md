@@ -151,6 +151,12 @@ bash ./build.sh X.X.X
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
 
+**Build for multicore**
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/multicore:0.0.0 --push
+```
+
 ## Tests
 
 To run tests manually, run phpunit from your command line:

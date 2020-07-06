@@ -320,41 +320,6 @@ trait DatabaseBase
     /**
      * @depends testCreateDocument
      */
-    public function testListDocumentsFirstAndLast(array $data):array
-    {
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'limit' => 1,
-            'orderField' => 'releaseYear',
-            'orderType' => 'ASC',
-            'orderCast' => 'int',
-            'first' => true,
-        ]);
-
-        $this->assertEquals(1944, $documents['body']['releaseYear']);
-
-        $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'limit' => 2,
-            'offset' => 1,
-            'orderField' => 'releaseYear',
-            'orderType' => 'ASC',
-            'orderCast' => 'int',
-            'last' => true,
-        ]);
-
-        $this->assertEquals(2019, $documents['body']['releaseYear']);
-
-        return [];
-    }
-
-    /**
-     * @depends testCreateDocument
-     */
     public function testDocumentsListSuccessSearch(array $data):array
     {
         $documents = $this->client->call(Client::METHOD_GET, '/database/collections/' . $data['moviesId'] . '/documents', array_merge([

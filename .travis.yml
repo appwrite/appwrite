@@ -30,4 +30,4 @@ install:
 
 script:
 - docker ps
-- docker exec appwrite bash test
+- docker exec appwrite test
