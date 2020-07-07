@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "12fa4cc8c24ef38a37424285d9be917a",
+    "content-hash": "c9c02c8344b98a983e16152163f8d91a",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1596,16 +1596,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.8.1",
+            "version": "0.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "79c4193e42120b3eefcda22a0254a6bfc257d6b6"
+                "reference": "7fbd96667df44f5afe30c8c48edc82a649b3c16b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/79c4193e42120b3eefcda22a0254a6bfc257d6b6",
-                "reference": "79c4193e42120b3eefcda22a0254a6bfc257d6b6",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/7fbd96667df44f5afe30c8c48edc82a649b3c16b",
+                "reference": "7fbd96667df44f5afe30c8c48edc82a649b3c16b",
                 "shasum": ""
             },
             "require": {
@@ -1636,7 +1636,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-07-06T11:37:03+00:00"
+            "time": "2020-07-07T04:23:03+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -3340,12 +3340,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "d190c2e7f7a0475ab86f3185ef34f958d341c5b4"
+                "reference": "e063bab1a67f4ceea759cee20c10ed609d1f6abb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/d190c2e7f7a0475ab86f3185ef34f958d341c5b4",
-                "reference": "d190c2e7f7a0475ab86f3185ef34f958d341c5b4",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/e063bab1a67f4ceea759cee20c10ed609d1f6abb",
+                "reference": "e063bab1a67f4ceea759cee20c10ed609d1f6abb",
                 "shasum": ""
             },
             "require": {
@@ -3397,7 +3397,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2020-07-05T13:32:43+00:00"
+            "time": "2020-07-06T13:35:12+00:00"
         },
         {
             "name": "webmozart/assert",

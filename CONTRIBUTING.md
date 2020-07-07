@@ -185,7 +185,7 @@ You can use WRK Docker image to benchmark the server performance. Benchmarking i
 ``` 
 
 ```bash
-docker run --rm skandyla/wrk -t5 -c10 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
+docker run --rm skandyla/wrk -t3 -c100 -d30  https://[APPWRITE_HOSTNAME_OR_IP]
 ```
 
 ## Code Maintenance  

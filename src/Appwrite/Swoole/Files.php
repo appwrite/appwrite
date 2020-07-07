@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia;
+namespace Appwrite\Swoole;
 
 use Exception;
 

@@ -2,8 +2,7 @@
 
 namespace Appwrite\Tests;
 
-use Appwrite\URL\URL;
-use Appwrite\Utopia\Files;
+use Appwrite\Swoole\Files;
 use PHPUnit\Framework\TestCase;
 
 class FilesTest extends TestCase

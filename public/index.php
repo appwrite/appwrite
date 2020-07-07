@@ -8,9 +8,9 @@
  * ― Rick Cook, The Wizardry Compiled
  */
 
+use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Request;
-use Utopia\Response;
 
 error_reporting(0);
 ini_set('display_errors', 0);

@@ -297,10 +297,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
-    var_dump(get_class($error));
-    var_dump($error->getMessage());
-    var_dump($error->getFile());
-    var_dump($error->getLine());
+    if(php_sapi_name() === 'cli') {
+        var_dump(get_class($error));
+        var_dump($error->getMessage());
+        var_dump($error->getFile());
+        var_dump($error->getLine());
+    }
 
     $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia;
+namespace Appwrite\Swoole;
 
 use Utopia\Request as UtopiaRequest;
 use Swoole\Http\Request as SwooleRequest;
