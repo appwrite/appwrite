@@ -1998,16 +1998,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "a491d65139e2411c75704e871dd02bdddf5a4bdc"
+                "reference": "969b211f9a51aa1f6c01d1d2aef56d3bd91598e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/a491d65139e2411c75704e871dd02bdddf5a4bdc",
-                "reference": "a491d65139e2411c75704e871dd02bdddf5a4bdc",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/969b211f9a51aa1f6c01d1d2aef56d3bd91598e5",
+                "reference": "969b211f9a51aa1f6c01d1d2aef56d3bd91598e5",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.1"
+                "php": "^7.1 || ^8.0"
             },
             "replace": {
                 "myclabs/deep-copy": "self.version"
@@ -2038,7 +2038,7 @@
                 "object",
                 "object graph"
             ],
-            "time": "2020-03-12T21:49:07+00:00"
+            "time": "2020-06-29T13:22:24+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -2197,24 +2197,23 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c"
+                "reference": "664187301bfbc87e686df212094e6817805c3ab8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
-                "reference": "790426f28bfcbfc1a6f1d59ee8c986edfa45395c",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/664187301bfbc87e686df212094e6817805c3ab8",
+                "reference": "664187301bfbc87e686df212094e6817805c3ab8",
                 "shasum": ""
             },
             "require": {
-                "ext-filter": "^7.1",
-                "php": "^7.2",
+                "ext-filter": "*",
+                "php": "^7.2 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0",
                 "phpdocumentor/type-resolver": "^1.0",
                 "webmozart/assert": "^1"
             },
             "require-dev": {
-                "doctrine/instantiator": "^1",
-                "mockery/mockery": "^1"
+                "mockery/mockery": "1.3.*"
             },
             "type": "library",
             "extra": {
@@ -2242,7 +2241,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-06-19T18:58:43+00:00"
+            "time": "2020-06-27T17:33:53+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
