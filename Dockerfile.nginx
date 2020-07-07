@@ -130,6 +130,9 @@ RUN \
 # Set Upload Limit (default to 100MB)
 RUN echo "upload_max_filesize = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 RUN echo "post_max_size = ${_APP_STORAGE_LIMIT}" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "opcache.preload_user=www-data" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
+RUN echo "opcache.enable_cli = 1" >> /etc/php/$PHP_VERSION/fpm/conf.d/appwrite.ini
 
 # Add logs file
 RUN echo "" >> /var/log/appwrite.log
