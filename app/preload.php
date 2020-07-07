@@ -8,9 +8,9 @@
  * 
  */
 
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 if (file_exists(__DIR__.'/../vendor/autoload.php')) {
     require __DIR__.'/../vendor/autoload.php';
@@ -30,5 +30,6 @@ include 'app.php';
     ->ignore(realpath(__DIR__ . '/../vendor/geoip2'))
     ->ignore(realpath(__DIR__ . '/../vendor/maxmind'))
     ->ignore(realpath(__DIR__ . '/../vendor/maxmind-db'))
-    ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
+    ->ignore(realpath(__DIR__ . '/../vendor/psr/log'))
+    // ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
     ->load();

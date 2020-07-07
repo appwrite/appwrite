@@ -9,28 +9,31 @@ class Preloader
      */
     protected $ignores = [];
 
-    private static $count = 0;
+    /**
+     * @var array
+     */
+    protected $paths = [];
 
-    private $paths;
+    /**
+     * @var array
+     */
+    protected $included = [];
 
     public function __construct(string ...$paths)
     {
         $this->paths = $paths;
 
-        // We'll use composer's classmap
-        // to easily find which classes to autoload,
-        // based on their filename
-        $classMap = require __DIR__ . '/../../../vendor/composer/autoload_classmap.php';
+        $classMap = require __DIR__.'/../../../vendor/composer/autoload_classmap.php';
 
-        $this->paths = array_merge(
+        $this->paths = \array_merge(
             $this->paths,
-            array_values($classMap)
+            \array_values($classMap)
         );
     }
     
-    public function paths(string ...$paths): Preloader
+    public function paths(string ...$paths): self
     {
-        $this->paths = array_merge(
+        $this->paths = \array_merge(
             $this->paths,
             $paths
         );
@@ -38,84 +41,81 @@ class Preloader
         return $this;
     }
 
-    public function ignore(string ...$names): Preloader
+    public function ignore(string ...$names): self
     {
-        $this->ignores = array_merge(
-            $this->ignores,
-            $names
-        );
+        foreach($names as $name) {
+            if(is_readable($name)) {
+                $this->ignores[] = $name;
+            }
+            else {
+                echo "[Preloader] Failed to ignore path `{$name}`".PHP_EOL;
+            }
+        }
 
         return $this;
     }
 
     public function load(): void
     {
-        // We'll loop over all registered paths
-        // and load them one by one
+        $this->included = get_included_files();
+
         foreach ($this->paths as $path) {
-            $this->loadPath(rtrim($path, '/'));
+            $this->loadPath(\rtrim($path, '/'));
         }
 
-        $count = self::$count;
+        $already = count($this->included);
 
-        echo "[Preloader] Preloaded {$count} classes" . PHP_EOL;
+        echo "[Preloader] Preloaded {$already} files.".PHP_EOL;
     }
 
     private function loadPath(string $path): void
     {
-        // If the current path is a directory,
-        // we'll load all files in it 
-        if (is_dir($path)) {
+        if (\is_dir($path)) {
             $this->loadDir($path);
 
             return;
         }
 
-        // Otherwise we'll just load this one file
         $this->loadFile($path);
     }
 
     private function loadDir(string $path): void
     {
-        $handle = opendir($path);
+        $handle = \opendir($path);
 
-        // We'll loop over all files and directories
-        // in the current path,
-        // and load them one by one
-        while ($file = readdir($handle)) {
-            if (in_array($file, ['.', '..'])) {
+        while ($file = \readdir($handle)) {
+            if (\in_array($file, ['.', '..'])) {
                 continue;
             }
 
             $this->loadPath("{$path}/{$file}");
         }
 
-        closedir($handle);
+        \closedir($handle);
     }
 
     private function loadFile(string $path): void
     {
-        // And use it to make sure the class shouldn't be ignored
         if ($this->shouldIgnore($path)) {
             return;
         }
-        // echo "[Preloader] Preloaded `{$path}`" . PHP_EOL;
-        // Finally we require the path,
-        // causing all its dependencies to be loaded as well
+        
+        if(in_array(realpath($path), $this->included)) {
+            // echo "[Preloader] Skiped `{$path}`".PHP_EOL;
+            return;
+        }
+        
+        // echo "[Preloader] Preloaded `{$path}`".PHP_EOL;
+
         try {
-            ob_start(); //Start of build
-
-            require_once $path;
-
-            $output = mb_strlen(ob_get_contents());
-    
-            ob_end_clean(); //End of build
+            // opcache_compile_file($path);
+            require $path;
         } catch (\Throwable $th) {
-            echo "[Preloader] Failed to load `{$path}`" . PHP_EOL;
+            echo "[Preloader] Failed to load `{$path}`: ".$th->getMessage().PHP_EOL;
             return;
         }
 
-        self::$count++;
+        $this->included = array_merge(get_included_files(), [realpath($path)]);
     }
 
     private function shouldIgnore(?string $path): bool
@@ -124,12 +124,12 @@ class Preloader
             return true;
         }
 
-        if(!in_array(pathinfo($path, PATHINFO_EXTENSION), ['php'])) {
+        if(!\in_array(\pathinfo($path, PATHINFO_EXTENSION), ['php'])) {
             return true;
         }
 
         foreach ($this->ignores as $ignore) {
-            if (strpos($path, $ignore) === 0) {
+            if (\strpos($path, $ignore) === 0) {
                 return true;
             }
         }
