@@ -91,6 +91,7 @@ services:
       - redis
       - telegraf
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_STATSD_HOST
@@ -108,6 +109,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -128,6 +130,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -148,6 +151,7 @@ services:
       - redis
       - mariadb
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -171,6 +175,7 @@ services:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -194,6 +199,7 @@ services:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_DB_HOST
@@ -215,6 +221,7 @@ services:
       - maildev
       # - smtp
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_SMTP_HOST
@@ -231,6 +238,7 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
 
