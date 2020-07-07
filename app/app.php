@@ -3,7 +3,7 @@
 require_once __DIR__.'/init.php';
 
 use Utopia\App;
-use Appwrite\Utopia\Request;
+use Appwrite\Swoole\Request;
 use Appwrite\Utopia\Response;
 use Utopia\View;
 use Utopia\Exception;
@@ -20,7 +20,7 @@ Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
-    /** @var Appwrite\Utopia\Request $request */
+    /** @var Appwrite\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
@@ -275,12 +275,13 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
 }, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'mode']);
 
 App::options(function ($request, $response) {
-    /** @var Appwrite\Utopia\Request $request */
+    /** @var Appwrite\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
-    $origin = $request->getOrigin('');
+    $origin = $request->getOrigin();
 
     $response
+        ->addHeader('Server', 'Appwrite')
         ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
         ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-SDK-Version, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
         ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')

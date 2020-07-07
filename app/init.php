@@ -363,7 +363,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 }, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
 
 App::setResource('project', function($consoleDB, $request) {
-    /** @var Appwrite\Utopia\Request $request */
+    /** @var Appwrite\Swoole\Request $request */
     /** @var Appwrite\Database\Database $consoleDB */
 
     Authorization::disable();

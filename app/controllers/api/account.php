@@ -160,7 +160,7 @@ App::post('/v1/account/sessions')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->action(function ($email, $password, $request, $response, $projectDB, $webhooks, $audits) {
-        /** @var Appwrite\Utopia\Request $request */
+        /** @var Appwrite\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */

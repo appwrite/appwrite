@@ -31,5 +31,5 @@ include 'app.php';
     ->ignore(realpath(__DIR__ . '/../vendor/maxmind'))
     ->ignore(realpath(__DIR__ . '/../vendor/maxmind-db'))
     ->ignore(realpath(__DIR__ . '/../vendor/psr/log'))
-    // ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
+    ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
     ->load();
