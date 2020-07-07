@@ -2,9 +2,9 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use Appwrite\Utopia\Files;
-use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Response;
+use Appwrite\Swoole\Files;
+use Appwrite\Swoole\Request;
+use Appwrite\Swoole\Response;
 use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
