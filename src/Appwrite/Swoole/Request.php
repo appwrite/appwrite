@@ -64,6 +64,7 @@ class Request extends UtopiaRequest
             case self::METHOD_POST:
             case self::METHOD_PUT:
             case self::METHOD_PATCH:
+            case self::METHOD_DELETE:
                 return $this->generateInput();
                 break;
             default:
@@ -309,7 +310,7 @@ class Request extends UtopiaRequest
                     break;
 
                 default:
-                    $this->payload = $this->swoole->post;
+                    $this->payload = $this->swoole->rawContent();
                     break;
             }
 
