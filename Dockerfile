@@ -68,6 +68,7 @@ ARG VERSION=dev
 
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
+    _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \

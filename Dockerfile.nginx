@@ -51,6 +51,7 @@ ARG VERSION=dev
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
     PHP_VERSION=7.4 \
+    _APP_SERVER=nginx \
     _APP_ENV=production \
     _APP_DOMAIN=localhost \
     _APP_DOMAIN_TARGET=localhost \
