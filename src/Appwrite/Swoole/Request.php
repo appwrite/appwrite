@@ -310,7 +310,7 @@ class Request extends UtopiaRequest
                     break;
 
                 default:
-                    $this->payload = $this->swoole->rawContent();
+                    $this->payload = $this->swoole->post;
                     break;
             }
 
