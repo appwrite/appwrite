@@ -24,13 +24,13 @@ $home = $this->getParam('home', '');
         data-success="trigger"
         data-success-param-trigger-events="projects.list">
 
-        <div data-ls-if="0 == {{console-projects.length}}" class="box margin-bottom" style="display: none">
+        <div data-ls-if="0 == {{console-projects.projects.length}}" class="box margin-bottom" style="display: none">
             <h3 class="margin-bottom-small text-bold">Get Started</h3>
 
             <p class="margin-bottom-no">No Projects Found, Create your first project now.</p>
         </div>
 
-        <ul data-ls-loop="console-projects" data-ls-as="project" data-ls-append="" class="tiles cell-3" style="visibility: hidden">
+        <ul data-ls-loop="console-projects.projects" data-ls-as="project" data-ls-append="" class="tiles cell-3" style="visibility: hidden">
             <li class="margin-bottom">
                 <a data-ls-attrs="href=/console/home?project={{project.$id}}" class="box">
                     <div data-ls-bind="{{project.name}}" class="text-one-liner margin-bottom-tiny text-bold">&nbsp;</div>

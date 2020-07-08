@@ -9,6 +9,7 @@ use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\URL;
+use Utopia\Validator\Range;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
@@ -91,21 +92,25 @@ App::get('/v1/projects')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'list')
-    ->action(function ($response, $consoleDB) {
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->action(function ($search, $limit, $offset, $orderType, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
-        
+
         $results = $consoleDB->getCollection([
-            'limit' => 20,
-            'offset' => 0,
-            'orderField' => 'name',
-            'orderType' => 'ASC',
-            'orderCast' => 'string',
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderField' => 'registration',
+            'orderType' => $orderType,
+            'orderCast' => 'int',
+            'search' => $search,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
             ],
         ]);
-
         foreach ($results as $project) {
             foreach (Config::getParam('providers') as $provider => $node) {
                 $secret = \json_decode($project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}'), true);
@@ -117,7 +122,7 @@ App::get('/v1/projects')
             }
         }
 
-        $response->json($results);
+        $response->json(['sum' => $consoleDB->getSum(), 'projects' => $results]);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId')
