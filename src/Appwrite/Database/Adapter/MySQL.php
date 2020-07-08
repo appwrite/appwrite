@@ -732,7 +732,7 @@ class MySQL extends Adapter
             ->setDebug('joins', \substr_count($query, 'JOIN'))
         ;
 
-        return (int) (isset($result['result'])) ? $result['result'] : 0;
+        return (isset($result['result'])) ? (int)$result['result'] : 0;
     }
 
     /**
