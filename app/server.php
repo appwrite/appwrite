@@ -47,11 +47,12 @@ $http->on('AfterReload', function($serv, $workerId) {
 
 $http->on('start', function (Server $http) {
     Console::success('Server started succefully');
-    printf("x master pid %d, manager pid %d\n", $http->master_pid, $http->manager_pid);
+
+    Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
     // listen ctrl + c
     Process::signal(2, function () use ($http) {
-        echo "Stop by Ctrl+C\n";
+        Console::log('Stop by Ctrl+C');
         $http->shutdown();
     });
 });
