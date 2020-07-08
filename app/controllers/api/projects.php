@@ -5,7 +5,6 @@ use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\URL;
@@ -19,6 +18,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Network\Validator\CNAME;
+use Appwrite\Network\Validator\Domain as DomainValidator;
 use Cron\CronExpression;
 
 App::post('/v1/projects')
