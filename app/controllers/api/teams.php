@@ -288,7 +288,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 }
             }
 
-            if (!$isOwner && (APP_MODE_ADMIN !== $mode)) {
+            if (!$isOwner && (APP_MODE_ADMIN !== $mode) && (APP_MODE_SERVER !== $mode)) {
                 throw new Exception('User is not allowed to send invitations for this team', 401);
             }
 
