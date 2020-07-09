@@ -51,7 +51,7 @@ $utopia->post('/v1/teams')
                 throw new Exception('Failed saving team to DB', 500);
             }
 
-            if ($mode !== APP_MODE_ADMIN && $user->getId()) { // Don't add user on server mode
+            if ($mode !== APP_MODE_ADMIN && $user->getId()) { // Don't add user on app/server mode
                 $membership = new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                     '$permissions' => [
@@ -288,7 +288,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 }
             }
 
-            if (!$isOwner && (APP_MODE_ADMIN !== $mode) && (APP_MODE_SERVER !== $mode)) {
+            if (!$isOwner && (APP_MODE_ADMIN !== $mode) && $user->getId()) { // Not owner, not admin, not app (server)
                 throw new Exception('User is not allowed to send invitations for this team', 401);
             }
 

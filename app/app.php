@@ -50,7 +50,7 @@ $clients = \array_unique(\array_merge($clientsConsole, \array_map(function ($nod
         return false;
     }))));
 
-$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $mail, $audit, $usage, $clients, &$mode) {
+$utopia->init(function () use ($utopia, $request, $response, &$user, $project, $console, $webhook, $mail, $audit, $usage, $clients) {
     
     $route = $utopia->match($request);
 
@@ -160,7 +160,7 @@ $utopia->init(function () use ($utopia, $request, $response, &$user, $project, $
 
         $role = Auth::USER_ROLE_APP;
         $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
-        $mode = APP_MODE_SERVER;
+
         Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
     }
 
