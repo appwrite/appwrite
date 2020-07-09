@@ -288,7 +288,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 }
             }
 
-            if (!$isOwner && (APP_MODE_ADMIN !== $mode) && $user->getId()) { // Not owner, not admin, not app (server)
+            if (!$isOwner && APP_MODE_ADMIN !== $mode && $user->getId()) { // Not owner, not admin, not app (server)
                 throw new Exception('User is not allowed to send invitations for this team', 401);
             }
 
@@ -305,13 +305,18 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'roles' => $roles,
                 'invited' => \time(),
                 'joined' => 0,
-                'confirm' => (APP_MODE_ADMIN === $mode),
+                'confirm' => (APP_MODE_ADMIN === $mode || !$user->getId()),
                 'secret' => Auth::hash($secret),
             ]);
 
-            if (APP_MODE_ADMIN === $mode) { // Allow admin to create membership
+            if (APP_MODE_ADMIN === $mode || !$user->getId()) { // Allow admin to create membership
                 Authorization::disable();
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
+
+                $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
+                    'sum' => $team->getAttribute('sum', 0) + 1,
+                ]));
+    
                 Authorization::reset();
             } else {
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
@@ -346,7 +351,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{text-cta}}', '#ffffff')
             ;
 
-            if (APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
+            if (APP_MODE_ADMIN !== $mode && $user->getId()) { // No need in comfirmation when in admin or app mode
                 $mail
                     ->setParam('event', 'teams.membership.create')
                     ->setParam('recipient', $email)
