@@ -137,11 +137,10 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
-RUN chmod +x /usr/local/bin/start
 RUN chmod +x /usr/local/bin/doctor
 RUN chmod +x /usr/local/bin/migrate
-RUN chmod +x /usr/local/bin/test
 RUN chmod +x /usr/local/bin/schedule
+RUN chmod +x /usr/local/bin/test
 RUN chmod +x /usr/local/bin/worker-audits
 RUN chmod +x /usr/local/bin/worker-certificates
 RUN chmod +x /usr/local/bin/worker-deletes
