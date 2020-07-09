@@ -466,7 +466,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.method', 'createWebhook')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name.')
-    ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list.')
+    ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Webhook events list.')
     ->param('url', null, function () { return new Text(2000); }, 'Webhook URL.')
     ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
@@ -502,7 +502,7 @@ App::post('/v1/projects/:projectId/webhooks')
             'name' => $name,
             'events' => $events,
             'url' => $url,
-            'security' => (int) $security,
+            'security' => $security,
             'httpUser' => $httpUser,
             'httpPass' => $httpPass,
         ]);
@@ -602,7 +602,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name.')
-    ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list.')
+    ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Webhook events list.')
     ->param('url', null, function () { return new Text(2000); }, 'Webhook URL.')
     ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
@@ -638,7 +638,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('name', $name)
             ->setAttribute('events', $events)
             ->setAttribute('url', $url)
-            ->setAttribute('security', (int) $security)
+            ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
             ->setAttribute('httpPass', $httpPass)
         ;
@@ -898,7 +898,7 @@ App::post('/v1/projects/:projectId/tasks')
             'updated' => \time(),
             'previous' => null,
             'next' => $next,
-            'security' => (int) $security,
+            'security' => $security,
             'httpMethod' => $httpMethod,
             'httpUrl' => $httpUrl,
             'httpHeaders' => $httpHeaders,
@@ -1052,7 +1052,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             ->setAttribute('schedule', $schedule)
             ->setAttribute('updated', \time())
             ->setAttribute('next', $next)
-            ->setAttribute('security', (int) $security)
+            ->setAttribute('security', $security)
             ->setAttribute('httpMethod', $httpMethod)
             ->setAttribute('httpUrl', $httpUrl)
             ->setAttribute('httpHeaders', $httpHeaders)
