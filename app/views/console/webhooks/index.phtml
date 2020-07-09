@@ -85,8 +85,8 @@ $events = array_keys($this->getParam('events', []));
                             <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                                 <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="true" data-cast-to="boolean" /> &nbsp; <span>Enabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="false" data-cast-to="boolean" /> &nbsp; <span>Disabled</span> &nbsp;
                             </label>
 
                             <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
@@ -135,7 +135,7 @@ $events = array_keys($this->getParam('events', []));
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
-                <span data-ls-if="0 == {{webhook.security}}">
+                <span data-ls-if="false === {{webhook.security}}" data-debug="1">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
                 <div class="margin-top-tiny">
