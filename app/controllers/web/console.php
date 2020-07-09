@@ -35,7 +35,7 @@ App::shutdown(function ($response, $layout) {
         ->setParam('footer', [$footer])
     ;
 
-    $response->send($layout->render());
+    $response->html($layout->render());
 }, ['response', 'layout'], 'console');
 
 App::get('/error/:code')

@@ -30,7 +30,7 @@ App::shutdown(function ($response, $layout) {
     /** @var Utopia\Response $response */
     /** @var Utopia\View $layout */
 
-    $response->send($layout->render());
+    $response->html($layout->render());
 }, ['response', 'layout'], 'home');
 
 App::get('/')

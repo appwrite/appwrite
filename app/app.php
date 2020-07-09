@@ -367,7 +367,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
             ->setParam('litespeed', false)
         ;
 
-        $response->send($layout->render());
+        $response->html($layout->render());
     }
 
     $response->dynamic(new Document($output),
