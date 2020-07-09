@@ -304,7 +304,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'teamId' => $team->getId(),
                 'roles' => $roles,
                 'invited' => \time(),
-                'joined' => 0,
+                'joined' => (APP_MODE_ADMIN === $mode || !$user->getId()) ? \time() : 0,
                 'confirm' => (APP_MODE_ADMIN === $mode || !$user->getId()),
                 'secret' => Auth::hash($secret),
             ]);
