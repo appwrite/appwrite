@@ -12,7 +12,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:8.0-rc as step1
+FROM php:8.0.0alpha1-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     DEBIAN_FRONTEND=noninteractive \
@@ -21,8 +21,8 @@ ENV TZ=Asia/Tel_Aviv \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
-  apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests ca-certificates software-properties-common wget git openssl make zip unzip libbrotli-dev libz-dev
+  apk update && \
+  apk add ca-certificates gcc make g++ autoconf wget git openssl make zip unzip brotli zlib
   
 RUN docker-php-ext-install sockets
 
@@ -60,7 +60,7 @@ RUN \
   # ./configure --enable-meminfo && \
   # make && make install
 
-FROM php:8.0-rc as final
+FROM php:8.0.0alpha1-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -101,9 +101,9 @@ ENV TZ=Asia/Tel_Aviv \
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
-  apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests webp certbot htop procps \
-  libonig-dev libcurl4-gnutls-dev libmagickwand-dev libyaml-dev libbrotli-dev libz-dev
+  apk update && \
+  apk add libwebp certbot htop procps \
+  oniguruma libcurl imagemagick-libs yaml-dev brotli-libs zlib-dev
   # pecl install imagick yaml && \ 
   # docker-php-ext-enable imagick yaml
 
@@ -112,10 +112,10 @@ RUN docker-php-ext-install sockets curl opcache pdo pdo_mysql
 WORKDIR /usr/src/code
 
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
-COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
-# COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
-# COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190902/meminfo.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190128/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20190128/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190128/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20190128/
+# COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190128/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20190128/
+# COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20190128/meminfo.so /usr/local/lib/php/extensions/no-debug-non-zts-20190128/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
