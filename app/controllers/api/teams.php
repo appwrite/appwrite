@@ -329,6 +329,15 @@ App::post('/v1/teams/:teamId/memberships')
                 'sum' => $team->getAttribute('sum', 0) + 1,
             ]));
 
+            // Attach user to team
+            $invitee->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
+
+            $invitee = $projectDB->updateDocument($invitee->getArrayCopy());
+
+            if (false === $invitee) {
+                throw new Exception('Failed saving user to DB', 500);
+            }
+
             Authorization::reset();
         } else {
             $membership = $projectDB->createDocument($membership->getArrayCopy());
