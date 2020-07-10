@@ -51,7 +51,7 @@ $utopia->post('/v1/teams')
                 throw new Exception('Failed saving team to DB', 500);
             }
 
-            if ($mode !== APP_MODE_ADMIN && $user->getId()) { // Don't add user on server mode
+            if ($mode !== APP_MODE_ADMIN && $user->getId()) { // Don't add user on app/server mode
                 $membership = new Document([
                     '$collection' => Database::SYSTEM_COLLECTION_MEMBERSHIPS,
                     '$permissions' => [
@@ -219,7 +219,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
     ->param('url', '', function () use ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.') // TODO add our own built-in confirm page
     ->action(
-        function ($teamId, $email, $name, $roles, $url) use ($response, $mail, $project, $user, $audit, $projectDB, $mode) {
+        function ($teamId, $email, $name, $roles, $url) use ($response, $mail, $project, $user, $audit, $projectDB, &$mode) {
             $name = (empty($name)) ? $email : $name;
             $team = $projectDB->getDocument($teamId);
 
@@ -288,7 +288,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 }
             }
 
-            if (!$isOwner && (APP_MODE_ADMIN !== $mode)) {
+            if (!$isOwner && APP_MODE_ADMIN !== $mode && $user->getId()) { // Not owner, not admin, not app (server)
                 throw new Exception('User is not allowed to send invitations for this team', 401);
             }
 
@@ -304,14 +304,28 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 'teamId' => $team->getId(),
                 'roles' => $roles,
                 'invited' => \time(),
-                'joined' => 0,
-                'confirm' => (APP_MODE_ADMIN === $mode),
+                'joined' => (APP_MODE_ADMIN === $mode || !$user->getId()) ? \time() : 0,
+                'confirm' => (APP_MODE_ADMIN === $mode || !$user->getId()),
                 'secret' => Auth::hash($secret),
             ]);
 
-            if (APP_MODE_ADMIN === $mode) { // Allow admin to create membership
+            if (APP_MODE_ADMIN === $mode || !$user->getId()) { // Allow admin to create membership
                 Authorization::disable();
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
+
+                $team = $projectDB->updateDocument(\array_merge($team->getArrayCopy(), [
+                    'sum' => $team->getAttribute('sum', 0) + 1,
+                ]));
+
+                // Attach user to team
+                $invitee->setAttribute('memberships', $membership, Document::SET_TYPE_APPEND);
+
+                $invitee = $projectDB->updateDocument($invitee->getArrayCopy());
+
+                if (false === $invitee) {
+                    throw new Exception('Failed saving user to DB', 500);
+                }
+    
                 Authorization::reset();
             } else {
                 $membership = $projectDB->createDocument($membership->getArrayCopy());
@@ -346,7 +360,7 @@ $utopia->post('/v1/teams/:teamId/memberships')
                 ->setParam('{{text-cta}}', '#ffffff')
             ;
 
-            if (APP_MODE_ADMIN !== $mode) { // No need in comfirmation when in admin mode
+            if (APP_MODE_ADMIN !== $mode && $user->getId()) { // No need in comfirmation when in admin or app mode
                 $mail
                     ->setParam('event', 'teams.membership.create')
                     ->setParam('recipient', $email)
