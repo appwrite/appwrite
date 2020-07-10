@@ -125,6 +125,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         ;
                         break;
                     case 'flutter':
+                    case 'flutter-dev':
                     case 'dart':
                         $config = new Dart();
                         break;
