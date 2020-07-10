@@ -1753,7 +1753,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "4209210c106714e07627ad66180b7d1424598184"
+                "reference": "03f2b64657f752830cc33b4b7f9531836da4506f"
             },
             "require": {
                 "ext-curl": "*",
@@ -1783,7 +1783,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-07-09T14:43:24+00:00"
+            "time": "2020-07-10T05:06:52+00:00"
         },
         {
             "name": "doctrine/instantiator",

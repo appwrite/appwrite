@@ -16,6 +16,7 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
+use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
 
@@ -89,43 +90,39 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 switch ($language['key']) {
                     case 'web':
                         $config = new JS();
-                        $config
-                            ->setNPMPackage('appwrite')
-                            ->setBowerPackage('appwrite')
-                        ;
+                        $config->setNPMPackage('appwrite');
+                        $config->setBowerPackage('appwrite');
                         break;
                     case 'php':
                         $config = new PHP();
-                        $config
-                            ->setComposerVendor('appwrite')
-                            ->setComposerPackage('appwrite')
-                        ;
+                        $config->setComposerVendor('appwrite');
+                        $config->setComposerPackage('appwrite');
                         break;
                     case 'nodejs':
                         $config = new Node();
-                        $config
-                            ->setNPMPackage('node-appwrite')
-                            ->setBowerPackage('appwrite')
-                        ;
+                        $config->setNPMPackage('node-appwrite');
+                        $config->setBowerPackage('appwrite');
                         break;
                     case 'deno':
                         $config = new Deno();
                         break;
                     case 'python':
                         $config = new Python();
-                        $config
-                            ->setPipPackage('appwrite')
-                        ;
+                        $config->setPipPackage('appwrite');
                         $license = 'BSD License'; // license edited due to classifiers in pypi
                     break;
                     case 'ruby':
                         $config = new Ruby();
-                        $config
-                            ->setGemPackage('appwrite')
-                        ;
+                        $config->setGemPackage('appwrite');
                         break;
                     case 'flutter':
+                        $config = new Flutter();
+                        $config->setPackageName('appwrite');
+                        break;
                     case 'flutter-dev':
+                        $config = new Flutter();
+                        $config->setPackageName('appwrite-dev');
+                        break;
                     case 'dart':
                         $config = new Dart();
                         break;
