@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
@@ -191,41 +192,6 @@ App::get('/open-api-2.json')
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
 
-        $services = Config::getParam('services', []);
-        
-        function fromCamelCase($input)
-        {
-            \preg_match_all('!([A-Z][A-Z0-9]*(?=$|[A-Z][a-z0-9])|[A-Za-z][a-z0-9]+)!', $input, $matches);
-            $ret = $matches[0];
-            foreach ($ret as &$match) {
-                $match = $match == \strtoupper($match) ? \strtolower($match) : \lcfirst($match);
-            }
-
-            return \implode('_', $ret);
-        }
-
-        function fromCamelCaseToDash($input)
-        {
-            return \str_replace([' ', '_'], '-', \strtolower(\preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1-', $input)));
-        }
-
-        foreach ($services as $service) { /* @noinspection PhpIncludeInspection */
-            if ($tests && !isset($service['tests'])) {
-                continue;
-            }
-
-            if ($tests && !$service['tests']) {
-                continue;
-            }
-            
-            if (!$tests && !$service['sdk']) {
-                continue;
-            }
-            
-            /** @noinspection PhpIncludeInspection */
-            include_once \realpath(__DIR__.'/../../'.$service['controller']);
-        }
-
         $security = [
             APP_PLATFORM_CLIENT => ['Project' => []],
             APP_PLATFORM_SERVER => ['Project' => [], 'Key' => []],
@@ -414,7 +380,7 @@ App::get('/open-api-2.json')
                     continue;
                 }
 
-                $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath('../'.$route->getLabel('sdk.description', '')) : null;
+                $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__.'/../../../'.$route->getLabel('sdk.description', '')) : null;
     
                 $temp = [
                     'summary' => $route->getDesc(),
@@ -440,7 +406,7 @@ App::get('/open-api-2.json')
                         'weight' => $route->getOrder(),
                         'cookies' => $route->getLabel('sdk.cookies', false),
                         'type' => $route->getLabel('sdk.methodType', ''),
-                        'demo' => 'docs/examples/'.fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.fromCamelCaseToDash($temp['operationId']).'.md',
+                        'demo' => 'docs/examples/'. Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')).'/'.Template::fromCamelCaseToDash($temp['operationId']).'.md',
                         'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                         'rate-limit' => $route->getLabel('abuse-limit', 0),
                         'rate-time' => $route->getLabel('abuse-time', 3600),
@@ -478,7 +444,7 @@ App::get('/open-api-2.json')
                     switch ((!empty($validator)) ? \get_class($validator) : '') {
                         case 'Utopia\Validator\Text':
                             $node['type'] = 'string';
-                            $node['x-example'] = '['.\strtoupper(fromCamelCase($node['name'])).']';
+                            $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                             break;
                         case 'Utopia\Validator\Boolean':
                             $node['type'] = 'boolean';
@@ -486,7 +452,7 @@ App::get('/open-api-2.json')
                             break;
                         case 'Appwrite\Database\Validator\UID':
                             $node['type'] = 'string';
-                            $node['x-example'] = '['.\strtoupper(fromCamelCase($node['name'])).']';
+                            $node['x-example'] = '['.\strtoupper(Template::fromCamelCaseToSnake($node['name'])).']';
                             break;
                         case 'Utopia\Validator\Email':
                             $node['type'] = 'string';
