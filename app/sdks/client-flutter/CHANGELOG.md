@@ -1,3 +1,7 @@
+## 0.2.3
+
+- Fixed OAuth2 cookie bug, where a new session cookie couldn&#039;t overwrite an old cookie
+
 ## 0.2.2
 
 - Fixed an error that happend when the OAuth session creation request was sent before any other API call

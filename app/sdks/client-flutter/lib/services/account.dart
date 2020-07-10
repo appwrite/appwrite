@@ -33,10 +33,10 @@ class Account extends Service {
      ///
      /// Use this endpoint to allow a new user to register a new account in your
      /// project. After the user registration completes successfully, you can use
-     /// the [/account/verfication](/docs/account#createVerification) route to start
-     /// verifying the user email address. To allow your new user to login to his
-     /// new account, you need to create a new [account
-     /// session](/docs/account#createSession).
+     /// the [/account/verfication](/docs/client/account#createVerification) route
+     /// to start verifying the user email address. To allow your new user to login
+     /// to his new account, you need to create a new [account
+     /// session](/docs/client/account#createSession).
      ///
     Future<Response> create({@required String email, @required String password, String name = ''}) {
         final String path = '/account';
@@ -195,7 +195,7 @@ class Account extends Service {
      /// When the user clicks the confirmation link he is redirected back to your
      /// app password reset URL with the secret key and email address values
      /// attached to the URL query string. Use the query string params to submit a
-     /// request to the [PUT /account/recovery](/docs/account#updateRecovery)
+     /// request to the [PUT /account/recovery](/docs/client/account#updateRecovery)
      /// endpoint to complete the process.
      ///
     Future<Response> createRecovery({@required String email, @required String url}) {
@@ -218,7 +218,7 @@ class Account extends Service {
      /// Use this endpoint to complete the user account password reset. Both the
      /// **userId** and **secret** arguments will be passed as query parameters to
      /// the redirect URL you have provided when sending your request to the [POST
-     /// /account/recovery](/docs/account#createRecovery) endpoint.
+     /// /account/recovery](/docs/client/account#createRecovery) endpoint.
      /// 
      /// Please note that in order to avoid a [Redirect
      /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -314,12 +314,26 @@ class Account extends Service {
             'project': client.config['project'],
         };
 
+
+        final List query = [];
+
+        params.forEach((key, value) {
+          if (value is List) { 
+            for (var item in value) {
+              query.add(Uri.encodeComponent(key + '[]') + '=' + Uri.encodeComponent(item));
+            }
+          }
+          else {
+              query.add(Uri.encodeComponent(key) + '=' + Uri.encodeComponent(value));
+          }
+        });
+
         Uri endpoint = Uri.parse(client.endPoint);
         Uri url = new Uri(scheme: endpoint.scheme,
           host: endpoint.host,
           port: endpoint.port,
           path: endpoint.path + path,
-          queryParameters:params,
+          query: query.join('&')
         );
 
         return FlutterWebAuth.authenticate(
@@ -327,9 +341,13 @@ class Account extends Service {
           callbackUrlScheme: "appwrite-callback-" + client.config['project']
           ).then((value) async {
               Uri url = Uri.parse(value);
-                List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
-                await client.init();
-                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+              Cookie cookie = new Cookie(url.queryParameters['key'], url.queryParameters['secret']);
+              cookie.domain = Uri.parse(client.endPoint).host;
+              cookie.httpOnly = true;
+              cookie.path = '/';
+              List<Cookie> cookies = [cookie];
+              await client.init();
+              client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
           });
     }
 
@@ -361,7 +379,7 @@ class Account extends Service {
      /// should redirect the user back for your app and allow you to complete the
      /// verification process by verifying both the **userId** and **secret**
      /// parameters. Learn more about how to [complete the verification
-     /// process](/docs/account#updateAccountVerification). 
+     /// process](/docs/client/account#updateAccountVerification). 
      /// 
      /// Please note that in order to avoid a [Redirect
      /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)

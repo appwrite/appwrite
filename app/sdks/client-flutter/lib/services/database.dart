@@ -41,7 +41,10 @@ class Database extends Service {
 
      /// Create Document
      ///
-     /// Create a new Document.
+     /// Create a new Document. Before using this route, you should create a new
+     /// collection resource using either a [server
+     /// integration](/docs/server/database?sdk=nodejs#createCollection) API or
+     /// directly from your database console.
      ///
     Future<Response> createDocument({@required String collectionId, @required dynamic data, @required List read, @required List write, String parentDocument = '', String parentProperty = '', String parentPropertyType = 'assign'}) {
         final String path = '/database/collections/{collectionId}/documents'.replaceAll(RegExp('{collectionId}'), collectionId);

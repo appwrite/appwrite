@@ -136,8 +136,8 @@ class Teams extends Service {
      /// 
      /// Use the 'URL' parameter to redirect the user from the invitation email back
      /// to your app. When the user is redirected, use the [Update Team Membership
-     /// Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to
-     /// accept the invitation to the team.
+     /// Status](/docs/client/teams#updateMembershipStatus) endpoint to allow the
+     /// user to accept the invitation to the team.
      /// 
      /// Please note that in order to avoid a [Redirect
      /// Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
