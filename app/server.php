@@ -78,7 +78,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $response = new Response($swooleResponse);
 
     if(Files::isFileLoaded($request->getURI())) {
-        $time = (60 * 60 * 24 * 45); // 45 days cache
+        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 
         $response
             ->setContentType(Files::getFileMimeType($request->getURI()))
