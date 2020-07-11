@@ -613,7 +613,7 @@ $utopia->patch('/v1/database/collections/:collectionId/documents/:documentId')
             }
 
             if (!empty($write)) { // Overwrite permissions only when passed
-                $data['$permissions']['write'] = $read;
+                $data['$permissions']['write'] = $write;
             }
 
             $data = \array_merge($document->getArrayCopy(), $data);
