@@ -327,6 +327,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('account.update.email', $response['body']['events']);
         $this->assertCount(2, $response['body']['events']);
         $this->assertEquals('https://appwrite.io', $response['body']['url']);
+        $this->assertIsBool($response['body']['security']);
+        $this->assertEquals(true, $response['body']['security']);
         $this->assertEquals('username', $response['body']['httpUser']);
         
         $data = array_merge($data, ['webhookId' => $response['body']['$id']]);
@@ -334,16 +336,379 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        
-        // $response = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
-        //     'content-type' => 'application/json',
-        //     'x-appwrite-project' => $this->getProject()['$id'],
-        // ], $this->getHeaders()), [
-        //     'name' => 'Project Test',
-        // ]);
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Webhook Test',
+            'events' => ['account.unknown', 'account.update.email'],
+            'url' => 'https://appwrite.io',
+            'security' => true,
+            'httpUser' => 'username',
+            'httpPass' => 'password',
+        ]);
 
-        // $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
+
+    /**
+     * @depends testCreateProjectWebhook
+     */
+    public function testGetProjectWebhook($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($webhookId, $response['body']['$id']);
+        $this->assertContains('account.create', $response['body']['events']);
+        $this->assertContains('account.update.email', $response['body']['events']);
+        $this->assertCount(2, $response['body']['events']);
+        $this->assertEquals('https://appwrite.io', $response['body']['url']);
+        $this->assertEquals('username', $response['body']['httpUser']);
+        $this->assertEquals('password', $response['body']['httpPass']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectWebhook
+     */
+    public function testUpdateProjectWebhook($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Webhook Test Update',
+            'events' => ['account.delete', 'account.sessions.delete', 'storage.files.create'],
+            'url' => 'https://appwrite.io/new',
+            'security' => false,
+            'httpUser' => '',
+            'httpPass' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($webhookId, $response['body']['$id']);
+        $this->assertEquals('Webhook Test Update', $response['body']['name']);
+        $this->assertContains('account.delete', $response['body']['events']);
+        $this->assertContains('account.sessions.delete', $response['body']['events']);
+        $this->assertContains('storage.files.create', $response['body']['events']);
+        $this->assertCount(3, $response['body']['events']);
+        $this->assertEquals('https://appwrite.io/new', $response['body']['url']);
+        $this->assertIsBool($response['body']['security']);
+        $this->assertEquals(false, $response['body']['security']);
+        $this->assertEquals('', $response['body']['httpUser']);
+        // $this->assertEquals('', $response['body']['httpPass']); // TODO add after encrypt refactor
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($webhookId, $response['body']['$id']);
+        $this->assertEquals('Webhook Test Update', $response['body']['name']);
+        $this->assertContains('account.delete', $response['body']['events']);
+        $this->assertContains('account.sessions.delete', $response['body']['events']);
+        $this->assertContains('storage.files.create', $response['body']['events']);
+        $this->assertCount(3, $response['body']['events']);
+        $this->assertEquals('https://appwrite.io/new', $response['body']['url']);
+        $this->assertIsBool($response['body']['security']);
+        $this->assertEquals(false, $response['body']['security']);
+        $this->assertEquals('', $response['body']['httpUser']);
+        // $this->assertEquals('', $response['body']['httpPass']); // TODO add after encrypt refactor
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Webhook Test Update',
+            'events' => ['account.delete', 'account.sessions.delete', 'storage.files.create', 'unknown'],
+            'url' => 'https://appwrite.io/new',
+            'security' => false,
+            'httpUser' => '',
+            'httpPass' => '',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Webhook Test Update',
+            'events' => ['account.delete', 'account.sessions.delete', 'storage.files.create'],
+            'url' => 'appwrite.io/new',
+            'security' => false,
+            'httpUser' => '',
+            'httpPass' => '',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectWebhook
+     */
+    public function testDeleteProjectWebhook($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/webhooks/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    // Keys
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateProjectKey($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('Key Test', $response['body']['name']);
+        $this->assertContains('teams.read', $response['body']['scopes']);
+        $this->assertContains('teams.write', $response['body']['scopes']);
+        $this->assertNotEmpty($response['body']['secret']);
+        
+        $data = array_merge($data, ['keyId' => $response['body']['$id']]);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test',
+            'scopes' => ['unknown'],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectKey
+     */
+    public function testGetProjectKey($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $keyId = (isset($data['keyId'])) ? $data['keyId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/keys/'.$keyId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($keyId, $response['body']['$id']);
+        $this->assertEquals('Key Test', $response['body']['name']);
+        $this->assertContains('teams.read', $response['body']['scopes']);
+        $this->assertContains('teams.write', $response['body']['scopes']);
+        $this->assertCount(2, $response['body']['scopes']);
+        $this->assertNotEmpty($response['body']['secret']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/keys/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    // /**
+    //  * @depends testCreateProjectKey
+    //  */
+    // public function testUpdateProjectWebhook($data): array
+    // {
+    //     $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+    //     $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+
+    //     $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'name' => 'Webhook Test Update',
+    //         'events' => ['account.delete', 'account.sessions.delete', 'storage.files.create'],
+    //         'url' => 'https://appwrite.io/new',
+    //         'security' => false,
+    //         'httpUser' => '',
+    //         'httpPass' => '',
+    //     ]);
+
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertNotEmpty($response['body']['$id']);
+    //     $this->assertEquals($webhookId, $response['body']['$id']);
+    //     $this->assertEquals('Webhook Test Update', $response['body']['name']);
+    //     $this->assertContains('account.delete', $response['body']['events']);
+    //     $this->assertContains('account.sessions.delete', $response['body']['events']);
+    //     $this->assertContains('storage.files.create', $response['body']['events']);
+    //     $this->assertCount(3, $response['body']['events']);
+    //     $this->assertEquals('https://appwrite.io/new', $response['body']['url']);
+    //     $this->assertIsBool($response['body']['security']);
+    //     $this->assertEquals(false, $response['body']['security']);
+    //     $this->assertEquals('', $response['body']['httpUser']);
+    //     // $this->assertEquals('', $response['body']['httpPass']); // TODO add after encrypt refactor
+
+    //     $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), []);
+
+    //     $this->assertEquals(200, $response['headers']['status-code']);
+    //     $this->assertNotEmpty($response['body']['$id']);
+    //     $this->assertEquals($webhookId, $response['body']['$id']);
+    //     $this->assertEquals('Webhook Test Update', $response['body']['name']);
+    //     $this->assertContains('account.delete', $response['body']['events']);
+    //     $this->assertContains('account.sessions.delete', $response['body']['events']);
+    //     $this->assertContains('storage.files.create', $response['body']['events']);
+    //     $this->assertCount(3, $response['body']['events']);
+    //     $this->assertEquals('https://appwrite.io/new', $response['body']['url']);
+    //     $this->assertIsBool($response['body']['security']);
+    //     $this->assertEquals(false, $response['body']['security']);
+    //     $this->assertEquals('', $response['body']['httpUser']);
+    //     // $this->assertEquals('', $response['body']['httpPass']); // TODO add after encrypt refactor
+        
+    //     /**
+    //      * Test for FAILURE
+    //      */
+    //     $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'name' => 'Webhook Test Update',
+    //         'events' => ['account.delete', 'account.sessions.delete', 'storage.files.create', 'unknown'],
+    //         'url' => 'https://appwrite.io/new',
+    //         'security' => false,
+    //         'httpUser' => '',
+    //         'httpPass' => '',
+    //     ]);
+
+    //     $this->assertEquals(400, $response['headers']['status-code']);
+
+    //     $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'name' => 'Webhook Test Update',
+    //         'events' => ['account.delete', 'account.sessions.delete', 'storage.files.create'],
+    //         'url' => 'appwrite.io/new',
+    //         'security' => false,
+    //         'httpUser' => '',
+    //         'httpPass' => '',
+    //     ]);
+
+    //     $this->assertEquals(400, $response['headers']['status-code']);
+
+    //     return $data;
+    // }
+
+    // /**
+    //  * @depends testCreateProjectKey
+    //  */
+    // public function testDeleteProjectWebhook($data): array
+    // {
+    //     $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+    //     $webhookId = (isset($data['webhookId'])) ? $data['webhookId'] : '';
+
+    //     $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), []);
+
+    //     $this->assertEquals(204, $response['headers']['status-code']);
+    //     $this->assertEmpty($response['body']);
+
+    //     $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks/'.$webhookId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), []);
+
+    //     $this->assertEquals(404, $response['headers']['status-code']);
+        
+    //     /**
+    //      * Test for FAILURE
+    //      */
+    //     $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/webhooks/error', array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), []);
+
+    //     $this->assertEquals(404, $response['headers']['status-code']);
+
+    //     return $data;
+    // }
 }
