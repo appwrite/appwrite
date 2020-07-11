@@ -13,6 +13,23 @@ class Response extends UtopiaResponse
      * @var SwooleResponse
      */
     protected $swoole = null;
+
+    /**
+     * Mime Types
+     *  with compression support
+     * 
+     * @var array
+     */
+    protected $compressed = [
+        'text/plain' => true,
+        'text/css' => true,
+        'text/javascript' => true,
+        'application/javascript' => true,
+        'application/json' => true,
+        'application/json; charset=UTF-8' => true,
+        'image/svg+xml' => true,
+        'application/xml+rss' => true,
+    ];
     
     /**
      * Response constructor.
@@ -43,9 +60,24 @@ class Response extends UtopiaResponse
                 ->appendHeaders()
             ;
 
-            $this->size = $this->size + mb_strlen(implode("\n", $this->headers)) + mb_strlen($body, '8bit');
+            $chunk = 2000000; // Max chunk of 2 mb
+            $length = strlen($body);
 
-            $this->swoole->end($body);
+            $this->size = $this->size + strlen(implode("\n", $this->headers)) + $length;
+
+            if(array_key_exists(
+                $this->contentType,
+                $this->compressed
+                ) && ($length <= $chunk)) { // Dont compress with GZIP / Brotli if header is not listed and size is bigger than 2mb
+                $this->swoole->end($body);
+            }
+            else {
+                for ($i=0; $i < ceil($length / $chunk); $i++) {
+                    $this->swoole->write(substr($body, ($i * $chunk), min((($i * $chunk) + $chunk), $length)));
+                }
+
+                $this->swoole->end();
+            }
 
             $this->disablePayload();
         }

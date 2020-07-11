@@ -75,14 +75,10 @@ App::post('/v1/storage/files')
         //throw new Exception('File type not allowed', 400);
         //}
 
-        // Check if file size is exceeding allowed limit
-        if (!$fileSize->isValid($file['size'])) {
+        if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
         }
 
-        /*
-            * Models
-            */
         $device = Storage::getDevice('local');
 
         if (!$upload->isValid($file['tmp_name'])) {
@@ -102,7 +98,6 @@ App::post('/v1/storage/files')
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled') { // Check if scans are enabled
             $antiVirus = new Network('clamav', 3310);
 
-            // Check if file size is exceeding allowed limit
             if (!$antiVirus->fileScan($path)) {
                 $device->delete($path);
                 throw new Exception('Invalid file', 403);
