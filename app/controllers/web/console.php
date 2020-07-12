@@ -152,7 +152,7 @@ App::get('/console/webhooks')
         /** @var Utopia\View $layout */
 
         $page = new View(__DIR__.'/../../views/console/webhooks/index.phtml');
-        
+
         $page
             ->setParam('events', Config::getParam('events', []))
         ;
@@ -336,5 +336,33 @@ App::get('/console/users/teams/team')
 
         $layout
             ->setParam('title', APP_NAME.' - Team')
+            ->setParam('body', $page);
+    }, ['layout']);
+
+App::get('/console/functions')
+    ->desc('Platform console project functions')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function ($layout) {
+        $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Functions')
+            ->setParam('body', $page);
+    }, ['layout']);
+
+App::get('/console/functions/function')
+    ->desc('Platform console project function')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function ($layout) {
+        $page = new View(__DIR__.'/../../views/console/functions/function.phtml');
+
+        $page
+            ->setParam('events', Config::getParam('events', []))
+        ;
+
+        $layout
+            ->setParam('title', APP_NAME.' - Function')
             ->setParam('body', $page);
     }, ['layout']);

@@ -102,7 +102,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apt-get update && \
-  apt-get install -y --no-install-recommends --no-install-suggests webp certbot htop procps \
+  apt-get install -y --no-install-recommends --no-install-suggests webp certbot htop procps docker.io \
   libonig-dev libcurl4-gnutls-dev libmagickwand-dev libyaml-dev libbrotli-dev libz-dev && \
   pecl install imagick yaml && \ 
   docker-php-ext-enable imagick yaml

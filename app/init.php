@@ -19,6 +19,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Event\Event;
 use Appwrite\Extend\PDO;
+use Appwrite\OpenSSL\OpenSSL;
 use Utopia\App;
 use Utopia\View;
 use Utopia\Config\Config;
@@ -79,6 +80,43 @@ Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
 
 Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '')
     .':'.App::getEnv('_APP_REDIS_PORT', ''));
+
+/**
+ * DB Filters
+ */
+Database::addFilter('json',
+    function($value) {
+        if(!is_array($value)) {
+            return $value;
+        }
+        return json_encode($value);
+    },
+    function($value) {
+        return json_decode($value, true);
+    }
+);
+
+Database::addFilter('encrypt',
+    function($value) use ($request) {
+        $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
+        $tag = null;
+        
+        return json_encode([
+            'data' => OpenSSL::encrypt($value, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
+            'method' => OpenSSL::CIPHER_AES_128_GCM,
+            'iv' => bin2hex($iv),
+            'tag' => bin2hex($tag),
+            'version' => '1',
+        ]);
+    },
+    function($value) use ($request) {
+        $value = json_decode($value, true);
+        $key = $request->getServer('_APP_OPENSSL_KEY_V'.$value['version']);
+
+        return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
 
 /*
  * Registry
@@ -171,6 +209,9 @@ $register->set('queue-mails', function () {
 });
 $register->set('queue-deletes', function () {
     return new Event('v1-deletes', 'DeletesV1');
+});
+$register->set('queue-functions', function () {
+    return new Event('v1-functions', 'FunctionsV1');
 });
 
 /*
@@ -269,6 +310,10 @@ App::setResource('mails', function($register) {
 
 App::setResource('deletes', function($register) {
     return $register->get('queue-deletes');
+}, ['register']);
+
+App::setResource('functions', function($register) {
+    return $register->get('queue-functions');
 }, ['register']);
 
 // Test Mock

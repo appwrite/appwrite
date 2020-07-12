@@ -168,4 +168,25 @@ window.ls.router
     template: "/console/users?version=" + APP_ENV.VERSION,
     scope: "console",
     project: true
-  });
+  })
+  .add("/console/functions", {
+    template: "/console/functions?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/functions/function", {
+    template: "/console/functions/function?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/functions/function/:tab", {
+    template: "/console/functions/function?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+  .add("/console/functions/:tab", {
+    template: "/console/functions?version=" + APP_ENV.VERSION,
+    scope: "console",
+    project: true
+  })
+;

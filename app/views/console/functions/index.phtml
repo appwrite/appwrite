@@ -1,0 +1,74 @@
+<div class="cover">
+    <h1 class="zone xl margin-bottom-large">
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Home</a>
+        <br />
+
+        <span>Functions</span>
+    </h1>
+</div>
+
+<div class="zone xl">
+    <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
+        <li data-state="/console/functions?project={{router.params.project}}">
+            <h2>Functions</h2>
+
+            <div class="zone xl"
+                data-service="functions.list"
+                data-scope="sdk"
+                data-event="load,functions.create,functions.update,functions.delete"
+                data-name="project-functions"
+                data-param-project-id="{{router.params.project}}"
+                data-success="trigger"
+                data-success-param-trigger-events="functions.list">
+
+                <div data-ls-if="0 == {{project-functions.functions.length}} || undefined == {{project-functions.functions.length}}" class="box margin-top margin-bottom">
+                    <h3 class="margin-bottom-small text-bold">No Functions Found</h3>
+
+                    <p class="margin-bottom-no">You haven't created any functions for your project yet.</p>
+                </div>
+
+                <div class="box margin-bottom" data-ls-if="0 != {{project-functions.functions.length}}">
+                    <ul data-ls-loop="project-functions.functions" data-ls-as="function" class="list">
+                        <li class="clear">
+
+                            <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Settings</a>
+
+                            <span data-ls-bind="{{function.name}}"></span> &nbsp; <span data-ls-if="({{function.events.length}})">(<span data-ls-bind="{{function.events.length}}"></span> events)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="clear">
+                    <div data-ui-modal class="modal close box sticky-footer" data-button-text="Add Function">
+                        <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                        <h1>Add Function</h1>
+
+                        <form
+                            data-analytics-event="submit"
+                            data-analytics-category="console"
+                            data-analytics-label="Create Project Function"
+                            data-service="functions.create"
+                            data-scope="sdk"
+                            data-event="submit"
+                            data-success="alert,trigger,reset,redirect"
+                            data-success-param-alert-text="Created function successfully"
+                            data-success-param-trigger-events="functions.create"
+                            data-success-param-redirect-url="/console/functions/function?id={{serviceData.$id}}&project={{router.params.project}}"
+                            data-failure="alert"
+                            data-failure-param-alert-text="Failed to create function"
+                            data-failure-param-alert-classname="error">
+
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom-xl" />
+
+                            <footer>
+                                <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                            </footer>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>

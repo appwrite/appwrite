@@ -266,6 +266,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     if($project->getId()
         && $mode !== APP_MODE_ADMIN
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
+        
         $usage
             ->setParam('request', $request->getSize() + $usage->getParam('storage'))
             ->setParam('response', $response->getSize())

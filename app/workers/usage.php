@@ -1,12 +1,13 @@
 <?php
 
 use Utopia\App;
+use Utopia\CLI\Console;
 
 require_once __DIR__.'/../init.php';
 
 \cli_set_process_title('Usage V1 Worker');
 
-echo APP_NAME.' usage worker v1 has started'."\n";
+Console::success(APP_NAME.' usage worker v1 has started');
 
 class UsageV1
 {

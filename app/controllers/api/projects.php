@@ -284,7 +284,7 @@ App::get('/v1/projects/:projectId/usage')
                 }, $requests)),
             ],
             'network' => [
-                'data' => $network,
+                'data' => \array_map(function ($value) {return ['value' => \round($value['value'] / 1000000, 2), 'date' => $value['date']];}, $network), // convert bytes to mb
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
                 }, $network)),

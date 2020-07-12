@@ -462,7 +462,6 @@ App::patch('/v1/users/:userId/prefs')
         $response->json($prefs);
     }, ['response', 'projectDB']);
 
-
 App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete User Session')
     ->groups(['api', 'users'])
