@@ -340,6 +340,7 @@ App::get('/console/users/teams/team')
     }, ['layout']);
 
 App::get('/console/functions')
+    ->groups(['web', 'console'])
     ->desc('Platform console project functions')
     ->label('permission', 'public')
     ->label('scope', 'console')
@@ -352,6 +353,7 @@ App::get('/console/functions')
     }, ['layout']);
 
 App::get('/console/functions/function')
+    ->groups(['web', 'console'])
     ->desc('Platform console project function')
     ->label('permission', 'public')
     ->label('scope', 'console')

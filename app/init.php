@@ -97,8 +97,8 @@ Database::addFilter('json',
 );
 
 Database::addFilter('encrypt',
-    function($value) use ($request) {
-        $key = $request->getServer('_APP_OPENSSL_KEY_V1');
+    function($value) {
+        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
         
@@ -110,9 +110,9 @@ Database::addFilter('encrypt',
             'version' => '1',
         ]);
     },
-    function($value) use ($request) {
+    function($value) {
         $value = json_decode($value, true);
-        $key = $request->getServer('_APP_OPENSSL_KEY_V'.$value['version']);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }

@@ -1,10 +1,9 @@
 <?php
 
-global $utopia, $response, $projectDB;
-
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Task\Validator\Cron;
+use Utopia\App;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -15,7 +14,8 @@ use Cron\CronExpression;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$utopia->post('/v1/functions')
+App::post('/v1/functions')
+    ->groups(['api', 'functions'])
     ->desc('Create Function')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -27,39 +27,38 @@ $utopia->post('/v1/functions')
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
-    ->action(
-        function ($name, $vars, $events, $schedule, $timeout) use ($response, $projectDB) {
-            $function = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
-                '$permissions' => [
-                    'read' => [],
-                    'write' => [],
-                ],
-                'dateCreated' => time(),
-                'dateUpdated' => time(),
-                'status' => 'paused',
-                'name' => $name,
-                'tag' => '',
-                'vars' => $vars,
-                'events' => $events,
-                'schedule' => $schedule,
-                'previous' => null,
-                'next' => null,
-                'timeout' => $timeout,
-            ]);
+    ->action(function ($name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+        $function = $projectDB->createDocument([
+            '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
+            '$permissions' => [
+                'read' => [],
+                'write' => [],
+            ],
+            'dateCreated' => time(),
+            'dateUpdated' => time(),
+            'status' => 'paused',
+            'name' => $name,
+            'tag' => '',
+            'vars' => $vars,
+            'events' => $events,
+            'schedule' => $schedule,
+            'previous' => null,
+            'next' => null,
+            'timeout' => $timeout,
+        ]);
 
-            if (false === $function) {
-                throw new Exception('Failed saving function to DB', 500);
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($function->getArrayCopy())
-            ;
+        if (false === $function) {
+            throw new Exception('Failed saving function to DB', 500);
         }
-    );
 
-$utopia->get('/v1/functions')
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->json($function->getArrayCopy())
+        ;
+    }, ['response', 'projectDB']);
+
+App::get('/v1/functions')
+    ->groups(['api', 'functions'])
     ->desc('List Functions')
     ->label('scope', 'functions.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -70,25 +69,24 @@ $utopia->get('/v1/functions')
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'dateCreated',
-                'orderType' => $orderType,
-                'orderCast' => 'int',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
-                ],
-            ]);
+    ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
+        $results = $projectDB->getCollection([
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderField' => 'dateCreated',
+            'orderType' => $orderType,
+            'orderCast' => 'int',
+            'search' => $search,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
+            ],
+        ]);
 
-            $response->json(['sum' => $projectDB->getSum(), 'functions' => $results]);
-        }
-    );
+        $response->json(['sum' => $projectDB->getSum(), 'functions' => $results]);
+    }, ['response', 'projectDB']);
 
-$utopia->get('/v1/functions/:functionId')
+App::get('/v1/functions/:functionId')
+    ->groups(['api', 'functions'])
     ->desc('Get Function')
     ->label('scope', 'functions.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -96,19 +94,18 @@ $utopia->get('/v1/functions/:functionId')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/functions/get-function.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->action(
-        function ($functionId) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('function not found', 404);
-            }
-
-            $response->json($function->getArrayCopy());
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('function not found', 404);
         }
-    );
 
-$utopia->put('/v1/functions/:functionId')
+        $response->json($function->getArrayCopy());
+    }, ['response', 'projectDB']);
+
+App::put('/v1/functions/:functionId')
+    ->groups(['api', 'functions'])
     ->desc('Update Function')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -121,37 +118,36 @@ $utopia->put('/v1/functions/:functionId')
     ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
-    ->action(
-        function ($functionId, $name, $vars, $events, $schedule, $timeout) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-
-            $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
-            $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
-
-            $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
-                'dateUpdated' => time(),
-                'name' => $name,
-                'vars' => $vars,
-                'events' => $events,
-                'schedule' => $schedule,
-                'previous' => null,
-                'next' => $next,
-                'timeout' => $timeout,   
-            ]));
-
-            if (false === $function) {
-                throw new Exception('Failed saving function to DB', 500);
-            }
-
-            $response->json($function->getArrayCopy());
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
 
-$utopia->patch('/v1/functions/:functionId/tag')
+        $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
+        $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
+
+        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+            'dateUpdated' => time(),
+            'name' => $name,
+            'vars' => $vars,
+            'events' => $events,
+            'schedule' => $schedule,
+            'previous' => null,
+            'next' => $next,
+            'timeout' => $timeout,   
+        ]));
+
+        if (false === $function) {
+            throw new Exception('Failed saving function to DB', 500);
+        }
+
+        $response->json($function->getArrayCopy());
+    }, ['response', 'projectDB']);
+
+App::patch('/v1/functions/:functionId/tag')
+    ->groups(['api', 'functions'])
     ->desc('Update Function Tag')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -160,32 +156,31 @@ $utopia->patch('/v1/functions/:functionId/tag')
     ->label('sdk.description', '/docs/references/functions/update-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tag', '', function () { return new UID(); }, 'Tag unique ID.')
-    ->action(
-        function ($functionId, $tag) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $tag, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-
-            $schedule = $function->getAttribute('schedule', '');
-            $cron = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? CronExpression::factory($schedule) : null;
-            $next = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? $cron->getNextRunDate()->format('U') : null;
-
-            $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
-                'tag' => $tag,
-                'next' => $next,
-            ]));
-
-            if (false === $function) {
-                throw new Exception('Failed saving function to DB', 500);
-            }
-
-            $response->json($function->getArrayCopy());
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
 
-$utopia->delete('/v1/functions/:functionId')
+        $schedule = $function->getAttribute('schedule', '');
+        $cron = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? CronExpression::factory($schedule) : null;
+        $next = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? $cron->getNextRunDate()->format('U') : null;
+
+        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+            'tag' => $tag,
+            'next' => $next,
+        ]));
+
+        if (false === $function) {
+            throw new Exception('Failed saving function to DB', 500);
+        }
+
+        $response->json($function->getArrayCopy());
+    }, ['response', 'projectDB']);
+
+App::delete('/v1/functions/:functionId')
+    ->groups(['api', 'functions'])
     ->desc('Delete Function')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -193,23 +188,22 @@ $utopia->delete('/v1/functions/:functionId')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/functions/delete-function.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->action(
-        function ($functionId) use ($response, $projectDB, $webhook, $audit, $usage) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-
-            if (!$projectDB->deleteDocument($function->getId())) {
-                throw new Exception('Failed to remove function from DB', 500);
-            }
-
-            $response->noContent();
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
 
-$utopia->post('/v1/functions/:functionId/tags')
+        if (!$projectDB->deleteDocument($function->getId())) {
+            throw new Exception('Failed to remove function from DB', 500);
+        }
+
+        $response->noContent();
+    }, ['response', 'projectDB']);
+
+App::post('/v1/functions/:functionId/tags')
+    ->groups(['api', 'functions'])
     ->desc('Create Tag')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -220,39 +214,38 @@ $utopia->post('/v1/functions/:functionId/tags')
     ->param('env', '', function () { return new WhiteList(['node-14', 'node-12', 'php-7.4']); }, 'Execution enviornment.')
     ->param('command', '', function () { return new Text('1028'); }, 'Code execution command.')
     ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
-    ->action(
-        function ($functionId, $env, $command, $code) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $env, $command, $code, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-            
-            $tag = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_TAGS,
-                '$permissions' => [
-                    'read' => [],
-                    'write' => [],
-                ],
-                'dateCreated' => time(),
-                'functionId' => $function->getId(),
-                'env' => $env,
-                'command' => $command,
-                'code' => $code,
-            ]);
-
-            if (false === $tag) {
-                throw new Exception('Failed saving tag to DB', 500);
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($tag->getArrayCopy())
-            ;
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
+        
+        $tag = $projectDB->createDocument([
+            '$collection' => Database::SYSTEM_COLLECTION_TAGS,
+            '$permissions' => [
+                'read' => [],
+                'write' => [],
+            ],
+            'dateCreated' => time(),
+            'functionId' => $function->getId(),
+            'env' => $env,
+            'command' => $command,
+            'code' => $code,
+        ]);
 
-$utopia->get('/v1/functions/:functionId/tags')
+        if (false === $tag) {
+            throw new Exception('Failed saving tag to DB', 500);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->json($tag->getArrayCopy())
+        ;
+    }, ['response', 'projectDB']);
+
+App::get('/v1/functions/:functionId/tags')
+    ->groups(['api', 'functions'])
     ->desc('List Tags')
     ->label('scope', 'functions.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -264,32 +257,31 @@ $utopia->get('/v1/functions/:functionId/tags')
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($functionId, $search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-            
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'dateCreated',
-                'orderType' => $orderType,
-                'orderCast' => 'int',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_TAGS,
-                    'functionId='.$function->getId(),
-                ],
-            ]);
-
-            $response->json(['sum' => $projectDB->getSum(), 'tags' => $results]);
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
+        
+        $results = $projectDB->getCollection([
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderField' => 'dateCreated',
+            'orderType' => $orderType,
+            'orderCast' => 'int',
+            'search' => $search,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+                'functionId='.$function->getId(),
+            ],
+        ]);
 
-$utopia->get('/v1/functions/:functionId/tags/:tagId')
+        $response->json(['sum' => $projectDB->getSum(), 'tags' => $results]);
+    }, ['response', 'projectDB']);
+
+App::get('/v1/functions/:functionId/tags/:tagId')
+    ->groups(['api', 'functions'])
     ->desc('Get Tag')
     ->label('scope', 'functions.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -298,29 +290,28 @@ $utopia->get('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.description', '/docs/references/functions/get-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
-    ->action(
-        function ($functionId, $tagId) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $tagId, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-
-            $tag = $projectDB->getDocument($tagId);
-
-            if($tag->getAttribute('functionId') !== $function->getId()) {
-                throw new Exception('Tag not found', 404);
-            }
-
-            if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-                throw new Exception('Tag not found', 404);
-            }
-
-            $response->json($tag->getArrayCopy());
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
 
-$utopia->delete('/v1/functions/:functionId/tags/:tagId')
+        $tag = $projectDB->getDocument($tagId);
+
+        if($tag->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Tag not found', 404);
+        }
+
+        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+            throw new Exception('Tag not found', 404);
+        }
+
+        $response->json($tag->getArrayCopy());
+    }, ['response', 'projectDB']);
+
+App::delete('/v1/functions/:functionId/tags/:tagId')
+    ->groups(['api', 'functions'])
     ->desc('Delete Tag')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -329,33 +320,32 @@ $utopia->delete('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.description', '/docs/references/functions/delete-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
-    ->action(
-        function ($functionId, $tagId) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $tagId, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-            
-            $tag = $projectDB->getDocument($tagId);
-
-            if($tag->getAttribute('functionId') !== $function->getId()) {
-                throw new Exception('Tag not found', 404);
-            }
-
-            if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-                throw new Exception('Tag not found', 404);
-            }
-
-            if (!$projectDB->deleteDocument($tag->getId())) {
-                throw new Exception('Failed to remove tag from DB', 500);
-            }
-
-            $response->noContent();
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
+        
+        $tag = $projectDB->getDocument($tagId);
 
-$utopia->post('/v1/functions/:functionId/executions')
+        if($tag->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Tag not found', 404);
+        }
+
+        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+            throw new Exception('Tag not found', 404);
+        }
+
+        if (!$projectDB->deleteDocument($tag->getId())) {
+            throw new Exception('Failed to remove tag from DB', 500);
+        }
+
+        $response->noContent();
+    }, ['response', 'projectDB']);
+
+App::post('/v1/functions/:functionId/executions')
+    ->groups(['api', 'functions'])
     ->desc('Create Execution')
     ->label('scope', 'functions.write')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -364,55 +354,54 @@ $utopia->post('/v1/functions/:functionId/executions')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
-    ->action(
-        function ($functionId, $async) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $async, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-            
-            $execution = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-                '$permissions' => [
-                    'read' => [],
-                    'write' => [],
-                ],
-                'dateCreated' => time(),
-                'functionId' => $function->getId(),
-                'status' => 'waiting', // Proccesing / Completed / Failed
-                'exitCode' => 0,
-                'stdout' => '',
-                'stderr' => '',
-                'time' => 0,
-            ]);
-
-            if (false === $execution) {
-                throw new Exception('Failed saving execution to DB', 500);
-            }
-            
-            $tag = $projectDB->getDocument($function->getAttribute('tag'));
-
-            if($tag->getAttribute('functionId') !== $function->getId()) {
-                throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
-            }
-
-            if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-                throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
-            }
-
-            if((bool)$async) {
-
-            }
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->json($execution->getArrayCopy())
-            ;
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
+        
+        $execution = $projectDB->createDocument([
+            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+            '$permissions' => [
+                'read' => [],
+                'write' => [],
+            ],
+            'dateCreated' => time(),
+            'functionId' => $function->getId(),
+            'status' => 'waiting', // Proccesing / Completed / Failed
+            'exitCode' => 0,
+            'stdout' => '',
+            'stderr' => '',
+            'time' => 0,
+        ]);
 
-$utopia->get('/v1/functions/:functionId/executions')
+        if (false === $execution) {
+            throw new Exception('Failed saving execution to DB', 500);
+        }
+        
+        $tag = $projectDB->getDocument($function->getAttribute('tag'));
+
+        if($tag->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+        }
+
+        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+        }
+
+        if((bool)$async) {
+
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->json($execution->getArrayCopy())
+        ;
+    }, ['response', 'projectDB']);
+
+App::get('/v1/functions/:functionId/executions')
+    ->groups(['api', 'functions'])
     ->desc('List Executions')
     ->label('scope', 'functions.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -424,32 +413,31 @@ $utopia->get('/v1/functions/:functionId/executions')
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
-    ->action(
-        function ($functionId, $search, $limit, $offset, $orderType) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-            
-            $results = $projectDB->getCollection([
-                'limit' => $limit,
-                'offset' => $offset,
-                'orderField' => 'dateCreated',
-                'orderType' => $orderType,
-                'orderCast' => 'int',
-                'search' => $search,
-                'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
-                    'functionId='.$function->getId(),
-                ],
-            ]);
-
-            $response->json(['sum' => $projectDB->getSum(), 'executions' => $results]);
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
+        
+        $results = $projectDB->getCollection([
+            'limit' => $limit,
+            'offset' => $offset,
+            'orderField' => 'dateCreated',
+            'orderType' => $orderType,
+            'orderCast' => 'int',
+            'search' => $search,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
+                'functionId='.$function->getId(),
+            ],
+        ]);
 
-$utopia->get('/v1/functions/:functionId/executions/:executionId')
+        $response->json(['sum' => $projectDB->getSum(), 'executions' => $results]);
+    }, ['response', 'projectDB']);
+
+App::get('/v1/functions/:functionId/executions/:executionId')
+    ->groups(['api', 'functions'])
     ->desc('Get Execution')
     ->label('scope', 'functions.read')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
@@ -458,24 +446,22 @@ $utopia->get('/v1/functions/:functionId/executions/:executionId')
     ->label('sdk.description', '/docs/references/functions/get-execution.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('executionId', '', function () { return new UID(); }, 'Execution unique ID.')
-    ->action(
-        function ($functionId, $executionId) use ($response, $projectDB) {
-            $function = $projectDB->getDocument($functionId);
+    ->action(function ($functionId, $executionId, $response, $projectDB) {
+        $function = $projectDB->getDocument($functionId);
 
-            if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-                throw new Exception('Function not found', 404);
-            }
-
-            $execution = $projectDB->getDocument($executionId);
-
-            if($execution->getAttribute('functionId') !== $function->getId()) {
-                throw new Exception('Execution not found', 404);
-            }
-
-            if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
-                throw new Exception('Execution not found', 404);
-            }
-
-            $response->json($execution->getArrayCopy());
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
         }
-    );
+
+        $execution = $projectDB->getDocument($executionId);
+
+        if($execution->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Execution not found', 404);
+        }
+
+        if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
+            throw new Exception('Execution not found', 404);
+        }
+
+        $response->json($execution->getArrayCopy());
+    }, ['response', 'projectDB']);
