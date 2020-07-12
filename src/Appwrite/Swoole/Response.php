@@ -25,6 +25,8 @@ class Response extends UtopiaResponse
         'text/css' => true,
         'text/javascript' => true,
         'application/javascript' => true,
+        'text/html' => true,
+        'text/html; charset=UTF-8' => true,
         'application/json' => true,
         'application/json; charset=UTF-8' => true,
         'image/svg+xml' => true,
