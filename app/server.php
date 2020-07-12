@@ -14,6 +14,7 @@ use Utopia\CLI\Console;
 
 // xdebug_start_trace('/tmp/trace');
 
+ini_set('memory_limit','512M');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -30,6 +31,7 @@ $http
         'timeout' => 7,
         'http_compression' => true,
         'http_compression_level' => 6,
+        'package_max_length' => 1000000 * 150, // 150MB
     ])
 ;
 
