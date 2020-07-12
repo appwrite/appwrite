@@ -680,7 +680,6 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-
     // Tasks
 
     /**
@@ -1040,6 +1039,326 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
         
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/tasks/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    // Platforms
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateProjectPlatform($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'web',
+            'name' => 'Web App',
+            'key' => '',
+            'store' => '',
+            'hostname' => 'localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('web', $response['body']['type']);
+        $this->assertEquals('Web App', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('localhost', $response['body']['hostname']);
+        
+        $data = array_merge($data, ['platformWebId' => $response['body']['$id']]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'flutter-ios',
+            'name' => 'Flutter App (iOS)',
+            'key' => 'com.example.ios',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('Flutter App (iOS)', $response['body']['name']);
+        $this->assertEquals('com.example.ios', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+        
+        $data = array_merge($data, ['platformFultteriOSId' => $response['body']['$id']]);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'flutter-android',
+            'name' => 'Flutter App (Android)',
+            'key' => 'com.example.android',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('Flutter App (Android)', $response['body']['name']);
+        $this->assertEquals('com.example.android', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+        
+        $data = array_merge($data, ['platformFultterAndroidId' => $response['body']['$id']]);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'type' => 'unknown',
+            'name' => 'Web App',
+            'key' => '',
+            'store' => '',
+            'hostname' => 'localhost',
+        ]);
+        
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        // ], $this->getHeaders()), [
+        //     'type' => 'web',
+        //     'name' => 'Web App',
+        //     'key' => '',
+        //     'store' => '',
+        //     'hostname' => 'https://localhost',
+        // ]);
+
+        // $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectPlatform
+     */
+    public function testGetProjectPlatform($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        
+        $platformWebId = (isset($data['platformWebId'])) ? $data['platformWebId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformWebId, $response['body']['$id']);
+        $this->assertEquals('web', $response['body']['type']);
+        $this->assertEquals('Web App', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('localhost', $response['body']['hostname']);
+         
+        $platformFultteriOSId = (isset($data['platformFultteriOSId'])) ? $data['platformFultteriOSId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformFultteriOSId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
+        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('Flutter App (iOS)', $response['body']['name']);
+        $this->assertEquals('com.example.ios', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+        
+        $platformFultterAndroidId = (isset($data['platformFultterAndroidId'])) ? $data['platformFultterAndroidId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
+        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('Flutter App (Android)', $response['body']['name']);
+        $this->assertEquals('com.example.android', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+        
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectPlatform
+     */
+    public function testUpdateProjectPlatform($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+
+        $platformWebId = (isset($data['platformWebId'])) ? $data['platformWebId'] : '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Web App 2',
+            'key' => '',
+            'store' => '',
+            'hostname' => 'localhost-new',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformWebId, $response['body']['$id']);
+        $this->assertEquals('web', $response['body']['type']);
+        $this->assertEquals('Web App 2', $response['body']['name']);
+        $this->assertEquals('', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('localhost-new', $response['body']['hostname']);
+
+        $platformFultteriOSId = (isset($data['platformFultteriOSId'])) ? $data['platformFultteriOSId'] : '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformFultteriOSId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Flutter App (iOS) 2',
+            'key' => 'com.example.ios2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultteriOSId, $response['body']['$id']);
+        $this->assertEquals('flutter-ios', $response['body']['type']);
+        $this->assertEquals('Flutter App (iOS) 2', $response['body']['name']);
+        $this->assertEquals('com.example.ios2', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+       
+        $platformFultterAndroidId = (isset($data['platformFultterAndroidId'])) ? $data['platformFultterAndroidId'] : '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Flutter App (Android) 2',
+            'key' => 'com.example.android2',
+            'store' => '',
+            'hostname' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($platformFultterAndroidId, $response['body']['$id']);
+        $this->assertEquals('flutter-android', $response['body']['type']);
+        $this->assertEquals('Flutter App (Android) 2', $response['body']['name']);
+        $this->assertEquals('com.example.android2', $response['body']['key']);
+        $this->assertEquals('', $response['body']['store']);
+        $this->assertEquals('', $response['body']['hostname']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectPlatform
+     */
+    public function testDeleteProjectPlatform($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        
+        $platformWebId = (isset($data['platformWebId'])) ? $data['platformWebId'] : '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformWebId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformFultteriOSId = (isset($data['platformFultteriOSId'])) ? $data['platformFultteriOSId'] : '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformFultteriOSId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformFultteriOSId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $platformFultterAndroidId = (isset($data['platformFultterAndroidId'])) ? $data['platformFultterAndroidId'] : '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms/'.$platformFultterAndroidId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */
