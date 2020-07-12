@@ -141,11 +141,13 @@ class Request extends UtopiaRequest
      */
     public function getProtocol(): string
     {
-        if($this->getServer('server_protocol', '') === 'HTTP/1.1') {
+        $protocol = $this->getHeader('x-forwarded-proto', $this->getServer('server_protocol', 'https'));
+
+        if($protocol === 'HTTP/1.1') {
             return 'http';
         }
 
-        return $this->getHeader('x-forwarded-proto', 'https');
+        return $protocol;
     }
 
     /**
