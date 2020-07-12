@@ -356,6 +356,28 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * @depends testCreateProjectWebhook
      */
+    public function testListProjectWebhook($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/webhooks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']);
+        
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectWebhook
+     */
     public function testGetProjectWebhook($data): array
     {
         $id = (isset($data['projectId'])) ? $data['projectId'] : '';
@@ -550,6 +572,28 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectKey
+     */
+    public function testListProjectKey($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']);
+        
+        /**
+         * Test for FAILURE
+         */
 
         return $data;
     }
@@ -806,6 +850,28 @@ class ProjectsConsoleClientTest extends Scope
         ]);
             
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectTask
+     */
+    public function testListProjectTask($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/tasks', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']);
+        
+        /**
+         * Test for FAILURE
+         */
 
         return $data;
     }
@@ -1159,6 +1225,28 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * @depends testCreateProjectPlatform
      */
+    public function testListProjectPlatform($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(3, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+ 
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectPlatform
+     */
     public function testGetProjectPlatform($data): array
     {
         $id = (isset($data['projectId'])) ? $data['projectId'] : '';
@@ -1363,6 +1451,162 @@ class ProjectsConsoleClientTest extends Scope
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/tasks/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    // Domains
+
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateProjectDomain($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/domains', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => 'sub.example.com',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertIsInt($response['body']['updated']);
+        $this->assertEquals('sub.example.com', $response['body']['domain']);
+        $this->assertEquals('com', $response['body']['tld']);
+        $this->assertEquals('example.com', $response['body']['registerable']);
+        $this->assertEquals(false, $response['body']['verification']);
+        
+        $data = array_merge($data, ['domainId' => $response['body']['$id']]);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/platforms', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => '123',
+        ]);
+        
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectDomain
+     */
+    public function testListProjectDomain($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/domains', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+ 
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectDomain
+     */
+    public function testGetProjectDomain($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $domainId = (isset($data['domainId'])) ? $data['domainId'] : '';
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/domains/'.$domainId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals($domainId, $response['body']['$id']);
+        $this->assertIsInt($response['body']['updated']);
+        $this->assertEquals('sub.example.com', $response['body']['domain']);
+        $this->assertEquals('com', $response['body']['tld']);
+        $this->assertEquals('example.com', $response['body']['registerable']);
+        $this->assertEquals(false, $response['body']['verification']);
+         
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/domains/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectDomain
+     */
+    public function testUpdateProjectDomain($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $domainId = (isset($data['domainId'])) ? $data['domainId'] : '';
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/'.$id.'/domains/'.$domainId.'/verification', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        return $data;
+    }
+
+    /**
+     * @depends testCreateProjectDomain
+     */
+    public function testDeleteProjectDomain($data): array
+    {
+        $id = (isset($data['projectId'])) ? $data['projectId'] : '';
+        $domainId = (isset($data['domainId'])) ? $data['domainId'] : '';
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/domains/'.$domainId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/domains/'.$domainId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/'.$id.'/domains/error', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
