@@ -161,6 +161,33 @@ window.ls.filter
 
     return $value.join(", ").replace(/,\s([^,]+)$/, ' and $1');
   })
+  .add("envName", function($value, env) {
+    console.log('env', env);
+
+    if(env && env.ENVIRONMENTS && env.ENVIRONMENTS[$value]) {
+      return env.ENVIRONMENTS[$value].name;
+    }
+
+    return '';
+  })
+  .add("envLogo", function($value, env) {
+    console.log('env', env);
+
+    if(env && env.ENVIRONMENTS && env.ENVIRONMENTS[$value]) {
+      return env.ENVIRONMENTS[$value].logo;
+    }
+
+    return '';
+  })
+  .add("envVersion", function($value, env) {
+    console.log('env', env);
+
+    if(env && env.ENVIRONMENTS && env.ENVIRONMENTS[$value]) {
+      return env.ENVIRONMENTS[$value].version;
+    }
+
+    return '';
+  })
 ;
 
 function abbreviate(number, maxPlaces, forcePlaces, forceLetter) {

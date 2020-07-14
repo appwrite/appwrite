@@ -1,15 +1,16 @@
 <?php
 
-$protocol   = $this->getParam('protocol', '');
-$domain     = $this->getParam('domain', '');
-$platforms  = $this->getParam('platforms', []);
-$version    = $this->getParam('version', '0.0.0');
-$isDev      = $this->getParam('isDev', false);
-$litespeed  = $this->getParam('litespeed', true);
-$analytics  = $this->getParam('analytics', 'UA-26264668-9');
-$env        = $this->getParam('env', '');
-$canonical  = $this->getParam('canonical', '');
-$locale     = $this->getParam('locale', null);
+$protocol       = $this->getParam('protocol', '');
+$domain         = $this->getParam('domain', '');
+$platforms      = $this->getParam('platforms', []);
+$version        = $this->getParam('version', '0.0.0');
+$isDev          = $this->getParam('isDev', false);
+$litespeed      = $this->getParam('litespeed', true);
+$analytics      = $this->getParam('analytics', 'UA-26264668-9');
+$mode           = $this->getParam('mode', '');
+$canonical      = $this->getParam('canonical', '');
+$locale         = $this->getParam('locale', null);
+$environments   = $this->getParam('environments', null);
 
 if(!empty($platforms)) {
     $platforms = array_map(function($platform) {
@@ -31,7 +32,7 @@ if(!empty($platforms)) {
 ?><!DOCTYPE html><!--
 <?php echo $locale->getText('settings.inspire'); ?>
 
---><html lang="<?php echo $locale->getText('settings.locale'); ?>" class="<?php echo $this->getParam('class', 'none'); ?>  <?php echo $env; ?>">
+--><html lang="<?php echo $locale->getText('settings.locale'); ?>" class="<?php echo $this->getParam('class', 'none'); ?>  <?php echo $mode; ?>">
 <head>
     <link rel="manifest" href="/manifest.json">
     <title><?php echo $this->getParam('title', ''); ?></title>
@@ -74,10 +75,11 @@ if(!empty($platforms)) {
             SETUP: '<?php echo $this->escape($this->getParam('setup')); ?>',
             API: '/v1',
             PROJECT: 'console',
+            ENVIRONMENTS: <?php echo json_encode($environments); ?>,
             PLATFORMS: <?php echo json_encode($platforms); ?>,
             LOCALE: '<?php echo $this->escape($locale->getText('settings.locale')); ?>',
             PREFIX: '<?php echo $this->escape($this->getParam('prefix')); ?>',
-            ROLES: <?PHP echo json_encode($this->getParam('roles', [])); ?>,
+            ROLES: <?php echo json_encode($this->getParam('roles', [])); ?>,
             PAGING_LIMIT: <?PHP echo APP_PAGING_LIMIT; ?>
         };
 

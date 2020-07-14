@@ -1,6 +1,7 @@
 <?php
 
 use Utopia\App;
+use Utopia\Config\Config;
 
 App::init(function ($utopia, $request, $response, $layout) {
     /** @var Utopia\App $utopia */
@@ -26,7 +27,8 @@ App::init(function ($utopia, $request, $response, $layout) {
             ['type' => 'developer', 'label' => 'Developer'],
             ['type' => 'admin', 'label' => 'Admin'],
         ])
-        ->setParam('env', App::getMode())
+        ->setParam('environments', Config::getParam('environments'))
+        ->setParam('mode', App::getMode())
     ;
 
     $time = (60 * 60 * 24 * 45); // 45 days cache
