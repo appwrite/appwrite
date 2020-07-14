@@ -230,7 +230,7 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         $file = $request->getFiles('code');
-        $device = Storage::getDevice('local');
+        $device = Storage::getDevice('functions');
         $fileType = new FileType([FileType::FILE_TYPE_GZIP]);
         $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
         $upload = new Upload();

@@ -47,6 +47,7 @@ services:
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-functions:/storage/functions:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
@@ -208,6 +209,7 @@ volumes:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:
+  appwrite-functions:
   appwrite-influxdb:
   appwrite-chronograf:
   appwrite-config:

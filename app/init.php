@@ -39,6 +39,7 @@ const APP_PAGING_LIMIT = 15;
 const APP_CACHE_BUSTER = 125;
 const APP_VERSION_STABLE = '0.6.2';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
+const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';

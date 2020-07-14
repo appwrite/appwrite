@@ -75,7 +75,7 @@ App::post('/v1/storage/files')
             throw new Exception('File size not allowed', 400);
         }
 
-        $device = Storage::getDevice('local');
+        $device = Storage::getDevice('files');
 
         if (!$upload->isValid($file['tmp_name'])) {
             throw new Exception('Invalid file', 403);
@@ -239,7 +239,7 @@ App::get('/v1/storage/files/:fileId/preview')
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $storage = 'local';
+        $storage = 'files';
 
         if (!\extension_loaded('imagick')) {
             throw new Exception('Imagick extension is missing', 500);
@@ -282,7 +282,7 @@ App::get('/v1/storage/files/:fileId/preview')
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('local');
+        $device = Storage::getDevice('files');
 
         if (!\file_exists($path)) {
             throw new Exception('File not found', 404);
@@ -371,7 +371,7 @@ App::get('/v1/storage/files/:fileId/download')
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('local');
+        $device = Storage::getDevice('files');
 
         $source = $device->read($path);
 
@@ -428,7 +428,7 @@ App::get('/v1/storage/files/:fileId/view')
         }
 
         $compressor = new GZIP();
-        $device = Storage::getDevice('local');
+        $device = Storage::getDevice('files');
 
         $contentType = 'text/plain';
 
@@ -542,7 +542,7 @@ App::delete('/v1/storage/files/:fileId')
             throw new Exception('File not found', 404);
         }
 
-        $device = Storage::getDevice('local');
+        $device = Storage::getDevice('files');
 
         if ($device->delete($file->getAttribute('path', ''))) {
             if (!$projectDB->deleteDocument($fileId)) {
@@ -575,7 +575,7 @@ App::delete('/v1/storage/files/:fileId')
 //     ->label('sdk.method', 'getFileScan')
 //     ->label('sdk.hide', true)
 //     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-//     ->param('storage', 'local', function () { return new WhiteList(['local']);})
+//     ->param('storage', 'files', function () { return new WhiteList(['files']);})
 //     ->action(
 //         function ($fileId, $storage) use ($response, $request, $projectDB) {
 //             $file = $projectDB->getDocument($fileId);

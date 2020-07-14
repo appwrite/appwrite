@@ -261,7 +261,7 @@ App::get('/v1/health/stats') // Currently only used internally
         /** @var Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
 
-        $device = Storage::getDevice('local');
+        $device = Storage::getDevice('files');
         $cache = $register->get('cache');
 
         $cacheStats = $cache->info();

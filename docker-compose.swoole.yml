@@ -45,10 +45,12 @@ services:
       - traefik.http.routers.appwrite-secure.rule=PathPrefix(`/`)
       - traefik.http.routers.appwrite-secure.tls=true
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-functions:/storage/functions:rw
       - ./phpunit.xml:/usr/src/code/phpunit.xml
       - ./tests:/usr/src/code/tests
       - ./app:/usr/src/code/app
@@ -371,6 +373,7 @@ volumes:
   appwrite-cache:
   appwrite-uploads:
   appwrite-certificates:
+  appwrite-functions:
   appwrite-influxdb:
   appwrite-chronograf:
   appwrite-config:
