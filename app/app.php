@@ -14,6 +14,8 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Storage\Device\Local;
+use Appwrite\Storage\Storage;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -86,6 +88,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ? null
         : '.'.$request->getHostname()
     );
+
+    Storage::setDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
 
     /*
      * Security Headers

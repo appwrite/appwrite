@@ -2,6 +2,11 @@
 
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\UID;
+use Appwrite\Storage\Storage;
+use Appwrite\Storage\Validator\File;
+use Appwrite\Storage\Validator\FileSize;
+use Appwrite\Storage\Validator\FileType;
+use Appwrite\Storage\Validator\Upload;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
 use Utopia\Response;
@@ -215,12 +220,49 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.description', '/docs/references/functions/create-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('command', '', function () { return new Text('1028'); }, 'Code execution command.')
-    ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
-    ->action(function ($functionId, $command, $code, $response, $projectDB) {
+    // ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
+    ->param('code', [], function () { return new File(); }, 'Gzip file containing your code.', false)
+    ->action(function ($functionId, $command, $code, $request, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
+        }
+
+        $file = $request->getFiles('code');
+        $device = Storage::getDevice('local');
+        $fileType = new FileType([FileType::FILE_TYPE_GZIP]);
+        $fileSize = new FileSize(App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $upload = new Upload();
+
+        if (empty($file)) {
+            throw new Exception('No file sent', 400);
+        }
+
+        // Make sure we handle a single file and multiple files the same way
+        $file['name'] = (\is_array($file['name']) && isset($file['name'][0])) ? $file['name'][0] : $file['name'];
+        $file['tmp_name'] = (\is_array($file['tmp_name']) && isset($file['tmp_name'][0])) ? $file['tmp_name'][0] : $file['tmp_name'];
+        $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+
+        // Check if file type is allowed (feature for project settings?)
+        if (!$fileType->isValid($file['tmp_name'])) {
+            throw new Exception('File type not allowed', 400);
+        }
+
+        if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
+            throw new Exception('File size not allowed', 400);
+        }
+
+        if (!$upload->isValid($file['tmp_name'])) {
+            throw new Exception('Invalid file', 403);
+        }
+
+        // Save to storage
+        $size = $device->getFileSize($file['tmp_name']);
+        $path = $device->getPath(\uniqid().'.'.\pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        if (!$device->upload($file['tmp_name'], $path)) { // TODO deprecate 'upload' and replace with 'move'
+            throw new Exception('Failed moving file', 500);
         }
         
         $tag = $projectDB->createDocument([
@@ -232,7 +274,8 @@ App::post('/v1/functions/:functionId/tags')
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'command' => $command,
-            'code' => $code,
+            'codePath' => $path,
+            'codeSize' => $size,
         ]);
 
         if (false === $tag) {
@@ -243,7 +286,7 @@ App::post('/v1/functions/:functionId/tags')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($tag->getArrayCopy())
         ;
-    }, ['response', 'projectDB']);
+    }, ['request', 'response', 'projectDB']);
 
 App::get('/v1/functions/:functionId/tags')
     ->groups(['api', 'functions'])

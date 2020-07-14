@@ -90,9 +90,32 @@ $events = array_keys($this->getParam('events', []));
 
                                 <h1>Deploy a New Tag</h1>
 
-                                <footer>
-                                    <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
-                                </footer>
+                                <form
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Create Function Tag"
+                                    data-service="functions.createTag"
+                                    data-scope="sdk"
+                                    data-event="submit"
+                                    data-success="alert,trigger,reset"
+                                    data-success-param-alert-text="Created function tag successfully"
+                                    data-success-param-trigger-events="functions.createTag"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to create function tag"
+                                    data-failure-param-alert-classname="error">
+                                    
+                                    <input type="hidden" name="functionId" data-ls-bind="{{router.params.id}}" />
+
+                                    <label for="tag-command">Command</label>
+                                    <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
+                            
+                                    <label for="tag-code">Gzipped Code</label>
+                                    <input type="file" name="code" id="tag-code" size="1" required class="margin-bottom-xl">
+
+                                    <footer>
+                                        <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>
+                                    </footer>
+                                </form>
                             </div>
                         </div>
 

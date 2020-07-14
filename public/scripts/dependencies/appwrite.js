@@ -2149,7 +2149,7 @@
              *
              * @param {string} functionId
              * @param {string} command
-             * @param {string} code
+             * @param {File} code
              * @throws {Error}
              * @return {Promise}             
              */
@@ -2180,7 +2180,7 @@
 
                 return http
                     .post(path, {
-                        'content-type': 'application/json',
+                        'content-type': 'multipart/form-data',
                     }, payload);
             },
 

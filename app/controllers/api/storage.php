@@ -23,10 +23,6 @@ use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Config\Config;
 
-App::init(function ($project) {
-    Storage::setDevice('local', new Local(APP_STORAGE_UPLOADS.'/app-'.$project->getId()));
-}, ['project'], 'storage');
-
 App::post('/v1/storage/files')
     ->desc('Create File')
     ->groups(['api', 'storage'])
@@ -38,7 +34,7 @@ App::post('/v1/storage/files')
     ->label('sdk.description', '/docs/references/storage/create-file.md')
     ->label('sdk.consumes', 'multipart/form-data')
     ->label('sdk.methodType', 'upload')
-    ->param('file', [], function () { return new File(); }, 'Binary File.', false)
+    ->param('file', [], function () { return new File(); }, 'Binary file.', false)
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhooks, $audits, $usage) {

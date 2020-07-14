@@ -739,11 +739,11 @@ declare namespace Appwrite {
 	     *
          * @param {string} functionId
          * @param {string} command
-         * @param {string} code
+         * @param {File} code
          * @throws {Error}
          * @return {Promise}         
          */
-	    createTag(functionId: string, command: string, code: string): Promise<object>;
+	    createTag(functionId: string, command: string, code: File): Promise<object>;
 
         /**
          * Get Tag
