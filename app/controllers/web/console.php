@@ -347,6 +347,10 @@ App::get('/console/functions')
     ->action(function ($layout) {
         $page = new View(__DIR__.'/../../views/console/functions/index.phtml');
 
+        $page
+            ->setParam('environments', Config::getParam('environments'))
+        ;
+
         $layout
             ->setParam('title', APP_NAME.' - Functions')
             ->setParam('body', $page);

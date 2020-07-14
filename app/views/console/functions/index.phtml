@@ -1,3 +1,6 @@
+<?php
+$environments = $this->getParam('environments', []);
+?>
 <div class="cover">
     <h1 class="zone xl margin-bottom-large">
         <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Home</a>
@@ -60,7 +63,14 @@
                             data-failure-param-alert-classname="error">
 
                             <label for="name">Name</label>
-                            <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom-xl" />
+                            <input type="text" id="name" name="name" required autocomplete="off" class="margin-bottom" />
+                            
+                            <label for="env">Environment</label>
+                            <select name="env" id="env" required class="margin-bottom-xl">
+                                <?php foreach($environments as $key => $environment): ?>
+                                    <option value="<?php echo $this->escape($key); ?>"><?php echo $this->escape($environment['name']); ?> <?php echo $this->escape($environment['version']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
 
                             <footer>
                                 <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

@@ -10,6 +10,7 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
+use Utopia\Config\Config;
 use Cron\CronExpression;
 
 include_once __DIR__ . '/../shared/api.php';
@@ -23,11 +24,12 @@ App::post('/v1/functions')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/functions/create-function.md')
     ->param('name', '', function () { return new Text(128); }, 'Function name.')
+    ->param('env', '', function () { return new WhiteList(array_keys(Config::getParam('environments'))); }, 'Execution enviornment.')
     ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
-    ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
+    ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
-    ->action(function ($name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+    ->action(function ($name, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
             '$permissions' => [
@@ -38,6 +40,7 @@ App::post('/v1/functions')
             'dateUpdated' => time(),
             'status' => 'paused',
             'name' => $name,
+            'env' => $env,
             'tag' => '',
             'vars' => $vars,
             'events' => $events,
@@ -115,7 +118,7 @@ App::put('/v1/functions/:functionId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('name', '', function () { return new Text(128); }, 'Function name.')
     ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
-    ->param('events', [], function () { return new ArrayList(new Text(256)); }, 'Events list.', true)
+    ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
     ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
@@ -211,10 +214,9 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.method', 'createTag')
     ->label('sdk.description', '/docs/references/functions/create-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('env', '', function () { return new WhiteList(['node-14', 'node-12', 'php-7.4']); }, 'Execution enviornment.')
     ->param('command', '', function () { return new Text('1028'); }, 'Code execution command.')
     ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
-    ->action(function ($functionId, $env, $command, $code, $response, $projectDB) {
+    ->action(function ($functionId, $command, $code, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -229,7 +231,6 @@ App::post('/v1/functions/:functionId/tags')
             ],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
-            'env' => $env,
             'command' => $command,
             'code' => $code,
         ]);

@@ -23,6 +23,7 @@ class FunctionsConsoleServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'name' => 'Test',
+            'env' => 'node-14',
             'vars' => [
                 'key1' => 'value1',
                 'key2' => 'value2',
@@ -179,7 +180,6 @@ class FunctionsConsoleServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'env' => 'node-14',
             'command' => 'node ./test.js',
             'code' => 'codefilehere',
         ]);
