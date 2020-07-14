@@ -32,4 +32,5 @@ include 'app.php';
     ->ignore(realpath(__DIR__ . '/../vendor/maxmind-db'))
     ->ignore(realpath(__DIR__ . '/../vendor/psr/log'))
     ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
+    ->ignore(realpath(__DIR__ . '/../vendor/symfony/polyfill-php70'))
     ->load();
