@@ -37,4 +37,5 @@ install:
 
 script:
 - docker ps
+- docker-compose logs appwrite
 - docker exec appwrite test
