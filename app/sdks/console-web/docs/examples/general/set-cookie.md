@@ -6,7 +6,7 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.projects.updateTask('[PROJECT_ID]', '[TASK_ID]', '[NAME]', 'play', '', false, 'GET', 'https://example.com');
+let promise = sdk.general.setCookie();
 
 promise.then(function (response) {
     console.log(response); // Success

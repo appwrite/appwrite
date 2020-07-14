@@ -25,8 +25,8 @@ use Appwrite\Utopia\Response;
 use DeviceDetector\DeviceDetector;
 use Utopia\Validator\ArrayList;
 
-$oauthDefaultSuccess = '/auth/oauth2/success';
-$oauthDefaultFailure = '/auth/oauth2/failure';
+$oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
+$oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
 
 $oauth2Keys = [];
 

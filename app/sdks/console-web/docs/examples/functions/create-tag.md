@@ -6,7 +6,7 @@ sdk
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-let promise = sdk.functions.createTag('[FUNCTION_ID]', 'node-14', '[COMMAND]', '[CODE]');
+let promise = sdk.functions.createTag('[FUNCTION_ID]', '[COMMAND]', '[CODE]');
 
 promise.then(function (response) {
     console.log(response); // Success

@@ -787,16 +787,17 @@
              * Use this endpoint to send a verification message to your user email address
              * to confirm they are the valid owners of that address. Both the **userId**
              * and **secret** arguments will be passed as query parameters to the URL you
-             * have provider to be attached to the verification email. The provided URL
-             * should redirect the user back for your app and allow you to complete the
+             * have provided to be attached to the verification email. The provided URL
+             * should redirect the user back to your app and allow you to complete the
              * verification process by verifying both the **userId** and **secret**
              * parameters. Learn more about how to [complete the verification
              * process](/docs/client/account#updateAccountVerification). 
              * 
              * Please note that in order to avoid a [Redirect
-             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+             * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md),
              * the only valid redirect URLs are the ones from domains you have set when
              * adding your platforms in the console interface.
+             * 
              *
              * @param {string} url
              * @throws {Error}
@@ -1209,60 +1210,6 @@
             },
 
             /**
-             * Get User Initials
-             *
-             * Use this endpoint to show your user initials avatar icon on your website or
-             * app. By default, this route will try to print your logged-in user name or
-             * email initials. You can also overwrite the user name if you pass the 'name'
-             * parameter. If no name is given and no user is logged, an empty avatar will
-             * be returned.
-             * 
-             * You can use the color and background params to change the avatar colors. By
-             * default, a random theme will be selected. The random theme will persist for
-             * the user's initials when reloading the same theme will always return for
-             * the same initials.
-             *
-             * @param {string} name
-             * @param {number} width
-             * @param {number} height
-             * @param {string} color
-             * @param {string} background
-             * @throws {Error}
-             * @return {string}             
-             */
-            getInitials: function(name = '', width = 500, height = 500, color = '', background = '') {
-                let path = '/avatars/initials';
-
-                let payload = {};
-
-                if(name) {
-                    payload['name'] = name;
-                }
-
-                if(width) {
-                    payload['width'] = width;
-                }
-
-                if(height) {
-                    payload['height'] = height;
-                }
-
-                if(color) {
-                    payload['color'] = color;
-                }
-
-                if(background) {
-                    payload['background'] = background;
-                }
-
-                payload['project'] = config.project;
-
-                let query = Object.keys(payload).map(key => key + '=' + encodeURIComponent(payload[key])).join('&');
-                
-                return config.endpoint + path + ((query) ? '?' + query : '');
-            },
-
-            /**
              * Get QR Code
              *
              * Converts a given plain text to a QR code image. You can use the query
@@ -1271,11 +1218,11 @@
              * @param {string} text
              * @param {number} size
              * @param {number} margin
-             * @param {number} download
+             * @param {boolean} download
              * @throws {Error}
              * @return {string}             
              */
-            getQR: function(text, size = 400, margin = 1, download = 0) {
+            getQR: function(text, size = 400, margin = 1, download = false) {
                 if(text === undefined) {
                     throw new Error('Missing required parameter: "text"');
                 }
@@ -1335,18 +1282,16 @@
              *
              * @param {string} collectionId
              * @param {string[]} filters
-             * @param {number} offset
              * @param {number} limit
+             * @param {number} offset
              * @param {string} orderField
              * @param {string} orderType
              * @param {string} orderCast
              * @param {string} search
-             * @param {number} first
-             * @param {number} last
              * @throws {Error}
              * @return {Promise}             
              */
-            listDocuments: function(collectionId, filters = [], offset = 0, limit = 50, orderField = '$id', orderType = 'ASC', orderCast = 'string', search = '', first = 0, last = 0) {
+            listDocuments: function(collectionId, filters = [], limit = 25, offset = 0, orderField = '$id', orderType = 'ASC', orderCast = 'string', search = '') {
                 if(collectionId === undefined) {
                     throw new Error('Missing required parameter: "collectionId"');
                 }
@@ -1359,12 +1304,12 @@
                     payload['filters'] = filters;
                 }
 
-                if(offset) {
-                    payload['offset'] = offset;
-                }
-
                 if(limit) {
                     payload['limit'] = limit;
+                }
+
+                if(offset) {
+                    payload['offset'] = offset;
                 }
 
                 if(orderField) {
@@ -1381,14 +1326,6 @@
 
                 if(search) {
                     payload['search'] = search;
-                }
-
-                if(first) {
-                    payload['first'] = first;
-                }
-
-                if(last) {
-                    payload['last'] = last;
                 }
 
                 return http

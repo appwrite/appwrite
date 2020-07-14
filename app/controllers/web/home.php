@@ -363,6 +363,10 @@ App::get('/open-api-2.json')
                     continue;
                 }
 
+                if ($route->getLabel('sdk.mock', false)) {
+                    continue;
+                }
+
                 if (empty($route->getLabel('sdk.namespace', null))) {
                     continue;
                 }
