@@ -166,9 +166,14 @@ App::patch('/v1/functions/:functionId/tag')
     ->param('tag', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(function ($functionId, $tag, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
+        $tag = $projectDB->getDocument($tag);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
+        }
+
+        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+            throw new Exception('Tag not found', 404);
         }
 
         $schedule = $function->getAttribute('schedule', '');
@@ -176,7 +181,7 @@ App::patch('/v1/functions/:functionId/tag')
         $next = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? $cron->getNextRunDate()->format('U') : null;
 
         $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
-            'tag' => $tag,
+            'tag' => $tag->getId(),
             'next' => $next,
         ]));
 
