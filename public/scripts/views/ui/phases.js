@@ -5,7 +5,7 @@
       var tabs = document.createElement("ul");
       var container = document.createElement("div");
       var titles = Array.prototype.slice.call(
-        element.getElementsByTagName("h2")
+        element.getElementsByTagName("h1")
       );
       var next = Array.prototype.slice.call(
         element.querySelectorAll("[data-next]")
@@ -15,6 +15,36 @@
       );
       var position = 0;
       var init = false;
+
+      if(titles.length === 0) {
+        titles = Array.prototype.slice.call(
+          element.getElementsByTagName("h2")
+        );
+      }
+
+      if(titles.length === 0) {
+        titles = Array.prototype.slice.call(
+          element.getElementsByTagName("h3")
+        );
+      }
+
+      if(titles.length === 0) {
+        titles = Array.prototype.slice.call(
+          element.getElementsByTagName("h4")
+        );
+      }
+
+      if(titles.length === 0) {
+        titles = Array.prototype.slice.call(
+          element.getElementsByTagName("h5")
+        );
+      }
+
+      if(titles.length === 0) {
+        titles = Array.prototype.slice.call(
+          element.getElementsByTagName("h6")
+        );
+      }
 
       for (var i = 0; i < element.children.length; i++) {
         var tabState = expression.parse(
