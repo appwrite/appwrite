@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use CURLFile;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -181,7 +182,7 @@ class FunctionsConsoleServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'command' => 'node ./test.js',
-            'code' => 'codefilehere',
+            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/function.tar.gz'), 'application/x-gzip', 'function.tar.gz'),
         ]);
 
         $tagId = (isset($tag['body']['$id'])) ? $tag['body']['$id'] : '';
