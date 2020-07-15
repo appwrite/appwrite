@@ -78,8 +78,6 @@ class FileType extends Validator
 
         $bytes = \fgets($handle, 8);
 
-        var_dump($bytes);
-
         foreach ($this->whiteList as $key) {
             if (\strpos($bytes, $this->types[$key]) === 0) {
                 \fclose($handle);

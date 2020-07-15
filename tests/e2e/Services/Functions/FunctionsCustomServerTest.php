@@ -43,6 +43,7 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals(201, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Test', $response1['body']['name']);
+        $this->assertEquals('node-14', $response1['body']['env']);
         $this->assertIsInt($response1['body']['dateCreated']);
         $this->assertIsInt($response1['body']['dateUpdated']);
         $this->assertEquals('', $response1['body']['tag']);
@@ -178,7 +179,7 @@ class FunctionsConsoleServerTest extends Scope
          * Test for SUCCESS
          */
         $tag = $this->client->call(Client::METHOD_POST, '/functions/'.$data['functionId'].'/tags', array_merge([
-            'content-type' => 'application/json',
+            'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'command' => 'node ./test.js',
@@ -190,9 +191,9 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals(201, $tag['headers']['status-code']);
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
-        $this->assertEquals('node-14', $tag['body']['env']);
         $this->assertEquals('node ./test.js', $tag['body']['command']);
-        $this->assertEquals('codefilehere', $tag['body']['code']);
+        $this->assertStringStartsWith('/storage/functions/app-', $tag['body']['codePath']);
+        $this->assertEquals(521, $tag['body']['codeSize']);
        
         /**
          * Test for FAILURE
@@ -246,7 +247,6 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals($function['body']['sum'], 1);
         $this->assertIsArray($function['body']['tags']);
         $this->assertCount(1, $function['body']['tags']);
-        $this->assertEquals($function['body']['tags'][0]['env'], 'node-14');
 
         return $data;
     }
@@ -264,8 +264,8 @@ class FunctionsConsoleServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($function['headers']['status-code'], 200);
-        $this->assertEquals($function['body']['env'], 'node-14');
+        $this->assertEquals(200, $function['headers']['status-code']);
+        $this->assertEquals(521, $function['body']['codeSize']);
 
         /**
          * Test for FAILURE
