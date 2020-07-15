@@ -210,6 +210,25 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
+  appwrite-worker-functions:
+    entrypoint: worker-functions
+    container_name: appwrite-worker-functions
+    build:
+      context: .
+    restart: unless-stopped
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - mariadb
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - appwrite-functions:/storage/functions:rw
+    environment:
+      - _APP_ENV
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+
   appwrite-worker-mails:
     entrypoint: worker-mails
     container_name: appwrite-worker-mails
