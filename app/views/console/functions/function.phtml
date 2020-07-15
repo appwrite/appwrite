@@ -1,5 +1,6 @@
 <?php
-
+$fileLimit = $this->getParam('fileLimit', 0);
+$fileLimitHuman = $this->getParam('fileLimitHuman', 0);
 $events = array_keys($this->getParam('events', []));
 
 ?>
@@ -60,7 +61,7 @@ $events = array_keys($this->getParam('events', []));
                             data-scope="sdk"
                             data-event="load,functions.createTag,functions.deleteTag"
                             data-name="project-function-tags"
-                            data-param-project-id="{{router.params.project}}"
+                            data-param-function-id="{{router.params.id}}"
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listTags">
 
@@ -77,7 +78,7 @@ $events = array_keys($this->getParam('events', []));
     
                                             <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Set Default</a>
     
-                                            <span data-ls-bind="{{function.name}}"></span>
+                                            <span data-ls-bind="{{tag}}"></span>
                                         </li>
                                     </ul>
                                 </div>
@@ -110,7 +111,8 @@ $events = array_keys($this->getParam('events', []));
                                     <input type="text" id="tag-command" name="command" required autocomplete="off" class="margin-bottom" placeholder="node main.js" />
                             
                                     <label for="tag-code">Gzipped Code</label>
-                                    <input type="file" name="code" id="tag-code" size="1" required class="margin-bottom-xl">
+                                    <input type="file" name="code" id="tag-code" size="1" required accept="application/x-gzip">
+                                    <div class="text-fade text-size-xs margin-top-negative-small margin-bottom-large">(Max file size allowed: <?php echo $fileLimitHuman; ?>)</div>
 
                                     <footer>
                                         <button type="submit">Create</button> &nbsp; <button data-ui-modal-close="" type="button" class="reverse">Cancel</button>

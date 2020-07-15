@@ -220,8 +220,8 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.description', '/docs/references/functions/create-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('command', '', function () { return new Text('1028'); }, 'Code execution command.')
-    // ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
     ->param('code', [], function () { return new File(); }, 'Gzip file containing your code.', false)
+    // ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
     ->action(function ($functionId, $command, $code, $request, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -245,9 +245,9 @@ App::post('/v1/functions/:functionId/tags')
         $file['size'] = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
 
         // Check if file type is allowed (feature for project settings?)
-        if (!$fileType->isValid($file['tmp_name'])) {
-            throw new Exception('File type not allowed', 400);
-        }
+        // if (!$fileType->isValid($file['tmp_name'])) {
+        //     throw new Exception('File type not allowed', 400);
+        // }
 
         if (!$fileSize->isValid($file['size'])) { // Check if file size is exceeding allowed limit
             throw new Exception('File size not allowed', 400);
