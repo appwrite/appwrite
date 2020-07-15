@@ -50,7 +50,24 @@ $events = array_keys($this->getParam('events', []));
                                 <p class="text-fade margin-bottom" data-ls-bind="{{project-function.env|envName}} {{project-function.env|envVersion}}">
                                 </p>
 
-                                <button class="margin-bottom-small">Execute Now</button> &nbsp; <button class="reverse">View Logs</button>
+                                <form name="functions.createExecution"
+                                    data-analytics-event="submit"
+                                    data-analytics-category="console"
+                                    data-analytics-label="Create Function Execution"
+                                    data-service="functions.createExecution"
+                                    data-event="submit"
+                                    data-param-function-id="{{router.params.id}}"
+                                    data-success="alert,trigger"
+                                    data-success-param-alert-text="Function executed successfully"
+                                    data-success-param-trigger-events="functions.createExecution"
+                                    data-failure="alert"
+                                    data-failure-param-alert-text="Failed to execute function"
+                                    data-failure-param-alert-classname="error">
+                                    <button class="margin-bottom-small">Execute Now</button>
+                                </form>
+
+
+                                &nbsp; <button class="reverse">View Logs</button>
                             </div>
                         </div>
 
@@ -75,8 +92,22 @@ $events = array_keys($this->getParam('events', []));
                                 <div class="box margin-bottom">
                                     <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
                                         <li class="clear">
-    
-                                            <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Set Default</a>
+                                            <form name="functions.updateTag" class="pull-end"
+                                                data-analytics-event="submit"
+                                                data-analytics-category="console"
+                                                data-analytics-label="Create Function Execution"
+                                                data-service="functions.updateTag"
+                                                data-event="submit"
+                                                data-param-function-id="{{router.params.id}}"
+                                                data-param-tag="{{tag.$id}}"
+                                                data-success="alert,trigger"
+                                                data-success-param-alert-text="Tag updated successfully"
+                                                data-success-param-trigger-events="functions.updateTag"
+                                                data-failure="alert"
+                                                data-failure-param-alert-text="Failed to update tag"
+                                                data-failure-param-alert-classname="error">
+                                                <button class="margin-bottom-small">Activate</button>
+                                            </form>
     
                                             <span data-ls-bind="{{tag}}"></span>
                                             <span data-ls-bind="{{tag.codeSize|humanFileSize}}"></span>
