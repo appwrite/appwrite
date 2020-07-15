@@ -51,6 +51,17 @@ class FunctionsV1
     {
         global $environments;
 
+        $functionId = $this->args['functionId'];
+        $functionTag = $this->args['functionTag'];
+        $functionCommand = $this->args['functionCommand'];
+        $functionEnv = $this->args['functionEnv'];
+
+        $environment = (isset($environments[$functionEnv])) ? $environments[$functionEnv] : null;
+        
+        if(is_null($environment)) {
+            throw new Exception('Environment "'.$functionEnv.' is not supported');
+        }
+
         /*
          * 1. Get Original Task
          * 2. Check for updates
@@ -67,7 +78,7 @@ class FunctionsV1
 
         /**
          * 1. Get event args
-         * 2. Unpackage code in an isolated folder
+         * 2. Unpackage code in the isolated container
          * 3. Execute in container with timeout
          *      + messure execution time
          *      + pass env vars
@@ -79,7 +90,6 @@ class FunctionsV1
          */
         $stdout = '';
         $stderr = '';
-        $image  = 'php:7.4-cli';
         $timeout  = 15;
 
         $start = microtime(true);
@@ -87,23 +97,38 @@ class FunctionsV1
         //TODO aviod scheduled execution if delay is bigger than X offest
 
         /**
-         * Limit CPU Usage
-         * Limit Memory Usage
+         * Limit CPU Usage - DONE
+         * Limit Memory Usage - DONE
          * Limit Network Usage
          * Make sure no access to redis, mariadb, influxdb or other system services
          * Make sure no access to NFS server / storage volumes
          * Access Appwrite REST from internal network for improved performance
          */
-        Console::execute("docker run \
+        
+         //--storage-opt size=120m \
+        $exitCode = Console::execute("docker run \
+            --cpus=1 \
+            --memory=50m \
+            --memory-swap=50m \
             --rm \
-            -v $(pwd):/app \
-            -w /app \
-            {$image} \
-            php -v", null, $stdout, $stderr, $timeout);
+            --name=appwrite-function- \
+            --volume $(pwd):/app \
+            --workdir /app \
+            --env APPWRITE_FUNCTION_ID={$functionId} \
+            --env APPWRITE_FUNCTION_TAG={$functionTag} \
+            --env APPWRITE_FUNCTION_ENV_NAME={$environment['name']} \
+            --env APPWRITE_FUNCTION_ENV_VERSION={$environment['version']} \
+            {$environment['image']} \
+            {$functionCommand}", null, $stdout, $stderr, $timeout);
 
         $end = microtime(true);
 
-        echo "The code took " . ($end - $start) . " seconds to complete.";
+        Console::info("Code executed in " . ($end - $start) . " seconds with exit code {$exitCode}");
+
+        // Double-check Cleanup
+
+        var_dump($stdout);
+        var_dump($stderr);
     }
 
     public function tearDown()

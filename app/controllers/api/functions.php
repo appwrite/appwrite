@@ -442,6 +442,10 @@ App::post('/v1/functions/:functionId/executions')
         if((bool)$async) {
             // Issue a TLS certificate when domain is verified
             Resque::enqueue('v1-functions', 'FunctionsV1', [
+                'functionId' => $function->getId(),
+                'functionTag' => $tag->getId(),
+                'functionEnv' => $function->getAttribute('env', ''),
+                'functionCommand' => $tag->getAttribute('command', ''),
             ]);
         }
 
