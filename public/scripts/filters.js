@@ -31,10 +31,10 @@ window.ls.filter
   .add("date", function($value, date) {
     return date.format("Y-m-d", $value);
   })
-  .add("date-time", function($value, date) {
+  .add("dateTime", function($value, date) {
     return date.format("Y-m-d H:i", $value);
   })
-  .add("date-text", function($value, date) {
+  .add("dateText", function($value, date) {
     return date.format("d M Y", $value);
   })
   .add("ms2hum", function($value) {

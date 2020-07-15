@@ -291,7 +291,7 @@
                         </thead>
                         <tbody data-ls-loop="securityLogs" data-ls-as="log">
                             <tr>
-                                <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                 <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                 <td data-title="Client: ">
                                     <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />

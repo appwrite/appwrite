@@ -56,12 +56,12 @@
                         </span>
                     </td>
                     <td data-title="" style="vertical-align: middle" class="text-size-small text-fade">
-                        <span data-ls-bind="Next: {{task.next|date-time}}"></span>
+                        <span data-ls-bind="Next: {{task.next|dateTime}}"></span>
 
                         <br />
                     
                         <span data-ls-if="undefined !== {{task.previous}}">
-                            <span data-ls-bind="Prev: {{task.previous|date-time}}"></span>
+                            <span data-ls-bind="Prev: {{task.previous|dateTime}}"></span>
 
                             <!-- <span data-ls-if="undefined !== {{task.delay}} && 59 < {{task.delay}}" class="text-danger margin-top-tiny">
                                 <small data-ls-bind="({{task.delay|ms2hum}} Delay)"></small>

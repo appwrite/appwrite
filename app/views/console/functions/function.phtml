@@ -79,6 +79,8 @@ $events = array_keys($this->getParam('events', []));
                                             <a data-ls-attrs="href=/console/functions/function?id={{function.$id}}&project={{router.params.project}}" class="button pull-end">Set Default</a>
     
                                             <span data-ls-bind="{{tag}}"></span>
+                                            <span data-ls-bind="{{tag.codeSize|humanFileSize}}"></span>
+                                            <span data-ls-bind="{{tag.dateCreated|dateTime}}"></span>
                                         </li>
                                     </ul>
                                 </div>
@@ -159,8 +161,8 @@ $events = array_keys($this->getParam('events', []));
 
                         <ul class="margin-bottom-large text-fade text-size-small">
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|date-text}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|date-text}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|dateText}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
@@ -215,7 +217,7 @@ $events = array_keys($this->getParam('events', []));
                         </thead>
                         <!-- <tbody data-ls-loop="securityLogs" data-ls-as="log">
                             <tr>
-                                <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                 <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                 <td data-title="Client: ">
                                     <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
@@ -286,7 +288,7 @@ $events = array_keys($this->getParam('events', []));
                                     <hr class="margin-bottom margin-top-no" />
 
                                     <fieldset name="vars" data-cast-to="object">
-                                        <div data-ls-loop="project-function.vars" data-ls-as="var" style="overflow: hidden" id="project-vars">
+                                        <div data-ls-loop="project-function.vars" data-ls-as="var" id="project-vars">
                                             <div class="margin-bottom-small">
                                                 <div data-forms-remove class="row thin">
                                                     <div class="col span-10">
@@ -327,8 +329,8 @@ $events = array_keys($this->getParam('events', []));
 
                         <ul class="margin-bottom-large text-fade text-size-small">
                             <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> <button data-ls-ui-trigger="open-json" class="link text-size-small">View as JSON</button></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|date-text}}"></span></li>
-                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|date-text}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Last Updated: <span data-ls-bind="{{project-function.dateUpdated|dateText}}"></span></li>
+                            <li class="margin-bottom-small"><i class="icon-angle-circled-right margin-start-tiny margin-end-tiny"></i> Created: <span data-ls-bind="{{project-function.dateCreated|dateText}}"></span></li>
                         </ul>
 
                         <form name="functions.delete" class="margin-bottom"
