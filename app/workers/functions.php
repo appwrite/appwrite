@@ -13,22 +13,26 @@ $environments = Config::getParam('environments');
 
 $warmupStart = microtime(true);
 
-foreach($environments as $environment) { // Warmup: make sure images are ready to run fast 🚀
-    $stdout = '';
-    $stderr = '';
-
-    Console::info('Warming up '.$environment['name'].' environment');
-
-    Console::execute('docker pull '.$environment['image'], null, $stdout, $stderr);
-
-    if(!empty($stdout)) {
-        Console::log($stdout);
+Co\run(function() use ($environments) {
+    foreach($environments as $environment) { // Warmup: make sure images are ready to run fast 🚀
+        go(function() use ($environment) {
+            $stdout = '';
+            $stderr = '';
+        
+            Console::info('Warming up '.$environment['name'].' environment');
+        
+            Console::execute('docker pull '.$environment['image'], null, $stdout, $stderr);
+        
+            if(!empty($stdout)) {
+                Console::log($stdout);
+            }
+        
+            if(!empty($stderr)) {
+                Console::error($stderr);
+            }
+        });
     }
-
-    if(!empty($stderr)) {
-        Console::error($stderr);
-    }
-}
+});
 
 $warmupEnd = microtime(true);
 $warmupTime = $warmupEnd - $warmupStart;
