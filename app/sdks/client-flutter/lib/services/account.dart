@@ -342,9 +342,13 @@ class Account extends Service {
           callbackUrlScheme: "appwrite-callback-" + client.config['project']
           ).then((value) async {
               Uri url = Uri.parse(value);
-                List<Cookie> cookies = [new Cookie(url.queryParameters['key'], url.queryParameters['secret'])];
-                await client.init();
-                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+              Cookie cookie = new Cookie(url.queryParameters['key'], url.queryParameters['secret']);
+              cookie.domain = Uri.parse(client.endPoint).host;
+              cookie.httpOnly = true;
+              cookie.path = '/';
+              List<Cookie> cookies = [cookie];
+              await client.init();
+              client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
           });
     }
 

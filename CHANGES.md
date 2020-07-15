@@ -43,6 +43,7 @@
 - Fixed bug denying authentication with Github OAuth provider
 - New OAuth adapter for Box.com
 - New OAuth adapter for PayPal sandbox
+- Fixed a bug making read permission overwrite write permission in some cases
 
 ## Breaking Changes
 - **Deprecated** `first` and `last` query params for documents list route in the database API
