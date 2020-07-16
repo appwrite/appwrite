@@ -86,10 +86,22 @@ class FunctionsV1
         $environment = (isset($environments[$function->getAttribute('env', '')]))
             ? $environments[$function->getAttribute('env', '')]
             : null;
-        
+
         if(\is_null($environment)) {
             throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
         }
+
+        $vars = array_merge($function->getAttribute('vars', []),
+        [
+            'APPWRITE_FUNCTION_ID' => $functionId,
+            'APPWRITE_FUNCTION_TAG' => $functionTag,
+            'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
+            'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
+        ]);
+
+        array_walk($vars, function (&$value, $key) {
+            $value = "\t\t\t--env {$key}={$value} \\";
+        });
 
         /*
          * 1. Get Original Task
@@ -164,15 +176,21 @@ class FunctionsV1
             --name=appwrite-function-{$functionId} \
             --volume {$tagPathTargetDir}:/tmp:rw \
             --workdir /usr/local/src \
-            --env APPWRITE_FUNCTION_ID={$functionId} \
-            --env APPWRITE_FUNCTION_TAG={$functionTag} \
-            --env APPWRITE_FUNCTION_ENV_NAME={$environment['name']} \
-            --env APPWRITE_FUNCTION_ENV_VERSION={$environment['version']} \
+            ".implode("\n", $vars)."
             {$environment['image']} \
             sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && {$tag->getAttribute('command', '')}'"
         , null, $stdout, $stderr, $timeout);
 
         $end = \microtime(true);
+
+        /**
+         * Get Usage Stats
+         *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
+         *  -> CPU Time 
+         *  -> Invoctions (+1)
+         * Report to usage worker
+         * Save execution status and results
+         */
 
         var_dump('stdout', $stdout);
         var_dump('stderr', $stderr);
