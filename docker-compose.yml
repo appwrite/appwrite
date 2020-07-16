@@ -223,11 +223,17 @@ services:
       - mariadb
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp:rw
       - appwrite-functions:/storage/functions:rw
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
 
   appwrite-worker-mails:
     entrypoint: worker-mails

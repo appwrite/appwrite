@@ -7,7 +7,7 @@ $events = array_keys($this->getParam('events', []));
 <div
     data-service="functions.get"
     data-name="project-function"
-    data-event="load,functions.update"
+    data-event="load,functions.update,functions.updateTag"
     data-param-function-id="{{router.params.id}}"
     data-success="trigger"
     data-success-param-trigger-events="functions.get">
@@ -73,9 +73,10 @@ $events = array_keys($this->getParam('events', []));
                         <div class="margin-bottom"
                             data-service="functions.listTags"
                             data-scope="sdk"
-                            data-event="load,functions.createTag,functions.deleteTag"
+                            data-event="load,functions.createTag,functions.deleteTag,functions.updateTag"
                             data-name="project-function-tags"
                             data-param-function-id="{{router.params.id}}"
+                            data-param-order-type="DESC"
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listTags">
 
@@ -89,20 +90,20 @@ $events = array_keys($this->getParam('events', []));
                                 <div class="box margin-bottom">
                                     <ul data-ls-loop="project-function-tags.tags" data-ls-as="tag" class="list">
                                         <li class="clear">
-                                            <form name="functions.updateTag" class="pull-end"
+                                            <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.updateTag" class="pull-end"
                                                 data-analytics-event="submit"
                                                 data-analytics-category="console"
                                                 data-analytics-label="Create Function Execution"
                                                 data-service="functions.updateTag"
                                                 data-event="submit"
                                                 data-param-function-id="{{router.params.id}}"
-                                                data-param-tag="{{tag.$id}}"
                                                 data-success="alert,trigger"
                                                 data-success-param-alert-text="Tag updated successfully"
                                                 data-success-param-trigger-events="functions.updateTag"
                                                 data-failure="alert"
                                                 data-failure-param-alert-text="Failed to update tag"
                                                 data-failure-param-alert-classname="error">
+                                                <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
                                                 <button class="margin-bottom-small">Activate</button>
                                             </form>
     

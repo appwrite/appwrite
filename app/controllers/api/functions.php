@@ -403,7 +403,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
-    ->action(function ($functionId, $async, $response, $projectDB) {
+    ->action(function ($functionId, $async, $response, $project, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -442,10 +442,9 @@ App::post('/v1/functions/:functionId/executions')
         if((bool)$async) {
             // Issue a TLS certificate when domain is verified
             Resque::enqueue('v1-functions', 'FunctionsV1', [
+                'projectId' => $project->getId(),
                 'functionId' => $function->getId(),
                 'functionTag' => $tag->getId(),
-                'functionEnv' => $function->getAttribute('env', ''),
-                'functionCommand' => $tag->getAttribute('command', ''),
             ]);
         }
 
@@ -453,7 +452,7 @@ App::post('/v1/functions/:functionId/executions')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($execution->getArrayCopy())
         ;
-    }, ['response', 'projectDB']);
+    }, ['response', 'project', 'projectDB']);
 
 App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])

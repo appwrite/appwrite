@@ -1,5 +1,12 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
+use Appwrite\Database\Database;
+use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
+use Appwrite\Database\Adapter\Redis as RedisAdapter;
+use Appwrite\Database\Validator\Authorization;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
@@ -49,17 +56,39 @@ class FunctionsV1
 
     public function perform()
     {
-        global $environments;
+        global $environments, $register;
 
+        $projectId = $this->args['projectId'];
         $functionId = $this->args['functionId'];
         $functionTag = $this->args['functionTag'];
-        $functionCommand = $this->args['functionCommand'];
-        $functionEnv = $this->args['functionEnv'];
 
-        $environment = (isset($environments[$functionEnv])) ? $environments[$functionEnv] : null;
+        $projectDB = new Database();
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $projectDB->setNamespace('app_'.$projectId);
+        $projectDB->setMocks(Config::getParam('collections', []));
+
+        Authorization::disable();
+        $function = $projectDB->getDocument($functionId);
+        Authorization::reset();
+
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('Function not found', 404);
+        }
+
+        Authorization::disable();
+        $tag = $projectDB->getDocument($functionTag);
+        Authorization::reset();
+
+        if($tag->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Tag not found', 404);
+        }
+
+        $environment = (isset($environments[$function->getAttribute('env', '')]))
+            ? $environments[$function->getAttribute('env', '')]
+            : null;
         
-        if(is_null($environment)) {
-            throw new Exception('Environment "'.$functionEnv.' is not supported');
+        if(\is_null($environment)) {
+            throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
         }
 
         /*
@@ -74,7 +103,6 @@ class FunctionsV1
          *      On failure add error count
          *      If error count bigger than allowed change status to pause
          */
-
 
         /**
          * 1. Get event args
@@ -92,7 +120,7 @@ class FunctionsV1
         $stderr = '';
         $timeout  = 15;
 
-        $start = microtime(true);
+        $start = \microtime(true);
 
         //TODO aviod scheduled execution if delay is bigger than X offest
 
@@ -104,6 +132,28 @@ class FunctionsV1
          * Make sure no access to NFS server / storage volumes
          * Access Appwrite REST from internal network for improved performance
          */
+
+        $tagPath = $tag->getAttribute('codePath', '');
+        $tagDir = \pathinfo($tag->getAttribute('codePath', ''), PATHINFO_DIRNAME);
+        $tagFile = \pathinfo($tag->getAttribute('codePath', ''), PATHINFO_BASENAME);
+        $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
+        $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
+
+        if(!\is_readable($tagPath)) {
+            throw new Exception('Code is not readable: '.$tag->getAttribute('codePath', ''));
+        }
+
+        if (!\file_exists($tagPathTargetDir)) {
+            if (!\mkdir($tagPathTargetDir, 0755, true)) {
+                throw new Exception('Can\'t create directory '.$tagPathTargetDir);
+            }
+        }
+        
+        if (!\file_exists($tagPathTarget)) {
+            if(!\copy($tagPath, $tagPathTarget)) {
+                throw new Exception('Can\'t create temporary code file '.$tagPathTarget);
+            }
+        }
         
          //--storage-opt size=120m \
         $exitCode = Console::execute("docker run \
@@ -112,23 +162,24 @@ class FunctionsV1
             --memory-swap=50m \
             --rm \
             --name=appwrite-function-{$functionId} \
-            --volume $(pwd):/app \
-            --workdir /app \
+            --volume {$tagPathTargetDir}:/tmp:rw \
+            --workdir /usr/local/src \
             --env APPWRITE_FUNCTION_ID={$functionId} \
             --env APPWRITE_FUNCTION_TAG={$functionTag} \
             --env APPWRITE_FUNCTION_ENV_NAME={$environment['name']} \
             --env APPWRITE_FUNCTION_ENV_VERSION={$environment['version']} \
             {$environment['image']} \
-            {$functionCommand}", null, $stdout, $stderr, $timeout);
+            sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && {$tag->getAttribute('command', '')}'"
+        , null, $stdout, $stderr, $timeout);
 
-        $end = microtime(true);
+        $end = \microtime(true);
+
+        var_dump('stdout', $stdout);
+        var_dump('stderr', $stderr);
 
         Console::info("Code executed in " . ($end - $start) . " seconds with exit code {$exitCode}");
 
         // Double-check Cleanup
-
-        var_dump($stdout);
-        var_dump($stderr);
     }
 
     public function tearDown()
