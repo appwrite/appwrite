@@ -233,35 +233,39 @@ $events = array_keys($this->getParam('events', []));
 
                 <h3>Logs</h3>
 
-                <div class="box">
+                <div class="box"
+                    data-service="functions.listExecutions"
+                    data-scope="sdk"
+                    data-event="load,functions.createExecution"
+                    data-name="project-function-executions"
+                    data-param-function-id="{{router.params.id}}"
+                    data-param-order-type="DESC"
+                    data-success="trigger"
+                    data-success-param-trigger-events="functions.listExecutions">
                     <table class="vertical small">
                         <thead>
                             <tr>
-                                <th width="140">Date</th>
-                                <th width="175">Event</th>
-                                <th>Client</th>
-                                <th width="90">Location</th>
-                                <th width="90">IP</th>
+                                <th width="140">Status</th>
+                                <th width="170">Date</th>
+                                <th width="100">Exit Code</th>
+                                <th width="100">Runtime</th>
+                                <th></th>
                             </tr>
                         </thead>
-                        <!-- <tbody data-ls-loop="securityLogs" data-ls-as="log">
+                        <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
                             <tr>
-                                <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
-                                <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
-                                <td data-title="Client: ">
-                                    <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
-                                    <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                <td data-title="Status: "><span data-ls-bind="{{execution.status}}"></span></td>
+                                <td data-title="Date: "><span data-ls-bind="{{execution.dateCreated|dateTime}}"></span></td>
+                                <td data-title="Exit Code: "><span data-ls-bind="{{execution.exitCode}}"></span></td>
+                                <td data-title="Runtime: "><span data-ls-bind="{{execution.time|seconds2hum}}"></span></td>
+                                <td data-title="">
+                                    <a href="" class="text-danger pull-end margin-start">Errors</a>
+                                    <a href="" class="pull-end margin-start">Output</a>
                                 </td>
-                                <td data-title="Location: ">
-                                    <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
-                                    <span data-ls-bind="{{log.geo.country}}"></span>
-                                </td>
-                                <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
                             </tr>
-                        </tbody> -->
+                        </tbody>
                     </table>
                 </div>
-
             </li>
             <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Settings</h2>

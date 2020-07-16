@@ -61,6 +61,8 @@ class FunctionsV1
         $projectId = $this->args['projectId'];
         $functionId = $this->args['functionId'];
         $functionTag = $this->args['functionTag'];
+        $executionId = $this->args['executionId'];
+        $functionTrigger = $this->args['functionTrigger'];
 
         $projectDB = new Database();
         $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
@@ -83,6 +85,32 @@ class FunctionsV1
             throw new Exception('Tag not found', 404);
         }
 
+        Authorization::disable();
+        $execution = $projectDB->getDocument($executionId);
+
+        if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
+            $execution = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+                '$permissions' => [
+                    'read' => [],
+                    'write' => [],
+                ],
+                'dateCreated' => time(),
+                'functionId' => $function->getId(),
+                'status' => 'proccesing', // waiting / proccesing / completed / failed
+                'exitCode' => 0,
+                'stdout' => '',
+                'stderr' => '',
+                'time' => 0,
+            ]);
+    
+            if (false === $execution) {
+                throw new Exception('Failed saving execution to DB', 500);
+            }
+        }
+        
+        Authorization::reset();
+
         $environment = (isset($environments[$function->getAttribute('env', '')]))
             ? $environments[$function->getAttribute('env', '')]
             : null;
@@ -91,10 +119,10 @@ class FunctionsV1
             throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
         }
 
-        $vars = array_merge($function->getAttribute('vars', []),
-        [
+        $vars = array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_TAG' => $functionTag,
+            'APPWRITE_FUNCTION_TRIGGER' => $functionTrigger,
             'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
             'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
         ]);
@@ -117,11 +145,11 @@ class FunctionsV1
          */
 
         /**
-         * 1. Get event args
-         * 2. Unpackage code in the isolated container
+         * 1. Get event args - DONE
+         * 2. Unpackage code in the isolated container - DONE
          * 3. Execute in container with timeout
-         *      + messure execution time
-         *      + pass env vars
+         *      + messure execution time - DONE
+         *      + pass env vars - DONE
          *      + pass one-time api key
          * 4. Update execution status
          * 5. Update execution stdout & stderr
@@ -183,13 +211,28 @@ class FunctionsV1
 
         $end = \microtime(true);
 
+        Authorization::disable();
+        
+        $execution = $projectDB->updateDocument(array_merge($execution->getArrayCopy(), [
+            'status' => ($exitCode === 0) ? 'completed' : 'failed',
+            'exitCode' => $exitCode,
+            'stdout' => mb_substr($stdout, -2000), // log last 2000 chars output
+            'stderr' => mb_substr($stderr, -2000), // log last 2000 chars output
+            'time' => ($end - $start),
+        ]));
+        
+        Authorization::reset();
+
+        if (false === $function) {
+            throw new Exception('Failed saving execution to DB', 500);
+        }
+
         /**
          * Get Usage Stats
          *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
          *  -> CPU Time 
          *  -> Invoctions (+1)
          * Report to usage worker
-         * Save execution status and results
          */
 
         var_dump('stdout', $stdout);

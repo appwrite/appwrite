@@ -58,6 +58,26 @@ window.ls.filter
 
     return "< 1s";
   })
+  .add("seconds2hum", function($value) {
+
+      var seconds = ($value).toFixed(2);
+
+      var minutes = ($value / (60)).toFixed(1);
+
+      var hours = ($value / (60 * 60)).toFixed(1);
+
+      var days = ($value / (60 * 60 * 24)).toFixed(1);
+
+      if (seconds < 60) {
+          return seconds + "s";
+      } else if (minutes < 60) {
+          return minutes + "m";
+      } else if (hours < 24) {
+          return hours + "h";
+      } else {
+          return days + "d"
+      }
+  })
   .add("markdown", function($value, markdown) {
     return markdown.render($value);
   })
