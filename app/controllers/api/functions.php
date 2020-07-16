@@ -404,10 +404,24 @@ App::post('/v1/functions/:functionId/executions')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->action(function ($functionId, $async, $response, $project, $projectDB) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Document $project */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
+        }
+
+        $tag = $projectDB->getDocument($function->getAttribute('tag'));
+
+        if($tag->getAttribute('functionId') !== $function->getId()) {
+            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
+        }
+
+        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
         
         $execution = $projectDB->createDocument([
@@ -418,7 +432,7 @@ App::post('/v1/functions/:functionId/executions')
             ],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
-            'status' => 'waiting', // Proccesing / Completed / Failed
+            'status' => 'waiting', // waiting / proccesing / completed / failed
             'exitCode' => 0,
             'stdout' => '',
             'stderr' => '',
@@ -429,22 +443,14 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Failed saving execution to DB', 500);
         }
         
-        $tag = $projectDB->getDocument($function->getAttribute('tag'));
-
-        if($tag->getAttribute('functionId') !== $function->getId()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
-        }
-
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
-            throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
-        }
-
         if((bool)$async) {
             // Issue a TLS certificate when domain is verified
             Resque::enqueue('v1-functions', 'FunctionsV1', [
                 'projectId' => $project->getId(),
                 'functionId' => $function->getId(),
+                'executionId' => $execution->getId(),
                 'functionTag' => $tag->getId(),
+                'functionTrigger' => 'API',
             ]);
         }
 
