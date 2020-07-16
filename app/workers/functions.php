@@ -111,7 +111,7 @@ class FunctionsV1
             --memory=50m \
             --memory-swap=50m \
             --rm \
-            --name=appwrite-function- \
+            --name=appwrite-function-{$functionId} \
             --volume $(pwd):/app \
             --workdir /app \
             --env APPWRITE_FUNCTION_ID={$functionId} \
