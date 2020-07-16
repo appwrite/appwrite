@@ -4,4 +4,8 @@ LABEL maintainer="team@appwrite.io"
 
 RUN apk add tar
 
-ENV PIP_TARGET=./.appwrites
+RUN mkdir /usr/local/src
+
+WORKDIR /usr/local/src/
+
+ENV PIP_TARGET=/usr/local/src/.appwrites
