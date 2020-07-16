@@ -128,6 +128,7 @@ class FunctionsV1
          * Limit CPU Usage - DONE
          * Limit Memory Usage - DONE
          * Limit Network Usage
+         * Limit Storage Usage (//--storage-opt size=120m \)
          * Make sure no access to redis, mariadb, influxdb or other system services
          * Make sure no access to NFS server / storage volumes
          * Access Appwrite REST from internal network for improved performance
@@ -155,7 +156,6 @@ class FunctionsV1
             }
         }
         
-         //--storage-opt size=120m \
         $exitCode = Console::execute("docker run \
             --cpus=1 \
             --memory=50m \
