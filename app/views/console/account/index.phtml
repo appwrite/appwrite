@@ -10,6 +10,8 @@
 <div class="zone xl">
     <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
         <li data-state="/console/account">
+            <h2 class="margin-bottom">Overview</h2>
+            
             <div
                 data-service="account.get"
                 data-scope="console"
@@ -17,8 +19,6 @@
                 data-event="load"
                 data-failure="trigger"
                 data-failure-param-trigger-events="account.deleteSession">
-
-                <h2 class="margin-bottom"><span class="number"><i class="icon-user"></i></span>Overview</h2>
 
                 <div class="row responsive force-reverse">
                     <div class="col span-3 text-align-center margin-bottom">
@@ -184,7 +184,7 @@
             </div>
         </li>
         <li data-state="/console/account/devices">
-            <h2><span class="number"><i class="icon-shield"></i></span>Devices</h2>
+            <h2>Devices</h2>
 
             <div class="box margin-bottom"
                 data-service="account.getSessions"
