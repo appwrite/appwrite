@@ -657,6 +657,11 @@ class MySQL extends Adapter
         $where = [];
         $join = [];
 
+        $options = array_merge([
+            'attribute' => '',
+            'filters' => [],
+        ], $options);
+
         // Filters
         foreach ($options['filters'] as $i => $filter) {
             $filter = $this->parseFilter($filter);
@@ -699,9 +704,10 @@ class MySQL extends Adapter
 
         $where = \implode("\n", $where);
         $join = \implode("\n", $join);
+        $attribute = $this->getPDO()->quote($options['attribute'], PDO::PARAM_STR);
         $func = 'JOIN `'.$this->getNamespace().".database.properties` b_func ON a.uid IS NOT NULL
             AND a.uid = b_func.documentUid
-            AND (b_func.key = 'sizeOriginal')";
+            AND (b_func.key = {$attribute})";
         $roles = [];
 
         foreach (Authorization::getRoles() as $role) {

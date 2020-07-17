@@ -310,8 +310,17 @@ App::get('/v1/projects/:projectId/usage')
             'storage' => [
                 'total' => $projectDB->getCount(
                     [
+                        'attribute' => 'sizeOriginal',
                         'filters' => [
                             '$collection='.Database::SYSTEM_COLLECTION_FILES,
+                        ],
+                    ]
+                ) + 
+                $projectDB->getCount(
+                    [
+                        'attribute' => 'codeSize',
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_TAGS,
                         ],
                     ]
                 ),
