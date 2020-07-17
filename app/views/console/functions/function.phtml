@@ -221,7 +221,7 @@ $events = array_keys($this->getParam('events', []));
                 <div class="box margin-bottom-small">
                     <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                         <div class="chart margin-bottom-no">
-                            <div class="content" data-forms-chart="Requests=usage.requests.data,Network=usage.network.data"></div>
+                            <div class="content" data-forms-chart="Requests=usage.requests.data,Network=usage.network.data" data-height="140"></div>
                         </div>
                     </div>
                 </div>
@@ -276,8 +276,6 @@ $events = array_keys($this->getParam('events', []));
                                     <td data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
                                         <a href="" class="text-danger pull-end margin-start">Errors</a>
                                         <a href="" class="pull-end margin-start">Output</a>
-                                        <span data-ls-bind="{{execution.stdout}}"></span>
-                                        <span data-ls-bind="{{execution.stderr}}"></span>
                                     </td>
                                 </tr>
                             </tbody>
