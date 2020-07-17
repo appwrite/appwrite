@@ -8,4 +8,4 @@ RUN mkdir /usr/local/src
 
 WORKDIR /usr/local/src/
 
-ENV PIP_TARGET=/usr/local/src/.appwrites
+ENV PIP_TARGET=/usr/local/src/.appwrite
