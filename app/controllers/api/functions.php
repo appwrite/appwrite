@@ -432,7 +432,7 @@ App::post('/v1/functions/:functionId/executions')
             ],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
-            'status' => 'waiting', // waiting / proccesing / completed / failed
+            'status' => 'waiting', // waiting / processing / completed / failed
             'exitCode' => 0,
             'stdout' => '',
             'stderr' => '',

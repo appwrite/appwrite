@@ -97,7 +97,7 @@ class FunctionsV1
                 ],
                 'dateCreated' => time(),
                 'functionId' => $function->getId(),
-                'status' => 'proccesing', // waiting / proccesing / completed / failed
+                'status' => 'processing', // waiting / processing / completed / failed
                 'exitCode' => 0,
                 'stdout' => '',
                 'stderr' => '',

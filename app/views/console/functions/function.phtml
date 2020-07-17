@@ -7,7 +7,7 @@ $events = array_keys($this->getParam('events', []));
 <div
     data-service="functions.get"
     data-name="project-function"
-    data-event="load,functions.update,functions.updateTag"
+    data-event="load,functions.update,functions.createTag,functions.updateTag"
     data-param-function-id="{{router.params.id}}"
     data-success="trigger"
     data-success-param-trigger-events="functions.get">
@@ -47,10 +47,10 @@ $events = array_keys($this->getParam('events', []));
                             <div class="text-align-center">
                                 <img src="" data-ls-attrs="src=/images/environments/{{project-function.env|envLogo}}" alt="Function Env." class="avatar huge margin-top-negative-xxl" />
 
-                                <p class="text-fade margin-bottom" data-ls-bind="{{project-function.env|envName}} {{project-function.env|envVersion}}">
+                                <p class="text-fade margin-bottom-small" data-ls-bind="{{project-function.env|envName}} {{project-function.env|envVersion}}">
                                 </p>
 
-                                <form name="functions.createExecution"
+                                <form data-ls-if="{{project-function.tag}} !== ''" name="functions.createExecution" class="margin-top"
                                     data-analytics-event="submit"
                                     data-analytics-category="console"
                                     data-analytics-label="Create Function Execution"
@@ -63,7 +63,7 @@ $events = array_keys($this->getParam('events', []));
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to execute function"
                                     data-failure-param-alert-classname="error">
-                                    <button class="margin-bottom-small">Execute Now</button> &nbsp; <button class="reverse">View Logs</button>
+                                    <button style="vertical-align: top;">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/usage?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
                                 </form>
                             </div>
                         </div>
@@ -216,7 +216,7 @@ $events = array_keys($this->getParam('events', []));
                 </div>
             </li>
             <li data-state="/console/functions/function/usage?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>Activity & Usage</h2>
+                <h2>Usage</h2>
 
                 <div class="box margin-bottom-small">
                     <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
@@ -231,9 +231,9 @@ $events = array_keys($this->getParam('events', []));
                     <li>CPU Time</li>
                 </ul>
 
-                <h3>Logs</h3>
+                <h3>Logs &nbsp; <span class="text-fade text-size-small pull-end margin-top-small">showing last 25 executions</span></h3>
 
-                <div class="box"
+                <div
                     data-service="functions.listExecutions"
                     data-scope="sdk"
                     data-event="load,functions.createExecution"
@@ -242,37 +242,55 @@ $events = array_keys($this->getParam('events', []));
                     data-param-order-type="DESC"
                     data-success="trigger"
                     data-success-param-trigger-events="functions.listExecutions">
-                    <table class="vertical small">
-                        <thead>
-                            <tr>
-                                <th width="140">Status</th>
-                                <th width="170">Date</th>
-                                <th width="100">Exit Code</th>
-                                <th width="100">Runtime</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
-                            <tr>
-                                <td data-title="Status: "><span data-ls-bind="{{execution.status}}"></span></td>
-                                <td data-title="Date: ">
-                                    <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
-                                </td>
-                                <td data-title="Exit Code: ">
-                                    <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.exitCode}}"></span>
-                                    <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'proccesing'">-</span>
-                                </td>
-                                <td data-title="Runtime: ">
-                                    <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
-                                    <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'proccesing'">-</span>
-                                </td>
-                                <td data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
-                                    <a href="" class="text-danger pull-end margin-start">Errors</a>
-                                    <a href="" class="pull-end margin-start">Output</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                    <div class="box" data-ls-if="0 < {{project-function-executions.executions.length}} && undefined !== {{project-function-executions.executions}}">
+                        <table class="vertical small">
+                            <thead>
+                                <tr>
+                                    <th width="30"></th>
+                                    <th width="150">Status</th>
+                                    <th width="170">Date</th>
+                                    <th width="100">Runtime</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
+                                <tr>
+                                    <td data-title="">
+                                        <i class="dot danger" data-ls-if="{{execution.status}} === 'failed'"></i>
+                                        <i class="dot info" data-ls-if="{{execution.status}} === 'waiting'"></i>
+                                        <i class="dot info" data-ls-if="{{execution.status}} === 'processing'"></i>
+                                        <i class="dot success" data-ls-if="{{execution.status}} === 'completed'"></i>
+                                    </td>
+                                    <td data-title="Status: ">
+                                        <span data-ls-bind="{{execution.status}}"></span>
+                                        <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" exit code: {{execution.exitCode}}"></span>
+                                    </td>
+                                    <td data-title="Date: ">
+                                        <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
+                                    </td>
+                                    <td data-title="Runtime: ">
+                                        <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
+                                        <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
+                                    </td>
+                                    <td data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
+                                        <a href="" class="text-danger pull-end margin-start">Errors</a>
+                                        <a href="" class="pull-end margin-start">Output</a>
+                                        <span data-ls-bind="{{execution.stdout}}"></span>
+                                        <span data-ls-bind="{{execution.stderr}}"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div data-ls-if="(!{{project-function-executions.executions.length}})" class="box dashboard margin-bottom">
+                        <div class="margin-bottom-small margin-top-small margin-end margin-start">
+                            <h3 class="margin-bottom-small text-bold">No Logs Founds</h3>
+
+                            <p class="margin-bottom-no">Execute your function to view execution logs.</p>
+                        </div>
+                    </div>
                 </div>
             </li>
             <li data-state="/console/functions/function/settings?id={{router.params.id}}&project={{router.params.project}}">
@@ -298,32 +316,38 @@ $events = array_keys($this->getParam('events', []));
                             data-failure-param-alert-classname="error">
 
                             <div class="box">
-                                <label for="name">Name</label>
-                                <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" />
-                                
-                                <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
-                                <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="900" />
-                                <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is 900 seconds (15 minutes)</div>
-                                
-                                <label for="events">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
-                                <div class="row responsive thin">
-                                    <?php foreach ($events as $i => $event) : ?>
-                                        <div class="col span-6 text-one-liner margin-bottom text-height-large">
-                                            <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" value="<?php echo $event; ?>" /> &nbsp; <?php echo $event; ?>
-                                        </div>
-                                        <?php if (($i + 1) % 2 === 0) : ?>
-                                        </div>
-                                        <div class="row responsive thin">
-                                        <?php endif; ?>
+                                <section class="margin-bottom-large">
+                                    <label for="name">Name</label>
+                                    <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" />
+                                    
+                                    <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
+                                    <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="900" />
+                                    <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is 900 seconds (15 minutes)</div>
+                                </section>
 
-                                    <?php endforeach; ?>
-                                </div>
+                                <section class="margin-bottom">
+                                    <label for="events" class="margin-bottom">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
+                                    <div class="row responsive thin margin-top-small">
+                                        <?php foreach ($events as $i => $event) : ?>
+                                            <div class="col span-6 text-one-liner margin-bottom text-height-large">
+                                                <input type="checkbox" name="events" data-ls-bind="{{project-function.events}}" value="<?php echo $event; ?>" /> &nbsp; <?php echo $event; ?>
+                                            </div>
+                                            <?php if (($i + 1) % 2 === 0) : ?>
+                                            </div>
+                                            <div class="row responsive thin">
+                                            <?php endif; ?>
 
-                                <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
-                                <input type="text" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
-                                <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </section>
 
-                                <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function."><i class="icon-info-circled"></i></span></h3>
+                                <section class="margin-bottom-large">
+                                    <label for="schedule">Schedule (CRON Syntax) <span class="tooltip small" data-tooltip="Set a CRON schedule to trigger this function."><i class="icon-info-circled"></i></span></label>
+                                    <input type="text" class="full-width" name="schedule" autocomplete="off" data-ls-bind="{{project-function.schedule}}" placeholder="* * * * *" />
+                                    <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Leave blank for no schedule</div>
+                                </section>
+
+                                <h3 class="margin-bottom-small">Variables <span class="tooltip small" data-tooltip="Set variables or secret keys that will be passed as env vars to your function at runtime."><i class="icon-info-circled"></i></span></h3>
 
                                 <div data-ls-if="(!{{project-function.vars.length}})">
                                     <hr class="margin-bottom margin-top-no" />
