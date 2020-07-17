@@ -6,10 +6,12 @@
     controller: function(element, container, date, document) {
       let child = document.createElement("canvas");
       let sources = element.getAttribute('data-forms-chart');
+      let width = element.getAttribute('data-width') || 500;
+      let height = element.getAttribute('data-height') || 175;
       let colors = ['#29b5d9' /* blue */, '#4eb55b' /* green */, '#fba233', /* orange */,];
 
-      child.width = 500;
-      child.height = 175;
+      child.width = width;
+      child.height = height;
 
       let config = {
         type: "line",
