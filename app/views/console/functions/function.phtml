@@ -255,10 +255,18 @@ $events = array_keys($this->getParam('events', []));
                         <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
                             <tr>
                                 <td data-title="Status: "><span data-ls-bind="{{execution.status}}"></span></td>
-                                <td data-title="Date: "><span data-ls-bind="{{execution.dateCreated|dateTime}}"></span></td>
-                                <td data-title="Exit Code: "><span data-ls-bind="{{execution.exitCode}}"></span></td>
-                                <td data-title="Runtime: "><span data-ls-bind="{{execution.time|seconds2hum}}"></span></td>
-                                <td data-title="">
+                                <td data-title="Date: ">
+                                    <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
+                                </td>
+                                <td data-title="Exit Code: ">
+                                    <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.exitCode}}"></span>
+                                    <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'proccesing'">-</span>
+                                </td>
+                                <td data-title="Runtime: ">
+                                    <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
+                                    <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'proccesing'">-</span>
+                                </td>
+                                <td data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
                                     <a href="" class="text-danger pull-end margin-start">Errors</a>
                                     <a href="" class="pull-end margin-start">Output</a>
                                 </td>
