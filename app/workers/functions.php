@@ -46,6 +46,54 @@ $warmupTime = $warmupEnd - $warmupStart;
 
 Console::success('Finished warmup in '.$warmupTime.' seconds');
 
+/*
+ * 1. Get Original Task
+ * 2. Check for updates
+ *  If has updates skip task and don't reschedule
+ *  If status not equal to play skip task
+ * 3. Check next run date, update task and add new job at the given date
+ * 4. Execute task (set optional timeout)
+ * 5. Update task response to log
+ *      On success reset error count
+ *      On failure add error count
+ *      If error count bigger than allowed change status to pause
+ */
+
+/**
+ * 1. Get event args - DONE
+ * 2. Unpackage code in the isolated container - DONE
+ * 3. Execute in container with timeout
+ *      + messure execution time - DONE
+ *      + pass env vars - DONE
+ *      + pass one-time api key
+ * 4. Update execution status
+ * 5. Update execution stdout & stderr
+ * 6. Trigger audit log
+ * 7. Trigger usage log
+ */
+
+//TODO aviod scheduled execution if delay is bigger than X offest
+
+/**
+ * Limit CPU Usage - DONE
+ * Limit Memory Usage - DONE
+ * Limit Network Usage
+ * Limit Storage Usage (//--storage-opt size=120m \)
+ * Make sure no access to redis, mariadb, influxdb or other system services
+ * Make sure no access to NFS server / storage volumes
+ * Access Appwrite REST from internal network for improved performance
+ */
+
+/**
+ * Get Usage Stats
+ *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
+ *  -> CPU Time 
+ *  -> Invoctions (+1)
+ * Report to usage worker
+ */
+
+// Double-check Cleanup
+
 class FunctionsV1
 {
     public $args = [];
@@ -86,6 +134,7 @@ class FunctionsV1
         }
 
         Authorization::disable();
+
         $execution = $projectDB->getDocument($executionId);
 
         if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
@@ -131,50 +180,10 @@ class FunctionsV1
             $value = "\t\t\t--env {$key}={$value} \\";
         });
 
-        /*
-         * 1. Get Original Task
-         * 2. Check for updates
-         *  If has updates skip task and don't reschedule
-         *  If status not equal to play skip task
-         * 3. Check next run date, update task and add new job at the given date
-         * 4. Execute task (set optional timeout)
-         * 5. Update task response to log
-         *      On success reset error count
-         *      On failure add error count
-         *      If error count bigger than allowed change status to pause
-         */
-
-        /**
-         * 1. Get event args - DONE
-         * 2. Unpackage code in the isolated container - DONE
-         * 3. Execute in container with timeout
-         *      + messure execution time - DONE
-         *      + pass env vars - DONE
-         *      + pass one-time api key
-         * 4. Update execution status
-         * 5. Update execution stdout & stderr
-         * 6. Trigger audit log
-         * 7. Trigger usage log
-         */
-
-        //TODO aviod scheduled execution if delay is bigger than X offest
-
-        /**
-         * Limit CPU Usage - DONE
-         * Limit Memory Usage - DONE
-         * Limit Network Usage
-         * Limit Storage Usage (//--storage-opt size=120m \)
-         * Make sure no access to redis, mariadb, influxdb or other system services
-         * Make sure no access to NFS server / storage volumes
-         * Access Appwrite REST from internal network for improved performance
-         */
-
         $tagPath = $tag->getAttribute('codePath', '');
-        $tagDir = \pathinfo($tag->getAttribute('codePath', ''), PATHINFO_DIRNAME);
-        $tagFile = \pathinfo($tag->getAttribute('codePath', ''), PATHINFO_BASENAME);
         $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
-        $container = 'appwrite-function-'.$functionId;
+        $container = 'appwrite-function-'.$tag->getId();
 
         if(!\is_readable($tagPath)) {
             throw new Exception('Code is not readable: '.$tag->getAttribute('codePath', ''));
@@ -197,18 +206,97 @@ class FunctionsV1
 
         $executionStart = \microtime(true);
         
-        $exitCode = Console::execute("docker run \
-            --cpus=1 \
-            --memory=50m \
-            --memory-swap=50m \
-            --rm \
-            --name={$container} \
-            --volume {$tagPathTargetDir}:/tmp:rw \
-            --workdir /usr/local/src \
-            ".implode("\n", $vars)."
-            {$environment['image']} \
-            sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && {$tag->getAttribute('command', '')}'"
+        $exitCode = Console::execute('docker ps --all --format "name={{.Names}}&status={{.Status}}&labels={{.Labels}}" --filter label=appwrite-type=function'
         , null, $stdout, $stderr, 30);
+
+        $executionEnd = \microtime(true);
+
+        $list = [];
+        $stdout = explode("\n", $stdout);
+
+        array_map(function($value) use (&$list) {
+            $container = [];
+
+            parse_str($value, $container);
+
+            if(isset($container['name'])) {
+                $container = [
+                    'name' => $container['name'],
+                    'online' => (substr($container['status'], 0, 2) === 'Up'),
+                    'status' => $container['status'],
+                    'labels' => $container['labels'],
+                ];
+
+                array_map(function($value) use (&$container) {
+                    $value = explode('=', $value);
+                    
+                    if(isset($value[0]) && isset($value[1])) {
+                        $container[$value[0]] = $value[1];
+                    }
+                }, explode(',', $container['labels']));
+
+                $list[$container['name']] = $container;
+            }
+        }, $stdout);
+        
+        Console::info("Functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+
+        //TODO if container found and offline -> delete it
+
+        if(isset($list[$container]) && !$list[$container]['online']) {
+            $stdout = '';
+            $stderr = '';
+            
+            if(Console::execute("docker rm {$container}", null, $stdout, $stderr, 30) !== 0) {
+                throw new Exception('Failed to remove offline container: '.$stderr);
+            }
+
+            unset($list[$container]);
+        }
+
+        //TODO if more than x contianers -> clear all older containers
+
+        if(!isset($list[$container])) { // Create contianer if not ready
+            $stdout = '';
+            $stderr = '';
+    
+            $executionStart = \microtime(true);
+            
+            $exitCode = Console::execute("docker run \
+                -d \
+                --cpus=1 \
+                --memory=50m \
+                --memory-swap=50m \
+                --rm \
+                --name={$container} \
+                --label appwrite-type=function \
+                --label appwrite-created=".time()." \
+                --volume {$tagPathTargetDir}:/tmp:rw \
+                --workdir /usr/local/src \
+                ".implode("\n", $vars)."
+                {$environment['image']} \
+                sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
+            , null, $stdout, $stderr, 30);
+    
+            $executionEnd = \microtime(true);
+    
+            if($exitCode !== 0) {
+                throw new Exception('Failed to create function environment: '.$stderr);
+            }
+    
+            Console::info("Function created in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
+        }
+        else {
+            Console::info('Container is ready to run');
+        }
+        
+        $stdout = '';
+        $stderr = '';
+
+        $executionStart = \microtime(true);
+        
+        $exitCode = Console::execute("docker exec {$container} sh -c '{$tag->getAttribute('command', '')}'"
+        , null, $stdout, $stderr, $function->getAttribute('timeout', 900)); // TODO add app env for max timeout
 
         $executionEnd = \microtime(true);
 
@@ -230,18 +318,38 @@ class FunctionsV1
             throw new Exception('Failed saving execution to DB', 500);
         }
 
-        /**
-         * Get Usage Stats
-         *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
-         *  -> CPU Time 
-         *  -> Invoctions (+1)
-         * Report to usage worker
-         */
+        Console::success(count($list).' running containers counted');
 
-        var_dump('stdout', $stdout);
-        var_dump('stderr', $stderr);
+        $max = 10;
 
-        // Double-check Cleanup
+        if(count($list) > $max) {
+            Console::info('Starting containers cleanup');
+
+            $sorted = [];
+            
+            foreach($list as $env) {
+                $sorted[] = [
+                    'name' => $env['name'],
+                    'created' => (int)$env['appwrite-created']
+                ];
+            }
+
+            usort($sorted, function ($item1, $item2) {
+                return $item1['created'] <=> $item2['created'];
+            });
+
+            while(count($sorted) > $max) {
+                $first = array_shift($sorted);
+                $stdout = '';
+                $stderr = '';
+
+                if(Console::execute("docker stop {$first['name']}", null, $stdout, $stderr, 30) !== 0) {
+                    Console::error('Failed to remove container: '.$stderr);
+                }
+
+                Console::info('Removed container: '.$first['name']);
+            }
+        }
     }
 
     public function tearDown()
