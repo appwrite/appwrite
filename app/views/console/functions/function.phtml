@@ -273,9 +273,11 @@ $events = array_keys($this->getParam('events', []));
                                         <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
                                         <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
                                     </td>
-                                    <td data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
-                                        <a href="" class="text-danger pull-end margin-start">Errors</a>
-                                        <a href="" class="pull-end margin-start">Output</a>
+                                    <td>
+                                        <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
+                                            <a href="" class="text-danger pull-end margin-start">Errors</a>
+                                            <a href="" class="pull-end margin-start">Output</a>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
