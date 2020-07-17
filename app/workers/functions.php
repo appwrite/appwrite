@@ -156,11 +156,6 @@ class FunctionsV1
          * 6. Trigger audit log
          * 7. Trigger usage log
          */
-        $stdout = '';
-        $stderr = '';
-        $timeout  = 15;
-
-        $start = \microtime(true);
 
         //TODO aviod scheduled execution if delay is bigger than X offest
 
@@ -179,6 +174,7 @@ class FunctionsV1
         $tagFile = \pathinfo($tag->getAttribute('codePath', ''), PATHINFO_BASENAME);
         $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
+        $container = 'appwrite-function-'.$functionId;
 
         if(!\is_readable($tagPath)) {
             throw new Exception('Code is not readable: '.$tag->getAttribute('codePath', ''));
@@ -195,21 +191,28 @@ class FunctionsV1
                 throw new Exception('Can\'t create temporary code file '.$tagPathTarget);
             }
         }
+
+        $stdout = '';
+        $stderr = '';
+
+        $executionStart = \microtime(true);
         
         $exitCode = Console::execute("docker run \
             --cpus=1 \
             --memory=50m \
             --memory-swap=50m \
             --rm \
-            --name=appwrite-function-{$functionId} \
+            --name={$container} \
             --volume {$tagPathTargetDir}:/tmp:rw \
             --workdir /usr/local/src \
             ".implode("\n", $vars)."
             {$environment['image']} \
             sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && {$tag->getAttribute('command', '')}'"
-        , null, $stdout, $stderr, $timeout);
+        , null, $stdout, $stderr, 30);
 
-        $end = \microtime(true);
+        $executionEnd = \microtime(true);
+
+        Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
         
@@ -218,7 +221,7 @@ class FunctionsV1
             'exitCode' => $exitCode,
             'stdout' => mb_substr($stdout, -2000), // log last 2000 chars output
             'stderr' => mb_substr($stderr, -2000), // log last 2000 chars output
-            'time' => ($end - $start),
+            'time' => ($executionEnd - $executionStart),
         ]));
         
         Authorization::reset();
@@ -237,8 +240,6 @@ class FunctionsV1
 
         var_dump('stdout', $stdout);
         var_dump('stderr', $stderr);
-
-        Console::info("Code executed in " . ($end - $start) . " seconds with exit code {$exitCode}");
 
         // Double-check Cleanup
     }
