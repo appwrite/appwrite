@@ -227,7 +227,7 @@ App::post('/v1/functions/:functionId/tags')
     ->param('command', '', function () { return new Text('1028'); }, 'Code execution command.')
     ->param('code', [], function () { return new File(); }, 'Gzip file containing your code.', false)
     // ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
-    ->action(function ($functionId, $command, $code, $request, $response, $projectDB) {
+    ->action(function ($functionId, $command, $code, $request, $response, $projectDB, $usage) {
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -287,11 +287,15 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed saving tag to DB', 500);
         }
 
+        $usage
+            ->setParam('storage', $tag->getAttribute('codeSize', 0))
+        ;
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($tag->getArrayCopy())
         ;
-    }, ['request', 'response', 'projectDB']);
+    }, ['request', 'response', 'projectDB', 'usage']);
 
 App::get('/v1/functions/:functionId/tags')
     ->groups(['api', 'functions'])
@@ -369,7 +373,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.description', '/docs/references/functions/delete-tag.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
-    ->action(function ($functionId, $tagId, $response, $projectDB) {
+    ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -386,12 +390,20 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Tag not found', 404);
         }
 
-        if (!$projectDB->deleteDocument($tag->getId())) {
-            throw new Exception('Failed to remove tag from DB', 500);
+        $device = Storage::getDevice('functions');
+
+        if ($device->delete($tag->getAttribute('codePath', ''))) {
+            if (!$projectDB->deleteDocument($tag->getId())) {
+                throw new Exception('Failed to remove tag from DB', 500);
+            }
         }
 
+        $usage
+            ->setParam('storage', $tag->getAttribute('codeSize', 0) * -1)
+        ;
+
         $response->noContent();
-    }, ['response', 'projectDB']);
+    }, ['response', 'projectDB', 'usage']);
 
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
