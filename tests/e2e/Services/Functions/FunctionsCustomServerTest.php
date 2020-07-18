@@ -183,7 +183,7 @@ class FunctionsConsoleServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'command' => 'node ./test.js',
-            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/function.tar.gz'), 'application/x-gzip', 'function.tar.gz'),
+            'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fx.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
         $tagId = (isset($tag['body']['$id'])) ? $tag['body']['$id'] : '';
