@@ -264,9 +264,9 @@ class FunctionsV1
             
             $exitCode = Console::execute("docker run \
                 -d \
-                --cpus=1 \
-                --memory=50m \
-                --memory-swap=50m \
+                --cpus=4 \
+                --memory=128m \
+                --memory-swap=128m \
                 --rm \
                 --name={$container} \
                 --label appwrite-type=function \

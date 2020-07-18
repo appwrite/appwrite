@@ -97,7 +97,7 @@ window.ls.filter
   })
   .add("seconds2hum", function($value) {
 
-      var seconds = ($value).toFixed(2);
+      var seconds = ($value).toFixed(3);
 
       var minutes = ($value / (60)).toFixed(1);
 

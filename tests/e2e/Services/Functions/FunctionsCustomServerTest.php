@@ -191,9 +191,9 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals(201, $tag['headers']['status-code']);
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
-        $this->assertEquals('node ./test.js', $tag['body']['command']);
+        $this->assertEquals('php function.php', $tag['body']['command']);
         $this->assertStringStartsWith('/storage/functions/app-', $tag['body']['codePath']);
-        $this->assertEquals(521, $tag['body']['codeSize']);
+        $this->assertEquals(751, $tag['body']['codeSize']);
        
         /**
          * Test for FAILURE
