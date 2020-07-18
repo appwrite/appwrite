@@ -14,7 +14,6 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Database\Database;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
-use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Validator\File;
 use Appwrite\Storage\Validator\FileSize;
 use Appwrite\Storage\Validator\Upload;
