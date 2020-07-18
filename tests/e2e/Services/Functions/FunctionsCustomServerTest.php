@@ -265,7 +265,7 @@ class FunctionsConsoleServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals(521, $function['body']['codeSize']);
+        $this->assertEquals(751, $function['body']['codeSize']);
 
         /**
          * Test for FAILURE
