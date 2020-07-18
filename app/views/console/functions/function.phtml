@@ -111,7 +111,28 @@ $events = array_keys($this->getParam('events', []));
     
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
                                             <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
-                                            <div class="text-size-small margin-top-small" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.codeSize|humanFileSize}}"></div>
+                                            <div class="text-size-small margin-top-small clear">
+                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.codeSize|humanFileSize}} &nbsp; | &nbsp; "></span>
+
+                                                <form name="functions.deleteTag" class="pull-start"
+                                                    data-analytics-event="submit"
+                                                    data-analytics-category="console"
+                                                    data-analytics-label="Delete Function Tag"
+                                                    data-service="functions.deleteTag"
+                                                    data-event="submit"
+                                                    data-param-function-id="{{router.params.id}}"
+                                                    data-confirm="Are you sure you want to delete this function tag?"
+                                                    data-success="alert,trigger"
+                                                    data-success-param-alert-text="Function tag deleted successfully"
+                                                    data-success-param-trigger-events="functions.deleteTag"
+                                                    data-failure="alert"
+                                                    data-failure-param-alert-text="Failed to delete function tag"
+                                                    data-failure-param-alert-classname="error">
+                                                    <input type="hidden" name="tagId" data-ls-bind="{{tag.$id}}" />
+
+                                                    <button type="submit" class="link text-danger text-size-small">Delete</button>
+                                                </form>
+                                            </div>
                                         </li>
                                     </ul>
                                 </div>
