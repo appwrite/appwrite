@@ -252,7 +252,13 @@ return false;};return{isRTL:isRTL,};},true);})(window);(function(window){"use st
 let size=element.dataset["size"]||80;let name=$value.name||$value||"";name=(typeof name!=='string')?'--':name;return def="/v1/avatars/initials?project=console"+"&name="+
 encodeURIComponent(name)+"&width="+
 size+"&height="+
-size;}).add("selectedCollection",function($value,router){return $value===router.params.collectionId?"selected":"";}).add("selectedDocument",function($value,router){return $value===router.params.documentId?"selected":"";}).add("localeString",function($value){$value=parseInt($value);return!Number.isNaN($value)?$value.toLocaleString():"";}).add("date",function($value,date){return date.format("Y-m-d",$value);}).add("dateTime",function($value,date){return date.format("Y-m-d H:i",$value);}).add("dateText",function($value,date){return date.format("d M Y",$value);}).add("ms2hum",function($value){let temp=$value;const years=Math.floor(temp/31536000),days=Math.floor((temp%=31536000)/86400),hours=Math.floor((temp%=86400)/3600),minutes=Math.floor((temp%=3600)/60),seconds=temp%60;if(days||hours||seconds||minutes){return((years?years+"y ":"")+
+size;}).add("selectedCollection",function($value,router){return $value===router.params.collectionId?"selected":"";}).add("selectedDocument",function($value,router){return $value===router.params.documentId?"selected":"";}).add("localeString",function($value){$value=parseInt($value);return!Number.isNaN($value)?$value.toLocaleString():"";}).add("date",function($value,date){return date.format("Y-m-d",$value);}).add("dateTime",function($value,date){return date.format("Y-m-d H:i",$value);}).add("dateText",function($value,date){return date.format("d M Y",$value);}).add("timeSince",function($value){$value=$value*1000;let seconds=Math.floor((Date.now()-$value)/1000);let unit="second";let direction="ago";if(seconds<0){seconds=-seconds;direction="from now";}
+let value=seconds;if(seconds>=31536000){value=Math.floor(seconds/31536000);unit="year";}
+else if(seconds>=86400){value=Math.floor(seconds/86400);unit="day";}
+else if(seconds>=3600){value=Math.floor(seconds/3600);unit="hour";}
+else if(seconds>=60){value=Math.floor(seconds/60);unit="minute";}
+if(value!=1){unit=unit+"s";}
+return value+" "+unit+" "+direction;}).add("ms2hum",function($value){let temp=$value;const years=Math.floor(temp/31536000),days=Math.floor((temp%=31536000)/86400),hours=Math.floor((temp%=86400)/3600),minutes=Math.floor((temp%=3600)/60),seconds=temp%60;if(days||hours||seconds||minutes){return((years?years+"y ":"")+
 (days?days+"d ":"")+
 (hours?hours+"h ":"")+
 (minutes?minutes+"m ":"")+

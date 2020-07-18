@@ -104,12 +104,12 @@ $events = array_keys($this->getParam('events', []));
                                                 data-failure-param-alert-text="Failed to update tag"
                                                 data-failure-param-alert-classname="error">
                                                 <input type="hidden" name="tag" data-ls-bind="{{tag.$id}}">
-                                                <button class="margin-bottom-small">Activate</button>
+                                                <button>Activate</button>
                                             </form>
     
-                                            <span data-ls-bind="{{tag}}"></span>
-                                            <span data-ls-bind="{{tag.codeSize|humanFileSize}}"></span>
-                                            <span data-ls-bind="{{tag.dateCreated|dateTime}}"></span>
+                                            <b data-ls-bind="{{tag.$id}}"></b>
+                                            <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
+                                            <div class="text-size-small margin-top-small" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.codeSize|humanFileSize}}"></div>
                                         </li>
                                     </ul>
                                 </div>
@@ -275,8 +275,33 @@ $events = array_keys($this->getParam('events', []));
                                     </td>
                                     <td>
                                         <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
-                                            <a href="" class="text-danger pull-end margin-start">Errors</a>
-                                            <a href="" class="pull-end margin-start">Output</a>
+                                            
+                                            <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
+                                            <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+
+                                            <button class="phones-only tablets-only link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
+                                            <button class="phones-only tablets-only link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+
+                                            <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h1>STDOUT</h1>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code />
+                                                </div>
+
+                                            </div>
+
+                                            <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stderr-{{execution.$id}}">
+                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+
+                                                <h1>STDERR</h1>
+
+                                                <div class="margin-bottom">
+                                                    <input type="hidden" data-ls-bind="{{execution.stderr}}" data-forms-code />
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
