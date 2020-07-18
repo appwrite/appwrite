@@ -182,7 +182,7 @@ class FunctionsConsoleServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'command' => 'node ./test.js',
+            'command' => 'php function.php',
             'code' => new CURLFile(realpath(__DIR__ . '/../../../resources/functions/php-fx.tar.gz'), 'application/x-gzip', 'php-fx.tar.gz'),
         ]);
 
