@@ -110,8 +110,8 @@
 
                                             <div class="margin-bottom-tiny">
                                                 <a data-ls-attrs="href=/console/users/user?id={{member.userId}}&project={{router.params.project}}"><span data-ls-bind="{{member.name}}"></span></a> &nbsp;&nbsp;
-                                                <span data-ls-if="1 == {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="({{member.roles.length}} role)" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
-                                                <span  data-ls-if="2 <= {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="({{member.roles.length}} roles)" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
+                                                <span data-ls-if="1 == {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} role" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
+                                                <span  data-ls-if="2 <= {{member.roles.length}}" class="text-fade tooltip" data-ls-bind="{{member.roles.length}} roles" data-ls-attrs="data-tooltip={{member.roles|arraySentence}}"></span>
                                             </div>
                                             <small class="text-size-small text-fade" data-ls-bind="{{member.email}}"></small> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="text-danger text-size-small">Pending Approval</span>
                                         </li>

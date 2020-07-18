@@ -74,11 +74,13 @@ $events = array_keys($this->getParam('events', []));
                             data-event="load,functions.createTag,functions.deleteTag,functions.updateTag"
                             data-name="project-function-tags"
                             data-param-function-id="{{router.params.id}}"
+                            data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                            data-param-offset=""
                             data-param-order-type="DESC"
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listTags">
 
-                            <h3>Tags &nbsp; <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-tags.sum}} tags available"></span></h3>
+                            <h3>Tags <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-tags.sum}} tags found"></span></h3>
 
                             <div data-ls-if="0 == {{project-function-tags.tags.length}} || undefined == {{project-function-tags.tags.length}}" class="box margin-top margin-bottom">
                                 <h3 class="margin-bottom-small text-bold">No Tags Found</h3>
@@ -107,7 +109,7 @@ $events = array_keys($this->getParam('events', []));
                                                 <button>Activate</button>
                                             </form>
     
-                                            <b data-ls-bind="{{tag.$id}}"></b>
+                                            <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
                                             <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
                                             <div class="text-size-small margin-top-small" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.codeSize|humanFileSize}}"></div>
                                         </li>
@@ -154,31 +156,33 @@ $events = array_keys($this->getParam('events', []));
 
                         <div class="pull-end paging">
                             <form
-                                data-service="users.list"
+                                data-service="functions.listTags"
                                 data-event="submit"
+                                data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                 data-param-order-type="DESC"
                                 data-scope="sdk"
-                                data-name="project-users"
+                                data-name="project-function-tags"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-tags.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
                             </form>
 
-                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-users.sum|pageTotal}}"></span>
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-tags.sum|pageTotal}}"></span>
 
                             <form
-                                data-service="users.list"
+                                data-service="functions.listTags"
                                 data-event="submit"
+                                data-param-function-id="{{router.params.id}}"
                                 data-param-search="{{router.params.search}}"
                                 data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
                                 data-param-order-type="DESC"
                                 data-scope="sdk"
-                                data-name="project-users"
+                                data-name="project-function-tags"
                                 data-success="state"
                                 data-success-param-state-keys="search,offset">
-                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-users.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-tags.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
                             </form>
                         </div>
                     </div>
@@ -231,7 +235,7 @@ $events = array_keys($this->getParam('events', []));
                     <li>CPU Time</li>
                 </ul>
 
-                <h3>Logs &nbsp; <span class="text-fade text-size-small pull-end margin-top-small">showing last 25 executions</span></h3>
+                <h3>Logs &nbsp; <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-executions.sum}} executions found"></span></h3>
 
                 <div
                     data-service="functions.listExecutions"
@@ -239,74 +243,110 @@ $events = array_keys($this->getParam('events', []));
                     data-event="load,functions.createExecution"
                     data-name="project-function-executions"
                     data-param-function-id="{{router.params.id}}"
+                    data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                    data-param-offset=""
                     data-param-order-type="DESC"
                     data-success="trigger"
                     data-success-param-trigger-events="functions.listExecutions">
 
-                    <div class="box" data-ls-if="0 < {{project-function-executions.executions.length}} && undefined !== {{project-function-executions.executions}}">
-                        <table class="vertical small">
-                            <thead>
-                                <tr>
-                                    <th width="30"></th>
-                                    <th width="150">Status</th>
-                                    <th width="170">Date</th>
-                                    <th width="100">Runtime</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
-                                <tr>
-                                    <td data-title="">
-                                        <i class="dot danger" data-ls-if="{{execution.status}} === 'failed'"></i>
-                                        <i class="dot info" data-ls-if="{{execution.status}} === 'waiting'"></i>
-                                        <i class="dot info" data-ls-if="{{execution.status}} === 'processing'"></i>
-                                        <i class="dot success" data-ls-if="{{execution.status}} === 'completed'"></i>
-                                    </td>
-                                    <td data-title="Status: ">
-                                        <span data-ls-bind="{{execution.status}}"></span>
-                                        <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" exit code: {{execution.exitCode}}"></span>
-                                    </td>
-                                    <td data-title="Date: ">
-                                        <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
-                                    </td>
-                                    <td data-title="Runtime: ">
-                                        <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
-                                        <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
-                                    </td>
-                                    <td>
-                                        <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
-                                            
-                                            <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
-                                            <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+                    <div data-ls-if="0 < {{project-function-executions.executions.length}} && undefined !== {{project-function-executions.executions}}">
+                        <div class="box margin-bottom">
+                            <table class="vertical small">
+                                <thead>
+                                    <tr>
+                                        <th width="30"></th>
+                                        <th width="150">Status</th>
+                                        <th width="170">Date</th>
+                                        <th width="100">Runtime</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-ls-loop="project-function-executions.executions" data-ls-as="execution">
+                                    <tr>
+                                        <td data-title="">
+                                            <i class="dot danger" data-ls-if="{{execution.status}} === 'failed'"></i>
+                                            <i class="dot info" data-ls-if="{{execution.status}} === 'waiting'"></i>
+                                            <i class="dot info" data-ls-if="{{execution.status}} === 'processing'"></i>
+                                            <i class="dot success" data-ls-if="{{execution.status}} === 'completed'"></i>
+                                        </td>
+                                        <td data-title="Status: ">
+                                            <span data-ls-bind="{{execution.status}}"></span>
+                                            <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" exit code: {{execution.exitCode}}"></span>
+                                        </td>
+                                        <td data-title="Date: ">
+                                            <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
+                                        </td>
+                                        <td data-title="Runtime: ">
+                                            <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>
+                                            <span data-ls-if="{{execution.status}} === 'waiting' || {{execution.status}} === 'processing'">-</span>
+                                        </td>
+                                        <td>
+                                            <div data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-title="">
+                                                
+                                                <button class="desktops-only pull-end link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
+                                                <button class="desktops-only pull-end link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
 
-                                            <button class="phones-only tablets-only link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
-                                            <button class="phones-only tablets-only link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
+                                                <button class="phones-only tablets-only link margin-start text-danger" data-ls-ui-trigger="execution-stderr-{{execution.$id}}">Errors</button>
+                                                <button class="phones-only tablets-only link margin-start" data-ls-ui-trigger="execution-stdout-{{execution.$id}}">Output</button>
 
-                                            <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
-                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stdout-{{execution.$id}}">
+                                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                                <h1>STDOUT</h1>
+                                                    <h1>STDOUT</h1>
 
-                                                <div class="margin-bottom">
-                                                    <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code />
+                                                    <div class="margin-bottom">
+                                                        <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code />
+                                                    </div>
+
                                                 </div>
 
-                                            </div>
+                                                <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stderr-{{execution.$id}}">
+                                                    <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
 
-                                            <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stderr-{{execution.$id}}">
-                                                <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>
+                                                    <h1>STDERR</h1>
 
-                                                <h1>STDERR</h1>
-
-                                                <div class="margin-bottom">
-                                                    <input type="hidden" data-ls-bind="{{execution.stderr}}" data-forms-code />
+                                                    <div class="margin-bottom">
+                                                        <input type="hidden" data-ls-bind="{{execution.stderr}}" data-forms-code />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="text-align-center paging">
+                            <form
+                                data-service="functions.listExecutions"
+                                data-event="submit"
+                                data-param-function-id="{{router.params.id}}"
+                                data-param-search="{{router.params.search}}"
+                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                                data-param-order-type="DESC"
+                                data-scope="sdk"
+                                data-name="project-function-executions"
+                                data-success="state"
+                                data-success-param-state-keys="search,offset">
+                                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+                            </form>
+
+                            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{project-function-executions.sum|pageTotal}}"></span>
+
+                            <form
+                                data-service="functions.listExecutions"
+                                data-event="submit"
+                                data-param-function-id="{{router.params.id}}"
+                                data-param-search="{{router.params.search}}"
+                                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                                data-param-order-type="DESC"
+                                data-scope="sdk"
+                                data-name="project-function-executions"
+                                data-success="state"
+                                data-success-param-state-keys="search,offset">
+                                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{project-function-executions.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+                            </form>
+                        </div>
                     </div>
 
                     <div data-ls-if="(!{{project-function-executions.executions.length}})" class="box dashboard margin-bottom">
