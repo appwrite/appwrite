@@ -68,8 +68,6 @@ $events = array_keys($this->getParam('events', []));
                             </div>
                         </div>
 
-                        <h3>Tags</h3>
-
                         <div class="margin-bottom"
                             data-service="functions.listTags"
                             data-scope="sdk"
@@ -79,6 +77,8 @@ $events = array_keys($this->getParam('events', []));
                             data-param-order-type="DESC"
                             data-success="trigger"
                             data-success-param-trigger-events="functions.listTags">
+
+                            <h3>Tags &nbsp; <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-tags.sum}} tags available"></span></h3>
 
                             <div data-ls-if="0 == {{project-function-tags.tags.length}} || undefined == {{project-function-tags.tags.length}}" class="box margin-top margin-bottom">
                                 <h3 class="margin-bottom-small text-bold">No Tags Found</h3>

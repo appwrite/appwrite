@@ -184,6 +184,7 @@ class FunctionsV1
         $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
         $container = 'appwrite-function-'.$tag->getId();
+        $command = escapeshellcmd($tag->getAttribute('command', ''));
 
         if(!\is_readable($tagPath)) {
             throw new Exception('Code is not readable: '.$tag->getAttribute('codePath', ''));
@@ -295,7 +296,7 @@ class FunctionsV1
 
         $executionStart = \microtime(true);
         
-        $exitCode = Console::execute("docker exec {$container} sh -c '{$tag->getAttribute('command', '')}'"
+        $exitCode = Console::execute("docker exec {$container} {$command}"
         , null, $stdout, $stderr, $function->getAttribute('timeout', 900)); // TODO add app env for max timeout
 
         $executionEnd = \microtime(true);
@@ -305,10 +306,11 @@ class FunctionsV1
         Authorization::disable();
         
         $execution = $projectDB->updateDocument(array_merge($execution->getArrayCopy(), [
+            'tagId' => $tag->getId(),
             'status' => ($exitCode === 0) ? 'completed' : 'failed',
             'exitCode' => $exitCode,
-            'stdout' => mb_substr($stdout, -2000), // log last 2000 chars output
-            'stderr' => mb_substr($stderr, -2000), // log last 2000 chars output
+            'stdout' => mb_substr($stdout, -4000), // log last 4000 chars output
+            'stderr' => mb_substr($stderr, -4000), // log last 4000 chars output
             'time' => ($executionEnd - $executionStart),
         ]));
         
