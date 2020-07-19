@@ -368,6 +368,7 @@ App::get('/console/functions/function')
             ->setParam('events', Config::getParam('events', []))
             ->setParam('fileLimit', App::getEnv('_APP_STORAGE_LIMIT', 0))
             ->setParam('fileLimitHuman', Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0)))
+            ->setParam('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))
         ;
 
         $layout
