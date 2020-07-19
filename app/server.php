@@ -23,6 +23,8 @@ sleep(2);
 
 $http = new Server("0.0.0.0", 80);
 
+$payloadSize = max(4000000 /* 4mb */, App::getEnv('_APP_STORAGE_LIMIT', 100000000));
+
 $http
     ->set([
         'open_http2_protocol' => true,
@@ -31,7 +33,7 @@ $http
         'timeout' => 7,
         'http_compression' => true,
         'http_compression_level' => 6,
-        'package_max_length' => 1000000 * 150, // 150MB
+        'package_max_length' => $payloadSize,
     ])
 ;
 
@@ -47,8 +49,8 @@ $http->on('AfterReload', function($serv, $workerId) {
     Console::success('Reload completed...');
 });
 
-$http->on('start', function (Server $http) {
-    Console::success('Server started succefully');
+$http->on('start', function (Server $http) use ($payloadSize) {
+    Console::success('Server started succefully (max payload is '.$payloadSize.' bytes)');
 
     Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
