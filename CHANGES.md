@@ -19,10 +19,17 @@
 - Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
 - Optimised function execution by using fully-qualified function calls
 - Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
+- Added pagination for projects list on the console home page.
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
   - ** - might be changed before merging to master
+
+## Breaking Changes (Read before upgrading!)
+- **Deprecated** `first` and `last` query params for documents list route in the database API
+- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
+- Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 
 ## Bug Fixes
 
@@ -44,12 +51,6 @@
 - New OAuth adapter for Box.com
 - New OAuth adapter for PayPal sandbox
 - Fixed a bug making read permission overwrite write permission in some cases
-
-## Breaking Changes (Read before upgrading)
-- **Deprecated** `first` and `last` query params for documents list route in the database API
-- **Deprecated** Deprectaed Pubjabi Translations ('pn')
-- Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
-- Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 
 ## Security
 
