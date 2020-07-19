@@ -9,8 +9,8 @@ $home = $this->getParam('home', '');
         <p class="margin-bottom margin-top-negative-small">Take advantage of the Appwrite APIs and tools.</p>
 
         <ul class="margin-bottom-xl clear">
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank" rel="noopener"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
-            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank" rel="noopener"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/docs" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-book-open"></i> &nbsp;Docs</a></li>
+            <li class="pull-start margin-end margin-bottom-small"><a href="<?php echo $home; ?>/support" target="_blank" rel="noopener" class="link-animation-enabled"><i class="icon-lifebuoy"></i> &nbsp;Support</a></li>
         </ul>
     </div>
 </div>
@@ -18,6 +18,10 @@ $home = $this->getParam('home', '');
 <section class="zone xl margin-bottom margin-top-negative-xl">
     <div class="margin-bottom-xl"
         data-service="projects.list"
+        data-param-search="{{router.params.search}}"
+        data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+        data-param-offset="{{router.params.offset}}"
+        data-param-order-type="DESC"
         data-scope="console"
         data-event="load,projects.create"
         data-name="console-projects"
@@ -44,6 +48,38 @@ $home = $this->getParam('home', '');
                 </a>
             </li>
         </ul>
+
+        <div class="pull-end paging">
+            <form
+                data-service="projects.list"
+                data-event="submit"
+                data-param-function-id="{{router.params.id}}"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="console"
+                data-name="console-projects"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-back data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-end round small" aria-label="Back"><i class="icon-left-open"></i></button>
+            </form>
+
+            <span data-ls-bind="{{router.params.offset|pageCurrent}} / {{console-projects.sum|pageTotal}}"></span>
+
+            <form
+                data-service="projects.list"
+                data-event="submit"
+                data-param-function-id="{{router.params.id}}"
+                data-param-search="{{router.params.search}}"
+                data-param-limit="<?php echo APP_PAGING_LIMIT; ?>"
+                data-param-order-type="DESC"
+                data-scope="console"
+                data-name="console-projects"
+                data-success="state"
+                data-success-param-state-keys="search,offset">
+                <button name="offset" data-paging-next data-offset="{{router.params.offset}}" data-sum="{{console-projects.sum}}" class="margin-start round small" aria-label="Next"><i class="icon-right-open"></i></button>
+            </form>
+        </div>
         
         <button data-ls-ui-trigger="create-project">Create Project</button>
     </div>
