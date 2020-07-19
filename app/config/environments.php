@@ -29,6 +29,13 @@ return [
         'image' => 'appwrite/env-python:3.8',
         'logo' => 'python.png',
     ],
+    'deno-1.2' => [
+        'name' => 'Deno',
+        'version' => '1.2',
+        'base' => 'hayd/deno:alpine-1.2.0',
+        'image' => 'appwrite/env-deno:1.2',
+        'logo' => 'deno.png',
+    ],
     // 'dart-2.8' => [
     //     'name' => 'Dart',
     //     'version' => '2.8',

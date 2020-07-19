@@ -7,6 +7,7 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
@@ -265,6 +266,7 @@ class FunctionsV1
             
             $exitCode = Console::execute("docker run \
                 -d \
+                --entrypoint=\"\" \
                 --cpus=4 \
                 --memory=128m \
                 --memory-swap=128m \
@@ -278,7 +280,7 @@ class FunctionsV1
                 {$environment['image']} \
                 sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
             , null, $stdout, $stderr, 30);
-    
+
             $executionEnd = \microtime(true);
     
             if($exitCode !== 0) {
@@ -297,7 +299,7 @@ class FunctionsV1
         $executionStart = \microtime(true);
         
         $exitCode = Console::execute("docker exec {$container} {$command}"
-        , null, $stdout, $stderr, $function->getAttribute('timeout', 900)); // TODO add app env for max timeout
+        , null, $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))); // TODO add app env for max timeout
 
         $executionEnd = \microtime(true);
 
@@ -322,7 +324,7 @@ class FunctionsV1
 
         Console::success(count($list).' running containers counted');
 
-        $max = 10;
+        $max = (int) App::getEnv('_APP_FUNCTIONS_CONTAINERS');
 
         if(count($list) > $max) {
             Console::info('Starting containers cleanup');
