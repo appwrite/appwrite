@@ -21,7 +21,7 @@ ENV TZ=Asia/Tel_Aviv \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
-  apk add \
+  apk add --no-cache --virtual .deps \
   make \
   automake \
   autoconf \
@@ -30,6 +30,7 @@ RUN \
   tar \
   wget \
   git \
+  zlib-dev \
   brotli
 
   #ca-certificates \
@@ -98,7 +99,7 @@ ENV TZ=Asia/Tel_Aviv \
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
-  apk update && apk add \
+  apk update && apk add --no-cache --virtual .deps \
   make \
   automake \
   autoconf \
@@ -113,8 +114,6 @@ RUN \
   curl-dev \
   imagemagick-dev \
   yaml-dev \
-  brotli \
-  zlib-dev \
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml
 
