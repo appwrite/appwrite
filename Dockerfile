@@ -112,6 +112,8 @@ RUN \
   docker \
   oniguruma-dev \
   curl-dev \
+  imagemagick \
+  imagemagick-libs \
   imagemagick-dev \
   yaml-dev \
   && pecl install imagick yaml \ 
