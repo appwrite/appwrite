@@ -13,13 +13,13 @@ use Utopia\Config\Config;
 
 require_once __DIR__.'/../init.php';
 
-cli_set_process_title('Functions V1 Worker');
+\cli_set_process_title('Functions V1 Worker');
 
 Console::success(APP_NAME.' functions worker v1 has started');
 
 $environments = Config::getParam('environments');
 
-$warmupStart = microtime(true);
+$warmupStart = \microtime(true);
 
 Co\run(function() use ($environments) {
     foreach($environments as $environment) { // Warmup: make sure images are ready to run fast 🚀
@@ -42,7 +42,7 @@ Co\run(function() use ($environments) {
     }
 });
 
-$warmupEnd = microtime(true);
+$warmupEnd = \microtime(true);
 $warmupTime = $warmupEnd - $warmupStart;
 
 Console::success('Finished warmup in '.$warmupTime.' seconds');
@@ -67,8 +67,8 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
  *      + messure execution time - DONE
  *      + pass env vars - DONE
  *      + pass one-time api key
- * 4. Update execution status
- * 5. Update execution stdout & stderr
+ * 4. Update execution status - DONE
+ * 5. Update execution stdout & stderr - DONE
  * 6. Trigger audit log
  * 7. Trigger usage log
  */
@@ -145,7 +145,7 @@ class FunctionsV1
                     'read' => [],
                     'write' => [],
                 ],
-                'dateCreated' => time(),
+                'dateCreated' => \time(),
                 'functionId' => $function->getId(),
                 'status' => 'processing', // waiting / processing / completed / failed
                 'exitCode' => 0,
@@ -169,7 +169,7 @@ class FunctionsV1
             throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
         }
 
-        $vars = array_merge($function->getAttribute('vars', []), [
+        $vars = \array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_TAG' => $functionTag,
@@ -178,7 +178,7 @@ class FunctionsV1
             'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
         ]);
 
-        array_walk($vars, function (&$value, $key) {
+        \array_walk($vars, function (&$value, $key) {
             $value = (empty($value)) ? 'null' : $value;
             $value = "\t\t\t--env {$key}={$value} \\";
         });
@@ -187,7 +187,7 @@ class FunctionsV1
         $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
         $container = 'appwrite-function-'.$tag->getId();
-        $command = escapeshellcmd($tag->getAttribute('command', ''));
+        $command = \escapeshellcmd($tag->getAttribute('command', ''));
 
         if(!\is_readable($tagPath)) {
             throw new Exception('Code is not readable: '.$tag->getAttribute('codePath', ''));
@@ -216,36 +216,34 @@ class FunctionsV1
         $executionEnd = \microtime(true);
 
         $list = [];
-        $stdout = explode("\n", $stdout);
+        $stdout = \explode("\n", $stdout);
 
-        array_map(function($value) use (&$list) {
+        \array_map(function($value) use (&$list) {
             $container = [];
 
-            parse_str($value, $container);
+            \parse_str($value, $container);
 
             if(isset($container['name'])) {
                 $container = [
                     'name' => $container['name'],
-                    'online' => (substr($container['status'], 0, 2) === 'Up'),
+                    'online' => (\substr($container['status'], 0, 2) === 'Up'),
                     'status' => $container['status'],
                     'labels' => $container['labels'],
                 ];
 
-                array_map(function($value) use (&$container) {
-                    $value = explode('=', $value);
+                \array_map(function($value) use (&$container) {
+                    $value = \explode('=', $value);
                     
                     if(isset($value[0]) && isset($value[1])) {
                         $container[$value[0]] = $value[1];
                     }
-                }, explode(',', $container['labels']));
+                }, \explode(',', $container['labels']));
 
                 $list[$container['name']] = $container;
             }
         }, $stdout);
         
         Console::info("Functions listed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
-
-        //TODO if container found and offline -> delete it
 
         if(isset($list[$container]) && !$list[$container]['online']) {
             $stdout = '';
@@ -257,8 +255,6 @@ class FunctionsV1
 
             unset($list[$container]);
         }
-
-        //TODO if more than x contianers -> clear all older containers
 
         if(!isset($list[$container])) { // Create contianer if not ready
             $stdout = '';
@@ -275,10 +271,10 @@ class FunctionsV1
                 --rm \
                 --name={$container} \
                 --label appwrite-type=function \
-                --label appwrite-created=".time()." \
+                --label appwrite-created=".\time()." \
                 --volume {$tagPathTargetDir}:/tmp:rw \
                 --workdir /usr/local/src \
-                ".implode("\n", $vars)."
+                ".\implode("\n", $vars)."
                 {$environment['image']} \
                 sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'"
             , null, $stdout, $stderr, 30);
@@ -301,7 +297,7 @@ class FunctionsV1
         $executionStart = \microtime(true);
         
         $exitCode = Console::execute("docker exec {$container} {$command}"
-        , null, $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))); // TODO add app env for max timeout
+        , null, $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
 
@@ -328,7 +324,7 @@ class FunctionsV1
 
         $max = (int) App::getEnv('_APP_FUNCTIONS_CONTAINERS');
 
-        if(count($list) > $max) {
+        if(\count($list) > $max) {
             Console::info('Starting containers cleanup');
 
             $sorted = [];
@@ -340,12 +336,12 @@ class FunctionsV1
                 ];
             }
 
-            usort($sorted, function ($item1, $item2) {
+            \usort($sorted, function ($item1, $item2) {
                 return $item1['created'] <=> $item2['created'];
             });
 
-            while(count($sorted) > $max) {
-                $first = array_shift($sorted);
+            while(\count($sorted) > $max) {
+                $first = \array_shift($sorted);
                 $stdout = '';
                 $stderr = '';
 

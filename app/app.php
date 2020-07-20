@@ -235,10 +235,11 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $usage
         ->setParam('projectId', $project->getId())
-        ->setParam('url', $request->getHostname().$request->getURI())
-        ->setParam('method', $request->getMethod())
-        ->setParam('request', 0)
-        ->setParam('response', 0)
+        ->setParam('httpRequest', 1)
+        ->setParam('httpUrl', $request->getHostname().$request->getURI())
+        ->setParam('httpMethod', $request->getMethod())
+        ->setParam('networkRequestSize', 0)
+        ->setParam('networkResponseSize', 0)
         ->setParam('storage', 0)
     ;
 }, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'clients']);
@@ -273,8 +274,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
         && !empty($route->getLabel('sdk.namespace', null))) { // Don't calculate console usage and admin mode
         
         $usage
-            ->setParam('request', $request->getSize() + $usage->getParam('storage'))
-            ->setParam('response', $response->getSize())
+            ->setParam('networkRequestSize', $request->getSize() + $usage->getParam('storage'))
+            ->setParam('networkResponseSize', $response->getSize())
             ->trigger()
         ;
     }
