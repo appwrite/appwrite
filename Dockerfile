@@ -33,9 +33,6 @@ RUN \
   zlib-dev \
   brotli
 
-  #ca-certificates \
-  # software-properties-common wget git openssl make zip unzip libbrotli-dev libz-dev
-  
 RUN docker-php-ext-install sockets
 
 RUN \
@@ -100,27 +97,26 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN \
   apk update && apk add --no-cache --virtual .deps \
-  bash \
   make \
   automake \
   autoconf \
   gcc \
   g++ \
-  libwebp \
   certbot \
-  htop \
-  procps \
+  # libwebp \
+  # htop \
+  # procps \
   docker \
-  oniguruma-dev \
+  # oniguruma-dev \
   curl-dev \
   imagemagick \
   imagemagick-libs \
   imagemagick-dev \
   yaml-dev \
   && pecl install imagick yaml \ 
-  && docker-php-ext-enable imagick yaml
-
-RUN docker-php-ext-install sockets curl opcache pdo pdo_mysql
+  && docker-php-ext-enable imagick yaml \
+  && docker-php-ext-install sockets opcache pdo_mysql \
+  && apk del make automake autoconf gcc g++ curl-dev imagemagick imagemagick-libs imagemagick-dev yaml-dev
 
 WORKDIR /usr/src/code
 
