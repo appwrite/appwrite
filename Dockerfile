@@ -31,7 +31,7 @@ RUN \
   wget \
   git \
   zlib-dev \
-  brotli
+  brotli-dev
 
 RUN docker-php-ext-install sockets
 
@@ -95,28 +95,50 @@ ENV TZ=Asia/Tel_Aviv \
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# RUN apk update
+# RUN apk add --no-cache --virtual .deps make
+# RUN apk add --no-cache --virtual .deps automake
+# RUN apk add --no-cache --virtual .deps autoconf
+# RUN apk add --no-cache --virtual .deps gcc
+# RUN apk add --no-cache --virtual .deps g++
+# RUN apk add --no-cache --virtual .deps curl-dev
+# RUN apk add --no-cache --virtual .deps imagemagick
+# RUN apk add --no-cache --virtual .deps imagemagick-libs
+# RUN apk add --no-cache --virtual .deps imagemagick-dev
+# RUN apk add --no-cache --virtual .deps yaml-dev
+# RUN apk add --no-cache certbot
+# RUN apk add --no-cache docker
+
+# RUN pecl install imagick yaml
+# RUN docker-php-ext-enable imagick yaml
+# RUN docker-php-ext-install sockets opcache pdo_mysql
+# RUN apk del make automake autoconf gcc g++ curl-dev imagemagick imagemagick-libs imagemagick-dev yaml-dev
+
 RUN \
-  apk update && apk add --no-cache --virtual .deps \
+  apk update \
+  && apk add --no-cache --virtual .deps \
   make \
   automake \
   autoconf \
   gcc \
   g++ \
-  certbot \
+  curl-dev \
   # libwebp \
   # htop \
   # procps \
-  docker \
   # oniguruma-dev \
-  curl-dev \
-  imagemagick \
-  imagemagick-libs \
-  imagemagick-dev \
+  && apk add --no-cache \
+  libstdc++ \
   yaml-dev \
+  imagemagick \
+  # imagemagick-libs \
+  imagemagick-dev \
+  certbot \
+  docker-cli \
   && pecl install imagick yaml \ 
   && docker-php-ext-enable imagick yaml \
   && docker-php-ext-install sockets opcache pdo_mysql \
-  && apk del make automake autoconf gcc g++ curl-dev imagemagick imagemagick-libs imagemagick-dev yaml-dev
+  && apk del .deps
 
 WORKDIR /usr/src/code
 
@@ -146,18 +168,18 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
 # Executables
-RUN chmod +x /usr/local/bin/doctor
-RUN chmod +x /usr/local/bin/migrate
-RUN chmod +x /usr/local/bin/schedule
-RUN chmod +x /usr/local/bin/test
-RUN chmod +x /usr/local/bin/worker-audits
-RUN chmod +x /usr/local/bin/worker-certificates
-RUN chmod +x /usr/local/bin/worker-deletes
-RUN chmod +x /usr/local/bin/worker-functions
-RUN chmod +x /usr/local/bin/worker-mails
-RUN chmod +x /usr/local/bin/worker-tasks
-RUN chmod +x /usr/local/bin/worker-usage
-RUN chmod +x /usr/local/bin/worker-webhooks
+RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/migrate && \
+    chmod +x /usr/local/bin/schedule && \
+    chmod +x /usr/local/bin/test && \
+    chmod +x /usr/local/bin/worker-audits && \
+    chmod +x /usr/local/bin/worker-certificates && \
+    chmod +x /usr/local/bin/worker-deletes && \
+    chmod +x /usr/local/bin/worker-functions && \
+    chmod +x /usr/local/bin/worker-mails && \
+    chmod +x /usr/local/bin/worker-tasks && \
+    chmod +x /usr/local/bin/worker-usage && \
+    chmod +x /usr/local/bin/worker-webhooks
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
