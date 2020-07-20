@@ -171,6 +171,7 @@ class FunctionsV1
 
         $vars = array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $functionId,
+            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
             'APPWRITE_FUNCTION_TAG' => $functionTag,
             'APPWRITE_FUNCTION_TRIGGER' => $functionTrigger,
             'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
@@ -178,6 +179,7 @@ class FunctionsV1
         ]);
 
         array_walk($vars, function (&$value, $key) {
+            $value = (empty($value)) ? 'null' : $value;
             $value = "\t\t\t--env {$key}={$value} \\";
         });
 
