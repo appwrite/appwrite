@@ -106,7 +106,7 @@ App::get('/v1/functions/:functionId')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('function not found', 404);
+            throw new Exception('Function not found', 404);
         }
 
         $response->json($function->getArrayCopy());
@@ -116,6 +116,7 @@ App::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
+    ->label('sdk.platform', [APP_PLATFORM_CONSOLE])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getUsage')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
@@ -130,7 +131,7 @@ App::get('/v1/functions/:functionId/usage')
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('function not found', 404);
+            throw new Exception('Function not found', 404);
         }
 
         $period = [
@@ -188,7 +189,7 @@ App::get('/v1/functions/:functionId/usage')
 
             foreach ($points as $point) {
                 $compute[] = [
-                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                    'value' => (!empty($point['value'])) ? $point['value'] / 60000 : 0, // minutes
                     'date' => \strtotime($point['time']),
                 ];
             }
@@ -208,7 +209,7 @@ App::get('/v1/functions/:functionId/usage')
                 }, $compute)),
             ],
         ]);
-    }, ['response', 'consoleDB', 'projectDB', 'register']);
+    }, ['response', 'project', 'projectDB', 'register']);
 
 App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])

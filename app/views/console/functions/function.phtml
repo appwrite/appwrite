@@ -244,17 +244,22 @@ $timeout = $this->getParam('timeout', 900);
             <li data-state="/console/functions/function/usage?id={{router.params.id}}&project={{router.params.project}}">
                 <h2>Usage</h2>
 
-                <div class="box margin-bottom-small">
+                <div class="box margin-bottom-small"
+                    data-service="functions.getUsage"
+                    data-event="load"
+                    data-name="usage"
+                    data-param-function-id="{{router.params.id}}"
+                    data-param-range="last30">
                     <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
                         <div class="chart margin-bottom-no">
-                            <div class="content" data-forms-chart="Requests=usage.requests.data,Network=usage.network.data" data-height="140"></div>
+                            <div class="content" data-forms-chart="Executions=usage.executions.data,CPU Time (minutes)=usage.compute.data" data-height="140"></div>
                         </div>
                     </div>
                 </div>
 
                 <ul class="chart-notes margin-bottom-large">
-                    <li>Invocations</li>
-                    <li>CPU Time</li>
+                    <li>Executions</li>
+                    <li>CPU Time (minutes)</li>
                 </ul>
 
                 <h3>Logs &nbsp; <span class="text-fade text-size-small pull-end margin-top-small" data-ls-bind="{{project-function-executions.sum}} executions found"></span></h3>

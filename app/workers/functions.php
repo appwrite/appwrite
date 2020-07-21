@@ -329,7 +329,7 @@ class FunctionsV1
             ->setParam('projectId', $projectId)
             ->setParam('functionId', $function->getId())
             ->setParam('functionExecution', 1)
-            ->setParam('functionExecutionTime', $executionTime) // Seconds
+            ->setParam('functionExecutionTime', $executionTime * 1000) // ms
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)
         ;
