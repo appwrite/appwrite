@@ -181,7 +181,7 @@ class FunctionsV1
         ]);
 
         \array_walk($vars, function (&$value, $key) {
-            $value = (empty($value)) ? 'null' : $value;
+            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
             $value = "\t\t\t--env {$key}={$value} \\";
         });
 
@@ -283,6 +283,22 @@ class FunctionsV1
 
             $executionEnd = \microtime(true);
     
+            var_dump("docker run \
+                -d \
+                --entrypoint=\"\" \
+                --cpus=4 \
+                --memory=128m \
+                --memory-swap=128m \
+                --rm \
+                --name={$container} \
+                --label appwrite-type=function \
+                --label appwrite-created=".\time()." \
+                --volume {$tagPathTargetDir}:/tmp:rw \
+                --workdir /usr/local/src \
+                ".\implode("\n", $vars)."
+                {$environment['image']} \
+                sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'");
+
             if($exitCode !== 0) {
                 throw new Exception('Failed to create function environment: '.$stderr);
             }
