@@ -21,6 +21,7 @@
 - Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
 - Added pagination for projects list on the console home page.
 - Updated storage calculation to match IEC standards
+- Now using Alpine as base Docker image
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
