@@ -15,7 +15,6 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 FROM php:7.4-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
-    DEBIAN_FRONTEND=noninteractive \
     PHP_REDIS_VERSION=5.3.0 \
     PHP_SWOOLE_VERSION=4.5.2 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
@@ -60,7 +59,6 @@ LABEL maintainer="team@appwrite.io"
 ARG VERSION=dev
 
 ENV TZ=Asia/Tel_Aviv \
-    DEBIAN_FRONTEND=noninteractive \
     _APP_SERVER=swoole \
     _APP_ENV=production \
     _APP_DOMAIN=localhost \
@@ -95,25 +93,6 @@ ENV TZ=Asia/Tel_Aviv \
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# RUN apk update
-# RUN apk add --no-cache --virtual .deps make
-# RUN apk add --no-cache --virtual .deps automake
-# RUN apk add --no-cache --virtual .deps autoconf
-# RUN apk add --no-cache --virtual .deps gcc
-# RUN apk add --no-cache --virtual .deps g++
-# RUN apk add --no-cache --virtual .deps curl-dev
-# RUN apk add --no-cache --virtual .deps imagemagick
-# RUN apk add --no-cache --virtual .deps imagemagick-libs
-# RUN apk add --no-cache --virtual .deps imagemagick-dev
-# RUN apk add --no-cache --virtual .deps yaml-dev
-# RUN apk add --no-cache certbot
-# RUN apk add --no-cache docker
-
-# RUN pecl install imagick yaml
-# RUN docker-php-ext-enable imagick yaml
-# RUN docker-php-ext-install sockets opcache pdo_mysql
-# RUN apk del make automake autoconf gcc g++ curl-dev imagemagick imagemagick-libs imagemagick-dev yaml-dev
-
 RUN \
   apk update \
   && apk add --no-cache --virtual .deps \
@@ -123,15 +102,10 @@ RUN \
   gcc \
   g++ \
   curl-dev \
-  # libwebp \
-  # htop \
-  # procps \
-  # oniguruma-dev \
   && apk add --no-cache \
   libstdc++ \
   yaml-dev \
   imagemagick \
-  # imagemagick-libs \
   imagemagick-dev \
   certbot \
   docker-cli \
