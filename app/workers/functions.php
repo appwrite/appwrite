@@ -22,6 +22,8 @@ $environments = Config::getParam('environments');
 $warmupStart = \microtime(true);
 
 Co\run(function() use ($environments) {
+    Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+    
     foreach($environments as $environment) { // Warmup: make sure images are ready to run fast 🚀
         go(function() use ($environment) {
             $stdout = '';
