@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 export PHP_VERSION=$PHP_VERSION
 
