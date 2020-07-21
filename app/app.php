@@ -60,7 +60,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
     $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
-    $refDomain = $protocol.'://'.((\in_array($origin, $clients))
+    $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()).'://'.((\in_array($origin, $clients))
         ? $origin : 'localhost') . (!empty($port) ? ':'.$port : '');
 
     $selfDomain = new Domain($request->getHostname());
