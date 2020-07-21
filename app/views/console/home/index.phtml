@@ -53,7 +53,11 @@ $graph = $this->getParam('graph', false);
                             <a href="">Full Usage Report <i class="icon-right-open"></i></a>
                         </div> -->
 
-                        <div class="margin-top-large"><b class="text-size-small unit" data-ls-bind="{{usage.functions.total|statsTotal}} Func. Executed" data-default="0 Func. Executed"></b></div>
+                        <div class="margin-top value small">
+                            <b class="text-size-small sum small" data-ls-bind="{{usage.functions.total|statsTotal}}" data-default="0"></b>
+                            <br />
+                            <b>Func. Executions</b>
+                        </div>
                     </div>
                 </div>
 
