@@ -23,7 +23,7 @@ $graph = $this->getParam('graph', false);
     </div>
 </div>
 
-<div class="zone xl margin-top-negative-xxl">
+<div class="zone xxl margin-top-negative-xxl">
     <div class="box margin-bottom dashboard">
         <div
             data-service="projects.getUsage"
@@ -52,6 +52,8 @@ $graph = $this->getParam('graph', false);
                         <!-- <div class="margin-top dev-feature">
                             <a href="">Full Usage Report <i class="icon-right-open"></i></a>
                         </div> -->
+
+                        <div class="margin-top-large"><b class="text-size-small unit" data-ls-bind="{{usage.functions.total|statsTotal}} Func. Executed" data-default="0 Func. Executed"></b></div>
                     </div>
                 </div>
 
@@ -77,6 +79,14 @@ $graph = $this->getParam('graph', false);
                         <div class="margin-top-small"><b class="text-size-small unit">Tasks</b></div>
                     </div>
                 </div>
+                <!-- 
+                <hr />
+
+                <div class="row responsive">
+                    <div class="col span-4">x</div>
+                    <div class="col span-4">x</div>
+                    <div class="col span-4">x</div>
+                </div> -->
             </div>
         </div>
     </div>

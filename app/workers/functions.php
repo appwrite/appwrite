@@ -302,6 +302,7 @@ class FunctionsV1
         , null, $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
+        $executionTime = ($executionEnd - $executionStart);
 
         Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
@@ -313,7 +314,7 @@ class FunctionsV1
             'exitCode' => $exitCode,
             'stdout' => mb_substr($stdout, -4000), // log last 4000 chars output
             'stderr' => mb_substr($stderr, -4000), // log last 4000 chars output
-            'time' => ($executionEnd - $executionStart),
+            'time' => $executionTime,
         ]));
         
         Authorization::reset();
@@ -321,6 +322,19 @@ class FunctionsV1
         if (false === $function) {
             throw new Exception('Failed saving execution to DB', 500);
         }
+
+        $usage = $register->get('queue-usage');
+
+        $usage
+            ->setParam('projectId', $projectId)
+            ->setParam('functionId', $function->getId())
+            ->setParam('functionExecution', 1)
+            ->setParam('functionExecutionTime', $executionTime) // Seconds
+            ->setParam('networkRequestSize', 0)
+            ->setParam('networkResponseSize', 0)
+        ;
+
+        $usage->trigger();
 
         Console::success(count($list).' running containers counted');
 

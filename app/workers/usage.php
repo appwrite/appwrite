@@ -27,17 +27,18 @@ class UsageV1
         $statsd = $register->get('statsd', true);
 
         $projectId = $this->args['projectId'];
-        $httpMethod = $this->args['httpMethod'];
-        $httpRequest = $this->args['httpRequest'];
-        
+
+        $storage = $this->args['storage'];
+
         $networkRequestSize = $this->args['networkRequestSize'];
         $networkResponseSize = $this->args['networkResponseSize'];
         
-        $storage = $this->args['storage'];
+        $httpMethod = $this->args['httpMethod'];
+        $httpRequest = $this->args['httpRequest'];
 
+        $functionId = $this->args['functionId'];
         $functionExecution = $this->args['functionExecution'];
         $functionExecutionTime = $this->args['functionExecutionTime'];
-        $functionId = $this->args['functionId'];
 
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
 
@@ -53,10 +54,13 @@ class UsageV1
             $statsd->count('executions.time'.$tags.',functionId='.$functionId, $functionExecutionTime);
         }
 
-        $statsd->count('network.all'.$tags, $networkRequestSize + $networkResponseSize);
         $statsd->count('network.inbound'.$tags, $networkRequestSize);
         $statsd->count('network.outbound'.$tags, $networkResponseSize);
-        $statsd->count('storage.all'.$tags, $storage);
+        $statsd->count('network.all'.$tags, $networkRequestSize + $networkResponseSize);
+
+        if($storage >= 1) {
+            $statsd->count('storage.all'.$tags, $storage);
+        }
     }
 
     public function tearDown()

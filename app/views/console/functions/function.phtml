@@ -277,8 +277,8 @@ $timeout = $this->getParam('timeout', 900);
                                 <thead>
                                     <tr>
                                         <th width="30"></th>
+                                        <th width="170">Triggered</th>
                                         <th width="150">Status</th>
-                                        <th width="170">Date</th>
                                         <th width="100">Runtime</th>
                                         <th></th>
                                     </tr>
@@ -291,12 +291,12 @@ $timeout = $this->getParam('timeout', 900);
                                             <i class="dot info" data-ls-if="{{execution.status}} === 'processing'"></i>
                                             <i class="dot success" data-ls-if="{{execution.status}} === 'completed'"></i>
                                         </td>
+                                        <td data-title="Date: ">
+                                            <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
+                                        </td>
                                         <td data-title="Status: ">
                                             <span data-ls-bind="{{execution.status}}"></span>
                                             <span class="text-fade text-size-small" data-ls-if="{{execution.exitCode}} !== 0" data-ls-bind=" exit code: {{execution.exitCode}}"></span>
-                                        </td>
-                                        <td data-title="Date: ">
-                                            <span data-ls-bind="{{execution.dateCreated|dateTime}}"></span>
                                         </td>
                                         <td data-title="Runtime: ">
                                             <span data-ls-if="{{execution.status}} === 'completed' || {{execution.status}} === 'failed'" data-ls-bind="{{execution.time|seconds2hum}}"></span>

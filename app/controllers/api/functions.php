@@ -112,6 +112,104 @@ App::get('/v1/functions/:functionId')
         $response->json($function->getArrayCopy());
     }, ['response', 'projectDB']);
 
+App::get('/v1/functions/:functionId/usage')
+    ->desc('Get Function Usage')
+    ->groups(['api', 'functions'])
+    ->label('scope', 'functions.read')
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'getUsage')
+    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
+    ->param('range', 'last30', function () { return new WhiteList(['daily', 'monthly', 'last30', 'last90']); }, 'Date range.', true)
+    ->action(function ($functionId, $range, $response, $project, $projectDB, $register) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Document $project */
+        /** @var Appwrite\Database\Database $consoleDB */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Registry\Registry $register */
+
+        $function = $projectDB->getDocument($functionId);
+
+        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+            throw new Exception('function not found', 404);
+        }
+
+        $period = [
+            'daily' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('today')),
+                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
+                'group' => '1m',
+            ],
+            'monthly' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('midnight first day of this month')),
+                'end' => DateTime::createFromFormat('U', \strtotime('midnight last day of this month')),
+                'group' => '1d',
+            ],
+            'last30' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
+                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
+                'group' => '1d',
+            ],
+            'last90' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
+                'end' => DateTime::createFromFormat('U', \strtotime('today')),
+                'group' => '1d',
+            ],
+            // 'yearly' => [
+            //     'start' => DateTime::createFromFormat('U', strtotime('midnight first day of january')),
+            //     'end' => DateTime::createFromFormat('U', strtotime('midnight last day of december')),
+            //     'group' => '4w',
+            // ],
+        ];
+
+        $client = $register->get('influxdb');
+
+        $executions = [];
+        $compute = [];
+
+        if ($client) {
+            $start = $period[$range]['start']->format(DateTime::RFC3339);
+            $end = $period[$range]['end']->format(DateTime::RFC3339);
+            $database = $client->selectDB('telegraf');
+
+            // Executions
+            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+            $points = $result->getPoints();
+
+            foreach ($points as $point) {
+                $executions[] = [
+                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                    'date' => \strtotime($point['time']),
+                ];
+            }
+
+            // Compute
+            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+            $points = $result->getPoints();
+
+            foreach ($points as $point) {
+                $compute[] = [
+                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                    'date' => \strtotime($point['time']),
+                ];
+            }
+        }
+
+        $response->json([
+            'executions' => [
+                'data' => $executions,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $executions)),
+            ],
+            'compute' => [
+                'data' => $compute,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $compute)),
+            ],
+        ]);
+    }, ['response', 'consoleDB', 'projectDB', 'register']);
+
 App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update Function')

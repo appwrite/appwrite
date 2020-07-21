@@ -206,6 +206,7 @@ App::get('/v1/projects/:projectId/usage')
 
         $requests = [];
         $network = [];
+        $functions = [];
 
         if ($client) {
             $start = $period[$range]['start']->format(DateTime::RFC3339);
@@ -229,6 +230,17 @@ App::get('/v1/projects/:projectId/usage')
 
             foreach ($points as $point) {
                 $network[] = [
+                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                    'date' => \strtotime($point['time']),
+                ];
+            }
+
+            // Functions
+            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+            $points = $result->getPoints();
+
+            foreach ($points as $point) {
+                $functions[] = [
                     'value' => (!empty($point['value'])) ? $point['value'] : 0,
                     'date' => \strtotime($point['time']),
                 ];
@@ -288,6 +300,12 @@ App::get('/v1/projects/:projectId/usage')
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
                 }, $network)),
+            ],
+            'functions' => [
+                'data' => $functions,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $functions)),
             ],
             'collections' => [
                 'data' => $collections,
