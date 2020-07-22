@@ -507,6 +507,16 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
             }
         }
 
+        if($function->getAttribute('tag') === $tag->getId()) { // Reset function tag
+            $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+                'tag' => '',
+            ]));
+    
+            if (false === $function) {
+                throw new Exception('Failed saving function to DB', 500);
+            }
+        }
+
         $usage
             ->setParam('storage', $tag->getAttribute('codeSize', 0) * -1)
         ;
