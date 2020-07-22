@@ -10,12 +10,16 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Document;
+use Appwrite\Database\Validator\Authorization;
 use Appwrite\Storage\Device\Local;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
 
 class DeletesV1
 {
     public $args = [];
+
+    protected $consoleDB = null;
 
     public function setUp()
     {
@@ -23,6 +27,7 @@ class DeletesV1
 
     public function perform()
     {
+        $projectId = $this->args['projectId'];
         $document = $this->args['document'];
         $document = new Document($document);
         
@@ -30,8 +35,12 @@ class DeletesV1
             case Database::SYSTEM_COLLECTION_PROJECTS:
                 $this->deleteProject($document);
                 break;
+            case Database::SYSTEM_COLLECTION_FUNCTIONS:
+                $this->deleteFunction($document, $projectId);
+                break;
             
             default:
+                Console::error('No lazy delete operation available for document of type: '.$document->getCollection());
                 break;
         }
     }
@@ -43,20 +52,133 @@ class DeletesV1
 
     protected function deleteProject(Document $document)
     {
-        global $register;
-
-        $consoleDB = new Database();
-        $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-        $consoleDB->setNamespace('app_console'); // Main DB
-        $consoleDB->setMocks(Config::getParam('collections', []));
-
         // Delete all DBs
-        $consoleDB->deleteNamespace($document->getId());
+        $this->getConsoleDB()->deleteNamespace($document->getId());
         $uploads = new Local(APP_STORAGE_UPLOADS.'/app-'.$document->getId());
         $cache = new Local(APP_STORAGE_CACHE.'/app-'.$document->getId());
 
         // Delete all storage directories
         $uploads->delete($uploads->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
+    }
+
+    protected function deleteFunction(Document $document, $projectId)
+    {
+        $projectDB = $this->getProjectDB($projectId);
+        $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
+
+        // Delete Tags
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+            'functionId='.$document->getId(),
+        ], $projectDB, function(Document $document) use ($device) {
+
+            if ($device->delete($document->getAttribute('codePath', ''))) {
+                Console::success('Delete code tag: '.$document->getAttribute('codePath', ''));
+            }
+            else {
+                Console::error('Dailed to delete code tag: '.$document->getAttribute('codePath', ''));
+            }
+        });
+
+        // Delete Executions
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
+            'functionId='.$document->getId(),
+        ], $projectDB);
+    }
+
+    protected function deleteById(Document $document, Database $database, callable $callback = null): bool
+    {
+        Authorization::disable();
+
+        if($database->deleteDocument($document->getId())) {
+            Console::success('Deleted document "'.$document->getId().'" successfully');
+
+            if(is_callable($callback)) {
+                $callback($document);
+            }
+
+            return true;
+        }
+        else {
+            Console::error('Failed to delete document: '.$document->getId());
+            return false;
+        }
+
+        Authorization::reset();
+    }
+
+    protected function deleteByGroup(array $filters, Database $database, callable $callback = null)
+    {
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $results = [];
+        $sum = $limit;
+
+        $executionStart = \microtime(true);
+        
+        while($sum === $limit) {
+            $chunk++;
+
+            Authorization::disable();
+
+            $results = $database->getCollection([
+                'limit' => $limit,
+                'offset' => 0,
+                'orderField' => '$id',
+                'orderType' => 'ASC',
+                'orderCast' => 'string',
+                'filters' => $filters,
+            ]);
+
+            Authorization::reset();
+
+            $sum = count($results);
+
+            Console::info('Deleting chunk #'.$chunk.'. Found '.$sum.' documents');
+
+            foreach ($results as $document) {
+                $this->deleteById($document, $database, $callback);
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+
+        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    /**
+     * @return Database;
+     */
+    protected function getConsoleDB(): Database
+    {
+        global $register;
+
+        if($this->consoleDB === null) {
+            $this->consoleDB = new Database();
+            $this->consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+            $this->consoleDB->setNamespace('app_console'); // Main DB
+            $this->consoleDB->setMocks(Config::getParam('collections', []));
+        }
+
+        return $this->consoleDB;
+    }
+
+    /**
+     * @return Database;
+     */
+    protected function getProjectDB($projectId): Database
+    {
+        global $register;
+        
+        $projectDB = new Database();
+        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $projectDB->setNamespace('app_'.$projectId); // Main DB
+        $projectDB->setMocks(Config::getParam('collections', []));
+
+        return $projectDB;
     }
 }

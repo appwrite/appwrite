@@ -300,7 +300,12 @@ App::delete('/v1/functions/:functionId')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/functions/delete-function.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->action(function ($functionId, $response, $projectDB) {
+    ->action(function ($functionId, $response, $project, $projectDB, $deletes) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Document $project */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $deletes */
+
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -311,8 +316,13 @@ App::delete('/v1/functions/:functionId')
             throw new Exception('Failed to remove function from DB', 500);
         }
 
+        $deletes
+            ->setParam('projectId', $project->getId())
+            ->setParam('document', $function->getArrayCopy())
+        ;
+
         $response->noContent();
-    }, ['response', 'projectDB']);
+    }, ['response', 'project', 'projectDB', 'deletes']);
 
 App::post('/v1/functions/:functionId/tags')
     ->groups(['api', 'functions'])
