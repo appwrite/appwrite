@@ -286,22 +286,6 @@ class FunctionsV1
 
             $executionEnd = \microtime(true);
     
-            var_dump("docker run \
-                -d \
-                --entrypoint=\"\" \
-                --cpus=4 \
-                --memory=128m \
-                --memory-swap=128m \
-                --rm \
-                --name={$container} \
-                --label appwrite-type=function \
-                --label appwrite-created=".\time()." \
-                --volume {$tagPathTargetDir}:/tmp:rw \
-                --workdir /usr/local/src \
-                ".\implode("\n", $vars)."
-                {$environment['image']} \
-                sh -c 'mv /tmp/code.tar.gz /usr/local/src/code.tar.gz && tar -zxf /usr/local/src/code.tar.gz --strip 1 && rm /usr/local/src/code.tar.gz && tail -f /dev/null'");
-
             if($exitCode !== 0) {
                 throw new Exception('Failed to create function environment: '.$stderr);
             }
@@ -317,7 +301,10 @@ class FunctionsV1
 
         $executionStart = \microtime(true);
         
-        $exitCode = Console::execute("docker exec {$container} {$command}"
+        $exitCode = Console::execute("docker exec \
+        ".\implode("\n", $vars)."
+        {$container} \
+        {$command}"
         , null, $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
