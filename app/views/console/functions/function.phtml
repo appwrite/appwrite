@@ -8,7 +8,7 @@ $timeout = $this->getParam('timeout', 900);
 <div
     data-service="functions.get"
     data-name="project-function"
-    data-event="load,functions.update,functions.createTag,functions.updateTag"
+    data-event="load,functions.update,functions.createTag,functions.updateTag,functions.deleteTag"
     data-param-function-id="{{router.params.id}}"
     data-success="trigger"
     data-success-param-trigger-events="functions.get">
@@ -321,10 +321,13 @@ $timeout = $this->getParam('timeout', 900);
 
                                                     <h1>STDOUT</h1>
 
-                                                    <div class="margin-bottom">
-                                                        <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code />
+                                                    <div class="margin-bottom" data-ls-if="({{execution.stdout.length}})">
+                                                        <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code="bash" />
                                                     </div>
 
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
+                                                        <p>No output was logged.</p>
+                                                    </div>
                                                 </div>
 
                                                 <div data-ui-modal class="modal width-large box close" data-button-alias="none" data-open-event="execution-stderr-{{execution.$id}}">
@@ -332,8 +335,12 @@ $timeout = $this->getParam('timeout', 900);
 
                                                     <h1>STDERR</h1>
 
-                                                    <div class="margin-bottom">
-                                                        <input type="hidden" data-ls-bind="{{execution.stderr}}" data-forms-code />
+                                                    <div class="margin-bottom" data-ls-if="({{execution.stderr.length}})">
+                                                        <input type="hidden" data-ls-bind="{{execution.stderr}}" data-forms-code="bash" />
+                                                    </div>
+
+                                                    <div class="margin-bottom" data-ls-if="(!{{execution.stderr.length}})">
+                                                        <p>No errors were logged.</p>
                                                     </div>
                                                 </div>
                                             </div>
