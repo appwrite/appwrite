@@ -564,6 +564,7 @@ App::post('/v1/functions/:functionId/executions')
             'dateCreated' => time(),
             'functionId' => $function->getId(),
             'status' => 'waiting', // waiting / processing / completed / failed
+            'trigger' => 'http', // http / schedule / event
             'exitCode' => 0,
             'stdout' => '',
             'stderr' => '',
@@ -581,7 +582,7 @@ App::post('/v1/functions/:functionId/executions')
                 'functionId' => $function->getId(),
                 'executionId' => $execution->getId(),
                 'functionTag' => $tag->getId(),
-                'functionTrigger' => 'API',
+                'functionTrigger' => 'http',
             ]);
         }
 

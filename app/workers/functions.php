@@ -71,8 +71,8 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
  *      + pass one-time api key
  * 4. Update execution status - DONE
  * 5. Update execution stdout & stderr - DONE
- * 6. Trigger audit log
- * 7. Trigger usage log
+ * 6. Trigger audit log - DONE
+ * 7. Trigger usage log - DONE
  */
 
 //TODO aviod scheduled execution if delay is bigger than X offest
@@ -90,12 +90,9 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
 /**
  * Get Usage Stats
  *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
- *  -> CPU Time 
- *  -> Invoctions (+1)
- * Report to usage worker
+ *  -> CPU Time - DONE
+ *  -> Invoctions (+1) - DONE
  */
-
-// Double-check Cleanup
 
 class FunctionsV1
 {
