@@ -64,7 +64,7 @@ $timeout = $this->getParam('timeout', 900);
                                     data-failure="alert"
                                     data-failure-param-alert-text="Failed to execute function"
                                     data-failure-param-alert-classname="error">
-                                    <button style="vertical-align: top;">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/usage?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
+                                    <button style="vertical-align: top;">Execute Now</button> &nbsp; <a data-ls-attrs="href=/console/functions/function/logs?id={{router.params.id}}&project={{router.params.project}}" class="button reverse" style="vertical-align: top;">View Logs</a>
                                 </form>
                             </div>
                         </div>
@@ -241,7 +241,7 @@ $timeout = $this->getParam('timeout', 900);
                     </div>
                 </div>
             </li>
-            <li data-state="/console/functions/function/monitor?id={{router.params.id}}&project={{router.params.project}}">
+            <li data-state="/console/functions/function/monitors?id={{router.params.id}}&project={{router.params.project}}">
                 
                 <form class="pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} !== '90d'"
                     data-service="functions.getUsage"
@@ -275,7 +275,7 @@ $timeout = $this->getParam('timeout', 900);
 
                 <button class="tick pull-end margin-start-small margin-top-small" data-ls-if="{{usage.range}} === '24h'" disabled>24h</button>
 
-                <h2>Monitor</h2>
+                <h2>Monitors</h2>
                 
                 <div 
                     data-service="functions.getUsage"
@@ -284,38 +284,38 @@ $timeout = $this->getParam('timeout', 900);
                     data-param-function-id="{{router.params.id}}">
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="xchart margin-bottom-no">
+                            <div class="chart margin-bottom-no">
                                 <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Executions=usage.executions.data" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li>Executions</li>
+                        <li>Executions <span data-ls-bind="({{usage.executions.total}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="xchart margin-bottom-no">
+                            <div class="chart margin-bottom-no">
                                 <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="CPU Time (minutes)=usage.compute.data" data-colors="orange" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="orange">CPU Time (minutes)</li>
+                        <li class="orange">CPU Time <span data-ls-bind="({{usage.compute.total|seconds2hum}})"></span></li>
                     </ul>
 
                     <div class="box margin-bottom-small">
                         <div class="margin-start-negative-small margin-end-negative-small margin-top-negative-small margin-bottom-negative-small">
-                            <div class="xchart margin-bottom-no">
+                            <div class="chart margin-bottom-no">
                                 <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Failures=usage.failures.data" data-colors="red" data-height="140" />
                             </div>
                         </div>
                     </div>
 
                     <ul class="chart-notes margin-bottom-large">
-                        <li class="red">Errors</li>
+                        <li class="red">Errors <span data-ls-bind="({{usage.failures.total}})"></span></li>
                     </ul>
                 </div>
 <!-- 

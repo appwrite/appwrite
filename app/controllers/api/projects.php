@@ -178,7 +178,7 @@ App::get('/v1/projects/:projectId/usage')
             '24h' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
                 'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
-                'group' => '1h',
+                'group' => '30m',
             ],
             '7d' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),

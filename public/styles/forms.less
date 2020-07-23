@@ -13,6 +13,12 @@ input:-moz-placeholder {
   text-align: @config-start;
 }
 
+form {
+  &.inline {
+    display: inline-block;
+  }
+}
+
 input, textarea {
   background: var(--config-color-background-input);
 }
@@ -106,6 +112,7 @@ button,
     line-height: 30px;
     height: 30px;
     font-size: 12px;
+    display: inline-block;
 
     &.selected {
       background: var(--config-color-dark);
