@@ -308,7 +308,27 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals('', $execution['body']['stdout']);
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
-       
+
+        sleep(5);
+
+        $this->assertNotEmpty($execution['body']['$id']);
+        $this->assertNotEmpty($execution['body']['functionId']);
+        $this->assertIsInt($execution['body']['dateCreated']);
+        $this->assertEquals($data['functionId'], $execution['body']['functionId']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(0, $execution['body']['exitCode']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_ID', $execution['body']['stdout']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_NAME', $execution['body']['stdout']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_TAG', $execution['body']['stdout']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_TRIGGER', $execution['body']['stdout']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_ENV_NAME', $execution['body']['stdout']);
+        $this->assertStringContainsString('APPWRITE_FUNCTION_ENV_VERSION', $execution['body']['stdout']);
+        $this->assertStringContainsString('Hello World', $execution['body']['stdout']);
+        $this->assertStringContainsString($execution['body']['functionId'], $execution['body']['stdout']);
+        $this->assertEquals('', $execution['body']['stderr']);
+        $this->assertGreaterThan(0.100, $execution['body']['time']);
+        $this->assertLessThan(0.500, $execution['body']['time']);
+
         /**
          * Test for FAILURE
          */
