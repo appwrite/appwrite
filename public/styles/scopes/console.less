@@ -586,7 +586,7 @@
         vertical-align: middle;
       }
 
-      &:nth-child(1) {
+      &:nth-child(1), &.blue {
         color: #29b5d9;
 
         &::before {
@@ -594,7 +594,7 @@
         }
       }
 
-      &:nth-child(2) {
+      &:nth-child(2), &.green {
         color: #4eb55b;
 
         &::before {
@@ -602,11 +602,19 @@
         }
       }
 
-      &:nth-child(3) {
+      &:nth-child(3), &.orange {
         color: #ec9323;
 
         &::before {
           background: #ec9323;
+        }
+      }
+
+      &:nth-child(4), &.red {
+        color: #dc3232;
+
+        &::before {
+          background: #dc3232;
         }
       }
     }

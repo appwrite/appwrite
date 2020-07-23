@@ -306,6 +306,7 @@ class FunctionsV1
 
         $executionEnd = \microtime(true);
         $executionTime = ($executionEnd - $executionStart);
+        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
 
         Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
@@ -313,7 +314,7 @@ class FunctionsV1
         
         $execution = $projectDB->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
-            'status' => ($exitCode === 0) ? 'completed' : 'failed',
+            'status' => $functionStatus,
             'exitCode' => $exitCode,
             'stdout' => mb_substr($stdout, -4000), // log last 4000 chars output
             'stderr' => mb_substr($stderr, -4000), // log last 4000 chars output
@@ -332,6 +333,7 @@ class FunctionsV1
             ->setParam('projectId', $projectId)
             ->setParam('functionId', $function->getId())
             ->setParam('functionExecution', 1)
+            ->setParam('functionStatus', $functionStatus)
             ->setParam('functionExecutionTime', $executionTime * 1000) // ms
             ->setParam('networkRequestSize', 0)
             ->setParam('networkResponseSize', 0)

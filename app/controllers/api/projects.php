@@ -161,7 +161,7 @@ App::get('/v1/projects/:projectId/usage')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('range', 'last30', function () { return new WhiteList(['daily', 'monthly', 'last30', 'last90']); }, 'Date range.', true)
+    ->param('range', '30d', function () { return new WhiteList(['24h', '7d', '30d', '90d']); }, 'Date range.', true)
     ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -175,31 +175,26 @@ App::get('/v1/projects/:projectId/usage')
         }
 
         $period = [
-            'daily' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('today')),
-                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
-                'group' => '1m',
+            '24h' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                'group' => '1h',
             ],
-            'monthly' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('midnight first day of this month')),
-                'end' => DateTime::createFromFormat('U', \strtotime('midnight last day of this month')),
+            '7d' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            'last30' => [
+            '30d' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            'last90' => [
+            '90d' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('today')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            // 'yearly' => [
-            //     'start' => DateTime::createFromFormat('U', strtotime('midnight first day of january')),
-            //     'end' => DateTime::createFromFormat('U', strtotime('midnight last day of december')),
-            //     'group' => '4w',
-            // ],
         ];
 
         $client = $register->get('influxdb');
@@ -289,6 +284,7 @@ App::get('/v1/projects/:projectId/usage')
         $tasksTotal = \count($project->getAttribute('tasks', []));
 
         $response->json([
+            'range' => $range,
             'requests' => [
                 'data' => $requests,
                 'total' => \array_sum(\array_map(function ($item) {

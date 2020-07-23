@@ -98,6 +98,21 @@ button,
     font-size: 13px;
   }
 
+  &.tick {
+    background: var(--config-color-fade-light);
+    color: var(--config-color-dark);
+    border-radius: 20px;
+    padding: 0 10px;
+    line-height: 30px;
+    height: 30px;
+    font-size: 12px;
+
+    &.selected {
+      background: var(--config-color-dark);
+      color: var(--config-color-fade);
+    }
+  }
+
   &.round {
     width: 52px;
     padding: 0;

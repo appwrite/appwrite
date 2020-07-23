@@ -120,7 +120,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getUsage')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('range', 'last30', function () { return new WhiteList(['daily', 'monthly', 'last30', 'last90']); }, 'Date range.', true)
+    ->param('range', '30d', function () { return new WhiteList(['24h', '7d', '30d', '90d']); }, 'Date range.', true)
     ->action(function ($functionId, $range, $response, $project, $projectDB, $register) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -135,36 +135,32 @@ App::get('/v1/functions/:functionId/usage')
         }
 
         $period = [
-            'daily' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('today')),
-                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
-                'group' => '1m',
+            '24h' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-24 hours')),
+                'end' => DateTime::createFromFormat('U', \strtotime('+1 hour')),
+                'group' => '30m',
             ],
-            'monthly' => [
-                'start' => DateTime::createFromFormat('U', \strtotime('midnight first day of this month')),
-                'end' => DateTime::createFromFormat('U', \strtotime('midnight last day of this month')),
+            '7d' => [
+                'start' => DateTime::createFromFormat('U', \strtotime('-7 days')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            'last30' => [
+            '30d' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            'last90' => [
+            '90d' => [
                 'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
-                'end' => DateTime::createFromFormat('U', \strtotime('today')),
+                'end' => DateTime::createFromFormat('U', \strtotime('now')),
                 'group' => '1d',
             ],
-            // 'yearly' => [
-            //     'start' => DateTime::createFromFormat('U', strtotime('midnight first day of january')),
-            //     'end' => DateTime::createFromFormat('U', strtotime('midnight last day of december')),
-            //     'group' => '4w',
-            // ],
         ];
 
         $client = $register->get('influxdb');
 
         $executions = [];
+        $failures = [];
         $compute = [];
 
         if ($client) {
@@ -183,6 +179,17 @@ App::get('/v1/functions/:functionId/usage')
                 ];
             }
 
+            // Failures
+            $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_all" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' AND "functionStatus"=\'failed\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
+            $points = $result->getPoints();
+
+            foreach ($points as $point) {
+                $failures[] = [
+                    'value' => (!empty($point['value'])) ? $point['value'] : 0,
+                    'date' => \strtotime($point['time']),
+                ];
+            }
+
             // Compute
             $result = $database->query('SELECT sum(value) AS "value" FROM "appwrite_usage_executions_time" WHERE time > \''.$start.'\' AND time < \''.$end.'\' AND "metric_type"=\'counter\' AND "project"=\''.$project->getId().'\' AND "functionId"=\''.$function->getId().'\' GROUP BY time('.$period[$range]['group'].') FILL(null)');
             $points = $result->getPoints();
@@ -196,11 +203,18 @@ App::get('/v1/functions/:functionId/usage')
         }
 
         $response->json([
+            'range' => $range,
             'executions' => [
                 'data' => $executions,
                 'total' => \array_sum(\array_map(function ($item) {
                     return $item['value'];
                 }, $executions)),
+            ],
+            'failures' => [
+                'data' => $failures,
+                'total' => \array_sum(\array_map(function ($item) {
+                    return $item['value'];
+                }, $failures)),
             ],
             'compute' => [
                 'data' => $compute,
@@ -533,8 +547,8 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.method', 'createExecution')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
-    ->action(function ($functionId, $async, $response, $project, $projectDB) {
+    // ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
+    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
@@ -575,16 +589,14 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception('Failed saving execution to DB', 500);
         }
         
-        if((bool)$async) {
-            // Issue a TLS certificate when domain is verified
-            Resque::enqueue('v1-functions', 'FunctionsV1', [
-                'projectId' => $project->getId(),
-                'functionId' => $function->getId(),
-                'executionId' => $execution->getId(),
-                'functionTag' => $tag->getId(),
-                'functionTrigger' => 'http',
-            ]);
-        }
+        // Issue a TLS certificate when domain is verified
+        Resque::enqueue('v1-functions', 'FunctionsV1', [
+            'projectId' => $project->getId(),
+            'functionId' => $function->getId(),
+            'executionId' => $execution->getId(),
+            'functionTag' => $tag->getId(),
+            'functionTrigger' => 'http',
+        ]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

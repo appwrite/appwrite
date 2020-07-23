@@ -39,6 +39,7 @@ class UsageV1
         $functionId = $this->args['functionId'];
         $functionExecution = $this->args['functionExecution'];
         $functionExecutionTime = $this->args['functionExecutionTime'];
+        $functionStatus = $this->args['functionStatus'];
 
         $tags = ",project={$projectId},version=".App::getEnv('_APP_VERSION', 'UNKNOWN').'';
 
@@ -50,7 +51,8 @@ class UsageV1
         }
         
         if($functionExecution >= 1) {
-            $statsd->increment('executions.all'.$tags.',functionId='.$functionId);
+            $statsd->increment('executions.all'.$tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
+            var_dump($tags.',functionId='.$functionId.',functionStatus='.$functionStatus);
             $statsd->count('executions.time'.$tags.',functionId='.$functionId, $functionExecutionTime);
         }
 

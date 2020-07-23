@@ -30,13 +30,13 @@ $graph = $this->getParam('graph', false);
             data-event="load"
             data-name="usage"
             data-param-project-id="{{router.params.project}}"
-            data-param-range="last30">
+            data-param-range="30d">
 
             <?php if (!$graph) : ?>
                 <div class="row responsive">
                     <div class="col span-9">
                         <div class="chart pull-end">
-                            <div class="content" data-forms-chart="Requests=usage.requests.data"></div>
+                            <input type="hidden" data-ls-bind="{{usage}}" data-forms-chart="Requests=usage.requests.data" />
                         </div>
 
                         <div class="chart-metric">
