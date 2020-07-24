@@ -489,7 +489,7 @@ $timeout = $this->getParam('timeout', 900);
                                     <div class="text-size-small text-fade margin-bottom margin-top-negative-small">Max value is <?php echo $this->escape(number_format($timeout)); ?> seconds (<?php echo $this->escape((int) ($timeout / 60)); ?> minutes)</div>
                                 </section>
 
-                                <section class="margin-bottom">
+                                <section class="margin-bottom" data-forms-select-all>
                                     <label for="events" class="margin-bottom">Events <span class="tooltip small" data-tooltip="Choose which events should trigger this function."><i class="icon-info-circled"></i></span></label>
                                     <div class="row responsive thin margin-top-small">
                                         <?php foreach ($events as $i => $event) : ?>
