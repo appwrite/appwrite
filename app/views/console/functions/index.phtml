@@ -47,8 +47,7 @@ $environments = $this->getParam('environments', []);
 
                                 <span data-ls-bind="{{function.name}}"></span>
 
-                                <div class="text-fade" data-ls-if="({{function.events.length}})" style="margin-top: 10px;"><span data-ls-bind="{{function.events.length}}"></span> events assigned</div>
-                                <div class="text-fade" data-ls-if="(!{{function.events.length}})" style="margin-top: 10px;">&nbsp;</div>
+                                <p class="text-fade margin-bottom-no" data-ls-bind="{{function.env|envName}} {{function.env|envVersion}}" style="margin-top: 10px;"></p>
                             </li>
                         </ul>
                     </div>

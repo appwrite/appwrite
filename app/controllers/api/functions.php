@@ -196,7 +196,7 @@ App::get('/v1/functions/:functionId/usage')
 
             foreach ($points as $point) {
                 $compute[] = [
-                    'value' => round((!empty($point['value'])) ? $point['value'] / 60000 : 0, 2), // minutes
+                    'value' => round((!empty($point['value'])) ? $point['value'] / 1000 : 0, 2), // minutes
                     'date' => \strtotime($point['time']),
                 ];
             }
