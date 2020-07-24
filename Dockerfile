@@ -12,11 +12,11 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:7.4-cli-alpine as step1
+FROM php:8.0.0alpha1-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
-    PHP_REDIS_VERSION=5.3.1 \
-    PHP_SWOOLE_VERSION=4.5.2 \
+    PHP_REDIS_VERSION=develop \
+    PHP_SWOOLE_VERSION=master \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
@@ -46,13 +46,13 @@ RUN \
   ## Swoole Extension
   git clone https://github.com/swoole/swoole-src.git && \
   cd swoole-src && \
-  git checkout v$PHP_SWOOLE_VERSION && \
+  git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
   ./configure --enable-sockets --enable-http2 && \
   make && make install && \
   cd ..
 
-FROM php:7.4-cli-alpine as final
+FROM php:8.0.0alpha1-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -164,7 +164,9 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
-RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.jit_buffer_size=100M" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.jit=1235" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 
