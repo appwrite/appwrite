@@ -4,10 +4,10 @@
     visibility: hidden;
     position: fixed;
     padding: 0;
-    right: 0;
-    left: 0;
+    .func-end(0);
+    .func-start(0);
     color: var(--config-color-normal);
-    z-index: 1002;
+    z-index: 4;
     margin: 0 auto;
     bottom: 15px;
     max-width: 560px;
@@ -38,9 +38,13 @@
           cursor: pointer;
           position: absolute;
           font-size: 14px;
-          line-height: 22px;
-          top: 8px;
-          .func-start(8px);
+          line-height: 20px;
+          top: 9px;
+          .func-start(9px);
+          background: #fff;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
         }
 
         &.error {
@@ -50,6 +54,10 @@
           a {
             color: #ffffff;
             border-bottom: dotted 1px #ffffff;
+          }
+
+          i {
+            color: var(--config-color-danger);
           }
         }
 
@@ -61,15 +69,23 @@
             color: #ffffff;
             border-bottom: dotted 1px #ffffff;
           }
+
+          i {
+            color: var(--config-color-success);
+          }
         }
 
         &.warning {
           color: #ffffff;
-          background: var(--config-color-success);
+          background: var(--config-color-warning);
 
           a {
             color: #ffffff;
             border-bottom: dotted 1px #ffffff;
+          }
+
+          i {
+            color: var(--config-color-warning);
           }
         }
 
@@ -100,6 +116,7 @@
       top: auto;
       bottom: 0;
       max-width: 100%;
+      .func-start(0);
 
       li {
         margin: 5px 0 0 0;
@@ -107,6 +124,20 @@
         div.message {
           border-radius: 0;
         }
+      }
+    }
+  }
+}
+
+.show-nav {
+  .alerts {
+    ul {
+      .func-start(220px);
+    }
+
+    @media @phones, @tablets {
+      ul {
+        .func-start(0);
       }
     }
   }
