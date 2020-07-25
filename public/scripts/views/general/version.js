@@ -2,7 +2,7 @@
     window.ls.container.get("view").add({
         selector: "data-version",
         controller: function(alerts, env, cookie) {
-          let cookieName = "cookie-version-" + env.VERSION.replace(/\./g, "_");
+          let cookieName = "version-update-" + env.VERSION.replace(/\./g, "_");
 
           if (!cookie.get(cookieName)) {
             var xhr = new XMLHttpRequest();
@@ -18,7 +18,7 @@
                   alerts.add({
                     text: text,
                     class: "success",
-                    link: env.HOME + "/policy/cookies",
+                    link: "https://github.com/appwrite/appwrite/releases",
                     label: 'release notes',
                     callback: function() {
                         cookie.set(cookieName, "true", 365 * 10); // 10 years
