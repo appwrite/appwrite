@@ -68,7 +68,8 @@ if(!empty($platforms)) {
 
         var APP_ENV = {
             NAME: '<?php echo APP_NAME; ?>',
-            VERSION: '<?php echo $version; ?>/<?php echo APP_CACHE_BUSTER; ?>',
+            VERSION: '<?php echo $version; ?>',
+            CACHEBUSTER: '<?php echo $version; ?>/<?php echo APP_CACHE_BUSTER; ?>',
             PROTOCOL: '<?php echo $protocol; ?>',
             DOMAIN: '<?php echo $domain; ?>',
             HOME: '<?php echo $this->escape($this->getParam('home')); ?>',
@@ -130,7 +131,7 @@ if(!empty($platforms)) {
                     <span data-ls-bind="{{alert.text}}"></span>
 
                     <span data-ls-if="undefined !== {{alert.link}}">
-                        <a data-ls-attrs="href={{alert.link}}" data-remove>Learn more</a>
+                        <a data-ls-attrs="href={{alert.link}}" data-ls-bind="{{alert.label}}" data-remove></a>
                     </span>
                 </div>
             </li>

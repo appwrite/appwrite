@@ -375,3 +375,23 @@ App::get('/console/functions/function')
             ->setParam('title', APP_NAME.' - Function')
             ->setParam('body', $page);
     }, ['layout']);
+
+App::get('/console/version')
+    ->groups(['web', 'console'])
+    ->desc('Check for new version')
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function ($response) {
+        try {
+            $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost').'/v1/health/version'), true);
+            
+            if($version && isset($version['version'])) {
+                return $response->json(['version' => $version['version']]);
+            }
+            else {
+                throw new Exception('Failed to check for a newer version', 500);
+            }
+        } catch (\Throwable $th) {
+            throw new Exception('Failed to check for a newer version', 500);
+        }
+    }, ['response']);
