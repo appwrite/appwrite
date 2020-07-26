@@ -170,7 +170,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '0.0.5',
+                'version' => '0.0.6',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'enabled' => true,
                 'beta' => true,
