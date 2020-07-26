@@ -38,13 +38,13 @@ export class Database extends Service {
      * Create a new Collection.
      *
      * @param string name
-     * @param Array<string> read
-     * @param Array<string> write
-     * @param Array<string> rules
+     * @param Array<any> read
+     * @param Array<any> write
+     * @param Array<any> rules
      * @throws Exception
      * @return Promise<string>
      */
-    async createCollection(name: string, read: Array<string>, write: Array<string>, rules: Array<string>): Promise<string> {
+    async createCollection(name: string, read: Array<any>, write: Array<any>, rules: Array<any>): Promise<string> {
         let path = '/database/collections';
         
         return await this.client.call('post', path, {
@@ -85,13 +85,13 @@ export class Database extends Service {
      *
      * @param string collectionId
      * @param string name
-     * @param Array<string> read
-     * @param Array<string> write
-     * @param Array<string> rules
+     * @param Array<any> read
+     * @param Array<any> write
+     * @param Array<any> rules
      * @throws Exception
      * @return Promise<string>
      */
-    async updateCollection(collectionId: string, name: string, read: Array<string>, write: Array<string>, rules: Array<string> = []): Promise<string> {
+    async updateCollection(collectionId: string, name: string, read: Array<any>, write: Array<any>, rules: Array<any> = []): Promise<string> {
         let path = '/database/collections/{collectionId}'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
         return await this.client.call('put', path, {
@@ -134,7 +134,7 @@ export class Database extends Service {
      * modes](/docs/admin).
      *
      * @param string collectionId
-     * @param Array<string> filters
+     * @param Array<any> filters
      * @param number offset
      * @param number limit
      * @param string orderField
@@ -146,7 +146,7 @@ export class Database extends Service {
      * @throws Exception
      * @return Promise<string>
      */
-    async listDocuments(collectionId: string, filters: Array<string> = [], offset: number = 0, limit: number = 50, orderField: string = '$id', orderType: string = 'ASC', orderCast: string = 'string', search: string = '', first: number = 0, last: number = 0): Promise<string> {
+    async listDocuments(collectionId: string, filters: Array<any> = [], offset: number = 0, limit: number = 50, orderField: string = '$id', orderType: string = 'ASC', orderCast: string = 'string', search: string = '', first: number = 0, last: number = 0): Promise<string> {
         let path = '/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
         return await this.client.call('get', path, {
@@ -168,19 +168,22 @@ export class Database extends Service {
     /**
      * Create Document
      *
-     * Create a new Document.
+     * Create a new Document. Before using this route, you should create a new
+     * collection resource using either a [server
+     * integration](/docs/server/database?sdk=nodejs#createCollection) API or
+     * directly from your database console.
      *
      * @param string collectionId
      * @param DocumentData data
-     * @param Array<string> read
-     * @param Array<string> write
+     * @param Array<any> read
+     * @param Array<any> write
      * @param string parentDocument
      * @param string parentProperty
      * @param string parentPropertyType
      * @throws Exception
      * @return Promise<string>
      */
-    async createDocument(collectionId: string, data: DocumentData, read: Array<string>, write: Array<string>, parentDocument: string = '', parentProperty: string = '', parentPropertyType: string = 'assign'): Promise<string> {
+    async createDocument(collectionId: string, data: DocumentData, read: Array<any>, write: Array<any>, parentDocument: string = '', parentProperty: string = '', parentPropertyType: string = 'assign'): Promise<string> {
         let path = '/database/collections/{collectionId}/documents'.replace(new RegExp('{collectionId}', 'g'), collectionId);
         
         return await this.client.call('post', path, {
@@ -223,12 +226,12 @@ export class Database extends Service {
      * @param string collectionId
      * @param string documentId
      * @param DocumentData data
-     * @param Array<string> read
-     * @param Array<string> write
+     * @param Array<any> read
+     * @param Array<any> write
      * @throws Exception
      * @return Promise<string>
      */
-    async updateDocument(collectionId: string, documentId: string, data: DocumentData, read: Array<string>, write: Array<string>): Promise<string> {
+    async updateDocument(collectionId: string, documentId: string, data: DocumentData, read: Array<any>, write: Array<any>): Promise<string> {
         let path = '/database/collections/{collectionId}/documents/{documentId}'.replace(new RegExp('{collectionId}', 'g'), collectionId).replace(new RegExp('{documentId}', 'g'), documentId);
         
         return await this.client.call('patch', path, {
