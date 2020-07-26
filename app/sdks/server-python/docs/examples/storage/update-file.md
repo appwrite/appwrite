@@ -11,4 +11,4 @@ client = Client()
 
 storage = Storage(client)
 
-result = storage.update_file('[FILE_ID]', {}, {})
+result = storage.update_file('[FILE_ID]', [], [])

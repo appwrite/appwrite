@@ -11,4 +11,4 @@ client = Client()
 
 database = Database(client)
 
-result = database.create_collection('[NAME]', {}, {}, {})
+result = database.create_collection('[NAME]', [], [], [])
