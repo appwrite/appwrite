@@ -39,12 +39,12 @@ export class Storage extends Service {
      * read and write arguments.
      *
      * @param File | Blob file
-     * @param Array<string> read
-     * @param Array<string> write
+     * @param Array<any> read
+     * @param Array<any> write
      * @throws Exception
      * @return Promise<string>
      */
-    async createFile(file: File | Blob, read: Array<string>, write: Array<string>): Promise<string> {
+    async createFile(file: File | Blob, read: Array<any>, write: Array<any>): Promise<string> {
         let path = '/storage/files';
         
         return await this.client.call('post', path, {
@@ -84,12 +84,12 @@ export class Storage extends Service {
      * to update this resource.
      *
      * @param string fileId
-     * @param Array<string> read
-     * @param Array<string> write
+     * @param Array<any> read
+     * @param Array<any> write
      * @throws Exception
      * @return Promise<string>
      */
-    async updateFile(fileId: string, read: Array<string>, write: Array<string>): Promise<string> {
+    async updateFile(fileId: string, read: Array<any>, write: Array<any>): Promise<string> {
         let path = '/storage/files/{fileId}'.replace(new RegExp('{fileId}', 'g'), fileId);
         
         return await this.client.call('put', path, {
