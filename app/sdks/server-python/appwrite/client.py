@@ -1,5 +1,5 @@
+import io
 import requests
-
 
 class Client:
     def __init__(self):
@@ -7,7 +7,7 @@ class Client:
         self._endpoint = 'https://appwrite.io/v1'
         self._global_headers = {
             'content-type': '',
-            'x-sdk-version': 'appwrite:python:0.0.5',
+            'x-sdk-version': 'appwrite:python:0.0.6',
         }
 
     def set_self_signed(self, status=True):
@@ -47,24 +47,34 @@ class Client:
 
         data = {}
         json = {}
+        files = {}
         
-        self._global_headers.update(headers)
+        headers = {**self._global_headers, **headers}
 
         if method != 'get':
             data = params
             params = {}
 
-        if headers['content-type'] == 'application/json':
+        if headers['content-type'].startswith('application/json'):
             json = data
             data = {}
+
+        if headers['content-type'].startswith('multipart/form-data'):
+            del headers['content-type']
+            
+            for key in data.copy():
+                if isinstance(data[key], io.BufferedIOBase):
+                    files[key] = data[key]
+                    del data[key]
 
         response = requests.request(  # call method dynamically https://stackoverflow.com/a/4246075/2299554
             method=method,
             url=self._endpoint + path,
-            params=params,
-            data=data,
+            params=self.flatten(params),
+            data=self.flatten(data),
             json=json,
-            headers=self._global_headers,
+            files=files,
+            headers=headers,
             verify=self._self_signed,
         )
 
@@ -76,4 +86,21 @@ class Client:
             return response.json()
 
         return response._content
+
+    def flatten(self, data, prefix=''):
+        output = {}
+        i = 0
+
+        for key in data:
+            value = data[key] if isinstance(data, dict) else key
+            finalKey = prefix + '[' + key +']' if prefix else key
+            finalKey = prefix + '[' + str(i) +']' if isinstance(data, list) else finalKey
+            i += 1
+            
+            if isinstance(value, list) or isinstance(value, dict):
+                output = {**output, **self.flatten(value, finalKey)}
+            else:
+                output[finalKey] = value
+
+        return output
 
