@@ -10,6 +10,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
+
 let promise = database.updateCollection('[COLLECTION_ID]', '[NAME]', [], []);
 
 promise.then(function (response) {
