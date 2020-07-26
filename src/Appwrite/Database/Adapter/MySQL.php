@@ -718,8 +718,8 @@ class MySQL extends Adapter
             $roles = ['1=1'];
         }
 
-        $query = 'SELECT SUM(b_func.value) as result
-            FROM `'.$this->getNamespace().".database.documents` a {$where}{$join}{$func}
+        $query = "SELECT SUM(b_func.value) as result
+            FROM `".$this->getNamespace().".database.documents` a {$where}{$join}{$func}
             WHERE status = 0
                AND (".\implode('||', $roles).')';
 
