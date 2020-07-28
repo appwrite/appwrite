@@ -1,18 +1,13 @@
-#!/bin/env php
 <?php
 
-require_once __DIR__.'/../init.php';
-
-global $register, $projectDB, $console;
+global $cli, $register, $projectDB, $console;
 
 use Utopia\Config\Config;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
 
-$cli = new CLI();
 $db = $register->get('db');
 
 $callbacks = [
@@ -172,7 +167,7 @@ function fixDocument(Document $document) {
 }
 
 $cli
-    ->task('run')
+    ->task('migrate')
     ->action(function () use ($console, $projectDB, $consoleDB, $callbacks) {
         Console::success('Starting Data Migration');
 
@@ -215,5 +210,3 @@ $cli
 
         Console::success('Data Migration Completed');
     });
-
-$cli->run();
