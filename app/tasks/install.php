@@ -17,7 +17,7 @@ $cli
          *  2.2. Get ENV vars
          *   2.2.1 Fetch from older docker-compose.yml file
          *   2.2.2 Fetch from older .env file (manually parse)
-         *  2.3 Use old ENV vars as default values 
+         *  2.3 Use old ENV vars as default values
          *  2.4 Ask for all required vars not given as CLI args and if in interactive mode
          *      Otherwise, just use default vars. - DONE
          * 3. Ask user to backup important volumes, env vars, and SQL tables
@@ -26,21 +26,16 @@ $cli
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
-
         $vars = Config::getParam('variables');
         
         Console::success('Starting Appwrite installation...');
 
-        if(!empty($httpPort)) {
-            $httpPort = Console::confirm('Choose your server HTTP port: (default: 80)');
-            $httpPort = ($httpPort) ? $httpPort : 80;
-        }
-        
-        if(!empty($httpsPort)) {
-            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: 443)');
-            $httpsPort = ($httpsPort) ? $httpsPort : 443;
-        }
-        
+        $httpPort = Console::confirm('Choose your server HTTP port: (default: 80)');
+        $httpPort = ($httpPort) ? $httpPort : 80;
+
+        $httpsPort = Console::confirm('Choose your server HTTPS port: (default: 443)');
+        $httpsPort = ($httpsPort) ? $httpsPort : 443;
+    
         $input = [];
 
         foreach($vars as $key => $var) {
@@ -56,8 +51,8 @@ $cli
             }
         }
 
-        $templateForCompose = new View('../views/install/compose.phtml');
-        $templateForEnv = new View('../views/install/env.phtml');
+        $templateForCompose = new View(__DIR__.'/../views/install/compose.phtml');
+        $templateForEnv = new View(__DIR__.'/../views/install/env.phtml');
         
         $templateForCompose
             ->setParam('httpPort', $httpPort)
@@ -71,12 +66,12 @@ $cli
 
         $path = '/usr/src/code';
 
-        if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render())) {
+        if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
             Console::error('Failed to save Docker Compose file');
             exit(1);
         }
 
-        if(!file_put_contents($path.'/.env', $templateForEnv->render())) {
+        if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
             Console::error('Failed to save environment variables file');
             exit(1);
         }
@@ -91,4 +86,10 @@ $cli
         } else {
             Console::success("Appwrite installed successfully");
         }
+
+        $files1 = scandir($path);
+
+        var_dump($files1);
+        var_dump(file_get_contents($path.'/.env'));
+        var_dump(file_get_contents($path.'/docker-compose.yml'));
     });
