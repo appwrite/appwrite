@@ -18,8 +18,7 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
 
 use Appwrite\Preloader\Preloader;
 
-include './init.php';
-include './controllers/general.php';
+include __DIR__.'/controllers/general.php';
 
 (new Preloader())
     ->paths(realpath(__DIR__ . '/../app/config'))
