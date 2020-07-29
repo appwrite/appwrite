@@ -3,6 +3,7 @@
 global $cli;
 
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 
 $cli
     ->task('install')
@@ -25,118 +26,7 @@ $cli
          * 6. Run data migration
          */
 
-         $vars = [
-             '_APP_ENV' => [
-                 'default' => 'production',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_OPTIONS_ABUSE' => [
-                 'default' => 'enabled',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_OPTIONS_FORCE_HTTPS' => [
-                 'default' => 'enabled',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_OPENSSL_KEY_V1' => [
-                 'default' => 'your-secret-key',
-                 'required' => true,
-                 'question' => 'Choose a secret API key, make sure to make a backup of your key in a secure location',
-             ],
-             '_APP_DOMAIN' => [
-                 'default' => 'localhost',
-                 'required' => true,
-                 'question' => 'Enter your Appwrite hostname',
-             ],
-             '_APP_DOMAIN_TARGET' => [
-                 'default' => 'localhost',
-                 'required' => true,
-                 'question' => "Enter a DNS A record hostname to server as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.",
-             ],
-             '_APP_REDIS_HOST' => [
-                 'default' => 'redis',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_REDIS_PORT' => [
-                 'default' => '6379',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_DB_HOST' => [
-                 'default' => 'mariadb',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_DB_PORT' => [
-                 'default' => '3306',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_DB_SCHEMA' => [
-                 'default' => 'appwrite',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_DB_USER' => [
-                 'default' => 'user',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_DB_PASS' => [
-                 'default' => 'password',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_INFLUXDB_HOST' => [
-                 'default' => 'influxdb',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_INFLUXDB_PORT' => [
-                 'default' => '8086',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_STATSD_HOST' => [
-                 'default' => 'telegraf',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_STATSD_PORT' => [
-                 'default' => '8125',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_SMTP_HOST' => [
-                 'default' => 'smtp',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_SMTP_PORT' => [
-                 'default' => '25',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_STORAGE_LIMIT' => [
-                 'default' => '100000000',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_FUNCTIONS_TIMEOUT' => [
-                 'default' => '900',
-                 'required' => false,
-                 'question' => '',
-             ],
-             '_APP_FUNCTIONS_CONTAINERS' => [
-                 'default' => '10',
-                 'required' => false,
-                 'question' => '',
-             ],
-         ];
+        $vars = Config::getParam('variables');
 
         // var_dump(realpath(__DIR__.'/docker-compose.yml'));
         // var_dump(yaml_parse_file(__DIR__.'/docker-compose.yml'));
@@ -157,14 +47,14 @@ $cli
 
         foreach($vars as $key => $var) {
             if(!$var['required']) {
-                $input[$key] = $var['default'];
+                $input[$var['name']] = $var['default'];
                 continue;
             }
 
-            $input[$key] = Console::confirm($var['question'].' (default: \''.$var['default'].'\')');
+            $input[$var['name']] = Console::confirm($var['question'].' (default: \''.$var['default'].'\')');
 
             if(empty($input[$key])) {
-                $input[$key] = $var['default'];
+                $input[$var['name']] = $var['default'];
             }
         }
 
@@ -188,9 +78,8 @@ $cli
         //     throw new Exception('Failed to save Docker Compose file');
         // }
 
-
-        $stdout = null;
-        $stderr = null;
+        $stdout = '';
+        $stderr = '';
 
         Console::execute('docker-compose -f /install/appwrite/docker-compose.yml up -d', null, $stdout, $stderr);
         if ($stdout != NULL) {
