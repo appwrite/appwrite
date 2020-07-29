@@ -4,6 +4,7 @@ global $cli;
 
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\View;
 
 $cli
     ->task('install')
@@ -22,14 +23,11 @@ $cli
          * 3. Ask user to backup important volumes, env vars, and SQL tables
          *      In th future we can try and automate this for smaller/medium size setups 
          * 4. Drop new docker-compose.yml setup (located inside the container, no network dependencies with appwrite.io)
-         * 5. Run docker-compose up -d
+         * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
 
         $vars = Config::getParam('variables');
-
-        // var_dump(realpath(__DIR__.'/docker-compose.yml'));
-        // var_dump(yaml_parse_file(__DIR__.'/docker-compose.yml'));
         
         Console::success('Starting Appwrite installation...');
 
@@ -58,31 +56,37 @@ $cli
             }
         }
 
-        var_dump($input);
+        $templateForCompose = new View('../views/install/compose.phtml');
+        $templateForEnv = new View('../views/install/env.phtml');
         
-        // $composeUrl = $source.'/docker-compose.yml?'.http_build_query([
-        //     'version' => $version,
-        //     'domain' => $domain,
-        //     'httpPort' => $httpPort,
-        //     'httpsPort' => $httpsPort,
-        //     'target' => $target,
-        // ]);
-
-        // $composeFile = @file_get_contents($composeUrl);
-
-        // if(!$composeFile) {
-        //     throw new Exception('Failed to fetch Docker Compose file');
-        // }
+        $templateForCompose
+            ->setParam('httpPort', $httpPort)
+            ->setParam('httpsPort', $httpsPort)
+            ->setParam('version', APP_VERSION_STABLE)
+        ;
         
-        // if(!file_put_contents('/install/appwrite/docker-compose.yml', $composeFile)) {
-        //     throw new Exception('Failed to save Docker Compose file');
-        // }
+        $templateForEnv
+            ->setParam('vars', $input)
+        ;
+
+        $path = '/usr/src/code';
+
+        if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render())) {
+            Console::error('Failed to save Docker Compose file');
+            exit(1);
+        }
+
+        if(!file_put_contents($path.'/.env', $templateForEnv->render())) {
+            Console::error('Failed to save environment variables file');
+            exit(1);
+        }
 
         $stdout = '';
         $stderr = '';
 
-        Console::execute('docker-compose -f /install/appwrite/docker-compose.yml up -d', null, $stdout, $stderr);
-        if ($stdout != NULL) {
+        Console::execute("docker-compose -f {$path}.'/docker-compose.yml up -d --remove-orphans", null, $stdout, $stderr);
+
+        if ($stderr !== '') {
             Console::error("Failed to install Appwrite dockers");
         } else {
             Console::success("Appwrite installed successfully");
