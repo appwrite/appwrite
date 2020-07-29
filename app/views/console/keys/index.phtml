@@ -56,7 +56,7 @@ $scopes = $this->getParam('scopes', []);
                             <label data-ls-attrs="for=scopes-{{key.$id}}">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
                             <div class="row responsive thin">
                                 <?php foreach ($scopes as $i => $scope) : ?>
-                                    <div class="col span-6 text-one-liner margin-bottom text-height-large">
+                                    <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small">
                                         <input type="checkbox" name="scopes" data-ls-bind="{{key.scopes}}" value="<?php echo $scope; ?>" /> &nbsp; <?php echo $scope; ?>
                                     </div>
                                     <?php if (($i + 1) % 2 === 0) : ?>
@@ -153,7 +153,7 @@ $scopes = $this->getParam('scopes', []);
                     <label for="scopes">Scopes (<a data-ls-attrs="href={{env.HOME}}/docs/keys" target="_blank" rel="noopener">Learn more</a>)</label>
                     <div class="row responsive thin">
                         <?php foreach ($scopes as $i => $scope) : ?>
-                            <div class="col span-6 text-one-liner margin-bottom text-height-large">
+                            <div class="col span-6 text-one-liner margin-bottom text-height-large text-size-small">
                                 <input type="checkbox" name="scopes" value="<?php echo $scope; ?>" /> &nbsp; <?php echo $scope; ?>
                             </div>
                             <?php if (($i + 1) % 2 === 0) : ?>
