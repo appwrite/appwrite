@@ -35,7 +35,7 @@ return [
         'name' => '_APP_DOMAIN_TARGET',
         'default' => 'localhost',
         'required' => true,
-        'question' => "Enter a DNS A record hostname to server as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.",
+        'question' => "Enter a DNS A record hostname to serve as a CNAME for your custom domains.\nYou can use the same value as used for the Appwrite hostname.",
     ],
     [
         'name' => '_APP_REDIS_HOST',
