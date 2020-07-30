@@ -147,9 +147,7 @@ function fixDocument(Document $document) {
         ->removeAttribute('$uid')
     ;
 
-    //Console::log('Switched from $uid to $id: '.$document->getCollection().'/'.$document->getId());
-
-    foreach($document as &$attr) {
+    foreach($document as &$attr) { // Handle child documents
         if($attr instanceof Document) {
             $attr = fixDocument($attr);
         }
