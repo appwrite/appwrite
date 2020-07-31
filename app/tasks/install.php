@@ -129,12 +129,12 @@ $cli
             ->setParam('vars', $input)
         ;
 
-        if(!file_put_contents($path.'/docker-compose.yml.xx', $templateForCompose->render(false))) {
+        if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
             Console::error('Failed to save Docker Compose file');
             exit(1);
         }
 
-        if(!file_put_contents($path.'/.env.xx', $templateForEnv->render(false))) {
+        if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
             Console::error('Failed to save environment variables file');
             exit(1);
         }

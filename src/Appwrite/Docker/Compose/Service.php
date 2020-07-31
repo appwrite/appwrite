@@ -17,7 +17,19 @@ class Service
     public function __construct(array $service)
     {
         $this->service = $service;
-        $this->service['environment'] = isset($this->service['environment']) ? new Env(implode("\n", $this->service['environment'])) : new Env('');
+        
+        $ports = (isset($this->service['ports']) && is_array($this->service['ports'])) ? $this->service['ports'] : [];
+        $this->service['ports'] = [];
+
+        array_walk($ports, function(&$value, &$key) {
+            $split = explode(':', $value);
+            $this->service['ports'][
+                (isset($split[0])) ? $split[0] : ''
+            ] = (isset($split[1])) ? $split[1] : '';
+        });
+
+        $this->service['environment'] = (isset($this->service['environment']) && is_array($this->service['environment'])) ? $this->service['environment'] : [];
+        $this->service['environment'] = new Env(implode("\n", $this->service['environment']));
     }
 
     /**
@@ -46,10 +58,18 @@ class Service
     }
 
     /**
-     * @return string
+     * @return Env
      */
     public function getEnvironment(): Env
     {
         return $this->service['environment'];
+    }
+
+    /**
+     * @return array
+     */
+    public function getPorts(): array
+    {
+        return $this->service['ports'];
     }
 }
