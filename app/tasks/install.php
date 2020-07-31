@@ -3,6 +3,7 @@
 global $cli;
 
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\View;
@@ -30,6 +31,8 @@ $cli
         $vars = Config::getParam('variables');
         $path = '/usr/src/code/appwrite';
         $version = null;
+        $defaultHTTPPort = '80';
+        $defaultHTTPSPort = '443';
         
         Console::success('Starting Appwrite installation...');
 
@@ -45,8 +48,9 @@ $cli
 
         if($data !== false) {
             $compose = new Compose($data);
-            $service = $compose->getService('appwrite');
-            $version = ($service) ? $service->getImageVersion() : $version;
+            $appwrite = $compose->getService('appwrite');
+            $version = ($appwrite) ? $appwrite->getImageVersion() : $version;
+            $ports = $compose->getService('traefik')->getPorts();
 
             if($version) {
                 foreach($compose->getServices() as $service) { // Fetch all env vars from previous compose file
@@ -56,18 +60,46 @@ $cli
 
                     $env = $service->getEnvironment()->list();
 
-                    var_dump($env);
+                    foreach ($env as $key => $value) {
+                        foreach($vars as &$var) {
+                            if($var['name'] === $key) {
+                                $var['default'] = $value;
+                            }
+                        }
+                    }
                 }
 
-                 // Fetch all env vars from previous .env file
+                $data = @file_get_contents($path.'/.env');
+
+                if($data !== false) { // Fetch all env vars from previous .env file
+                    $env = new Env($data);
+
+                    foreach ($env->list() as $key => $value) {
+                        foreach($vars as &$var) {
+                            if($var['name'] === $key) {
+                                $var['default'] = $value;
+                            }
+                        }
+                    }
+                }
+
+                foreach ($ports as $key => $value) {
+                    if($value === $defaultHTTPPort) {
+                        $defaultHTTPPort = $key;
+                    }
+
+                    if($value === $defaultHTTPSPort) {
+                        $defaultHTTPSPort = $key;
+                    }
+                }
             }
         }
 
-        $httpPort = Console::confirm('Choose your server HTTP port: (default: 80)');
-        $httpPort = ($httpPort) ? $httpPort : 80;
+        $httpPort = Console::confirm('Choose your server HTTP port: (default: '.$defaultHTTPPort.')');
+        $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
 
-        $httpsPort = Console::confirm('Choose your server HTTPS port: (default: 443)');
-        $httpsPort = ($httpsPort) ? $httpsPort : 443;
+        $httpsPort = Console::confirm('Choose your server HTTPS port: (default: '.$defaultHTTPSPort.')');
+        $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPPort;
     
         $input = [];
 
@@ -97,12 +129,12 @@ $cli
             ->setParam('vars', $input)
         ;
 
-        if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
+        if(!file_put_contents($path.'/docker-compose.yml.xx', $templateForCompose->render(false))) {
             Console::error('Failed to save Docker Compose file');
             exit(1);
         }
 
-        if(!file_put_contents($path.'/.env', $templateForEnv->render(false))) {
+        if(!file_put_contents($path.'/.env.xx', $templateForEnv->render(false))) {
             Console::error('Failed to save environment variables file');
             exit(1);
         }
@@ -110,17 +142,11 @@ $cli
         $stdout = '';
         $stderr = '';
 
-        Console::execute("docker-compose -f {$path}.'/docker-compose.yml up -d --remove-orphans", null, $stdout, $stderr);
+        //Console::execute("docker-compose -f {$path}.'/docker-compose.yml up -d --remove-orphans", null, $stdout, $stderr);
 
         if ($stderr !== '') {
             Console::error("Failed to install Appwrite dockers");
         } else {
             Console::success("Appwrite installed successfully");
         }
-
-        $files1 = scandir($path);
-
-        var_dump($files1);
-        var_dump(file_get_contents($path.'/.env'));
-        var_dump(file_get_contents($path.'/docker-compose.yml'));
     });
