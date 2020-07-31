@@ -54,6 +54,16 @@ class Env
     }
 
     /**
+     * Get All Vars
+     * 
+     * @return array
+     */
+    public function list(): array
+    {
+        return $this->vars;
+    }
+
+    /**
      * @return string
      */
     public function export(): string

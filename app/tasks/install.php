@@ -2,6 +2,7 @@
 
 global $cli;
 
+use Appwrite\Docker\Compose;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\View;
@@ -12,9 +13,9 @@ $cli
     ->action(function () {
         /**
          * 1. Start - DONE
-         * 2. Check for older setup and get older version
+         * 2. Check for older setup and get older version - DONE
          *  2.1 If older version is equal or bigger(?) than current version, **stop setup**
-         *  2.2. Get ENV vars
+         *  2.2. Get ENV vars - DONE
          *   2.2.1 Fetch from older docker-compose.yml file
          *   2.2.2 Fetch from older .env file (manually parse)
          *  2.3 Use old ENV vars as default values
@@ -22,13 +23,45 @@ $cli
          *      Otherwise, just use default vars. - DONE
          * 3. Ask user to backup important volumes, env vars, and SQL tables
          *      In th future we can try and automate this for smaller/medium size setups 
-         * 4. Drop new docker-compose.yml setup (located inside the container, no network dependencies with appwrite.io)
+         * 4. Drop new docker-compose.yml setup (located inside the container, no network dependencies with appwrite.io) - DONE
          * 5. Run docker-compose up -d - DONE
          * 6. Run data migration
          */
         $vars = Config::getParam('variables');
+        $path = '/usr/src/code/appwrite';
+        $version = null;
         
         Console::success('Starting Appwrite installation...');
+
+        // Create directory with write permissions
+        if (null !== $path && !\file_exists(\dirname($path))) {
+            if (!@\mkdir(\dirname($path), 0755, true)) {
+                Console::error('Can\'t create directory '.\dirname($path));
+                exit(1);
+            }
+        }
+
+        $data = @file_get_contents($path.'/docker-compose.yml');
+
+        if($data !== false) {
+            $compose = new Compose($data);
+            $service = $compose->getService('appwrite');
+            $version = ($service) ? $service->getImageVersion() : $version;
+
+            if($version) {
+                foreach($compose->getServices() as $service) { // Fetch all env vars from previous compose file
+                    if(!$service) {
+                        continue;
+                    }
+
+                    $env = $service->getEnvironment()->list();
+
+                    var_dump($env);
+                }
+
+                 // Fetch all env vars from previous .env file
+            }
+        }
 
         $httpPort = Console::confirm('Choose your server HTTP port: (default: 80)');
         $httpPort = ($httpPort) ? $httpPort : 80;
@@ -63,8 +96,6 @@ $cli
         $templateForEnv
             ->setParam('vars', $input)
         ;
-
-        $path = '/usr/src/code';
 
         if(!file_put_contents($path.'/docker-compose.yml', $templateForCompose->render(false))) {
             Console::error('Failed to save Docker Compose file');
