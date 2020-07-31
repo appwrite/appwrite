@@ -30,7 +30,7 @@ services:
       - appwrite
   
   appwrite:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     container_name: appwrite
     restart: unless-stopped
     networks:
@@ -71,7 +71,7 @@ services:
       - _APP_FUNCTIONS_CONTAINERS
 
   appwrite-worker-usage:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-usage
     container_name: appwrite-worker-usage
     restart: unless-stopped
@@ -88,7 +88,7 @@ services:
       - _APP_STATSD_PORT
 
   appwrite-worker-audits:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-audits
     container_name: appwrite-worker-audits
     restart: unless-stopped
@@ -108,7 +108,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-webhooks:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-webhooks
     container_name: appwrite-worker-webhooks
     restart: unless-stopped
@@ -128,7 +128,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-tasks:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-tasks
     container_name: appwrite-worker-tasks
     restart: unless-stopped
@@ -148,7 +148,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-deletes:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-deletes
     container_name: appwrite-worker-deletes
     restart: unless-stopped
@@ -171,7 +171,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-certificates:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-certificates
     container_name: appwrite-worker-certificates
     restart: unless-stopped
@@ -194,7 +194,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-worker-functions:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-functions
     container_name: appwrite-worker-functions
     restart: unless-stopped
@@ -220,7 +220,7 @@ services:
       - _APP_FUNCTIONS_CONTAINERS
 
   appwrite-worker-mails:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: worker-mails
     container_name: appwrite-worker-mails
     restart: unless-stopped
@@ -237,7 +237,7 @@ services:
       - _APP_SMTP_PORT
 
   appwrite-schedule:
-    image: appwrite/appwrite:<?php echo $version; ?>
+    image: appwrite/appwrite:<?php echo $version."\n"; ?>
     entrypoint: schedule
     container_name: appwrite-schedule
     restart: unless-stopped
