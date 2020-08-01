@@ -167,7 +167,7 @@ return [
                 'name' => 'Deno',
                 'version' => '0.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-deno',
-                'enabled' => false,
+                'enabled' => true,
                 'beta' => true,
                 'dev' => false,
                 'family' => APP_PLATFORM_SERVER,
