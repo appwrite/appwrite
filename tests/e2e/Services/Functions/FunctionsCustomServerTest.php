@@ -309,7 +309,7 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertEquals('', $execution['body']['stderr']);
         $this->assertEquals(0, $execution['body']['time']);
 
-        sleep(10);
+        sleep(15);
 
         $execution = $this->client->call(Client::METHOD_GET, '/functions/'.$data['functionId'].'/executions/'.$executionId, array_merge([
             'content-type' => 'application/json',
