@@ -21,7 +21,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $functions, $clients) {
     /** @var Appwrite\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
@@ -31,6 +31,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $webhooks */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
     /** @var array $clients */
     
@@ -217,9 +218,18 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /*
      * Background Jobs
      */
+    $functions
+        ->setParam('projectId', $project->getId())
+        ->setParam('event', $route->getLabel('events', ''))
+        ->setParam('payload', [])
+        ->setParam('functionId', null)
+        ->setParam('executionId', null)
+        ->setParam('trigger', 'event')
+    ;
+
     $webhooks
         ->setParam('projectId', $project->getId())
-        ->setParam('event', $route->getLabel('webhook', ''))
+        ->setParam('event', $route->getLabel('events', ''))
         ->setParam('payload', [])
     ;
 
@@ -242,9 +252,9 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->setParam('networkResponseSize', 0)
         ->setParam('storage', 0)
     ;
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'clients']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'functions', 'clients']);
 
-App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $mode) {
+App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $functions, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Request $request */
     /** @var Utopia\Response $response */
@@ -253,7 +263,12 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
     /** @var Appwrite\Event\Event $deletes */
+    /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
+
+    if (!empty($functions->getParam('event'))) {
+        $functions->trigger();
+    }
 
     if (!empty($webhooks->getParam('event'))) {
         $webhooks->trigger();
@@ -279,7 +294,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
             ->trigger()
         ;
     }
-}, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'mode']);
+}, ['utopia', 'request', 'response', 'project', 'webhooks', 'audits', 'usage', 'deletes', 'functions', 'mode']);
 
 App::options(function ($request, $response) {
     /** @var Appwrite\Swoole\Request $request */

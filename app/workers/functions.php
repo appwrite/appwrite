@@ -4,6 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
@@ -106,29 +107,51 @@ class FunctionsV1
 
     public function perform()
     {
-        global $environments, $register;
+        global $register;
 
         $projectId = $this->args['projectId'];
         $functionId = $this->args['functionId'];
-        $functionTag = $this->args['functionTag'];
         $executionId = $this->args['executionId'];
-        $functionTrigger = $this->args['functionTrigger'];
+        $trigger = $this->args['trigger'];
 
-        $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-        $projectDB->setNamespace('app_'.$projectId);
-        $projectDB->setMocks(Config::getParam('collections', []));
+        $database = new Database();
+        $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $database->setNamespace('app_'.$projectId);
+        $database->setMocks(Config::getParam('collections', []));
 
-        Authorization::disable();
-        $function = $projectDB->getDocument($functionId);
-        Authorization::reset();
+        switch ($trigger) {
+            case 'event':
+                # code...
+                break;
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+            case 'schedule':
+                # code...
+                break;
+
+            case 'http':
+                Authorization::disable();
+                $function = $database->getDocument($functionId);
+                Authorization::reset();
+
+                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                    throw new Exception('Function not found');
+                }
+
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
+                break;
+            
+            default:
+                # code...
+                break;
         }
+    }
+
+    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function)
+    {
+        $environments = Config::getParam('environments');
 
         Authorization::disable();
-        $tag = $projectDB->getDocument($functionTag);
+        $tag = $database->getDocument($function->getAttribute('tag', ''));
         Authorization::reset();
 
         if($tag->getAttribute('functionId') !== $function->getId()) {
@@ -137,10 +160,10 @@ class FunctionsV1
 
         Authorization::disable();
 
-        $execution = $projectDB->getDocument($executionId);
+        $execution = $database->getDocument($executionId);
 
         if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
-            $execution = $projectDB->createDocument([
+            $execution = $database->createDocument([
                 '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
                 '$permissions' => [
                     'read' => [],
@@ -171,10 +194,10 @@ class FunctionsV1
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
-            'APPWRITE_FUNCTION_ID' => $functionId,
+            'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-            'APPWRITE_FUNCTION_TAG' => $functionTag,
-            'APPWRITE_FUNCTION_TRIGGER' => $functionTrigger,
+            'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
             'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
             'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
         ]);
@@ -312,7 +335,7 @@ class FunctionsV1
 
         Authorization::disable();
         
-        $execution = $projectDB->updateDocument(array_merge($execution->getArrayCopy(), [
+        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,

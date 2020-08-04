@@ -577,6 +577,7 @@ App::post('/v1/functions/:functionId/executions')
             ],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
+            'trigger' => 'http',
             'status' => 'waiting', // waiting / processing / completed / failed
             'trigger' => 'http', // http / schedule / event
             'exitCode' => 0,
@@ -588,14 +589,13 @@ App::post('/v1/functions/:functionId/executions')
         if (false === $execution) {
             throw new Exception('Failed saving execution to DB', 500);
         }
-        
+    
         // Issue a TLS certificate when domain is verified
         Resque::enqueue('v1-functions', 'FunctionsV1', [
             'projectId' => $project->getId(),
             'functionId' => $function->getId(),
             'executionId' => $execution->getId(),
-            'functionTag' => $tag->getId(),
-            'functionTrigger' => 'http',
+            'trigger' => 'http',
         ]);
 
         $response
