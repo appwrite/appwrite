@@ -444,6 +444,7 @@ App::post('/v1/functions/:functionId/executions')
             ],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
+            'trigger' => 'http',
             'status' => 'waiting', // waiting / processing / completed / failed
             'exitCode' => 0,
             'stdout' => '',
@@ -461,8 +462,7 @@ App::post('/v1/functions/:functionId/executions')
                 'projectId' => $project->getId(),
                 'functionId' => $function->getId(),
                 'executionId' => $execution->getId(),
-                'functionTag' => $tag->getId(),
-                'functionTrigger' => 'API',
+                'trigger' => 'http',
             ]);
         }
 

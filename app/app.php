@@ -224,8 +224,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->setParam('payload', [])
         ->setParam('functionId', null)
         ->setParam('executionId', null)
-        ->setParam('functionTag', null)
-        ->setParam('functionTrigger', 'event')
+        ->setParam('trigger', 'event')
     ;
 
     $webhooks
