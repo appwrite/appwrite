@@ -113,6 +113,7 @@ class FunctionsV1
         $functionId = $this->args['functionId'];
         $executionId = $this->args['executionId'];
         $trigger = $this->args['trigger'];
+        $event = $this->args['event'];
 
         $database = new Database();
         $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
@@ -121,7 +122,43 @@ class FunctionsV1
 
         switch ($trigger) {
             case 'event':
-                # code...
+                
+                $limit = 30;
+                $sum = 30;
+                $offset = 0;
+                $functions = []; /** @var Document[] $functions */
+
+                while ($sum >= $limit) {
+                    foreach($functions as $function) {
+                        $events =  $function->getAttribute('events', []);
+
+                        if(!\in_array($event, $events)) {
+                            continue;
+                        }
+
+                        $this->execute('event', $projectId, $executionId, $database, $function);
+                    }
+
+                    Authorization::disable();
+
+                    $functions = $database->getCollection([
+                        'limit' => $limit,
+                        'offset' => $offset,
+                        'orderField' => 'name',
+                        'orderType' => 'ASC',
+                        'orderCast' => 'string',
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
+                        ],
+                    ]);
+
+                    Authorization::reset();
+
+                    $sum = \count($functions);
+                    $offset = $offset + $limit;
+
+                    Console::log('Fetched '.$sum.' functions...');
+                }
                 break;
 
             case 'schedule':
@@ -148,6 +185,8 @@ class FunctionsV1
 
     public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function)
     {
+        global $register;
+
         $environments = Config::getParam('environments');
 
         Authorization::disable();
@@ -339,8 +378,8 @@ class FunctionsV1
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => mb_substr($stderr, -4000), // log last 4000 chars output
+            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
+            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
             'time' => $executionTime,
         ]));
         
@@ -401,14 +440,14 @@ class FunctionsV1
     public function filterEnvKey(string $string): string
     {
         if(empty($this->allowed)) {
-            $this->allowed = array_fill_keys(str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true);
+            $this->allowed = array_fill_keys(\str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true);
         }
 
-        $string     = str_split($string);
+        $string     = \str_split($string);
         $output     = '';
 
         foreach ($string as $char) {
-            if(array_key_exists($char, $this->allowed)) {
+            if(\array_key_exists($char, $this->allowed)) {
                 $output .= $char;
             }
         }

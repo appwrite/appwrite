@@ -1406,15 +1406,6 @@ $collections = [
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
-                'label' => 'Trigger',
-                'key' => 'trigger',
-                'type' => Database::SYSTEM_VAR_TYPE_TEXT,
-                'default' => '',
-                'required' => false,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Exit Code',
                 'key' => 'exitCode',
                 'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,

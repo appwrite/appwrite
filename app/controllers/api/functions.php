@@ -577,9 +577,8 @@ App::post('/v1/functions/:functionId/executions')
             ],
             'dateCreated' => time(),
             'functionId' => $function->getId(),
-            'trigger' => 'http',
-            'status' => 'waiting', // waiting / processing / completed / failed
             'trigger' => 'http', // http / schedule / event
+            'status' => 'waiting', // waiting / processing / completed / failed
             'exitCode' => 0,
             'stdout' => '',
             'stderr' => '',
