@@ -220,7 +220,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
      */
     $functions
         ->setParam('projectId', $project->getId())
-        ->setParam('event', $route->getLabel('events', ''))
+        ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
         ->setParam('functionId', null)
         ->setParam('executionId', null)
@@ -229,7 +229,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
     $webhooks
         ->setParam('projectId', $project->getId())
-        ->setParam('event', $route->getLabel('events', ''))
+        ->setParam('event', $route->getLabel('event', ''))
         ->setParam('payload', [])
     ;
 
@@ -266,6 +266,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
+    var_dump($functions->getParam('event'));
     if (!empty($functions->getParam('event'))) {
         $functions->trigger();
     }

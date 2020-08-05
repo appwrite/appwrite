@@ -129,15 +129,6 @@ class FunctionsV1
                 $functions = []; /** @var Document[] $functions */
 
                 while ($sum >= $limit) {
-                    foreach($functions as $function) {
-                        $events =  $function->getAttribute('events', []);
-
-                        if(!\in_array($event, $events)) {
-                            continue;
-                        }
-
-                        $this->execute('event', $projectId, $executionId, $database, $function);
-                    }
 
                     Authorization::disable();
 
@@ -158,6 +149,21 @@ class FunctionsV1
                     $offset = $offset + $limit;
 
                     Console::log('Fetched '.$sum.' functions...');
+
+                    foreach($functions as $function) {
+                        $events =  $function->getAttribute('events', []);
+                        $tag =  $function->getAttribute('tag', []);
+
+                        Console::success('Itterating function: '.$function->getAttribute('name'));
+
+                        if(!\in_array($event, $events) || empty($tag)) {
+                            continue;
+                        }
+
+                        Console::success('Triggered function: '.$event);
+
+                        $this->execute('event', $projectId, '', $database, $function);
+                    }
                 }
                 break;
 
@@ -199,27 +205,24 @@ class FunctionsV1
 
         Authorization::disable();
 
-        $execution = $database->getDocument($executionId);
+        $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
+            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+            '$permissions' => [
+                'read' => [],
+                'write' => [],
+            ],
+            'dateCreated' => time(),
+            'functionId' => $function->getId(),
+            'trigger' => $trigger, // http / schedule / event
+            'status' => 'processing', // waiting / processing / completed / failed
+            'exitCode' => 0,
+            'stdout' => '',
+            'stderr' => '',
+            'time' => 0,
+        ]);
 
-        if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
-            $execution = $database->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-                '$permissions' => [
-                    'read' => [],
-                    'write' => [],
-                ],
-                'dateCreated' => \time(),
-                'functionId' => $function->getId(),
-                'status' => 'processing', // waiting / processing / completed / failed
-                'exitCode' => 0,
-                'stdout' => '',
-                'stderr' => '',
-                'time' => 0,
-            ]);
-    
-            if (false === $execution) {
-                throw new Exception('Failed saving execution to DB', 500);
-            }
+        if(false === $execution) {
+            throw new Exception('Failed to create execution');
         }
         
         Authorization::reset();
@@ -232,6 +235,8 @@ class FunctionsV1
             throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
         }
 
+        var_dump($function->getAttribute('name', ''));
+        var_dump($function->getAttribute('vars', []));
         $vars = \array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),

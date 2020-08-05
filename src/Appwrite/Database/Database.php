@@ -157,7 +157,7 @@ class Database
         $results = $this->adapter->getCollection($options);
 
         foreach ($results as &$node) {
-            $node = new Document($node);
+            $node = $this->decode(new Document($node));
         }
 
         return $results;
