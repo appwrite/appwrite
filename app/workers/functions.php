@@ -114,6 +114,7 @@ class FunctionsV1
         $executionId = $this->args['executionId'];
         $trigger = $this->args['trigger'];
         $event = $this->args['event'];
+        $payload = (!empty($this->args['payload'])) ? json_encode($this->args['payload']) : '';
 
         $database = new Database();
         $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
@@ -162,7 +163,7 @@ class FunctionsV1
 
                         Console::success('Triggered function: '.$event);
 
-                        $this->execute('event', $projectId, '', $database, $function);
+                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
                     }
                 }
                 break;
@@ -189,7 +190,15 @@ class FunctionsV1
         }
     }
 
-    public function execute(string $trigger, string $projectId, string $executionId, Database $database, Document $function)
+    public function execute(
+        string $trigger,
+        string $projectId,
+        string $executionId,
+        Database $database,
+        Document $function,
+        string $event = '',
+        string $payload = ''
+    )
     {
         global $register;
 
@@ -235,8 +244,6 @@ class FunctionsV1
             throw new Exception('Environment "'.$function->getAttribute('env', '').' is not supported');
         }
 
-        var_dump($function->getAttribute('name', ''));
-        var_dump($function->getAttribute('vars', []));
         $vars = \array_merge($function->getAttribute('vars', []), [
             'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
@@ -245,6 +252,13 @@ class FunctionsV1
             'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
             'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
         ]);
+
+        if('event' === $trigger) {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_EVENT' => $event,
+                'APPWRITE_FUNCTION_EVENT_PAYLOAD' => $payload,
+            ]);
+        }
 
         \array_walk($vars, function (&$value, $key) {
             $key = $this->filterEnvKey($key);

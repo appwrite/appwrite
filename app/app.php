@@ -266,8 +266,8 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
 
-    var_dump($functions->getParam('event'));
     if (!empty($functions->getParam('event'))) {
+        $functions->setParam('payload', $webhooks->getParam('payload'));
         $functions->trigger();
     }
 
