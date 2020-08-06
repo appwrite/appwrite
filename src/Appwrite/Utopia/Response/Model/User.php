@@ -48,7 +48,7 @@ class User extends Model
                 'type' => 'json',
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass,
-                'example' => ['theme' => 'dark', 'timezone' => 'UTC'],
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
             ->addRule('roles', [
                 'type' => 'string',

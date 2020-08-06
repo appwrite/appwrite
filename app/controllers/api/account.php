@@ -239,7 +239,6 @@ App::post('/v1/account/sessions')
         ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
-        ;
     }, ['request', 'response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/account/sessions/oauth2/:provider')
@@ -552,20 +551,15 @@ App::get('/v1/account')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response', ['200' => 'user'])
-    ->action(function ($response, $user) use ($oauth2Keys) {
+    ->action(function ($response, $user) {
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'emailVerification',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+        $user
+            ->setAttribute('roles', Authorization::getRoles())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user']);
 
 App::get('/v1/account/prefs')

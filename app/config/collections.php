@@ -234,6 +234,7 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
+                'filter' => ['json']
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
