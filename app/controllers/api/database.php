@@ -35,7 +35,7 @@ App::post('/v1/database/collections')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', false, ['projectDB'])
     ->action(function ($name, $read, $write, $rules, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
@@ -111,7 +111,7 @@ App::get('/v1/database/collections')
     ->param('offset', 0, function () { return new Range(0, 40000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $results = $projectDB->getCollection([
@@ -139,7 +139,7 @@ App::get('/v1/database/collections/:collectionId')
     ->label('sdk.description', '/docs/references/database/get-collection.md')
     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
     ->action(function ($collectionId, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         
         $collection = $projectDB->getDocument($collectionId, false);
@@ -231,7 +231,7 @@ App::put('/v1/database/collections/:collectionId')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('rules', [], function ($projectDB) { return new ArrayList(new Collection($projectDB, [Database::SYSTEM_COLLECTION_RULES], ['$collection' => Database::SYSTEM_COLLECTION_RULES, '$permissions' => ['read' => [], 'write' => []]])); }, 'Array of [rule objects](/docs/rules). Each rule define a collection field name, data type and validation.', true, ['projectDB'])
     ->action(function ($collectionId, $name, $read, $write, $rules, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
@@ -303,7 +303,7 @@ App::delete('/v1/database/collections/:collectionId')
     ->label('sdk.description', '/docs/references/database/delete-collection.md')
     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
     ->action(function ($collectionId, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
@@ -350,7 +350,7 @@ App::post('/v1/database/collections/:collectionId/documents')
     ->param('parentProperty', '', function () { return new Key(); }, 'Parent document property name. Use when you want your new document to be a child of a parent document.', true)
     ->param('parentPropertyType', Document::SET_TYPE_ASSIGN, function () { return new WhiteList([Document::SET_TYPE_ASSIGN, Document::SET_TYPE_APPEND, Document::SET_TYPE_PREPEND]); }, 'Parent document property connection type. You can set this value to **assign**, **append** or **prepend**, default value is assign. Use when you want your new document to be a child of a parent document.', true)
     ->action(function ($collectionId, $data, $read, $write, $parentDocument, $parentProperty, $parentPropertyType, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
@@ -473,7 +473,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
     ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
     ->action(function ($collectionId, $filters, $limit, $offset, $orderField, $orderType, $orderCast, $search, $response, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $collection = $projectDB->getDocument($collectionId, false);
@@ -529,7 +529,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(function ($collectionId, $documentId, $request, $response, $projectDB) {
         /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $document = $projectDB->getDocument($documentId, false);
@@ -580,7 +580,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(function ($collectionId, $documentId, $data, $read, $write, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
@@ -660,7 +660,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
     ->param('collectionId', null, function () { return new UID(); }, 'Collection unique ID. You can create a new collection with validation rules using the Database service [server integration](/docs/server/database#createCollection).')
     ->param('documentId', null, function () { return new UID(); }, 'Document unique ID.')
     ->action(function ($collectionId, $documentId, $response, $projectDB, $webhooks, $audits) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */

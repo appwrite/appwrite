@@ -257,7 +257,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $functions, $mode) {
     /** @var Utopia\App $utopia */
     /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Event\Event $webhooks */
     /** @var Appwrite\Event\Event $audits */
@@ -317,7 +317,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
     /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
@@ -403,7 +403,7 @@ App::get('/manifest.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json([
             'name' => APP_NAME,

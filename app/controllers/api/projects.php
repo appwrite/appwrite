@@ -39,7 +39,7 @@ App::post('/v1/projects')
     ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal Address.', true)
     ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal Tax ID.', true)
     ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -97,7 +97,7 @@ App::get('/v1/projects')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $results = $consoleDB->getCollection([
@@ -133,7 +133,7 @@ App::get('/v1/projects/:projectId')
     ->label('sdk.method', 'get')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -163,7 +163,7 @@ App::get('/v1/projects/:projectId/usage')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('range', '30d', function () { return new WhiteList(['24h', '7d', '30d', '90d']); }, 'Date range.', true)
     ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Registry\Registry $register */
@@ -360,7 +360,7 @@ App::patch('/v1/projects/:projectId')
     ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal address.', true)
     ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal tax ID.', true)
     ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -400,7 +400,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
     ->param('secret', '', function () { return new text(512); }, 'Provider secret key.', true)
     ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -441,7 +441,7 @@ App::delete('/v1/projects/:projectId')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation. Must be between 6 to 32 chars.')
     ->action(function ($projectId, $password, $response, $user, $consoleDB, $deletes) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Event\Event $deletes */
@@ -495,7 +495,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -556,7 +556,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->label('sdk.method', 'listWebhooks')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -591,7 +591,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -630,7 +630,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -682,7 +682,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -716,7 +716,7 @@ App::post('/v1/projects/:projectId/keys')
     ->param('name', null, function () { return new Text(256); }, 'Key name.')
     ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'))); }, 'Key scopes list.')
     ->action(function ($projectId, $name, $scopes, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -762,7 +762,7 @@ App::get('/v1/projects/:projectId/keys')
     ->label('sdk.method', 'listKeys')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         
         $project = $consoleDB->getDocument($projectId);
@@ -809,7 +809,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('name', null, function () { return new Text(256); }, 'Key name.')
     ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'))); }, 'Key scopes list')
     ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -845,7 +845,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
     ->action(function ($projectId, $keyId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -886,7 +886,7 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
     ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -962,7 +962,7 @@ App::get('/v1/projects/:projectId/tasks')
     ->label('sdk.method', 'listTasks')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -997,7 +997,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1040,7 +1040,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
     ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1104,7 +1104,7 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1141,7 +1141,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
     ->param('hostname', '', function () { return new Text(256); }, 'Platform client hostname.', true)
     ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1191,7 +1191,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->label('sdk.method', 'listPlatforms')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1214,7 +1214,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1245,7 +1245,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
     ->param('hostname', '', function () { return new Text(256); }, 'Platform client URL.', true)
     ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1284,7 +1284,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1317,7 +1317,7 @@ App::post('/v1/projects/:projectId/domains')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domain', null, function () { return new DomainValidator(); }, 'Domain name.')
     ->action(function ($projectId, $domain, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1380,7 +1380,7 @@ App::get('/v1/projects/:projectId/domains')
     ->label('sdk.method', 'listDomains')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1403,7 +1403,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1430,7 +1430,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1488,7 +1488,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);

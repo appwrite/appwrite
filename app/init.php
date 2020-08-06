@@ -349,7 +349,7 @@ App::setResource('clients', function($console, $project) {
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
     /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Database $projectDB */

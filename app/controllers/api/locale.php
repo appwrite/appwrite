@@ -13,7 +13,7 @@ App::get('/v1/locale')
     ->label('sdk.description', '/docs/references/locale/get-locale.md')
     ->action(function ($request, $response, $locale, $geodb) {
         /** @var Utopia\Request $request */
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
         /** @var GeoIp2\Database\Reader $geodb */
 
@@ -73,7 +73,7 @@ App::get('/v1/locale/countries')
     ->label('sdk.method', 'getCountries')
     ->label('sdk.description', '/docs/references/locale/get-countries.md')
     ->action(function ($response, $locale) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
         $list = $locale->getText('countries'); /* @var $list array */
@@ -92,7 +92,7 @@ App::get('/v1/locale/countries/eu')
     ->label('sdk.method', 'getCountriesEU')
     ->label('sdk.description', '/docs/references/locale/get-countries-eu.md')
     ->action(function ($response, $locale) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
         $countries = $locale->getText('countries'); /* @var $countries array */
@@ -119,7 +119,7 @@ App::get('/v1/locale/countries/phones')
     ->label('sdk.method', 'getCountriesPhones')
     ->label('sdk.description', '/docs/references/locale/get-countries-phones.md')
     ->action(function ($response, $locale) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
         $list = Config::getParam('locale-phones'); /* @var $list array */
@@ -146,7 +146,7 @@ App::get('/v1/locale/continents')
     ->label('sdk.method', 'getContinents')
     ->label('sdk.description', '/docs/references/locale/get-continents.md')
     ->action(function ($response, $locale) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
         $list = $locale->getText('continents'); /* @var $list array */
@@ -165,7 +165,7 @@ App::get('/v1/locale/currencies')
     ->label('sdk.method', 'getCurrencies')
     ->label('sdk.description', '/docs/references/locale/get-currencies.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $currencies = Config::getParam('locale-currencies');
 
@@ -182,7 +182,7 @@ App::get('/v1/locale/languages')
     ->label('sdk.method', 'getLanguages')
     ->label('sdk.description', '/docs/references/locale/get-languages.md')
     ->action(function ($response) {
-        /** @var Utopia\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $languages = Config::getParam('locale-languages');
 
