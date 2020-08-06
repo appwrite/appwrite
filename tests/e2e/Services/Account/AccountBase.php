@@ -566,7 +566,7 @@ trait AccountBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -588,7 +588,7 @@ trait AccountBase
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -596,7 +596,7 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 401);
         
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -608,7 +608,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 400);
         
         
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -619,7 +619,7 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 400);
         
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

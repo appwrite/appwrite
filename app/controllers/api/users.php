@@ -65,6 +65,7 @@ App::post('/v1/users')
             throw new Exception('Account already exists', 409);
         }
 
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'projectDB']);
 
@@ -340,7 +341,7 @@ App::patch('/v1/users/:userId/status')
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'projectDB']);
 
-App::patch('/v1/users/:userId/prefs')
+App::put('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')
@@ -360,10 +361,8 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception('User not found', 404);
         }
 
-        $old = $user->getAttribute('prefs', new \stdClass);
-
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => \array_merge($old, $prefs),
+            'prefs' => $prefs,
         ]));
 
         if (false === $user) {

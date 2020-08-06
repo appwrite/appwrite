@@ -124,6 +124,7 @@ App::post('/v1/account')
             ->setAttribute('roles', Authorization::getRoles())
         ;
 
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
     }, ['request', 'response', 'project', 'projectDB', 'webhooks', 'audits']);
 
@@ -828,7 +829,7 @@ App::patch('/v1/account/email')
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
-App::patch('/v1/account/prefs')
+App::put('/v1/account/prefs')
     ->desc('Update Account Preferences')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.prefs')
@@ -836,7 +837,7 @@ App::patch('/v1/account/prefs')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
-    ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
+    ->param('prefs', [], function () { return new Assoc();}, 'Prefs key-value JSON object.')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->action(function ($prefs, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Swoole\Response $response */
@@ -844,10 +845,8 @@ App::patch('/v1/account/prefs')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         
-        $old = $user->getAttribute('prefs', new \stdClass);
-
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => \array_merge($old, $prefs),
+            'prefs' => $prefs,
         ]));
 
         if (false === $user) {
