@@ -863,8 +863,10 @@ App::patch('/v1/account/prefs')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         
+        $old = $user->getAttribute('prefs', new \stdClass);
+
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => $prefs,
+            'prefs' => \array_merge($old, $prefs),
         ]));
 
         if (false === $user) {

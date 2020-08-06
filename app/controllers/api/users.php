@@ -208,13 +208,6 @@ App::get('/v1/users/:userId/prefs')
 
         $prefs = $user->getAttribute('prefs', '');
 
-        try {
-            $prefs = \json_decode($prefs, true);
-            $prefs = ($prefs) ? $prefs : [];
-        } catch (\Exception $error) {
-            throw new Exception('Failed to parse prefs', 500);
-        }
-
         $response->json($prefs);
     }, ['response', 'projectDB']);
 
@@ -439,24 +432,14 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception('User not found', 404);
         }
 
-        $old = \json_decode($user->getAttribute('prefs', '{}'), true);
-        $old = ($old) ? $old : [];
+        $old = $user->getAttribute('prefs', new \stdClass);
 
         $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => \json_encode(\array_merge($old, $prefs)),
+            'prefs' => \array_merge($old, $prefs),
         ]));
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
-        }
-
-        $prefs = $user->getAttribute('prefs', '');
-
-        try {
-            $prefs = \json_decode($prefs, true);
-            $prefs = ($prefs) ? $prefs : [];
-        } catch (\Exception $error) {
-            throw new Exception('Failed to parse prefs', 500);
         }
 
         $response->json($prefs);
