@@ -862,6 +862,10 @@ App::patch('/v1/account/prefs')
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
+        
+        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+            'prefs' => $prefs,
+        ]));
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
