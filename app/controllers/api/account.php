@@ -574,14 +574,7 @@ App::get('/v1/account/prefs')
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $user */
 
-        $prefs = $user->getAttribute('prefs', '{}');
-
-        try {
-            $prefs = \json_decode($prefs, true);
-            $prefs = ($prefs) ? $prefs : [];
-        } catch (\Exception $error) {
-            throw new Exception('Failed to parse prefs', 500);
-        }
+        $prefs = $user->getAttribute('prefs', new \stdClass);
 
         $response->json($prefs);
     }, ['response', 'user']);
@@ -887,13 +880,6 @@ App::patch('/v1/account/prefs')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        $old = \json_decode($user->getAttribute('prefs', '{}'), true);
-        $old = ($old) ? $old : [];
-
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
-            'prefs' => \json_encode(\array_merge($old, $prefs)),
-        ]));
-
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
@@ -903,14 +889,7 @@ App::patch('/v1/account/prefs')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $prefs = $user->getAttribute('prefs', '{}');
-
-        try {
-            $prefs = \json_decode($prefs, true);
-            $prefs = ($prefs) ? $prefs : [];
-        } catch (\Exception $error) {
-            throw new Exception('Failed to parse prefs', 500);
-        }
+        $prefs = $user->getAttribute('prefs', new \stdClass);
 
         $response->json($prefs);
     }, ['response', 'user', 'projectDB', 'audits']);
