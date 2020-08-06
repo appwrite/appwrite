@@ -28,19 +28,6 @@ use Utopia\Validator\ArrayList;
 $oauthDefaultSuccess = App::getEnv('_APP_HOME').'/auth/oauth2/success';
 $oauthDefaultFailure = App::getEnv('_APP_HOME').'/auth/oauth2/failure';
 
-$oauth2Keys = [];
-
-App::init(function() use (&$oauth2Keys) {
-    foreach (Config::getParam('providers') as $key => $provider) {
-        if (!$provider['enabled']) {
-            continue;
-        }
-
-        $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-        $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-    }
-}, [], 'account');
-
 App::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account'])
@@ -54,7 +41,7 @@ App::post('/v1/account')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) use ($oauth2Keys) {
+    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) {
         /** @var Appwrite\Swoole\Request $request */
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -133,17 +120,11 @@ App::post('/v1/account')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json(\array_merge($user->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'email',
-                    'registration',
-                    'name',
-                ],
-                $oauth2Keys
-            )), ['roles' => Authorization::getRoles()]));
+        $user
+            ->setAttribute('roles', Authorization::getRoles())
+        ;
+
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['request', 'response', 'project', 'projectDB', 'webhooks', 'audits']);
 
 App::post('/v1/account/sessions')

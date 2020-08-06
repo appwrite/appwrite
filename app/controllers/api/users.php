@@ -65,27 +65,7 @@ App::post('/v1/users')
             throw new Exception('Account already exists', 409);
         }
 
-        $oauth2Keys = [];
-
-        foreach (Config::getParam('providers') as $key => $provider) {
-            if (!$provider['enabled']) {
-                continue;
-            }
-
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json(\array_merge($user->getArrayCopy(\array_merge([
-                '$id',
-                'status',
-                'email',
-                'registration',
-                'emailVerification',
-                'name',
-            ], $oauth2Keys)), ['roles' => []]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'projectDB']);
 
 App::get('/v1/users')
@@ -116,18 +96,7 @@ App::get('/v1/users')
             ],
         ]);
 
-        $oauth2Keys = [];
-
-        foreach (Config::getParam('providers') as $key => $provider) {
-            if (!$provider['enabled']) {
-                continue;
-            }
-
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-        }
-
-        $results = \array_map(function ($value) use ($oauth2Keys) { /* @var $value \Database\Document */
+        $results = \array_map(function ($value) { /* @var $value \Database\Document */
             return $value->getArrayCopy(\array_merge(
                 [
                     '$id',
@@ -137,7 +106,6 @@ App::get('/v1/users')
                     'emailVerification',
                     'name',
                 ],
-                $oauth2Keys
             ));
         }, $results);
 
@@ -163,28 +131,7 @@ App::get('/v1/users/:userId')
             throw new Exception('User not found', 404);
         }
 
-        $oauth2Keys = [];
-
-        foreach (Config::getParam('providers') as $key => $provider) {
-            if (!$provider['enabled']) {
-                continue;
-            }
-
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-        }
-
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'status',
-                'email',
-                'registration',
-                'emailVerification',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => []]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'projectDB']);
 
 App::get('/v1/users/:userId/prefs')
@@ -389,27 +336,8 @@ App::patch('/v1/users/:userId/status')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
-        
-        $oauth2Keys = [];
 
-        foreach (Config::getParam('providers') as $key => $provider) {
-            if (!$provider['enabled']) {
-                continue;
-            }
-
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key);
-            $oauth2Keys[] = 'oauth2'.\ucfirst($key).'AccessToken';
-        }
-
-        $response
-            ->json(\array_merge($user->getArrayCopy(\array_merge([
-                '$id',
-                'status',
-                'email',
-                'registration',
-                'emailVerification',
-                'name',
-            ], $oauth2Keys)), ['roles' => []]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'projectDB']);
 
 App::patch('/v1/users/:userId/prefs')
@@ -476,7 +404,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
             }
         }
 
-        $response->json(array('result' => 'success'));
+        $response->noContent();
     }, ['response', 'projectDB']);
 
 App::delete('/v1/users/:userId/sessions')
@@ -507,5 +435,5 @@ App::delete('/v1/users/:userId/sessions')
             }
         }
 
-        $response->json(array('result' => 'success'));
+        $response->noContent();
     }, ['response', 'projectDB']);
