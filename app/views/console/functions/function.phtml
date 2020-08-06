@@ -386,8 +386,9 @@ $timeout = $this->getParam('timeout', 900);
 
                                                     <h1>STDOUT</h1>
 
-                                                    <div class="margin-bottom" data-ls-if="({{execution.stdout.length}})">
-                                                        <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code="bash" />
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stdout.length}})">
+                                                        <pre data-ls-bind="{{execution.stdout}}"></pre>
+                                                        <!-- <input type="hidden" data-ls-bind="{{execution.stdout}}" data-forms-code="bash" /> -->
                                                     </div>
 
                                                     <div class="margin-bottom" data-ls-if="(!{{execution.stdout.length}})">
@@ -400,8 +401,9 @@ $timeout = $this->getParam('timeout', 900);
 
                                                     <h1>STDERR</h1>
 
-                                                    <div class="margin-bottom" data-ls-if="({{execution.stderr.length}})">
-                                                        <input type="hidden" data-ls-bind="{{execution.stderr}}" data-forms-code="bash" />
+                                                    <div class="margin-bottom ide" data-ls-if="({{execution.stderr.length}})">
+                                                        <pre data-ls-bind="{{execution.stderr}}"></pre>
+                                                        <!-- <input type="hidden" data-ls-bind="{{execution.stderr}}" data-forms-code="bash" /> -->
                                                     </div>
 
                                                     <div class="margin-bottom" data-ls-if="(!{{execution.stderr.length}})">
