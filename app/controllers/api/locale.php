@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Database\Document;
+use Appwrite\Swoole\Response;
 use Utopia\App;
 use Utopia\Config\Config;
 
@@ -24,10 +26,6 @@ App::get('/v1/locale')
         $time = (60 * 60 * 24 * 45); // 45 days cache
         $countries = $locale->getText('countries');
         $continents = $locale->getText('continents');
-
-        if (!App::isProduction()) {
-            $ip = '79.177.241.94';
-        }
 
         $output['ip'] = $ip;
 
@@ -61,7 +59,8 @@ App::get('/v1/locale')
         $response
             ->addHeader('Cache-Control', 'public, max-age='.$time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time).' GMT') // 45 days cache
-            ->json($output);
+        ;
+        $response->dynamic(new Document($output), Response::MODEL_LOCALE);
     }, ['request', 'response', 'locale', 'geodb']);
 
 App::get('/v1/locale/countries')

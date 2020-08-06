@@ -7,6 +7,8 @@ use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
+use Appwrite\Utopia\Response\Model\File;
+use Appwrite\Utopia\Response\Model\FileList;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
@@ -23,6 +25,7 @@ class Response extends UtopiaResponse
     const MODEL_ERROR = 'error';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
+    const MODEL_PERMISSIONS = 'permissions';
     
     // Users
     const MODEL_USER = 'user';
@@ -41,7 +44,8 @@ class Response extends UtopiaResponse
     const MODEL_PHONE = 'phone'; // - Missing
 
     // Storage
-    const MODEL_FILE = 'file'; // - Missing
+    const MODEL_FILE = 'file';
+    const MODEL_FILE_LIST = 'fileList';
     const MODEL_BUCKET = 'bucket'; // - Missing
 
     // Teams
@@ -61,6 +65,8 @@ class Response extends UtopiaResponse
             ->setModel(new User())
             ->setModel(new Session())
             ->setModel(new Locale())
+            ->setModel(new File())
+            ->setModel(new FileList())
             ->setModel(new Team())
             ->setModel(new TeamList())
             ->setModel(new Membership())

@@ -2,7 +2,6 @@
 
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Range;
@@ -12,6 +11,7 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Filesystem;
 use Appwrite\ClamAV\Network;
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
 use Appwrite\Storage\Validator\File;
@@ -20,6 +20,7 @@ use Appwrite\Storage\Validator\Upload;
 use Appwrite\Storage\Compression\Algorithms\GZIP;
 use Appwrite\Resize\Resize;
 use Appwrite\OpenSSL\OpenSSL;
+use Appwrite\Swoole\Response;
 use Utopia\Config\Config;
 
 App::post('/v1/storage/files')
@@ -153,10 +154,8 @@ App::post('/v1/storage/files')
             ->setParam('storage', $sizeActual)
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($file->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($file, Response::MODEL_FILE);
     }, ['request', 'response', 'user', 'projectDB', 'webhooks', 'audits', 'usage']);
 
 App::get('/v1/storage/files')
@@ -187,11 +186,10 @@ App::get('/v1/storage/files')
             ],
         ]);
 
-        $results = \array_map(function ($value) { /* @var $value \Database\Document */
-            return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
-        }, $results);
-
-        $response->json(['sum' => $projectDB->getSum(), 'files' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'files' => $results
+        ]), Response::MODEL_FILE_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/storage/files/:fileId')
@@ -213,7 +211,7 @@ App::get('/v1/storage/files/:fileId')
             throw new Exception('File not found', 404);
         }
 
-        $response->json($file->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']));
+        $response->dynamic($file, Response::MODEL_FILE);
     }, ['response', 'projectDB']);
 
 App::get('/v1/storage/files/:fileId/preview')
@@ -515,7 +513,7 @@ App::put('/v1/storage/files/:fileId')
             ->setParam('resource', 'storage/files/'.$file->getId())
         ;
 
-        $response->json($file->getArrayCopy());
+        $response->dynamic($file, Response::MODEL_FILE);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/storage/files/:fileId')
@@ -613,6 +611,5 @@ App::delete('/v1/storage/files/:fileId')
 //             //var_dump($antiVirus->version());
 //             //var_dump($antiVirus->fileScan('/storage/uploads/app-1/5/9/f/e/59fecaed49645.pdf'));
 
-//             //$response->json($antiVirus->continueScan($device->getRoot()));
 //         }
 //     );

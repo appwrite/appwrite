@@ -9,53 +9,47 @@ class File extends Model
 {
     public function __construct()
     {
+        //return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
         $this
             ->addRule('$id', [
                 'type' => 'string',
-                'description' => 'User ID.',
+                'description' => 'File ID.',
                 'example' => '5e5ea5c16897e',
+            ])
+            ->addRule('$permissions', [
+                'type' => Response::MODEL_PERMISSIONS,
+                'description' => 'File permissions.',
+                'example' => [],
+                'array' => false,
             ])
             ->addRule('name', [
                 'type' => 'string',
-                'description' => 'User name.',
+                'description' => 'File name.',
                 'default' => '',
-                'example' => 'John Doe',
+                'example' => 'Pink.png',
             ])
-            ->addRule('registration', [
+            ->addRule('dateCreated', [
                 'type' => 'integer',
-                'description' => 'User registration date in Unix timestamp.',
+                'description' => 'File creation date in Unix timestamp.',
                 'example' => 1592981250,
             ])
-            ->addRule('status', [
-                'type' => 'integer',
-                'description' => 'User status. 0 for Unavtivated, 1 for active and 2 is blocked.',
-                'default' => false,
-                'example' => true,
-            ])
-            ->addRule('email', [
+            ->addRule('signature', [
                 'type' => 'string',
-                'description' => 'User email address.',
+                'description' => 'File MD5 signature.',
+                'default' => false,
+                'example' => '5d529fd02b544198ae075bd57c1762bb',
+            ])
+            ->addRule('mimeType', [
+                'type' => 'string',
+                'description' => 'File mime type.',
                 'default' => '',
-                'example' => 'john@appwrite.io',
+                'example' => 'image/png',
             ])
-            ->addRule('emailVerification', [
-                'type' => 'boolean',
-                'description' => 'Email verification status.',
+            ->addRule('sizeOriginal', [
+                'type' => 'integer',
+                'description' => 'File original size in bytes.',
                 'default' => false,
                 'example' => true,
-            ])
-            ->addRule('prefs', [
-                'type' => 'json',
-                'description' => 'User preferences as a key-value object',
-                'default' => new \stdClass,
-                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
-            ])
-            ->addRule('roles', [
-                'type' => 'string',
-                'description' => 'User list of roles',
-                'default' => [],
-                'example' => [],
-                'array' => true,
             ])
         ;
     }

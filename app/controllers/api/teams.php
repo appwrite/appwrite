@@ -79,10 +79,8 @@ App::post('/v1/teams')
             }
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($team->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($team, Response::MODEL_TEAM);
     }, ['response', 'user', 'projectDB', 'mode']);
 
 App::get('/v1/teams')
@@ -113,7 +111,10 @@ App::get('/v1/teams')
             ],
         ]);
 
-        $response->json(['sum' => $projectDB->getSum(), 'teams' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'teams' => $results
+        ]), Response::MODEL_TEAM_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/teams/:teamId')
@@ -135,7 +136,7 @@ App::get('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $response->json($team->getArrayCopy([]));
+        $response->dynamic($team, Response::MODEL_TEAM);
     }, ['response', 'projectDB']);
 
 App::put('/v1/teams/:teamId')
@@ -165,8 +166,8 @@ App::put('/v1/teams/:teamId')
         if (false === $team) {
             throw new Exception('Failed saving team to DB', 500);
         }
-
-        $response->json($team->getArrayCopy());
+        
+        $response->dynamic($team, Response::MODEL_TEAM);
     }, ['response', 'projectDB']);
 
 App::delete('/v1/teams/:teamId')
@@ -390,21 +391,12 @@ App::post('/v1/teams/:teamId/memberships')
             ->setParam('resource', 'teams/'.$teamId)
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED) // TODO change response of this endpoint
-            ->json(\array_merge($membership->getArrayCopy([
-                '$id',
-                'userId',
-                'teamId',
-                'roles',
-                'invited',
-                'joined',
-                'confirm',
-            ]), [
-                'email' => $email,
-                'name' => $name,
-            ]))
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+
+        $response->dynamic(new Document(\array_merge($membership->getArrayCopy(), [
+            'email' => $email,
+            'name' => $name,
+        ])), Response::MODEL_MEMBERSHIP);
     }, ['response', 'project', 'user', 'projectDB', 'locale', 'audits', 'mails', 'mode']);
 
 App::get('/v1/teams/:teamId/memberships')
@@ -442,7 +434,6 @@ App::get('/v1/teams/:teamId/memberships')
                 'teamId='.$teamId,
             ],
         ]);
-
         $users = [];
 
         foreach ($memberships as $membership) {
@@ -452,18 +443,10 @@ App::get('/v1/teams/:teamId/memberships')
 
             $temp = $projectDB->getDocument($membership->getAttribute('userId', null))->getArrayCopy(['email', 'name']);
 
-            $users[] = \array_merge($temp, $membership->getArrayCopy([
-                '$id',
-                'userId',
-                'teamId',
-                'roles',
-                'invited',
-                'joined',
-                'confirm',
-            ]));
+            $users[] = new Document(\array_merge($temp, $membership->getArrayCopy()));
         }
 
-        $response->json(['sum' => $projectDB->getSum(), 'memberships' => $users]);
+        $response->dynamic(new Document(['sum' => $projectDB->getSum(), 'memberships' => $users]), Response::MODEL_MEMBERSHIP_LIST);
     }, ['response', 'projectDB']);
 
 App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
