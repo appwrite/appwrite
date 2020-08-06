@@ -30,7 +30,7 @@ App::post('/v1/users')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(function ($email, $password, $name, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $profile = $projectDB->getCollectionFirst([ // Get user by email address
@@ -101,7 +101,7 @@ App::get('/v1/users')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $results = $projectDB->getCollection([
@@ -154,7 +154,7 @@ App::get('/v1/users/:userId')
     ->label('sdk.description', '/docs/references/users/get-user.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $user = $projectDB->getDocument($userId);
@@ -197,7 +197,7 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $user = $projectDB->getDocument($userId);
@@ -228,7 +228,7 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(function ($userId, $response, $projectDB, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var GeoIp2\Database\Reader $geodb */
@@ -294,7 +294,7 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.description', '/docs/references/users/get-user-logs.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Utopia\Registry\Registry $register */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
@@ -380,7 +380,7 @@ App::patch('/v1/users/:userId/status')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('status', '', function () { return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]); }, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->action(function ($userId, $status, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $user = $projectDB->getDocument($userId);
@@ -430,7 +430,7 @@ App::patch('/v1/users/:userId/prefs')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
     ->action(function ($userId, $prefs, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $user = $projectDB->getDocument($userId);
@@ -474,7 +474,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('sessionId', null, function () { return new UID(); }, 'User unique session ID.')
     ->action(function ($userId, $sessionId, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $user = $projectDB->getDocument($userId);
@@ -507,7 +507,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('abuse-limit', 100)
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
         $user = $projectDB->getDocument($userId);

@@ -122,7 +122,7 @@ App::get('/v1/functions/:functionId/usage')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('range', '30d', function () { return new WhiteList(['24h', '7d', '30d', '90d']); }, 'Date range.', true)
     ->action(function ($functionId, $range, $response, $project, $projectDB, $register) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
@@ -315,7 +315,7 @@ App::delete('/v1/functions/:functionId')
     ->label('sdk.description', '/docs/references/functions/delete-function.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->action(function ($functionId, $response, $project, $projectDB, $deletes) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $deletes */
@@ -549,7 +549,7 @@ App::post('/v1/functions/:functionId/executions')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     // ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
     ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 

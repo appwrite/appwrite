@@ -23,7 +23,7 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $functions, $clients) {
     /** @var Appwrite\Swoole\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Swoole\Response $response */
     /** @var Appwrite\Database\Document $console */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Document $user */
@@ -256,8 +256,8 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
 
 App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $functions, $mode) {
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Swoole\Request $request */
+    /** @var Appwrite\Swoole\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Event\Event $webhooks */
     /** @var Appwrite\Event\Event $audits */
@@ -299,7 +299,7 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
 
 App::options(function ($request, $response) {
     /** @var Appwrite\Swoole\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Swoole\Response $response */
 
     $origin = $request->getOrigin();
 
@@ -316,8 +316,8 @@ App::options(function ($request, $response) {
 App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
-    /** @var Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
+    /** @var Appwrite\Swoole\Request $request */
+    /** @var Appwrite\Swoole\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
@@ -403,7 +403,7 @@ App::get('/manifest.json')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Swoole\Response $response */
 
         $response->json([
             'name' => APP_NAME,
