@@ -726,7 +726,7 @@ App::patch('/v1/account/name')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
     ->param('name', '', function () { return new Text(100); }, 'User name.')
-    ->action(function ($name, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
+    ->action(function ($name, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -740,21 +740,15 @@ App::patch('/v1/account/name')
             throw new Exception('Failed saving user to DB', 500);
         }
 
+        $user->setAttribute('roles', Authorization::getRoles());
+
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.name')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/password')
@@ -768,7 +762,7 @@ App::patch('/v1/account/password')
     ->label('sdk.description', '/docs/references/account/update-password.md')
     ->param('password', '', function () { return new Password(); }, 'New user password. Must be between 6 to 32 chars.')
     ->param('oldPassword', '', function () { return new Password(); }, 'Old user password. Must be between 6 to 32 chars.')
-    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
+    ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -786,21 +780,15 @@ App::patch('/v1/account/password')
             throw new Exception('Failed saving user to DB', 500);
         }
 
+        $user->setAttribute('roles', Authorization::getRoles());
+
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.password')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/email')
@@ -814,7 +802,7 @@ App::patch('/v1/account/email')
     ->label('sdk.description', '/docs/references/account/update-email.md')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->action(function ($email, $password, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
+    ->action(function ($email, $password, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -847,21 +835,16 @@ App::patch('/v1/account/email')
             throw new Exception('Failed saving user to DB', 500);
         }
 
+        $user->setAttribute('roles', Authorization::getRoles());
+        
         $audits
             ->setParam('userId', $user->getId())
             ->setParam('event', 'account.update.email')
             ->setParam('resource', 'users/'.$user->getId())
         ;
 
-        $response->json(\array_merge($user->getArrayCopy(\array_merge(
-            [
-                '$id',
-                'email',
-                'registration',
-                'name',
-            ],
-            $oauth2Keys
-        )), ['roles' => Authorization::getRoles()]));
+
+        $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
 App::patch('/v1/account/prefs')
