@@ -9,15 +9,12 @@ use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\File;
-use Appwrite\Utopia\Response\Model\FileList;
-use Appwrite\Utopia\Response\Model\Functionx;
+use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
-use Appwrite\Utopia\Response\Model\TeamList;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Membership;
-use Appwrite\Utopia\Response\Model\MembershipList;
 use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse
