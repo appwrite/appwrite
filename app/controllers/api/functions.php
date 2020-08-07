@@ -43,7 +43,7 @@ App::post('/v1/functions')
             ],
             'dateCreated' => time(),
             'dateUpdated' => time(),
-            'status' => 'paused',
+            'status' => 'disabled',
             'name' => $name,
             'env' => $env,
             'tag' => '',

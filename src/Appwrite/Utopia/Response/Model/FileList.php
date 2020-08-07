@@ -26,7 +26,7 @@ class FileList extends BaseList
      */
     public function getName():string
     {
-        return 'File List';
+        return 'Files List';
     }
 
     /**

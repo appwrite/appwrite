@@ -4,15 +4,15 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class MembershipList extends BaseList
+class FunctionxList extends BaseList
 {
     public function __construct()
     {
         parent::__construct();
         $this
-            ->addRule('memberships', [
+            ->addRule('functions', [
                 'type' => Response::MODEL_MEMBERSHIP,
-                'description' => 'List of memberships.',
+                'description' => 'List of functions.',
                 'example' => [],
                 'array' => true,
             ])
@@ -26,7 +26,7 @@ class MembershipList extends BaseList
      */
     public function getName():string
     {
-        return 'Memberships List';
+        return 'Functions List';
     }
 
     /**
@@ -36,6 +36,6 @@ class MembershipList extends BaseList
      */
     public function getType():string
     {
-        return Response::MODEL_MEMBERSHIP_LIST;
+        return Response::MODEL_FUNCTION_LIST;
     }
 }

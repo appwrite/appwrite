@@ -26,7 +26,7 @@ class TeamList extends BaseList
      */
     public function getName():string
     {
-        return 'Team List';
+        return 'Teams List';
     }
 
     /**

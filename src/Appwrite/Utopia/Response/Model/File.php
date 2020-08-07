@@ -9,7 +9,6 @@ class File extends Model
 {
     public function __construct()
     {
-        //return $value->getArrayCopy(['$id', '$permissions', 'name', 'dateCreated', 'signature', 'mimeType', 'sizeOriginal']);
         $this
             ->addRule('$id', [
                 'type' => 'string',
@@ -19,13 +18,12 @@ class File extends Model
             ->addRule('$permissions', [
                 'type' => Response::MODEL_PERMISSIONS,
                 'description' => 'File permissions.',
-                'example' => [],
+                'example' => new \stdClass,
                 'array' => false,
             ])
             ->addRule('name', [
                 'type' => 'string',
                 'description' => 'File name.',
-                'default' => '',
                 'example' => 'Pink.png',
             ])
             ->addRule('dateCreated', [
@@ -36,20 +34,17 @@ class File extends Model
             ->addRule('signature', [
                 'type' => 'string',
                 'description' => 'File MD5 signature.',
-                'default' => false,
                 'example' => '5d529fd02b544198ae075bd57c1762bb',
             ])
             ->addRule('mimeType', [
                 'type' => 'string',
                 'description' => 'File mime type.',
-                'default' => '',
                 'example' => 'image/png',
             ])
             ->addRule('sizeOriginal', [
                 'type' => 'integer',
                 'description' => 'File original size in bytes.',
-                'default' => false,
-                'example' => true,
+                'example' => 17890,
             ])
         ;
     }

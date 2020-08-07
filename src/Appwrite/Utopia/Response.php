@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\FileList;
+use Appwrite\Utopia\Response\Model\Functionx;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
@@ -54,6 +55,14 @@ class Response extends UtopiaResponse
     const MODEL_MEMBERSHIP = 'membership';
     const MODEL_MEMBERSHIP_LIST = 'membershipList';
 
+    // Functions
+    const MODEL_FUNCTION = 'function';
+    const MODEL_FUNCTION_LIST = 'functionList';
+    const MODEL_TAG = 'tag';
+    const MODEL_TAG_LIST = 'tagList';
+    const MODEL_EXECUTION = 'execution';
+    const MODEL_EXECUTION_LIST = 'executionList';
+
     /**
      * Response constructor.
      */
@@ -71,6 +80,7 @@ class Response extends UtopiaResponse
             ->setModel(new TeamList())
             ->setModel(new Membership())
             ->setModel(new MembershipList())
+            ->setModel(new Functionx())
         ;
 
         parent::__construct($time);
