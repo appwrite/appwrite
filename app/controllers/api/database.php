@@ -89,9 +89,6 @@ App::post('/v1/database/collections')
             ->setParam('data', $data)
         ;
 
-        /*
-            * View
-            */
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($data)
@@ -387,11 +384,11 @@ App::post('/v1/database/collections/:collectionId/documents')
             }
 
             /*
-                * 1. Check child has valid structure,
-                * 2. Check user have write permission for parent document
-                * 3. Assign parent data (including child) to $data
-                * 4. Validate the combined result has valid structure (inside $projectDB->createDocument method)
-                */
+             * 1. Check child has valid structure,
+             * 2. Check user have write permission for parent document
+             * 3. Assign parent data (including child) to $data
+             * 4. Validate the combined result has valid structure (inside $projectDB->createDocument method)
+             */
 
             $new = new Document($data);
 
@@ -447,9 +444,6 @@ App::post('/v1/database/collections/:collectionId/documents')
             ->setParam('data', $data)
         ;
 
-        /*
-            * View
-            */
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->json($data)
@@ -511,9 +505,6 @@ App::get('/v1/database/collections/:collectionId/documents')
             ->setAttribute('documents', $list)
         ;
 
-        /*
-         * View
-         */
         $response->json($collection->getArrayCopy(/*['$id', '$collection', 'name', 'documents']*/[], ['rules']));
     }, ['response', 'projectDB']);
 
@@ -559,9 +550,6 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             }
         }
 
-        /*
-         * View
-         */
         $response->json($output);
     }, ['request', 'response', 'projectDB']);
 
@@ -591,7 +579,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
         if (!\is_array($data)) {
-            throw new Exception('Data param should be a valid JSON', 400);
+            throw new Exception('Data param should be a valid JSON object', 400);
         }
 
         if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
@@ -620,6 +608,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         if (empty($data)) {
             throw new Exception('Missing payload', 400);
         }
+
         try {
             $data = $projectDB->updateDocument($data);
         } catch (AuthorizationException $exception) {
@@ -642,9 +631,6 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             ->setParam('data', $data)
         ;
 
-        /*
-            * View
-            */
         $response->json($data);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
