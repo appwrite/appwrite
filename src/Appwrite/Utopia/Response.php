@@ -5,6 +5,7 @@ namespace Appwrite\Utopia;
 use Exception;
 use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\File;
@@ -69,18 +70,24 @@ class Response extends UtopiaResponse
     public function __construct(int $time = 0)
     {
         $this
+            // General
             ->setModel(new Error())
             ->setModel(new ErrorDev())
+            // Lists
+            ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
+            ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
+            ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
+            ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
+            ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            // Entities
             ->setModel(new User())
             ->setModel(new Session())
             ->setModel(new Locale())
             ->setModel(new File())
-            ->setModel(new FileList())
             ->setModel(new Team())
-            ->setModel(new TeamList())
             ->setModel(new Membership())
-            ->setModel(new MembershipList())
-            ->setModel(new Functionx())
+            ->setModel(new Func())
         ;
 
         parent::__construct($time);

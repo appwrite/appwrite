@@ -1,15 +1,16 @@
 <?php
 
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Storage\Storage;
 use Appwrite\Storage\Validator\File;
 use Appwrite\Storage\Validator\FileSize;
 use Appwrite\Storage\Validator\FileType;
 use Appwrite\Storage\Validator\Upload;
+use Appwrite\Swoole\Response;
 use Appwrite\Task\Validator\Cron;
 use Utopia\App;
-use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
@@ -59,10 +60,8 @@ App::post('/v1/functions')
             throw new Exception('Failed saving function to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($function->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     }, ['response', 'projectDB']);
 
 App::get('/v1/functions')
@@ -90,7 +89,10 @@ App::get('/v1/functions')
             ],
         ]);
 
-        $response->json(['sum' => $projectDB->getSum(), 'functions' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'functions' => $results
+        ]), Response::MODEL_FUNCTION_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/functions/:functionId')
@@ -109,7 +111,7 @@ App::get('/v1/functions/:functionId')
             throw new Exception('Function not found', 404);
         }
 
-        $response->json($function->getArrayCopy());
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     }, ['response', 'projectDB']);
 
 App::get('/v1/functions/:functionId/usage')
@@ -264,7 +266,7 @@ App::put('/v1/functions/:functionId')
             throw new Exception('Failed saving function to DB', 500);
         }
 
-        $response->json($function->getArrayCopy());
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     }, ['response', 'projectDB']);
 
 App::patch('/v1/functions/:functionId/tag')
@@ -302,7 +304,7 @@ App::patch('/v1/functions/:functionId/tag')
             throw new Exception('Failed saving function to DB', 500);
         }
 
-        $response->json($function->getArrayCopy());
+        $response->dynamic($function, Response::MODEL_FUNCTION);
     }, ['response', 'projectDB']);
 
 App::delete('/v1/functions/:functionId')
@@ -414,10 +416,8 @@ App::post('/v1/functions/:functionId/tags')
             ->setParam('storage', $tag->getAttribute('codeSize', 0))
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($tag->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($tag, Response::MODEL_TAG);
     }, ['request', 'response', 'projectDB', 'usage']);
 
 App::get('/v1/functions/:functionId/tags')
@@ -453,7 +453,10 @@ App::get('/v1/functions/:functionId/tags')
             ],
         ]);
 
-        $response->json(['sum' => $projectDB->getSum(), 'tags' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'tags' => $results
+        ]), Response::MODEL_TAG_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/functions/:functionId/tags/:tagId')
@@ -483,7 +486,7 @@ App::get('/v1/functions/:functionId/tags/:tagId')
             throw new Exception('Tag not found', 404);
         }
 
-        $response->json($tag->getArrayCopy());
+        $response->dynamic($tag, Response::MODEL_TAG);
     }, ['response', 'projectDB']);
 
 App::delete('/v1/functions/:functionId/tags/:tagId')
@@ -597,10 +600,8 @@ App::post('/v1/functions/:functionId/executions')
             'trigger' => 'http',
         ]);
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($execution->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($execution, Response::MODEL_EXECUTION);
     }, ['response', 'project', 'projectDB']);
 
 App::get('/v1/functions/:functionId/executions')
@@ -636,7 +637,10 @@ App::get('/v1/functions/:functionId/executions')
             ],
         ]);
 
-        $response->json(['sum' => $projectDB->getSum(), 'executions' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'executions' => $results
+        ]), Response::MODEL_EXECUTION_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/functions/:functionId/executions/:executionId')
@@ -666,5 +670,5 @@ App::get('/v1/functions/:functionId/executions/:executionId')
             throw new Exception('Execution not found', 404);
         }
 
-        $response->json($execution->getArrayCopy());
+        $response->dynamic($execution, Response::MODEL_EXECUTION);
     }, ['response', 'projectDB']);
