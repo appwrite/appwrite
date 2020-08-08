@@ -8,6 +8,7 @@ use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
+use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\User;
@@ -87,6 +88,7 @@ class Response extends UtopiaResponse
             ->setModel(new Membership())
             ->setModel(new Func())
             ->setModel(new Tag())
+            ->setModel(new Execution())
         ;
 
         parent::__construct($time);
