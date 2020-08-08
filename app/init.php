@@ -67,6 +67,7 @@ Config::load('environments', __DIR__.'/config/environments.php');
 Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__.'/config/services.php');  // List of services
+Config::load('variables', __DIR__.'/config/variables.php');  // List of env variables
 Config::load('avatar-browsers', __DIR__.'/config/avatars/browsers.php'); 
 Config::load('avatar-credit-cards', __DIR__.'/config/avatars/credit-cards.php'); 
 Config::load('avatar-flags', __DIR__.'/config/avatars/flags.php'); 

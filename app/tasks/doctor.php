@@ -1,34 +1,13 @@
-#!/bin/env php
 <?php
 
-require_once __DIR__.'/../init.php';
+global $cli;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Utopia\App;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Domains\Domain;
-
-$cli = new CLI();
-
-$cli
-    ->task('ssl')
-    ->desc('Validate server certificates')
-    ->action(function () {
-        $domain = App::getEnv('_APP_DOMAIN', '');
-
-        Console::log('Issue a TLS certificate for master domain ('.$domain.') in 30 seconds.
-            Make sure your domain points to your server or restart to try again.');
-
-        ResqueScheduler::enqueueAt(\time() + 30, 'v1-certificates', 'CertificatesV1', [
-            'document' => [],
-            'domain' => $domain,
-            'validateTarget' => false,
-            'validateCNAME' => false,
-        ]);
-    });
 
 $cli
     ->task('doctor')
@@ -255,5 +234,3 @@ $cli
             Console::error('Failed to check for a newer version'."\n");
         }
     });
-
-$cli->run();
