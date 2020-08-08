@@ -55,7 +55,7 @@ class Func extends Model
             ->addRule('events', [
                 'type' => 'string',
                 'description' => 'Function trigger events.',
-                'default' => '',
+                'default' => [],
                 'example' => 'account.create',
                 'array' => true,
             ])
@@ -69,11 +69,13 @@ class Func extends Model
                 'type' => 'integer',
                 'description' => 'Function next scheduled execution date in Unix timestamp.',
                 'example' => 1592981292,
+                'default' => 0,
             ])
             ->addRule('previous', [
                 'type' => 'integer',
                 'description' => 'Function next scheduled execution date in Unix timestamp.',
                 'example' => 1592981237,
+                'default' => 0,
             ])
             ->addRule('timeout', [
                 'type' => 'integer',

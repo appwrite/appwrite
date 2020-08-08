@@ -15,6 +15,7 @@ use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Tag;
 use Utopia\Response as UtopiaResponse;
 
 class Response extends UtopiaResponse
@@ -85,6 +86,7 @@ class Response extends UtopiaResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
+            ->setModel(new Tag())
         ;
 
         parent::__construct($time);
@@ -150,13 +152,15 @@ class Response extends UtopiaResponse
                     $document->setAttribute($key, $rule['default']);
                 }
                 else {
+                    var_dump($data);
                     throw new Exception('Missing response key: '.$key);
                 }
             }
 
             if($rule['array']) {
                 if(!is_array($data[$key])) {
-                    throw new Exception($key.' must be an array of '.$rule['type'].' types');
+                    var_dump($data);
+                    throw new Exception($key.' must be an array of type '.$rule['type']);
                 }
 
                 foreach ($data[$key] as &$item) {

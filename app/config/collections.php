@@ -1336,7 +1336,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Code Path',
-                'key' => 'codePath',
+                'key' => 'path',
                 'type' => Database::SYSTEM_VAR_TYPE_TEXT,
                 'default' => '',
                 'required' => false,
@@ -1345,7 +1345,7 @@ $collections = [
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
                 'label' => 'Code Size',
-                'key' => 'codeSize',
+                'key' => 'size',
                 'type' => Database::SYSTEM_VAR_TYPE_NUMERIC,
                 'default' => '',
                 'required' => false,

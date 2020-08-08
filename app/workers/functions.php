@@ -266,14 +266,14 @@ class FunctionsV1
             $value = "\t\t\t--env {$key}={$value} \\";
         });
 
-        $tagPath = $tag->getAttribute('codePath', '');
+        $tagPath = $tag->getAttribute('path', '');
         $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
         $container = 'appwrite-function-'.$tag->getId();
         $command = \escapeshellcmd($tag->getAttribute('command', ''));
 
         if(!\is_readable($tagPath)) {
-            throw new Exception('Code is not readable: '.$tag->getAttribute('codePath', ''));
+            throw new Exception('Code is not readable: '.$tag->getAttribute('path', ''));
         }
 
         if (!\file_exists($tagPathTargetDir)) {

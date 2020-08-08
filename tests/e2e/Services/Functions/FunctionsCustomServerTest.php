@@ -192,8 +192,7 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertNotEmpty($tag['body']['$id']);
         $this->assertIsInt($tag['body']['dateCreated']);
         $this->assertEquals('php function.php', $tag['body']['command']);
-        $this->assertStringStartsWith('/storage/functions/app-', $tag['body']['codePath']);
-        $this->assertEquals(751, $tag['body']['codeSize']);
+        $this->assertEquals(751, $tag['body']['size']);
        
         /**
          * Test for FAILURE
@@ -265,7 +264,7 @@ class FunctionsConsoleServerTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $function['headers']['status-code']);
-        $this->assertEquals(751, $function['body']['codeSize']);
+        $this->assertEquals(751, $function['body']['size']);
 
         /**
          * Test for FAILURE

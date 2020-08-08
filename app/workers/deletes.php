@@ -73,11 +73,11 @@ class DeletesV1
             'functionId='.$document->getId(),
         ], $projectDB, function(Document $document) use ($device) {
 
-            if ($device->delete($document->getAttribute('codePath', ''))) {
-                Console::success('Delete code tag: '.$document->getAttribute('codePath', ''));
+            if ($device->delete($document->getAttribute('path', ''))) {
+                Console::success('Delete code tag: '.$document->getAttribute('path', ''));
             }
             else {
-                Console::error('Dailed to delete code tag: '.$document->getAttribute('codePath', ''));
+                Console::error('Dailed to delete code tag: '.$document->getAttribute('path', ''));
             }
         });
 

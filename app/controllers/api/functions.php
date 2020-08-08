@@ -401,11 +401,11 @@ App::post('/v1/functions/:functionId/tags')
                 'read' => [],
                 'write' => [],
             ],
-            'dateCreated' => time(),
             'functionId' => $function->getId(),
+            'dateCreated' => time(),
             'command' => $command,
-            'codePath' => $path,
-            'codeSize' => $size,
+            'path' => $path,
+            'size' => $size,
         ]);
 
         if (false === $tag) {
@@ -413,7 +413,7 @@ App::post('/v1/functions/:functionId/tags')
         }
 
         $usage
-            ->setParam('storage', $tag->getAttribute('codeSize', 0))
+            ->setParam('storage', $tag->getAttribute('size', 0))
         ;
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
@@ -518,7 +518,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
 
         $device = Storage::getDevice('functions');
 
-        if ($device->delete($tag->getAttribute('codePath', ''))) {
+        if ($device->delete($tag->getAttribute('path', ''))) {
             if (!$projectDB->deleteDocument($tag->getId())) {
                 throw new Exception('Failed to remove tag from DB', 500);
             }
@@ -535,7 +535,7 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         }
 
         $usage
-            ->setParam('storage', $tag->getAttribute('codeSize', 0) * -1)
+            ->setParam('storage', $tag->getAttribute('size', 0) * -1)
         ;
 
         $response->noContent();

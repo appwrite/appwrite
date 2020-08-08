@@ -332,7 +332,7 @@ App::get('/v1/projects/:projectId/usage')
                 ) + 
                 $projectDB->getCount(
                     [
-                        'attribute' => 'codeSize',
+                        'attribute' => 'size',
                         'filters' => [
                             '$collection='.Database::SYSTEM_COLLECTION_TAGS,
                         ],

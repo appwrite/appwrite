@@ -112,7 +112,7 @@ $timeout = $this->getParam('timeout', 900);
                                             <b data-ls-bind="{{tag.$id}}"></b> &nbsp;
                                             <span class="text-fade" data-ls-bind="{{tag.command}}"></span>
                                             <div class="text-size-small margin-top-small clear">
-                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.codeSize|humanFileSize}}"></span>
+                                                <span class="pull-start" data-ls-bind="Created {{tag.dateCreated|timeSince}} &nbsp; | &nbsp; {{tag.size|humanFileSize}}"></span>
 
                                                 <form data-ls-if="{{tag.$id}} !== {{project-function.tag}}" name="functions.deleteTag" class="pull-start"
                                                     data-analytics-event="submit"
