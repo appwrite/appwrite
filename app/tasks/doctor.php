@@ -1,17 +1,13 @@
-#!/bin/env php
 <?php
 
-require_once __DIR__.'/../init.php';
+global $cli;
 
 use Appwrite\ClamAV\Network;
 use Appwrite\Storage\Device\Local;
 use Appwrite\Storage\Storage;
 use Utopia\App;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Domains\Domain;
-
-$cli = new CLI();
 
 $cli
     ->task('doctor')
@@ -237,5 +233,3 @@ $cli
             Console::error('Failed to check for a newer version'."\n");
         }
     });
-
-$cli->run();

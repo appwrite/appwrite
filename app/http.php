@@ -63,7 +63,7 @@ $http->on('start', function (Server $http) use ($payloadSize) {
 
 Files::load(__DIR__ . '/../public');
 
-include __DIR__ . '/app.php';
+include __DIR__ . '/controllers/general.php';
 
 $domain = App::getEnv('_APP_DOMAIN', '');
 

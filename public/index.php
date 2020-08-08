@@ -20,7 +20,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 //trigger_error('hide errors in prod', E_USER_NOTICE);
 
-include __DIR__ . '/../app/app.php';
+include __DIR__ . '/../app/controllers/general.php';
 
 $app = new App('Asia/Tel_Aviv');
 

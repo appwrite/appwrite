@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.'/init.php';
+require_once __DIR__.'/../init.php';
 
 use Utopia\App;
 use Appwrite\Swoole\Request;
@@ -476,8 +476,8 @@ App::get('/.well-known/acme-challenge')
         $response->text($content);
     }, ['request', 'response']);
 
-include_once __DIR__ . '/controllers/shared/api.php';
-include_once __DIR__ . '/controllers/shared/web.php';
+include_once __DIR__ . '/shared/api.php';
+include_once __DIR__ . '/shared/web.php';
 
 foreach(Config::getParam('services', []) as $service) {
     include_once $service['controller'];
