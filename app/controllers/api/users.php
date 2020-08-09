@@ -9,7 +9,6 @@ use Utopia\Validator\Text;
 use Utopia\Validator\Range;
 use Utopia\Audit\Audit;
 use Utopia\Audit\Adapters\MySQL as AuditAdapter;
-use Utopia\Config\Config;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Database\Database;
@@ -101,7 +100,7 @@ App::get('/v1/users')
         $response->dynamic(new Document([
             'sum' => $projectDB->getSum(),
             'users' => $results
-        ]), Response::MODEL_FILE_LIST);
+        ]), Response::MODEL_USER_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/users/:userId')

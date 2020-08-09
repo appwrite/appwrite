@@ -30,6 +30,7 @@ class Response extends UtopiaResponse
     
     // Users
     const MODEL_USER = 'user';
+    const MODEL_USER_LIST = 'userList';
     const MODEL_SESSION = 'session';
     const MODEL_TOKEN = 'token'; // - Missing
 
@@ -73,7 +74,7 @@ class Response extends UtopiaResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
-            ->setModel(new BaseList('Users List', self::MODEL_FILE_LIST, 'users', self::MODEL_USER))
+            ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
