@@ -166,7 +166,7 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
-RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 
