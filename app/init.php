@@ -198,6 +198,9 @@ $register->set('smtp', function () {
 
     return $mail;
 });
+$register->set('geodb', function () {
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
+});
 $register->set('queue-webhooks', function () {
     return new Event('v1-webhooks', 'WebhooksV1');
 });
@@ -451,6 +454,6 @@ App::setResource('mode', function($request) {
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
 }, ['request']);
 
-App::setResource('geodb', function($request) {
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
-}, ['request']);
+App::setResource('geodb', function($register) {
+    return $register->get('geodb');
+}, ['register']);
