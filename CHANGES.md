@@ -22,6 +22,7 @@
 - Added pagination for projects list on the console home page.
 - Updated storage calculation to match IEC standards
 - Now using Alpine as base Docker image
+- Upgraded device detctor to version 3.12.6
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
