@@ -321,7 +321,12 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
+    $route = $utopia->match($request);
+    $template = ($route) ? $route->getLabel('error', null) : null;
+
     if(php_sapi_name() === 'cli') {
+        var_dump($route->getMethod());
+        var_dump($route->getURL());
         var_dump(get_class($error));
         var_dump($error->getMessage());
         var_dump($error->getFile());
@@ -368,9 +373,6 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
         ->addHeader('Pragma', 'no-cache')
         ->setStatusCode($code)
     ;
-
-    $route = $utopia->match($request);
-    $template = ($route) ? $route->getLabel('error', null) : null;
 
     if ($template) {
         $comp = new View($template);
