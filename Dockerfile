@@ -12,11 +12,11 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:8.0.0alpha3-cli-alpine as step1
+FROM php:8.0.0beta1-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=develop \
-    PHP_SWOOLE_VERSION=master \
+    PHP_SWOOLE_VERSION=v4.5.3-beta \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
@@ -52,7 +52,7 @@ RUN \
   make && make install && \
   cd ..
 
-FROM php:8.0.0alpha3-cli-alpine as final
+FROM php:8.0.0beta1-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
