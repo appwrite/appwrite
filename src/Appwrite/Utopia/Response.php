@@ -32,6 +32,7 @@ class Response extends UtopiaResponse
     const MODEL_USER = 'user';
     const MODEL_USER_LIST = 'userList';
     const MODEL_SESSION = 'session';
+    const MODEL_SESSION_LIST = 'sessionList';
     const MODEL_TOKEN = 'token'; // - Missing
 
     // Database
@@ -75,6 +76,7 @@ class Response extends UtopiaResponse
             ->setModel(new ErrorDev())
             // Lists
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
+            ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
@@ -156,14 +158,12 @@ class Response extends UtopiaResponse
                     $document->setAttribute($key, $rule['default']);
                 }
                 else {
-                    var_dump($data);
-                    throw new Exception('Missing response key: '.$key);
+                    throw new Exception('Model '.$model->getName().' is missing response key: '.$key);
                 }
             }
 
             if($rule['array']) {
                 if(!is_array($data[$key])) {
-                    var_dump($data);
                     throw new Exception($key.' must be an array of type '.$rule['type']);
                 }
 
