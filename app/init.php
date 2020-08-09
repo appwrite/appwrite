@@ -432,7 +432,6 @@ App::setResource('consoleDB', function($register) {
     $consoleDB = new Database();
     $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-    
     $consoleDB->setMocks(Config::getParam('collections', []));
 
     return $consoleDB;
