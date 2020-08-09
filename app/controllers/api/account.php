@@ -829,7 +829,7 @@ App::patch('/v1/account/email')
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'user', 'projectDB', 'audits']);
 
-App::put('/v1/account/prefs')
+App::patch('/v1/account/prefs')
     ->desc('Update Account Preferences')
     ->groups(['api', 'account'])
     ->label('event', 'account.update.prefs')

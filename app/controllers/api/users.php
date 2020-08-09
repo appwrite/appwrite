@@ -13,6 +13,7 @@ use Utopia\Config\Config;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Utopia\Response;
@@ -97,20 +98,10 @@ App::get('/v1/users')
             ],
         ]);
 
-        $results = \array_map(function ($value) { /* @var $value \Database\Document */
-            return $value->getArrayCopy(\array_merge(
-                [
-                    '$id',
-                    'status',
-                    'email',
-                    'registration',
-                    'emailVerification',
-                    'name',
-                ],
-            ));
-        }, $results);
-
-        $response->json(['sum' => $projectDB->getSum(), 'users' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'users' => $results
+        ]), Response::MODEL_FILE_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/users/:userId')
@@ -341,7 +332,7 @@ App::patch('/v1/users/:userId/status')
         $response->dynamic($user, Response::MODEL_USER);
     }, ['response', 'projectDB']);
 
-App::put('/v1/users/:userId/prefs')
+App::patch('/v1/users/:userId/prefs')
     ->desc('Update User Preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.write')

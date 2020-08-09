@@ -30,8 +30,8 @@
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API
 - **Deprecated** Deprectaed Pubjabi Translations ('pn')
-- **Deprecated** `PATCH /account/prefs` in favour of `PUT /account/prefs` route
-- **Deprecated** `PATCH /users/:userId/prefs` in favour of `PUT /users/:userId/prefs` route
+- **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
+- **Deprecated** `PATCH /users/:userId/prefs` is now updating the prefs payload and not just merging it
 - Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
 - Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 
