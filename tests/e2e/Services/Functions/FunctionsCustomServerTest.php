@@ -26,9 +26,9 @@ class FunctionsConsoleServerTest extends Scope
             'name' => 'Test',
             'env' => 'php-7.4',
             'vars' => [
-                'key1' => 'value1',
-                'key2' => 'value2',
-                'key3' => 'value3',
+                'funcKey1' => 'funcValue1',
+                'funcKey2' => 'funcValue2',
+                'funcKey3' => 'funcValue3',
             ],
             'events' => [
                 'account.create',
@@ -48,9 +48,9 @@ class FunctionsConsoleServerTest extends Scope
         $this->assertIsInt($response1['body']['dateUpdated']);
         $this->assertEquals('', $response1['body']['tag']);
         $this->assertEquals([
-            'key1' => 'value1',
-            'key2' => 'value2',
-            'key3' => 'value3',
+            'funcKey1' => 'funcValue1',
+            'funcKey2' => 'funcValue2',
+            'funcKey3' => 'funcValue3',
         ], $response1['body']['vars']);
         $this->assertEquals([
             'account.create',

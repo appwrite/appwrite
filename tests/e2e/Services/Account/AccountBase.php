@@ -566,15 +566,15 @@ trait AccountBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_'.$this->getProject()['$id'].'=' . $session,
         ]), [
             'prefs' => [
-                'key1' => 'value1',
-                'key2' => 'value2',
+                'prefKey1' => 'prefValue1',
+                'prefKey2' => 'prefValue2',
             ]
         ]);
 
@@ -582,13 +582,13 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('value1', $response['body']['key1']);
-        $this->assertEquals('value2', $response['body']['key2']);
+        $this->assertEquals('prefValue1', $response['body']['prefKey1']);
+        $this->assertEquals('prefValue2', $response['body']['prefKey2']);
 
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -596,7 +596,7 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 401);
         
-        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -608,7 +608,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 400);
         
         
-        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -619,7 +619,7 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 400);
         
-        $response = $this->client->call(Client::METHOD_PUT, '/account/prefs', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
