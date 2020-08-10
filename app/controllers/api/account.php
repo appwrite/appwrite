@@ -141,10 +141,12 @@ App::post('/v1/account/sessions')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->action(function ($email, $password, $request, $response, $projectDB, $webhooks, $audits) {
+    ->action(function ($email, $password, $request, $response, $projectDB, $locale, $geodb, $webhooks, $audits) {
         /** @var Appwrite\Swoole\Request $request */
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var Utopia\Locale\Locale $locale */
+        /** @var GeoIp2\Database\Reader $geodb */
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
 
@@ -167,6 +169,23 @@ App::post('/v1/account/sessions')
             throw new Exception('Invalid credentials', 401); // Wrong password or username
         }
 
+        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
+
+        $dd->parse();
+
+        $os = $dd->getOs();
+        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+        $osName = (isset($os['name'])) ? $os['name'] : '';
+        $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+        $client = $dd->getClient();
+        $clientType = (isset($client['type'])) ? $client['type'] : '';
+        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+        $clientName = (isset($client['name'])) ? $client['name'] : '';
+        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
         $session = new Document([
@@ -177,7 +196,31 @@ App::post('/v1/account/sessions')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+
+            'osCode' => $osCode,
+            'osName' => $osName,
+            'osVersion' => $osVersion,
+            'clientType' => $clientType,
+            'clientCode' => $clientCode,
+            'clientName' => $clientName,
+            'clientVersion' => $clientVersion,
+            'clientEngine' => $clientEngine,
+            'clientEngineVersion' => $clientEngineVersion,
+            'deviceName' => $dd->getDeviceName(),
+            'deviceBrand' => $dd->getBrandName(),
+            'deviceModel' => $dd->getModel(),
         ]);
+
+        try {
+            $record = $geodb->country($request->getIP());
+            $session
+                ->setAttribute('countryCode', \strtolower($record->country->isoCode))
+            ;
+        } catch (\Exception $e) {
+            $session
+                ->setAttribute('countryCode', '--')
+            ;
+        }
 
         Authorization::setRole('user:'.$profile->getId());
 
@@ -219,9 +262,14 @@ App::post('/v1/account/sessions')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($profile->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', (isset($countries[$session->getAttribute('countryCode')])) ? $countries[$session->getAttribute('countryCode')] : $locale->getText('locale.country.unknown'))
+        ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
-    }, ['request', 'response', 'projectDB', 'webhooks', 'audits']);
+    }, ['request', 'response', 'projectDB', 'locale', 'geodb', 'webhooks', 'audits']);
 
 App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create Account Session with OAuth2')
@@ -569,58 +617,34 @@ App::get('/v1/account/sessions')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/account/get-sessions.md')
-    ->action(function ($response, $user, $locale, $geodb) {
+    ->action(function ($response, $user, $locale) {
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
 
         $tokens = $user->getAttribute('tokens', []);
         $sessions = [];
-        $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
-        $index = 0;
         $countries = $locale->getText('countries');
+        $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
         foreach ($tokens as $token) { /* @var $token Document */
             if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
                 continue;
             }
 
-            $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
+            $token->setAttribute('countryName', (isset($countries[$token->getAttribute('contryCode')]))
+                ? $countries[$token->getAttribute('contryCode')]
+                : $locale->getText('locale.country.unknown'));
+            $token->setAttribute('current', ($current == $token->getId()) ? true : false);
 
-            $dd = new DeviceDetector($userAgent);
-
-            // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            // $dd->skipBotDetection();
-
-            $dd->parse();
-
-            $sessions[$index] = [
-                '$id' => $token->getId(),
-                'OS' => $dd->getOs(),
-                'client' => $dd->getClient(),
-                'device' => $dd->getDevice(),
-                'brand' => $dd->getBrand(),
-                'model' => $dd->getModel(),
-                'ip' => $token->getAttribute('ip', ''),
-                'geo' => [],
-                'current' => ($current == $token->getId()) ? true : false,
-            ];
-
-            try {
-                $record = $geodb->country($token->getAttribute('ip', ''));
-                $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
-            } catch (\Exception $e) {
-                $sessions[$index]['geo']['isoCode'] = '--';
-                $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
-            }
-
-            ++$index;
+            $sessions[] = $token;
         }
 
-        $response->json($sessions);
-    }, ['response', 'user', 'locale', 'geodb']);
+        $response->dynamic(new Document([
+            'sum' => count($sessions),
+            'sessions' => $sessions
+        ]), Response::MODEL_SESSION_LIST);
+    }, ['response', 'user', 'locale']);
 
 App::get('/v1/account/logs')
     ->desc('Get Account Logs')

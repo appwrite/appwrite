@@ -158,11 +158,10 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->action(function ($userId, $response, $projectDB, $locale, $geodb) {
+    ->action(function ($userId, $response, $projectDB, $locale) {
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
-        /** @var GeoIp2\Database\Reader $geodb */
 
         $user = $projectDB->getDocument($userId);
 
@@ -172,7 +171,6 @@ App::get('/v1/users/:userId/sessions')
 
         $tokens = $user->getAttribute('tokens', []);
         $sessions = [];
-        $index = 0;
         $countries = $locale->getText('countries');
 
         foreach ($tokens as $token) { /* @var $token Document */
@@ -180,40 +178,19 @@ App::get('/v1/users/:userId/sessions')
                 continue;
             }
 
-            $userAgent = (!empty($token->getAttribute('userAgent'))) ? $token->getAttribute('userAgent') : 'UNKNOWN';
+            $token->setAttribute('countryName', (isset($countries[$token->getAttribute('contryCode')]))
+                ? $countries[$token->getAttribute('contryCode')]
+                : $locale->getText('locale.country.unknown'));
+            $token->setAttribute('current', false);
 
-            $dd = new DeviceDetector($userAgent);
-
-            // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-            // $dd->skipBotDetection();
-
-            $dd->parse();
-
-            $sessions[$index] = [
-                '$id' => $token->getId(),
-                'OS' => $dd->getOs(),
-                'client' => $dd->getClient(),
-                'device' => $dd->getDevice(),
-                'brand' => $dd->getBrand(),
-                'model' => $dd->getModel(),
-                'ip' => $token->getAttribute('ip', ''),
-                'geo' => [],
-            ];
-
-            try {
-                $record = $geodb->country($token->getAttribute('ip', ''));
-                $sessions[$index]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                $sessions[$index]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
-            } catch (\Exception $e) {
-                $sessions[$index]['geo']['isoCode'] = '--';
-                $sessions[$index]['geo']['country'] = $locale->getText('locale.country.unknown');
-            }
-
-            ++$index;
+            $sessions[] = $token;
         }
 
-        $response->json($sessions);
-    }, ['response', 'projectDB', 'locale', 'geodb']);
+        $response->dynamic(new Document([
+            'sum' => count($sessions),
+            'sessions' => $sessions
+        ]), Response::MODEL_SESSION_LIST);
+    }, ['response', 'projectDB', 'locale']);
 
 App::get('/v1/users/:userId/logs')
     ->desc('Get User Logs')
