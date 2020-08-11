@@ -158,14 +158,14 @@ $graph = $this->getParam('graph', false);
 
                 <div>
                     <div class="pull-start margin-end avatar-container">
-                        <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar" loading="lazy" width="60" height="60" />
+                        <img src="" data-ls-attrs="src=/images/clients/{{platform.type}}.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Platform Logo" class="avatar" loading="lazy" width="60" height="60" />
                         
                         <div data-ls-if="{{platform.type}} === 'flutter-ios'" class="corner">
-                            <img src="" data-ls-attrs="src=/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xs" loading="lazy" width="30" height="30" />
+                            <img src="" data-ls-attrs="src=/images/clients/ios.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="iOS Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
                         
                         <div data-ls-if="{{platform.type}} === 'flutter-android'" class="corner">
-                            <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" class="avatar xs" loading="lazy" width="30" height="30" />
+                            <img src="" data-ls-attrs="src=/images/clients/android.png?v=<?php echo APP_CACHE_BUSTER; ?>" alt="Android Logo" class="avatar xs" loading="lazy" width="30" height="30" />
                         </div>
                     </div>
                     <span class="text-one-liner" data-ls-bind="{{platform.name}}"></span>

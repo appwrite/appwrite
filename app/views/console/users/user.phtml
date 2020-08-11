@@ -184,7 +184,7 @@
                                     <span data-ls-bind="{{session.clientName}}"></span> <span data-ls-bind="{{session.clientVersion}}"></span> on <span data-ls-bind="{{session.deviceModel}}"></span> <span data-ls-bind="{{session.osName}}"></span> <span data-ls-bind="{{session.osVersion}}"></span>
 
                                     <div class="margin-top-small">
-                                        <img data-ls-attrs="src={{env.API}}/avatars/flags/{{session.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
+                                        <img data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{session.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs margin-end-small inline" />
                                         <small data-ls-bind="{{session.ip}}"></small> / <small data-ls-bind="{{session.countryName}}"></small>
                                     </div>
                                 </li>
@@ -244,7 +244,7 @@
                                         <div data-ls-if="(!{{log.client.name}})" class="text-align-center text-fade">Unknown</div>
                                     </td>
                                     <td data-title="Location: ">
-                                        <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                        <img data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
                                         <span data-ls-bind="{{log.geo.country}}"></span>
                                     </td>
                                     <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
