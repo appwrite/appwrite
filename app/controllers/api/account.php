@@ -385,12 +385,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
-    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $audits) use ($oauthDefaultSuccess) {
+    ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
         /** @var Appwrite\Swoole\Request $request */
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var GeoIp2\Database\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
         
         $protocol = $request->getProtocol();
@@ -511,6 +512,24 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         // Create session token, verify user account and update OAuth2 ID and Access Token
 
+
+        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
+
+        $dd->parse();
+
+        $os = $dd->getOs();
+        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+        $osName = (isset($os['name'])) ? $os['name'] : '';
+        $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+        $client = $dd->getClient();
+        $clientType = (isset($client['type'])) ? $client['type'] : '';
+        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+        $clientName = (isset($client['name'])) ? $client['name'] : '';
+        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document([
@@ -521,7 +540,31 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+
+            'osCode' => $osCode,
+            'osName' => $osName,
+            'osVersion' => $osVersion,
+            'clientType' => $clientType,
+            'clientCode' => $clientCode,
+            'clientName' => $clientName,
+            'clientVersion' => $clientVersion,
+            'clientEngine' => $clientEngine,
+            'clientEngineVersion' => $clientEngineVersion,
+            'deviceName' => $dd->getDeviceName(),
+            'deviceBrand' => $dd->getBrandName(),
+            'deviceModel' => $dd->getModel(),
         ]);
+
+        try {
+            $record = $geodb->country($request->getIP());
+            $session
+                ->setAttribute('countryCode', \strtolower($record->country->isoCode))
+            ;
+        } catch (\Exception $e) {
+            $session
+                ->setAttribute('countryCode', '--')
+            ;
+        }
 
         $user
             ->setAttribute('oauth2'.\ucfirst($provider), $oauth2ID)
@@ -570,7 +613,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expiry, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
-    }, ['request', 'response', 'project', 'user', 'projectDB', 'audits']);
+    }, ['request', 'response', 'project', 'user', 'projectDB', 'geodb', 'audits']);
 
 App::get('/v1/account')
     ->desc('Get Account')

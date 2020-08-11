@@ -17,6 +17,7 @@ use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
+use DeviceDetector\DeviceDetector;
 
 App::post('/v1/teams')
     ->desc('Create Team')
@@ -461,11 +462,12 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
     ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
     ->param('secret', '', function () { return new Text(256); }, 'Secret key.')
-    ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $audits) {
+    ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $geodb, $audits) {
         /** @var Appwrite\Swoole\Request $request */
         /** @var Appwrite\Swoole\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
+        /** @var GeoIp2\Database\Reader $geodb */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
@@ -522,10 +524,28 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         ;
 
         // Log user in
+
+        $dd = new DeviceDetector($request->getUserAgent('UNKNOWN'));
+
+        $dd->parse();
+
+        $os = $dd->getOs();
+        $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+        $osName = (isset($os['name'])) ? $os['name'] : '';
+        $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+        $client = $dd->getClient();
+        $clientType = (isset($client['type'])) ? $client['type'] : '';
+        $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+        $clientName = (isset($client['name'])) ? $client['name'] : '';
+        $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+        $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+        $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
 
-        $user->setAttribute('tokens', new Document([
+        $session = new Document([
             '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
@@ -533,7 +553,33 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'expire' => $expiry,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
-        ]), Document::SET_TYPE_APPEND);
+
+            'osCode' => $osCode,
+            'osName' => $osName,
+            'osVersion' => $osVersion,
+            'clientType' => $clientType,
+            'clientCode' => $clientCode,
+            'clientName' => $clientName,
+            'clientVersion' => $clientVersion,
+            'clientEngine' => $clientEngine,
+            'clientEngineVersion' => $clientEngineVersion,
+            'deviceName' => $dd->getDeviceName(),
+            'deviceBrand' => $dd->getBrandName(),
+            'deviceModel' => $dd->getModel(),
+        ]);
+
+        try {
+            $record = $geodb->country($request->getIP());
+            $session
+                ->setAttribute('countryCode', \strtolower($record->country->isoCode))
+            ;
+        } catch (\Exception $e) {
+            $session
+                ->setAttribute('countryCode', '--')
+            ;
+        }
+
+        $user->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
 
         Authorization::setRole('user:'.$userId);
 
@@ -576,8 +622,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
             'email' => $user->getAttribute('email'),
             'name' => $user->getAttribute('name'),
         ])), Response::MODEL_MEMBERSHIP);
-        
-    }, ['request', 'response', 'user', 'projectDB', 'audits']);
+    }, ['request', 'response', 'user', 'projectDB', 'geodb', 'audits']);
 
 App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->desc('Delete Team Membership')
