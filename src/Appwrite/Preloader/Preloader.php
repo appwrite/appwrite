@@ -65,7 +65,7 @@ class Preloader
 
         $already = count($this->included);
 
-        echo "[Preloader] Preloaded {$already} files.".PHP_EOL;
+        //echo "[Preloader] Preloaded {$already} files.".PHP_EOL;
     }
 
     private function loadPath(string $path): void
