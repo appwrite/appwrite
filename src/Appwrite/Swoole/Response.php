@@ -2,7 +2,7 @@
 
 namespace Appwrite\Swoole;
 
-use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Response as UtopiaResponse;
 use Swoole\Http\Response as SwooleResponse;
 
 class Response extends UtopiaResponse
