@@ -56,7 +56,7 @@ class Func extends Model
                 'type' => 'string',
                 'description' => 'Function trigger events.',
                 'default' => [],
-                'example' => 'account.create',
+                'example' => ['account.create'],
                 'array' => true,
             ])
             ->addRule('schedule', [

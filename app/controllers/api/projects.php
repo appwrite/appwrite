@@ -2,7 +2,6 @@
 
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -19,6 +18,7 @@ use Appwrite\Database\Validator\UID;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
+use Appwrite\Utopia\Response;
 use Cron\CronExpression;
 
 App::post('/v1/projects')
@@ -39,7 +39,7 @@ App::post('/v1/projects')
     ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal Address.', true)
     ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal Tax ID.', true)
     ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
 
@@ -97,7 +97,7 @@ App::get('/v1/projects')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $results = $consoleDB->getCollection([
@@ -133,7 +133,7 @@ App::get('/v1/projects/:projectId')
     ->label('sdk.method', 'get')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -163,7 +163,7 @@ App::get('/v1/projects/:projectId/usage')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('range', '30d', function () { return new WhiteList(['24h', '7d', '30d', '90d']); }, 'Date range.', true)
     ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Registry\Registry $register */
@@ -360,7 +360,7 @@ App::patch('/v1/projects/:projectId')
     ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal address.', true)
     ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal tax ID.', true)
     ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -400,7 +400,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
     ->param('secret', '', function () { return new text(512); }, 'Provider secret key.', true)
     ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -441,7 +441,7 @@ App::delete('/v1/projects/:projectId')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation. Must be between 6 to 32 chars.')
     ->action(function ($projectId, $password, $response, $user, $consoleDB, $deletes) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Event\Event $deletes */
@@ -495,7 +495,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -542,10 +542,8 @@ App::post('/v1/projects/:projectId/webhooks')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($webhook->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/webhooks')
@@ -556,7 +554,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->label('sdk.method', 'listWebhooks')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -579,7 +577,10 @@ App::get('/v1/projects/:projectId/webhooks')
             $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
         }
 
-        $response->json($webhooks);
+        $response->dynamic(new Document([
+            'sum' => count($webhooks),
+            'webhooks' => $webhooks
+        ]), Response::MODEL_WEBHOOK_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/webhooks/:webhookId')
@@ -591,7 +592,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -613,7 +614,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
             $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
         }
 
-        $response->json($webhook->getArrayCopy());
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/webhooks/:webhookId')
@@ -630,7 +631,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -670,7 +671,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Failed saving webhook to DB', 500);
         }
 
-        $response->json($webhook->getArrayCopy());
+        $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/webhooks/:webhookId')
@@ -682,7 +683,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -716,7 +717,7 @@ App::post('/v1/projects/:projectId/keys')
     ->param('name', null, function () { return new Text(256); }, 'Key name.')
     ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'))); }, 'Key scopes list.')
     ->action(function ($projectId, $name, $scopes, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -748,10 +749,8 @@ App::post('/v1/projects/:projectId/keys')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($key->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($key, Response::MODEL_KEY);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/keys')
@@ -762,7 +761,7 @@ App::get('/v1/projects/:projectId/keys')
     ->label('sdk.method', 'listKeys')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         
         $project = $consoleDB->getDocument($projectId);
@@ -771,7 +770,12 @@ App::get('/v1/projects/:projectId/keys')
             throw new Exception('Project not found', 404);
         }
 
-        $response->json($project->getAttribute('keys', [])); //FIXME make sure array objects return correctly
+        $keys = $project->getAttribute('keys', []);
+
+        $response->dynamic(new Document([
+            'sum' => count($keys),
+            'keys' => $keys
+        ]), Response::MODEL_KEY_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/keys/:keyId')
@@ -795,7 +799,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Key not found', 404);
         }
 
-        $response->json($key->getArrayCopy());
+        $response->dynamic($key, Response::MODEL_KEY);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/keys/:keyId')
@@ -809,7 +813,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('name', null, function () { return new Text(256); }, 'Key name.')
     ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'))); }, 'Key scopes list')
     ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -833,7 +837,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Failed saving key to DB', 500);
         }
 
-        $response->json($key->getArrayCopy());
+        $response->dynamic($key, Response::MODEL_KEY);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/keys/:keyId')
@@ -845,7 +849,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
     ->action(function ($projectId, $keyId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -886,7 +890,7 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
     ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -948,10 +952,8 @@ App::post('/v1/projects/:projectId/tasks')
             ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($task->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($task, Response::MODEL_TASK);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/tasks')
@@ -962,7 +964,7 @@ App::get('/v1/projects/:projectId/tasks')
     ->label('sdk.method', 'listTasks')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -985,7 +987,10 @@ App::get('/v1/projects/:projectId/tasks')
             $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
         }
 
-        $response->json($tasks);
+        $response->dynamic(new Document([
+            'sum' => count($tasks),
+            'tasks' => $tasks
+        ]), Response::MODEL_TASK_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/tasks/:taskId')
@@ -997,7 +1002,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1019,7 +1024,7 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
             $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
         }
 
-        $response->json($task->getArrayCopy());
+        $response->dynamic($task, Response::MODEL_TASK);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/tasks/:taskId')
@@ -1040,7 +1045,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
     ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1092,7 +1097,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             ResqueScheduler::enqueueAt($next, 'v1-tasks', 'TasksV1', $task->getArrayCopy());
         }
 
-        $response->json($task->getArrayCopy());
+        $response->dynamic($task, Response::MODEL_TASK);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/tasks/:taskId')
@@ -1104,7 +1109,7 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1141,7 +1146,7 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
     ->param('hostname', '', function () { return new Text(256); }, 'Platform client hostname.', true)
     ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1177,10 +1182,8 @@ App::post('/v1/projects/:projectId/platforms')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($platform->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     }, ['response', 'consoleDB']);
     
 App::get('/v1/projects/:projectId/platforms')
@@ -1191,7 +1194,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->label('sdk.method', 'listPlatforms')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1202,7 +1205,10 @@ App::get('/v1/projects/:projectId/platforms')
 
         $platforms = $project->getAttribute('platforms', []);
 
-        $response->json($platforms);
+        $response->dynamic(new Document([
+            'sum' => count($platforms),
+            'platforms' => $platforms
+        ]), Response::MODEL_PLATFORM_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/platforms/:platformId')
@@ -1214,7 +1220,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1229,7 +1235,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Platform not found', 404);
         }
 
-        $response->json($platform->getArrayCopy());
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     }, ['response', 'consoleDB']);
 
 App::put('/v1/projects/:projectId/platforms/:platformId')
@@ -1245,7 +1251,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
     ->param('hostname', '', function () { return new Text(256); }, 'Platform client URL.', true)
     ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1272,7 +1278,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Failed saving platform to DB', 500);
         }
 
-        $response->json($platform->getArrayCopy());
+        $response->dynamic($platform, Response::MODEL_PLATFORM);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/platforms/:platformId')
@@ -1284,7 +1290,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1317,7 +1323,7 @@ App::post('/v1/projects/:projectId/domains')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domain', null, function () { return new DomainValidator(); }, 'Domain name.')
     ->action(function ($projectId, $domain, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1366,10 +1372,8 @@ App::post('/v1/projects/:projectId/domains')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($domain->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/domains')
@@ -1380,7 +1384,7 @@ App::get('/v1/projects/:projectId/domains')
     ->label('sdk.method', 'listDomains')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1390,8 +1394,11 @@ App::get('/v1/projects/:projectId/domains')
         }
 
         $domains = $project->getAttribute('domains', []);
-
-        $response->json($domains);
+        
+        $response->dynamic(new Document([
+            'sum' => count($domains),
+            'domains' => $domains
+        ]), Response::MODEL_DOMAIN_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/domains/:domainId')
@@ -1403,7 +1410,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1418,7 +1425,7 @@ App::get('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Domain not found', 404);
         }
 
-        $response->json($domain->getArrayCopy());
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     }, ['response', 'consoleDB']);
 
 App::patch('/v1/projects/:projectId/domains/:domainId/verification')
@@ -1430,7 +1437,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
@@ -1452,7 +1459,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         }
 
         if ($domain->getAttribute('verification') === true) {
-            return $response->json($domain->getArrayCopy());
+            return $response->dynamic($domain, Response::MODEL_DOMAIN);
         }
 
         // Verify Domain with DNS records
@@ -1476,7 +1483,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             'domain' => $domain->getAttribute('domain'),
         ]);
 
-        $response->json($domain->getArrayCopy());
+        $response->dynamic($domain, Response::MODEL_DOMAIN);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId/domains/:domainId')
@@ -1488,7 +1495,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
         $project = $consoleDB->getDocument($projectId);
