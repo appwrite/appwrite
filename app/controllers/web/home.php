@@ -28,7 +28,7 @@ App::init(function ($layout) {
 }, ['layout'], 'home');
 
 App::shutdown(function ($response, $layout) {
-    /** @var Appwrite\Swoole\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
 
     $response->html($layout->render());
@@ -39,7 +39,7 @@ App::get('/')
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->action(function ($response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->redirect('/auth/signin');
     }, ['response']);
@@ -190,7 +190,7 @@ App::get('/open-api-2.json')
     ->action(function ($platform, $extensions, $tests, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
         /** @var Appwrite\Swoole\Request $request */
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $security = [
             APP_PLATFORM_CLIENT => ['Project' => []],

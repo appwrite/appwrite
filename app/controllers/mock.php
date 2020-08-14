@@ -187,7 +187,7 @@ App::get('/v1/mock/tests/general/redirect')
     ->label('sdk.description', 'Mock a redirect request for SDK tests')
     ->label('sdk.mock', true)
     ->action(function ($response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->redirect('/v1/mock/tests/general/redirected');
     }, ['response']);
@@ -210,7 +210,7 @@ App::get('/v1/mock/tests/general/set-cookie')
     ->label('sdk.description', 'Mock a set cookie request for SDK tests')
     ->label('sdk.mock', true)
     ->action(function ($response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', 'localhost', true, true);
     }, ['response']);
@@ -238,7 +238,7 @@ App::get('/v1/mock/tests/general/empty')
     ->label('sdk.description', 'Mock a redirected request for SDK tests')
     ->label('sdk.mock', true)
     ->action(function ($response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->noContent();
         exit();
@@ -254,7 +254,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->param('scope', '', function () { return new Text(100); }, 'OAuth2 scope list.')
     ->param('state', '', function () { return new Text(1024); }, 'OAuth2 state.')
     ->action(function ($clientId, $redirectURI, $scope, $state, $response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->redirect($redirectURI.'?'.\http_build_query(['code' => 'abcdef', 'state' => $state]));
     }, ['response']);
@@ -269,7 +269,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('client_secret', '', function () { return new Text(100); }, 'OAuth2 scope list.')
     ->param('code', '', function () { return new Text(100); }, 'OAuth2 state.')
     ->action(function ($clientId, $redirectURI, $clientSecret, $code, $response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         if ($clientId != '1') {
             throw new Exception('Invalid client ID');
@@ -292,7 +292,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
     ->label('docs', false)
     ->param('token', '', function () { return new Text(100); }, 'OAuth2 Access Token.')
     ->action(function ($token, $response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         if ($token != '123456') {
             throw new Exception('Invalid token');
@@ -309,7 +309,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response->json([
             'result' => 'success',
@@ -320,7 +320,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
     ->label('scope', 'public')
     ->label('docs', false)
     ->action(function ($response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $response
             ->setStatusCode(Response::STATUS_CODE_BAD_REQUEST)
@@ -332,7 +332,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
 App::shutdown(function($utopia, $response, $request) {
     /** @var Utopia\App $utopia */
     /** @var Appwrite\Swoole\Request $request */
-    /** @var Appwrite\Swoole\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
 
     $result = [];
     $route  = $utopia->match($request);

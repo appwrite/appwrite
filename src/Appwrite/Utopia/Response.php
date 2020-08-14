@@ -4,6 +4,8 @@ namespace Appwrite\Utopia;
 
 use Exception;
 use Appwrite\Database\Document;
+use Appwrite\Swoole\Response as SwooleResponse;
+use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Error;
@@ -17,9 +19,9 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Tag;
-use Utopia\Response as UtopiaResponse;
+use Appwrite\Utopia\Response\Model\Webhook;
 
-class Response extends UtopiaResponse
+class Response extends SwooleResponse
 {
     // General
     const MODEL_LOG = 'log'; // - Missing
@@ -64,11 +66,25 @@ class Response extends UtopiaResponse
     const MODEL_TAG_LIST = 'tagList';
     const MODEL_EXECUTION = 'execution';
     const MODEL_EXECUTION_LIST = 'executionList';
+    
+    // Project
+    const MODEL_PROJECT = 'project';
+    const MODEL_PROJECT_LIST = 'projectsList';
+    const MODEL_WEBHOOK = 'webhook';
+    const MODEL_WEBHOOK_LIST = 'webhookList';
+    const MODEL_KEY = 'key';
+    const MODEL_KEY_LIST = 'keyList';
+    const MODEL_TASK = 'task';
+    const MODEL_TASK_LIST = 'taskList';
+    const MODEL_PLATFORM = 'platform';
+    const MODEL_PLATFORM_LIST = 'platformList';
+    const MODEL_DOMAIN = 'domain';
+    const MODEL_DOMAIN_LIST = 'domainList';
 
     /**
      * Response constructor.
      */
-    public function __construct(int $time = 0)
+    public function __construct(SwooleHTTPResponse $response)
     {
         $this
             // General
@@ -83,6 +99,12 @@ class Response extends UtopiaResponse
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
             ->setModel(new BaseList('Tags List', self::MODEL_TAG_LIST, 'tags', self::MODEL_TAG))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Projects List', self::MODEL_EXECUTION_LIST, 'projects', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Webhooks List', self::MODEL_EXECUTION_LIST, 'webhooks', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('API Keys List', self::MODEL_EXECUTION_LIST, 'keyss', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Tasks List', self::MODEL_EXECUTION_LIST, 'tasks', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Platforms List', self::MODEL_EXECUTION_LIST, 'platforms', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('Domains List', self::MODEL_EXECUTION_LIST, 'domains', self::MODEL_EXECUTION))
             // Entities
             ->setModel(new User())
             ->setModel(new Session())
@@ -93,9 +115,10 @@ class Response extends UtopiaResponse
             ->setModel(new Func())
             ->setModel(new Tag())
             ->setModel(new Execution())
+            ->setModel(new Webhook())
         ;
 
-        parent::__construct($time);
+        parent::__construct($response);
     }
 
     /**

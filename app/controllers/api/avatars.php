@@ -19,7 +19,7 @@ use Utopia\Config\Config;
 use Utopia\Validator\HexColor;
 
 $avatarCallback = function ($type, $code, $width, $height, $quality, $response) {
-    /** @var Appwrite\Swoole\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
 
     $code = \strtolower($code);
     $type = \strtolower($type);
@@ -145,7 +145,7 @@ App::get('/v1/avatars/image')
     ->param('width', 400, function () { return new Range(0, 2000); }, 'Resize preview image width, Pass an integer between 0 to 2000.', true)
     ->param('height', 400, function () { return new Range(0, 2000); }, 'Resize preview image height, Pass an integer between 0 to 2000.', true)
     ->action(function ($url, $width, $height, $response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $quality = 80;
         $output = 'png';
@@ -209,7 +209,7 @@ App::get('/v1/avatars/favicon')
     ->label('sdk.description', '/docs/references/avatars/get-favicon.md')
     ->param('url', '', function () { return new URL(); }, 'Website URL which you want to fetch the favicon from.')
     ->action(function ($url, $response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $width = 56;
         $height = 56;
@@ -362,7 +362,7 @@ App::get('/v1/avatars/qr')
     ->param('margin', 1, function () { return new Range(0, 10); }, 'Margin from edge. Pass an integer between 0 to 10. Defaults to 1.', true)
     ->param('download', false, function () { return new Boolean(true); }, 'Return resulting image with \'Content-Disposition: attachment \' headers for the browser to start downloading it. Pass 0 for no header, or 1 for otherwise. Default value is set to 0.', true)
     ->action(function ($text, $size, $margin, $download, $response) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
 
         $download = ($download === '1' || $download === 'true' || $download === 1 || $download === true);
 
@@ -399,7 +399,7 @@ App::get('/v1/avatars/initials')
     ->param('color', '', function () { return new HexColor(); }, 'Changes text color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->param('background', '', function () { return new HexColor(); }, 'Changes background color. By default a random color will be picked and stay will persistent to the given name.', true)
     ->action(function ($name, $width, $height, $color, $background, $response, $user) {
-        /** @var Appwrite\Swoole\Response $response */
+        /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
 
         $themes = [

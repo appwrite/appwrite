@@ -16,7 +16,7 @@ if (file_exists(__DIR__.'/../vendor/autoload.php')) {
     require __DIR__.'/../vendor/autoload.php';
 }
 
-use Appwrite\Preloader\Preloader;
+use Utopia\Preloader\Preloader;
 
 include __DIR__.'/controllers/general.php';
 
