@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a95c05370522cef7f6042467a9adf219",
+    "content-hash": "fa5ca1bd60c2ebb41f76803af55744a8",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -1861,16 +1861,16 @@
         },
         {
             "name": "utopia-php/preloader",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/preloader.git",
-                "reference": "43e126b6c056e9a2c6a6f31f996f774e0072a22f"
+                "reference": "e710e7cf38605dd67c6cc599dd1150735765ad2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/43e126b6c056e9a2c6a6f31f996f774e0072a22f",
-                "reference": "43e126b6c056e9a2c6a6f31f996f774e0072a22f",
+                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/e710e7cf38605dd67c6cc599dd1150735765ad2e",
+                "reference": "e710e7cf38605dd67c6cc599dd1150735765ad2e",
                 "shasum": ""
             },
             "require": {
@@ -1905,7 +1905,7 @@
                 "upf",
                 "utopia"
             ],
-            "time": "2020-08-14T17:34:39+00:00"
+            "time": "2020-08-14T23:17:55+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -1953,6 +1953,56 @@
                 "utopia"
             ],
             "time": "2020-07-04T22:14:07+00:00"
+        },
+        {
+            "name": "utopia-php/swoole",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/swoole.git",
+                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/26965d8122cb42769a5543c3be1677321cdaebdb",
+                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1",
+                "utopia-php/framework": "0.*.*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0",
+                "swoole/ide-helper": "4.5.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Swoole\\": "src/Swoole"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "An extension for Utopia Framework to work with PHP Swoole as a PHP FPM alternative",
+            "keywords": [
+                "framework",
+                "http",
+                "php",
+                "server",
+                "swoole",
+                "upf",
+                "utopia"
+            ],
+            "time": "2020-08-14T22:44:34+00:00"
         }
     ],
     "packages-dev": [
@@ -2364,12 +2414,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "584a54ca0dadeee4e07c959e24fe61ffa4df22a2"
+                "reference": "f3ab30788f7d3e90c065c70a1658a464b8beff91"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/584a54ca0dadeee4e07c959e24fe61ffa4df22a2",
-                "reference": "584a54ca0dadeee4e07c959e24fe61ffa4df22a2",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/f3ab30788f7d3e90c065c70a1658a464b8beff91",
+                "reference": "f3ab30788f7d3e90c065c70a1658a464b8beff91",
                 "shasum": ""
             },
             "require": {
@@ -2408,7 +2458,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-08-12T17:52:10+00:00"
+            "time": "2020-08-15T12:16:28+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",

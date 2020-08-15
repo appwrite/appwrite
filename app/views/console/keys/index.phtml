@@ -18,14 +18,14 @@ $scopes = $this->getParam('scopes', []);
     data-success="trigger"
     data-success-param-trigger-events="projects.listKeys">
 
-    <div data-ls-if="0 == {{console-keys.length}} || undefined == {{console-keys.length}}" class="box margin-top margin-bottom">
+    <div data-ls-if="0 == {{console-keys.sum}} || undefined == {{console-keys.sum}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold">No API Keys Found</h3>
 
         <p class="margin-bottom-no">You haven't created any API keys for your project yet.</p>
     </div>
 
-    <div class="box margin-bottom" data-ls-if="0 != {{console-keys.length}}">
-        <ul data-ls-loop="console-keys" data-ls-as="key" class="list">
+    <div class="box margin-bottom" data-ls-if="0 != {{console-keys.sum}}">
+        <ul data-ls-loop="console-keys.keys" data-ls-as="key" class="list">
             <li class="clear">
                 <div data-ui-modal class="modal box close" data-button-alias="none" data-open-event="key-update-{{key.$id}}">
                     <button type="button" class="close pull-end" data-ui-modal-close=""><i class="icon-cancel"></i></button>

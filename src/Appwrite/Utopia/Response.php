@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
+use Appwrite\Utopia\Response\Model\Key;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
@@ -101,7 +102,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
             ->setModel(new BaseList('Projects List', self::MODEL_EXECUTION_LIST, 'projects', self::MODEL_EXECUTION))
             ->setModel(new BaseList('Webhooks List', self::MODEL_EXECUTION_LIST, 'webhooks', self::MODEL_EXECUTION))
-            ->setModel(new BaseList('API Keys List', self::MODEL_EXECUTION_LIST, 'keyss', self::MODEL_EXECUTION))
+            ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY))
             ->setModel(new BaseList('Tasks List', self::MODEL_EXECUTION_LIST, 'tasks', self::MODEL_EXECUTION))
             ->setModel(new BaseList('Platforms List', self::MODEL_EXECUTION_LIST, 'platforms', self::MODEL_EXECUTION))
             ->setModel(new BaseList('Domains List', self::MODEL_EXECUTION_LIST, 'domains', self::MODEL_EXECUTION))
@@ -116,6 +117,7 @@ class Response extends SwooleResponse
             ->setModel(new Tag())
             ->setModel(new Execution())
             ->setModel(new Webhook())
+            ->setModel(new Key())
         ;
 
         parent::__construct($response);
