@@ -352,7 +352,7 @@ App::setResource('clients', function($console, $project) {
 }, ['console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
@@ -414,7 +414,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 }, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
 
 App::setResource('project', function($consoleDB, $request) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Database\Database $consoleDB */
 
     Authorization::disable();
@@ -450,7 +450,7 @@ App::setResource('projectDB', function($register, $project) {
 }, ['register', 'project']);
 
 App::setResource('mode', function($request) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
 }, ['request']);
 

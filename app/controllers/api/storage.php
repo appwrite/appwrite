@@ -38,7 +38,7 @@ App::post('/v1/storage/files')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhooks, $audits, $usage) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -231,7 +231,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', function () { return new WhiteList(\array_keys(Config::getParam('storage-outputs'))); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(function ($fileId, $width, $height, $quality, $background, $output, $request, $response, $project, $projectDB) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */

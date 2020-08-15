@@ -42,7 +42,7 @@ App::post('/v1/account')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(100); }, 'User name.', true)
     ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
@@ -142,7 +142,7 @@ App::post('/v1/account/sessions')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->action(function ($email, $password, $request, $response, $projectDB, $locale, $geodb, $webhooks, $audits) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
@@ -290,7 +290,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('failure', $oauthDefaultFailure, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], function () { return new ArrayList(new Text(128)); }, 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
 
@@ -335,7 +335,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
 
         $domain = $request->getHostname();
@@ -360,7 +360,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
 
         $domain = $request->getHostname();
@@ -386,7 +386,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
     ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
     ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $geodb, $audits) use ($oauthDefaultSuccess) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */
@@ -939,7 +939,7 @@ App::delete('/v1/account')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/account/delete.md')
     ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1002,7 +1002,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('abuse-limit', 100)
     ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $webhooks) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1066,7 +1066,7 @@ App::delete('/v1/account/sessions')
     ->label('sdk.description', '/docs/references/account/delete-sessions.md')
     ->label('abuse-limit', 100)
     ->action(function ($request, $response, $user, $projectDB, $audits, $webhooks) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1124,7 +1124,7 @@ App::post('/v1/account/recovery')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Database\Document $project */
@@ -1301,7 +1301,7 @@ App::post('/v1/account/verification')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->action(function ($url, $request, $response, $project, $user, $projectDB, $locale, $audits, $mails) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Document $user */

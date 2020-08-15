@@ -189,7 +189,7 @@ App::get('/open-api-2.json')
     ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
     ->action(function ($platform, $extensions, $tests, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
 
         $security = [

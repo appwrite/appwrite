@@ -153,7 +153,7 @@ App::post('/v1/mock/tests/general/upload')
     ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
     ->param('file', [], function () { return new File(); }, 'Sample file param', false)
     ->action(function ($x, $y, $z, $file, $request) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
         
         $file = $request->getFiles('file');
         $file['tmp_name'] = (\is_array($file['tmp_name'])) ? $file['tmp_name'] : [$file['tmp_name']];
@@ -223,7 +223,7 @@ App::get('/v1/mock/tests/general/get-cookie')
     ->label('sdk.description', 'Mock a get cookie request for SDK tests')
     ->label('sdk.mock', true)
     ->action(function ($request) {
-        /** @var Appwrite\Swoole\Request $request */
+        /** @var Utopia\Swoole\Request $request */
 
         if ($request->getCookie('cookieName', '') !== 'cookieValue') {
             throw new Exception('Missing cookie value', 400);
@@ -331,7 +331,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
 
 App::shutdown(function($utopia, $response, $request) {
     /** @var Utopia\App $utopia */
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
 
     $result = [];

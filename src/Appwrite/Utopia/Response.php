@@ -4,7 +4,7 @@ namespace Appwrite\Utopia;
 
 use Exception;
 use Appwrite\Database\Document;
-use Appwrite\Swoole\Response as SwooleResponse;
+use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\BaseList;

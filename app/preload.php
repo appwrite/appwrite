@@ -20,7 +20,8 @@ use Utopia\Preloader\Preloader;
 
 include __DIR__.'/controllers/general.php';
 
-(new Preloader())
+$preloader = new Preloader();
+$preloader
     ->paths(realpath(__DIR__ . '/../app/config'))
     ->paths(realpath(__DIR__ . '/../app/controllers'))
     ->paths(realpath(__DIR__ . '/../src'))
@@ -33,3 +34,5 @@ include __DIR__.'/controllers/general.php';
     ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
     ->ignore(realpath(__DIR__ . '/../vendor/symfony'))
     ->load();
+
+echo 'Loaded '.$preloader->getCount()." file\n";
