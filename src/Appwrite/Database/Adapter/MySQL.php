@@ -435,6 +435,7 @@ class MySQL extends Adapter
             throw new Exception('Empty namespace');
         }
 
+        $unique = 'app_'.$namespace.'.database.unique';
         $documents = 'app_'.$namespace.'.database.documents';
         $properties = 'app_'.$namespace.'.database.properties';
         $relationships = 'app_'.$namespace.'.database.relationships';
@@ -442,6 +443,7 @@ class MySQL extends Adapter
         $abuse = 'app_'.$namespace.'.abuse.abuse';
 
         try {
+            $this->getPDO()->prepare('DROP TABLE `'.$unique.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$documents.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$properties.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$relationships.'`;')->execute();
