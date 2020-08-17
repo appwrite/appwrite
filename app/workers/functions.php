@@ -133,7 +133,7 @@ class FunctionsV1
 
                     Authorization::disable();
 
-                    $functions = $database->getCollection([
+                    $functions = $database->find([
                         'limit' => $limit,
                         'offset' => $offset,
                         'orderField' => 'name',

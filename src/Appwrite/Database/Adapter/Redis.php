@@ -184,9 +184,9 @@ class Redis extends Adapter
      *
      * @throws Exception
      */
-    public function getCollection(array $options)
+    public function find(array $options)
     {
-        $data = $this->adapter->getCollection($options);
+        $data = $this->adapter->find($options);
         $keys = [];
 
         foreach ($data as $node) {

@@ -33,7 +33,7 @@ App::post('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -85,7 +85,7 @@ App::get('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->getCollection([
+        $results = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'registration',

@@ -85,7 +85,7 @@ class CertificatesV1
             }
         }
 
-        $certificate = $consoleDB->getCollectionFirst([
+        $certificate = $consoleDB->findFirst([
             'limit' => 1,
             'offset' => 0,
             'orderField' => 'id',

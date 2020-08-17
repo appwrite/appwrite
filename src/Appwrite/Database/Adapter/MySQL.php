@@ -440,7 +440,7 @@ class MySQL extends Adapter
      *
      * @return array
      */
-    public function getCollection(array $options)
+    public function find(array $options)
     {
         $start = \microtime(true);
         $orderCastMap = [

@@ -27,7 +27,7 @@ $callbacks = [
         $offset = 0;
 
         while ($sum >= 30) {
-            $all = $projectDB->getCollection([
+            $all = $projectDB->find([
                 'limit' => $limit,
                 'offset' => $offset,
                 'orderField' => '$uid',
@@ -212,7 +212,7 @@ $cli
                 }
             }
 
-            $projects = $consoleDB->getCollection([
+            $projects = $consoleDB->find([
                 'limit' => $limit,
                 'offset' => $offset,
                 'orderField' => 'name',

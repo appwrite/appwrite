@@ -100,7 +100,7 @@ App::get('/v1/teams')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->getCollection([
+        $results = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
@@ -190,7 +190,7 @@ App::delete('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
+        $memberships = $projectDB->find([
             'limit' => 2000, // TODO add members limit
             'offset' => 0,
             'filters' => [
@@ -241,7 +241,7 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
+        $memberships = $projectDB->find([
             'limit' => 50,
             'offset' => 0,
             'filters' => [
@@ -250,7 +250,7 @@ App::post('/v1/teams/:teamId/memberships')
             ],
         ]);
 
-        $invitee = $projectDB->getCollectionFirst([ // Get user by email address
+        $invitee = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -423,7 +423,7 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->getCollection([
+        $memberships = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'joined',
@@ -500,7 +500,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if (empty($user->getId())) {
-            $user = $projectDB->getCollectionFirst([ // Get user
+            $user = $projectDB->findFirst([ // Get user
                 'limit' => 1,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,

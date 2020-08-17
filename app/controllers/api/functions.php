@@ -77,7 +77,7 @@ App::get('/v1/functions')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        $results = $projectDB->getCollection([
+        $results = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
@@ -440,7 +440,7 @@ App::get('/v1/functions/:functionId/tags')
             throw new Exception('Function not found', 404);
         }
         
-        $results = $projectDB->getCollection([
+        $results = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
@@ -624,7 +624,7 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404);
         }
         
-        $results = $projectDB->getCollection([
+        $results = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',

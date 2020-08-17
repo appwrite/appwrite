@@ -174,7 +174,7 @@ App::get('/v1/storage/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->getCollection([
+        $results = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',

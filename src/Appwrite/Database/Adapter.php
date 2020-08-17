@@ -158,7 +158,7 @@ abstract class Adapter
      *
      * @return array
      */
-    abstract public function getCollection(array $options);
+    abstract public function find(array $options);
 
     /**
      * @param array $options

@@ -100,7 +100,7 @@ App::get('/v1/projects')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $results = $consoleDB->getCollection([
+        $results = $consoleDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'registration',
@@ -244,7 +244,7 @@ App::get('/v1/projects/:projectId/usage')
 
         // Users
 
-        $projectDB->getCollection([
+        $projectDB->find([
             'limit' => 0,
             'offset' => 0,
             'filters' => [
@@ -256,7 +256,7 @@ App::get('/v1/projects/:projectId/usage')
 
         // Documents
 
-        $collections = $projectDB->getCollection([
+        $collections = $projectDB->find([
             'limit' => 100,
             'offset' => 0,
             'filters' => [
@@ -269,7 +269,7 @@ App::get('/v1/projects/:projectId/usage')
         $documents = [];
 
         foreach ($collections as $collection) {
-            $result = $projectDB->getCollection([
+            $result = $projectDB->find([
                 'limit' => 0,
                 'offset' => 0,
                 'filters' => [

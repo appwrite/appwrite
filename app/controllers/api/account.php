@@ -67,7 +67,7 @@ App::post('/v1/account')
             }
         }
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -151,7 +151,7 @@ App::post('/v1/account/sessions')
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -462,7 +462,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
         }
 
-        $user = (empty($user->getId())) ? $projectDB->getCollectionFirst([ // Get user by provider id
+        $user = (empty($user->getId())) ? $projectDB->findFirst([ // Get user by provider id
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -474,7 +474,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
-            $user = $projectDB->getCollectionFirst([ // Get user by provider email address
+            $user = $projectDB->findFirst([ // Get user by provider email address
                 'limit' => 1,
                 'filters' => [
                     '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -861,7 +861,7 @@ App::patch('/v1/account/email')
             throw new Exception('Invalid credentials', 401);
         }
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -1132,7 +1132,7 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -1240,7 +1240,7 @@ App::put('/v1/account/recovery')
             throw new Exception('Passwords must match', 400);
         }
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,
@@ -1402,7 +1402,7 @@ App::put('/v1/account/verification')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->getCollectionFirst([ // Get user by email address
+        $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
                 '$collection='.Database::SYSTEM_COLLECTION_USERS,

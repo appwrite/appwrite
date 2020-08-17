@@ -111,7 +111,7 @@ App::get('/v1/database/collections')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->getCollection([
+        $results = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'name',
@@ -476,7 +476,7 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
-        $list = $projectDB->getCollection([
+        $list = $projectDB->find([
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => $orderField,

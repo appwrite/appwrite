@@ -124,7 +124,7 @@ class DeletesV1
 
             Authorization::disable();
 
-            $results = $database->getCollection([
+            $results = $database->find([
                 'limit' => $limit,
                 'offset' => 0,
                 'orderField' => '$id',

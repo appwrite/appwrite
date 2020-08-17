@@ -141,7 +141,7 @@ class Database
      *
      * @return Document[]
      */
-    public function getCollection(array $options)
+    public function find(array $options)
     {
         $options = \array_merge([
             'offset' => 0,
@@ -154,7 +154,7 @@ class Database
             'filters' => [],
         ], $options);
 
-        $results = $this->adapter->getCollection($options);
+        $results = $this->adapter->find($options);
 
         foreach ($results as &$node) {
             $node = $this->decode(new Document($node));
@@ -168,9 +168,9 @@ class Database
      *
      * @return Document
      */
-    public function getCollectionFirst(array $options)
+    public function findFirst(array $options)
     {
-        $results = $this->getCollection($options);
+        $results = $this->find($options);
         return \reset($results);
     }
 
@@ -179,9 +179,9 @@ class Database
      *
      * @return Document
      */
-    public function getCollectionLast(array $options)
+    public function findLast(array $options)
     {
-        $results = $this->getCollection($options);
+        $results = $this->find($options);
         return \end($results);
     }
 
