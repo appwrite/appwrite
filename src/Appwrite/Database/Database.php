@@ -517,16 +517,4 @@ class Database
 
         return $value;
     }
-
-    /**
-     * Get Last Modified.
-     *
-     * Return Unix timestamp of last time a node queried in current session has been changed
-     *
-     * @return int
-     */
-    public function lastModified()
-    {
-        return $this->adapter->lastModified();
-    }
 }

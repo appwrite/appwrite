@@ -18,6 +18,11 @@ class MySQL extends Adapter
     protected $register;
 
     /**
+     * @var array
+     */
+    protected $debug = [];
+
+    /**
      * Constructor.
      *
      * Set connection and settings
@@ -719,25 +724,6 @@ class MySQL extends Adapter
     }
 
     /**
-     * Get Unique Document ID.
-     */
-    public function getId()
-    {
-        $unique = \uniqid();
-        $attempts = 5;
-
-        for ($i = 1; $i <= $attempts; ++$i) {
-            $document = $this->getDocument($unique);
-
-            if (empty($document) || $document['$id'] !== $unique) {
-                return $unique;
-            }
-        }
-
-        throw new Exception('Failed to create a unique ID ('.$attempts.' attempts)');
-    }
-
-    /**
      * Parse Filter.
      *
      * @param string $filter
@@ -824,6 +810,35 @@ class MySQL extends Adapter
         }
 
         throw new Exception('Unknown data type: '.$value.' ('.\gettype($value).')');
+    }
+
+    /**
+     * @param $key
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setDebug($key, $value)
+    {
+        $this->debug[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDebug()
+    {
+        return $this->debug;
+    }
+
+    /**
+     * return $this;.
+     */
+    public function resetDebug()
+    {
+        $this->debug = [];
     }
 
     /**

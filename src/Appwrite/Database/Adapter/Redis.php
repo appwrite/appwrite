@@ -219,18 +219,6 @@ class Redis extends Adapter
     }
 
     /**
-     * Last Modified.
-     *
-     * Return Unix timestamp of last time a node queried in current session has been changed
-     *
-     * @return int
-     */
-    public function lastModified()
-    {
-        return;
-    }
-
-    /**
      * @return array
      */
     public function getDebug()

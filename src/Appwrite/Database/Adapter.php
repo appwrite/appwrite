@@ -6,10 +6,53 @@ use Exception;
 
 abstract class Adapter
 {
+    const DATA_TYPE_STRING = 'string';
+    const DATA_TYPE_INTEGER = 'integer';
+    const DATA_TYPE_FLOAT = 'float';
+    const DATA_TYPE_BOOLEAN = 'boolean';
+    const DATA_TYPE_OBJECT = 'object';
+    const DATA_TYPE_DICTIONARY = 'dictionary';
+    const DATA_TYPE_ARRAY = 'array';
+    const DATA_TYPE_NULL = 'null';
+
     /**
      * @var string
      */
     protected $namespace = '';
+
+    /**
+     * @var array
+     */
+    protected $debug = [];
+
+    /**
+     * @param $key
+     * @param $value
+     *
+     * @return $this
+     */
+    public function setDebug($key, $value)
+    {
+        $this->debug[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDebug()
+    {
+        return $this->debug;
+    }
+
+    /**
+     * return $this
+     */
+    public function resetDebug()
+    {
+        $this->debug = [];
+    }
 
     /**
      * Set Namespace.
@@ -125,18 +168,21 @@ abstract class Adapter
     abstract public function getCount(array $options);
 
     /**
-     * Last Modified.
-     *
-     * Return Unix timestamp of last time a node queried in corrent session has been changed
-     *
-     * @return int
+     * Get Unique Document ID.
      */
-    abstract public function lastModified();
+    public function getId()
+    {
+        $unique = \uniqid();
+        $attempts = 5;
 
-    /**
-     * Get Debug Data.
-     *
-     * @return array
-     */
-    abstract public function getDebug();
+        for ($i = 1; $i <= $attempts; ++$i) {
+            $document = $this->getDocument($unique);
+
+            if (empty($document) || $document['$id'] !== $unique) {
+                return $unique;
+            }
+        }
+
+        throw new Exception('Failed to create a unique ID ('.$attempts.' attempts)');
+    }
 }
