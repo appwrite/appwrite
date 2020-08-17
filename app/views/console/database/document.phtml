@@ -29,13 +29,13 @@ $collections = [];
 
         if(!isset($collections[$item])) {
             Authorization::disable(); //TODO Try and avoid calling the DB from the template
-            $collections[$item] = $db->getDocument($item, false);
+            $collections[$item] = $db->getDocument(Database::COLLECTION_COLLECTIONS, $item, false);
             Authorization::reset();
         }
 
         $childCollection = $collections[$item];
 
-        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
+        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::COLLECTION_COLLECTIONS) {
             continue;
         }
 
@@ -81,13 +81,13 @@ $collections = [];
 
         if(!isset($collections[$item])) {
             Authorization::disable(); //TODO Try and avoid calling the DB from the template
-            $collections[$item] = $db->getDocument($item, false);
+            $collections[$item] = $db->getDocument(Database::COLLECTION_COLLECTIONS, $item, false);
             Authorization::reset();
         }
 
         $childCollection = $collections[$item];
 
-        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::SYSTEM_COLLECTION_COLLECTIONS) {
+        if(!$childCollection->getId() || $childCollection->getCollection() !== Database::COLLECTION_COLLECTIONS) {
             continue;
         }
     ?>

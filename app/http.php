@@ -104,7 +104,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             var_dump($th->getMessage());
             var_dump($th->getFile());
             var_dump($th->getLine());
-            $swooleResponse->end('error: '.$th->getMessage());
+            $swooleResponse->end('error: '.$th->getMessage() . json_encode($th->getTrace()));
         }
         
         $swooleResponse->end('500: Server Error');

@@ -140,7 +140,7 @@ class FunctionsV1
                         'orderType' => 'ASC',
                         'orderCast' => 'string',
                         'filters' => [
-                            '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
+                            '$collection='.Database::COLLECTION_FUNCTIONS,
                         ],
                     ]);
 
@@ -174,10 +174,10 @@ class FunctionsV1
 
             case 'http':
                 Authorization::disable();
-                $function = $database->getDocument($functionId);
+                $function = $database->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
                 Authorization::reset();
 
-                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
                     throw new Exception('Function not found');
                 }
 
@@ -205,7 +205,7 @@ class FunctionsV1
         $environments = Config::getParam('environments');
 
         Authorization::disable();
-        $tag = $database->getDocument($function->getAttribute('tag', ''));
+        $tag = $database->getDocument(Database::COLLECTION_TAGS, $function->getAttribute('tag', ''));
         Authorization::reset();
 
         if($tag->getAttribute('functionId') !== $function->getId()) {
@@ -214,21 +214,23 @@ class FunctionsV1
 
         Authorization::disable();
 
-        $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-            '$permissions' => [
-                'read' => [],
-                'write' => [],
-            ],
-            'dateCreated' => time(),
-            'functionId' => $function->getId(),
-            'trigger' => $trigger, // http / schedule / event
-            'status' => 'processing', // waiting / processing / completed / failed
-            'exitCode' => 0,
-            'stdout' => '',
-            'stderr' => '',
-            'time' => 0,
-        ]);
+        $execution = (!empty($executionId))
+            ? $database->getDocument(Database::COLLECTION_EXECUTIONS, $executionId)
+            : $database->createDocument(Database::COLLECTION_EXECUTIONS, [
+                '$collection' => Database::COLLECTION_EXECUTIONS,
+                '$permissions' => [
+                    'read' => [],
+                    'write' => [],
+                ],
+                'dateCreated' => time(),
+                'functionId' => $function->getId(),
+                'trigger' => $trigger, // http / schedule / event
+                'status' => 'processing', // waiting / processing / completed / failed
+                'exitCode' => 0,
+                'stdout' => '',
+                'stderr' => '',
+                'time' => 0,
+            ]);
 
         if(false === $execution) {
             throw new Exception('Failed to create execution');
@@ -393,7 +395,7 @@ class FunctionsV1
 
         Authorization::disable();
         
-        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
+        $execution = $database->updateDocument(Database::COLLECTION_EXECUTIONS, $execution->getId(), array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
             'status' => $functionStatus,
             'exitCode' => $exitCode,

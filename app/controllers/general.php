@@ -50,7 +50,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     }
 
     $console->setAttribute('platforms', [ // Allways allow current host
-        '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        '$collection' => Database::COLLECTION_PLATFORMS,
         'name' => 'Current Host',
         'type' => 'web',
         'hostname' => $request->getHostname(),
@@ -202,7 +202,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     // TDOO Check if user is god
 
     if (!\in_array($scope, $scopes)) {
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS !== $project->getCollection()) { // Check if permission is denied because project is missing
             throw new Exception('Project not found', 404);
         }
         

@@ -42,11 +42,11 @@ class WebhooksV1
 
         Authorization::disable();
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
         Authorization::reset();
 
-        if (\is_null($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS !== $project->getCollection()) {
+        if (\is_null($project->getId()) || Database::COLLECTION_PROJECTS !== $project->getCollection()) {
             throw new Exception('Project Not Found');
         }
 

@@ -386,10 +386,10 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     Auth::$secret = $session['secret'];
 
     if (APP_MODE_ADMIN !== $mode) {
-        $user = $projectDB->getDocument(Auth::$unique);
+        $user = $projectDB->getDocument(Database::COLLECTION_USERS, Auth::$unique);
     }
     else {
-        $user = $consoleDB->getDocument(Auth::$unique);
+        $user = $consoleDB->getDocument(Database::COLLECTION_USERS, Auth::$unique);
 
         $user
             ->setAttribute('$id', 'admin-'.$user->getAttribute('$id'))
@@ -397,16 +397,16 @@ App::setResource('user', function($mode, $project, $console, $request, $response
     }
 
     if (empty($user->getId()) // Check a document has been found in the DB
-        || Database::SYSTEM_COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
+        || Database::COLLECTION_USERS !== $user->getCollection() // Validate returned document is really a user document
         || !Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret)) { // Validate user has valid login token
-        $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+        $user = new Document(['$id' => '', '$collection' => Database::COLLECTION_USERS]);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if (!empty($user->search('teamId', $project->getAttribute('teamId'), $user->getAttribute('memberships')))) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => '', '$collection' => Database::SYSTEM_COLLECTION_USERS]);
+            $user = new Document(['$id' => '', '$collection' => Database::COLLECTION_USERS]);
         }
     }
 
@@ -419,7 +419,7 @@ App::setResource('project', function($consoleDB, $request) {
 
     Authorization::disable();
 
-    $project = $consoleDB->getDocument($request->getParam('project',
+    $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $request->getParam('project',
         $request->getHeader('x-appwrite-project', '')));
 
     Authorization::reset();
@@ -428,7 +428,9 @@ App::setResource('project', function($consoleDB, $request) {
 }, ['consoleDB', 'request']);
 
 App::setResource('console', function($consoleDB) {
-    return $consoleDB->getDocument('console');
+    /** @var Appwrite\Database\Database $consoleDB */
+    
+    return $consoleDB->getDocument(Database::COLLECTION_PROJECTS, 'console');
 }, ['consoleDB']);
 
 App::setResource('consoleDB', function($register) {

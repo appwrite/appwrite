@@ -92,7 +92,7 @@ class CertificatesV1
             'orderType' => 'ASC',
             'orderCast' => 'string',
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_CERTIFICATES,
+                '$collection='.Database::COLLECTION_CERTIFICATES,
                 'domain='.$domain->get(),
             ],
         ]);
@@ -148,7 +148,7 @@ class CertificatesV1
         }
 
         $certificate = \array_merge($certificate, [
-            '$collection' => Database::SYSTEM_COLLECTION_CERTIFICATES,
+            '$collection' => Database::COLLECTION_CERTIFICATES,
             '$permissions' => [
                 'read' => [],
                 'write' => [],
@@ -160,7 +160,7 @@ class CertificatesV1
             'log' => \json_encode($response),
         ]);
 
-        $certificate = $consoleDB->createDocument($certificate);
+        $certificate = $consoleDB->createDocument(Database::COLLECTION_CERTIFICATES, $certificate);
 
         if(!$certificate) {
             throw new Exception('Failed saving certificate to DB');
@@ -172,7 +172,7 @@ class CertificatesV1
                 'certificateId' => $certificate->getId(),
             ]);
     
-            $document = $consoleDB->updateDocument($document);
+            $document = $consoleDB->updateDocument(Database::COLLECTION_DOMAINS, $document['$id'], $document);
     
             if(!$document) {
                 throw new Exception('Failed saving domain to DB');

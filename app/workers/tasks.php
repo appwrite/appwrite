@@ -64,11 +64,11 @@ class TasksV1
 
         Authorization::disable();
 
-        $task = $consoleDB->getDocument($taskId);
+        $task = $consoleDB->getDocument(Database::COLLECTION_TASKS, $taskId);
 
         Authorization::reset();
 
-        if (\is_null($task->getId()) || Database::SYSTEM_COLLECTION_TASKS !== $task->getCollection()) {
+        if (\is_null($task->getId()) || Database::COLLECTION_TASKS !== $task->getCollection()) {
             throw new Exception('Task Not Found');
         }
 
@@ -192,7 +192,7 @@ class TasksV1
 
         Authorization::disable();
 
-        if (false === $consoleDB->updateDocument($task->getArrayCopy())) {
+        if (false === $consoleDB->updateDocument(Database::COLLECTION_TASKS, $task->getId(), $task->getArrayCopy())) {
             throw new Exception('Failed saving tasks to DB');
         }
 

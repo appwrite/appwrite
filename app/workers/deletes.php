@@ -32,10 +32,10 @@ class DeletesV1
         $document = new Document($document);
         
         switch ($document->getCollection()) {
-            case Database::SYSTEM_COLLECTION_PROJECTS:
+            case Database::COLLECTION_PROJECTS:
                 $this->deleteProject($document);
                 break;
-            case Database::SYSTEM_COLLECTION_FUNCTIONS:
+            case Database::COLLECTION_FUNCTIONS:
                 $this->deleteFunction($document, $projectId);
                 break;
             
@@ -69,7 +69,7 @@ class DeletesV1
 
         // Delete Tags
         $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+            '$collection='.Database::COLLECTION_TAGS,
             'functionId='.$document->getId(),
         ], $projectDB, function(Document $document) use ($device) {
 
@@ -83,7 +83,7 @@ class DeletesV1
 
         // Delete Executions
         $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
+            '$collection='.Database::COLLECTION_EXECUTIONS,
             'functionId='.$document->getId(),
         ], $projectDB);
     }
@@ -92,7 +92,7 @@ class DeletesV1
     {
         Authorization::disable();
 
-        if($database->deleteDocument($document->getId())) {
+        if($database->deleteDocument($document->getCollection(), $document->getId())) {
             Console::success('Deleted document "'.$document->getId().'" successfully');
 
             if(is_callable($callback)) {

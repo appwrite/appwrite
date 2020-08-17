@@ -114,8 +114,8 @@ App::post('/v1/storage/files')
 
         $sizeActual = $device->getFileSize($path);
         
-        $file = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_FILES,
+        $file = $projectDB->createDocument(Database::COLLECTION_FILES, [
+            '$collection' => Database::COLLECTION_FILES,
             '$permissions' => [
                 'read' => $read,
                 'write' => $write,
@@ -182,7 +182,7 @@ App::get('/v1/storage/files')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_FILES,
+                '$collection='.Database::COLLECTION_FILES,
             ],
         ]);
 
@@ -205,9 +205,9 @@ App::get('/v1/storage/files/:fileId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $file = $projectDB->getDocument($fileId);
+        $file = $projectDB->getDocument(Database::COLLECTION_FILES, $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId()) || Database::COLLECTION_FILES != $file->getCollection()) {
             throw new Exception('File not found', 404);
         }
 
@@ -257,9 +257,9 @@ App::get('/v1/storage/files/:fileId/preview')
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
         $key = \md5($fileId.$width.$height.$quality.$background.$storage.$output);
 
-        $file = $projectDB->getDocument($fileId);
+        $file = $projectDB->getDocument(Database::COLLECTION_FILES, $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId()) || Database::COLLECTION_FILES != $file->getCollection()) {
             throw new Exception('File not found', 404);
         }
 
@@ -355,9 +355,9 @@ App::get('/v1/storage/files/:fileId/download')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $file = $projectDB->getDocument($fileId);
+        $file = $projectDB->getDocument(Database::COLLECTION_FILES, $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId()) || Database::COLLECTION_FILES != $file->getCollection()) {
             throw new Exception('File not found', 404);
         }
 
@@ -411,10 +411,10 @@ App::get('/v1/storage/files/:fileId/view')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $file  = $projectDB->getDocument($fileId);
+        $file  = $projectDB->getDocument(Database::COLLECTION_FILES, $fileId);
         $mimes = Config::getParam('storage-mimes');
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId()) || Database::COLLECTION_FILES != $file->getCollection()) {
             throw new Exception('File not found', 404);
         }
 
@@ -486,13 +486,13 @@ App::put('/v1/storage/files/:fileId')
         /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
 
-        $file = $projectDB->getDocument($fileId);
+        $file = $projectDB->getDocument(Database::COLLECTION_FILES, $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId()) || Database::COLLECTION_FILES != $file->getCollection()) {
             throw new Exception('File not found', 404);
         }
 
-        $file = $projectDB->updateDocument(\array_merge($file->getArrayCopy(), [
+        $file = $projectDB->updateDocument(Database::COLLECTION_FILES, $file->getId(), \array_merge($file->getArrayCopy(), [
             '$permissions' => [
                 'read' => $read,
                 'write' => $write,
@@ -533,16 +533,16 @@ App::delete('/v1/storage/files/:fileId')
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
         
-        $file = $projectDB->getDocument($fileId);
+        $file = $projectDB->getDocument(Database::COLLECTION_FILES, $fileId);
 
-        if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+        if (empty($file->getId()) || Database::COLLECTION_FILES != $file->getCollection()) {
             throw new Exception('File not found', 404);
         }
 
         $device = Storage::getDevice('files');
 
         if ($device->delete($file->getAttribute('path', ''))) {
-            if (!$projectDB->deleteDocument($fileId)) {
+            if (!$projectDB->deleteDocument(Database::COLLECTION_FILES, $fileId)) {
                 throw new Exception('Failed to remove file from DB', 500);
             }
         }
@@ -575,9 +575,9 @@ App::delete('/v1/storage/files/:fileId')
 //     ->param('storage', 'files', function () { return new WhiteList(['files']);})
 //     ->action(
 //         function ($fileId, $storage) use ($response, $request, $projectDB) {
-//             $file = $projectDB->getDocument($fileId);
+//             $file = $projectDB->getDocument(Database::COLLECTION_FILES, $fileId);
 
-//             if (empty($file->getId()) || Database::SYSTEM_COLLECTION_FILES != $file->getCollection()) {
+//             if (empty($file->getId()) || Database::COLLECTION_FILES != $file->getCollection()) {
 //                 throw new Exception('File not found', 404);
 //             }
 

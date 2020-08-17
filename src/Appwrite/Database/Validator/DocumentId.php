@@ -58,7 +58,7 @@ class DocumentId extends Validator
      */
     public function isValid($id)
     {
-        $document = $this->database->getDocument($id);
+        $document = $this->database->getDocument($this->collection, $id);
         
         if (!$document) {
             return false;

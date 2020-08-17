@@ -34,18 +34,19 @@ class Redis extends Adapter
     /**
      * Get Document.
      *
+     * @param string $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getDocument($id)
+    public function getDocument($collection, $id)
     {
         $output = \json_decode($this->getRedis()->get($this->getNamespace().':document-'.$id), true);
 
         if (!$output) {
-            $output = $this->adapter->getDocument($id);
+            $output = $this->adapter->getDocument($collection, $id);
             $this->getRedis()->set($this->getNamespace().':document-'.$id, \json_encode($output, JSON_UNESCAPED_UNICODE));
         }
 
@@ -78,7 +79,7 @@ class Redis extends Adapter
         foreach ($output['temp-relations'] as $i => $relationship) {
             $node = $relationship['end'];
 
-            $node = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument($node);
+            $node = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument('', $node);
 
             if (empty($node)) {
                 continue;
@@ -99,15 +100,17 @@ class Redis extends Adapter
     /**
      * Create Document.
      *
+     * @param string $collection
      * @param array $data
+     * @param array $unique
      *
      * @return array
      *
      * @throws Exception
      */
-    public function createDocument(array $data = [], array $unique = [])
+    public function createDocument(string $collection, array $data, array $unique = [])
     {
-        $data = $this->adapter->createDocument($data, $unique);
+        $data = $this->adapter->createDocument($collection, $data, $unique);
 
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
@@ -118,15 +121,17 @@ class Redis extends Adapter
     /**
      * Update Document.
      *
+     * @param string $collection
+     * @param string $id
      * @param array $data
      *
      * @return array
      *
      * @throws Exception
      */
-    public function updateDocument(array $data = [])
+    public function updateDocument(string $collection, string $id, array $data)
     {
-        $data = $this->adapter->updateDocument($data);
+        $data = $this->adapter->updateDocument($collection, $id, $data);
 
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
         $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
@@ -137,15 +142,16 @@ class Redis extends Adapter
     /**
      * Delete Document.
      *
-     * @param $id
+     * @param string $collection
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $collection, string $id)
     {
-        $data = $this->adapter->deleteDocument($id);
+        $data = $this->adapter->deleteDocument($collection, $id);
 
         $this->getRedis()->expire($this->getNamespace().':document-'.$id, 0);
         $this->getRedis()->expire($this->getNamespace().':document-'.$id, 0);
@@ -196,7 +202,7 @@ class Redis extends Adapter
         $nodes = (!empty($keys)) ? $this->getRedis()->mget($keys) : [];
 
         foreach ($data as $i => &$node) {
-            $temp = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument($node);
+            $temp = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument('', $node);
 
             if (!empty($temp)) {
                 $node = $temp;
@@ -213,9 +219,9 @@ class Redis extends Adapter
      *
      * @throws Exception
      */
-    public function getCount(array $options)
+    public function count(array $options)
     {
-        return $this->adapter->getCount($options);
+        return $this->adapter->count($options);
     }
 
     /**

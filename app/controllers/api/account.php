@@ -70,7 +70,7 @@ App::post('/v1/account')
         $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -82,8 +82,8 @@ App::post('/v1/account')
         Authorization::disable();
 
         try {
-            $user = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_USERS,
+            $user = $projectDB->createDocument(Database::COLLECTION_USERS, [
+                '$collection' => Database::COLLECTION_USERS,
                 '$permissions' => [
                     'read' => ['*'],
                     'write' => ['user:{self}'],
@@ -154,7 +154,7 @@ App::post('/v1/account/sessions')
         $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -189,7 +189,7 @@ App::post('/v1/account/sessions')
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $secret = Auth::tokenGenerator();
         $session = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
@@ -224,7 +224,7 @@ App::post('/v1/account/sessions')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $session = $projectDB->createDocument($session->getArrayCopy());
+        $session = $projectDB->createDocument($session->getCollection(), $session->getArrayCopy());
 
         if (false === $session) {
             throw new Exception('Failed saving session to DB', 500);
@@ -232,7 +232,7 @@ App::post('/v1/account/sessions')
 
         $profile->setAttribute('tokens', $session, Document::SET_TYPE_APPEND);
 
-        $profile = $projectDB->updateDocument($profile->getArrayCopy());
+        $profile = $projectDB->updateDocument($profile->getCollection(), $profile->getId(), $profile->getArrayCopy());
 
         if (false === $profile) {
             throw new Exception('Failed saving user to DB', 500);
@@ -459,13 +459,13 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $current = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
         if ($current) {
-            $projectDB->deleteDocument($current); //throw new Exception('User already logged in', 401);
+            $projectDB->deleteDocument(Database::COLLECTION_TOKENS, $current); //throw new Exception('User already logged in', 401);
         }
 
         $user = (empty($user->getId())) ? $projectDB->findFirst([ // Get user by provider id
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
                 'oauth2'.\ucfirst($provider).'='.$oauth2ID,
             ],
         ]) : $user;
@@ -477,7 +477,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user = $projectDB->findFirst([ // Get user by provider email address
                 'limit' => 1,
                 'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                    '$collection='.Database::COLLECTION_USERS,
                     'email='.$email,
                 ],
             ]);
@@ -486,8 +486,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Authorization::disable();
 
                 try {
-                    $user = $projectDB->createDocument([
-                        '$collection' => Database::SYSTEM_COLLECTION_USERS,
+                    $user = $projectDB->createDocument(Database::COLLECTION_USERS, [
+                        '$collection' => Database::COLLECTION_USERS,
                         '$permissions' => ['read' => ['*'], 'write' => ['user:{self}']],
                         'email' => $email,
                         'emailVerification' => true,
@@ -533,7 +533,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $secret = Auth::tokenGenerator();
         $expiry = \time() + Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $session = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user['$id']], 'write' => ['user:'.$user['$id']]],
             'type' => Auth::TOKEN_TYPE_LOGIN,
             'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
@@ -575,7 +575,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         Authorization::setRole('user:'.$user->getId());
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
+        $user = $projectDB->updateDocument($user->getCollection(), $user->getId(), $user->getArrayCopy());
 
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
@@ -670,7 +670,7 @@ App::get('/v1/account/sessions')
         $countries = $locale->getText('countries');
         $current = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_LOGIN, Auth::$secret);
 
-        foreach ($tokens as $token) { /* @var $token Document */
+        foreach ($tokens as $token) { /** @var Document $token */
             if (Auth::TOKEN_TYPE_LOGIN != $token->getAttribute('type')) {
                 continue;
             }
@@ -781,7 +781,7 @@ App::patch('/v1/account/name')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+        $user = $projectDB->updateDocument($user->getCollection(), $user->getId(), \array_merge($user->getArrayCopy(), [
             'name' => $name,
         ]));
 
@@ -821,7 +821,7 @@ App::patch('/v1/account/password')
             throw new Exception('Invalid credentials', 401);
         }
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+        $user = $projectDB->updateDocument($user->getCollection(), $user->getId(), \array_merge($user->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
         ]));
 
@@ -864,7 +864,7 @@ App::patch('/v1/account/email')
         $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -875,7 +875,7 @@ App::patch('/v1/account/email')
 
         // TODO after this user needs to confirm mail again
 
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+        $user = $projectDB->updateDocument($user->getCollection(), $user->getId(), \array_merge($user->getArrayCopy(), [
             'email' => $email,
             'emailVerification' => false,
         ]));
@@ -911,7 +911,7 @@ App::patch('/v1/account/prefs')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
         
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+        $user = $projectDB->updateDocument($user->getCollection(), $user->getId(), \array_merge($user->getArrayCopy(), [
             'prefs' => $prefs,
         ]));
 
@@ -947,7 +947,7 @@ App::delete('/v1/account')
         /** @var Appwrite\Event\Event $webhooks */
 
         $protocol = $request->getProtocol();
-        $user = $projectDB->updateDocument(\array_merge($user->getArrayCopy(), [
+        $user = $projectDB->updateDocument($user->getCollection(), $user->getId(), \array_merge($user->getArrayCopy(), [
             'status' => Auth::USER_STATUS_BLOCKED,
         ]));
 
@@ -1016,9 +1016,9 @@ App::delete('/v1/account/sessions/:sessionId')
                 
         $tokens = $user->getAttribute('tokens', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
+        foreach ($tokens as $token) { /** @var Document $token */
             if (($sessionId == $token->getId()) && Auth::TOKEN_TYPE_LOGIN == $token->getAttribute('type')) {
-                if (!$projectDB->deleteDocument($token->getId())) {
+                if (!$projectDB->deleteDocument($token->getCollection(), $token->getId())) {
                     throw new Exception('Failed to remove token from DB', 500);
                 }
 
@@ -1076,8 +1076,8 @@ App::delete('/v1/account/sessions')
         $protocol = $request->getProtocol();
         $tokens = $user->getAttribute('tokens', []);
 
-        foreach ($tokens as $token) { /* @var $token Document */
-            if (!$projectDB->deleteDocument($token->getId())) {
+        foreach ($tokens as $token) { /** @var Document $token */
+            if (!$projectDB->deleteDocument($token->getCollection(), $token->getId())) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
 
@@ -1135,7 +1135,7 @@ App::post('/v1/account/recovery')
         $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -1146,7 +1146,7 @@ App::post('/v1/account/recovery')
 
         $secret = Auth::tokenGenerator();
         $recovery = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$profile->getId()], 'write' => ['user:'.$profile->getId()]],
             'type' => Auth::TOKEN_TYPE_RECOVERY,
             'secret' => Auth::hash($secret), // On way hash encryption to protect DB leak
@@ -1157,7 +1157,7 @@ App::post('/v1/account/recovery')
             
         Authorization::setRole('user:'.$profile->getId());
 
-        $recovery = $projectDB->createDocument($recovery->getArrayCopy());
+        $recovery = $projectDB->createDocument($recovery->getCollection(), $recovery->getArrayCopy());
 
         if (false === $recovery) {
             throw new Exception('Failed saving recovery to DB', 500);
@@ -1165,7 +1165,7 @@ App::post('/v1/account/recovery')
 
         $profile->setAttribute('tokens', $recovery, Document::SET_TYPE_APPEND);
 
-        $profile = $projectDB->updateDocument($profile->getArrayCopy());
+        $profile = $projectDB->updateDocument($profile->getCollection(), $profile->getId(), $profile->getArrayCopy());
 
         if (false === $profile) {
             throw new Exception('Failed to save user to DB', 500);
@@ -1243,7 +1243,7 @@ App::put('/v1/account/recovery')
         $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
                 '$id='.$userId,
             ],
         ]);
@@ -1260,7 +1260,7 @@ App::put('/v1/account/recovery')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $profile = $projectDB->updateDocument(\array_merge($profile->getArrayCopy(), [
+        $profile = $projectDB->updateDocument($profile->getCollection(), $profile->getId(), \array_merge($profile->getArrayCopy(), [
             'password' => Auth::passwordHash($password),
             'password-update' => \time(),
             'emailVerification' => true,
@@ -1274,7 +1274,7 @@ App::put('/v1/account/recovery')
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        if (!$projectDB->deleteDocument($recovery)) {
+        if (!$projectDB->deleteDocument(Database::COLLECTION_TOKENS, $recovery)) {
             throw new Exception('Failed to remove recovery from DB', 500);
         }
 
@@ -1313,7 +1313,7 @@ App::post('/v1/account/verification')
         $verificationSecret = Auth::tokenGenerator();
         
         $verification = new Document([
-            '$collection' => Database::SYSTEM_COLLECTION_TOKENS,
+            '$collection' => Database::COLLECTION_TOKENS,
             '$permissions' => ['read' => ['user:'.$user->getId()], 'write' => ['user:'.$user->getId()]],
             'type' => Auth::TOKEN_TYPE_VERIFICATION,
             'secret' => Auth::hash($verificationSecret), // On way hash encryption to protect DB leak
@@ -1324,7 +1324,7 @@ App::post('/v1/account/verification')
             
         Authorization::setRole('user:'.$user->getId());
 
-        $verification = $projectDB->createDocument($verification->getArrayCopy());
+        $verification = $projectDB->createDocument(Database::COLLECTION_TOKENS, $verification->getArrayCopy());
 
         if (false === $verification) {
             throw new Exception('Failed saving verification to DB', 500);
@@ -1332,7 +1332,7 @@ App::post('/v1/account/verification')
 
         $user->setAttribute('tokens', $verification, Document::SET_TYPE_APPEND);
 
-        $user = $projectDB->updateDocument($user->getArrayCopy());
+        $user = $projectDB->updateDocument($user->getCollection(), $user->getId(), $user->getArrayCopy());
 
         if (false === $user) {
             throw new Exception('Failed to save user to DB', 500);
@@ -1405,7 +1405,7 @@ App::put('/v1/account/verification')
         $profile = $projectDB->findFirst([ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
                 '$id='.$userId,
             ],
         ]);
@@ -1422,7 +1422,7 @@ App::put('/v1/account/verification')
 
         Authorization::setRole('user:'.$profile->getId());
 
-        $profile = $projectDB->updateDocument(\array_merge($profile->getArrayCopy(), [
+        $profile = $projectDB->updateDocument($profile->getCollection(), $profile->getId(), \array_merge($profile->getArrayCopy(), [
             'emailVerification' => true,
         ]));
 
@@ -1434,7 +1434,7 @@ App::put('/v1/account/verification')
          * We act like we're updating and validating
          *  the verification token but actually we don't need it anymore.
          */
-        if (!$projectDB->deleteDocument($verification)) {
+        if (!$projectDB->deleteDocument(Database::COLLECTION_TOKENS, $verification)) {
             throw new Exception('Failed to remove verification from DB', 500);
         }
 

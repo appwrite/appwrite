@@ -11,45 +11,45 @@ use Appwrite\Database\Exception\Structure as StructureException;
 class Database
 {
     // System Core
-    const SYSTEM_COLLECTION_COLLECTIONS = 0;
-    const SYSTEM_COLLECTION_RULES = 'rules';
+    const COLLECTION_COLLECTIONS = 0;
+    const COLLECTION_RULES = 'rules';
 
     // Project
-    const SYSTEM_COLLECTION_PROJECTS = 'projects';
-    const SYSTEM_COLLECTION_WEBHOOKS = 'webhooks';
-    const SYSTEM_COLLECTION_KEYS = 'keys';
-    const SYSTEM_COLLECTION_TASKS = 'tasks';
-    const SYSTEM_COLLECTION_PLATFORMS = 'platforms';
-    const SYSTEM_COLLECTION_USAGES = 'usages'; //TODO add structure
-    const SYSTEM_COLLECTION_DOMAINS = 'domains';
-    const SYSTEM_COLLECTION_CERTIFICATES = 'certificates';
+    const COLLECTION_PROJECTS = 'projects';
+    const COLLECTION_WEBHOOKS = 'webhooks';
+    const COLLECTION_KEYS = 'keys';
+    const COLLECTION_TASKS = 'tasks';
+    const COLLECTION_PLATFORMS = 'platforms';
+    const COLLECTION_USAGES = 'usages'; //TODO add structure
+    const COLLECTION_DOMAINS = 'domains';
+    const COLLECTION_CERTIFICATES = 'certificates';
 
     // Auth, Account and Users (private to user)
-    const SYSTEM_COLLECTION_USERS = 'users';
-    const SYSTEM_COLLECTION_TOKENS = 'tokens';
+    const COLLECTION_USERS = 'users';
+    const COLLECTION_TOKENS = 'tokens';
 
     // Teams (shared among team members)
-    const SYSTEM_COLLECTION_MEMBERSHIPS = 'memberships';
-    const SYSTEM_COLLECTION_TEAMS = 'teams';
+    const COLLECTION_MEMBERSHIPS = 'memberships';
+    const COLLECTION_TEAMS = 'teams';
 
     // Storage
-    const SYSTEM_COLLECTION_FILES = 'files';
+    const COLLECTION_FILES = 'files';
 
     // Functions
-    const SYSTEM_COLLECTION_FUNCTIONS = 'functions';
-    const SYSTEM_COLLECTION_TAGS = 'tags';
-    const SYSTEM_COLLECTION_EXECUTIONS = 'executions';
+    const COLLECTION_FUNCTIONS = 'functions';
+    const COLLECTION_TAGS = 'tags';
+    const COLLECTION_EXECUTIONS = 'executions';
     
     // Var Types
-    const SYSTEM_VAR_TYPE_TEXT = 'text';
-    const SYSTEM_VAR_TYPE_NUMERIC = 'numeric';
-    const SYSTEM_VAR_TYPE_BOOLEAN = 'boolean';
-    const SYSTEM_VAR_TYPE_DOCUMENT = 'document';
-    const SYSTEM_VAR_TYPE_WILDCARD = 'wildcard';
-    const SYSTEM_VAR_TYPE_EMAIL = 'email';
-    const SYSTEM_VAR_TYPE_IP = 'ip';
-    const SYSTEM_VAR_TYPE_URL = 'url';
-    const SYSTEM_VAR_TYPE_KEY = 'key';
+    const VAR_TYPE_TEXT = 'text';
+    const VAR_TYPE_NUMERIC = 'numeric';
+    const VAR_TYPE_BOOLEAN = 'boolean';
+    const VAR_TYPE_DOCUMENT = 'document';
+    const VAR_TYPE_WILDCARD = 'wildcard';
+    const VAR_TYPE_EMAIL = 'email';
+    const VAR_TYPE_IP = 'ip';
+    const VAR_TYPE_URL = 'url';
+    const VAR_TYPE_KEY = 'key';
 
     /**
      * @var array
@@ -186,18 +186,20 @@ class Database
     }
 
     /**
-     * @param int  $id
+     * @param string $collection
+     * @param string $id
      * @param bool $mock is mocked data allowed?
+     * @param bool $decode
      *
      * @return Document
      */
-    public function getDocument($id, $mock = true, $decode = true)
+    public function getDocument($collection, $id, bool $mock = true, bool $decode = true)
     {
-        if (\is_null($id)) {
+        if ($id === '') {
             return new Document([]);
         }
 
-        $document = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($id));
+        $document = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($collection, $id));
         $validator = new Authorization($document, 'read');
 
         if (!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
@@ -210,14 +212,16 @@ class Database
     }
 
     /**
+     * @param string $collection
      * @param array $data
+     * @param array $unique
      *
      * @return Document|bool
      *
      * @throws AuthorizationException
      * @throws StructureException
      */
-    public function createDocument(array $data, array $unique = [])
+    public function createDocument(string $collection, array $data, array $unique = [])
     {
         $document = new Document($data);
 
@@ -235,7 +239,7 @@ class Database
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
         
-        $document = new Document($this->adapter->createDocument($document->getArrayCopy(), $unique));
+        $document = new Document($this->adapter->createDocument($collection, $document->getArrayCopy(), $unique));
         
         $document = $this->decode($document);
 
@@ -243,19 +247,21 @@ class Database
     }
 
     /**
+     * @param array $collection
+     * @param array $id
      * @param array $data
      *
      * @return Document|false
      *
      * @throws Exception
      */
-    public function updateDocument(array $data)
+    public function updateDocument(string $collection, string $id, array $data)
     {
         if (!isset($data['$id'])) {
             throw new Exception('Must define $id attribute');
         }
 
-        $document = $this->getDocument($data['$id']); // TODO make sure user don\'t need read permission for write operations
+        $document = $this->getDocument($collection, $id); // TODO make sure user don\'t need read permission for write operations
 
         // Make sure reserved keys stay constant
         $data['$id'] = $document->getId();
@@ -281,7 +287,7 @@ class Database
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        $new = new Document($this->adapter->updateDocument($new->getArrayCopy()));
+        $new = new Document($this->adapter->updateDocument($collection, $id, $new->getArrayCopy()));
         
         $new = $this->decode($new);
 
@@ -301,7 +307,7 @@ class Database
             throw new Exception('Must define $id attribute');
         }
 
-        $document = $this->getDocument($data['$id']); // TODO make sure user don\'t need read permission for write operations
+        $document = $this->getDocument($data['$collection'], $data['$id']); // TODO make sure user don\'t need read permission for write operations
 
         $validator = new Authorization($document, 'write');
 
@@ -323,7 +329,7 @@ class Database
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        $new = new Document($this->adapter->updateDocument($new->getArrayCopy()));
+        $new = new Document($this->adapter->updateDocument($new->getCollection(), $new->getId(), $new->getArrayCopy()));
 
         $new = $this->decode($new);
 
@@ -331,15 +337,16 @@ class Database
     }
 
     /**
-     * @param int $id
+     * @param string $collection
+     * @param string $id
      *
      * @return Document|false
      *
      * @throws AuthorizationException
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $collection, string $id)
     {
-        $document = $this->getDocument($id);
+        $document = $this->getDocument($collection, $id);
 
         $validator = new Authorization($document, 'write');
 
@@ -347,7 +354,7 @@ class Database
             throw new AuthorizationException($validator->getDescription());
         }
 
-        return new Document($this->adapter->deleteDocument($id));
+        return new Document($this->adapter->deleteDocument($collection, $id));
     }
 
     /**
@@ -373,13 +380,13 @@ class Database
      *
      * @return int
      */
-    public function getCount(array $options)
+    public function count(array $options)
     {
         $options = \array_merge([
             'filters' => [],
         ], $options);
 
-        $results = $this->adapter->getCount($options);
+        $results = $this->adapter->count($options);
 
         return $results;
     }
@@ -436,7 +443,7 @@ class Database
 
     public function encode(Document $document):Document
     {
-        $collection = $this->getDocument($document->getCollection(), true , false);
+        $collection = $this->getDocument(self::COLLECTION_COLLECTIONS, $document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {
@@ -457,7 +464,7 @@ class Database
 
     public function decode(Document $document):Document
     {
-        $collection = $this->getDocument($document->getCollection(), true , false);
+        $collection = $this->getDocument(self::COLLECTION_COLLECTIONS, $document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 
         foreach ($rules as $key => $rule) {

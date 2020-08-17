@@ -97,39 +97,41 @@ abstract class Adapter
     /**
      * Get Document.
      *
-     * @param int $id
+     * @param string $collection
+     * @param string $id
      *
      * @return array
      */
-    abstract public function getDocument($id);
+    abstract public function getDocument($collection, $id);
 
     /**
      * Create Document
-     **.
      *
      * @param array $data
      *
      * @return array
      */
-    abstract public function createDocument(array $data = [], array $unique = []);
+    abstract public function createDocument(string $collection, array $data, array $unique = []);
 
     /**
      * Update Document.
      *
+     * @param string $collection
      * @param array $data
      *
      * @return array
      */
-    abstract public function updateDocument(array $data = []);
+    abstract public function updateDocument(string $collection, string $id, array $data);
 
     /**
      * Delete Node.
      *
-     * @param int $id
+     * @param string $collection
+     * @param string $id
      *
      * @return array
      */
-    abstract public function deleteDocument($id);
+    abstract public function deleteDocument(string $collection, string $id);
 
     /**
      * Create Namespace.
@@ -165,24 +167,13 @@ abstract class Adapter
      *
      * @return int
      */
-    abstract public function getCount(array $options);
+    abstract public function count(array $options);
 
     /**
      * Get Unique Document ID.
      */
     public function getId()
     {
-        $unique = \uniqid();
-        $attempts = 5;
-
-        for ($i = 1; $i <= $attempts; ++$i) {
-            $document = $this->getDocument($unique);
-
-            if (empty($document) || $document['$id'] !== $unique) {
-                return $unique;
-            }
-        }
-
-        throw new Exception('Failed to create a unique ID ('.$attempts.' attempts)');
+        return \uniqid();
     }
 }

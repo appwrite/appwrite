@@ -43,15 +43,16 @@ App::post('/v1/projects')
         /** @var Appwrite\Database\Database $consoleDB */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $team = $projectDB->getDocument($teamId);
+        $team = $projectDB->getDocument(Database::COLLECTION_TEAMS, $teamId);
 
-        if (empty($team->getId()) || Database::SYSTEM_COLLECTION_TEAMS != $team->getCollection()) {
+        if (empty($team->getId()) || Database::COLLECTION_TEAMS != $team->getCollection()) {
             throw new Exception('Team not found', 404);
         }
 
         $project = $consoleDB->createDocument(
+            Database::COLLECTION_PROJECTS,
             [
-                '$collection' => Database::SYSTEM_COLLECTION_PROJECTS,
+                '$collection' => Database::COLLECTION_PROJECTS,
                 '$permissions' => [
                     'read' => ['team:'.$teamId],
                     'write' => ['team:'.$teamId.'/owner', 'team:'.$teamId.'/developer'],
@@ -108,7 +109,7 @@ App::get('/v1/projects')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
+                '$collection='.Database::COLLECTION_PROJECTS,
             ],
         ]);
         foreach ($results as $project) {
@@ -136,9 +137,9 @@ App::get('/v1/projects/:projectId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -168,9 +169,9 @@ App::get('/v1/projects/:projectId/usage')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Registry\Registry $register */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -248,7 +249,7 @@ App::get('/v1/projects/:projectId/usage')
             'limit' => 0,
             'offset' => 0,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_USERS,
+                '$collection='.Database::COLLECTION_USERS,
             ],
         ]);
 
@@ -260,7 +261,7 @@ App::get('/v1/projects/:projectId/usage')
             'limit' => 100,
             'offset' => 0,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_COLLECTIONS,
+                '$collection='.Database::COLLECTION_COLLECTIONS,
             ],
         ]);
 
@@ -322,19 +323,19 @@ App::get('/v1/projects/:projectId/usage')
                 'total' => $tasksTotal,
             ],
             'storage' => [
-                'total' => $projectDB->getCount(
+                'total' => $projectDB->count(
                     [
                         'attribute' => 'sizeOriginal',
                         'filters' => [
-                            '$collection='.Database::SYSTEM_COLLECTION_FILES,
+                            '$collection='.Database::COLLECTION_FILES,
                         ],
                     ]
                 ) + 
-                $projectDB->getCount(
+                $projectDB->count(
                     [
                         'attribute' => 'size',
                         'filters' => [
-                            '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+                            '$collection='.Database::COLLECTION_TAGS,
                         ],
                     ]
                 ),
@@ -363,13 +364,13 @@ App::patch('/v1/projects/:projectId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
-        $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
+        $project = $consoleDB->updateDocument(Database::COLLECTION_PROJECTS, $project->getId(), \array_merge($project->getArrayCopy(), [
             'name' => $name,
             'description' => $description,
             'logo' => $logo,
@@ -403,9 +404,9 @@ App::patch('/v1/projects/:projectId/oauth2')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -420,7 +421,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             'version' => '1',
         ]);
 
-        $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
+        $project = $consoleDB->updateDocument(Database::COLLECTION_PROJECTS, $project->getId(), \array_merge($project->getArrayCopy(), [
             'usersOauth2'.\ucfirst($provider).'Appid' => $appId,
             'usersOauth2'.\ucfirst($provider).'Secret' => $secret,
         ]));
@@ -450,9 +451,9 @@ App::delete('/v1/projects/:projectId')
             throw new Exception('Invalid credentials', 401);
         }
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -461,18 +462,18 @@ App::delete('/v1/projects/:projectId')
         foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
             $list = $project->getAttribute('webhooks', []);
 
-            foreach ($list as $document) { /* @var $document Document */
-                if (!$consoleDB->deleteDocument($projectId)) {
+            foreach ($list as $document) { /** @var Document $document */
+                if (!$consoleDB->deleteDocument($document->getCollection(), $document->getId())) {
                     throw new Exception('Failed to remove project document ('.$key.')] from DB', 500);
                 }
             }
         }
         
-        if (!$consoleDB->deleteDocument($project->getAttribute('teamId', null))) {
+        if (!$consoleDB->deleteDocument(Database::COLLECTION_TEAMS, $project->getAttribute('teamId', null))) {
             throw new Exception('Failed to remove project team from DB', 500);
         }
 
-        if (!$consoleDB->deleteDocument($projectId)) {
+        if (!$consoleDB->deleteDocument(Database::COLLECTION_PROJECTS, $projectId)) {
             throw new Exception('Failed to remove project from DB', 500);
         }
 
@@ -498,9 +499,9 @@ App::post('/v1/projects/:projectId/webhooks')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -516,8 +517,8 @@ App::post('/v1/projects/:projectId/webhooks')
             'version' => '1',
         ]);
 
-        $webhook = $consoleDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_WEBHOOKS,
+        $webhook = $consoleDB->createDocument(Database::COLLECTION_WEBHOOKS, [
+            '$collection' => Database::COLLECTION_WEBHOOKS,
             '$permissions' => [
                 'read' => ['team:'.$project->getAttribute('teamId', null)],
                 'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
@@ -536,7 +537,7 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $project->setAttribute('webhooks', $webhook, Document::SET_TYPE_APPEND);
 
-        $project = $consoleDB->updateDocument($project->getArrayCopy());
+        $project = $consoleDB->updateDocument(Database::COLLECTION_PROJECTS, $project->getId(), $project->getArrayCopy());
 
         if (false === $project) {
             throw new Exception('Failed saving project to DB', 500);
@@ -557,9 +558,9 @@ App::get('/v1/projects/:projectId/webhooks')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -595,9 +596,9 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -634,9 +635,9 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -667,7 +668,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('httpPass', $httpPass)
         ;
 
-        if (false === $consoleDB->updateDocument($webhook->getArrayCopy())) {
+        if (false === $consoleDB->updateDocument(Database::COLLECTION_WEBHOOKS, $webhook->getId(), $webhook->getArrayCopy())) {
             throw new Exception('Failed saving webhook to DB', 500);
         }
 
@@ -686,9 +687,9 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -698,7 +699,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
             throw new Exception('Webhook not found', 404);
         }
 
-        if (!$consoleDB->deleteDocument($webhook->getId())) {
+        if (!$consoleDB->deleteDocument(Database::COLLECTION_WEBHOOKS, $webhook->getId())) {
             throw new Exception('Failed to remove webhook from DB', 500);
         }
 
@@ -720,14 +721,14 @@ App::post('/v1/projects/:projectId/keys')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
-        $key = $consoleDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_KEYS,
+        $key = $consoleDB->createDocument(Database::COLLECTION_KEYS, [
+            '$collection' => Database::COLLECTION_KEYS,
             '$permissions' => [
                 'read' => ['team:'.$project->getAttribute('teamId', null)],
                 'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
@@ -743,7 +744,7 @@ App::post('/v1/projects/:projectId/keys')
 
         $project->setAttribute('keys', $key, Document::SET_TYPE_APPEND);
 
-        $project = $consoleDB->updateDocument($project->getArrayCopy());
+        $project = $consoleDB->updateDocument(Database::COLLECTION_PROJECTS, $project->getId(), $project->getArrayCopy());
 
         if (false === $project) {
             throw new Exception('Failed saving project to DB', 500);
@@ -764,9 +765,9 @@ App::get('/v1/projects/:projectId/keys')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
         
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -787,9 +788,9 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
     ->action(function ($projectId, $keyId, $response, $consoleDB) {
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -816,9 +817,9 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -833,7 +834,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
             ->setAttribute('scopes', $scopes)
         ;
 
-        if (false === $consoleDB->updateDocument($key->getArrayCopy())) {
+        if (false === $consoleDB->updateDocument(Database::COLLECTION_KEYS, $key->getId(), $key->getArrayCopy())) {
             throw new Exception('Failed saving key to DB', 500);
         }
 
@@ -852,9 +853,9 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -864,7 +865,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
             throw new Exception('Key not found', 404);
         }
 
-        if (!$consoleDB->deleteDocument($key->getId())) {
+        if (!$consoleDB->deleteDocument(Database::COLLECTION_KEYS, $key->getId())) {
             throw new Exception('Failed to remove key from DB', 500);
         }
 
@@ -893,9 +894,9 @@ App::post('/v1/projects/:projectId/tasks')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -914,8 +915,8 @@ App::post('/v1/projects/:projectId/tasks')
             'version' => '1',
         ]);
 
-        $task = $consoleDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_TASKS,
+        $task = $consoleDB->createDocument(Database::COLLECTION_TASKS, [
+            '$collection' => Database::COLLECTION_TASKS,
             '$permissions' => [
                 'read' => ['team:'.$project->getAttribute('teamId', null)],
                 'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
@@ -942,7 +943,7 @@ App::post('/v1/projects/:projectId/tasks')
 
         $project->setAttribute('tasks', $task, Document::SET_TYPE_APPEND);
 
-        $project = $consoleDB->updateDocument($project->getArrayCopy());
+        $project = $consoleDB->updateDocument(Database::COLLECTION_PROJECTS, $project->getId(), $project->getArrayCopy());
 
         if (false === $project) {
             throw new Exception('Failed saving project to DB', 500);
@@ -967,9 +968,9 @@ App::get('/v1/projects/:projectId/tasks')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1005,9 +1006,9 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1048,9 +1049,9 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1089,7 +1090,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
             ->setAttribute('httpPass', $httpPass)
         ;
 
-        if (false === $consoleDB->updateDocument($task->getArrayCopy())) {
+        if (false === $consoleDB->updateDocument(Database::COLLECTION_TASKS, $task->getId(), $task->getArrayCopy())) {
             throw new Exception('Failed saving tasks to DB', 500);
         }
 
@@ -1112,9 +1113,9 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1124,7 +1125,7 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
             throw new Exception('Task not found', 404);
         }
 
-        if (!$consoleDB->deleteDocument($task->getId())) {
+        if (!$consoleDB->deleteDocument(Database::COLLECTION_TASKS, $task->getId())) {
             throw new Exception('Failed to remove tasks from DB', 500);
         }
 
@@ -1149,14 +1150,14 @@ App::post('/v1/projects/:projectId/platforms')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
-        $platform = $consoleDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_PLATFORMS,
+        $platform = $consoleDB->createDocument(Database::COLLECTION_PLATFORMS, [
+            '$collection' => Database::COLLECTION_PLATFORMS,
             '$permissions' => [
                 'read' => ['team:'.$project->getAttribute('teamId', null)],
                 'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
@@ -1176,7 +1177,7 @@ App::post('/v1/projects/:projectId/platforms')
 
         $project->setAttribute('platforms', $platform, Document::SET_TYPE_APPEND);
 
-        $project = $consoleDB->updateDocument($project->getArrayCopy());
+        $project = $consoleDB->updateDocument(Database::COLLECTION_PROJECTS, $project->getId(), $project->getArrayCopy());
 
         if (false === $project) {
             throw new Exception('Failed saving project to DB', 500);
@@ -1197,9 +1198,9 @@ App::get('/v1/projects/:projectId/platforms')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1223,9 +1224,9 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1254,9 +1255,9 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1274,7 +1275,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             ->setAttribute('hostname', $hostname)
         ;
 
-        if (false === $consoleDB->updateDocument($platform->getArrayCopy())) {
+        if (false === $consoleDB->updateDocument(Database::COLLECTION_PLATFORMS, $platform->getId(), $platform->getArrayCopy())) {
             throw new Exception('Failed saving platform to DB', 500);
         }
 
@@ -1293,9 +1294,9 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1305,7 +1306,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
             throw new Exception('Platform not found', 404);
         }
 
-        if (!$consoleDB->deleteDocument($platform->getId())) {
+        if (!$consoleDB->deleteDocument(Database::COLLECTION_PLATFORMS, $platform->getId())) {
             throw new Exception('Failed to remove platform from DB', 500);
         }
 
@@ -1326,9 +1327,9 @@ App::post('/v1/projects/:projectId/domains')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1346,8 +1347,8 @@ App::post('/v1/projects/:projectId/domains')
 
         $domain = new Domain($domain);
 
-        $domain = $consoleDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_DOMAINS,
+        $domain = $consoleDB->createDocument(Database::COLLECTION_DOMAINS, [
+            '$collection' => Database::COLLECTION_DOMAINS,
             '$permissions' => [
                 'read' => ['team:'.$project->getAttribute('teamId', null)],
                 'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
@@ -1366,7 +1367,7 @@ App::post('/v1/projects/:projectId/domains')
 
         $project->setAttribute('domains', $domain, Document::SET_TYPE_APPEND);
 
-        $project = $consoleDB->updateDocument($project->getArrayCopy());
+        $project = $consoleDB->updateDocument(Database::COLLECTION_PROJECTS, $project->getId(), $project->getArrayCopy());
 
         if (false === $project) {
             throw new Exception('Failed saving project to DB', 500);
@@ -1387,9 +1388,9 @@ App::get('/v1/projects/:projectId/domains')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1413,9 +1414,9 @@ App::get('/v1/projects/:projectId/domains/:domainId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1440,9 +1441,9 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1473,7 +1474,7 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             ->setAttribute('verification', true)
         ;
 
-        if (false === $consoleDB->updateDocument($domain->getArrayCopy())) {
+        if (false === $consoleDB->updateDocument(Database::COLLECTION_DOMAINS, $domain->getId(), $domain->getArrayCopy())) {
             throw new Exception('Failed saving domains to DB', 500);
         }
 
@@ -1498,9 +1499,9 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $project = $consoleDB->getDocument($projectId);
+        $project = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, $projectId);
 
-        if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
+        if (empty($project->getId()) || Database::COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
         }
 
@@ -1510,7 +1511,7 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
             throw new Exception('Domain not found', 404);
         }
 
-        if (!$consoleDB->deleteDocument($domain->getId())) {
+        if (!$consoleDB->deleteDocument(Database::COLLECTION_DOMAINS, $domain->getId())) {
             throw new Exception('Failed to remove domains from DB', 500);
         }
 

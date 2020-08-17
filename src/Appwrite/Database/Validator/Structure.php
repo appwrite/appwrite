@@ -41,7 +41,7 @@ class Structure extends Validator
     protected $rules = [
         [
             'label' => '$id',
-            '$collection' => Database::SYSTEM_COLLECTION_RULES,
+            '$collection' => Database::COLLECTION_RULES,
             'key' => '$id',
             'type' => 'id',
             'default' => null,
@@ -50,7 +50,7 @@ class Structure extends Validator
         ],
         [
             'label' => '$collection',
-            '$collection' => Database::SYSTEM_COLLECTION_RULES,
+            '$collection' => Database::COLLECTION_RULES,
             'key' => '$collection',
             'type' => 'id',
             'default' => null,
@@ -59,7 +59,7 @@ class Structure extends Validator
         ],
         [
             'label' => '$permissions',
-            '$collection' => Database::SYSTEM_COLLECTION_RULES,
+            '$collection' => Database::COLLECTION_RULES,
             'key' => '$permissions',
             'type' => 'permissions',
             'default' => null,
@@ -68,7 +68,7 @@ class Structure extends Validator
         ],
         [
             'label' => '$createdAt',
-            '$collection' => Database::SYSTEM_COLLECTION_RULES,
+            '$collection' => Database::COLLECTION_RULES,
             'key' => '$createdAt',
             'type' => 'numeric',
             'default' => null,
@@ -77,7 +77,7 @@ class Structure extends Validator
         ],
         [
             'label' => '$updatedAt',
-            '$collection' => Database::SYSTEM_COLLECTION_RULES,
+            '$collection' => Database::COLLECTION_RULES,
             'key' => '$updatedAt',
             'type' => 'numeric',
             'default' => null,
@@ -134,9 +134,9 @@ class Structure extends Validator
             return false;
         }
 
-        $collection = $this->getCollection($document->getCollection());
+        $collection = $this->getCollection(Database::COLLECTION_COLLECTIONS, $document->getCollection());
 
-        if (\is_null($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
+        if (\is_null($collection->getId()) || Database::COLLECTION_COLLECTIONS != $collection->getCollection()) {
             $this->message = 'Collection not found';
 
             return false;
@@ -202,7 +202,7 @@ class Structure extends Validator
                     $value = $document->getAttribute($key);
                     break;
                 case self::RULE_TYPE_FILEID:
-                    $validator = new DocumentId($this->database, Database::SYSTEM_COLLECTION_FILES);
+                    $validator = new DocumentId($this->database, Database::COLLECTION_FILES);
                     $value = $document->getAttribute($key);
                     break;
             }
@@ -269,8 +269,8 @@ class Structure extends Validator
         return true;
     }
 
-    protected function getCollection($id)
+    protected function getCollection(string $collection, string $id): Document
     {
-        return $this->database->getDocument($id);
+        return $this->database->getDocument($collection, $id);
     }
 }

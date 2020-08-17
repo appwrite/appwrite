@@ -32,13 +32,14 @@ class MySQL extends Adapter
     /**
      * Get Document.
      *
+     * @param string $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getDocument($id)
+    public function getDocument($collection, $id)
     {
         // Get fields abstraction
         $st = $this->getPDO()->prepare('SELECT * FROM `'.$this->getNamespace().'.database.documents` a
@@ -104,13 +105,14 @@ class MySQL extends Adapter
     /**
      * Create Document.
      *
+     * @param string $collection
      * @param array $data
      *
      * @throws \Exception
      *
      * @return array
      */
-    public function createDocument(array $data = [], array $unique = [])
+    public function createDocument(string $collection, array $data, array $unique = [])
     {
         $order = 0;
         $data = \array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
@@ -221,7 +223,7 @@ class MySQL extends Adapter
                         continue;
                     }
 
-                    $data[$key][$i] = $this->createDocument($child);
+                    $data[$key][$i] = $this->createDocument($child['$collection'], $child);
 
                     $this->createRelationship($revision, $data['$id'], $data[$key][$i]['$id'], $key, true, $i);
                 }
@@ -231,7 +233,7 @@ class MySQL extends Adapter
 
             // Handle relation
             if (self::DATA_TYPE_DICTIONARY === $type) {
-                $value = $this->createDocument($value);
+                $value = $this->createDocument($value['$collection'], $value);
                 $this->createRelationship($revision, $data['$id'], $value['$id'], $key); //xxx
                 continue;
             }
@@ -276,27 +278,30 @@ class MySQL extends Adapter
     /**
      * Update Document.
      *
+     * @param string $collection
+     * @param string $id
      * @param array $data
      *
      * @return array
      *
      * @throws Exception
      */
-    public function updateDocument(array $data = [])
+    public function updateDocument(string $collection, string $id, array $data)
     {
-        return $this->createDocument($data);
+        return $this->createDocument($collection, $data);
     }
 
     /**
      * Delete Document.
      *
-     * @param int $id
+     * @param string $collection
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $collection, string $id)
     {
         $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.documents`
             WHERE uid = :id
@@ -628,7 +633,7 @@ class MySQL extends Adapter
      *
      * @return int
      */
-    public function getCount(array $options)
+    public function count(array $options)
     {
         $start = \microtime(true);
         $where = [];
@@ -723,18 +728,7 @@ class MySQL extends Adapter
      */
     public function getId()
     {
-        $unique = \uniqid();
-        $attempts = 5;
-
-        for ($i = 1; $i <= $attempts; ++$i) {
-            $document = $this->getDocument($unique);
-
-            if (empty($document) || $document['$id'] !== $unique) {
-                return $unique;
-            }
-        }
-
-        throw new Exception('Failed to create a unique ID ('.$attempts.' attempts)');
+        return \uniqid();
     }
 
     /**

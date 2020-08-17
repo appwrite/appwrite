@@ -37,7 +37,7 @@ App::post('/v1/functions')
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
     ->action(function ($name, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
+            '$collection' => Database::COLLECTION_FUNCTIONS,
             '$permissions' => [
                 'read' => [],
                 'write' => [],
@@ -85,7 +85,7 @@ App::get('/v1/functions')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
+                '$collection='.Database::COLLECTION_FUNCTIONS,
             ],
         ]);
 
@@ -105,9 +105,9 @@ App::get('/v1/functions/:functionId')
     ->label('sdk.description', '/docs/references/functions/get-function.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->action(function ($functionId, $response, $projectDB) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -130,9 +130,9 @@ App::get('/v1/functions/:functionId/usage')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Registry\Registry $register */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -242,9 +242,9 @@ App::put('/v1/functions/:functionId')
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
     ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -280,14 +280,14 @@ App::patch('/v1/functions/:functionId/tag')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tag', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(function ($functionId, $tag, $response, $projectDB) {
-        $function = $projectDB->getDocument($functionId);
-        $tag = $projectDB->getDocument($tag);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
+        $tag = $projectDB->getDocument(Database::COLLECTION_TAGS, $tag);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId()) || Database::COLLECTION_TAGS != $tag->getCollection()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -322,13 +322,13 @@ App::delete('/v1/functions/:functionId')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $deletes */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
-        if (!$projectDB->deleteDocument($function->getId())) {
+        if (!$projectDB->deleteDocument(Database::COLLECTION_FUNCTIONS, $function->getId())) {
             throw new Exception('Failed to remove function from DB', 500);
         }
 
@@ -353,9 +353,9 @@ App::post('/v1/functions/:functionId/tags')
     ->param('code', [], function () { return new File(); }, 'Gzip file containing your code.', false)
     // ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
     ->action(function ($functionId, $command, $code, $request, $response, $projectDB, $usage) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
@@ -396,7 +396,7 @@ App::post('/v1/functions/:functionId/tags')
         }
         
         $tag = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_TAGS,
+            '$collection' => Database::COLLECTION_TAGS,
             '$permissions' => [
                 'read' => [],
                 'write' => [],
@@ -434,9 +434,9 @@ App::get('/v1/functions/:functionId/tags')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
         
@@ -448,7 +448,7 @@ App::get('/v1/functions/:functionId/tags')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_TAGS,
+                '$collection='.Database::COLLECTION_TAGS,
                 'functionId='.$function->getId(),
             ],
         ]);
@@ -470,19 +470,19 @@ App::get('/v1/functions/:functionId/tags/:tagId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(function ($functionId, $tagId, $response, $projectDB) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
-        $tag = $projectDB->getDocument($tagId);
+        $tag = $projectDB->getDocument(Database::COLLECTION_TAGS, $tagId);
 
         if($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId()) || Database::COLLECTION_TAGS != $tag->getCollection()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -500,19 +500,19 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
         
-        $tag = $projectDB->getDocument($tagId);
+        $tag = $projectDB->getDocument(Database::COLLECTION_TAGS, $tagId);
 
         if($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId()) || Database::COLLECTION_TAGS != $tag->getCollection()) {
             throw new Exception('Tag not found', 404);
         }
 
@@ -556,24 +556,24 @@ App::post('/v1/functions/:functionId/executions')
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
-        $tag = $projectDB->getDocument($function->getAttribute('tag'));
+        $tag = $projectDB->getDocument(Database::COLLECTION_TAGS, $function->getAttribute('tag'));
 
         if($tag->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
 
-        if (empty($tag->getId()) || Database::SYSTEM_COLLECTION_TAGS != $tag->getCollection()) {
+        if (empty($tag->getId()) || Database::COLLECTION_TAGS != $tag->getCollection()) {
             throw new Exception('Tag not found. Deploy tag before trying to execute a function', 404);
         }
         
-        $execution = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+        $execution = $projectDB->createDocument(Database::COLLECTION_EXECUTIONS, [
+            '$collection' => Database::COLLECTION_EXECUTIONS,
             '$permissions' => [
                 'read' => [],
                 'write' => [],
@@ -618,9 +618,9 @@ App::get('/v1/functions/:functionId/executions')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
         
@@ -632,7 +632,7 @@ App::get('/v1/functions/:functionId/executions')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
+                '$collection='.Database::COLLECTION_EXECUTIONS,
                 'functionId='.$function->getId(),
             ],
         ]);
@@ -654,19 +654,19 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('executionId', '', function () { return new UID(); }, 'Execution unique ID.')
     ->action(function ($functionId, $executionId, $response, $projectDB) {
-        $function = $projectDB->getDocument($functionId);
+        $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+        if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
 
-        $execution = $projectDB->getDocument($executionId);
+        $execution = $projectDB->getDocument(Database::COLLECTION_EXECUTIONS, $executionId);
 
         if($execution->getAttribute('functionId') !== $function->getId()) {
             throw new Exception('Execution not found', 404);
         }
 
-        if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
+        if (empty($execution->getId()) || Database::COLLECTION_EXECUTIONS != $execution->getCollection()) {
             throw new Exception('Execution not found', 404);
         }
 

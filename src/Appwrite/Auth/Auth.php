@@ -51,7 +51,7 @@ class Auth
      *
      * @var int
      */
-    public static $unique = 0;
+    public static $unique = '';
 
     /**
      * User Secret Key.
@@ -100,7 +100,7 @@ class Auth
     public static function decodeSession($session)
     {
         $session = \json_decode(\base64_decode($session), true);
-        $default = ['id' => null, 'secret' => ''];
+        $default = ['id' => '', 'secret' => ''];
 
         if (!\is_array($session)) {
             return $default;

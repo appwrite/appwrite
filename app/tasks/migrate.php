@@ -93,7 +93,7 @@ $callbacks = [
 function fixDocument(Document $document) {
     $providers = Config::getParam('providers');
 
-    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_PROJECTS){
+    if($document->getAttribute('$collection') === Database::COLLECTION_PROJECTS){
         foreach($providers as $key => $provider) {
             if(!empty($document->getAttribute('usersOauth'.\ucfirst($key).'Appid'))) {
                 $document
@@ -111,15 +111,15 @@ function fixDocument(Document $document) {
         }
     }
 
-    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_WEBHOOKS){
+    if($document->getAttribute('$collection') === Database::COLLECTION_WEBHOOKS){
         $document->setAttribute('security', ($document->getAttribute('security')) ? true : false);
     }
 
-    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_TASKS){
+    if($document->getAttribute('$collection') === Database::COLLECTION_TASKS){
         $document->setAttribute('security', ($document->getAttribute('security')) ? true : false);
     }
 
-    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_USERS) {
+    if($document->getAttribute('$collection') === Database::COLLECTION_USERS) {
         foreach($providers as $key => $provider) {
             if(!empty($document->getAttribute('oauth'.\ucfirst($key)))) {
                 $document
@@ -144,7 +144,7 @@ function fixDocument(Document $document) {
         }
     }
 
-    if($document->getAttribute('$collection') === Database::SYSTEM_COLLECTION_PLATFORMS) {
+    if($document->getAttribute('$collection') === Database::COLLECTION_PLATFORMS) {
         if($document->getAttribute('url', null) !== null) {
             $document
                 ->setAttribute('hostname', \parse_url($document->getAttribute('url', $document->getAttribute('hostname', '')), PHP_URL_HOST))
@@ -219,7 +219,7 @@ $cli
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
                 'filters' => [
-                    '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
+                    '$collection='.Database::COLLECTION_PROJECTS,
                 ],
             ]);
 

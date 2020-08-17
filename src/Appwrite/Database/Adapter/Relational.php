@@ -10,17 +10,12 @@ use Exception;
 use PDO;
 use Redis as Client;
 
-class MySQL extends Adapter
+class Relational extends Adapter
 {
     /**
      * @var Registry
      */
     protected $register;
-
-    /**
-     * @var array
-     */
-    protected $debug = [];
 
     /**
      * Constructor.
@@ -37,13 +32,14 @@ class MySQL extends Adapter
     /**
      * Get Document.
      *
+     * @param string $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getDocument($id)
+    public function getDocument($collection, $id)
     {
         // Get fields abstraction
         $st = $this->getPDO()->prepare('SELECT * FROM `'.$this->getNamespace().'.database.documents` a
@@ -109,13 +105,15 @@ class MySQL extends Adapter
     /**
      * Create Document.
      *
+     * @param string $collection
      * @param array $data
+     * @param array $unique
      *
      * @throws \Exception
      *
      * @return array
      */
-    public function createDocument(array $data = [], array $unique = [])
+    public function createDocument(string $collection, array $data, array $unique = [])
     {
         $order = 0;
         $data = \array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
@@ -226,7 +224,7 @@ class MySQL extends Adapter
                         continue;
                     }
 
-                    $data[$key][$i] = $this->createDocument($child);
+                    $data[$key][$i] = $this->createDocument($child['$collection'], $child);
 
                     $this->createRelationship($revision, $data['$id'], $data[$key][$i]['$id'], $key, true, $i);
                 }
@@ -236,7 +234,7 @@ class MySQL extends Adapter
 
             // Handle relation
             if (self::DATA_TYPE_DICTIONARY === $type) {
-                $value = $this->createDocument($value);
+                $value = $this->createDocument($value['$collection'], $value);
                 $this->createRelationship($revision, $data['$id'], $value['$id'], $key); //xxx
                 continue;
             }
@@ -281,27 +279,30 @@ class MySQL extends Adapter
     /**
      * Update Document.
      *
+     * @param string $collection
+     * @param string $id
      * @param array $data
      *
      * @return array
      *
      * @throws Exception
      */
-    public function updateDocument(array $data = [])
+    public function updateDocument(string $collection, string $id, array $data)
     {
-        return $this->createDocument($data);
+        return $this->createDocument($collection, $data);
     }
 
     /**
      * Delete Document.
      *
-     * @param int $id
+     * @param string $collection
+     * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument($id)
+    public function deleteDocument(string $collection, string $id)
     {
         $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.documents`
             WHERE uid = :id
@@ -633,7 +634,7 @@ class MySQL extends Adapter
      *
      * @return int
      */
-    public function getCount(array $options)
+    public function count(array $options)
     {
         $start = \microtime(true);
         $where = [];
@@ -810,35 +811,6 @@ class MySQL extends Adapter
         }
 
         throw new Exception('Unknown data type: '.$value.' ('.\gettype($value).')');
-    }
-
-    /**
-     * @param $key
-     * @param $value
-     *
-     * @return $this
-     */
-    public function setDebug($key, $value)
-    {
-        $this->debug[$key] = $value;
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDebug()
-    {
-        return $this->debug;
-    }
-
-    /**
-     * return $this;.
-     */
-    public function resetDebug()
-    {
-        $this->debug = [];
     }
 
     /**
