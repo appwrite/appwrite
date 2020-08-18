@@ -2,7 +2,6 @@
 
 namespace Appwrite\Database\Validator;
 
-use Appwrite\Database\Document;
 use Utopia\Validator;
 
 class Permissions extends Validator
@@ -11,21 +10,6 @@ class Permissions extends Validator
      * @var string
      */
     protected $message = 'Permissions Error';
-
-    /**
-     * @var Document
-     */
-    protected $document = null;
-
-    /**
-     * Structure constructor.
-     *
-     * @param Document $document
-     */
-    public function __construct(Document $document)
-    {
-        $this->document = $document;
-    }
 
     /**
      * Get Description.
@@ -60,6 +44,11 @@ class Permissions extends Validator
             if (!\in_array($action, ['read', 'write'])) {
                 $this->message = 'Unknown action ("'.$action.'")';
 
+                return false;
+            }
+
+            if(!is_array($roles)) {
+                $this->message = 'Permissions roles must be an array of strings';
                 return false;
             }
 

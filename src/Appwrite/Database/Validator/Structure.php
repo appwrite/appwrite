@@ -166,7 +166,7 @@ class Structure extends Validator
                     $validator = new UID();
                     break;
                 case self::RULE_TYPE_PERMISSIONS:
-                    $validator = new Permissions($document); //$validator = ($this->forcePermissions) ? new Authorization($original, 'write') : new Validator\Mock();
+                    $validator = new Permissions(); //$validator = ($this->forcePermissions) ? new Authorization($original, 'write') : new Validator\Mock();
                     break;
                 case self::RULE_TYPE_KEY:
                     $validator = new Key();

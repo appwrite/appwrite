@@ -4,7 +4,6 @@ namespace Appwrite\Tests;
 
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\Authorization;
-use Appwrite\Database\Validator\Key;
 use PHPUnit\Framework\TestCase;
 
 class AuthorizationTest extends TestCase
