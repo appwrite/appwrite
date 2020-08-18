@@ -89,8 +89,9 @@ class Authorization extends Validator
 
     /**
      * @param string $role
+     * @return void
      */
-    public static function setRole($role)
+    public static function setRole(string $role): void
     {
         self::$roles[] = $role;
     }
@@ -98,9 +99,17 @@ class Authorization extends Validator
     /**
      * @return array
      */
-    public static function getRoles()
+    public static function getRoles(): array
     {
         return self::$roles;
+    }
+
+    /**
+     * @return void
+     */
+    public static function cleanRoles(): void
+    {
+        self::$roles = [];
     }
 
     /**
@@ -120,33 +129,41 @@ class Authorization extends Validator
      * Change default status.
      * This will be used for the
      *  value set on the self::reset() method
+     * 
+     * @return void
      */
-    public static function setDefaultStatus($status)
+    public static function setDefaultStatus($status): void
     {
         self::$statusDefault = $status;
         self::$status = $status;
     }
 
     /**
-     *  Enable Authorization checks
+     * Enable Authorization checks
+     * 
+     * @return void
      */
-    public static function enable()
+    public static function enable(): void
     {
         self::$status = true;
     }
 
     /**
      * Disable Authorization checks
+     * 
+     * @return void
      */
-    public static function disable()
+    public static function disable(): void
     {
         self::$status = false;
     }
 
     /**
      * Disable Authorization checks
+     * 
+     * @return void
      */
-    public static function reset()
+    public static function reset(): void
     {
         self::$status = self::$statusDefault;
     }
