@@ -595,7 +595,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
         
         // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
-        if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
+        if (parse_url($state['success'], PHP_URL_PATH) === parse_url($oauthDefaultSuccess, PHP_URL_PATH)) {
             $state['success'] = URLParser::parse($state['success']);
             $query = URLParser::parseQuery($state['success']['query']);
             $query['project'] = $project->getId();
