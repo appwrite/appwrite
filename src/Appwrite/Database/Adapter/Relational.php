@@ -3,6 +3,7 @@
 namespace Appwrite\Database\Adapter;
 
 use Appwrite\Database\Adapter;
+use Appwrite\Database\Database;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\Authorization;
 use Exception;
@@ -25,6 +26,125 @@ class Relational extends Adapter
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
+    }
+
+    /**
+     * Create Collection
+     *
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function createCollection(string $id): bool
+    {
+        $query = $this->getPDO()->prepare('CREATE TABLE `'.$this->getNamespace().'.collection.'.$id.'` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `uid` varchar(45) DEFAULT NULL,
+            `collection` varchar(45) DEFAULT NULL,
+            `createdAt` datetime DEFAULT NULL,
+            `updatedAt` datetime DEFAULT NULL,
+            `signature` varchar(32) NOT NULL,
+            `permissions` longtext DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `index1` (`uid`),
+            KEY `index2` (`collection`),
+            KEY `index3` (`uid`,`collection`)
+          ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
+        ');
+
+        if (!$query->execute()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete Collection
+     *
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function deleteCollection(string $id): bool
+    {
+        $query = $this->getPDO()->prepare('DROP TABLE `'.$this->getNamespace().'.collection.'.$id.'`;');
+
+        if (!$query->execute()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Create Attribute
+     *
+     * @param string $collection
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function createAttribute(string $collection, string $name, string $type): bool
+    {
+        $columnType = '';
+
+        switch ($type) {
+            case Database::VAR_TYPE_TEXT:
+            case Database::VAR_TYPE_DOCUMENT:
+            case Database::VAR_TYPE_WILDCARD:
+            case Database::VAR_TYPE_EMAIL:
+            case Database::VAR_TYPE_IP:
+            case Database::VAR_TYPE_URL:
+            case Database::VAR_TYPE_KEY:
+                $columnType = 'TEXT';
+                break;
+
+            case Database::VAR_TYPE_NUMERIC:
+                $columnType = 'INT';
+                break;
+
+            case Database::VAR_TYPE_FLOAT:
+                $columnType = 'FLOAT';
+                break;
+
+            case Database::VAR_TYPE_BOOLEAN:
+                $columnType = 'BOOLEAN';
+                break;
+
+            default:
+                throw new Exception('Unsupported attribute type');
+                break;
+        }
+
+        $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
+            ADD COLUMN `col_'.$name.'` '.$columnType.' NULL;');
+
+        if (!$query->execute()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete Attribute
+     *
+     * @param string $collection
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function deleteAttribute(string $collection, string $name): bool
+    {
+        $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
+            DROP COLUMN `col_'.$name.'`;');
+
+        if (!$query->execute()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

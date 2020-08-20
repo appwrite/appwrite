@@ -95,6 +95,45 @@ abstract class Adapter
     }
 
     /**
+     * Create Collection
+     * 
+     * @param string $id
+     * 
+     * @return bool
+     */
+    abstract public function createCollection(string $id): bool;
+
+    /**
+     * Delete Collection
+     * 
+     * @param string $id
+     * 
+     * @return bool
+     */
+    abstract public function deleteCollection(string $id): bool;
+
+    /**
+     * Create Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * @param string $type
+     * 
+     * @return bool
+     */
+    abstract public function createAttribute(string $collection, string $id, string $type): bool;
+
+    /**
+     * Delete Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * 
+     * @return bool
+     */
+    abstract public function deleteAttribute(string $collection, string $id): bool;
+
+    /**
      * Get Document.
      *
      * @param string $collection

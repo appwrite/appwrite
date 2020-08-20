@@ -30,6 +30,57 @@ class MySQL extends Adapter
     }
 
     /**
+     * Create Collection
+     *
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function createCollection(string $id): bool
+    {
+        return true;
+    }
+
+    /**
+     * Delete Collection
+     *
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function deleteCollection(string $id): bool
+    {
+        return true;
+    }
+
+    /**
+     * Create Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * @param string $type
+     * 
+     * @return bool
+     */
+    public function createAttribute(string $collection, string $id, string $type): bool
+    {
+        return true;
+    }
+
+    /**
+     * Delete Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * 
+     * @return bool
+     */
+    public function deleteAttribute(string $collection, string $id): bool
+    {
+        return true;
+    }
+
+    /**
      * Get Document.
      *
      * @param string $collection

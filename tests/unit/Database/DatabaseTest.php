@@ -5,6 +5,7 @@ namespace Appwrite\Tests;
 use PDO;
 use Appwrite\Database\Adapter\Relational;
 use Appwrite\Database\Database;
+use Exception;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseTest extends TestCase
@@ -14,8 +15,15 @@ class DatabaseTest extends TestCase
      */
     protected $object = null;
 
+    /**
+     * @var string
+     */
+    protected $collection = '';
+
     public function setUp()
     {
+        $this->collection = uniqid();
+
         $dbHost = getenv('_APP_DB_HOST');
         $dbUser = getenv('_APP_DB_USER');
         $dbPass = getenv('_APP_DB_PASS');
@@ -35,10 +43,10 @@ class DatabaseTest extends TestCase
         $this->object->setAdapter(new Relational($pdo));
         $this->object->setNamespace('test');
 
-        $this->object->createDocument('dddd', [
-            '$permissions' => ['read' => ['*'], 'write' => ['*']],
-            'title' => '123',
-        ]);
+        // $this->object->createDocument('dddd', [
+        //     '$permissions' => ['read' => ['*'], 'write' => ['*']],
+        //     'title' => '123',
+        // ]);
     }
 
     public function tearDown()
@@ -48,17 +56,48 @@ class DatabaseTest extends TestCase
 
     public function testCreateCollection()
     {
-        $this->assertEquals('1', '1');
+        $this->assertEquals(true, $this->object->createCollection('create_'.$this->collection));
+        
+        try {
+            $this->object->createCollection('create_'.$this->collection);
+        }
+        catch (\Throwable $th) {
+            return $this->assertEquals('42S01', $th->getCode());
+        }
+
+        throw new Exception('Expected exception');
     }
 
     public function testDeleteCollection()
     {
-        $this->assertEquals('1', '1');
+        $this->assertEquals(true, $this->object->createCollection('delete_'.$this->collection));
+        $this->assertEquals(true, $this->object->deleteCollection('delete_'.$this->collection));
+        
+        try {
+            $this->object->deleteCollection('delete_'.$this->collection);
+        }
+        catch (\Throwable $th) {
+            return $this->assertEquals('42S02', $th->getCode());
+        }
+
+        throw new Exception('Expected exception');
     }
 
     public function testCreateAttribute()
     {
-        $this->assertEquals('1', '1');
+        $this->assertEquals(true, $this->object->createCollection('create_attr_'.$this->collection));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'title', Database::VAR_TYPE_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'description', Database::VAR_TYPE_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'value', Database::VAR_TYPE_NUMERIC));
+        
+        try {
+            $this->object->deleteCollection('delete_'.$this->collection);
+        }
+        catch (\Throwable $th) {
+            return $this->assertEquals('42S02', $th->getCode());
+        }
+
+        throw new Exception('Expected exception');
     }
 
     public function testDeleteAttribute()

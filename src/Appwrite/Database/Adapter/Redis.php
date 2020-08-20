@@ -32,6 +32,57 @@ class Redis extends Adapter
     }
 
     /**
+     * Create Collection
+     *
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function createCollection(string $id): bool
+    {
+        return $this->adapter->createCollection($id);
+    }
+
+    /**
+     * Delete Collection
+     *
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function deleteCollection(string $id): bool
+    {
+        return $this->adapter->deleteCollection($id);
+    }
+
+    /**
+     * Create Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * @param string $type
+     * 
+     * @return bool
+     */
+    public function createAttribute(string $collection, string $id, string $type): bool
+    {
+        return $this->adapter->createAttribute($collection, $id, $type);
+    }
+
+    /**
+     * Delete Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * 
+     * @return bool
+     */
+    public function deleteAttribute(string $collection, string $id): bool
+    {
+        return $this->adapter->deleteAttribute($collection, $id);
+    }
+
+    /**
      * Get Document.
      *
      * @param string $collection

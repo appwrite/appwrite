@@ -42,6 +42,8 @@ class Database
     
     // Var Types
     const VAR_TYPE_TEXT = 'text';
+    const VAR_TYPE_INTEGER = 'integer';
+    const VAR_TYPE_FLOAT = 'float';
     const VAR_TYPE_NUMERIC = 'numeric';
     const VAR_TYPE_BOOLEAN = 'boolean';
     const VAR_TYPE_DOCUMENT = 'document';
@@ -199,6 +201,57 @@ class Database
         $results = $this->adapter->count($options);
 
         return $results;
+    }
+
+    /**
+     * Create Collection
+     * 
+     * @param string $id
+     * 
+     * @return bool
+     */
+    public function createCollection(string $id): bool
+    {
+        return $this->adapter->createCollection($id);
+    }
+
+    /**
+     * Delete Collection
+     * 
+     * @param string $id
+     * 
+     * @return bool
+     */
+    public function deleteCollection(string $id): bool
+    {
+        return $this->adapter->deleteCollection($id);
+    }
+
+    /**
+     * Create Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * @param string $type
+     * 
+     * @return bool
+     */
+    public function createAttribute(string $collection, string $id, string $type): bool
+    {
+        return $this->adapter->createAttribute($collection, $id, $type);
+    }
+
+    /**
+     * Delete Attribute
+     * 
+     * @param string $collection
+     * @param string $id
+     * 
+     * @return bool
+     */
+    public function deleteAttribute(string $collection, string $id): bool
+    {
+        return $this->adapter->deleteAttribute($collection, $id);
     }
 
     /**
