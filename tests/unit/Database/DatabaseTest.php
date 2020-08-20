@@ -3,9 +3,9 @@
 namespace Appwrite\Tests;
 
 use PDO;
+use Exception;
 use Appwrite\Database\Adapter\Relational;
 use Appwrite\Database\Database;
-use Exception;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseTest extends TestCase
