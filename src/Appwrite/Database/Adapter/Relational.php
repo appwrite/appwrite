@@ -2,20 +2,18 @@
 
 namespace Appwrite\Database\Adapter;
 
-use Utopia\Registry\Registry;
 use Appwrite\Database\Adapter;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\Authorization;
 use Exception;
 use PDO;
-use Redis as Client;
 
 class Relational extends Adapter
 {
     /**
-     * @var Registry
+     * @var PDO
      */
-    protected $register;
+    protected $pdo;
 
     /**
      * Constructor.
@@ -24,9 +22,9 @@ class Relational extends Adapter
      *
      * @param Registry $register
      */
-    public function __construct(Registry $register)
+    public function __construct(PDO $pdo)
     {
-        $this->register = $register;
+        $this->pdo = $pdo;
     }
 
     /**
@@ -270,8 +268,8 @@ class Relational extends Adapter
         }
 
         //TODO remove this dependency (check if related to nested documents)
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
-        $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
+        // $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
+        // $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
 
         return $data;
     }
@@ -820,16 +818,6 @@ class Relational extends Adapter
      */
     protected function getPDO()
     {
-        return $this->register->get('db');
-    }
-
-    /**
-     * @throws Exception
-     *
-     * @return Client
-     */
-    protected function getRedis():Client
-    {
-        return $this->register->get('cache');
+        return $this->pdo;
     }
 }
