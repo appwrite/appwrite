@@ -86,9 +86,9 @@ class DatabaseTest extends TestCase
     public function testCreateAttribute()
     {
         $this->assertEquals(true, $this->object->createCollection('create_attr_'.$this->collection));
-        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'title', Database::VAR_TYPE_TEXT));
-        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'description', Database::VAR_TYPE_TEXT));
-        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'value', Database::VAR_TYPE_NUMERIC));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'value', Database::VAR_NUMERIC));
         
         try {
             $this->object->deleteCollection('delete_'.$this->collection);

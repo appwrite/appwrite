@@ -90,25 +90,25 @@ class Relational extends Adapter
         $columnType = '';
 
         switch ($type) {
-            case Database::VAR_TYPE_TEXT:
-            case Database::VAR_TYPE_DOCUMENT:
-            case Database::VAR_TYPE_WILDCARD:
-            case Database::VAR_TYPE_EMAIL:
-            case Database::VAR_TYPE_IP:
-            case Database::VAR_TYPE_URL:
-            case Database::VAR_TYPE_KEY:
+            case Database::VAR_TEXT:
+            case Database::VAR_DOCUMENT:
+            case Database::VAR_WILDCARD:
+            case Database::VAR_EMAIL:
+            case Database::VAR_IP:
+            case Database::VAR_URL:
+            case Database::VAR_KEY:
                 $columnType = 'TEXT';
                 break;
 
-            case Database::VAR_TYPE_NUMERIC:
+            case Database::VAR_NUMERIC:
                 $columnType = 'INT';
                 break;
 
-            case Database::VAR_TYPE_FLOAT:
+            case Database::VAR_FLOAT:
                 $columnType = 'FLOAT';
                 break;
 
-            case Database::VAR_TYPE_BOOLEAN:
+            case Database::VAR_BOOLEAN:
                 $columnType = 'BOOLEAN';
                 break;
 

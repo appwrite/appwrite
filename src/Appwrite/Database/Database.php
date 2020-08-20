@@ -41,17 +41,17 @@ class Database
     const COLLECTION_EXECUTIONS = 'executions';
     
     // Var Types
-    const VAR_TYPE_TEXT = 'text';
-    const VAR_TYPE_INTEGER = 'integer';
-    const VAR_TYPE_FLOAT = 'float';
-    const VAR_TYPE_NUMERIC = 'numeric';
-    const VAR_TYPE_BOOLEAN = 'boolean';
-    const VAR_TYPE_DOCUMENT = 'document';
-    const VAR_TYPE_WILDCARD = 'wildcard';
-    const VAR_TYPE_EMAIL = 'email';
-    const VAR_TYPE_IP = 'ip';
-    const VAR_TYPE_URL = 'url';
-    const VAR_TYPE_KEY = 'key';
+    const VAR_TEXT = 'text';
+    const VAR_INTEGER = 'integer';
+    const VAR_FLOAT = 'float';
+    const VAR_NUMERIC = 'numeric';
+    const VAR_BOOLEAN = 'boolean';
+    const VAR_DOCUMENT = 'document';
+    const VAR_WILDCARD = 'wildcard';
+    const VAR_EMAIL = 'email';
+    const VAR_IP = 'ip';
+    const VAR_URL = 'url';
+    const VAR_KEY = 'key';
 
     /**
      * @var array
