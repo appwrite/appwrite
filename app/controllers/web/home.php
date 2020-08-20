@@ -547,10 +547,6 @@ App::get('/open-api-2.json')
             }
         }
 
-        /*foreach ($consoleDB->getMocks() as $mock) {
-            var_dump($mock['name']);
-        }*/
-
         \ksort($output['paths']);
 
         $response
