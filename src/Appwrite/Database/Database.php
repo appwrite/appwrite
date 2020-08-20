@@ -186,6 +186,22 @@ class Database
     }
 
     /**
+     * @param array $options
+     *
+     * @return int
+     */
+    public function count(array $options)
+    {
+        $options = \array_merge([
+            'filters' => [],
+        ], $options);
+
+        $results = $this->adapter->count($options);
+
+        return $results;
+    }
+
+    /**
      * @param string $collection
      * @param string $id
      * @param bool $mock is mocked data allowed?
@@ -373,22 +389,6 @@ class Database
         $debug = $this->getDebug();
 
         return (isset($debug['sum'])) ? $debug['sum'] : 0;
-    }
-
-    /**
-     * @param array $options
-     *
-     * @return int
-     */
-    public function count(array $options)
-    {
-        $options = \array_merge([
-            'filters' => [],
-        ], $options);
-
-        $results = $this->adapter->count($options);
-
-        return $results;
     }
 
     /**
