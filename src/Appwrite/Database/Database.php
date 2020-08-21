@@ -47,10 +47,10 @@ class Database
     const VAR_NUMERIC = 'numeric';
     const VAR_BOOLEAN = 'boolean';
     const VAR_DOCUMENT = 'document';
-    const VAR_WILDCARD = 'wildcard';
     const VAR_EMAIL = 'email';
-    const VAR_IP = 'ip';
     const VAR_URL = 'url';
+    const VAR_IPV4 = 'ipv4';
+    const VAR_IPV6 = 'ipv6';
     const VAR_KEY = 'key';
 
     /**
@@ -233,12 +233,13 @@ class Database
      * @param string $collection
      * @param string $id
      * @param string $type
+     * @param bool $array
      * 
      * @return bool
      */
-    public function createAttribute(string $collection, string $id, string $type): bool
+    public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool
     {
-        return $this->adapter->createAttribute($collection, $id, $type);
+        return $this->adapter->createAttribute($collection, $id, $type, $array);
     }
 
     /**
@@ -246,12 +247,40 @@ class Database
      * 
      * @param string $collection
      * @param string $id
+     * @param bool $array
      * 
      * @return bool
      */
-    public function deleteAttribute(string $collection, string $id): bool
+    public function deleteAttribute(string $collection, string $id, bool $array = false): bool
     {
-        return $this->adapter->deleteAttribute($collection, $id);
+        return $this->adapter->deleteAttribute($collection, $id, $array);
+    }
+
+    /**
+     * Create Index
+     *
+     * @param string $collection
+     * @param string $id
+     * @param array $attributes
+     *
+     * @return bool
+     */
+    public function createIndex(string $collection, string $id, array $attributes): bool
+    {
+        return $this->adapter->createIndex($collection, $id, $attributes);
+    }
+
+    /**
+     * Delete Index
+     *
+     * @param string $collection
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function deleteIndex(string $collection, string $id): bool
+    {
+        return $this->adapter->deleteIndex($collection, $id);
     }
 
     /**

@@ -59,10 +59,11 @@ class MySQL extends Adapter
      * @param string $collection
      * @param string $id
      * @param string $type
+     * @param bool $array
      * 
      * @return bool
      */
-    public function createAttribute(string $collection, string $id, string $type): bool
+    public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool
     {
         return true;
     }
@@ -72,10 +73,39 @@ class MySQL extends Adapter
      * 
      * @param string $collection
      * @param string $id
+     * @param bool $array
      * 
      * @return bool
      */
-    public function deleteAttribute(string $collection, string $id): bool
+    public function deleteAttribute(string $collection, string $id, bool $array = false): bool
+    {
+        return true;
+    }
+
+
+    /**
+     * Create Index
+     *
+     * @param string $collection
+     * @param string $id
+     * @param array $attributes
+     *
+     * @return bool
+     */
+    public function createIndex(string $collection, string $id, array $attributes): bool
+    {
+        return true;
+    }
+
+    /**
+     * Delete Index
+     *
+     * @param string $collection
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function deleteIndex(string $collection, string $id): bool
     {
         return true;
     }
