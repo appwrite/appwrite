@@ -57,10 +57,10 @@ class DatabaseTest extends TestCase
 
     public function testCreateCollection()
     {
-        $this->assertEquals(true, $this->object->createCollection('create_'.$this->collection));
+        $this->assertEquals(true, $this->object->createCollection('create_'.$this->collection, [], []));
         
         try {
-            $this->object->createCollection('create_'.$this->collection);
+            $this->object->createCollection('create_'.$this->collection, [], []);
         }
         catch (\Throwable $th) {
             return $this->assertEquals('42S01', $th->getCode());
@@ -71,7 +71,7 @@ class DatabaseTest extends TestCase
 
     public function testDeleteCollection()
     {
-        $this->assertEquals(true, $this->object->createCollection('delete_'.$this->collection));
+        $this->assertEquals(true, $this->object->createCollection('delete_'.$this->collection, [], []));
         $this->assertEquals(true, $this->object->deleteCollection('delete_'.$this->collection));
         
         try {
@@ -86,7 +86,7 @@ class DatabaseTest extends TestCase
 
     public function testCreateAttribute()
     {
-        $this->assertEquals(true, $this->object->createCollection('create_attr_'.$this->collection));
+        $this->assertEquals(true, $this->object->createCollection('create_attr_'.$this->collection, [], []));
         $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'title', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'description', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'numeric', Database::VAR_NUMERIC));
@@ -117,7 +117,7 @@ class DatabaseTest extends TestCase
 
     public function testDeleteAttribute()
     {
-        $this->assertEquals(true, $this->object->createCollection('delete_attr_'.$this->collection));
+        $this->assertEquals(true, $this->object->createCollection('delete_attr_'.$this->collection, [], []));
         
         $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'title', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'description', Database::VAR_TEXT));
@@ -138,22 +138,22 @@ class DatabaseTest extends TestCase
 
     public function testCreateIndex()
     {
-        $this->assertEquals(true, $this->object->createCollection('create_index_'.$this->collection));
+        $this->assertEquals(true, $this->object->createCollection('create_index_'.$this->collection, [], []));
         $this->assertEquals(true, $this->object->createAttribute('create_index_'.$this->collection, 'title', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('create_index_'.$this->collection, 'description', Database::VAR_TEXT));
-        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'x', ['title']));
-        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'y', ['description']));
-        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'z', ['title', 'description']));
+        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'x', Database::INDEX_KEY, ['title']));
+        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'y', Database::INDEX_KEY, ['description']));
+        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'z', Database::INDEX_KEY, ['title', 'description']));
     }
 
     public function testDeleteIndex()
     {
-        $this->assertEquals(true, $this->object->createCollection('delete_index_'.$this->collection));
+        $this->assertEquals(true, $this->object->createCollection('delete_index_'.$this->collection, [], []));
         $this->assertEquals(true, $this->object->createAttribute('delete_index_'.$this->collection, 'title', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('delete_index_'.$this->collection, 'description', Database::VAR_TEXT));
-        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'x', ['title']));
-        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'y', ['description']));
-        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'z', ['title', 'description']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, Database::INDEX_KEY, 'x', ['title']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, Database::INDEX_KEY, 'y', ['description']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, Database::INDEX_KEY, 'z', ['title', 'description']));
         
         $this->assertEquals(true, $this->object->deleteIndex('delete_index_'.$this->collection, 'x'));
         $this->assertEquals(true, $this->object->deleteIndex('delete_index_'.$this->collection, 'y'));
@@ -162,7 +162,7 @@ class DatabaseTest extends TestCase
 
     public function testCreateDocument()
     {
-        $this->assertEquals(true, $this->object->createCollection('create_document_'.$this->collection));
+        $this->assertEquals(true, $this->object->createCollection('create_document_'.$this->collection, [], []));
         $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'title', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'description', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'numeric', Database::VAR_NUMERIC));

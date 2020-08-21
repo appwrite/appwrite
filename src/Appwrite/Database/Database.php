@@ -52,6 +52,12 @@ class Database
     const VAR_IPV4 = 'ipv4';
     const VAR_IPV6 = 'ipv6';
     const VAR_KEY = 'key';
+    
+    // Index Types
+    const INDEX_KEY = 'text';
+    const INDEX_FULLTEXT = 'fulltext';
+    const INDEX_UNIQUE = 'unique';
+    const INDEX_SPATIAL = 'spatial';
 
     /**
      * @var array
@@ -210,9 +216,9 @@ class Database
      * 
      * @return bool
      */
-    public function createCollection(string $id): bool
+    public function createCollection(string $id, array $attributes, array $indexs): bool
     {
-        return $this->adapter->createCollection($id);
+        return $this->adapter->createCollection($id, $attributes, $indexs);
     }
 
     /**
@@ -261,13 +267,14 @@ class Database
      *
      * @param string $collection
      * @param string $id
+     * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    public function createIndex(string $collection, string $id, array $attributes): bool
+    public function createIndex(string $collection, string $id, string $type, array $attributes): bool
     {
-        return $this->adapter->createIndex($collection, $id, $attributes);
+        return $this->adapter->createIndex($collection, $id, $type, $attributes);
     }
 
     /**

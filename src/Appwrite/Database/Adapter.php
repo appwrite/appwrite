@@ -101,7 +101,7 @@ abstract class Adapter
      * 
      * @return bool
      */
-    abstract public function createCollection(string $id): bool;
+    abstract public function createCollection(string $id, array $attributes, array $indexs): bool;
 
     /**
      * Delete Collection
@@ -140,11 +140,12 @@ abstract class Adapter
      *
      * @param string $collection
      * @param string $id
+     * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    abstract public function createIndex(string $collection, string $id, array $attributes): bool;
+    abstract public function createIndex(string $collection, string $id, string $type, array $attributes): bool;
 
     /**
      * Delete Index

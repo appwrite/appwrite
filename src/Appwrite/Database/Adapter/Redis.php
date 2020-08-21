@@ -38,9 +38,9 @@ class Redis extends Adapter
      *
      * @return bool
      */
-    public function createCollection(string $id): bool
+    public function createCollection(string $id, array $attributes, array $indexs): bool
     {
-        return $this->adapter->createCollection($id);
+        return $this->adapter->createCollection($id, $attributes, $indexs);
     }
 
     /**
@@ -89,13 +89,14 @@ class Redis extends Adapter
      *
      * @param string $collection
      * @param string $id
+     * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    public function createIndex(string $collection, string $id, array $attributes): bool
+    public function createIndex(string $collection, string $id, string $type, array $attributes): bool
     {
-        return $this->adapter->createIndex($collection, $id, $attributes);
+        return $this->adapter->createIndex($collection, $id, $type, $attributes);
     }
 
     /**

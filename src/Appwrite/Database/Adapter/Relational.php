@@ -35,8 +35,23 @@ class Relational extends Adapter
      *
      * @return bool
      */
-    public function createCollection(string $id): bool
+    public function createCollection(string $id, array $attributes, array $indexs): bool
     {
+        $columns = [];
+
+        foreach ($attributes as $attribute) {
+            $id = (isset($attribute['key'])) ? $attribute['key'] : '';
+            $type = (isset($attribute['type'])) ? $attribute['type'] : '';
+            $array = (isset($attribute['array'])) ? $attribute['array'] : false;
+
+            if($array) {
+                $this->createAttribute($id, $id, $type, true);
+                continue;
+            }
+
+            $columns[] = $this->getColumn($id, $type);
+        }
+
         $query = $this->getPDO()->prepare('CREATE TABLE `'.$this->getNamespace().'.collection.'.$id.'` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `uid` varchar(45) DEFAULT NULL,
@@ -44,10 +59,12 @@ class Relational extends Adapter
             `createdAt` datetime DEFAULT NULL,
             `updatedAt` datetime DEFAULT NULL,
             `permissions` longtext DEFAULT NULL,
+            '.implode("\n", $columns).'
             PRIMARY KEY (`id`),
             UNIQUE KEY `index1` (`uid`),
             KEY `index2` (`collection`),
             KEY `index3` (`uid`,`collection`)
+
           ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
         ');
 
@@ -87,56 +104,13 @@ class Relational extends Adapter
      *
      * @return bool
      */
-    public function createAttribute(string $collection, string $name, string $type, bool $array = false): bool
+    public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool
     {
-        $columnType = '';
-
-        switch ($type) {
-            case Database::VAR_TEXT:
-            case Database::VAR_URL:
-                $columnType = 'TEXT';
-                break;
-
-            case Database::VAR_KEY:
-            case Database::VAR_DOCUMENT:
-                $columnType = 'VARCHAR(36)';
-                break;
-
-            case Database::VAR_IPV4:
-                $columnType = 'INT UNSIGNED';
-                break;
-
-            case Database::VAR_IPV6:
-                $columnType = 'BINARY(16)';
-                break;
-
-            case Database::VAR_EMAIL:
-                $columnType = 'VARCHAR(255)';
-                break;
-
-            case Database::VAR_INTEGER:
-                $columnType = 'INT';
-                break;
-            
-            case Database::VAR_FLOAT:
-            case Database::VAR_NUMERIC:
-                $columnType = 'FLOAT';
-                break;
-
-            case Database::VAR_BOOLEAN:
-                $columnType = 'BOOLEAN';
-                break;
-
-            default:
-                throw new Exception('Unsupported attribute type');
-                break;
-        }
-
         if($array) {
-            $query = $this->getPDO()->prepare('CREATE TABLE `'.$this->getNamespace().'.collection.'.$collection.'.'.$name.'` (
+            $query = $this->getPDO()->prepare('CREATE TABLE `'.$this->getNamespace().'.collection.'.$collection.'.'.$id.'` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `uid` varchar(45) DEFAULT NULL,
-                `value` '.$columnType.' DEFAULT NULL,
+                '.$this->getColumn($id, $type).',
                 PRIMARY KEY (`id`),
                 KEY `index1` (`uid`)
               ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
@@ -144,7 +118,7 @@ class Relational extends Adapter
         }
         else {
             $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
-                ADD COLUMN `col_'.$name.'` '.$columnType.' NULL;');
+                ADD COLUMN '.$this->getColumn($id, $type).';');
         }
 
         if (!$query->execute()) {
@@ -163,14 +137,14 @@ class Relational extends Adapter
      *
      * @return bool
      */
-    public function deleteAttribute(string $collection, string $name, bool $array = false): bool
+    public function deleteAttribute(string $collection, string $id, bool $array = false): bool
     {
         if($array) {
-            $query = $this->getPDO()->prepare('DROP TABLE `'.$this->getNamespace().'.collection.'.$collection.'.'.$name.'`;');
+            $query = $this->getPDO()->prepare('DROP TABLE `'.$this->getNamespace().'.collection.'.$collection.'.'.$id.'`;');
         }
         else {
             $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
-                DROP COLUMN `col_'.$name.'`;');
+                DROP COLUMN `col_'.$id.'`;');
         }
 
         if (!$query->execute()) {
@@ -185,11 +159,12 @@ class Relational extends Adapter
      *
      * @param string $collection
      * @param string $id
+     * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    public function createIndex(string $collection, string $id, array $attributes): bool
+    public function createIndex(string $collection, string $id, string $type, array $attributes): bool
     {
         $columns = [];
 
@@ -197,9 +172,33 @@ class Relational extends Adapter
             $columns[] = '`col_'.$attribute.'`(32) ASC'; // TODO custom size limit per type
         }
 
+        $index = '';
+
+        switch ($type) {
+            case Database::INDEX_KEY:
+                $index = 'INDEX';
+                break;
+
+            case Database::INDEX_FULLTEXT:
+                $index = 'FULLTEXT INDEX';
+                break;
+
+            case Database::INDEX_UNIQUE:
+                $index = 'UNIQUE INDEX';
+                break;
+
+            case Database::INDEX_SPATIAL:
+                $index = 'SPATIAL INDEX';
+                break;
+            
+            default:
+                throw new Exception('Unsupported indext type');
+                break;
+        }
+
         // TODO auto-index arrays?
         $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
-            ADD INDEX `index_'.$id.'` ('.implode(',', $columns).');');
+            ADD '.$index.' `index_'.$id.'` ('.implode(',', $columns).');');
 
         if (!$query->execute()) {
             return false;
@@ -895,6 +894,58 @@ class Relational extends Adapter
         }
 
         throw new Exception('Unknown data type: '.$value.' ('.\gettype($value).')');
+    }
+
+    /**
+     * Get Column
+     * 
+     * @var string $key
+     * @var string $type
+     * 
+     * @return string
+     */
+    protected function getColumn(string $key, string $type): string
+    {
+        switch ($type) {
+            case Database::VAR_TEXT:
+            case Database::VAR_URL:
+                return '`col_'.$key.'` TEXT NULL';
+                break;
+
+            case Database::VAR_KEY:
+            case Database::VAR_DOCUMENT:
+                return '`col_'.$key.'` VARCHAR(36) NULL';
+                break;
+
+            case Database::VAR_IPV4:
+                return '`col_'.$key.'` INT UNSIGNED NULL';
+                break;
+
+            case Database::VAR_IPV6:
+                return '`col_'.$key.'` BINARY(16) NULL';
+                break;
+
+            case Database::VAR_EMAIL:
+                return '`col_'.$key.'` VARCHAR(255) NULL';
+                break;
+
+            case Database::VAR_INTEGER:
+                return '`col_'.$key.'` INT NULL';
+                break;
+            
+            case Database::VAR_FLOAT:
+            case Database::VAR_NUMERIC:
+                return '`col_'.$key.'` FLOAT NULL';
+                break;
+
+            case Database::VAR_BOOLEAN:
+                return '`col_'.$key.'` BOOLEAN NULL';
+                break;
+
+            default:
+                throw new Exception('Unsupported attribute type');
+                break;
+        }
     }
 
     /**
