@@ -18,7 +18,6 @@ class Structure extends Validator
     const RULE_TYPE_EMAIL = 'email';
     const RULE_TYPE_URL = 'url';
     const RULE_TYPE_IP = 'ip';
-    const RULE_TYPE_WILDCARD = 'wildcard';
     const RULE_TYPE_DOCUMENT = 'document';
     const RULE_TYPE_DOCUMENTID = 'documentId';
     const RULE_TYPE_FILEID = 'fileId';
@@ -189,9 +188,6 @@ class Structure extends Validator
                     break;
                 case self::RULE_TYPE_IP:
                     $validator = new Validator\IP();
-                    break;
-                case self::RULE_TYPE_WILDCARD:
-                    $validator = new Validator\Mock();
                     break;
                 case self::RULE_TYPE_DOCUMENT:
                     $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : []);
