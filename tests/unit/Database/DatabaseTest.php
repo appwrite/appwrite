@@ -6,6 +6,7 @@ use PDO;
 use Exception;
 use Appwrite\Database\Adapter\Relational;
 use Appwrite\Database\Database;
+use Appwrite\Database\Validator\Authorization;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseTest extends TestCase
@@ -88,36 +89,124 @@ class DatabaseTest extends TestCase
         $this->assertEquals(true, $this->object->createCollection('create_attr_'.$this->collection));
         $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'title', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'description', Database::VAR_TEXT));
-        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'value', Database::VAR_NUMERIC));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'numeric', Database::VAR_NUMERIC));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'integer', Database::VAR_INTEGER));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'float', Database::VAR_FLOAT));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'boolean', Database::VAR_BOOLEAN));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'document', Database::VAR_DOCUMENT));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'email', Database::VAR_EMAIL));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'url', Database::VAR_URL));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'ipv4', Database::VAR_IPV4));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'ipv6', Database::VAR_IPV6));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'key', Database::VAR_KEY));
         
-        try {
-            $this->object->deleteCollection('delete_'.$this->collection);
-        }
-        catch (\Throwable $th) {
-            return $this->assertEquals('42S02', $th->getCode());
-        }
-
-        throw new Exception('Expected exception');
+        // arrays
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'titles', Database::VAR_TEXT, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'descriptions', Database::VAR_TEXT, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'numerics', Database::VAR_NUMERIC, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'integers', Database::VAR_INTEGER, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'floats', Database::VAR_FLOAT, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'booleans', Database::VAR_BOOLEAN, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'documents', Database::VAR_DOCUMENT, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'emails', Database::VAR_EMAIL, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'urls', Database::VAR_URL, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'ipv4s', Database::VAR_IPV4, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'ipv6s', Database::VAR_IPV6, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_attr_'.$this->collection, 'keys', Database::VAR_KEY, true));
     }
 
     public function testDeleteAttribute()
     {
-        $this->assertEquals('1', '1');
+        $this->assertEquals(true, $this->object->createCollection('delete_attr_'.$this->collection));
+        
+        $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'value', Database::VAR_NUMERIC));
+
+        $this->assertEquals(true, $this->object->deleteAttribute('delete_attr_'.$this->collection, 'title'));
+        $this->assertEquals(true, $this->object->deleteAttribute('delete_attr_'.$this->collection, 'description'));
+        $this->assertEquals(true, $this->object->deleteAttribute('delete_attr_'.$this->collection, 'value'));
+
+        $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'titles', Database::VAR_TEXT, true));
+        $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'descriptions', Database::VAR_TEXT, true));
+        $this->assertEquals(true, $this->object->createAttribute('delete_attr_'.$this->collection, 'values', Database::VAR_NUMERIC, true));
+
+        $this->assertEquals(true, $this->object->deleteAttribute('delete_attr_'.$this->collection, 'titles', true));
+        $this->assertEquals(true, $this->object->deleteAttribute('delete_attr_'.$this->collection, 'descriptions', true));
+        $this->assertEquals(true, $this->object->deleteAttribute('delete_attr_'.$this->collection, 'values', true));
     }
 
     public function testCreateIndex()
     {
-        $this->assertEquals('1', '1');
+        $this->assertEquals(true, $this->object->createCollection('create_index_'.$this->collection));
+        $this->assertEquals(true, $this->object->createAttribute('create_index_'.$this->collection, 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('create_index_'.$this->collection, 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'x', ['title']));
+        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'y', ['description']));
+        $this->assertEquals(true, $this->object->createIndex('create_index_'.$this->collection, 'z', ['title', 'description']));
     }
 
     public function testDeleteIndex()
     {
-        $this->assertEquals('1', '1');
+        $this->assertEquals(true, $this->object->createCollection('delete_index_'.$this->collection));
+        $this->assertEquals(true, $this->object->createAttribute('delete_index_'.$this->collection, 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('delete_index_'.$this->collection, 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'x', ['title']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'y', ['description']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'z', ['title', 'description']));
+        
+        $this->assertEquals(true, $this->object->deleteIndex('delete_index_'.$this->collection, 'x'));
+        $this->assertEquals(true, $this->object->deleteIndex('delete_index_'.$this->collection, 'y'));
+        $this->assertEquals(true, $this->object->deleteIndex('delete_index_'.$this->collection, 'z'));
     }
 
     public function testCreateDocument()
     {
-        $this->assertEquals('1', '1');
+        $this->assertEquals(true, $this->object->createCollection('create_document_'.$this->collection));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'numeric', Database::VAR_NUMERIC));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'integer', Database::VAR_INTEGER));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'float', Database::VAR_FLOAT));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'boolean', Database::VAR_BOOLEAN));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'email', Database::VAR_EMAIL));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'url', Database::VAR_URL));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'ipv4', Database::VAR_IPV4));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'ipv6', Database::VAR_IPV6));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'key', Database::VAR_KEY));
+        
+        // arrays
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'titles', Database::VAR_TEXT, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'descriptions', Database::VAR_TEXT, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'numerics', Database::VAR_NUMERIC, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'integers', Database::VAR_INTEGER, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'floats', Database::VAR_FLOAT, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'booleans', Database::VAR_BOOLEAN, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'emails', Database::VAR_EMAIL, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'urls', Database::VAR_URL, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'ipv4s', Database::VAR_IPV4, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'ipv6s', Database::VAR_IPV6, true));
+        $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'keys', Database::VAR_KEY, true));
+
+        Authorization::disable();
+
+        $document = $this->object->createDocument('create_document_'.$this->collection, [
+            'title' => 'Hello World',
+            'description' => 'I\'m a test document',
+            'numeric' => 1,
+            'integer' => 1,
+            'float' => 2.22,
+            'boolean' => true,
+            'email' => 'test@appwrite.io',
+            'url' => 'http://example.com/welcome',
+            'ipv4' => '172.16.254.1',
+            'ipv6' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            'key' => uniqid(),
+        ]);
+
+        Authorization::reset();
+
+        var_dump($document);
     }
 
     public function testGetDocument()
