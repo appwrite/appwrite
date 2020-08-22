@@ -33,4 +33,5 @@ include 'app.php';
     ->ignore(realpath(__DIR__ . '/../vendor/psr/log'))
     ->ignore(realpath(__DIR__ . '/../vendor/piwik'))
     ->ignore(realpath(__DIR__ . '/../vendor/symfony'))
+    ->ignore(realpath(__DIR__ . '/../vendor/phpunit'))
     ->load();

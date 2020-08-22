@@ -98,7 +98,7 @@ class PDOStatement extends PDOStatementNative
         return $result;
     }
 
-    public function fetchAll($how = null, $class_name = null, $ctor_args = null)
+    public function fetchAll(int $fetch_style = PDO::FETCH_BOTH, mixed ...$fetch_args)
     {
         $result = $this->PDOStatement->fetchAll();
         
