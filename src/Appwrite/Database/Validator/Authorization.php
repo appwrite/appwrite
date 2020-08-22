@@ -28,8 +28,6 @@ class Authorization extends Validator
     protected $message = 'Authorization Error';
 
     /**
-     * Structure constructor.
-     *
      * @param Document $document
      * @param string   $action
      */

@@ -52,7 +52,6 @@ $collections = [
         '$id' => Database::COLLECTION_COLLECTIONS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Collections',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -83,15 +82,6 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_RULES,
-                'label' => 'Structure',
-                'key' => 'structure',
-                'type' => Database::VAR_BOOLEAN,
-                'default' => false,
-                'required' => true,
-                'array' => false,
-            ],
-            [
-                '$collection' => Database::COLLECTION_RULES,
                 'label' => 'Rules',
                 'key' => 'rules',
                 'type' => Database::VAR_DOCUMENT,
@@ -107,7 +97,6 @@ $collections = [
         '$id' => Database::COLLECTION_RULES,
         '$permissions' => ['read' => ['*']],
         'name' => 'Collections Rule',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -179,7 +168,6 @@ $collections = [
         '$id' => Database::COLLECTION_USERS,
         '$permissions' => ['read' => ['*']],
         'name' => 'User',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -290,7 +278,6 @@ $collections = [
         '$id' => Database::COLLECTION_TOKENS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Token',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -461,7 +448,6 @@ $collections = [
         '$id' => Database::COLLECTION_MEMBERSHIPS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Membership',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -533,7 +519,6 @@ $collections = [
         '$id' => Database::COLLECTION_TEAMS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Team',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -569,7 +554,6 @@ $collections = [
         '$id' => Database::COLLECTION_PROJECTS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Project',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -719,7 +703,6 @@ $collections = [
         '$id' => Database::COLLECTION_WEBHOOKS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Webhook',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -782,7 +765,6 @@ $collections = [
         '$id' => Database::COLLECTION_KEYS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Key',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -817,7 +799,6 @@ $collections = [
         '$id' => Database::COLLECTION_TASKS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Task',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -970,7 +951,6 @@ $collections = [
         '$id' => Database::COLLECTION_PLATFORMS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Platform',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -1042,7 +1022,6 @@ $collections = [
         '$id' => Database::COLLECTION_DOMAINS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Domains',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -1105,7 +1084,6 @@ $collections = [
         '$id' => Database::COLLECTION_CERTIFICATES,
         '$permissions' => ['read' => ['*']],
         'name' => 'Certificates',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -1159,7 +1137,6 @@ $collections = [
         '$id' => Database::COLLECTION_FILES,
         '$permissions' => ['read' => ['*']],
         'name' => 'File',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -1303,7 +1280,6 @@ $collections = [
         '$id' => Database::COLLECTION_FUNCTIONS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Functions',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -1421,7 +1397,6 @@ $collections = [
         '$id' => Database::COLLECTION_TAGS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Tags',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,
@@ -1475,7 +1450,6 @@ $collections = [
         '$id' => Database::COLLECTION_EXECUTIONS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Executions',
-        'structure' => true,
         'rules' => [
             [
                 '$collection' => Database::COLLECTION_RULES,

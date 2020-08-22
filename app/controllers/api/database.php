@@ -58,7 +58,6 @@ App::post('/v1/database/collections')
                 'name' => $name,
                 'dateCreated' => \time(),
                 'dateUpdated' => \time(),
-                'structure' => true,
                 '$permissions' => [
                     'read' => $read,
                     'write' => $write,
@@ -254,7 +253,6 @@ App::put('/v1/database/collections/:collectionId')
         try {
             $collection = $projectDB->updateDocument(Database::COLLECTION_COLLECTIONS, $collection->getId(), \array_merge($collection->getArrayCopy(), [
                 'name' => $name,
-                'structure' => true,
                 'dateUpdated' => \time(),
                 '$permissions' => [
                     'read' => $read,
