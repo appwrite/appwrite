@@ -12,11 +12,11 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM php:8.0.0beta1-cli-alpine as step1
+FROM php:8.0.0beta2-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=develop \
-    PHP_SWOOLE_VERSION=v4.5.3-beta \
+    PHP_SWOOLE_VERSION=master \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
@@ -32,8 +32,6 @@ RUN \
   zlib-dev \
   brotli-dev
 
-RUN docker-php-ext-install sockets
-
 RUN \
   # Redis Extension
   wget -q https://github.com/phpredis/phpredis/archive/$PHP_REDIS_VERSION.tar.gz && \
@@ -48,11 +46,11 @@ RUN \
   cd swoole-src && \
   git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
-  ./configure --enable-sockets --enable-http2 && \
+  ./configure --enable-http2 && \
   make && make install && \
   cd ..
 
-FROM php:8.0.0beta1-cli-alpine as final
+FROM php:8.0.0beta2-cli-alpine as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -109,10 +107,17 @@ RUN \
   imagemagick-dev \
   certbot \
   docker-cli \
-  && pecl install imagick yaml \ 
-  && docker-php-ext-enable imagick yaml \
-  && docker-php-ext-install sockets opcache pdo_mysql \
+  # && pecl install imagick yaml \ 
+  # && docker-php-ext-enable imagick yaml \
+  # && mkdir -p /usr/src/php/ext/imagick && curl -fsSL https://pecl.php.net/get/imagick | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 && docker-php-ext-install imagick \
+  # && mkdir -p /usr/src/php/ext/yaml && curl -fsSL https://pecl.php.net/get/yaml | tar xvz -C "/usr/src/php/ext/yaml" --strip 1 && docker-php-ext-install yaml \
+  && docker-php-ext-install opcache pdo_mysql \
   && apk del .deps
+
+# RUN wget https://github.com/FriendsOfPHP/pickle/releases/download/v0.6.0/pickle.phar && \
+#   mv pickle.phar /usr/local/bin/pickle && \
+#   chmod +x /usr/local/bin/pickle && \
+#   pickle install imagick yaml
 
 WORKDIR /usr/src/code
 
