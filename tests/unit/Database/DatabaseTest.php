@@ -44,10 +44,163 @@ class DatabaseTest extends TestCase
         $this->object->setAdapter(new Relational($pdo));
         $this->object->setNamespace('test');
 
-        // $this->object->createDocument('dddd', [
-        //     '$permissions' => ['read' => ['*'], 'write' => ['*']],
-        //     'title' => '123',
-        // ]);
+        $this->object->setMocks([
+            Database::COLLECTION_COLLECTIONS => [
+                '$collection' => Database::COLLECTION_COLLECTIONS,
+                '$id' => Database::COLLECTION_COLLECTIONS,
+                '$permissions' => ['read' => ['*']],
+                'name' => 'Collections',
+                'rules' => [
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Name',
+                        'key' => 'name',
+                        'type' => Database::VAR_TEXT,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Date Created',
+                        'key' => 'dateCreated',
+                        'type' => Database::VAR_NUMERIC,
+                        'default' => 0,
+                        'required' => false,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Date Updated',
+                        'key' => 'dateUpdated',
+                        'type' => Database::VAR_NUMERIC,
+                        'default' => 0,
+                        'required' => false,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Rules',
+                        'key' => 'rules',
+                        'type' => Database::VAR_DOCUMENT,
+                        'default' => [],
+                        'required' => true,
+                        'array' => true,
+                        'list' => [Database::COLLECTION_RULES],
+                    ],
+                ],
+            ],
+            Database::COLLECTION_USERS => [
+                '$collection' => Database::COLLECTION_COLLECTIONS,
+                '$id' => Database::COLLECTION_USERS,
+                '$permissions' => ['read' => ['*']],
+                'name' => 'User',
+                'rules' => [
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Name',
+                        'key' => 'name',
+                        'type' => Database::VAR_TEXT,
+                        'default' => '',
+                        'required' => false,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Email',
+                        'key' => 'email',
+                        'type' => Database::VAR_EMAIL,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Status',
+                        'key' => 'status',
+                        'type' => Database::VAR_NUMERIC,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Password',
+                        'key' => 'password',
+                        'type' => Database::VAR_TEXT,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Password Update Date',
+                        'key' => 'password-update',
+                        'type' => Database::VAR_NUMERIC,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Prefs',
+                        'key' => 'prefs',
+                        'type' => Database::VAR_TEXT,
+                        'default' => '',
+                        'required' => false,
+                        'array' => false,
+                        'filter' => ['json']
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Registration Date',
+                        'key' => 'registration',
+                        'type' => Database::VAR_NUMERIC,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Email Verification Status',
+                        'key' => 'emailVerification',
+                        'type' => Database::VAR_BOOLEAN,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Reset',
+                        'key' => 'reset',
+                        'type' => Database::VAR_BOOLEAN,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Tokens',
+                        'key' => 'tokens',
+                        'type' => Database::VAR_DOCUMENT,
+                        'default' => [],
+                        'required' => false,
+                        'array' => true,
+                        'list' => [Database::COLLECTION_TOKENS],
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Memberships',
+                        'key' => 'memberships',
+                        'type' => Database::VAR_DOCUMENT,
+                        'default' => [],
+                        'required' => false,
+                        'array' => true,
+                        'list' => [Database::COLLECTION_MEMBERSHIPS],
+                    ],
+                ],
+            ]
+        ]);
     }
 
     public function tearDown()
@@ -207,6 +360,14 @@ class DatabaseTest extends TestCase
         Authorization::reset();
 
         var_dump($document);
+    }
+
+    public function testGetMockDocument()
+    {
+        $document = $this->object->getDocument(Database::COLLECTION_COLLECTIONS, Database::COLLECTION_USERS);
+
+        $this->assertEquals(Database::COLLECTION_USERS, $document->getId());
+        $this->assertEquals(Database::COLLECTION_COLLECTIONS, $document->getCollection());
     }
 
     public function testGetDocument()

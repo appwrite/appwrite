@@ -304,7 +304,15 @@ class Database
             return new Document([]);
         }
 
-        $document = new Document((isset($this->mocks[$id]) && $mock) ? $this->mocks[$id] : $this->adapter->getDocument($collection, $id));
+        if($mock === true
+            && $collection === self::COLLECTION_COLLECTIONS
+            && isset($this->mocks[$id])) {
+            $document = new Document($this->mocks[$id]);
+        }
+        else {
+            $document = new Document($this->adapter->getDocument($collection, $id));
+        }
+
         $validator = new Authorization($document, 'read');
 
         if (!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
@@ -337,7 +345,6 @@ class Database
         }
 
         $validator = new Structure($this);
-        
         $document = $this->encode($document);
 
         if (!$validator->isValid($document)) {
