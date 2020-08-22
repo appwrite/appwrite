@@ -17,6 +17,11 @@ class Relational extends Adapter
     protected $pdo;
 
     /**
+     * @var array
+     */
+    protected $protected = ['$id' => true, '$collection' => true, '$permissions' => true];
+
+    /**
      * Constructor.
      *
      * Set connection and settings
@@ -272,24 +277,27 @@ class Relational extends Adapter
     {
         $data['$id'] = $this->getId();
         $data['$permissions'] = (!isset($data['$permissions'])) ? [] : $data['$permissions'];
-        
-        // $collection = $this->getDocument(Database::COLLECTION_COLLECTIONS, $collection);
-        // $rules = (isset($collection['rules'])) ? $collection['rules'] : [];
+        $columns = [];
+        $index = 0;
 
-        // if(empty($collection)) {
-        //     throw new Exception('Missing collection data');
-        // }
+        foreach($data as $key => $value) {
+            if(array_key_exists($key, $this->protected) || is_array($value)) {
+                continue;
+            }
 
-        $rules = [];
+            $columns[] = '`col_'.$key.'` = :col_'.$index++;
+        }
+
+        $columns = (!empty($columns)) ? ', '.implode(', ', $columns) : '';
 
         /**
          * Check Unique Keys
          */
-        throw new Duplicate('Duplicated Property');
+        //throw new Duplicate('Duplicated Property');
         
-        // Add or update fields abstraction level
+        $index = 0;
         $st = $this->getPDO()->prepare('INSERT INTO  `'.$this->getNamespace().'.collection.'.$collection.'`
-            SET uid = :uid, createdAt = :createdAt, updatedAt = :updatedAt, permissions = :permissions;
+            SET uid = :uid, createdAt = :createdAt, updatedAt = :updatedAt, permissions = :permissions'.$columns.';
         ');
 
         $st->bindValue(':uid', $data['$id'], PDO::PARAM_STR);
@@ -297,49 +305,35 @@ class Relational extends Adapter
         $st->bindValue(':updatedAt', \date('Y-m-d H:i:s', \time()), PDO::PARAM_STR);
         $st->bindValue(':permissions', \json_encode($data['$permissions']), PDO::PARAM_STR);
         
-        foreach ($rules as $rule) {
-            $rule['type'] = (isset($rule['type'])) ? $rule['type'] : '';
-            $rule['key'] = (isset($rule['key'])) ? $rule['key'] : '';
-            $type = '';
-            $value = isset($data[$rule['key']]) ? $data[$rule['key']] : null;
+        foreach ($data as $key => $value) {
+            $type = $this->getDataType($value);
+            $pdoType = '';
+
+            if(array_key_exists($key, $this->protected) || is_array($value)) {
+                continue;
+            }
             
-            switch ($rule['type']) {
-                case Database::VAR_TEXT:
-                case Database::VAR_URL:
-                case Database::VAR_KEY:
-                case Database::VAR_DOCUMENT:
-                case Database::VAR_EMAIL:
-                    $type = PDO::PARAM_STR;
+            switch ($type) {
+                case self::DATA_TYPE_STRING:
+                case self::DATA_TYPE_FLOAT:
+                case self::DATA_TYPE_NULL:
+                    $pdoType = PDO::PARAM_STR;
                     break;
 
-                case Database::VAR_IPV4:
-                    $type = PDO::PARAM_INT;
+                case self::DATA_TYPE_INTEGER:
+                    $pdoType = PDO::PARAM_INT;
                     break;
 
-                case Database::VAR_IPV6:
-                    $type = PDO::PARAM_LOB;
-                    $value = hex2bin($value);
-                    break;
-
-                case Database::VAR_INTEGER:
-                    $type = PDO::PARAM_INT;
-                    break;
-                
-                case Database::VAR_FLOAT:
-                case Database::VAR_NUMERIC:
-                    $type = PDO::PARAM_STR;
-                    break;
-
-                case Database::VAR_BOOLEAN:
-                    $type = PDO::PARAM_BOOL;
+                case self::DATA_TYPE_BOOLEAN:
+                    $pdoType = PDO::PARAM_BOOL;
                     break;
 
                 default:
-                    throw new Exception('Unsupported attribute');
+                    throw new Exception('Unsupported attribute: '.$type);
                     break;
             }
 
-            $st->bindValue(':col_'.$rule['key'], $value, $type);
+            $st->bindValue(':col_'.$index++, $value, $pdoType);
         }
 
         $st->execute();
@@ -943,7 +937,7 @@ class Relational extends Adapter
                 break;
 
             default:
-                throw new Exception('Unsupported attribute type');
+                throw new Exception('Unsupported attribute: '.$type);
                 break;
         }
     }

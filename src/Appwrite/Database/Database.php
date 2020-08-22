@@ -305,7 +305,6 @@ class Database
         }
 
         if($mock === true
-            && $collection === self::COLLECTION_COLLECTIONS
             && isset($this->mocks[$id])) {
             $document = new Document($this->mocks[$id]);
         }
@@ -539,6 +538,11 @@ class Database
 
     public function encode(Document $document):Document
     {
+        
+        if($document->getCollection() === null) {
+            return $document;
+        }
+
         $collection = $this->getDocument(self::COLLECTION_COLLECTIONS, $document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 

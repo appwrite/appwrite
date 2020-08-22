@@ -304,9 +304,9 @@ class DatabaseTest extends TestCase
         $this->assertEquals(true, $this->object->createCollection('delete_index_'.$this->collection, [], []));
         $this->assertEquals(true, $this->object->createAttribute('delete_index_'.$this->collection, 'title', Database::VAR_TEXT));
         $this->assertEquals(true, $this->object->createAttribute('delete_index_'.$this->collection, 'description', Database::VAR_TEXT));
-        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, Database::INDEX_KEY, 'x', ['title']));
-        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, Database::INDEX_KEY, 'y', ['description']));
-        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, Database::INDEX_KEY, 'z', ['title', 'description']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'x', Database::INDEX_KEY, ['title']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'y', Database::INDEX_KEY, ['description']));
+        $this->assertEquals(true, $this->object->createIndex('delete_index_'.$this->collection, 'z', Database::INDEX_KEY, ['title', 'description']));
         
         $this->assertEquals(true, $this->object->deleteIndex('delete_index_'.$this->collection, 'x'));
         $this->assertEquals(true, $this->object->deleteIndex('delete_index_'.$this->collection, 'y'));
@@ -342,6 +342,22 @@ class DatabaseTest extends TestCase
         $this->assertEquals(true, $this->object->createAttribute('create_document_'.$this->collection, 'keys', Database::VAR_KEY, true));
 
         Authorization::disable();
+
+        // $document = $this->object->createDocument('create_document_'.$this->collection, [
+        //     '$collection' => Database::COLLECTION_USERS,
+        //     '$permissions' => [
+        //         'read' => ['*'],
+        //         'write' => ['user:123'],
+        //     ],
+        //     'email' => 'test@appwrite.io',
+        //     'emailVerification' => false,
+        //     'status' => 0,
+        //     'password' => 'secrethash',
+        //     'password-update' => \time(),
+        //     'registration' => \time(),
+        //     'reset' => false,
+        //     'name' => 'Test',
+        // ]);
 
         $document = $this->object->createDocument('create_document_'.$this->collection, [
             'title' => 'Hello World',
