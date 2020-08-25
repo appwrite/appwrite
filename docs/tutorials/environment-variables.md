@@ -96,11 +96,11 @@ InfluxDB server TCP port. Default value is: '8086'
 
 Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.
 
-### _APP_INFLUXDB_HOST
+### _APP_STATSD_HOST
 
 StatsD server host name address. Default value is: 'telegraf'
 
-### _APP_INFLUXDB_PORT
+### _APP_STATSD_PORT
 
 StatsD server TCP port. Default value is: '8125'
 
