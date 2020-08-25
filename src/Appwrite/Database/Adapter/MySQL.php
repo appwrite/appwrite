@@ -4,6 +4,7 @@ namespace Appwrite\Database\Adapter;
 
 use Utopia\Registry\Registry;
 use Appwrite\Database\Adapter;
+use Appwrite\Database\Document;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\Authorization;
 use Exception;
@@ -12,6 +13,15 @@ use Redis as Client;
 
 class MySQL extends Adapter
 {
+    const DATA_TYPE_STRING = 'string';
+    const DATA_TYPE_INTEGER = 'integer';
+    const DATA_TYPE_FLOAT = 'float';
+    const DATA_TYPE_BOOLEAN = 'boolean';
+    const DATA_TYPE_OBJECT = 'object';
+    const DATA_TYPE_DICTIONARY = 'dictionary';
+    const DATA_TYPE_ARRAY = 'array';
+    const DATA_TYPE_NULL = 'null';
+    
     /**
      * @var Registry
      */
@@ -32,11 +42,12 @@ class MySQL extends Adapter
     /**
      * Create Collection
      *
+     * @param Document $collection
      * @param string $id
      *
      * @return bool
      */
-    public function createCollection(string $id, array $attributes, array $indexs): bool
+    public function createCollection(Document $collection, string $id): bool
     {
         return true;
     }
@@ -44,11 +55,11 @@ class MySQL extends Adapter
     /**
      * Delete Collection
      *
-     * @param string $id
+     * @param Document $collection
      *
      * @return bool
      */
-    public function deleteCollection(string $id): bool
+    public function deleteCollection(Document $collection): bool
     {
         return true;
     }
@@ -56,14 +67,14 @@ class MySQL extends Adapter
     /**
      * Create Attribute
      * 
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param bool $array
      * 
      * @return bool
      */
-    public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool
+    public function createAttribute(Document $collection, string $id, string $type, bool $array = false): bool
     {
         return true;
     }
@@ -71,13 +82,13 @@ class MySQL extends Adapter
     /**
      * Delete Attribute
      * 
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param bool $array
      * 
      * @return bool
      */
-    public function deleteAttribute(string $collection, string $id, bool $array = false): bool
+    public function deleteAttribute(Document $collection, string $id, bool $array = false): bool
     {
         return true;
     }
@@ -86,14 +97,14 @@ class MySQL extends Adapter
     /**
      * Create Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    public function createIndex(string $collection, string $id, string $type, array $attributes): bool
+    public function createIndex(Document $collection, string $id, string $type, array $attributes): bool
     {
         return true;
     }
@@ -101,12 +112,12 @@ class MySQL extends Adapter
     /**
      * Delete Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return bool
      */
-    public function deleteIndex(string $collection, string $id): bool
+    public function deleteIndex(Document $collection, string $id): bool
     {
         return true;
     }
@@ -114,14 +125,14 @@ class MySQL extends Adapter
     /**
      * Get Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getDocument($collection, $id)
+    public function getDocument(Document $collection, $id)
     {
         // Get fields abstraction
         $st = $this->getPDO()->prepare('SELECT * FROM `'.$this->getNamespace().'.database.documents` a
@@ -187,14 +198,14 @@ class MySQL extends Adapter
     /**
      * Create Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param array $data
      *
      * @throws \Exception
      *
      * @return array
      */
-    public function createDocument(string $collection, array $data, array $unique = [])
+    public function createDocument(Document $collection, array $data, array $unique = [])
     {
         $order = 0;
         $data = \array_merge(['$id' => null, '$permissions' => []], $data); // Merge data with default params
@@ -360,7 +371,7 @@ class MySQL extends Adapter
     /**
      * Update Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param array $data
      *
@@ -368,7 +379,7 @@ class MySQL extends Adapter
      *
      * @throws Exception
      */
-    public function updateDocument(string $collection, string $id, array $data)
+    public function updateDocument(Document $collection, string $id, array $data)
     {
         return $this->createDocument($collection, $data);
     }
@@ -376,14 +387,14 @@ class MySQL extends Adapter
     /**
      * Delete Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument(string $collection, string $id)
+    public function deleteDocument(Document $collection, string $id)
     {
         $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.documents`
             WHERE uid = :id

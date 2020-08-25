@@ -4,6 +4,7 @@ namespace Appwrite\Database\Adapter;
 
 use Utopia\Registry\Registry;
 use Appwrite\Database\Adapter;
+use Appwrite\Database\Document;
 use Exception;
 use Redis as Client;
 
@@ -34,38 +35,39 @@ class Redis extends Adapter
     /**
      * Create Collection
      *
+     * @param Document $collection
      * @param string $id
      *
      * @return bool
      */
-    public function createCollection(string $id, array $attributes, array $indexs): bool
+    public function createCollection(Document $collection, string $id): bool
     {
-        return $this->adapter->createCollection($id, $attributes, $indexs);
+        return $this->adapter->createCollection($collection, $id);
     }
 
     /**
      * Delete Collection
      *
-     * @param string $id
+     * @param Document $collection
      *
      * @return bool
      */
-    public function deleteCollection(string $id): bool
+    public function deleteCollection(Document $collection): bool
     {
-        return $this->adapter->deleteCollection($id);
+        return $this->adapter->deleteCollection($collection);
     }
 
     /**
      * Create Attribute
      * 
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param bool $array
      * 
      * @return bool
      */
-    public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool
+    public function createAttribute(Document $collection, string $id, string $type, bool $array = false): bool
     {
         return $this->adapter->createAttribute($collection, $id, $type, $array);
     }
@@ -73,13 +75,13 @@ class Redis extends Adapter
     /**
      * Delete Attribute
      * 
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param bool $array
      * 
      * @return bool
      */
-    public function deleteAttribute(string $collection, string $id, bool $array = false): bool
+    public function deleteAttribute(Document $collection, string $id, bool $array = false): bool
     {
         return $this->adapter->deleteAttribute($collection, $id, $array);
     }
@@ -87,14 +89,14 @@ class Redis extends Adapter
     /**
      * Create Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    public function createIndex(string $collection, string $id, string $type, array $attributes): bool
+    public function createIndex(Document $collection, string $id, string $type, array $attributes): bool
     {
         return $this->adapter->createIndex($collection, $id, $type, $attributes);
     }
@@ -102,12 +104,12 @@ class Redis extends Adapter
     /**
      * Delete Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return bool
      */
-    public function deleteIndex(string $collection, string $id): bool
+    public function deleteIndex(Document $collection, string $id): bool
     {
         return $this->adapter->deleteIndex($collection, $id);
     }
@@ -115,14 +117,14 @@ class Redis extends Adapter
     /**
      * Get Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getDocument($collection, $id)
+    public function getDocument(Document $collection, $id)
     {
         $output = \json_decode($this->getRedis()->get($this->getNamespace().':document-'.$id), true);
 
@@ -181,7 +183,7 @@ class Redis extends Adapter
     /**
      * Create Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param array $data
      * @param array $unique
      *
@@ -189,7 +191,7 @@ class Redis extends Adapter
      *
      * @throws Exception
      */
-    public function createDocument(string $collection, array $data, array $unique = [])
+    public function createDocument(Document $collection, array $data, array $unique = [])
     {
         $data = $this->adapter->createDocument($collection, $data, $unique);
 
@@ -202,7 +204,7 @@ class Redis extends Adapter
     /**
      * Update Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param array $data
      *
@@ -210,7 +212,7 @@ class Redis extends Adapter
      *
      * @throws Exception
      */
-    public function updateDocument(string $collection, string $id, array $data)
+    public function updateDocument(Document $collection, string $id, array $data)
     {
         $data = $this->adapter->updateDocument($collection, $id, $data);
 
@@ -223,14 +225,14 @@ class Redis extends Adapter
     /**
      * Delete Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument(string $collection, string $id)
+    public function deleteDocument(Document $collection, string $id)
     {
         $data = $this->adapter->deleteDocument($collection, $id);
 

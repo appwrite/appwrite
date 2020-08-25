@@ -136,8 +136,7 @@ class Structure extends Validator
         $collection = $this->getCollection(Database::COLLECTION_COLLECTIONS, $document->getCollection());
 
         if (\is_null($collection->getId()) || Database::COLLECTION_COLLECTIONS != $collection->getCollection()) {
-            $this->message = 'Collection not found';
-
+            $this->message = 'Collection "'.$collection->getCollection().'" not found';
             return false;
         }
 
@@ -165,7 +164,7 @@ class Structure extends Validator
                     $validator = new UID();
                     break;
                 case self::RULE_TYPE_PERMISSIONS:
-                    $validator = new Permissions(); //$validator = ($this->forcePermissions) ? new Authorization($original, 'write') : new Validator\Mock();
+                    $validator = new Permissions();
                     break;
                 case self::RULE_TYPE_KEY:
                     $validator = new Key();

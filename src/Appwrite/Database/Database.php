@@ -11,10 +11,9 @@ use Appwrite\Database\Exception\Structure as StructureException;
 class Database
 {
     // System Core
-    const COLLECTION_COLLECTIONS = 0;
+    const COLLECTION_COLLECTIONS = 'collections';
     const COLLECTION_RULES = 'rules';
-
-    // Project
+    const COLLECTION_INDEXES = 'indexes';
     const COLLECTION_PROJECTS = 'projects';
     const COLLECTION_WEBHOOKS = 'webhooks';
     const COLLECTION_KEYS = 'keys';
@@ -23,19 +22,11 @@ class Database
     const COLLECTION_USAGES = 'usages'; //TODO add structure
     const COLLECTION_DOMAINS = 'domains';
     const COLLECTION_CERTIFICATES = 'certificates';
-
-    // Auth, Account and Users (private to user)
     const COLLECTION_USERS = 'users';
     const COLLECTION_TOKENS = 'tokens';
-
-    // Teams (shared among team members)
     const COLLECTION_MEMBERSHIPS = 'memberships';
     const COLLECTION_TEAMS = 'teams';
-
-    // Storage
     const COLLECTION_FILES = 'files';
-
-    // Functions
     const COLLECTION_FUNCTIONS = 'functions';
     const COLLECTION_TAGS = 'tags';
     const COLLECTION_EXECUTIONS = 'executions';
@@ -84,6 +75,8 @@ class Database
     public function setAdapter(Adapter $adapter)
     {
         $this->adapter = $adapter;
+
+        $this->adapter->setDatabase($this);
 
         return $this;
     }
@@ -216,9 +209,9 @@ class Database
      * 
      * @return bool
      */
-    public function createCollection(string $id, array $attributes, array $indexs): bool
+    public function createCollection(string $id): bool
     {
-        return $this->adapter->createCollection($id, $attributes, $indexs);
+        return $this->adapter->createCollection($this->getDocument(self::COLLECTION_COLLECTIONS, $id), $id);
     }
 
     /**
@@ -230,7 +223,7 @@ class Database
      */
     public function deleteCollection(string $id): bool
     {
-        return $this->adapter->deleteCollection($id);
+        return $this->adapter->deleteCollection($this->getDocument(self::COLLECTION_COLLECTIONS, $id));
     }
 
     /**
@@ -245,6 +238,7 @@ class Database
      */
     public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool
     {
+        $collection = $this->getDocument(self::COLLECTION_COLLECTIONS, $collection);
         return $this->adapter->createAttribute($collection, $id, $type, $array);
     }
 
@@ -257,9 +251,9 @@ class Database
      * 
      * @return bool
      */
-    public function deleteAttribute(string $collection, string $id, bool $array = false): bool
+    public function deleteAttribute(string $collection, string $id, bool $array): bool
     {
-        return $this->adapter->deleteAttribute($collection, $id, $array);
+        return $this->adapter->deleteAttribute($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id);
     }
 
     /**
@@ -274,6 +268,7 @@ class Database
      */
     public function createIndex(string $collection, string $id, string $type, array $attributes): bool
     {
+        $collection = $this->getDocument(self::COLLECTION_COLLECTIONS, $collection);
         return $this->adapter->createIndex($collection, $id, $type, $attributes);
     }
 
@@ -287,6 +282,7 @@ class Database
      */
     public function deleteIndex(string $collection, string $id): bool
     {
+        $collection = $this->getDocument(self::COLLECTION_COLLECTIONS, $collection);
         return $this->adapter->deleteIndex($collection, $id);
     }
 
@@ -306,10 +302,10 @@ class Database
 
         if($mock === true
             && isset($this->mocks[$id])) {
-            $document = new Document($this->mocks[$id]);
+            $document = $this->mocks[$id];
         }
         else {
-            $document = new Document($this->adapter->getDocument($collection, $id));
+            $document = new Document($this->adapter->getDocument($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id));
         }
 
         $validator = new Authorization($document, 'read');
@@ -335,6 +331,10 @@ class Database
      */
     public function createDocument(string $collection, array $data, array $unique = [])
     {
+        if(isset($data['$id'])) {
+            throw new Exception('Use update method instead of create');
+        }
+
         $document = new Document($data);
 
         $validator = new Authorization($document, 'write');
@@ -350,7 +350,7 @@ class Database
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
         
-        $document = new Document($this->adapter->createDocument($collection, $document->getArrayCopy(), $unique));
+        $document = new Document($this->adapter->createDocument($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $document->getArrayCopy(), $unique));
         
         $document = $this->decode($document);
 
@@ -440,7 +440,7 @@ class Database
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        $new = new Document($this->adapter->updateDocument($new->getCollection(), $new->getId(), $new->getArrayCopy()));
+        $new = new Document($this->adapter->updateDocument($this->getDocument(self::COLLECTION_COLLECTIONS, $new->getCollection()), $new->getId(), $new->getArrayCopy()));
 
         $new = $this->decode($new);
 
@@ -465,7 +465,7 @@ class Database
             throw new AuthorizationException($validator->getDescription());
         }
 
-        return new Document($this->adapter->deleteDocument($collection, $id));
+        return new Document($this->adapter->deleteDocument($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id));
     }
 
     /**
@@ -487,26 +487,17 @@ class Database
     }
 
     /**
-     * @param string $key
-     * @param string $value
-     *
-     * @return array
-     */
-    public function setMock($key, $value)
-    {
-        $this->mocks[$key] = $value;
-
-        return $this;
-    }
-
-    /**
      * @param string $mocks
      *
      * @return array
      */
     public function setMocks(array $mocks)
     {
-        $this->mocks = $mocks;
+        foreach ($mocks as $key => $mock) {
+            $this->mocks[$key] = new Document($mock);
+        }
+
+        $this->adapter->setMocks($this->mocks);
 
         return $this;
     }
@@ -538,7 +529,6 @@ class Database
 
     public function encode(Document $document):Document
     {
-        
         if($document->getCollection() === null) {
             return $document;
         }
@@ -564,6 +554,10 @@ class Database
 
     public function decode(Document $document):Document
     {
+        if($document->getCollection() === null) {
+            return $document;
+        }
+
         $collection = $this->getDocument(self::COLLECTION_COLLECTIONS, $document->getCollection(), true , false);
         $rules = $collection->getAttribute('rules', []);
 

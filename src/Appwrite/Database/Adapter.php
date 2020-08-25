@@ -6,15 +6,6 @@ use Exception;
 
 abstract class Adapter
 {
-    const DATA_TYPE_STRING = 'string';
-    const DATA_TYPE_INTEGER = 'integer';
-    const DATA_TYPE_FLOAT = 'float';
-    const DATA_TYPE_BOOLEAN = 'boolean';
-    const DATA_TYPE_OBJECT = 'object';
-    const DATA_TYPE_DICTIONARY = 'dictionary';
-    const DATA_TYPE_ARRAY = 'array';
-    const DATA_TYPE_NULL = 'null';
-
     /**
      * @var string
      */
@@ -24,6 +15,16 @@ abstract class Adapter
      * @var array
      */
     protected $debug = [];
+
+    /**
+     * @var array
+     */
+    protected $mocks = [];
+
+    /**
+     * @var Database
+     */
+    protected $database = null;
 
     /**
      * @param $key
@@ -97,104 +98,107 @@ abstract class Adapter
     /**
      * Create Collection
      * 
+     * @param Document $collection
      * @param string $id
      * 
      * @return bool
      */
-    abstract public function createCollection(string $id, array $attributes, array $indexs): bool;
+    abstract public function createCollection(Document $collection, string $id): bool;
 
     /**
      * Delete Collection
      * 
-     * @param string $id
+     * @param Document $collection
      * 
      * @return bool
      */
-    abstract public function deleteCollection(string $id): bool;
+    abstract public function deleteCollection(Document $collection): bool;
 
     /**
      * Create Attribute
      * 
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param bool $array
      * 
      * @return bool
      */
-    abstract public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool;
+    abstract public function createAttribute(Document $collection, string $id, string $type, bool $array = false): bool;
 
     /**
      * Delete Attribute
      * 
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param bool $array
      * 
      * @return bool
      */
-    abstract public function deleteAttribute(string $collection, string $id, bool $array = false): bool;
+    abstract public function deleteAttribute(Document $collection, string $id, bool $array = false): bool;
 
     /**
      * Create Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    abstract public function createIndex(string $collection, string $id, string $type, array $attributes): bool;
+    abstract public function createIndex(Document $collection, string $id, string $type, array $attributes): bool;
 
     /**
      * Delete Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return bool
      */
-    abstract public function deleteIndex(string $collection, string $id): bool;
+    abstract public function deleteIndex(Document $collection, string $id): bool;
 
     /**
      * Get Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      */
-    abstract public function getDocument($collection, $id);
+    abstract public function getDocument(Document $collection, $id);
 
     /**
      * Create Document
      *
+     * @param Document $collection
      * @param array $data
+     * @param array $unique
      *
      * @return array
      */
-    abstract public function createDocument(string $collection, array $data, array $unique = []);
+    abstract public function createDocument(Document $collection, array $data, array $unique = []);
 
     /**
      * Update Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param array $data
      *
      * @return array
      */
-    abstract public function updateDocument(string $collection, string $id, array $data);
+    abstract public function updateDocument(Document $collection, string $id, array $data);
 
     /**
      * Delete Node.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      */
-    abstract public function deleteDocument(string $collection, string $id);
+    abstract public function deleteDocument(Document $collection, string $id);
 
     /**
      * Create Namespace.
@@ -238,5 +242,45 @@ abstract class Adapter
     public function getId()
     {
         return \uniqid();
+    }
+
+    /**
+     * @param Database $database
+     *
+     * @return $this
+     */
+    public function setDatabase(Database $database)
+    {
+        $this->database = $database;
+        
+        return $this;
+    }
+
+    /**
+     * @return Database
+     */
+    public function getDatabase()
+    {
+        return $this->database;
+    }
+
+    /**
+     * @param string $mocks
+     *
+     * @return $this
+     */
+    public function setMocks(array $mocks)
+    {
+        $this->mocks = $mocks;
+        
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMocks()
+    {
+        return $this->mocks;
     }
 }

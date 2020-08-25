@@ -4,10 +4,12 @@ namespace Appwrite\Database\Adapter;
 
 use Appwrite\Database\Adapter;
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Exception\Duplicate;
 use Appwrite\Database\Validator\Authorization;
 use Exception;
 use PDO;
+use stdClass;
 
 class Relational extends Adapter
 {
@@ -36,39 +38,41 @@ class Relational extends Adapter
     /**
      * Create Collection
      *
+     * @param Document $collection
      * @param string $id
      *
      * @return bool
      */
-    public function createCollection(string $id, array $attributes, array $indexs): bool
+    public function createCollection(Document $collection, string $id): bool
     {
+        $rules = $collection->getAttribute('rules', []);
+        $indexes = $collection->getAttribute('indexes', []);
         $columns = [];
 
-        foreach ($attributes as $attribute) {
-            $id = (isset($attribute['key'])) ? $attribute['key'] : '';
-            $type = (isset($attribute['type'])) ? $attribute['type'] : '';
-            $array = (isset($attribute['array'])) ? $attribute['array'] : false;
+        foreach ($rules as $attribute) { /** @var Document $attribute */
+            $key = $attribute->getAttribute('key');
+            $type = $attribute->getAttribute('type');
+            $array = $attribute->getAttribute('array');
 
             if($array) {
-                $this->createAttribute($id, $id, $type, true);
+                $this->createAttribute($collection, $key, $type, $array);
                 continue;
             }
 
-            $columns[] = $this->getColumn($id, $type);
+            $columns[] = $this->getColumn($key, $type, $array);
         }
 
-        $query = $this->getPDO()->prepare('CREATE TABLE `'.$this->getNamespace().'.collection.'.$id.'` (
+        $columns = (!empty($columns)) ? implode(",\n", $columns) . ",\n" : '';
+
+        $query = $this->getPDO()->prepare('CREATE TABLE `app_'.$this->getNamespace().'.collection.'.$id.'` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             `uid` varchar(45) DEFAULT NULL,
-            `collection` varchar(45) DEFAULT NULL,
             `createdAt` datetime DEFAULT NULL,
             `updatedAt` datetime DEFAULT NULL,
             `permissions` longtext DEFAULT NULL,
-            '.implode("\n", $columns).'
+            '.$columns.'
             PRIMARY KEY (`id`),
-            UNIQUE KEY `index1` (`uid`),
-            KEY `index2` (`collection`),
-            KEY `index3` (`uid`,`collection`)
+            UNIQUE KEY `index1` (`uid`)
 
           ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
         ');
@@ -83,17 +87,27 @@ class Relational extends Adapter
     /**
      * Delete Collection
      *
-     * @param string $id
+     * @param Document $collection
      *
      * @return bool
      */
-    public function deleteCollection(string $id): bool
+    public function deleteCollection(Document $collection): bool
     {
-        // TODO fetch all array rules, and delete all child tables
-        $query = $this->getPDO()->prepare('DROP TABLE `'.$this->getNamespace().'.collection.'.$id.'`;');
+        $query = $this->getPDO()->prepare('DROP TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`;');
 
         if (!$query->execute()) {
             return false;
+        }
+
+        $rules = $collection->getAttribute('rules', []);
+        
+        foreach ($rules as $attribute) { /** @var Document $attribute */
+            $key = $attribute->getAttribute('key');
+            $array = $attribute->getAttribute('array');
+
+            if($array) {
+                $this->deleteAttribute($collection, $key, $array);
+            }
         }
 
         return true;
@@ -102,30 +116,30 @@ class Relational extends Adapter
     /**
      * Create Attribute
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param bool $array
      *
      * @return bool
      */
-    public function createAttribute(string $collection, string $id, string $type, bool $array = false): bool
+    public function createAttribute(Document $collection, string $id, string $type, bool $array = false): bool
     {
         if($array) {
-            $query = $this->getPDO()->prepare('CREATE TABLE `'.$this->getNamespace().'.collection.'.$collection.'.'.$id.'` (
+            $query = $this->getPDO()->prepare('CREATE TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$id.'` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `uid` varchar(45) DEFAULT NULL,
-                '.$this->getColumn($id, $type).',
+                '.$this->getColumn($id, $type, $array).',
                 PRIMARY KEY (`id`),
                 KEY `index1` (`uid`)
               ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
             ;');
         }
         else {
-            $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
-                ADD COLUMN '.$this->getColumn($id, $type).';');
+            $query = $this->getPDO()->prepare('ALTER TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
+                ADD COLUMN '.$this->getColumn($id, $type, $array).';');
         }
-
+        
         if (!$query->execute()) {
             return false;
         }
@@ -136,19 +150,19 @@ class Relational extends Adapter
     /**
      * Delete Attribute
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param bool $array
      *
      * @return bool
      */
-    public function deleteAttribute(string $collection, string $id, bool $array = false): bool
+    public function deleteAttribute(Document $collection, string $id, bool $array = false): bool
     {
         if($array) {
-            $query = $this->getPDO()->prepare('DROP TABLE `'.$this->getNamespace().'.collection.'.$collection.'.'.$id.'`;');
+            $query = $this->getPDO()->prepare('DROP TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$id.'`;');
         }
         else {
-            $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
+            $query = $this->getPDO()->prepare('ALTER TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
                 DROP COLUMN `col_'.$id.'`;');
         }
 
@@ -162,14 +176,14 @@ class Relational extends Adapter
     /**
      * Create Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param string $type
      * @param array $attributes
      *
      * @return bool
      */
-    public function createIndex(string $collection, string $id, string $type, array $attributes): bool
+    public function createIndex(Document $collection, string $id, string $type, array $attributes): bool
     {
         $columns = [];
 
@@ -201,8 +215,7 @@ class Relational extends Adapter
                 break;
         }
 
-        // TODO auto-index arrays?
-        $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
+        $query = $this->getPDO()->prepare('ALTER TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
             ADD '.$index.' `index_'.$id.'` ('.implode(',', $columns).');');
 
         if (!$query->execute()) {
@@ -215,14 +228,14 @@ class Relational extends Adapter
     /**
      * Delete Index
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return bool
      */
-    public function deleteIndex(string $collection, string $id): bool
+    public function deleteIndex(Document $collection, string $id): bool
     {
-        $query = $this->getPDO()->prepare('ALTER TABLE `'.$this->getNamespace().'.collection.'.$collection.'`
+        $query = $this->getPDO()->prepare('ALTER TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
             DROP INDEX `index_'.$id.'`;');
 
         if (!$query->execute()) {
@@ -235,17 +248,17 @@ class Relational extends Adapter
     /**
      * Get Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function getDocument($collection, $id)
+    public function getDocument(Document $collection, $id)
     {
         // Get fields abstraction
-        $st = $this->getPDO()->prepare('SELECT * FROM `'.$this->getNamespace().'.collection.'.$collection.'` documents
+        $st = $this->getPDO()->prepare('SELECT * FROM `app_'.$this->getNamespace().'.collection.'.$collection->getId().'` documents
             WHERE documents.uid = :uid;
         ');
 
@@ -259,13 +272,65 @@ class Relational extends Adapter
             return [];
         }
 
-        return $document;
+        $rules = $collection->getAttribute('rules', []);
+        $data = [];
+
+        $data['$id'] = (isset($document['uid'])) ? $document['uid'] : null;
+        $data['$collection'] = $collection->getId();
+        $data['$permissions'] = (isset($document['permissions'])) ? json_decode($document['permissions'], true) : new stdClass;
+
+        foreach($rules as $i => $rule) { /** @var Document $rule */
+            $key = $rule->getAttribute('key');
+            $type = $rule->getAttribute('type');
+            $array = $rule->getAttribute('array');
+            $list = $rule->getAttribute('list', []);
+            $value = (isset($document['col_'.$key])) ? $document['col_'.$key] : null;
+
+            if(array_key_exists($key, $this->protected)) {
+                continue;
+            }
+
+            if($array) {                
+                $st = $this->getPDO()->prepare('SELECT * FROM `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'` documents
+                    WHERE documents.uid = :uid;
+                ');
+
+                $st->bindValue(':uid', $id, PDO::PARAM_STR);
+
+                $st->execute();
+
+                $elements = $st->fetchAll();
+
+                $value = [];
+
+                foreach ($elements as $element) {
+                    $value[] = (isset($element['col_'.$key])) ? $element['col_'.$key] : null;
+                }
+            }
+
+            switch($type) {
+                case Database::VAR_DOCUMENT:
+                    if($array) {
+                        foreach($value as $i => $element) {
+                            $value[$i] = $this->getDatabase()->getDocument(array_pop(array_reverse($list)), $element);
+                        }
+                    }
+                    else {
+                        $value = $this->getDatabase()->getDocument(array_pop(array_reverse($list)), $value);
+                    }
+                    break;
+            }
+
+            $data[$key] = $value;
+        }
+
+        return $data;
     }
 
     /**
      * Create Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param array $data
      * @param array $unique
      *
@@ -273,19 +338,23 @@ class Relational extends Adapter
      *
      * @return array
      */
-    public function createDocument(string $collection, array $data, array $unique = [])
+    public function createDocument(Document $collection, array $data, array $unique = [])
     {
         $data['$id'] = $this->getId();
         $data['$permissions'] = (!isset($data['$permissions'])) ? [] : $data['$permissions'];
         $columns = [];
-        $index = 0;
+        $rules = $collection->getAttribute('rules', []);
 
-        foreach($data as $key => $value) {
-            if(array_key_exists($key, $this->protected) || is_array($value)) {
+        foreach($rules as $i => $rule) {
+            $key = $rule->getAttribute('key');
+            $type = $rule->getAttribute('type');
+            $array = $rule->getAttribute('array');
+
+            if(array_key_exists($key, $this->protected) || $array) {
                 continue;
             }
 
-            $columns[] = '`col_'.$key.'` = :col_'.$index++;
+            $columns[] = '`col_'.$key.'` = :col_'.$i;
         }
 
         $columns = (!empty($columns)) ? ', '.implode(', ', $columns) : '';
@@ -295,8 +364,7 @@ class Relational extends Adapter
          */
         //throw new Duplicate('Duplicated Property');
         
-        $index = 0;
-        $st = $this->getPDO()->prepare('INSERT INTO  `'.$this->getNamespace().'.collection.'.$collection.'`
+        $st = $this->getPDO()->prepare('INSERT INTO  `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
             SET uid = :uid, createdAt = :createdAt, updatedAt = :updatedAt, permissions = :permissions'.$columns.';
         ');
 
@@ -305,35 +373,59 @@ class Relational extends Adapter
         $st->bindValue(':updatedAt', \date('Y-m-d H:i:s', \time()), PDO::PARAM_STR);
         $st->bindValue(':permissions', \json_encode($data['$permissions']), PDO::PARAM_STR);
         
-        foreach ($data as $key => $value) {
-            $type = $this->getDataType($value);
-            $pdoType = '';
+        foreach($rules as $i => $rule) { /** @var Document $rule */
+            $key = $rule->getAttribute('key');
+            $type = $rule->getAttribute('type');
+            $array = $rule->getAttribute('array');
+            $list = $rule->getAttribute('list', []);
+            $value = (isset($data[$key])) ? $data[$key] : null;
 
-            if(array_key_exists($key, $this->protected) || is_array($value)) {
+            if(array_key_exists($key, $this->protected)) {
+                continue;
+            }
+
+            switch($type) {
+                case Database::VAR_DOCUMENT:
+                    if($array) {
+                        if(!is_array($value)) {
+                            continue 2;
+                        }
+                        
+                        foreach ($value as $i => $element) { // TODO CHECK IF CREATE OR UPDATE
+                            $value[$i] = $this->getDatabase()
+                                ->createDocument(array_pop(array_reverse($list)), $element)->getId();
+                        }
+                    }
+                    else {
+                        $id = (isset($value['$id'])) ? $value['$id'] : null;  // TODO CHECK IF CREATE OR UPDATE
+                        $value = ($id)
+                            ? $this->getDatabase()->createDocument(array_pop(array_reverse($list)), $value)->getId()
+                            : $this->getDatabase()->updateDocument(array_pop(array_reverse($list)), $id, $value)->getId();
+                    }
+                    break;
+            }
+
+            if($array) {
+                if(!is_array($value)) {
+                    continue;
+                }
+                
+                foreach ($value as $i => $element) {
+                    $stArray = $this->getPDO()->prepare('INSERT INTO  `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'`
+                        SET uid = :uid, `col_'.$key.'` = :col_x;
+                    ');
+            
+                    $stArray->bindValue(':uid', $data['$id'], PDO::PARAM_STR);
+                    $stArray->bindValue(':col_x', $element, $this->getDataType($type));
+                    $stArray->execute();
+                }
+
                 continue;
             }
             
-            switch ($type) {
-                case self::DATA_TYPE_STRING:
-                case self::DATA_TYPE_FLOAT:
-                case self::DATA_TYPE_NULL:
-                    $pdoType = PDO::PARAM_STR;
-                    break;
-
-                case self::DATA_TYPE_INTEGER:
-                    $pdoType = PDO::PARAM_INT;
-                    break;
-
-                case self::DATA_TYPE_BOOLEAN:
-                    $pdoType = PDO::PARAM_BOOL;
-                    break;
-
-                default:
-                    throw new Exception('Unsupported attribute: '.$type);
-                    break;
+            if(!$array) {
+                $st->bindValue(':col_'.$i, $value, $this->getDataType($type));
             }
-
-            $st->bindValue(':col_'.$index++, $value, $pdoType);
         }
 
         $st->execute();
@@ -348,7 +440,7 @@ class Relational extends Adapter
     /**
      * Update Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      * @param array $data
      *
@@ -356,7 +448,7 @@ class Relational extends Adapter
      *
      * @throws Exception
      */
-    public function updateDocument(string $collection, string $id, array $data)
+    public function updateDocument(Document $collection, string $id, array $data)
     {
         return $this->createDocument($collection, $data);
     }
@@ -364,14 +456,14 @@ class Relational extends Adapter
     /**
      * Delete Document.
      *
-     * @param string $collection
+     * @param Document $collection
      * @param string $id
      *
      * @return array
      *
      * @throws Exception
      */
-    public function deleteDocument(string $collection, string $id)
+    public function deleteDocument(Document $collection, string $id)
     {
         $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.documents`
             WHERE uid = :id
@@ -401,40 +493,6 @@ class Relational extends Adapter
     }
 
     /**
-     * Create Relation.
-     *
-     * Adds a new relationship between different nodes
-     *
-     * @param string $revision
-     * @param int    $start
-     * @param int    $end
-     * @param string $key
-     * @param bool   $isArray
-     * @param int    $order
-     *
-     * @return array
-     *
-     * @throws Exception
-     */
-    protected function createRelationship($revision, $start, $end, $key, $isArray = false, $order = 0)
-    {
-        $st2 = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.relationships`
-                (`revision`, `start`, `end`, `key`, `array`, `order`)
-            VALUES (:revision, :start, :end, :key, :array, :order)');
-
-        $st2->bindValue(':revision', $revision, PDO::PARAM_STR);
-        $st2->bindValue(':start', $start, PDO::PARAM_STR);
-        $st2->bindValue(':end', $end, PDO::PARAM_STR);
-        $st2->bindValue(':key', $key, PDO::PARAM_STR);
-        $st2->bindValue(':array', $isArray, PDO::PARAM_INT);
-        $st2->bindValue(':order', $order, PDO::PARAM_INT);
-
-        $st2->execute();
-
-        return [];
-    }
-
-    /**
      * Create Namespace.
      *
      * @param $namespace
@@ -449,10 +507,6 @@ class Relational extends Adapter
             throw new Exception('Empty namespace');
         }
 
-        $documents = 'app_'.$namespace.'.database.documents';
-        $properties = 'app_'.$namespace.'.database.properties';
-        $relationships = 'app_'.$namespace.'.database.relationships';
-        $unique = 'app_'.$namespace.'.database.unique';
         $audit = 'app_'.$namespace.'.audit.audit';
         $abuse = 'app_'.$namespace.'.abuse.abuse';
 
@@ -464,11 +518,11 @@ class Relational extends Adapter
          * 5. Create audit / abuse tables
          */
 
+        foreach($this->getMocks() as $collection) { /** @var Document $collection */
+            $this->createCollection($collection, $collection->getId());
+        }
+
         try {
-            $this->getPDO()->prepare('CREATE TABLE `'.$documents.'` LIKE `template.database.documents`;')->execute();
-            $this->getPDO()->prepare('CREATE TABLE `'.$properties.'` LIKE `template.database.properties`;')->execute();
-            $this->getPDO()->prepare('CREATE TABLE `'.$relationships.'` LIKE `template.database.relationships`;')->execute();
-            $this->getPDO()->prepare('CREATE TABLE `'.$unique.'` LIKE `template.database.unique`;')->execute();
             $this->getPDO()->prepare('CREATE TABLE `'.$audit.'` LIKE `template.audit.audit`;')->execute();
             $this->getPDO()->prepare('CREATE TABLE `'.$abuse.'` LIKE `template.abuse.abuse`;')->execute();
         } catch (Exception $e) {
@@ -493,18 +547,16 @@ class Relational extends Adapter
             throw new Exception('Empty namespace');
         }
 
-        $unique = 'app_'.$namespace.'.database.unique';
-        $documents = 'app_'.$namespace.'.database.documents';
-        $properties = 'app_'.$namespace.'.database.properties';
-        $relationships = 'app_'.$namespace.'.database.relationships';
         $audit = 'app_'.$namespace.'.audit.audit';
         $abuse = 'app_'.$namespace.'.abuse.abuse';
 
+        foreach($this->getMocks() as $collection) { /** @var Document $collection */
+            $this->deleteCollection($collection, $collection->getId());
+        }
+
+        // TODO Delete all custom collections
+
         try {
-            $this->getPDO()->prepare('DROP TABLE `'.$unique.'`;')->execute();
-            $this->getPDO()->prepare('DROP TABLE `'.$documents.'`;')->execute();
-            $this->getPDO()->prepare('DROP TABLE `'.$properties.'`;')->execute();
-            $this->getPDO()->prepare('DROP TABLE `'.$relationships.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$audit.'`;')->execute();
             $this->getPDO()->prepare('DROP TABLE `'.$abuse.'`;')->execute();
         } catch (Exception $e) {
@@ -515,7 +567,7 @@ class Relational extends Adapter
     }
 
     /**
-     * Get Collection.
+     * Find
      *
      * @param array $options
      *
@@ -525,185 +577,11 @@ class Relational extends Adapter
      */
     public function find(array $options)
     {
-        $start = \microtime(true);
-        $orderCastMap = [
-            'int' => 'UNSIGNED',
-            'string' => 'CHAR',
-            'date' => 'DATE',
-            'time' => 'TIME',
-            'datetime' => 'DATETIME',
-        ];
-        $orderTypeMap = ['DESC', 'ASC'];
-
-        $options['orderField'] = (empty($options['orderField'])) ? '$id' : $options['orderField']; // Set default order field
-        $options['orderCast'] = (empty($options['orderCast'])) ? 'string' : $options['orderCast']; // Set default order field
-
-        if (!\array_key_exists($options['orderCast'], $orderCastMap)) {
-            throw new Exception('Invalid order cast');
-        }
-
-        if (!\in_array($options['orderType'], $orderTypeMap)) {
-            throw new Exception('Invalid order type');
-        }
-
-        $where = [];
-        $join = [];
-        $sorts = [];
-        $search = '';
-
-        // Filters
-        foreach ($options['filters'] as $i => $filter) {
-            $filter = $this->parseFilter($filter);
-            $key = $filter['key'];
-            $value = $filter['value'];
-            $operator = $filter['operator'];
-
-            $path = \explode('.', $key);
-            $original = $path;
-
-            if (1 < \count($path)) {
-                $key = \array_pop($path);
-            } else {
-                $path = [];
-            }
-
-            //$path = implode('.', $path);
-
-            $key = $this->getPDO()->quote($key, PDO::PARAM_STR);
-            $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
-            //$path               = $this->getPDO()->quote($path, PDO::PARAM_STR);
-            $options['offset'] = (int) $options['offset'];
-            $options['limit'] = (int) $options['limit'];
-
-            if (empty($path)) {
-                //if($path == "''") { // Handle direct attributes queries
-                $where[] = 'JOIN `'.$this->getNamespace().".database.properties` b{$i} ON a.uid IS NOT NULL AND b{$i}.documentUid = a.uid AND (b{$i}.key = {$key} AND b{$i}.value {$operator} {$value})";
-            } else { // Handle direct child attributes queries
-                $len = \count($original);
-                $prev = 'c'.$i;
-
-                foreach ($original as $y => $part) {
-                    $part = $this->getPDO()->quote($part, PDO::PARAM_STR);
-
-                    if (0 === $y) { // First key
-                        $join[$i] = 'JOIN `'.$this->getNamespace().".database.relationships` c{$i} ON a.uid IS NOT NULL AND c{$i}.start = a.uid AND c{$i}.key = {$part}";
-                    } elseif ($y == $len - 1) { // Last key
-                        $join[$i] .= 'JOIN `'.$this->getNamespace().".database.properties` e{$i} ON e{$i}.documentUid = {$prev}.end AND e{$i}.key = {$part} AND e{$i}.value {$operator} {$value}";
-                    } else {
-                        $join[$i] .= 'JOIN `'.$this->getNamespace().".database.relationships` d{$i}{$y} ON d{$i}{$y}.start = {$prev}.end AND d{$i}{$y}.key = {$part}";
-                        $prev = 'd'.$i.$y;
-                    }
-                }
-
-                //$join[] = "JOIN `" . $this->getNamespace() . ".database.relationships` c{$i} ON a.uid IS NOT NULL AND c{$i}.start = a.uid AND c{$i}.key = {$path}
-                //    JOIN `" . $this->getNamespace() . ".database.properties` d{$i} ON d{$i}.documentUid = c{$i}.end AND d{$i}.key = {$key} AND d{$i}.value {$operator} {$value}";
-            }
-        }
-
-        // Sorting
-        $orderPath = \explode('.', $options['orderField']);
-        $len = \count($orderPath);
-        $orderKey = 'order_b';
-        $part = $this->getPDO()->quote(\implode('', $orderPath), PDO::PARAM_STR);
-        $orderSelect = "CASE WHEN {$orderKey}.key = {$part} THEN CAST({$orderKey}.value AS {$orderCastMap[$options['orderCast']]}) END AS sort_ff";
-
-        if (1 === $len) {
-            //if($path == "''") { // Handle direct attributes queries
-            $sorts[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` order_b ON a.uid IS NOT NULL AND order_b.documentUid = a.uid AND (order_b.key = {$part})";
-        } else { // Handle direct child attributes queries
-            $prev = 'c';
-            $orderKey = 'order_e';
-
-            foreach ($orderPath as $y => $part) {
-                $part = $this->getPDO()->quote($part, PDO::PARAM_STR);
-                $x = $y - 1;
-
-                if (0 === $y) { // First key
-                    $sorts[] = 'JOIN `'.$this->getNamespace().".database.relationships` order_c{$y} ON a.uid IS NOT NULL AND order_c{$y}.start = a.uid AND order_c{$y}.key = {$part}";
-                } elseif ($y == $len - 1) { // Last key
-                    $sorts[] .= 'JOIN `'.$this->getNamespace().".database.properties` order_e ON order_e.documentUid = order_{$prev}{$x}.end AND order_e.key = {$part}";
-                } else {
-                    $sorts[] .= 'JOIN `'.$this->getNamespace().".database.relationships` order_d{$y} ON order_d{$y}.start = order_{$prev}{$x}.end AND order_d{$y}.key = {$part}";
-                    $prev = 'd';
-                }
-            }
-        }
-
-        /*
-         * Workaround for a MySQL bug as reported here:
-         * https://bugs.mysql.com/bug.php?id=78485
-         */
-        $options['search'] = ($options['search'] === '*') ? '' : $options['search'];
-
-        // Search
-        if (!empty($options['search'])) { // Handle free search
-            $where[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid  AND b_search.primitive = 'string'
-                    LEFT JOIN
-                `".$this->getNamespace().'.database.relationships` c_search ON c_search.start = b_search.documentUid
-                    LEFT JOIN
-                `'.$this->getNamespace().".database.properties` d_search ON d_search.documentUid = c_search.end AND d_search.primitive = 'string'
-                \n";
-
-            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
-            )";
-        }
-
-        $select = 'DISTINCT a.uid';
-        $where = \implode("\n", $where);
-        $join = \implode("\n", $join);
-        $sorts = \implode("\n", $sorts);
-        $range = "LIMIT {$options['offset']}, {$options['limit']}";
-        $roles = [];
-
-        foreach (Authorization::getRoles() as $role) {
-            $roles[] = 'JSON_CONTAINS(REPLACE(a.permissions, \'{self}\', a.uid), \'"'.$role.'"\', \'$.read\')';
-        }
-
-        if (false === Authorization::$status) { // FIXME temporary solution (hopefully)
-            $roles = ['1=1'];
-        }
-
-        $query = "SELECT %s, {$orderSelect}
-            FROM `".$this->getNamespace().".database.documents` a {$where}{$join}{$sorts}
-            WHERE status = 0
-               {$search}
-               AND (".\implode('||', $roles).")
-            ORDER BY sort_ff {$options['orderType']} %s";
-
-        $st = $this->getPDO()->prepare(\sprintf($query, $select, $range));
-
-        $st->execute();
-
-        $results = ['data' => []];
-
-        // Get entire fields data for each id
-        foreach ($st->fetchAll() as $node) {
-            $results['data'][] = $node['uid'];
-        }
-
-        $count = $this->getPDO()->prepare(\sprintf($query, 'count(DISTINCT a.uid) as sum', ''));
-
-        $count->execute();
-
-        $count = $count->fetch();
-
-        $this->resetDebug();
-
-        $this
-            ->setDebug('query', \preg_replace('/\s+/', ' ', \sprintf($query, $select, $range)))
-            ->setDebug('time', \microtime(true) - $start)
-            ->setDebug('filters', \count($options['filters']))
-            ->setDebug('joins', \substr_count($query, 'JOIN'))
-            ->setDebug('count', \count($results['data']))
-            ->setDebug('sum', (int) $count['sum'])
-        ;
-
-        return $results['data'];
+        return [];
     }
 
     /**
-     * Get Collection.
+     * Count
      *
      * @param array $options
      *
@@ -713,92 +591,7 @@ class Relational extends Adapter
      */
     public function count(array $options)
     {
-        $start = \microtime(true);
-        $where = [];
-        $join = [];
-
-        $options = array_merge([
-            'attribute' => '',
-            'filters' => [],
-        ], $options);
-
-        // Filters
-        foreach ($options['filters'] as $i => $filter) {
-            $filter = $this->parseFilter($filter);
-            $key = $filter['key'];
-            $value = $filter['value'];
-            $operator = $filter['operator'];
-            $path = \explode('.', $key);
-            $original = $path;
-
-            if (1 < \count($path)) {
-                $key = \array_pop($path);
-            } else {
-                $path = [];
-            }
-
-            $key = $this->getPDO()->quote($key, PDO::PARAM_STR);
-            $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
-
-            if (empty($path)) {
-                //if($path == "''") { // Handle direct attributes queries
-                $where[] = 'JOIN `'.$this->getNamespace().".database.properties` b{$i} ON a.uid IS NOT NULL AND b{$i}.documentUid = a.uid AND (b{$i}.key = {$key} AND b{$i}.value {$operator} {$value})";
-            } else { // Handle direct child attributes queries
-                $len = \count($original);
-                $prev = 'c'.$i;
-
-                foreach ($original as $y => $part) {
-                    $part = $this->getPDO()->quote($part, PDO::PARAM_STR);
-
-                    if (0 === $y) { // First key
-                        $join[$i] = 'JOIN `'.$this->getNamespace().".database.relationships` c{$i} ON a.uid IS NOT NULL AND c{$i}.start = a.uid AND c{$i}.key = {$part}";
-                    } elseif ($y == $len - 1) { // Last key
-                        $join[$i] .= 'JOIN `'.$this->getNamespace().".database.properties` e{$i} ON e{$i}.documentUid = {$prev}.end AND e{$i}.key = {$part} AND e{$i}.value {$operator} {$value}";
-                    } else {
-                        $join[$i] .= 'JOIN `'.$this->getNamespace().".database.relationships` d{$i}{$y} ON d{$i}{$y}.start = {$prev}.end AND d{$i}{$y}.key = {$part}";
-                        $prev = 'd'.$i.$y;
-                    }
-                }
-            }
-        }
-
-        $where = \implode("\n", $where);
-        $join = \implode("\n", $join);
-        $attribute = $this->getPDO()->quote($options['attribute'], PDO::PARAM_STR);
-        $func = 'JOIN `'.$this->getNamespace().".database.properties` b_func ON a.uid IS NOT NULL
-            AND a.uid = b_func.documentUid
-            AND (b_func.key = {$attribute})";
-        $roles = [];
-
-        foreach (Authorization::getRoles() as $role) {
-            $roles[] = 'JSON_CONTAINS(REPLACE(a.permissions, \'{self}\', a.uid), \'"'.$role.'"\', \'$.read\')';
-        }
-
-        if (false === Authorization::$status) { // FIXME temporary solution (hopefully)
-            $roles = ['1=1'];
-        }
-
-        $query = "SELECT SUM(b_func.value) as result
-            FROM `".$this->getNamespace().".database.documents` a {$where}{$join}{$func}
-            WHERE status = 0
-               AND (".\implode('||', $roles).')';
-
-        $st = $this->getPDO()->prepare(\sprintf($query));
-
-        $st->execute();
-
-        $result = $st->fetch();
-
-        $this->resetDebug();
-
-        $this
-            ->setDebug('query', \preg_replace('/\s+/', ' ', \sprintf($query)))
-            ->setDebug('time', \microtime(true) - $start)
-            ->setDebug('filters', \count($options['filters']))
-            ->setDebug('joins', \substr_count($query, 'JOIN'))
-        ;
-
-        return (isset($result['result'])) ? (int)$result['result'] : 0;
+        return 0;
     }
 
     /**
@@ -843,51 +636,44 @@ class Relational extends Adapter
     }
 
     /**
-     * Get Data Type.
+     * Get PDO Data Type.
      *
-     * Check value data type. return value can be on of the following:
-     * string, integer, float, boolean, object, list or null
-     *
-     * @param $value
+     * @param $type
      *
      * @return string
      *
      * @throws \Exception
      */
-    protected function getDataType($value)
+    protected function getDataType($type)
     {
-        switch (\gettype($value)) {
-
-            case 'string':
-                return self::DATA_TYPE_STRING;
+        switch ($type) {
+            case Database::VAR_TEXT:
+            case Database::VAR_URL:
+            case Database::VAR_KEY:
+            case Database::VAR_IPV4:
+            case Database::VAR_IPV6:
+            case Database::VAR_EMAIL:
+            case Database::VAR_FLOAT:
+            case Database::VAR_NUMERIC:
+                return PDO::PARAM_STR;
                 break;
 
-            case 'integer':
-                return self::DATA_TYPE_INTEGER;
+            case Database::VAR_DOCUMENT:
+                return PDO::PARAM_STR;
                 break;
 
-            case 'double':
-                return self::DATA_TYPE_FLOAT;
+            case Database::VAR_INTEGER:
+                return PDO::PARAM_INT;
+                break;
+            
+            case Database::VAR_BOOLEAN:
+                return PDO::PARAM_BOOL;
                 break;
 
-            case 'boolean':
-                return self::DATA_TYPE_BOOLEAN;
-                break;
-
-            case 'array':
-                if ((bool) \count(\array_filter(\array_keys($value), 'is_string'))) {
-                    return self::DATA_TYPE_DICTIONARY;
-                }
-
-                return self::DATA_TYPE_ARRAY;
-                break;
-
-            case 'NULL':
-                return self::DATA_TYPE_NULL;
+            default:
+                throw new Exception('Unsupported attribute: '.$type);
                 break;
         }
-
-        throw new Exception('Unknown data type: '.$value.' ('.\gettype($value).')');
     }
 
     /**
@@ -898,7 +684,7 @@ class Relational extends Adapter
      * 
      * @return string
      */
-    protected function getColumn(string $key, string $type): string
+    protected function getColumn(string $key, string $type, bool $array): string
     {
         switch ($type) {
             case Database::VAR_TEXT:
@@ -912,11 +698,13 @@ class Relational extends Adapter
                 break;
 
             case Database::VAR_IPV4:
-                return '`col_'.$key.'` INT UNSIGNED NULL';
+                //return '`col_'.$key.'` INT UNSIGNED NULL';
+                return '`col_'.$key.'` VARCHAR(15) NULL';
                 break;
 
             case Database::VAR_IPV6:
-                return '`col_'.$key.'` BINARY(16) NULL';
+                //return '`col_'.$key.'` BINARY(16) NULL';
+                return '`col_'.$key.'` VARCHAR(39) NULL';
                 break;
 
             case Database::VAR_EMAIL:
