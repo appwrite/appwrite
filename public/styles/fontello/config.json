@@ -689,6 +689,12 @@
       "css": "left-dir",
       "code": 59470,
       "src": "fontawesome"
+    },
+    {
+      "uid": "dc73bee1d58539abe8c96b958bf4c931",
+      "css": "fire",
+      "code": 59471,
+      "src": "elusive"
     }
   ]
 }
