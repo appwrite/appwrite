@@ -173,6 +173,32 @@ $collections = [
             ],
         ],
     ],
+    Database::COLLECTION_INDEXES => [
+        '$collection' => Database::COLLECTION_COLLECTIONS,
+        '$id' => Database::COLLECTION_INDEXES,
+        '$permissions' => ['read' => ['*']],
+        'name' => 'Collections Indexes',
+        'rules' => [
+            [
+                '$collection' => Database::COLLECTION_RULES,
+                'label' => 'Type',
+                'key' => 'type',
+                'type' => Database::VAR_TEXT,
+                'default' => '',
+                'required' => true,
+                'array' => false,
+            ],
+            [
+                '$collection' => Database::COLLECTION_RULES,
+                'label' => 'Attributes',
+                'key' => 'attributes',
+                'type' => Database::VAR_KEY,
+                'default' => '',
+                'required' => true,
+                'array' => true,
+            ],
+        ],
+    ],
     Database::COLLECTION_USERS => [
         '$collection' => Database::COLLECTION_COLLECTIONS,
         '$id' => Database::COLLECTION_USERS,
