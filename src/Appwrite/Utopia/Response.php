@@ -118,6 +118,14 @@ class Response extends SwooleResponse
             ->setModel(new Execution())
             ->setModel(new Webhook())
             ->setModel(new Key())
+            // Locale
+            // Continent
+            // Country
+            // Currency
+            // Log
+            // Verification
+            // Recovery
+            // Language
         ;
 
         parent::__construct($response);
