@@ -13,6 +13,8 @@ class Structure extends Validator
     const RULE_TYPE_KEY = 'key';
     const RULE_TYPE_TEXT = 'text';
     const RULE_TYPE_MARKDOWN = 'markdown';
+    const RULE_TYPE_INTEGER = 'integer';
+    const RULE_TYPE_FLOAT = 'float';
     const RULE_TYPE_NUMERIC = 'numeric';
     const RULE_TYPE_BOOLEAN = 'boolean';
     const RULE_TYPE_EMAIL = 'email';
@@ -176,6 +178,12 @@ class Structure extends Validator
                 case self::RULE_TYPE_NUMERIC:
                     $validator = new Validator\Numeric();
                     break;
+                // case self::RULE_TYPE_INTEGER:
+                //     $validator = new Validator\Integer();
+                //     break;
+                // case self::RULE_TYPE_FLOAT:
+                //     $validator = new Validator\Float();
+                //     break;
                 case self::RULE_TYPE_BOOLEAN:
                     $validator = new Validator\Boolean();
                     break;

@@ -503,8 +503,6 @@ class DatabaseTest extends TestCase
             ],
         ]);
 
-        var_dump($document);
-
         $document = self::$object->createDocument(Database::COLLECTION_USERS, [
             '$collection' => Database::COLLECTION_USERS,
             '$permissions' => [
@@ -545,6 +543,85 @@ class DatabaseTest extends TestCase
         //     'ipv6' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
         //     'key' => uniqid(),
         // ]);
+
+        $types = [
+            Database::VAR_TEXT,
+            Database::VAR_INTEGER,
+            Database::VAR_FLOAT,
+            Database::VAR_NUMERIC,
+            Database::VAR_BOOLEAN,
+            // Database::VAR_DOCUMENT,
+            Database::VAR_EMAIL,
+            Database::VAR_URL,
+            Database::VAR_IPV4,
+            Database::VAR_IPV6,
+            Database::VAR_KEY,
+        ];
+
+        $rules = [];
+
+        foreach($types as $type) {
+            $rules[] = [
+                '$collection' => Database::COLLECTION_RULES,
+                '$permissions' => ['read' => ['*']],
+                'label' => ucfirst($type),
+                'key' => $type,
+                'type' => $type,
+                'default' => null,
+                'required' => true,
+                'array' => false,
+            ];
+
+            $rules[] = [
+                '$collection' => Database::COLLECTION_RULES,
+                '$permissions' => ['read' => ['*']],
+                'label' => ucfirst($type),
+                'key' => $type.'s',
+                'type' => $type,
+                'default' => null,
+                'required' => true,
+                'array' => true,
+            ];
+        }
+
+        $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+            '$collection' => Database::COLLECTION_COLLECTIONS,
+            '$permissions' => ['read' => ['*']],
+            'name' => 'Create Documents',
+            'rules' => $rules,
+        ]);
+
+        $this->assertEquals(true, self::$object->createCollection($collection->getId(), [], []));
+        
+        $document = self::$object->createDocument($collection->getId(), [
+            '$collection' => $collection->getId(),
+            '$permissions' => [
+                'read' => ['*'],
+                'write' => ['user:123'],
+            ],
+            'text' => 'Hello World',
+            'texts' => ['Hello World 1', 'Hello World 2'],
+            'integer' => 1,
+            'integers' => [5, 3, 4],
+            'float' => 2.22,
+            'floats' => [1.13, 4.33, 8.9999],
+            'numeric' => 1,
+            'numerics' => [1, 5, 7.77],
+            'boolean' => true,
+            'booleans' => [true, false, true],
+            'email' => 'test@appwrite.io',
+            'emails' => ['test4@appwrite.io', 'test3@appwrite.io', 'test2@appwrite.io', 'test1@appwrite.io'],
+            'url' => 'http://example.com/welcome',
+            'urls' => ['http://example.com/welcome-1', 'http://example.com/welcome-2', 'http://example.com/welcome-3'],
+            'ipv4' => '172.16.254.1',
+            'ipv4s' => ['172.16.254.1', '172.16.254.5'],
+            'ipv6' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            'ipv6s' => ['2001:0db8:85a3:0000:0000:8a2e:0370:7334', '2001:0db8:85a3:0000:0000:8a2e:0370:7337'],
+            'key' => uniqid(),
+            'keys' => [uniqid(), uniqid(), uniqid()],
+        ]);
+
+        var_dump($document);
     }
 
     public function testGetMockDocument()
