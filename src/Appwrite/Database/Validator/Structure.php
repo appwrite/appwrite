@@ -8,19 +8,19 @@ use Utopia\Validator;
 
 class Structure extends Validator
 {
-    const RULE_TYPE_ID = 'id';
+    // const RULE_TYPE_ID = 'id';
+    // const RULE_TYPE_KEY = 'key';
+    // const RULE_TYPE_TEXT = 'text';
+    // const RULE_TYPE_INTEGER = 'integer';
+    // const RULE_TYPE_FLOAT = 'float';
+    // const RULE_TYPE_NUMERIC = 'numeric';
+    // const RULE_TYPE_BOOLEAN = 'boolean';
+    // const RULE_TYPE_EMAIL = 'email';
+    // const RULE_TYPE_URL = 'url';
+    // const RULE_TYPE_DOCUMENT = 'document';
     const RULE_TYPE_PERMISSIONS = 'permissions';
-    const RULE_TYPE_KEY = 'key';
-    const RULE_TYPE_TEXT = 'text';
     const RULE_TYPE_MARKDOWN = 'markdown';
-    const RULE_TYPE_INTEGER = 'integer';
-    const RULE_TYPE_FLOAT = 'float';
-    const RULE_TYPE_NUMERIC = 'numeric';
-    const RULE_TYPE_BOOLEAN = 'boolean';
-    const RULE_TYPE_EMAIL = 'email';
-    const RULE_TYPE_URL = 'url';
     const RULE_TYPE_IP = 'ip';
-    const RULE_TYPE_DOCUMENT = 'document';
     const RULE_TYPE_DOCUMENTID = 'documentId';
     const RULE_TYPE_FILEID = 'fileId';
 
@@ -44,7 +44,7 @@ class Structure extends Validator
             'label' => '$id',
             '$collection' => Database::COLLECTION_RULES,
             'key' => '$id',
-            'type' => 'id',
+            'type' => Database::VAR_KEY,
             'default' => null,
             'required' => false,
             'array' => false,
@@ -53,7 +53,7 @@ class Structure extends Validator
             'label' => '$collection',
             '$collection' => Database::COLLECTION_RULES,
             'key' => '$collection',
-            'type' => 'id',
+            'type' => Database::VAR_KEY,
             'default' => null,
             'required' => true,
             'array' => false,
@@ -71,7 +71,7 @@ class Structure extends Validator
             'label' => '$createdAt',
             '$collection' => Database::COLLECTION_RULES,
             'key' => '$createdAt',
-            'type' => 'numeric',
+            'type' => Database::VAR_INTEGER,
             'default' => null,
             'required' => false,
             'array' => false,
@@ -80,7 +80,7 @@ class Structure extends Validator
             'label' => '$updatedAt',
             '$collection' => Database::COLLECTION_RULES,
             'key' => '$updatedAt',
-            'type' => 'numeric',
+            'type' => Database::VAR_INTEGER,
             'default' => null,
             'required' => false,
             'array' => false,
@@ -162,41 +162,44 @@ class Structure extends Validator
             $validator = null;
 
             switch ($ruleType) {
-                case self::RULE_TYPE_ID:
-                    $validator = new UID();
-                    break;
                 case self::RULE_TYPE_PERMISSIONS:
                     $validator = new Permissions();
                     break;
-                case self::RULE_TYPE_KEY:
+                case Database::VAR_KEY:
                     $validator = new Key();
                     break;
-                case self::RULE_TYPE_TEXT:
+                case Database::VAR_TEXT:
                 case self::RULE_TYPE_MARKDOWN:
                     $validator = new Validator\Text(0);
                     break;
-                case self::RULE_TYPE_NUMERIC:
+                case Database::VAR_NUMERIC:
                     $validator = new Validator\Numeric();
                     break;
-                // case self::RULE_TYPE_INTEGER:
-                //     $validator = new Validator\Integer();
-                //     break;
-                // case self::RULE_TYPE_FLOAT:
-                //     $validator = new Validator\Float();
-                //     break;
-                case self::RULE_TYPE_BOOLEAN:
+                case Database::VAR_INTEGER:
+                    $validator = new Validator\Integer();
+                    break;
+                case Database::VAR_FLOAT:
+                    $validator = new Validator\FloatValidator();
+                    break;
+                    case Database::VAR_BOOLEAN:
                     $validator = new Validator\Boolean();
                     break;
-                case self::RULE_TYPE_EMAIL:
+                case Database::VAR_EMAIL:
                     $validator = new Validator\Email();
                     break;
-                case self::RULE_TYPE_URL:
+                case Database::VAR_URL:
                     $validator = new Validator\URL();
                     break;
                 case self::RULE_TYPE_IP:
                     $validator = new Validator\IP();
                     break;
-                case self::RULE_TYPE_DOCUMENT:
+                case Database::VAR_IPV4:
+                    $validator = new Validator\IP(Validator\IP::V4);
+                    break;
+                case Database::VAR_IPV6:
+                    $validator = new Validator\IP(Validator\IP::V6);
+                    break;
+                case Database::VAR_DOCUMENT:
                     $validator = new Collection($this->database, (isset($rule['list'])) ? $rule['list'] : []);
                     $value = $document->getAttribute($key);
                     break;
