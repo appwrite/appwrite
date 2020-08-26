@@ -610,18 +610,99 @@ class DatabaseTest extends TestCase
             'boolean' => true,
             'booleans' => [true, false, true],
             'email' => 'test@appwrite.io',
-            'emails' => ['test4@appwrite.io', 'test3@appwrite.io', 'test2@appwrite.io', 'test1@appwrite.io'],
+            'emails' => [
+                'test4@appwrite.io',
+                'test3@appwrite.io',
+                'test2@appwrite.io',
+                'test1@appwrite.io'
+            ],
             'url' => 'http://example.com/welcome',
-            'urls' => ['http://example.com/welcome-1', 'http://example.com/welcome-2', 'http://example.com/welcome-3'],
+            'urls' => [
+                'http://example.com/welcome-1',
+                'http://example.com/welcome-2',
+                'http://example.com/welcome-3'
+            ],
             'ipv4' => '172.16.254.1',
-            'ipv4s' => ['172.16.254.1', '172.16.254.5'],
+            'ipv4s' => [
+                '172.16.254.1',
+                '172.16.254.5'
+            ],
             'ipv6' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-            'ipv6s' => ['2001:0db8:85a3:0000:0000:8a2e:0370:7334', '2001:0db8:85a3:0000:0000:8a2e:0370:7337'],
+            'ipv6s' => [
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+                '2001:0db8:85a3:0000:0000:8a2e:0370:7337'
+            ],
             'key' => uniqid(),
             'keys' => [uniqid(), uniqid(), uniqid()],
         ]);
 
-        var_dump($document);
+        $document = self::$object->getDocument($collection->getId(), $document->getId());
+
+        $this->assertIsString($document->getId());
+        $this->assertIsString($document->getCollection());
+        $this->assertEquals([
+            'read' => ['*'],
+            'write' => ['user:123'],
+        ], $document->getPermissions());
+        $this->assertEquals('Hello World', $document->getAttribute('text'));
+        $this->assertCount(2, $document->getAttribute('texts'));
+        
+        $this->assertEquals('Hello World', $document->getAttribute('text'));
+        $this->assertEquals(['Hello World 1', 'Hello World 2'], $document->getAttribute('texts'));
+        $this->assertCount(2, $document->getAttribute('texts'));
+        
+        $this->assertEquals(1, $document->getAttribute('integer'));
+        $this->assertEquals([5, 3, 4], $document->getAttribute('integers'));
+        $this->assertCount(3, $document->getAttribute('integers'));
+
+        $this->assertEquals(2.22, $document->getAttribute('float'));
+        $this->assertEquals([1.13, 4.33, 8.9999], $document->getAttribute('floats'));
+        $this->assertCount(3, $document->getAttribute('floats'));
+
+        $this->assertEquals(true, $document->getAttribute('boolean'));
+        $this->assertEquals([true, false, true], $document->getAttribute('booleans'));
+        $this->assertCount(3, $document->getAttribute('booleans'));
+
+        $this->assertEquals('test@appwrite.io', $document->getAttribute('email'));
+        $this->assertEquals([
+            'test4@appwrite.io',
+            'test3@appwrite.io',
+            'test2@appwrite.io',
+            'test1@appwrite.io'
+        ], $document->getAttribute('emails'));
+        $this->assertCount(4, $document->getAttribute('emails'));
+
+        $this->assertEquals('http://example.com/welcome', $document->getAttribute('url'));
+        $this->assertEquals([
+            'http://example.com/welcome-1',
+            'http://example.com/welcome-2',
+            'http://example.com/welcome-3'
+        ], $document->getAttribute('urls'));
+        $this->assertCount(3, $document->getAttribute('urls'));
+
+        $this->assertEquals('172.16.254.1', $document->getAttribute('ipv4'));
+        $this->assertEquals([
+            '172.16.254.1',
+            '172.16.254.5'
+        ], $document->getAttribute('ipv4s'));
+        $this->assertCount(2, $document->getAttribute('ipv4s'));
+
+        $this->assertEquals('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $document->getAttribute('ipv6'));
+        $this->assertEquals([
+            '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            '2001:0db8:85a3:0000:0000:8a2e:0370:7337'
+        ], $document->getAttribute('ipv6s'));
+        $this->assertCount(2, $document->getAttribute('ipv6s'));
+
+        $this->assertEquals('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $document->getAttribute('ipv6'));
+        $this->assertEquals([
+            '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+            '2001:0db8:85a3:0000:0000:8a2e:0370:7337'
+        ], $document->getAttribute('ipv6s'));
+        $this->assertCount(2, $document->getAttribute('ipv6s'));
+
+        $this->assertIsString($document->getAttribute('key'));
+        $this->assertCount(3, $document->getAttribute('keys'));
     }
 
     public function testGetMockDocument()
