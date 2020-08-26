@@ -411,6 +411,7 @@ App::post('/v1/database/collections/:collectionId/documents')
                 ->setAttribute($parentProperty, $data, $parentPropertyType);
 
             $data = $parentDocument->getArrayCopy();
+            $collection = $projectDB->getDocument($parentDocument->getCollection(), false);
         }
 
         /**
