@@ -51,6 +51,7 @@ const APP_SOCIAL_INSTAGRAM = 'https://www.instagram.com/appwrite.io';
 const APP_SOCIAL_GITHUB = 'https://github.com/appwrite';
 const APP_SOCIAL_DISCORD = 'https://appwrite.io/discord';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
+const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 
 $register = new Registry();
 
