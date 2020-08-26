@@ -308,20 +308,20 @@ class Relational extends Adapter
                 }
             }
 
-            switch($type) {
-                case Database::VAR_DOCUMENT:
-                    if($array) {
-                        foreach($value as $i => $element) {
-                            $value[$i] = $this->getDatabase()->getDocument(array_pop(array_reverse($list)), $element);
-                        }
-                    }
-                    else {
-                        $value = $this->getDatabase()->getDocument(array_pop(array_reverse($list)), $value);
-                    }
-                    break;
+            $value = ($array) ? $value : [$value];
+            
+            foreach($value as $i => $element) {
+                switch($type) {
+                    case Database::VAR_BOOLEAN:
+                        $value[$i] = ($element === '1');
+                        break;
+                    case Database::VAR_DOCUMENT:
+                        $value[$i] = $this->getDatabase()->getDocument(array_pop(array_reverse($list)), $element);
+                        break;
+                }
             }
 
-            $data[$key] = $value;
+            $data[$key] = ($array) ? $value : $value[0];
         }
 
         return $data;
