@@ -356,108 +356,110 @@ class DatabaseTest extends TestCase
 
     public function testCreateAttribute()
     {
-        // $this->assertEquals(true, self::$object->createCollection(self::$collection->getId(), [], []));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'title', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'description', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'numeric', Database::VAR_NUMERIC));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'integer', Database::VAR_INTEGER));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'float', Database::VAR_FLOAT));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'boolean', Database::VAR_BOOLEAN));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'document', Database::VAR_DOCUMENT));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'email', Database::VAR_EMAIL));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'url', Database::VAR_URL));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'ipv4', Database::VAR_IPV4));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'ipv6', Database::VAR_IPV6));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'key', Database::VAR_KEY));
+        $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+            '$collection' => Database::COLLECTION_COLLECTIONS,
+            '$permissions' => ['read' => ['*']],
+            'name' => 'Create Attribute',
+            'rules' => [],
+        ]);
+
+        $this->assertEquals(true, self::$object->createCollection($collection->getId(), [], []));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'numeric', Database::VAR_NUMERIC));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'integer', Database::VAR_INTEGER));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'float', Database::VAR_FLOAT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'boolean', Database::VAR_BOOLEAN));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'document', Database::VAR_DOCUMENT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'email', Database::VAR_EMAIL));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'url', Database::VAR_URL));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'ipv4', Database::VAR_IPV4));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'ipv6', Database::VAR_IPV6));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'key', Database::VAR_KEY));
         
-        // // arrays
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'titles', Database::VAR_TEXT, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'descriptions', Database::VAR_TEXT, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'numerics', Database::VAR_NUMERIC, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'integers', Database::VAR_INTEGER, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'floats', Database::VAR_FLOAT, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'booleans', Database::VAR_BOOLEAN, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'documents', Database::VAR_DOCUMENT, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'emails', Database::VAR_EMAIL, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'urls', Database::VAR_URL, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'ipv4s', Database::VAR_IPV4, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'ipv6s', Database::VAR_IPV6, true));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'keys', Database::VAR_KEY, true));
+        // arrays
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'titles', Database::VAR_TEXT, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'descriptions', Database::VAR_TEXT, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'numerics', Database::VAR_NUMERIC, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'integers', Database::VAR_INTEGER, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'floats', Database::VAR_FLOAT, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'booleans', Database::VAR_BOOLEAN, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'documents', Database::VAR_DOCUMENT, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'emails', Database::VAR_EMAIL, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'urls', Database::VAR_URL, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'ipv4s', Database::VAR_IPV4, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'ipv6s', Database::VAR_IPV6, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'keys', Database::VAR_KEY, true));
     }
 
-    // public function testDeleteAttribute()
-    // {
-    //     $this->assertEquals(true, self::$object->createCollection(self::$collection->getId(), [], []));
+    public function testDeleteAttribute()
+    {
+        $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+            '$collection' => Database::COLLECTION_COLLECTIONS,
+            '$permissions' => ['read' => ['*']],
+            'name' => 'Delete Attribute',
+            'rules' => [],
+        ]);
+
+        $this->assertEquals(true, self::$object->createCollection($collection->getId(), [], []));
         
-    //     $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'title', Database::VAR_TEXT));
-    //     $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'description', Database::VAR_TEXT));
-    //     $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'value', Database::VAR_NUMERIC));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'value', Database::VAR_NUMERIC));
 
-    //     $this->assertEquals(true, self::$object->deleteAttribute(self::$collection->getId(), 'title', false));
-    //     $this->assertEquals(true, self::$object->deleteAttribute(self::$collection->getId(), 'description', false));
-    //     $this->assertEquals(true, self::$object->deleteAttribute(self::$collection->getId(), 'value', false));
+        $this->assertEquals(true, self::$object->deleteAttribute($collection->getId(), 'title', false));
+        $this->assertEquals(true, self::$object->deleteAttribute($collection->getId(), 'description', false));
+        $this->assertEquals(true, self::$object->deleteAttribute($collection->getId(), 'value', false));
 
-    //     $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'titles', Database::VAR_TEXT, true));
-    //     $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'descriptions', Database::VAR_TEXT, true));
-    //     $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'values', Database::VAR_NUMERIC, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'titles', Database::VAR_TEXT, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'descriptions', Database::VAR_TEXT, true));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'values', Database::VAR_NUMERIC, true));
 
-    //     $this->assertEquals(true, self::$object->deleteAttribute(self::$collection->getId(), 'titles', true));
-    //     $this->assertEquals(true, self::$object->deleteAttribute(self::$collection->getId(), 'descriptions', true));
-    //     $this->assertEquals(true, self::$object->deleteAttribute(self::$collection->getId(), 'values', true));
-    // }
+        $this->assertEquals(true, self::$object->deleteAttribute($collection->getId(), 'titles', true));
+        $this->assertEquals(true, self::$object->deleteAttribute($collection->getId(), 'descriptions', true));
+        $this->assertEquals(true, self::$object->deleteAttribute($collection->getId(), 'values', true));
+    }
 
     public function testCreateIndex()
     {
-        // $this->assertEquals(true, self::$object->createCollection(self::$collection->getId(), [], []));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'title', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'description', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createIndex(self::$collection->getId(), 'x', Database::INDEX_KEY, ['title']));
-        // $this->assertEquals(true, self::$object->createIndex(self::$collection->getId(), 'y', Database::INDEX_KEY, ['description']));
-        // $this->assertEquals(true, self::$object->createIndex(self::$collection->getId(), 'z', Database::INDEX_KEY, ['title', 'description']));
+        $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+            '$collection' => Database::COLLECTION_COLLECTIONS,
+            '$permissions' => ['read' => ['*']],
+            'name' => 'Create Index',
+            'rules' => [],
+        ]);
+
+        $this->assertEquals(true, self::$object->createCollection($collection->getId(), [], []));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createIndex($collection->getId(), 'x', Database::INDEX_KEY, ['title']));
+        $this->assertEquals(true, self::$object->createIndex($collection->getId(), 'y', Database::INDEX_KEY, ['description']));
+        $this->assertEquals(true, self::$object->createIndex($collection->getId(), 'z', Database::INDEX_KEY, ['title', 'description']));
     }
 
     public function testDeleteIndex()
     {
-        // $this->assertEquals(true, self::$object->createCollection(self::$collection->getId(), [], []));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'title', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createAttribute(self::$collection->getId(), 'description', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createIndex(self::$collection->getId(), 'x', Database::INDEX_KEY, ['title']));
-        // $this->assertEquals(true, self::$object->createIndex(self::$collection->getId(), 'y', Database::INDEX_KEY, ['description']));
-        // $this->assertEquals(true, self::$object->createIndex(self::$collection->getId(), 'z', Database::INDEX_KEY, ['title', 'description']));
+        $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+            '$collection' => Database::COLLECTION_COLLECTIONS,
+            '$permissions' => ['read' => ['*']],
+            'name' => 'Delete Index',
+            'rules' => [],
+        ]);
+
+        $this->assertEquals(true, self::$object->createCollection($collection->getId(), [], []));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'title', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createAttribute($collection->getId(), 'description', Database::VAR_TEXT));
+        $this->assertEquals(true, self::$object->createIndex($collection->getId(), 'x', Database::INDEX_KEY, ['title']));
+        $this->assertEquals(true, self::$object->createIndex($collection->getId(), 'y', Database::INDEX_KEY, ['description']));
+        $this->assertEquals(true, self::$object->createIndex($collection->getId(), 'z', Database::INDEX_KEY, ['title', 'description']));
         
-        // $this->assertEquals(true, self::$object->deleteIndex(self::$collection->getId(), 'x'));
-        // $this->assertEquals(true, self::$object->deleteIndex(self::$collection->getId(), 'y'));
-        // $this->assertEquals(true, self::$object->deleteIndex(self::$collection->getId(), 'z'));
+        $this->assertEquals(true, self::$object->deleteIndex($collection->getId(), 'x'));
+        $this->assertEquals(true, self::$object->deleteIndex($collection->getId(), 'y'));
+        $this->assertEquals(true, self::$object->deleteIndex($collection->getId(), 'z'));
     }
 
     public function testCreateDocument()
     {
-        // $this->assertEquals(true, self::$object->createCollection('create_document_'.self::$collection->getId(), [], []));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'title', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'description', Database::VAR_TEXT));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'numeric', Database::VAR_NUMERIC));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'integer', Database::VAR_INTEGER));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'float', Database::VAR_FLOAT));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'boolean', Database::VAR_BOOLEAN));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'email', Database::VAR_EMAIL));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'url', Database::VAR_URL));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'ipv4', Database::VAR_IPV4));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'ipv6', Database::VAR_IPV6));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'key', Database::VAR_KEY));
-        
-        // // arrays
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'titles', Database::VAR_TEXT, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'descriptions', Database::VAR_TEXT, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'numerics', Database::VAR_NUMERIC, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'integers', Database::VAR_INTEGER, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'floats', Database::VAR_FLOAT, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'booleans', Database::VAR_BOOLEAN, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'emails', Database::VAR_EMAIL, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'urls', Database::VAR_URL, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'ipv4s', Database::VAR_IPV4, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'ipv6s', Database::VAR_IPV6, true));
-        // $this->assertEquals(true, self::$object->createAttribute('create_document_'.self::$collection->getId(), 'keys', Database::VAR_KEY, true));
-
         $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
             '$collection' => Database::COLLECTION_COLLECTIONS,
             '$permissions' => ['read' => ['*']],
