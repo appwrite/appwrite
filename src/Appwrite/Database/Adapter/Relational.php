@@ -24,6 +24,11 @@ class Relational extends Adapter
     protected $protected = ['$id' => true, '$collection' => true, '$permissions' => true];
 
     /**
+     * @var bool
+     */
+    protected $transaction = false;
+
+    /**
      * Constructor.
      *
      * Set connection and settings
@@ -45,6 +50,10 @@ class Relational extends Adapter
      */
     public function createCollection(Document $collection, string $id): bool
     {
+        if($collection->isEmpty()) {
+            throw new Exception('Missing Collection');
+        }
+
         $rules = $collection->getAttribute('rules', []);
         $indexes = $collection->getAttribute('indexes', []);
         $columns = [];
@@ -59,7 +68,7 @@ class Relational extends Adapter
                 continue;
             }
 
-            $columns[] = $this->getColumn($key, $type, $array);
+            $columns[] = $this->getColumn($key, $type);
         }
 
         $columns = (!empty($columns)) ? implode(",\n", $columns) . ",\n" : '';
@@ -129,7 +138,7 @@ class Relational extends Adapter
             $query = $this->getPDO()->prepare('CREATE TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$id.'` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `uid` varchar(45) DEFAULT NULL,
-                '.$this->getColumn($id, $type, $array).',
+                '.$this->getColumn($id, $type).',
                 PRIMARY KEY (`id`),
                 KEY `index1` (`uid`)
               ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
@@ -137,7 +146,7 @@ class Relational extends Adapter
         }
         else {
             $query = $this->getPDO()->prepare('ALTER TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
-                ADD COLUMN '.$this->getColumn($id, $type, $array).';');
+                ADD COLUMN '.$this->getColumn($id, $type).';');
         }
         
         if (!$query->execute()) {
@@ -309,6 +318,10 @@ class Relational extends Adapter
             }
 
             $value = ($array) ? $value : [$value];
+
+            if($array && !\is_array($value)) {
+                continue;
+            }
             
             foreach($value as $i => $element) {
                 switch($type) {
@@ -363,6 +376,8 @@ class Relational extends Adapter
          * Check Unique Keys
          */
         //throw new Duplicate('Duplicated Property');
+
+        $this->beginTransaction();
         
         $st = $this->getPDO()->prepare('INSERT INTO  `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
             SET uid = :uid, createdAt = :createdAt, updatedAt = :updatedAt, permissions = :permissions'.$columns.';
@@ -372,7 +387,7 @@ class Relational extends Adapter
         $st->bindValue(':createdAt', \date('Y-m-d H:i:s', \time()), PDO::PARAM_STR);
         $st->bindValue(':updatedAt', \date('Y-m-d H:i:s', \time()), PDO::PARAM_STR);
         $st->bindValue(':permissions', \json_encode($data['$permissions']), PDO::PARAM_STR);
-        
+
         foreach($rules as $i => $rule) { /** @var Document $rule */
             $key = $rule->getAttribute('key');
             $type = $rule->getAttribute('type');
@@ -384,33 +399,28 @@ class Relational extends Adapter
                 continue;
             }
 
-            switch($type) {
-                case Database::VAR_DOCUMENT:
-                    if($array) {
-                        if(!is_array($value)) {
-                            continue 2;
-                        }
-                        
-                        foreach ($value as $i => $element) { // TODO CHECK IF CREATE OR UPDATE
-                            $value[$i] = $this->getDatabase()
-                                ->createDocument(array_pop(array_reverse($list)), $element)->getId();
-                        }
-                    }
-                    else {
-                        $id = (isset($value['$id'])) ? $value['$id'] : null;  // TODO CHECK IF CREATE OR UPDATE
-                        $value = ($id)
-                            ? $this->getDatabase()->createDocument(array_pop(array_reverse($list)), $value)->getId()
-                            : $this->getDatabase()->updateDocument(array_pop(array_reverse($list)), $id, $value)->getId();
-                    }
+            $value = ($array) ? $value : [$value];
+            $value = ($array && !\is_array($value)) ? [] : $value;
+
+            foreach ($value as $x => $element) { // TODO CHECK IF CREATE OR UPDATE
+                switch($type) {
+                    case Database::VAR_DOCUMENT:
+                        $id = (isset($element['$id'])) ? $element['$id'] : null;  // TODO CHECK IF CREATE OR UPDATE
+                        $value[$x] = (empty($id))
+                            ? $this->getDatabase()->createDocument(array_pop(array_reverse($list)), $element)->getId()
+                            : $this->getDatabase()->updateDocument(array_pop(array_reverse($list)), $id, $element)->getId();
                     break;
+                }
             }
+            
+            $value = ($array) ? $value : $value[0];
 
             if($array) {
                 if(!is_array($value)) {
                     continue;
                 }
                 
-                foreach ($value as $i => $element) {
+                foreach ($value as $element) {
                     $stArray = $this->getPDO()->prepare('INSERT INTO  `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'`
                         SET uid = :uid, `col_'.$key.'` = :col_x;
                     ');
@@ -429,6 +439,8 @@ class Relational extends Adapter
         }
 
         $st->execute();
+
+        $this->commit();
 
         //TODO remove this dependency (check if related to nested documents)
         // $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
@@ -684,7 +696,7 @@ class Relational extends Adapter
      * 
      * @return string
      */
-    protected function getColumn(string $key, string $type, bool $array): string
+    protected function getColumn(string $key, string $type): string
     {
         switch ($type) {
             case Database::VAR_TEXT:
@@ -728,6 +740,38 @@ class Relational extends Adapter
                 throw new Exception('Unsupported attribute: '.$type);
                 break;
         }
+    }
+
+    /**
+     * @return false
+     */
+    protected function beginTransaction(): bool
+    {
+        if($this->transaction) {
+            return false;
+        }
+
+        $this->transaction = true;
+
+        $this->getPDO()->beginTransaction();
+
+        return true;
+    }
+
+    /**
+     * @return false
+     */
+    protected function commit(): bool
+    {
+        if(!$this->transaction) {
+            return false;
+        }
+
+        $this->getPDO()->commit();
+
+        $this->transaction = false;
+
+        return true;
     }
 
     /**
