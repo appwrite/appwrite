@@ -398,7 +398,7 @@ class Database
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        $new = new Document($this->adapter->updateDocument($collection, $id, $new->getArrayCopy()));
+        $new = new Document($this->adapter->updateDocument($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id, $new->getArrayCopy()));
         
         $new = $this->decode($new);
 

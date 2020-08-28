@@ -379,7 +379,7 @@ class Relational extends Adapter
 
         $this->beginTransaction();
         
-        $st = $this->getPDO()->prepare('INSERT INTO  `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
+        $st = $this->getPDO()->prepare('INSERT INTO `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
             SET uid = :uid, createdAt = :createdAt, updatedAt = :updatedAt, permissions = :permissions'.$columns.';
         ');
 
@@ -402,10 +402,14 @@ class Relational extends Adapter
             $value = ($array) ? $value : [$value];
             $value = ($array && !\is_array($value)) ? [] : $value;
 
-            foreach ($value as $x => $element) { // TODO CHECK IF CREATE OR UPDATE
+            foreach ($value as $x => $element) {
                 switch($type) {
                     case Database::VAR_DOCUMENT:
-                        $id = (isset($element['$id'])) ? $element['$id'] : null;  // TODO CHECK IF CREATE OR UPDATE
+                        $id = (isset($element['$id'])) ? $element['$id'] : null;
+
+                        if(!empty($id)) {
+                            var_dump($element);
+                        }
                         $value[$x] = (empty($id))
                             ? $this->getDatabase()->createDocument(array_pop(array_reverse($list)), $element)->getId()
                             : $this->getDatabase()->updateDocument(array_pop(array_reverse($list)), $id, $element)->getId();
@@ -421,7 +425,7 @@ class Relational extends Adapter
                 }
                 
                 foreach ($value as $element) {
-                    $stArray = $this->getPDO()->prepare('INSERT INTO  `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'`
+                    $stArray = $this->getPDO()->prepare('INSERT INTO `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'`
                         SET uid = :uid, `col_'.$key.'` = :col_x;
                     ');
             
@@ -462,7 +466,110 @@ class Relational extends Adapter
      */
     public function updateDocument(Document $collection, string $id, array $data)
     {
-        return $this->createDocument($collection, $data);
+        if(!isset($data['$id']) || empty($data['$id']) || empty($id)) {
+            throw new Exception('$id is missing');
+        }
+
+        $data['$permissions'] = (!isset($data['$permissions'])) ? [] : $data['$permissions'];
+        $columns = [];
+        $rules = $collection->getAttribute('rules', []);
+
+        foreach($rules as $i => $rule) {
+            $key = $rule->getAttribute('key');
+            $type = $rule->getAttribute('type');
+            $array = $rule->getAttribute('array');
+
+            if(array_key_exists($key, $this->protected) || $array) {
+                continue;
+            }
+
+            $columns[] = '`col_'.$key.'` = :col_'.$i;
+        }
+
+        $columns = (!empty($columns)) ? ', '.implode(', ', $columns) : '';
+
+        /**
+         * Check Unique Keys
+         */
+        //throw new Duplicate('Duplicated Property');
+
+        $this->beginTransaction();
+        
+        $st = $this->getPDO()->prepare('UPDATE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
+            SET updatedAt = :updatedAt, permissions = :permissions'.$columns.'
+            WHERE uid = :uid;
+        ');
+
+        $st->bindValue(':uid', $data['$id'], PDO::PARAM_STR);
+        $st->bindValue(':updatedAt', \date('Y-m-d H:i:s', \time()), PDO::PARAM_STR);
+        $st->bindValue(':permissions', \json_encode($data['$permissions']), PDO::PARAM_STR);
+
+        foreach($rules as $i => $rule) { /** @var Document $rule */
+            $key = $rule->getAttribute('key');
+            $type = $rule->getAttribute('type');
+            $array = $rule->getAttribute('array');
+            $list = $rule->getAttribute('list', []);
+            $value = (isset($data[$key])) ? $data[$key] : null;
+
+            if(array_key_exists($key, $this->protected)) {
+                continue;
+            }
+
+            $value = ($array) ? $value : [$value];
+            $value = ($array && !\is_array($value)) ? [] : $value;
+
+            foreach ($value as $x => $element) {
+                switch($type) {
+                    case Database::VAR_DOCUMENT:
+                        $id = (isset($element['$id'])) ? $element['$id'] : null;
+                        $value[$x] = (empty($id))
+                            ? $this->getDatabase()->createDocument(array_pop(array_reverse($list)), $element)->getId()
+                            : $this->getDatabase()->updateDocument(array_pop(array_reverse($list)), $id, $element)->getId();
+                    break;
+                }
+            }
+            
+            $value = ($array) ? $value : $value[0];
+
+            if($array) {
+                if(!is_array($value)) {
+                    continue;
+                }
+
+                $stArray = $this->getPDO()->prepare('DELETE FROM `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'`
+                    WHERE uid = :uid;
+                ');
+
+                $stArray->bindValue(':uid', $data['$id'], PDO::PARAM_STR);
+                $stArray->execute();
+                
+                foreach ($value as $element) {
+                    $stArray = $this->getPDO()->prepare('INSERT INTO `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'`
+                        SET uid = :uid, `col_'.$key.'` = :col_x;
+                    ');
+            
+                    $stArray->bindValue(':uid', $data['$id'], PDO::PARAM_STR);
+                    $stArray->bindValue(':col_x', $element, $this->getDataType($type));
+                    $stArray->execute();
+                }
+
+                continue;
+            }
+            
+            if(!$array) {
+                $st->bindValue(':col_'.$i, $value, $this->getDataType($type));
+            }
+        }
+
+        $st->execute();
+
+        $this->commit();
+
+        //TODO remove this dependency (check if related to nested documents)
+        // $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
+        // $this->getRedis()->expire($this->getNamespace().':document-'.$data['$id'], 0);
+
+        return $data;
     }
 
     /**

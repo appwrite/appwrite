@@ -600,29 +600,29 @@ class DatabaseTest extends TestCase
             ];
         }
 
-        // $rules[] = [
-        //     '$collection' => Database::COLLECTION_RULES,
-        //     '$permissions' => ['read' => ['*']],
-        //     'label' => 'document2',
-        //     'key' => 'document2',
-        //     'type' => Database::VAR_DOCUMENT,
-        //     'default' => null,
-        //     'required' => true,
-        //     'array' => false,
-        //     'list' => [$collection1->getId()],
-        // ];
+        $rules[] = [
+            '$collection' => Database::COLLECTION_RULES,
+            '$permissions' => ['read' => ['*']],
+            'label' => 'document2',
+            'key' => 'document2',
+            'type' => Database::VAR_DOCUMENT,
+            'default' => null,
+            'required' => true,
+            'array' => false,
+            'list' => [$collection1->getId()],
+        ];
 
-        // $rules[] = [
-        //     '$collection' => Database::COLLECTION_RULES,
-        //     '$permissions' => ['read' => ['*']],
-        //     'label' => 'documents2',
-        //     'key' => 'documents2',
-        //     'type' => Database::VAR_DOCUMENT,
-        //     'default' => null,
-        //     'required' => true,
-        //     'array' => true,
-        //     'list' => [$collection1->getId()],
-        // ];
+        $rules[] = [
+            '$collection' => Database::COLLECTION_RULES,
+            '$permissions' => ['read' => ['*']],
+            'label' => 'documents2',
+            'key' => 'documents2',
+            'type' => Database::VAR_DOCUMENT,
+            'default' => null,
+            'required' => true,
+            'array' => true,
+            'list' => [$collection1->getId()],
+        ];
 
         $collection2 = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
             '$collection' => Database::COLLECTION_COLLECTIONS,
@@ -641,12 +641,12 @@ class DatabaseTest extends TestCase
             ],
             'text' => 'Hello World',
             'texts' => ['Hello World 1', 'Hello World 2'],
-            'document' => $document0,
-            'documents' => [$document0],
             // 'document' => $document0,
-            // 'documents' => [$document1, $document0],
-            // 'document2' => $document1,
-            // 'documents2' => [$document0, $document1],
+            // 'documents' => [$document0],
+            'document' => $document0,
+            'documents' => [$document1, $document0],
+            'document2' => $document1,
+            'documents2' => [$document0, $document1],
             'integer' => 1,
             'integers' => [5, 3, 4],
             'float' => 2.22,
@@ -716,12 +716,64 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document3->getAttribute('documents')[0]->getPermissions());
         $this->assertArrayHasKey('read', $document3->getAttribute('documents')[0]->getPermissions());
         $this->assertArrayHasKey('write', $document3->getAttribute('documents')[0]->getPermissions());
-        $this->assertEquals('Task #0', $document3->getAttribute('documents')[0]->getAttribute('name'));
+        $this->assertEquals('Task #1', $document3->getAttribute('documents')[0]->getAttribute('name'));
         $this->assertCount(4, $document3->getAttribute('documents')[0]->getAttribute('links'));
-        $this->assertEquals('http://example.com/link-1', $document3->getAttribute('documents')[0]->getAttribute('links')[0]);
-        $this->assertEquals('http://example.com/link-2', $document3->getAttribute('documents')[0]->getAttribute('links')[1]);
-        $this->assertEquals('http://example.com/link-3', $document3->getAttribute('documents')[0]->getAttribute('links')[2]);
-        $this->assertEquals('http://example.com/link-4', $document3->getAttribute('documents')[0]->getAttribute('links')[3]);
+        $this->assertEquals('http://example.com/link-5', $document3->getAttribute('documents')[0]->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-6', $document3->getAttribute('documents')[0]->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-7', $document3->getAttribute('documents')[0]->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-8', $document3->getAttribute('documents')[0]->getAttribute('links')[3]);
+        
+        $this->assertInstanceOf(Document::class, $document3->getAttribute('documents')[1]);
+        $this->assertIsString($document3->getAttribute('documents')[1]->getId());
+        $this->assertNotEmpty($document3->getAttribute('documents')[1]->getId());
+        $this->assertIsArray($document3->getAttribute('documents')[1]->getPermissions());
+        $this->assertArrayHasKey('read', $document3->getAttribute('documents')[1]->getPermissions());
+        $this->assertArrayHasKey('write', $document3->getAttribute('documents')[1]->getPermissions());
+        $this->assertEquals('Task #0', $document3->getAttribute('documents')[1]->getAttribute('name'));
+        $this->assertCount(4, $document3->getAttribute('documents')[1]->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-1', $document3->getAttribute('documents')[1]->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-2', $document3->getAttribute('documents')[1]->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-3', $document3->getAttribute('documents')[1]->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-4', $document3->getAttribute('documents')[1]->getAttribute('links')[3]);
+
+        $this->assertInstanceOf(Document::class, $document3->getAttribute('document2'));
+        $this->assertIsString($document3->getAttribute('document2')->getId());
+        $this->assertNotEmpty($document3->getAttribute('document2')->getId());
+        $this->assertIsArray($document3->getAttribute('document2')->getPermissions());
+        $this->assertArrayHasKey('read', $document3->getAttribute('document2')->getPermissions());
+        $this->assertArrayHasKey('write', $document3->getAttribute('document2')->getPermissions());
+        $this->assertEquals('Task #1', $document3->getAttribute('document2')->getAttribute('name'));
+        $this->assertCount(4, $document3->getAttribute('document2')->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-5', $document3->getAttribute('document2')->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-6', $document3->getAttribute('document2')->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-7', $document3->getAttribute('document2')->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-8', $document3->getAttribute('document2')->getAttribute('links')[3]);
+
+        $this->assertInstanceOf(Document::class, $document3->getAttribute('documents2')[0]);
+        $this->assertIsString($document3->getAttribute('documents2')[0]->getId());
+        $this->assertNotEmpty($document3->getAttribute('documents2')[0]->getId());
+        $this->assertIsArray($document3->getAttribute('documents2')[0]->getPermissions());
+        $this->assertArrayHasKey('read', $document3->getAttribute('documents2')[0]->getPermissions());
+        $this->assertArrayHasKey('write', $document3->getAttribute('documents2')[0]->getPermissions());
+        $this->assertEquals('Task #0', $document3->getAttribute('documents2')[0]->getAttribute('name'));
+        $this->assertCount(4, $document3->getAttribute('documents2')[0]->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-1', $document3->getAttribute('documents2')[0]->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-2', $document3->getAttribute('documents2')[0]->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-3', $document3->getAttribute('documents2')[0]->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-4', $document3->getAttribute('documents2')[0]->getAttribute('links')[3]);
+
+        $this->assertInstanceOf(Document::class, $document3->getAttribute('documents2')[1]);
+        $this->assertIsString($document3->getAttribute('documents2')[1]->getId());
+        $this->assertNotEmpty($document3->getAttribute('documents2')[1]->getId());
+        $this->assertIsArray($document3->getAttribute('documents2')[1]->getPermissions());
+        $this->assertArrayHasKey('read', $document3->getAttribute('documents2')[1]->getPermissions());
+        $this->assertArrayHasKey('write', $document3->getAttribute('documents2')[1]->getPermissions());
+        $this->assertEquals('Task #1', $document3->getAttribute('documents2')[1]->getAttribute('name'));
+        $this->assertCount(4, $document3->getAttribute('documents2')[1]->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-5', $document3->getAttribute('documents2')[1]->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-6', $document3->getAttribute('documents2')[1]->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-7', $document3->getAttribute('documents2')[1]->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-8', $document3->getAttribute('documents2')[1]->getAttribute('links')[3]);
         
         $this->assertEquals(1, $document3->getAttribute('integer'));
         $this->assertEquals([5, 3, 4], $document3->getAttribute('integers'));
