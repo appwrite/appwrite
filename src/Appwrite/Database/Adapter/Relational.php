@@ -588,29 +588,35 @@ class Relational extends Adapter
      */
     public function deleteDocument(Document $collection, string $id)
     {
-        $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.documents`
-            WHERE uid = :id
+        $rules = $collection->getAttribute('rules', []);
+
+        $this->beginTransaction();
+        
+        $st = $this->getPDO()->prepare('DELETE FROM `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
+            WHERE uid = :uid
 		');
 
-        $st1->bindValue(':id', $id, PDO::PARAM_STR);
+        $st->bindValue(':uid', $id, PDO::PARAM_STR);
 
-        $st1->execute();
+        $st->execute();
 
-        $st2 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.properties`
-            WHERE documentUid = :id
-		');
+        foreach($rules as $i => $rule) { /** @var Document $rule */
+            $key = $rule->getAttribute('key');
+            $array = $rule->getAttribute('array');
 
-        $st2->bindValue(':id', $id, PDO::PARAM_STR);
+            if($array) {
+                $stArray = $this->getPDO()->prepare('DELETE FROM `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'`
+                    WHERE uid = :uid;
+                ');
 
-        $st2->execute();
+                $stArray->bindValue(':uid', $id, PDO::PARAM_STR);
+                $stArray->execute();
+            }
+        }
 
-        $st3 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.relationships`
-            WHERE start = :id OR end = :id
-		');
+        $st->execute();
 
-        $st3->bindValue(':id', $id, PDO::PARAM_STR);
-
-        $st3->execute();
+        $this->commit();
 
         return [];
     }
