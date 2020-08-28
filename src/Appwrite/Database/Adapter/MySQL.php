@@ -369,7 +369,7 @@ class MySQL extends Adapter
     /**
      * Delete Unique Key.
      *
-     * @param int $id
+     * @param int $key
      *
      * @return array
      *
