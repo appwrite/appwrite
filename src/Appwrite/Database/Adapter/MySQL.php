@@ -191,7 +191,7 @@ class MySQL extends Adapter
             $st = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.unique`
                 SET `key` = :key;
             ');
-
+            
             $st->bindValue(':key', \md5($data['$collection'].':'.$key.'='.$value), PDO::PARAM_STR);
 
             if (!$st->execute()) {
