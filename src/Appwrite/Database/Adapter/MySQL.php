@@ -191,7 +191,7 @@ class MySQL extends Adapter
             $st = $this->getPDO()->prepare('INSERT INTO `'.$this->getNamespace().'.database.unique`
                 SET `key` = :key;
             ');
-            
+
             $st->bindValue(':key', \md5($data['$collection'].':'.$key.'='.$value), PDO::PARAM_STR);
 
             if (!$st->execute()) {
@@ -362,6 +362,26 @@ class MySQL extends Adapter
         $st3->bindValue(':id', $id, PDO::PARAM_STR);
 
         $st3->execute();
+
+        return [];
+    }
+
+    /**
+     * Delete Unique Key.
+     *
+     * @param int $id
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function deleteUniqueKey($key)
+    {
+        $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.unique` WHERE `key` = :key');
+
+        $st1->bindValue(':key', $key, PDO::PARAM_STR);
+
+        $st1->execute();
 
         return [];
     }

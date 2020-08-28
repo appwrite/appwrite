@@ -209,6 +209,10 @@ $utopia->delete('/v1/users/:userId')
                 throw new Exception('Failed to remove user from DB', 500);
             }
 
+            if (!$projectDB->deleteUniqueKey(md5('users:email='.$user->getAttribute('email', null)))) {
+                throw new Exception('Failed to remove unique key from DB', 500);
+            }
+            
             $reservedId = $projectDB->createDocument([
                 '$collection' => Database::SYSTEM_COLLECTION_RESERVED,
                 '$id' => $userId,

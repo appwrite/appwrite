@@ -299,6 +299,18 @@ class Database
     }
 
     /**
+     * @param int $key
+     *
+     * @return Document|false
+     *
+     * @throws AuthorizationException
+     */
+    public function deleteUniqueKey($key)
+    {
+        return new Document($this->adapter->deleteUniqueKey($key));
+    }
+
+    /**
      * @return array
      */
     public function getDebug()
