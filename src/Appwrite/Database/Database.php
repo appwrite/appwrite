@@ -253,7 +253,7 @@ class Database
      */
     public function deleteAttribute(string $collection, string $id, bool $array): bool
     {
-        return $this->adapter->deleteAttribute($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id);
+        return $this->adapter->deleteAttribute($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id, $array);
     }
 
     /**
