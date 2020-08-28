@@ -1678,7 +1678,84 @@ class DatabaseTest extends TestCase
 
     public function testDeleteDocument()
     {
-        $this->assertEquals('1', '1');
+        $collection1 = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+            '$collection' => Database::COLLECTION_COLLECTIONS,
+            '$permissions' => ['read' => ['*']],
+            'name' => 'Create Documents',
+            'rules' => [
+                [
+                    '$collection' => Database::COLLECTION_RULES,
+                    '$permissions' => ['read' => ['*']],
+                    'label' => 'Name',
+                    'key' => 'name',
+                    'type' => Database::VAR_TEXT,
+                    'default' => '',
+                    'required' => true,
+                    'array' => false,
+                ],
+                [
+                    '$collection' => Database::COLLECTION_RULES,
+                    '$permissions' => ['read' => ['*']],
+                    'label' => 'Links',
+                    'key' => 'links',
+                    'type' => Database::VAR_URL,
+                    'default' => '',
+                    'required' => true,
+                    'array' => true,
+                ],
+            ]
+        ]);
+
+        $this->assertEquals(true, self::$object->createCollection($collection1->getId(), [], []));
+        
+        $document1 = self::$object->createDocument($collection1->getId(), [
+            '$collection' => $collection1->getId(),
+            '$permissions' => [
+                'read' => ['*'],
+                'write' => ['user:123'],
+            ],
+            'name' => 'Task #1',
+            'links' => [
+                'http://example.com/link-5',
+                'http://example.com/link-6',
+                'http://example.com/link-7',
+                'http://example.com/link-8',
+            ],
+        ]);
+
+        $this->assertNotEmpty($document1->getId());
+        $this->assertIsArray($document1->getPermissions());
+        $this->assertArrayHasKey('read', $document1->getPermissions());
+        $this->assertArrayHasKey('write', $document1->getPermissions());
+        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertCount(4, $document1->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-7', $document1->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-8', $document1->getAttribute('links')[3]);
+        
+        $document1 = self::$object->getDocument($collection1->getId(), $document1->getId());
+
+        $this->assertNotEmpty($document1->getId());
+        $this->assertIsArray($document1->getPermissions());
+        $this->assertArrayHasKey('read', $document1->getPermissions());
+        $this->assertArrayHasKey('write', $document1->getPermissions());
+        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertCount(4, $document1->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-7', $document1->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-8', $document1->getAttribute('links')[3]);
+
+        self::$object->deleteDocument($collection1->getId(), $document1->getId());
+
+        $document1 = self::$object->getDocument($collection1->getId(), $document1->getId());
+
+        $this->assertTrue($document1->isEmpty());
+        $this->assertEmpty($document1->getId());
+        $this->assertEmpty($document1->getCollection());
+        $this->assertIsArray($document1->getPermissions());
+        $this->assertEmpty($document1->getPermissions());
     }
 
     public function testFind()
