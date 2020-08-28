@@ -460,7 +460,7 @@ class DatabaseTest extends TestCase
 
     public function testCreateDocument()
     {
-        $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+        $collection1 = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
             '$collection' => Database::COLLECTION_COLLECTIONS,
             '$permissions' => ['read' => ['*']],
             'name' => 'Create Documents',
@@ -488,15 +488,15 @@ class DatabaseTest extends TestCase
             ]
         ]);
 
-        $this->assertEquals(true, self::$object->createCollection($collection->getId(), [], []));
+        $this->assertEquals(true, self::$object->createCollection($collection1->getId(), [], []));
         
-        $document = self::$object->createDocument($collection->getId(), [
-            '$collection' => $collection->getId(),
+        $document0 = new Document([
+            '$collection' => $collection1->getId(),
             '$permissions' => [
                 'read' => ['*'],
                 'write' => ['user:123'],
             ],
-            'name' => 'Task #1',
+            'name' => 'Task #0',
             'links' => [
                 'http://example.com/link-1',
                 'http://example.com/link-2',
@@ -504,8 +504,34 @@ class DatabaseTest extends TestCase
                 'http://example.com/link-4',
             ],
         ]);
+        
+        $document1 = self::$object->createDocument($collection1->getId(), [
+            '$collection' => $collection1->getId(),
+            '$permissions' => [
+                'read' => ['*'],
+                'write' => ['user:123'],
+            ],
+            'name' => 'Task #1',
+            'links' => [
+                'http://example.com/link-5',
+                'http://example.com/link-6',
+                'http://example.com/link-7',
+                'http://example.com/link-8',
+            ],
+        ]);
 
-        $document = self::$object->createDocument(Database::COLLECTION_USERS, [
+        $this->assertNotEmpty($document1->getId());
+        $this->assertIsArray($document1->getPermissions());
+        $this->assertArrayHasKey('read', $document1->getPermissions());
+        $this->assertArrayHasKey('write', $document1->getPermissions());
+        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertCount(4, $document1->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-7', $document1->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-8', $document1->getAttribute('links')[3]);
+
+        $document2 = self::$object->createDocument(Database::COLLECTION_USERS, [
             '$collection' => Database::COLLECTION_USERS,
             '$permissions' => [
                 'read' => ['*'],
@@ -521,30 +547,16 @@ class DatabaseTest extends TestCase
             'name' => 'Test',
         ]);
 
-        $this->assertNotEmpty($document->getId());
-        $this->assertIsArray($document->getPermissions());
-        $this->assertArrayHasKey('read', $document->getPermissions());
-        $this->assertArrayHasKey('write', $document->getPermissions());
-        $this->assertEquals('test@appwrite.io', $document->getAttribute('email'));
-        $this->assertIsString($document->getAttribute('email'));
-        $this->assertEquals(0, $document->getAttribute('status'));
-        $this->assertIsInt($document->getAttribute('status'));
-        $this->assertEquals(false, $document->getAttribute('emailVerification'));
-        $this->assertIsBool($document->getAttribute('emailVerification'));
-
-        // $document = self::$object->createDocument('create_document_'.self::$collection->getId(), [
-        //     'title' => 'Hello World',
-        //     'description' => 'I\'m a test document',
-        //     'numeric' => 1,
-        //     'integer' => 1,
-        //     'float' => 2.22,
-        //     'boolean' => true,
-        //     'email' => 'test@appwrite.io',
-        //     'url' => 'http://example.com/welcome',
-        //     'ipv4' => '172.16.254.1',
-        //     'ipv6' => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-        //     'key' => uniqid(),
-        // ]);
+        $this->assertNotEmpty($document2->getId());
+        $this->assertIsArray($document2->getPermissions());
+        $this->assertArrayHasKey('read', $document2->getPermissions());
+        $this->assertArrayHasKey('write', $document2->getPermissions());
+        $this->assertEquals('test@appwrite.io', $document2->getAttribute('email'));
+        $this->assertIsString($document2->getAttribute('email'));
+        $this->assertEquals(0, $document2->getAttribute('status'));
+        $this->assertIsInt($document2->getAttribute('status'));
+        $this->assertEquals(false, $document2->getAttribute('emailVerification'));
+        $this->assertIsBool($document2->getAttribute('emailVerification'));
 
         $types = [
             Database::VAR_TEXT,
@@ -552,7 +564,7 @@ class DatabaseTest extends TestCase
             Database::VAR_FLOAT,
             Database::VAR_NUMERIC,
             Database::VAR_BOOLEAN,
-            // Database::VAR_DOCUMENT,
+            Database::VAR_DOCUMENT,
             Database::VAR_EMAIL,
             Database::VAR_URL,
             Database::VAR_IPV4,
@@ -572,6 +584,7 @@ class DatabaseTest extends TestCase
                 'default' => null,
                 'required' => true,
                 'array' => false,
+                'list' => ($type === Database::VAR_DOCUMENT) ? [$collection1->getId()] : [],
             ];
 
             $rules[] = [
@@ -583,26 +596,57 @@ class DatabaseTest extends TestCase
                 'default' => null,
                 'required' => true,
                 'array' => true,
+                'list' => ($type === Database::VAR_DOCUMENT) ? [$collection1->getId()] : [],
             ];
         }
 
-        $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
+        // $rules[] = [
+        //     '$collection' => Database::COLLECTION_RULES,
+        //     '$permissions' => ['read' => ['*']],
+        //     'label' => 'document2',
+        //     'key' => 'document2',
+        //     'type' => Database::VAR_DOCUMENT,
+        //     'default' => null,
+        //     'required' => true,
+        //     'array' => false,
+        //     'list' => [$collection1->getId()],
+        // ];
+
+        // $rules[] = [
+        //     '$collection' => Database::COLLECTION_RULES,
+        //     '$permissions' => ['read' => ['*']],
+        //     'label' => 'documents2',
+        //     'key' => 'documents2',
+        //     'type' => Database::VAR_DOCUMENT,
+        //     'default' => null,
+        //     'required' => true,
+        //     'array' => true,
+        //     'list' => [$collection1->getId()],
+        // ];
+
+        $collection2 = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, [
             '$collection' => Database::COLLECTION_COLLECTIONS,
             '$permissions' => ['read' => ['*']],
             'name' => 'Create Documents',
             'rules' => $rules,
         ]);
 
-        $this->assertEquals(true, self::$object->createCollection($collection->getId(), [], []));
+        $this->assertEquals(true, self::$object->createCollection($collection2->getId(), [], []));
         
-        $document = self::$object->createDocument($collection->getId(), [
-            '$collection' => $collection->getId(),
+        $document3 = self::$object->createDocument($collection2->getId(), [
+            '$collection' => $collection2->getId(),
             '$permissions' => [
                 'read' => ['*'],
                 'write' => ['user:123'],
             ],
             'text' => 'Hello World',
             'texts' => ['Hello World 1', 'Hello World 2'],
+            'document' => $document0,
+            'documents' => [$document0],
+            // 'document' => $document0,
+            // 'documents' => [$document1, $document0],
+            // 'document2' => $document1,
+            // 'documents2' => [$document0, $document1],
             'integer' => 1,
             'integers' => [5, 3, 4],
             'float' => 2.22,
@@ -638,86 +682,110 @@ class DatabaseTest extends TestCase
             'keys' => [uniqid(), uniqid(), uniqid()],
         ]);
 
-        $document = self::$object->getDocument($collection->getId(), $document->getId());
+        $document3 = self::$object->getDocument($collection2->getId(), $document3->getId());
 
-        $this->assertIsString($document->getId());
-        $this->assertIsString($document->getCollection());
+        $this->assertIsString($document3->getId());
+        $this->assertIsString($document3->getCollection());
         $this->assertEquals([
             'read' => ['*'],
             'write' => ['user:123'],
-        ], $document->getPermissions());
-        $this->assertEquals('Hello World', $document->getAttribute('text'));
-        $this->assertCount(2, $document->getAttribute('texts'));
+        ], $document3->getPermissions());
+        $this->assertEquals('Hello World', $document3->getAttribute('text'));
+        $this->assertCount(2, $document3->getAttribute('texts'));
         
-        $this->assertEquals('Hello World', $document->getAttribute('text'));
-        $this->assertEquals(['Hello World 1', 'Hello World 2'], $document->getAttribute('texts'));
-        $this->assertCount(2, $document->getAttribute('texts'));
+        $this->assertEquals('Hello World', $document3->getAttribute('text'));
+        $this->assertEquals(['Hello World 1', 'Hello World 2'], $document3->getAttribute('texts'));
+        $this->assertCount(2, $document3->getAttribute('texts'));
         
-        $this->assertEquals(1, $document->getAttribute('integer'));
-        $this->assertEquals([5, 3, 4], $document->getAttribute('integers'));
-        $this->assertCount(3, $document->getAttribute('integers'));
+        $this->assertInstanceOf(Document::class, $document3->getAttribute('document'));
+        $this->assertIsString($document3->getAttribute('document')->getId());
+        $this->assertNotEmpty($document3->getAttribute('document')->getId());
+        $this->assertIsArray($document3->getAttribute('document')->getPermissions());
+        $this->assertArrayHasKey('read', $document3->getAttribute('document')->getPermissions());
+        $this->assertArrayHasKey('write', $document3->getAttribute('document')->getPermissions());
+        $this->assertEquals('Task #0', $document3->getAttribute('document')->getAttribute('name'));
+        $this->assertCount(4, $document3->getAttribute('document')->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-1', $document3->getAttribute('document')->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-2', $document3->getAttribute('document')->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-3', $document3->getAttribute('document')->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-4', $document3->getAttribute('document')->getAttribute('links')[3]);
+        
+        $this->assertInstanceOf(Document::class, $document3->getAttribute('documents')[0]);
+        $this->assertIsString($document3->getAttribute('documents')[0]->getId());
+        $this->assertNotEmpty($document3->getAttribute('documents')[0]->getId());
+        $this->assertIsArray($document3->getAttribute('documents')[0]->getPermissions());
+        $this->assertArrayHasKey('read', $document3->getAttribute('documents')[0]->getPermissions());
+        $this->assertArrayHasKey('write', $document3->getAttribute('documents')[0]->getPermissions());
+        $this->assertEquals('Task #0', $document3->getAttribute('documents')[0]->getAttribute('name'));
+        $this->assertCount(4, $document3->getAttribute('documents')[0]->getAttribute('links'));
+        $this->assertEquals('http://example.com/link-1', $document3->getAttribute('documents')[0]->getAttribute('links')[0]);
+        $this->assertEquals('http://example.com/link-2', $document3->getAttribute('documents')[0]->getAttribute('links')[1]);
+        $this->assertEquals('http://example.com/link-3', $document3->getAttribute('documents')[0]->getAttribute('links')[2]);
+        $this->assertEquals('http://example.com/link-4', $document3->getAttribute('documents')[0]->getAttribute('links')[3]);
+        
+        $this->assertEquals(1, $document3->getAttribute('integer'));
+        $this->assertEquals([5, 3, 4], $document3->getAttribute('integers'));
+        $this->assertCount(3, $document3->getAttribute('integers'));
 
-        $this->assertEquals(2.22, $document->getAttribute('float'));
-        $this->assertEquals([1.13, 4.33, 8.9999], $document->getAttribute('floats'));
-        $this->assertCount(3, $document->getAttribute('floats'));
+        $this->assertEquals(2.22, $document3->getAttribute('float'));
+        $this->assertEquals([1.13, 4.33, 8.9999], $document3->getAttribute('floats'));
+        $this->assertCount(3, $document3->getAttribute('floats'));
 
-        $this->assertEquals(true, $document->getAttribute('boolean'));
-        $this->assertEquals([true, false, true], $document->getAttribute('booleans'));
-        $this->assertCount(3, $document->getAttribute('booleans'));
+        $this->assertEquals(true, $document3->getAttribute('boolean'));
+        $this->assertEquals([true, false, true], $document3->getAttribute('booleans'));
+        $this->assertCount(3, $document3->getAttribute('booleans'));
 
-        $this->assertEquals('test@appwrite.io', $document->getAttribute('email'));
+        $this->assertEquals('test@appwrite.io', $document3->getAttribute('email'));
         $this->assertEquals([
             'test4@appwrite.io',
             'test3@appwrite.io',
             'test2@appwrite.io',
             'test1@appwrite.io'
-        ], $document->getAttribute('emails'));
-        $this->assertCount(4, $document->getAttribute('emails'));
+        ], $document3->getAttribute('emails'));
+        $this->assertCount(4, $document3->getAttribute('emails'));
 
-        $this->assertEquals('http://example.com/welcome', $document->getAttribute('url'));
+        $this->assertEquals('http://example.com/welcome', $document3->getAttribute('url'));
         $this->assertEquals([
             'http://example.com/welcome-1',
             'http://example.com/welcome-2',
             'http://example.com/welcome-3'
-        ], $document->getAttribute('urls'));
-        $this->assertCount(3, $document->getAttribute('urls'));
+        ], $document3->getAttribute('urls'));
+        $this->assertCount(3, $document3->getAttribute('urls'));
 
-        $this->assertEquals('172.16.254.1', $document->getAttribute('ipv4'));
+        $this->assertEquals('172.16.254.1', $document3->getAttribute('ipv4'));
         $this->assertEquals([
             '172.16.254.1',
             '172.16.254.5'
-        ], $document->getAttribute('ipv4s'));
-        $this->assertCount(2, $document->getAttribute('ipv4s'));
+        ], $document3->getAttribute('ipv4s'));
+        $this->assertCount(2, $document3->getAttribute('ipv4s'));
 
-        $this->assertEquals('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $document->getAttribute('ipv6'));
+        $this->assertEquals('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $document3->getAttribute('ipv6'));
         $this->assertEquals([
             '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
             '2001:0db8:85a3:0000:0000:8a2e:0370:7337'
-        ], $document->getAttribute('ipv6s'));
-        $this->assertCount(2, $document->getAttribute('ipv6s'));
+        ], $document3->getAttribute('ipv6s'));
+        $this->assertCount(2, $document3->getAttribute('ipv6s'));
 
-        $this->assertEquals('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $document->getAttribute('ipv6'));
+        $this->assertEquals('2001:0db8:85a3:0000:0000:8a2e:0370:7334', $document3->getAttribute('ipv6'));
         $this->assertEquals([
             '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
             '2001:0db8:85a3:0000:0000:8a2e:0370:7337'
-        ], $document->getAttribute('ipv6s'));
-        $this->assertCount(2, $document->getAttribute('ipv6s'));
+        ], $document3->getAttribute('ipv6s'));
+        $this->assertCount(2, $document3->getAttribute('ipv6s'));
 
-        $this->assertIsString($document->getAttribute('key'));
-        $this->assertCount(3, $document->getAttribute('keys'));
-    }
-
-    public function testGetMockDocument()
-    {
-        $document = self::$object->getDocument(Database::COLLECTION_COLLECTIONS, Database::COLLECTION_USERS);
-
-        $this->assertEquals(Database::COLLECTION_USERS, $document->getId());
-        $this->assertEquals(Database::COLLECTION_COLLECTIONS, $document->getCollection());
+        $this->assertIsString($document3->getAttribute('key'));
+        $this->assertCount(3, $document3->getAttribute('keys'));
     }
 
     public function testGetDocument()
     {
-        $this->assertEquals('1', '1');
+        // Mocked document
+        $document = self::$object->getDocument(Database::COLLECTION_COLLECTIONS, Database::COLLECTION_USERS);
+
+        $this->assertEquals(Database::COLLECTION_USERS, $document->getId());
+        $this->assertEquals(Database::COLLECTION_COLLECTIONS, $document->getCollection());
+
+
     }
 
     public function testUpdateDocument()
