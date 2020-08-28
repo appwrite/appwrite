@@ -325,6 +325,13 @@ class Relational extends Adapter
             
             foreach($value as $i => $element) {
                 switch($type) {
+                    case Database::VAR_INTEGER:
+                        $value[$i] = (int)$element;
+                        break;
+                    case Database::VAR_FLOAT:
+                    case Database::VAR_NUMERIC:
+                        $value[$i] = (float)$element;
+                        break;
                     case Database::VAR_BOOLEAN:
                         $value[$i] = ($element === '1');
                         break;
@@ -407,9 +414,6 @@ class Relational extends Adapter
                     case Database::VAR_DOCUMENT:
                         $id = (isset($element['$id'])) ? $element['$id'] : null;
 
-                        if(!empty($id)) {
-                            var_dump($element);
-                        }
                         $value[$x] = (empty($id))
                             ? $this->getDatabase()->createDocument(array_pop(array_reverse($list)), $element)->getId()
                             : $this->getDatabase()->updateDocument(array_pop(array_reverse($list)), $id, $element)->getId();
