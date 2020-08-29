@@ -336,13 +336,14 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID')
     ->param('width', 0, function () { return new Range(0, 4000); }, 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000.', true)
-    ->param('borderColor', '', function () { return new HexColor(); }, 'Color for the image border. Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('borderSize', 0, function () { return new Range(0, 100); }, 'Size of the image border in pixels. Enter an integer between 0 and 40', true)
+    ->param('borderColor', '', function () { return new HexColor(); }, 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
+    ->param('borderSize', 0, function () { return new Range(0, 100); }, 'Preview image border size in pixels. Enter an integer between 0 and 100', true)
+    ->param('opacity', 1, function () { return new Range(0, 1); }, 'Preview image opacity. Enter an value between 0 and 1', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', null, function () use ($outputs) { return new WhiteList(\array_merge(\array_keys($outputs), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(
-        function ($fileId, $width, $height, $borderColor, $borderSize, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
+        function ($fileId, $width, $height, $borderColor, $borderSize, $opacity, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
             $storage = 'local';
 
             if (!\extension_loaded('imagick')) {
@@ -423,7 +424,8 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $resize = new Resize($source);
 
-            $resize->addBorder($borderSize, $borderColor)
+            $resize->setOpacity($opacity)
+                    ->addBorder($borderSize, $borderColor)
                     ->crop((int) $width, (int) $height);
             
     

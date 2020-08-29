@@ -96,6 +96,34 @@ class Resize
     }
 
     /**
+     * @param opacity The opacity of the image
+     * 
+     * @return Resize
+     *
+     * @throws \ImagickException
+     */
+    public function setOpacity($opacity){
+        
+        try {
+            // If opacity is empty return
+            if(empty($opacity)) {
+                return $this;
+            }
+            // If opacity is 1, there is no change in the image
+            if($opacity == 1) {
+                return $this;
+            }
+
+            $this->image->setImageOpacity($opacity);
+            return $this;
+
+        } catch (\Throwable $th) {
+            return $this;
+        }
+    }
+
+
+    /**
      * @param $color
      *
      * @return Resize
