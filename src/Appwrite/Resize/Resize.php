@@ -77,17 +77,20 @@ class Resize
      * @throws \ImagickException
      */
     public function addBorder($borderSize, $borderColor){
-        try {
-            // If either fields are empty, return
-            if($empty($borderSize)) return $this;
-            if($empty($borderColor)) return $this;
-
-            // Else create a new color and add borders
-            $color = new ImagickPixel($borderColor);
-            return $this->image->borderImage($color, $borderSize, $borderSize);
         
+        try {
+            // If either fields are empty, return 
+            // Else create a new color and add borders
+            if(empty($borderSize) || empty($borderColor)) {
+                return $this;
+            }
+
+            $color = '#'.$borderColor;
+            $width = $height = $borderSize;
+            $this->image->borderImage($color, $width, $height);
+            return $this;
+
         } catch (\Throwable $th) {
-            print($th);
             return $this;
         }
     }

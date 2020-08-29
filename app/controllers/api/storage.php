@@ -423,9 +423,10 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $resize = new Resize($source);
 
-            $resize->addBorder($borderSize, $borderSize)
+            $resize->addBorder($borderSize, $borderColor)
                     ->crop((int) $width, (int) $height);
             
+    
 
             if (!empty($background)) {
                 $resize->setBackground('#'.$background);
@@ -442,7 +443,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $data = $resize->output($output, $quality);
 
-            $cache->save($key, $data);
+            // $cache->save($key, $data);
 
             echo $data;
 
