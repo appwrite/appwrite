@@ -78,7 +78,7 @@ $movies = [
         'langauges' => ['Xhosa', 'English', 'Korean', 'Swahili'],
     ],
     [
-        'name' => 'Black Panther',
+        'name' => 'Avengers: Infinity War',
         'releaseYear' => '2018',
         'director' => 'Ryan Coogler',
         'generes' => ['Action', 'Adventure'],
