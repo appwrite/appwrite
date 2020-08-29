@@ -98,6 +98,34 @@ class DatabaseTest extends TestCase
                         'array' => true,
                         'list' => [Database::COLLECTION_RULES],
                     ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Indexes',
+                        'key' => 'indexes',
+                        'type' => Database::VAR_DOCUMENT,
+                        'default' => [],
+                        'required' => false,
+                        'array' => true,
+                        'list' => [Database::COLLECTION_INDEXES],
+                    ],
+                ],
+                'indexes' => [
+                    [
+                        '$collection' => Database::COLLECTION_INDEXES,
+                        '$id' => 'index1',
+                        'type' => Database::INDEX_KEY,
+                        'attributes' => [
+                            'name',
+                        ],
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_INDEXES,
+                        '$id' => 'index2',
+                        'type' => Database::INDEX_FULLTEXT,
+                        'attributes' => [
+                            'name',
+                        ],
+                    ],
                 ],
             ],
             Database::COLLECTION_RULES => [
@@ -167,6 +195,32 @@ class DatabaseTest extends TestCase
                         'type' => Database::VAR_TEXT,
                         //'default' => '',
                         'required' => false,
+                        'array' => true,
+                    ],
+                ],
+            ],
+            Database::COLLECTION_INDEXES => [
+                '$collection' => Database::COLLECTION_COLLECTIONS,
+                '$id' => Database::COLLECTION_INDEXES,
+                '$permissions' => ['read' => ['*']],
+                'name' => 'Collections Indexes',
+                'rules' => [
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Type',
+                        'key' => 'type',
+                        'type' => Database::VAR_TEXT,
+                        'default' => '',
+                        'required' => true,
+                        'array' => false,
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_RULES,
+                        'label' => 'Attributes',
+                        'key' => 'attributes',
+                        'type' => Database::VAR_KEY,
+                        'default' => '',
+                        'required' => true,
                         'array' => true,
                     ],
                 ],
@@ -280,7 +334,41 @@ class DatabaseTest extends TestCase
                         'list' => [Database::COLLECTION_MEMBERSHIPS],
                     ],
                 ],
-            ]
+                'indexes' => [
+                    [
+                        '$collection' => Database::COLLECTION_INDEXES,
+                        '$id' => 'index1',
+                        'type' => Database::INDEX_KEY,
+                        'attributes' => [
+                            'name',
+                        ],
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_INDEXES,
+                        '$id' => 'index2',
+                        'type' => Database::INDEX_FULLTEXT,
+                        'attributes' => [
+                            'name',
+                        ],
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_INDEXES,
+                        '$id' => 'index3',
+                        'type' => Database::INDEX_UNIQUE,
+                        'attributes' => [
+                            'email',
+                        ],
+                    ],
+                    [
+                        '$collection' => Database::COLLECTION_INDEXES,
+                        '$id' => 'index4',
+                        'type' => Database::INDEX_KEY,
+                        'attributes' => [
+                            'email',
+                        ],
+                    ],
+                ],
+            ],
         ]);
 
         self::$object->setNamespace($namespace);
@@ -1078,7 +1166,7 @@ class DatabaseTest extends TestCase
                 'read' => ['*'],
                 'write' => ['user:123'],
             ],
-            'email' => 'test@appwrite.io',
+            'email' => 'test5@appwrite.io',
             'emailVerification' => false,
             'status' => 0,
             'password' => 'secrethash',
@@ -1092,7 +1180,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document2->getPermissions());
         $this->assertArrayHasKey('read', $document2->getPermissions());
         $this->assertArrayHasKey('write', $document2->getPermissions());
-        $this->assertEquals('test@appwrite.io', $document2->getAttribute('email'));
+        $this->assertEquals('test5@appwrite.io', $document2->getAttribute('email'));
         $this->assertIsString($document2->getAttribute('email'));
         $this->assertEquals(0, $document2->getAttribute('status'));
         $this->assertIsInt($document2->getAttribute('status'));
@@ -1105,7 +1193,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document2->getPermissions());
         $this->assertArrayHasKey('read', $document2->getPermissions());
         $this->assertArrayHasKey('write', $document2->getPermissions());
-        $this->assertEquals('test@appwrite.io', $document2->getAttribute('email'));
+        $this->assertEquals('test5@appwrite.io', $document2->getAttribute('email'));
         $this->assertIsString($document2->getAttribute('email'));
         $this->assertEquals(0, $document2->getAttribute('status'));
         $this->assertIsInt($document2->getAttribute('status'));
@@ -1119,7 +1207,7 @@ class DatabaseTest extends TestCase
                 'read' => ['user:1234'],
                 'write' => ['user:1234'],
             ],
-            'email' => 'testx@appwrite.io',
+            'email' => 'test5x@appwrite.io',
             'emailVerification' => true,
             'status' => 1,
             'password' => 'secrethashx',
@@ -1133,7 +1221,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document2->getPermissions());
         $this->assertArrayHasKey('read', $document2->getPermissions());
         $this->assertArrayHasKey('write', $document2->getPermissions());
-        $this->assertEquals('testx@appwrite.io', $document2->getAttribute('email'));
+        $this->assertEquals('test5x@appwrite.io', $document2->getAttribute('email'));
         $this->assertIsString($document2->getAttribute('email'));
         $this->assertEquals(1, $document2->getAttribute('status'));
         $this->assertIsInt($document2->getAttribute('status'));
@@ -1146,7 +1234,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document2->getPermissions());
         $this->assertArrayHasKey('read', $document2->getPermissions());
         $this->assertArrayHasKey('write', $document2->getPermissions());
-        $this->assertEquals('testx@appwrite.io', $document2->getAttribute('email'));
+        $this->assertEquals('test5x@appwrite.io', $document2->getAttribute('email'));
         $this->assertIsString($document2->getAttribute('email'));
         $this->assertEquals(1, $document2->getAttribute('status'));
         $this->assertIsInt($document2->getAttribute('status'));

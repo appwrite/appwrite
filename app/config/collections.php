@@ -101,6 +101,24 @@ $collections = [
                 'list' => [Database::COLLECTION_INDEXES],
             ],
         ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+        ],
     ],
     Database::COLLECTION_RULES => [
         '$collection' => Database::COLLECTION_COLLECTIONS,
@@ -306,6 +324,40 @@ $collections = [
                 'required' => false,
                 'array' => true,
                 'list' => [Database::COLLECTION_MEMBERSHIPS],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index3',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => [
+                    'email',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index4',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'email',
+                ],
             ],
         ],
     ],
@@ -549,6 +601,24 @@ $collections = [
                 'array' => false,
             ],
         ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'teamId',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'userId',
+                ],
+            ],
+        ],
     ],
     Database::COLLECTION_TEAMS => [
         '$collection' => Database::COLLECTION_COLLECTIONS,
@@ -582,6 +652,24 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
+            ],
+        ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => [
+                    'name',
+                ],
             ],
         ],
     ],
@@ -731,6 +819,24 @@ $collections = [
                 'required' => false,
                 'array' => true,
                 'list' => [Database::COLLECTION_DOMAINS],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => [
+                    'name',
+                ],
             ],
         ],
     ],
@@ -1310,6 +1416,32 @@ $collections = [
                 'array' => false,
             ],
         ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index3',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'mimeType',
+                ],
+            ],
+        ],
     ],
     Database::COLLECTION_FUNCTIONS => [
         '$collection' => Database::COLLECTION_COLLECTIONS,
@@ -1427,6 +1559,24 @@ $collections = [
                 'array' => false,
             ],
         ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => [
+                    'name',
+                ],
+            ],
+        ],
     ],
     Database::COLLECTION_TAGS => [
         '$collection' => Database::COLLECTION_COLLECTIONS,
@@ -1478,6 +1628,16 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
+            ],
+        ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'functionId',
+                ],
             ],
         ],
     ],
@@ -1567,6 +1727,24 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
+            ],
+        ],
+        'indexes' => [
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index1',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'functionId',
+                ],
+            ],
+            [
+                '$collection' => Database::COLLECTION_INDEXES,
+                '$id' => 'index2',
+                'type' => Database::INDEX_KEY,
+                'attributes' => [
+                    'tagId',
+                ],
             ],
         ],
     ],

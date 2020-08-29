@@ -21,7 +21,11 @@ class Relational extends Adapter
     /**
      * @var array
      */
-    protected $protected = ['$id' => true, '$collection' => true, '$permissions' => true];
+    protected $protected = [
+        '$id' => true,
+        '$collection' => true,
+        '$permissions' => true
+    ];
 
     /**
      * @var bool
@@ -56,22 +60,31 @@ class Relational extends Adapter
 
         $rules = $collection->getAttribute('rules', []);
         $indexes = $collection->getAttribute('indexes', []);
-        $columns = [];
+        $PDOColumns = [];
+        $PDOIndexes = [];
 
-        foreach ($rules as $attribute) { /** @var Document $attribute */
-            $key = $attribute->getAttribute('key');
-            $type = $attribute->getAttribute('type');
-            $array = $attribute->getAttribute('array');
+        foreach ($rules as $rule) { /** @var Document $attribute */
+            $key = $rule->getAttribute('key');
+            $type = $rule->getAttribute('type');
+            $array = $rule->getAttribute('array');
 
             if($array) {
                 $this->createAttribute($collection, $key, $type, $array);
                 continue;
             }
 
-            $columns[] = $this->getColumn($key, $type);
+            $PDOColumns[] = $this->getAttributeType($key, $type);
         }
 
-        $columns = (!empty($columns)) ? implode(",\n", $columns) . ",\n" : '';
+        foreach ($indexes as $index) { /** @var Document $index */
+            $type = $index->getAttribute('type', '');
+            $attributes = $index->getAttribute('attributes', []);
+
+            $PDOIndexes[] = $this->getIndexType($index->getId(), $type, $attributes);
+        }
+
+        $PDOColumns = (!empty($PDOColumns)) ? implode(",\n", $PDOColumns) . ",\n" : '';
+        $PDOIndexes = (!empty($PDOIndexes)) ? ",\n" . implode(",\n", $PDOIndexes) : '';
 
         $query = $this->getPDO()->prepare('CREATE TABLE `app_'.$this->getNamespace().'.collection.'.$id.'` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -79,10 +92,10 @@ class Relational extends Adapter
             `createdAt` datetime DEFAULT NULL,
             `updatedAt` datetime DEFAULT NULL,
             `permissions` longtext DEFAULT NULL,
-            '.$columns.'
+            '.$PDOColumns.'
             PRIMARY KEY (`id`),
             UNIQUE KEY `index1` (`uid`)
-
+            '.$PDOIndexes.'
           ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
         ');
 
@@ -138,7 +151,7 @@ class Relational extends Adapter
             $query = $this->getPDO()->prepare('CREATE TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$id.'` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `uid` varchar(45) DEFAULT NULL,
-                '.$this->getColumn($id, $type).',
+                '.$this->getAttributeType($id, $type).',
                 PRIMARY KEY (`id`),
                 KEY `index1` (`uid`)
               ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
@@ -146,7 +159,7 @@ class Relational extends Adapter
         }
         else {
             $query = $this->getPDO()->prepare('ALTER TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
-                ADD COLUMN '.$this->getColumn($id, $type).';');
+                ADD COLUMN '.$this->getAttributeType($id, $type).';');
         }
         
         if (!$query->execute()) {
@@ -194,38 +207,8 @@ class Relational extends Adapter
      */
     public function createIndex(Document $collection, string $id, string $type, array $attributes): bool
     {
-        $columns = [];
-
-        foreach ($attributes as $attribute) {
-            $columns[] = '`col_'.$attribute.'`(32) ASC'; // TODO custom size limit per type
-        }
-
-        $index = '';
-
-        switch ($type) {
-            case Database::INDEX_KEY:
-                $index = 'INDEX';
-                break;
-
-            case Database::INDEX_FULLTEXT:
-                $index = 'FULLTEXT INDEX';
-                break;
-
-            case Database::INDEX_UNIQUE:
-                $index = 'UNIQUE INDEX';
-                break;
-
-            case Database::INDEX_SPATIAL:
-                $index = 'SPATIAL INDEX';
-                break;
-            
-            default:
-                throw new Exception('Unsupported indext type');
-                break;
-        }
-
         $query = $this->getPDO()->prepare('ALTER TABLE `app_'.$this->getNamespace().'.collection.'.$collection->getId().'`
-            ADD '.$index.' `index_'.$id.'` ('.implode(',', $columns).');');
+            ADD '.$this->getIndexType($id, $type, $attributes) . ';');
 
         if (!$query->execute()) {
             return false;
@@ -813,7 +796,7 @@ class Relational extends Adapter
      * 
      * @return string
      */
-    protected function getColumn(string $key, string $type): string
+    protected function getAttributeType(string $key, string $type): string
     {
         switch ($type) {
             case Database::VAR_TEXT:
@@ -857,6 +840,47 @@ class Relational extends Adapter
                 throw new Exception('Unsupported attribute: '.$type);
                 break;
         }
+    }
+
+    /**
+     * @var string $type
+     * 
+     * @throws Exceptions
+     * 
+     * @return string
+     */
+    protected function getIndexType(string $key, string $type, array $attributes): string
+    {
+        $index = '';
+        $columns = [];
+
+        foreach ($attributes as $attribute) {
+            $columns[] = '`col_'.$attribute.'`(32) ASC'; // TODO custom size limit per type
+        }
+
+        switch ($type) {
+            case Database::INDEX_KEY:
+                $index = 'INDEX';
+                break;
+
+            case Database::INDEX_FULLTEXT:
+                $index = 'FULLTEXT INDEX';
+                break;
+
+            case Database::INDEX_UNIQUE:
+                $index = 'UNIQUE INDEX';
+                break;
+
+            case Database::INDEX_SPATIAL:
+                $index = 'SPATIAL INDEX';
+                break;
+            
+            default:
+                throw new Exception('Unsupported indext type');
+                break;
+        }
+
+        return $index .' `index_'.$key.'` ('.implode(',', $columns).')';
     }
 
     /**
