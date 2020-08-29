@@ -187,6 +187,49 @@ $utopia->get('/v1/users/:userId')
         }
     );
 
+$utopia->delete('/v1/users/:userId')
+    ->desc('Delete User')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.write')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'deleteUser')
+    ->label('sdk.description', '/docs/references/users/delete-user.md')
+    ->label('abuse-limit', 100)
+    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->action(
+        function ($userId) use ($response, $deletes, $projectDB) {
+            $user = $projectDB->getDocument($userId);
+
+            if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+                throw new Exception('User not found', 404);
+            }
+            if (!$projectDB->deleteDocument($userId)) {
+                throw new Exception('Failed to remove user from DB', 500);
+            }
+
+            if (!$projectDB->deleteUniqueKey(md5('users:email='.$user->getAttribute('email', null)))) {
+                throw new Exception('Failed to remove unique key from DB', 500);
+            }
+            
+            $reservedId = $projectDB->createDocument([
+                '$collection' => Database::SYSTEM_COLLECTION_RESERVED,
+                '$id' => $userId,
+                '$permissions' => [
+                    'read' => ['*'],
+                ],
+            ]);
+
+            if (false === $reservedId) {
+                throw new Exception('Failed saving reserved id to DB', 500);
+            }
+
+            $deletes->setParam('document', $user);
+
+            $response->noContent();
+        }
+    );
+
 $utopia->get('/v1/users/:userId/prefs')
     ->desc('Get User Preferences')
     ->groups(['api', 'users'])

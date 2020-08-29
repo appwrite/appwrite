@@ -23,6 +23,7 @@ class Database
     const SYSTEM_COLLECTION_USAGES = 'usages'; //TODO add structure
     const SYSTEM_COLLECTION_DOMAINS = 'domains';
     const SYSTEM_COLLECTION_CERTIFICATES = 'certificates';
+    const SYSTEM_COLLECTION_RESERVED = 'reserved';
 
     // Auth, Account and Users (private to user)
     const SYSTEM_COLLECTION_USERS = 'users';
@@ -307,6 +308,18 @@ class Database
         }
 
         return new Document($this->adapter->deleteDocument($id));
+    }
+
+    /**
+     * @param int $key
+     *
+     * @return Document|false
+     *
+     * @throws AuthorizationException
+     */
+    public function deleteUniqueKey($key)
+    {
+        return new Document($this->adapter->deleteUniqueKey($key));
     }
 
     /**
