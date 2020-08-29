@@ -36,6 +36,27 @@ class Database
     // Storage
     const SYSTEM_COLLECTION_FILES = 'files';
 
+    // Functions
+    const SYSTEM_COLLECTION_FUNCTIONS = 'functions';
+    const SYSTEM_COLLECTION_TAGS = 'tags';
+    const SYSTEM_COLLECTION_EXECUTIONS = 'executions';
+    
+    // Var Types
+    const SYSTEM_VAR_TYPE_TEXT = 'text';
+    const SYSTEM_VAR_TYPE_NUMERIC = 'numeric';
+    const SYSTEM_VAR_TYPE_BOOLEAN = 'boolean';
+    const SYSTEM_VAR_TYPE_DOCUMENT = 'document';
+    const SYSTEM_VAR_TYPE_WILDCARD = 'wildcard';
+    const SYSTEM_VAR_TYPE_EMAIL = 'email';
+    const SYSTEM_VAR_TYPE_IP = 'ip';
+    const SYSTEM_VAR_TYPE_URL = 'url';
+    const SYSTEM_VAR_TYPE_KEY = 'key';
+
+    /**
+     * @var array
+     */
+    static protected $filters = [];
+
     /**
      * @var array
      */
@@ -119,7 +140,7 @@ class Database
     /**
      * @param array $options
      *
-     * @return Document[]|Document
+     * @return Document[]
      */
     public function getCollection(array $options)
     {
@@ -171,7 +192,7 @@ class Database
      *
      * @return Document
      */
-    public function getDocument($id, $mock = true)
+    public function getDocument($id, $mock = true, $decode = true)
     {
         if (\is_null($id)) {
             return new Document([]);
@@ -183,6 +204,8 @@ class Database
         if (!$validator->isValid($document->getPermissions())) { // Check if user has read access to this document
             return new Document([]);
         }
+
+        $document = ($decode) ? $this->decode($document) : $document;
 
         return $document;
     }
@@ -206,12 +229,18 @@ class Database
         }
 
         $validator = new Structure($this);
+        
+        $document = $this->encode($document);
 
         if (!$validator->isValid($document)) {
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
+        
+        $document = new Document($this->adapter->createDocument($document->getArrayCopy(), $unique));
+        
+        $document = $this->decode($document);
 
-        return new Document($this->adapter->createDocument($data, $unique));
+        return $document;
     }
 
     /**
@@ -245,13 +274,19 @@ class Database
             throw new AuthorizationException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
+        $new = $this->encode($new);
+
         $validator = new Structure($this);
 
         if (!$validator->isValid($new)) { // Make sure updated structure still apply collection rules (if any)
             throw new StructureException($validator->getDescription()); // var_dump($validator->getDescription()); return false;
         }
 
-        return new Document($this->adapter->updateDocument($data));
+        $new = new Document($this->adapter->updateDocument($new->getArrayCopy()));
+        
+        $new = $this->decode($new);
+
+        return $new;
     }
 
     /**
@@ -390,9 +425,110 @@ class Database
     }
 
     /**
+     * Add Attribute Filter
+     * 
+     * @param string $name
+     * @param callable $encode
+     * @param callable $decode
+     * 
+     * return $this
+     */
+    static public function addFilter(string $name, callable $encode, callable $decode)
+    {
+        self::$filters[$name] = [
+            'encode' => $encode,
+            'decode' => $decode,
+        ];
+    }
+
+    public function encode(Document $document):Document
+    {
+        $collection = $this->getDocument($document->getCollection(), true , false);
+        $rules = $collection->getAttribute('rules', []);
+
+        foreach ($rules as $key => $rule) {
+            $key = $rule->getAttribute('key', null);
+            $filters = $rule->getAttribute('filter', null);
+            $value = $document->getAttribute($key, null);
+
+            if(($value !== null) && is_array($filters)) {
+                foreach ($filters as $filter) {
+                    $value = $this->encodeAttribute($filter, $value);
+                    $document->setAttribute($key, $value);
+                }
+            }
+        }
+
+        return $document;
+    }
+
+    public function decode(Document $document):Document
+    {
+        $collection = $this->getDocument($document->getCollection(), true , false);
+        $rules = $collection->getAttribute('rules', []);
+
+        foreach ($rules as $key => $rule) {
+            $key = $rule->getAttribute('key', null);
+            $filters = $rule->getAttribute('filter', null);
+            $value = $document->getAttribute($key, null);
+
+            if(($value !== null) && is_array($filters)) {
+                foreach (array_reverse($filters) as $filter) {
+                    $value = $this->decodeAttribute($filter, $value);
+                    $document->setAttribute($key, $value);
+                }
+            }
+        }
+
+        return $document;
+    }
+
+    /**
+     * Encode Attribute
+     * 
+     * @param string $name
+     * @param mixed $value
+     */
+    static protected function encodeAttribute(string $name, $value)
+    {
+        if(!isset(self::$filters[$name])) {
+            throw new Exception('Filter not found');
+        }
+
+        try {
+            $value = self::$filters[$name]['encode']($value);
+        } catch (\Throwable $th) {
+            $value = null;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Decode Attribute
+     * 
+     * @param string $name
+     * @param mixed $value
+     */
+    static protected function decodeAttribute(string $name, $value)
+    {
+        if(!isset(self::$filters[$name])) {
+            throw new Exception('Filter not found');
+        }
+
+        try {
+            $value = self::$filters[$name]['decode']($value);
+        } catch (\Throwable $th) {
+            $value = null;
+        }
+
+        return $value;
+    }
+
+    /**
      * Get Last Modified.
      *
-     * Return unix timestamp of last time a node queried in current session has been changed
+     * Return Unix timestamp of last time a node queried in current session has been changed
      *
      * @return int
      */

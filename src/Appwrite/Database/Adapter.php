@@ -68,7 +68,7 @@ abstract class Adapter
      *
      * @return array
      */
-    abstract public function createDocument(array $data, array $unique);
+    abstract public function createDocument(array $data = [], array $unique = []);
 
     /**
      * Update Document.
@@ -77,7 +77,7 @@ abstract class Adapter
      *
      * @return array
      */
-    abstract public function updateDocument(array $data);
+    abstract public function updateDocument(array $data = []);
 
     /**
      * Delete Node.
@@ -136,7 +136,7 @@ abstract class Adapter
     /**
      * Last Modified.
      *
-     * Return unix timestamp of last time a node queried in corrent session has been changed
+     * Return Unix timestamp of last time a node queried in corrent session has been changed
      *
      * @return int
      */

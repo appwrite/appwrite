@@ -7,8 +7,8 @@ use Appwrite\Storage\Storage;
 use Appwrite\Storage\Device\Local;
 use PHPUnit\Framework\TestCase;
 
-Storage::addDevice('disk-a', new Local(__DIR__ . '/../../resources/disk-a'));
-Storage::addDevice('disk-b', new Local(__DIR__ . '/../../resources/disk-b'));
+Storage::setDevice('disk-a', new Local(__DIR__ . '/../../resources/disk-a'));
+Storage::setDevice('disk-b', new Local(__DIR__ . '/../../resources/disk-b'));
 
 class StorageTest extends TestCase
 {
