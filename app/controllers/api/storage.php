@@ -336,11 +336,13 @@ $utopia->get('/v1/storage/files/:fileId/preview')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID')
     ->param('width', 0, function () { return new Range(0, 4000); }, 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000.', true)
+    ->param('borderColor', '', function () { return new HexColor(); }, 'Color for the image border. Use a valid HEX color, no # is needed for prefix.', true)
+    ->param('borderSize', 0, function () { return new Range(0, 100); }, 'Size of the image border in pixels. Enter an integer between 0 and 40', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', null, function () use ($outputs) { return new WhiteList(\array_merge(\array_keys($outputs), [null])); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(
-        function ($fileId, $width, $height, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
+        function ($fileId, $width, $height, $borderColor, $borderSize, $quality, $background, $output) use ($request, $response, $projectDB, $project, $inputs, $outputs, $fileLogos) {
             $storage = 'local';
 
             if (!\extension_loaded('imagick')) {
@@ -386,21 +388,21 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 throw new Exception('File not found', 404);
             }
 
-            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
-            $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
+            // $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
+            // $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
-            if ($data) {
-                $output = (empty($output)) ? $type : $output;
+            // if ($data) {
+            //     $output = (empty($output)) ? $type : $output;
 
-                $response
-                    ->setContentType((\in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
-                    ->addHeader('Expires', $date)
-                    ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->send($data)
-                ;
+            //     $response
+            //         ->setContentType((\in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
+            //         ->addHeader('Expires', $date)
+            //         ->addHeader('X-Appwrite-Cache', 'hit')
+            //         ->send($data)
+            //     ;
 
-                return;
-            }
+            //     return;
+            // }
 
             $source = $device->read($path);
 
@@ -421,7 +423,9 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $resize = new Resize($source);
 
-            $resize->crop((int) $width, (int) $height);
+            $resize->addBorder($borderSize, $borderSize)
+                    ->crop((int) $width, (int) $height);
+            
 
             if (!empty($background)) {
                 $resize->setBackground('#'.$background);
