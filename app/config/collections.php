@@ -104,7 +104,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'name',
@@ -112,7 +112,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => [
                     'name',
@@ -329,7 +329,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'name',
@@ -337,7 +337,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => [
                     'name',
@@ -345,7 +345,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index3',
+                '$id' => 'system3',
                 'type' => Database::INDEX_UNIQUE,
                 'attributes' => [
                     'email',
@@ -353,7 +353,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index4',
+                '$id' => 'system4',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'email',
@@ -604,7 +604,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'teamId',
@@ -612,7 +612,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'userId',
@@ -657,7 +657,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'name',
@@ -665,7 +665,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => [
                     'name',
@@ -824,7 +824,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'name',
@@ -832,7 +832,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => [
                     'name',
@@ -1419,7 +1419,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'name',
@@ -1427,7 +1427,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => [
                     'name',
@@ -1435,7 +1435,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index3',
+                '$id' => 'system3',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'mimeType',
@@ -1562,7 +1562,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'name',
@@ -1570,7 +1570,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => [
                     'name',
@@ -1633,7 +1633,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'functionId',
@@ -1732,7 +1732,7 @@ $collections = [
         'indexes' => [
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index1',
+                '$id' => 'system1',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'functionId',
@@ -1740,7 +1740,7 @@ $collections = [
             ],
             [
                 '$collection' => Database::COLLECTION_INDEXES,
-                '$id' => 'index2',
+                '$id' => 'system2',
                 'type' => Database::INDEX_KEY,
                 'attributes' => [
                     'tagId',
