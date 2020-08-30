@@ -419,12 +419,12 @@ App::delete('/v1/users/:userId')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $deletes */
         
-        $user = $projectDB->getDocument($userId);
+        $user = $projectDB->getDocument(Database::COLLECTION_USERS, $userId);
 
-        if (empty($user->getId()) || Database::SYSTEM_COLLECTION_USERS != $user->getCollection()) {
+        if (empty($user->getId()) || Database::COLLECTION_USERS != $user->getCollection()) {
             throw new Exception('User not found', 404);
         }
-        if (!$projectDB->deleteDocument($userId)) {
+        if (!$projectDB->deleteDocument(Database::COLLECTION_USERS, $userId)) {
             throw new Exception('Failed to remove user from DB', 500);
         }
 
@@ -432,8 +432,8 @@ App::delete('/v1/users/:userId')
             throw new Exception('Failed to remove unique key from DB', 500);
         }
         
-        $reservedId = $projectDB->createDocument([
-            '$collection' => Database::SYSTEM_COLLECTION_RESERVED,
+        $reservedId = $projectDB->createDocument(Database::COLLECTION_RESERVED, [
+            '$collection' => Database::COLLECTION_RESERVED,
             '$id' => $userId,
             '$permissions' => [
                 'read' => ['*'],

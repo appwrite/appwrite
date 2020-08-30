@@ -944,4 +944,9 @@ class Relational extends Adapter
     {
         return $this->pdo;
     }
+
+    public function deleteUniqueKey($key)
+    {
+        return [];
+    }
 }

@@ -1748,9 +1748,9 @@ $collections = [
             ],
         ],
     ],
-    Database::SYSTEM_COLLECTION_RESERVED => [
-        '$collection' => Database::SYSTEM_COLLECTION_COLLECTIONS,
-        '$id' => Database::SYSTEM_COLLECTION_RESERVED,
+    Database::COLLECTION_RESERVED => [
+        '$collection' => Database::COLLECTION_COLLECTIONS,
+        '$id' => Database::COLLECTION_RESERVED,
         '$permissions' => ['read' => ['*']],
         'name' => 'Reserved',
         'structure' => true,

@@ -14,7 +14,7 @@ class Database
     const COLLECTION_COLLECTIONS = 'collections';
     const COLLECTION_RULES = 'rules';
     const COLLECTION_INDEXES = 'indexes';
-    const SYSTEM_COLLECTION_RESERVED = 'reserved';
+    const COLLECTION_RESERVED = 'reserved';
     const COLLECTION_PROJECTS = 'projects';
     const COLLECTION_WEBHOOKS = 'webhooks';
     const COLLECTION_KEYS = 'keys';

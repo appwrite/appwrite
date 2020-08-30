@@ -39,7 +39,7 @@ class DeletesV1
             case Database::COLLECTION_FUNCTIONS:
                 $this->deleteFunction($document, $projectId);
                 break;
-            case Database::SYSTEM_COLLECTION_USERS:
+            case Database::COLLECTION_USERS:
                 $this->deleteUser($document, $projectId);
                 break;
             
@@ -71,14 +71,14 @@ class DeletesV1
         $tokens = $document->getAttribute('tokens', []);
 
         foreach ($tokens as $token) {
-            if (!$this->getProjectDB($projectId)->deleteDocument($token->getId())) {
+            if (!$this->getProjectDB($projectId)->deleteDocument(Database::COLLECTION_TOKENS, $token->getId())) {
                 throw new Exception('Failed to remove token from DB', 500);
             }
         }
 
         // Delete Memberships
         $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+            '$collection='.Database::COLLECTION_MEMBERSHIPS,
             'userId='.$document->getId(),
         ], $this->getProjectDB($projectId));
     }
