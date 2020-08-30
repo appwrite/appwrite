@@ -695,6 +695,20 @@ $movies = [
         'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
         'langauges' => ['English'],
     ],
+     [
+        'name' => 'Pocahontas',
+        'releaseYear' => '1995',
+        'director' => 'Mike Gabriel, Eric Goldberg',
+        'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Frank and Ollie',
+        'releaseYear' => '1995',
+        'director' => 'Theodore Thomas',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
     
     
    
