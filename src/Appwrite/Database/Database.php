@@ -14,6 +14,7 @@ class Database
     const COLLECTION_COLLECTIONS = 'collections';
     const COLLECTION_RULES = 'rules';
     const COLLECTION_INDEXES = 'indexes';
+    const SYSTEM_COLLECTION_RESERVED = 'reserved';
     const COLLECTION_PROJECTS = 'projects';
     const COLLECTION_WEBHOOKS = 'webhooks';
     const COLLECTION_KEYS = 'keys';
@@ -466,6 +467,18 @@ class Database
         }
 
         return new Document($this->adapter->deleteDocument($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id));
+    }
+
+    /**
+     * @param int $key
+     *
+     * @return Document|false
+     *
+     * @throws AuthorizationException
+     */
+    public function deleteUniqueKey($key)
+    {
+        return new Document($this->adapter->deleteUniqueKey($key));
     }
 
     /**

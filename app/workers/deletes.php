@@ -29,6 +29,7 @@ class DeletesV1
     {
         $projectId = $this->args['projectId'];
         $document = $this->args['document'];
+
         $document = new Document($document);
         
         switch ($document->getCollection()) {
@@ -37,6 +38,9 @@ class DeletesV1
                 break;
             case Database::COLLECTION_FUNCTIONS:
                 $this->deleteFunction($document, $projectId);
+                break;
+            case Database::SYSTEM_COLLECTION_USERS:
+                $this->deleteUser($document, $projectId);
                 break;
             
             default:
@@ -60,6 +64,23 @@ class DeletesV1
         // Delete all storage directories
         $uploads->delete($uploads->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
+    }
+
+    protected function deleteUser(Document $document, $projectId)
+    {
+        $tokens = $document->getAttribute('tokens', []);
+
+        foreach ($tokens as $token) {
+            if (!$this->getProjectDB($projectId)->deleteDocument($token->getId())) {
+                throw new Exception('Failed to remove token from DB', 500);
+            }
+        }
+
+        // Delete Memberships
+        $this->deleteByGroup([
+            '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+            'userId='.$document->getId(),
+        ], $this->getProjectDB($projectId));
     }
 
     protected function deleteFunction(Document $document, $projectId)

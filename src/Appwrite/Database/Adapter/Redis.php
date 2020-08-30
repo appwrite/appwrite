@@ -243,6 +243,22 @@ class Redis extends Adapter
     }
 
     /**
+     * Delete Unique Key.
+     *
+     * @param $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function deleteUniqueKey($key)
+    {
+        $data = $this->adapter->deleteUniqueKey($key);
+
+        return $data;
+    }
+
+    /**
      * Create Namespace.
      *
      * @param string $namespace
