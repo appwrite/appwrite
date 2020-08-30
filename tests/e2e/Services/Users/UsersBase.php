@@ -168,6 +168,34 @@ trait UsersBase
         return $data;
     }
 
+    /**
+     * @depends testGetUser
+     */
+    public function testDeleteUser(array $data):array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 204);
+
+        /**
+         * Test for FAILURE
+         */
+        $user = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 404);
+
+        return $data;
+    }
+
     // TODO add test for session delete
     // TODO add test for all sessions delete
 }
