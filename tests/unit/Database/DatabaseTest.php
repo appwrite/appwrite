@@ -599,7 +599,7 @@ class DatabaseTest extends TestCase
                 'read' => ['*'],
                 'write' => ['user:123'],
             ],
-            'name' => 'Task #1',
+            'name' => 'Task #1️⃣',
             'links' => [
                 'http://example.com/link-5',
                 'http://example.com/link-6',
@@ -612,7 +612,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document1->getPermissions());
         $this->assertArrayHasKey('read', $document1->getPermissions());
         $this->assertArrayHasKey('write', $document1->getPermissions());
-        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document1->getAttribute('name'));
         $this->assertCount(4, $document1->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
@@ -818,7 +818,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document3->getAttribute('documents')[0]->getPermissions());
         $this->assertArrayHasKey('read', $document3->getAttribute('documents')[0]->getPermissions());
         $this->assertArrayHasKey('write', $document3->getAttribute('documents')[0]->getPermissions());
-        $this->assertEquals('Task #1', $document3->getAttribute('documents')[0]->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document3->getAttribute('documents')[0]->getAttribute('name'));
         $this->assertCount(4, $document3->getAttribute('documents')[0]->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document3->getAttribute('documents')[0]->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document3->getAttribute('documents')[0]->getAttribute('links')[1]);
@@ -844,7 +844,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document3->getAttribute('document2')->getPermissions());
         $this->assertArrayHasKey('read', $document3->getAttribute('document2')->getPermissions());
         $this->assertArrayHasKey('write', $document3->getAttribute('document2')->getPermissions());
-        $this->assertEquals('Task #1', $document3->getAttribute('document2')->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document3->getAttribute('document2')->getAttribute('name'));
         $this->assertCount(4, $document3->getAttribute('document2')->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document3->getAttribute('document2')->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document3->getAttribute('document2')->getAttribute('links')[1]);
@@ -870,7 +870,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document3->getAttribute('documents2')[1]->getPermissions());
         $this->assertArrayHasKey('read', $document3->getAttribute('documents2')[1]->getPermissions());
         $this->assertArrayHasKey('write', $document3->getAttribute('documents2')[1]->getPermissions());
-        $this->assertEquals('Task #1', $document3->getAttribute('documents2')[1]->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document3->getAttribute('documents2')[1]->getAttribute('name'));
         $this->assertCount(4, $document3->getAttribute('documents2')[1]->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document3->getAttribute('documents2')[1]->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document3->getAttribute('documents2')[1]->getAttribute('links')[1]);
@@ -1002,7 +1002,7 @@ class DatabaseTest extends TestCase
                 'read' => ['*'],
                 'write' => ['user:123'],
             ],
-            'name' => 'Task #1',
+            'name' => 'Task #1️⃣',
             'links' => [
                 'http://example.com/link-5',
                 'http://example.com/link-6',
@@ -1018,7 +1018,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document1->getPermissions());
         $this->assertArrayHasKey('read', $document1->getPermissions());
         $this->assertArrayHasKey('write', $document1->getPermissions());
-        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document1->getAttribute('name'));
         $this->assertCount(4, $document1->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
@@ -1087,7 +1087,7 @@ class DatabaseTest extends TestCase
                 'read' => ['*'],
                 'write' => ['user:123'],
             ],
-            'name' => 'Task #1',
+            'name' => 'Task #1️⃣',
             'links' => [
                 'http://example.com/link-5',
                 'http://example.com/link-6',
@@ -1100,7 +1100,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document1->getPermissions());
         $this->assertArrayHasKey('read', $document1->getPermissions());
         $this->assertArrayHasKey('write', $document1->getPermissions());
-        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document1->getAttribute('name'));
         $this->assertCount(4, $document1->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
@@ -1113,7 +1113,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document1->getPermissions());
         $this->assertArrayHasKey('read', $document1->getPermissions());
         $this->assertArrayHasKey('write', $document1->getPermissions());
-        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document1->getAttribute('name'));
         $this->assertCount(4, $document1->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
@@ -1802,7 +1802,7 @@ class DatabaseTest extends TestCase
                 'read' => ['*'],
                 'write' => ['user:123'],
             ],
-            'name' => 'Task #1',
+            'name' => 'Task #1️⃣',
             'links' => [
                 'http://example.com/link-5',
                 'http://example.com/link-6',
@@ -1815,7 +1815,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document1->getPermissions());
         $this->assertArrayHasKey('read', $document1->getPermissions());
         $this->assertArrayHasKey('write', $document1->getPermissions());
-        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document1->getAttribute('name'));
         $this->assertCount(4, $document1->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
@@ -1828,7 +1828,7 @@ class DatabaseTest extends TestCase
         $this->assertIsArray($document1->getPermissions());
         $this->assertArrayHasKey('read', $document1->getPermissions());
         $this->assertArrayHasKey('write', $document1->getPermissions());
-        $this->assertEquals('Task #1', $document1->getAttribute('name'));
+        $this->assertEquals('Task #1️⃣', $document1->getAttribute('name'));
         $this->assertCount(4, $document1->getAttribute('links'));
         $this->assertEquals('http://example.com/link-5', $document1->getAttribute('links')[0]);
         $this->assertEquals('http://example.com/link-6', $document1->getAttribute('links')[1]);
