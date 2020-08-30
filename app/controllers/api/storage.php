@@ -361,7 +361,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
             }
 
             $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-            $key = \md5($fileId.$width.$height.$quality.$background.$storage.$output);
+            $key = \md5($fileId.$width.$height.$borderColor.$borderSize.$opacity.$rotation.$cornerRadius.$quality.$background.$storage.$output);
 
             $file = $projectDB->getDocument($fileId);
 
@@ -391,21 +391,21 @@ $utopia->get('/v1/storage/files/:fileId/preview')
                 throw new Exception('File not found', 404);
             }
 
-            // $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
-            // $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
+            $cache = new Cache(new Filesystem(APP_STORAGE_CACHE.'/app-'.$project->getId())); // Limit file number or size
+            $data = $cache->load($key, 60 * 60 * 24 * 30 * 3 /* 3 months */);
 
-            // if ($data) {
-            //     $output = (empty($output)) ? $type : $output;
+            if ($data) {
+                $output = (empty($output)) ? $type : $output;
 
-            //     $response
-            //         ->setContentType((\in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
-            //         ->addHeader('Expires', $date)
-            //         ->addHeader('X-Appwrite-Cache', 'hit')
-            //         ->send($data)
-            //     ;
+                $response
+                    ->setContentType((\in_array($output, $outputs)) ? $outputs[$output] : $outputs['jpg'])
+                    ->addHeader('Expires', $date)
+                    ->addHeader('X-Appwrite-Cache', 'hit')
+                    ->send($data)
+                ;
 
-            //     return;
-            // }
+                return;
+            }
 
             $source = $device->read($path);
 
@@ -459,7 +459,7 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $data = $resize->output($output, $quality);
 
-            // $cache->save($key, $data);
+            $cache->save($key, $data);
 
             echo $data;
 
