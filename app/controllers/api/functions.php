@@ -333,7 +333,6 @@ App::delete('/v1/functions/:functionId')
         }
 
         $deletes
-            ->setParam('projectId', $project->getId())
             ->setParam('document', $function->getArrayCopy())
         ;
 

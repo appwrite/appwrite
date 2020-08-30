@@ -21,7 +21,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $functions, $clients) {
+App::init(function ($utopia, $request, $response, $console, $project, $user, $locale, $webhooks, $audits, $usage, $deletes, $functions, $clients) {
     /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $console */
@@ -31,6 +31,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     /** @var Appwrite\Event\Event $webhooks */
     /** @var Appwrite\Event\Event $audits */
     /** @var Appwrite\Event\Event $usage */
+    /** @var Appwrite\Event\Event $deletes */
     /** @var Appwrite\Event\Event $functions */
     /** @var bool $mode */
     /** @var array $clients */
@@ -253,6 +254,10 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
         ->setParam('networkRequestSize', 0)
         ->setParam('networkResponseSize', 0)
         ->setParam('storage', 0)
+    ;
+    
+    $deletes
+        ->setParam('projectId', $project->getId())
     ;
 }, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'functions', 'clients']);
 

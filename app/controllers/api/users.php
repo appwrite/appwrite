@@ -444,7 +444,9 @@ App::delete('/v1/users/:userId')
             throw new Exception('Failed saving reserved id to DB', 500);
         }
 
-        $deletes->setParam('document', $user);
+        $deletes
+            ->setParam('document', $user)
+        ;
 
         $response->noContent();
     }, ['response', 'projectDB', 'deletes']);
