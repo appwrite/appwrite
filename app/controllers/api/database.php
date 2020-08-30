@@ -66,7 +66,7 @@ App::post('/v1/database/collections')
                 'rules' => $parsedRules,
             ]);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -266,7 +266,7 @@ App::put('/v1/database/collections/:collectionId')
                 'rules' => $parsedRules,
             ]));
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -404,7 +404,7 @@ App::post('/v1/database/collections/:collectionId/documents')
             $authorization = new Authorization($parentDocument, 'write');
 
             if (!$authorization->isValid($new->getPermissions())) {
-                throw new Exception('Unauthorized action', 401);
+                throw new Exception('Unauthorized permissions', 401);
             }
 
             $parentDocument
@@ -429,7 +429,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         try {
             $data = $projectDB->createDocument($data);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -624,7 +624,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             $data = $projectDB->updateDocument($data);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -680,7 +680,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             $projectDB->deleteDocument($documentId);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
