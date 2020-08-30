@@ -426,13 +426,26 @@ $utopia->get('/v1/storage/files/:fileId/preview')
 
             $resize = new Resize($source);
 
-            $resize->roundCornersAndBorder($cornerRadius, '#'.$borderColor, $borderSize)
-                    ->setOpacity($opacity)
-                    ->crop((int) $width, (int) $height)
-                    ->rotate($rotation);
-    
-            if (!empty($background)) {
-                $resize->setBackground('#'.$background);
+            $resize->crop((int) $width, (int) $height);
+
+            if(!empty($opacity)) {
+                $resize->setOpacity($opacity);
+            }
+
+            if($cornerRadius != 0) {
+                $resize->roundCornersAndBorder($cornerRadius, '#'.$borderColor, $borderSize, '#'.$background);
+            } else {
+                if($borderSize != 0 && !empty($borderColor)) {
+                    $resize->addBorder($borderSize, '#'.$borderColor);
+                }
+
+                if (!empty($background)) {
+                    $resize->setBackground('#'.$background);
+                }
+            }
+            
+            if(!empty($rotation)) {
+                $resize->rotate($rotation);
             }
 
             $output = (empty($output)) ? $type : $output;

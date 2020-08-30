@@ -77,14 +77,7 @@ class Resize
      * @throws \ImagickException
      */
     public function addBorder($borderSize, $borderColor){
-        
         try {
-            // If either fields are empty, return 
-            // Else create a new color and add borders
-            if(empty($borderSize) || empty($borderColor)) {
-                return $this;
-            }
-
             $width = $height = $borderSize;
             $this->image->borderImage($borderColor, $width, $height);
             return $this;
@@ -94,48 +87,48 @@ class Resize
         }
     }
 
-    public function roundCornersAndBorder($radius, $borderColor, $borderSize) {
-
-        if (!method_exists($this->image, 'roundCorners')) {
-            throw new Exception('Your version of Imagick is not compiled against a recent enough ImageMagick library (> 6.2.8) to use the RoundCorners effect.');
-        }
-
+    /**
+      * Applies rounded corners, borders and background to an image
+      * @param integer $cornerRadius: The radius for the corners
+      * @param string $borderColor: A valid HEX string representing the border color
+      * @param integer $borderSize: An integer representing the broder size in pixels
+      * @param string $background: A valid HEX string representing the background color
+      * @return Resize $image: The processed image
+      *
+      * @throws \ImagickException
+      */
+    public function roundCornersAndBorder($cornerRadius, $borderColor, $borderSize, $background) {
         try {
-            $this->image->roundCorners($radius, $radius);
-            if (!empty($borderColor) && !empty($borderSize) && $borderSize > 0) {
+            if (!method_exists($this->image, 'roundCorners')) {
+                throw new Exception('Your version of Imagick is not compiled against a recent enough ImageMagick library (> 6.2.8) to use the RoundCorners effect.');
+            }
+
+            $this->image->roundCorners($cornerRadius, $cornerRadius);
+
+            if (!empty($borderColor) && $borderColor != '#' && $borderSize > 0) {
                 $new = new Imagick();
-                $new->newImage($this->width + $borderSize, $this->height + $borderSize, $borderColor);
+                $new->newImage($this->image->getImageWidth() + $borderSize, $this->image->getImageHeight() + $borderSize, $borderColor);
                 $new->setImageFormat($this->image->getImageFormat());
-                $new->roundCorners($radius, $radius);
+                $new->roundCorners($cornerRadius, $cornerRadius);
                 $new->compositeImage($this->image, Imagick::COMPOSITE_OVER, round($borderSize / 2), round($borderSize / 2));
                 $this->image->clear();
                 $this->image->addImage($new);
                 $new->destroy();
             }
 
+            if (!empty($background) && $background != '#') {
+                $new = new Imagick();
+                $new->newImage($this->image->getImageWidth(), $this->image->getImageHeight(), $background);
+                $new->setImageFormat($this->image->getImageFormat());
+                $new->compositeImage($this->image, Imagick::COMPOSITE_OVER, 0, 0);
+                $this->image->clear();
+                $this->image->addImage($new);
+                $new->destroy();
+            }
+
+        } catch (\Throwable $th) {
             
-
-            // // If we have a background other than 'none' we need to compose two
-            // // images together to make sure we *have* a background. We can't
-            // // use border because we don't want to extend the image area, just
-            // // fill in the parts removed by the rounding.
-            // if ($this->_params['background'] != 'none') {
-            //     $size = $this->_image->getDimensions();
-            //     $new = new Imagick();
-            //     $new->newImage($size['width'], $size['height'], $this->_params['background']);
-            //     $new->setImageFormat($this->_image->getType());
-            //     $new->compositeImage($this->_image->imagick, Imagick::COMPOSITE_OVER, 0, 0);
-            //     $this->_image->imagick->clear();
-            //     $this->_image->imagick->addImage($new);
-            //     $new->destroy();
-            // }
-
-
-        } catch (\Throwable $e) {
-            var_dump($e);
-            exit();
         }   
-        
         return $this;
     }
 
@@ -149,7 +142,6 @@ class Resize
     public function setOpacity($opacity){
         
         try {
-            // If opacity is empty or 1 return
             if(empty($opacity) || $opacity == 1) {
                 return $this;
             }
