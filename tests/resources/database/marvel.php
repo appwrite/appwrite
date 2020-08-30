@@ -323,7 +323,7 @@ $movies = [
         'director' => 'Rob Bowman',
         'generes' => ['Action', 'Adventure'],
         'langauges' => ['English'],
-    
+    ],
    
     
     
