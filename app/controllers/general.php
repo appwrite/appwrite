@@ -259,7 +259,7 @@ App::init(function ($utopia, $request, $response, $console, $project, $user, $lo
     $deletes
         ->setParam('projectId', $project->getId())
     ;
-}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'functions', 'clients']);
+}, ['utopia', 'request', 'response', 'console', 'project', 'user', 'locale', 'webhooks', 'audits', 'usage', 'deletes', 'functions', 'clients']);
 
 App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audits, $usage, $deletes, $functions, $mode) {
     /** @var Utopia\App $utopia */
