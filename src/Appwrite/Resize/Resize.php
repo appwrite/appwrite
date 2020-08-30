@@ -85,14 +85,58 @@ class Resize
                 return $this;
             }
 
-            $color = '#'.$borderColor;
             $width = $height = $borderSize;
-            $this->image->borderImage($color, $width, $height);
+            $this->image->borderImage($borderColor, $width, $height);
             return $this;
 
         } catch (\Throwable $th) {
             return $this;
         }
+    }
+
+    public function roundCornersAndBorder($radius, $borderColor, $borderSize) {
+
+        if (!method_exists($this->image, 'roundCorners')) {
+            throw new Exception('Your version of Imagick is not compiled against a recent enough ImageMagick library (> 6.2.8) to use the RoundCorners effect.');
+        }
+
+        try {
+            $this->image->roundCorners($radius, $radius);
+            if (!empty($borderColor) && !empty($borderSize) && $borderSize > 0) {
+                $new = new Imagick();
+                $new->newImage($this->width + $borderSize, $this->height + $borderSize, $borderColor);
+                $new->setImageFormat($this->image->getImageFormat());
+                $new->roundCorners($radius, $radius);
+                $new->compositeImage($this->image, Imagick::COMPOSITE_OVER, round($borderSize / 2), round($borderSize / 2));
+                $this->image->clear();
+                $this->image->addImage($new);
+                $new->destroy();
+            }
+
+            
+
+            // // If we have a background other than 'none' we need to compose two
+            // // images together to make sure we *have* a background. We can't
+            // // use border because we don't want to extend the image area, just
+            // // fill in the parts removed by the rounding.
+            // if ($this->_params['background'] != 'none') {
+            //     $size = $this->_image->getDimensions();
+            //     $new = new Imagick();
+            //     $new->newImage($size['width'], $size['height'], $this->_params['background']);
+            //     $new->setImageFormat($this->_image->getType());
+            //     $new->compositeImage($this->_image->imagick, Imagick::COMPOSITE_OVER, 0, 0);
+            //     $this->_image->imagick->clear();
+            //     $this->_image->imagick->addImage($new);
+            //     $new->destroy();
+            // }
+
+
+        } catch (\Throwable $e) {
+            var_dump($e);
+            exit();
+        }   
+        
+        return $this;
     }
 
     /**
