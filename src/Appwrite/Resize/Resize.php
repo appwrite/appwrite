@@ -69,8 +69,8 @@ class Resize
     }
 
     /**
-     * @param $borderSize The size of the border in pixels
-     * @param $borderColor The color of the border in hex format
+     * @param integer $borderSize The size of the border in pixels
+     * @param string $borderColor The color of the border in hex format
      * 
      * @return Resize
      *
@@ -96,7 +96,7 @@ class Resize
     }
 
     /**
-     * @param opacity The opacity of the image
+     * @param float opacity The opacity of the image
      * 
      * @return Resize
      *
@@ -105,16 +105,34 @@ class Resize
     public function setOpacity($opacity){
         
         try {
-            // If opacity is empty return
-            if(empty($opacity)) {
-                return $this;
-            }
-            // If opacity is 1, there is no change in the image
-            if($opacity == 1) {
+            // If opacity is empty or 1 return
+            if(empty($opacity) || $opacity == 1) {
                 return $this;
             }
 
             $this->image->setImageOpacity($opacity);
+            return $this;
+
+        } catch (\Throwable $th) {
+            return $this;
+        }
+    }
+
+     /**
+      * Rotates an image to $degree degree
+      * @param integer $degree: The amount to rotate in degrees
+      * @return Resize $image: The rotated image
+      *
+      * @throws \ImagickException
+      */
+    public function rotate($degree) {
+        
+        try {
+            if (empty($degree) || $degree == 0) {
+                return $this;
+            }
+            
+            $this->image->rotateImage('transparent', $degree);
             return $this;
 
         } catch (\Throwable $th) {
