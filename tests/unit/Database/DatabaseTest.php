@@ -112,7 +112,7 @@ class DatabaseTest extends TestCase
                 'indexes' => [
                     [
                         '$collection' => Database::COLLECTION_INDEXES,
-                        '$id' => 'index1',
+                        '$id' => 'system1',
                         'type' => Database::INDEX_KEY,
                         'attributes' => [
                             'name',
@@ -120,7 +120,7 @@ class DatabaseTest extends TestCase
                     ],
                     [
                         '$collection' => Database::COLLECTION_INDEXES,
-                        '$id' => 'index2',
+                        '$id' => 'system2',
                         'type' => Database::INDEX_FULLTEXT,
                         'attributes' => [
                             'name',
@@ -337,7 +337,7 @@ class DatabaseTest extends TestCase
                 'indexes' => [
                     [
                         '$collection' => Database::COLLECTION_INDEXES,
-                        '$id' => 'index1',
+                        '$id' => 'system1',
                         'type' => Database::INDEX_KEY,
                         'attributes' => [
                             'name',
@@ -345,7 +345,7 @@ class DatabaseTest extends TestCase
                     ],
                     [
                         '$collection' => Database::COLLECTION_INDEXES,
-                        '$id' => 'index2',
+                        '$id' => 'system2',
                         'type' => Database::INDEX_FULLTEXT,
                         'attributes' => [
                             'name',
@@ -353,7 +353,7 @@ class DatabaseTest extends TestCase
                     ],
                     [
                         '$collection' => Database::COLLECTION_INDEXES,
-                        '$id' => 'index3',
+                        '$id' => 'system3',
                         'type' => Database::INDEX_UNIQUE,
                         'attributes' => [
                             'email',
@@ -361,7 +361,7 @@ class DatabaseTest extends TestCase
                     ],
                     [
                         '$collection' => Database::COLLECTION_INDEXES,
-                        '$id' => 'index4',
+                        '$id' => 'system4',
                         'type' => Database::INDEX_KEY,
                         'attributes' => [
                             'email',

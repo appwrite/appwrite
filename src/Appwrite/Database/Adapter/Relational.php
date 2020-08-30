@@ -429,7 +429,17 @@ class Relational extends Adapter
             }
         }
 
-        $st->execute();
+        try {
+            $st->execute();
+        } catch (\Throwable $th) {
+            switch ($th->getCode()) {
+                case '23000':
+                    throw new Duplicate('Duplicated documents');
+                    break;
+            }
+
+            throw $th;
+        }
 
         $this->commit();
 
@@ -548,7 +558,17 @@ class Relational extends Adapter
             }
         }
 
-        $st->execute();
+        try {
+            $st->execute();
+        } catch (\Throwable $th) {
+            switch ($th->getCode()) {
+                case '23000':
+                    throw new Duplicate('Duplicated documents');
+                    break;
+            }
+
+            throw $th;
+        }
 
         $this->commit();
 
