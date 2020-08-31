@@ -1848,6 +1848,13 @@ class DatabaseTest extends TestCase
 
     public function testFind()
     {
+        self::$object->find([
+            'limit' => 5,
+            'filters' => [
+                'text=Hello World',
+                'integer=1',
+            ],
+        ]);
         $this->assertEquals('1', '1');
     }
 

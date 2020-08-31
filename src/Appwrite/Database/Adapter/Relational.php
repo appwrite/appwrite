@@ -709,7 +709,171 @@ class Relational extends Adapter
      */
     public function find(array $options)
     {
+        $start = \microtime(true);
+
+        $orderTypeMap = ['DESC', 'ASC'];
+
+        $options['orderField'] = (empty($options['orderField'])) ? '$id' : $options['orderField']; // Set default order field
+
+        if (!\in_array($options['orderType'], $orderTypeMap)) {
+            throw new Exception('Invalid order type');
+        }
+
+        $where = [];
+        $join = [];
+        $sorts = [];
+        $search = '';
+
+        // Filters
+        foreach ($options['filters'] as $i => $filter) {
+            $filter = $this->parseFilter($filter);
+            $key = $filter['key'];
+            $value = $filter['value'];
+            $operator = $filter['operator'];
+
+            $path = \explode('.', $key);
+            $original = $path;
+
+            if (1 < \count($path)) {
+                $key = \array_pop($path);
+            }
+            else {
+                $path = [];
+            }
+
+            //$key = $this->getPDO()->quote($key, PDO::PARAM_STR);
+            $value = $this->getPDO()->quote($value, PDO::PARAM_STR);
+            
+            $options['offset'] = (int) $options['offset'];
+            $options['limit'] = (int) $options['limit'];
+
+            if (empty($path)) {
+                $where[] = "(col_{$key} {$operator} {$value})";
+            }
+            else { // Handle direct child attributes queries
+                // $len = \count($original);
+                // $prev = 'c'.$i;
+
+                // foreach ($original as $y => $part) {
+                //     $part = $this->getPDO()->quote($part, PDO::PARAM_STR);
+
+                //     if (0 === $y) { // First key
+                //         $join[$i] = 'JOIN `'.$this->getNamespace().".database.relationships` c{$i} ON a.uid IS NOT NULL AND c{$i}.start = a.uid AND c{$i}.key = {$part}";
+                //     } elseif ($y == $len - 1) { // Last key
+                //         $join[$i] .= 'JOIN `'.$this->getNamespace().".database.properties` e{$i} ON e{$i}.documentUid = {$prev}.end AND e{$i}.key = {$part} AND e{$i}.value {$operator} {$value}";
+                //     } else {
+                //         $join[$i] .= 'JOIN `'.$this->getNamespace().".database.relationships` d{$i}{$y} ON d{$i}{$y}.start = {$prev}.end AND d{$i}{$y}.key = {$part}";
+                //         $prev = 'd'.$i.$y;
+                //     }
+                // }
+            }
+        }
+
+        $orderSelect = '';
+        // // Sorting
+        // $orderPath = \explode('.', $options['orderField']);
+        // $len = \count($orderPath);
+        // $orderKey = 'order_b';
+        // $part = $this->getPDO()->quote(\implode('', $orderPath), PDO::PARAM_STR);
+        // $orderSelect = "CASE WHEN {$orderKey}.key = {$part} THEN CAST({$orderKey}.value AS {$orderCastMap[$options['orderCast']]}) END AS sort_ff";
+
+        // if (1 === $len) {
+        //     //if($path == "''") { // Handle direct attributes queries
+        //     $sorts[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` order_b ON a.uid IS NOT NULL AND order_b.documentUid = a.uid AND (order_b.key = {$part})";
+        // } else { // Handle direct child attributes queries
+        //     $prev = 'c';
+        //     $orderKey = 'order_e';
+
+        //     foreach ($orderPath as $y => $part) {
+        //         $part = $this->getPDO()->quote($part, PDO::PARAM_STR);
+        //         $x = $y - 1;
+
+        //         if (0 === $y) { // First key
+        //             $sorts[] = 'JOIN `'.$this->getNamespace().".database.relationships` order_c{$y} ON a.uid IS NOT NULL AND order_c{$y}.start = a.uid AND order_c{$y}.key = {$part}";
+        //         } elseif ($y == $len - 1) { // Last key
+        //             $sorts[] .= 'JOIN `'.$this->getNamespace().".database.properties` order_e ON order_e.documentUid = order_{$prev}{$x}.end AND order_e.key = {$part}";
+        //         } else {
+        //             $sorts[] .= 'JOIN `'.$this->getNamespace().".database.relationships` order_d{$y} ON order_d{$y}.start = order_{$prev}{$x}.end AND order_d{$y}.key = {$part}";
+        //             $prev = 'd';
+        //         }
+        //     }
+        // }
+
+        /*
+         * Workaround for a MySQL bug as reported here:
+         * https://bugs.mysql.com/bug.php?id=78485
+         */
+        // $options['search'] = ($options['search'] === '*') ? '' : $options['search'];
+
+        // Search
+        if (!empty($options['search'])) { // Handle free search
+            $where[] = 'LEFT JOIN `'.$this->getNamespace().".database.properties` b_search ON a.uid IS NOT NULL AND b_search.documentUid = a.uid  AND b_search.primitive = 'string'
+                    LEFT JOIN
+                `".$this->getNamespace().'.database.relationships` c_search ON c_search.start = b_search.documentUid
+                    LEFT JOIN
+                `'.$this->getNamespace().".database.properties` d_search ON d_search.documentUid = c_search.end AND d_search.primitive = 'string'
+                \n";
+
+            $search = "AND (MATCH (b_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+                OR MATCH (d_search.value) AGAINST ({$this->getPDO()->quote($options['search'], PDO::PARAM_STR)} IN BOOLEAN MODE)
+            )";
+        }
+
+        $select = 'DISTINCT a.uid';
+        $where = \implode(" AND \n", $where);
+        $join = \implode("\n", $join);
+        $sorts = \implode("\n", $sorts);
+        $range = "LIMIT {$options['offset']}, {$options['limit']}";
+        $roles = [];
+
+        foreach (Authorization::getRoles() as $role) {
+            $roles[] = 'JSON_CONTAINS(REPLACE(a.permissions, \'{self}\', a.uid), \'"'.$role.'"\', \'$.read\')';
+        }
+
+        if (false === Authorization::$status) { // FIXME temporary solution (hopefully)
+            $roles = ['1=1'];
+        }
+
+        $query = "SELECT %s
+            FROM `".$this->getNamespace().".database.documents` a
+                {$join}
+                {$sorts}
+            WHERE
+                {$where}
+                {$search}
+                AND (".\implode('||', $roles).")
+            ORDER BY sort_ff {$options['orderType']} %s";
+
+        var_dump(\preg_replace('/\s+/', ' ', \sprintf($query, $select, $range)));
+
         return [];
+        $st = $this->getPDO()->prepare(\sprintf($query, $select, $range));
+
+        $st->execute();
+
+        $results = ['data' => []];
+
+        // Get entire fields data for each id
+        foreach ($st->fetchAll() as $node) {
+            $results['data'][] = $node['uid'];
+        }
+
+        // $count = $this->getPDO()->prepare(\sprintf($query, 'count(DISTINCT a.uid) as sum', ''));
+        // $count->execute();
+        // $count = $count->fetch();
+
+        $this->resetDebug();
+
+        $this
+            ->setDebug('query', \preg_replace('/\s+/', ' ', \sprintf($query, $select, $range)))
+            ->setDebug('time', \microtime(true) - $start)
+            ->setDebug('filters', \count($options['filters']))
+            ->setDebug('joins', \substr_count($query, 'JOIN'))
+            ->setDebug('count', \count($results['data']))
+            ->setDebug('sum', (int) 0)
+        ;
+
+        return $results['data'];
     }
 
     /**
