@@ -709,6 +709,245 @@ $movies = [
         'generes' => ['Animation, Adventure, Musical, Family'],
         'langauges' => ['English'],
     ],
+    [
+        'name' => 'Toy Story',
+        'releaseYear' => '1995',
+        'director' => 'John Lasseter',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Hunchback of Notre Dame',
+        'releaseYear' => '1996',
+        'director' => 'Gary Trousdale, Kirk Wise',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => '101 Dalmatians',
+        'releaseYear' => '1996',
+        'director' => 'Stephen Herek',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Inspector Gadget',
+        'releaseYear' => '1996',
+        'director' => 'David Kellogg',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Mulan',
+        'releaseYear' => '1997',
+        'director' => 'Barry Cook, Tony Bancroft',
+        'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'A Bugs Life',
+        'releaseYear' => '1998',
+        'director' => 'John Lasseter',
+        'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Parent Trap',
+        'releaseYear' => '1998',
+        'director' => 'Nancy Meyers',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Doug 1st Movie',
+        'releaseYear' => '1999',
+        'director' => 'Maurice Joyce',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Tarzan ',
+        'releaseYear' => '1999',
+        'director' => 'Kevin Lima',
+        'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Toy Story 2',
+        'releaseYear' => '1999',
+        'director' => 'John Lasseter',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Fantasia 2000',
+        'releaseYear' => '2000',
+        'director' => 'Don Hahn, Pixote Hunt, James Algar, Eric Goldberg',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'The Tigger Movie',
+        'releaseYear' => '2000',
+        'director' => 'Jun Falkenstein',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Dinosaur',
+        'releaseYear' => '1996',
+        'director' => 'Ralph Zondag, Eric Leighton',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => '102 Dalmatians',
+        'releaseYear' => '2000',
+        'director' => 'Kevin Lima',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Atlantis: The Lost Empire',
+        'releaseYear' => '2001',
+        'director' => 'Gary Trousdale, Kirk Wise',
+        'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Princess Diaries',
+        'releaseYear' => '2001',
+        'director' => 'Garry Marshall, ',
+        'generes' => ['Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    [
+        'name' => 'Monsters, Inc.',
+        'releaseYear' => '2002',
+        'director' => 'Pete Docter, David Silverman',
+        'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Return to Never Land',
+        'releaseYear' => '2002',
+        'director' => 'Robin Budd',
+        'generes' => ['Animation, Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Lilo & Stitch',
+        'releaseYear' => '2002',
+        'director' => 'Chris Sanders, Dean DeBlois',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Treasure Planet',
+        'releaseYear' => '2002',
+        'director' => 'Ron Clements, John Musker',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Jungle Book 2',
+        'releaseYear' => '2003',
+        'director' => 'Steve Trenbirth, ',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Piglet Big Movie',
+        'releaseYear' => '2003',
+        'director' => 'Francis Glebas',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Holes',
+        'releaseYear' => '2003',
+        'director' => 'Andrew Davis',
+        'generes' => ['Romantic, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Lizzie McGuire Movie',
+        'releaseYear' => '2003',
+        'director' => 'Jim Fall',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Finding Nemo',
+        'releaseYear' => '2003',
+        'director' => 'Andrew Stanton',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Pirates of the Caribbean: The Curse of the Black Pearl',
+        'releaseYear' => '2003',
+        'director' => 'Gore Verbinski',
+        'generes' => ['Adventure, Romantic, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Freaky Friday',
+        'releaseYear' => '2003',
+        'director' => 'Mark Waters',
+        'generes' => ['Romantic, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'Brother Bear',
+        'releaseYear' => '2003',
+        'director' => 'Aaron Blaise',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Haunted Mansion',
+        'releaseYear' => '2003',
+        'director' => 'Rob Minkoff',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Princess Diaries 2: Royal Engagement',
+        'releaseYear' => '2004',
+        'director' => 'Garry Marshall',
+        'generes' => ['Adventure, Romantic, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'The Incredibles',
+        'releaseYear' => '2004',
+        'director' => 'Brad Bird',
+        'generes' => ['Animation, Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    [
+        'name' => 'National Treasure',
+        'releaseYear' => '2004',
+        'director' => 'Jon Turteltaub',
+        'generes' => ['Adventure, Musical, Family'],
+        'langauges' => ['English'],
+    ],
+    
+    
+    
+    
     
     
    
