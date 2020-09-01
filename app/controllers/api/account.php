@@ -1234,14 +1234,9 @@ App::put('/v1/account/recovery')
             throw new Exception('Passwords must match', 400);
         }
 
-        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$id='.$userId,
-            ],
-        ]);
+        $profile = $projectDB->getDocument(Database::COLLECTION_USERS, $userId);
 
-        if (empty($profile)) {
+        if ($profile->isEmpty() || $profile->getCollection() !== Database::COLLECTION_USERS) {
             throw new Exception('User not found', 404); // TODO maybe hide this
         }
 
@@ -1395,14 +1390,9 @@ App::put('/v1/account/verification')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
-            'limit' => 1,
-            'filters' => [
-                '$id='.$userId,
-            ],
-        ]);
+        $profile = $projectDB->getDocument(Database::COLLECTION_USERS, $userId);
 
-        if (empty($profile)) {
+        if ($profile->isEmpty() || $profile->getCollection() !== Database::COLLECTION_USERS) {
             throw new Exception('User not found', 404); // TODO maybe hide this
         }
 

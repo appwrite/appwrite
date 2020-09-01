@@ -494,12 +494,7 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if (empty($user->getId())) {
-            $user = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user
-                'limit' => 1,
-                'filters' => [
-                    '$id='.$userId,
-                ],
-            ]);
+            $user = $projectDB->getDocument(Database::COLLECTION_USERS, $userId);
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
