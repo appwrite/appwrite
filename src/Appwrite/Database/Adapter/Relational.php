@@ -701,13 +701,14 @@ class Relational extends Adapter
     /**
      * Find
      *
+     * @param Document $collection
      * @param array $options
      *
      * @throws Exception
      *
      * @return array
      */
-    public function find(array $options)
+    public function find(Document $collection, array $options)
     {
         $start = \microtime(true);
 
@@ -834,15 +835,15 @@ class Relational extends Adapter
             $roles = ['1=1'];
         }
 
-        $query = "SELECT %s
-            FROM `".$this->getNamespace().".database.documents` a
-                {$join}
-                {$sorts}
+        $query = 'SELECT %s
+            FROM `app_'.$this->getNamespace().'.collection.'.$collection->getId().'` a
+                '.$join.'
+                '.$sorts.'
             WHERE
-                {$where}
-                {$search}
-                AND (".\implode('||', $roles).")
-            ORDER BY sort_ff {$options['orderType']} %s";
+                '.$where.'
+                '.$search.'
+                AND ('.\implode('||', $roles).')
+            ORDER BY sort_ff '.$options['orderType'].' %s';
 
         var_dump(\preg_replace('/\s+/', ' ', \sprintf($query, $select, $range)));
 

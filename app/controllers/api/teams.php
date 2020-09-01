@@ -100,16 +100,13 @@ App::get('/v1/teams')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_TEAMS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
             'orderType' => $orderType,
             'orderCast' => 'int',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_TEAMS,
-            ],
         ]);
 
         $response->dynamic(new Document([
@@ -190,11 +187,10 @@ App::delete('/v1/teams/:teamId')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->find([
+        $memberships = $projectDB->find(Database::COLLECTION_MEMBERSHIPS, [
             'limit' => 2000, // TODO add members limit
             'offset' => 0,
             'filters' => [
-                '$collection='.Database::COLLECTION_MEMBERSHIPS,
                 'teamId='.$teamId,
             ],
         ]);
@@ -241,19 +237,17 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->find([
+        $memberships = $projectDB->find(Database::COLLECTION_MEMBERSHIPS, [
             'limit' => 50,
             'offset' => 0,
             'filters' => [
-                '$collection='.Database::COLLECTION_MEMBERSHIPS,
                 'teamId='.$team->getId(),
             ],
         ]);
 
-        $invitee = $projectDB->findFirst([ // Get user by email address
+        $invitee = $projectDB->findFirst(Database::COLLECTION_USERS,[ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -423,7 +417,7 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception('Team not found', 404);
         }
 
-        $memberships = $projectDB->find([
+        $memberships = $projectDB->find(Database::COLLECTION_MEMBERSHIPS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'joined',
@@ -431,10 +425,10 @@ App::get('/v1/teams/:teamId/memberships')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::COLLECTION_MEMBERSHIPS,
                 'teamId='.$teamId,
             ],
         ]);
+
         $users = [];
 
         foreach ($memberships as $membership) {
@@ -500,10 +494,9 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
         }
 
         if (empty($user->getId())) {
-            $user = $projectDB->findFirst([ // Get user
+            $user = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user
                 'limit' => 1,
                 'filters' => [
-                    '$collection='.Database::COLLECTION_USERS,
                     '$id='.$userId,
                 ],
             ]);

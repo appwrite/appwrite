@@ -162,7 +162,7 @@ class Redis extends Adapter
         foreach ($output['temp-relations'] as $i => $relationship) {
             $node = $relationship['end'];
 
-            $node = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument('', $node);
+            $node = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument(new Document(), $node);
 
             if (empty($node)) {
                 continue;
@@ -283,15 +283,16 @@ class Redis extends Adapter
     }
 
     /**
+     * @param Document $collection
      * @param array $options
      *
      * @return array
      *
      * @throws Exception
      */
-    public function find(array $options)
+    public function find(Document $collection, array $options)
     {
-        $data = $this->adapter->find($options);
+        $data = $this->adapter->find($collection, $options);
         $keys = [];
 
         foreach ($data as $node) {
@@ -301,7 +302,7 @@ class Redis extends Adapter
         $nodes = (!empty($keys)) ? $this->getRedis()->mget($keys) : [];
 
         foreach ($data as $i => &$node) {
-            $temp = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument('', $node);
+            $temp = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument($collection, $node);
 
             if (!empty($temp)) {
                 $node = $temp;

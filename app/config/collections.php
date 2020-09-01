@@ -9,7 +9,7 @@ $providers = Config::getParam('providers');
 $collections = [
     'console' => [
         '$id' => 'console',
-        '$collection' => 'projects',
+        '$collection' => Database::COLLECTION_PROJECTS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Appwrite',
         'description' => 'Appwrite core engine',

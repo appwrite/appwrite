@@ -558,7 +558,7 @@ class MySQL extends Adapter
      *
      * @return array
      */
-    public function find(array $options)
+    public function find(Document $collection, array $options)
     {
         $start = \microtime(true);
         $orderCastMap = [
@@ -585,6 +585,8 @@ class MySQL extends Adapter
         $join = [];
         $sorts = [];
         $search = '';
+
+        $options['filters'][] = '$collection='.$collection->getId();
 
         // Filters
         foreach ($options['filters'] as $i => $filter) {

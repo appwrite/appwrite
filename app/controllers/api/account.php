@@ -67,10 +67,9 @@ App::post('/v1/account')
             }
         }
 
-        $profile = $projectDB->findFirst([ // Get user by email address
+        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -151,10 +150,9 @@ App::post('/v1/account/sessions')
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
-        $profile = $projectDB->findFirst([ // Get user by email address
+        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -462,10 +460,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $projectDB->deleteDocument(Database::COLLECTION_TOKENS, $current); //throw new Exception('User already logged in', 401);
         }
 
-        $user = (empty($user->getId())) ? $projectDB->findFirst([ // Get user by provider id
+        $user = (empty($user->getId())) ? $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by provider id
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 'oauth2'.\ucfirst($provider).'='.$oauth2ID,
             ],
         ]) : $user;
@@ -474,10 +471,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $name = $oauth2->getUserName($accessToken);
             $email = $oauth2->getUserEmail($accessToken);
 
-            $user = $projectDB->findFirst([ // Get user by provider email address
+            $user = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by provider email address
                 'limit' => 1,
                 'filters' => [
-                    '$collection='.Database::COLLECTION_USERS,
                     'email='.$email,
                 ],
             ]);
@@ -861,10 +857,9 @@ App::patch('/v1/account/email')
             throw new Exception('Invalid credentials', 401);
         }
 
-        $profile = $projectDB->findFirst([ // Get user by email address
+        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -1132,10 +1127,9 @@ App::post('/v1/account/recovery')
         /** @var Appwrite\Event\Event $mails */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->findFirst([ // Get user by email address
+        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -1240,10 +1234,9 @@ App::put('/v1/account/recovery')
             throw new Exception('Passwords must match', 400);
         }
 
-        $profile = $projectDB->findFirst([ // Get user by email address
+        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 '$id='.$userId,
             ],
         ]);
@@ -1402,10 +1395,9 @@ App::put('/v1/account/verification')
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Appwrite\Event\Event $audits */
 
-        $profile = $projectDB->findFirst([ // Get user by email address
+        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 '$id='.$userId,
             ],
         ]);

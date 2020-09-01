@@ -232,11 +232,12 @@ abstract class Adapter
      *
      * Filter data sets using chosen queries
      *
+     * @param Document $collection
      * @param array $options
      *
      * @return array
      */
-    abstract public function find(array $options);
+    abstract public function find(Document $collection, array $options);
 
     /**
      * @param array $options

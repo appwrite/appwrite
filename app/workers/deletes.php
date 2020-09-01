@@ -77,8 +77,7 @@ class DeletesV1
         }
 
         // Delete Memberships
-        $this->deleteByGroup([
-            '$collection='.Database::COLLECTION_MEMBERSHIPS,
+        $this->deleteByGroup(Database::COLLECTION_MEMBERSHIPS, [
             'userId='.$document->getId(),
         ], $this->getProjectDB($projectId));
     }
@@ -89,8 +88,7 @@ class DeletesV1
         $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
 
         // Delete Tags
-        $this->deleteByGroup([
-            '$collection='.Database::COLLECTION_TAGS,
+        $this->deleteByGroup(Database::COLLECTION_TAGS, [
             'functionId='.$document->getId(),
         ], $projectDB, function(Document $document) use ($device) {
 
@@ -103,8 +101,7 @@ class DeletesV1
         });
 
         // Delete Executions
-        $this->deleteByGroup([
-            '$collection='.Database::COLLECTION_EXECUTIONS,
+        $this->deleteByGroup(Database::COLLECTION_EXECUTIONS, [
             'functionId='.$document->getId(),
         ], $projectDB);
     }
@@ -130,7 +127,7 @@ class DeletesV1
         Authorization::reset();
     }
 
-    protected function deleteByGroup(array $filters, Database $database, callable $callback = null)
+    protected function deleteByGroup(string $collection, array $filters, Database $database, callable $callback = null)
     {
         $count = 0;
         $chunk = 0;
@@ -145,7 +142,7 @@ class DeletesV1
 
             Authorization::disable();
 
-            $results = $database->find([
+            $results = $database->find($collection, [
                 'limit' => $limit,
                 'offset' => 0,
                 'orderField' => '$id',

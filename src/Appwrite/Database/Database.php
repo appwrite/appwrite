@@ -139,11 +139,12 @@ class Database
     }
 
     /**
+     * @param string $collection
      * @param array $options
      *
      * @return Document[]
      */
-    public function find(array $options)
+    public function find(string $collection, array $options)
     {
         $options = \array_merge([
             'offset' => 0,
@@ -156,7 +157,7 @@ class Database
             'filters' => [],
         ], $options);
 
-        $results = $this->adapter->find($options);
+        $results = $this->adapter->find($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $options);
 
         foreach ($results as &$node) {
             $node = $this->decode(new Document($node));
@@ -166,24 +167,26 @@ class Database
     }
 
     /**
+     * @param string $collection
      * @param array $options
      *
      * @return Document
      */
-    public function findFirst(array $options)
+    public function findFirst(string $collection, array $options)
     {
-        $results = $this->find($options);
+        $results = $this->find($collection, $options);
         return \reset($results);
     }
 
     /**
+     * @param string $collection
      * @param array $options
      *
      * @return Document
      */
-    public function findLast(array $options)
+    public function findLast(string $collection, array $options)
     {
-        $results = $this->find($options);
+        $results = $this->find($collection, $options);
         return \end($results);
     }
 

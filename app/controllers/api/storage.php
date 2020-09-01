@@ -174,16 +174,13 @@ App::get('/v1/storage/files')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_FILES, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
             'orderType' => $orderType,
             'orderCast' => 'int',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_FILES,
-            ],
         ]);
 
         $response->dynamic(new Document([

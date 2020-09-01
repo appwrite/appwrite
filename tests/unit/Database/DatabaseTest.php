@@ -1848,7 +1848,23 @@ class DatabaseTest extends TestCase
 
     public function testFind()
     {
-        self::$object->find([
+        $data = include __DIR__.'/../../resources/database/movies.php';
+
+        $collections = $data['collections'];
+        $movies = $data['movies'];
+
+        foreach ($collections as $key => &$collection) {
+            $collection = self::$object->createDocument(Database::COLLECTION_COLLECTIONS, $collection);
+            self::$object->createCollection($collection->getId(), [], []);
+        }
+
+        foreach ($movies as $key => &$movie) {
+            $movie['$collection'] = $collection->getId();
+            $movie['$permissions'] = [];
+            $movie = self::$object->createDocument($collection->getId(), $movie);            
+        }
+
+        self::$object->find($collection->getId(), [
             'limit' => 5,
             'filters' => [
                 'text=Hello World',

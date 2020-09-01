@@ -16,7 +16,7 @@ $callbacks = [
     '0.4.0' => function() {
         Console::log('I got nothing to do.');
     },
-    '0.5.0' => function(Document $project, $projectDB) use ($db) {
+    '0.5.0' => function(Document $project, Database $projectDB) use ($db) {
 
         Console::log('Migrating project: '.$project->getAttribute('name').' ('.$project->getId().')');
 
@@ -189,7 +189,7 @@ $cli
         $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
         $projectDB->setMocks(Config::getParam('collections', []));
 
-        $console = $consoleDB->getDocument('console');
+        $console = $consoleDB->getDocument(Database::COLLECTION_PROJECTS, 'console');
 
         Authorization::disable();
 
@@ -212,15 +212,12 @@ $cli
                 }
             }
 
-            $projects = $consoleDB->find([
+            $projects = $consoleDB->find(Database::COLLECTION_PROJECTS, [
                 'limit' => $limit,
                 'offset' => $offset,
                 'orderField' => 'name',
                 'orderType' => 'ASC',
                 'orderCast' => 'string',
-                'filters' => [
-                    '$collection='.Database::COLLECTION_PROJECTS,
-                ],
             ]);
 
             $sum = \count($projects);

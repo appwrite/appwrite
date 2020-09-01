@@ -85,14 +85,13 @@ class CertificatesV1
             }
         }
 
-        $certificate = $consoleDB->findFirst([
+        $certificate = $consoleDB->findFirst(Database::COLLECTION_CERTIFICATES, [
             'limit' => 1,
             'offset' => 0,
             'orderField' => 'id',
             'orderType' => 'ASC',
             'orderCast' => 'string',
             'filters' => [
-                '$collection='.Database::COLLECTION_CERTIFICATES,
                 'domain='.$domain->get(),
             ],
         ]);

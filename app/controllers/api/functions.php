@@ -77,16 +77,13 @@ App::get('/v1/functions')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_FUNCTIONS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
             'orderType' => $orderType,
             'orderCast' => 'int',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_FUNCTIONS,
-            ],
         ]);
 
         $response->dynamic(new Document([
@@ -439,7 +436,7 @@ App::get('/v1/functions/:functionId/tags')
             throw new Exception('Function not found', 404);
         }
         
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_TAGS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
@@ -447,7 +444,6 @@ App::get('/v1/functions/:functionId/tags')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::COLLECTION_TAGS,
                 'functionId='.$function->getId(),
             ],
         ]);
@@ -623,7 +619,7 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception('Function not found', 404);
         }
         
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_EXECUTIONS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
@@ -631,7 +627,6 @@ App::get('/v1/functions/:functionId/executions')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::COLLECTION_EXECUTIONS,
                 'functionId='.$function->getId(),
             ],
         ]);

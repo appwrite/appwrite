@@ -110,16 +110,13 @@ App::get('/v1/database/collections')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_COLLECTIONS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'name',
             'orderType' => $orderType,
             'orderCast' => 'string',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_COLLECTIONS,
-            ],
         ]);
 
         $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
@@ -435,16 +432,14 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
-        $list = $projectDB->find([
+        $list = $projectDB->find($collection->getId(), [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => $orderField,
             'orderType' => $orderType,
             'orderCast' => $orderCast,
             'search' => $search,
-            'filters' => \array_merge($filters, [
-                '$collection='.$collectionId,
-            ]),
+            'filters' => $filters,
         ]);
 
         if (App::isDevelopment()) {

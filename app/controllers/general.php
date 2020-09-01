@@ -4,11 +4,11 @@ require_once __DIR__.'/../init.php';
 
 use Utopia\App;
 use Utopia\Swoole\Request;
-use Appwrite\Utopia\Response;
 use Utopia\View;
 use Utopia\Exception;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Appwrite\Utopia\Response;
 use Appwrite\Auth\Auth;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
