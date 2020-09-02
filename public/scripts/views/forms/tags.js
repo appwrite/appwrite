@@ -60,7 +60,7 @@
           dropdown.removeChild(dropdown.lastChild);
         }
 
-        recomendations.teams.forEach(element => {
+        recommendations.teams.forEach(element => {
           let child = window.document.createElement("div");
           child.innerText = `t: ${element.name}`;
           child.addEventListener('mousedown', function () {
@@ -69,7 +69,7 @@
           dropdown.appendChild(child);
         });
 
-        recomendations.users.forEach(element => {
+        recommendations.users.forEach(element => {
           let child = window.document.createElement("div");
           child.innerText = `u: ${element.name}`;
           child.addEventListener('mousedown', function () {
@@ -78,7 +78,7 @@
           dropdown.appendChild(child);
         });
 
-        if (recomendations.users.length <= 0 && recomendations.teams.length <= 0) {
+        if (recommendations.users.length <= 0 && recommendations.teams.length <= 0) {
           let child = window.document.createElement("div");
           child.innerText = 'No Results';
           dropdown.appendChild(child);
@@ -93,14 +93,14 @@
           return;
         }
 
-        recomendations = { users: [], teams: [] };
+        recommendations = { users: [], teams: [] };
 
         // http://localhost/v1/teams?search=test&limit=15&orderType=DESC
 
         sdk.users.list(add.value, 5, 0, 'DESC').then((response) => {
-          recomendations.users = [];
+          recommendations.users = [];
           response.users.forEach(element => {
-            recomendations.users.push(element);
+            recommendations.users.push(element);
           });
           rerenderRecommendations();
         }, function (error) {
@@ -108,9 +108,9 @@
         });
 
         sdk.teams.list(add.value, 5, 0, 'DESC').then((response) => {
-          recomendations.teams = [];
+          recommendations.teams = [];
           response.teams.forEach(element => {
-            recomendations.teams.push(element);
+            recommendations.teams.push(element);
           });
           rerenderRecommendations();
         }, function (error) {
