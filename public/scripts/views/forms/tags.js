@@ -9,7 +9,7 @@
       let preview = window.document.createElement("ul");
       let addContainer = window.document.createElement("div");
       let add = window.document.createElement("input");
-      let recomendations = { users: [], teams: [] };
+      let recommendations = { users: [], teams: [] };
       let dropdown = window.document.createElement("div");
       let searchIcon = window.document.createElement("i");
 
@@ -17,7 +17,7 @@
       searchIcon.className = "icon-search";
 
       let focus = function (event) {
-        rerenderRecomendations();
+        rerenderRecommendations();
       }
 
       let listen = function (event) {
@@ -53,7 +53,7 @@
         return false;
       };
 
-      let rerenderRecomendations = function () {
+      let rerenderRecommendations = function () {
         let childNodesLength = dropdown.childNodes.length;
 
         while (childNodesLength--) {
@@ -89,7 +89,7 @@
 
       let autoComplete = function () {
         if (add.value.length <= 0) {
-          rerenderRecomendations();
+          rerenderRecommendations();
           return;
         }
 
@@ -102,7 +102,7 @@
           response.users.forEach(element => {
             recomendations.users.push(element);
           });
-          rerenderRecomendations();
+          rerenderRecommendations();
         }, function (error) {
           console.log(error);
         });
@@ -112,7 +112,7 @@
           response.teams.forEach(element => {
             recomendations.teams.push(element);
           });
-          rerenderRecomendations();
+          rerenderRecommendations();
         }, function (error) {
           console.log(error);
         });
