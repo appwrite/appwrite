@@ -1394,3 +1394,30 @@ ol {
     }
   }
 }
+
+.dot {
+  width: 20px;
+  height: 20px;
+  background: var(--config-color-fade);
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0!important;
+  padding: 0!important;
+
+  &.danger {
+    background: var(--config-color-danger)!important;
+  }
+
+  &.success {
+    background: var(--config-color-success)!important;
+  }
+
+  &.warning {
+    background: var(--config-color-warning)!important;
+  }
+
+  &.info {
+    background: var(--config-color-info)!important;
+  }
+}

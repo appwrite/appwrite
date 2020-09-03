@@ -31,7 +31,7 @@
     <div class="zone xl">
         <ul class="phases clear" data-ui-phases data-selected="{{router.params.tab}}">
             <li data-state="/console/users/user?id={{router.params.id}}&project={{router.params.project}}">
-                <h2>General</h2>
+                <h2>Overview</h2>
 
                 <div data-ls-if="{{user.status}} === <?php echo \Appwrite\Auth\Auth::USER_STATUS_BLOCKED; ?>" style="display: none" class="box padding-small danger margin-bottom-xxl text-align-center">
                     This user account is blocked.
@@ -45,7 +45,7 @@
                             <div class="text-align-center">
                                 <img src="" data-ls-attrs="src={{user|avatar}}" data-size="200" alt="User Avatar" class="avatar huge margin-top-negative-xxl" />
 
-                                <div class="margin-top-small" data-ls-bind="Member since {{user.registration|date-text}}"></div>
+                                <div class="margin-top-small" data-ls-bind="Member since {{user.registration|dateText}}"></div>
                                 <div class="margin-top-small">
                                     <span data-ls-if="{{user.emailVerification}} === true">
                                         <span class="tag green">Verified</span>
@@ -236,11 +236,12 @@
                             </thead>
                             <tbody data-ls-loop="logs" data-ls-as="log">
                                 <tr>
-                                    <td data-title="Date: "><span data-ls-bind="{{log.time|date-time}}"></span></td>
+                                    <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                     <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                     <td data-title="Client: ">
-                                        <img data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
-                                        <span data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                        <img data-ls-if="({{log.client.short_name}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
+                                        <span data-ls-if="({{log.client.name}})" data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
+                                        <div data-ls-if="(!{{log.client.name}})" class="text-align-center text-fade">Unknown</div>
                                     </td>
                                     <td data-title="Location: ">
                                         <img data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />

@@ -23,6 +23,7 @@
         "ext-imagick": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
+        "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
         "ext-pdo": "*",
@@ -32,13 +33,13 @@
 
         "appwrite/php-clamav": "1.0.*",
 
-        "utopia-php/framework": "0.4.1",
+        "utopia-php/framework": "0.9.0",
         "utopia-php/abuse": "0.2.*",
         "utopia-php/audit": "0.3.*",
         "utopia-php/cache": "0.2.*",
         "utopia-php/cli": "0.6.2",
         "utopia-php/config": "0.2.*",
-        "utopia-php/locale": "0.2.*",
+        "utopia-php/locale": "0.3.*",
         "utopia-php/registry": "0.2.*",
         "utopia-php/domains": "0.2.*",
 
@@ -52,6 +53,7 @@
         "phpmailer/phpmailer": "6.1.6"
     },
     "require-dev": {
+        "swoole/ide-helper": "4.5.2",
         "appwrite/sdk-generator": "master",
         "phpunit/phpunit": "^7.0"
     },
