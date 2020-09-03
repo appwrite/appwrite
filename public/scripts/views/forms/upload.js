@@ -10,6 +10,7 @@
       var labelLoading = element.dataset["labelLoading"] || "Uploading...";
       var previewWidth = element.dataset["previewWidth"] || 200;
       var previewHeight = element.dataset["previewHeight"] || 200;
+      var previewAlt = element.dataset["previewAlt"] || 200;
       var accept = element.dataset["accept"] || "";
       var searchButton = (element.dataset["search"] || 0);
       var required = element.dataset["required"] || false;
@@ -76,6 +77,8 @@
           "&project="+project +
           "&mode=admin";
 
+        image.alt = previewAlt;
+
         file.className = "file avatar";
         file.tabIndex = 0;
         file.appendChild(image);
@@ -85,6 +88,7 @@
         var remove = (function(result) {
           return function(event) {
             render(result.$id);
+            element.value = '';
           };
         })(result);
 

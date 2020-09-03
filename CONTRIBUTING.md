@@ -153,12 +153,38 @@ bash ./build.sh 1.0.0
 
 Before running the command, make sure you have proper write permissions to the Appwrite docker hub team.
 
+**Build for multicore**
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/multicore:0.0.0 --push
+```
+
 ## Tests
 
 To run tests manually, run phpunit from your command line:
 
 ```bash
 docker exec appwrite test
+```
+
+## Code Maintenance  
+
+We use some automation tools to help us keep a healthy code base.
+
+Improve PHP exeution time by using [fully-qualified function calls](https://veewee.github.io/blog/optimizing-php-performance-by-fq-function-calls/):
+
+```bash
+php-cs-fixer fix src/ --rules=native_function_invocation --allow-risky=yes
+```
+
+Coding Standards:
+
+```bash
+php-cs-fixer fix app/controllers --rules='{"braces": {"allow_single_line_closure": true}}'
+```
+
+```bash
+php-cs-fixer fix src --rules='{"braces": {"allow_single_line_closure": true}}'
 ```
 
 ## Tutorials

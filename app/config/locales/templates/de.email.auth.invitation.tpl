@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hallo,
-    <br />
-    <br />
+</p>
+<p>
     diese E-Mail wurde dir geschickt, weil <b>{{owner}}</b> dich eingeladen hat Teammitglied im Team <b>{{team}}</b> bei {{project}} zu werden.
-    <br />
-    <br />
+</p>
+<p>
     Folge diesem Link um dem Team <b>{{team}}</b> beizutreten:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Wenn du daran nicht interessiert bist, kannst du diese Nachricht ignorieren.
-    <br />
-    <br />
+</p>
+<p>
     Vielen Dank,
     <br />
     {{project}} Team
-</div>
+</p>

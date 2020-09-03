@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Merhaba {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Aşağıdaki bağlantıyı takip ederek {{project}} şifresini değiştirin.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Eğer şifrenizi sıfırlamayı istemediyseniz, bu mesajı yok sayabilirsiniz.
-    <br />
-    <br />
+</p>
+<p>
     Teşekkürler,
     <br />
     {{project}} takımı
-</div>
+</p>

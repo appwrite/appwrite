@@ -2,7 +2,8 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:v2.1.4
+    image: traefik:2.2
+    container_name: appwrite_traefik
     command:
       - --log.level=DEBUG
       - --api.insecure=true
@@ -49,11 +50,10 @@ services:
       - ./phpunit.xml:/usr/share/nginx/html/phpunit.xml
       - ./tests:/usr/share/nginx/html/tests
       - ./app:/usr/share/nginx/html/app
-      # - ./vendor:/usr/share/nginx/html/vendor
+     # - ./vendor:/usr/share/nginx/html/vendor
       - ./docs:/usr/share/nginx/html/docs
       - ./public:/usr/share/nginx/html/public
       - ./src:/usr/share/nginx/html/src
-      - ./docker/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - mariadb
       - redis
@@ -66,6 +66,7 @@ services:
       #- _APP_ENV=production
       - _APP_ENV=development
       - _APP_OPTIONS_ABUSE=disabled
+      - _APP_OPTIONS_FORCE_HTTPS=disabled
       - _APP_OPENSSL_KEY_V1=your-secret-key
       - _APP_DOMAIN=demo.appwrite.io
       - _APP_DOMAIN_TARGET=demo.appwrite.io
@@ -85,6 +86,7 @@ services:
 
   mariadb:
     image: appwrite/mariadb:1.0.3 # fix issues when upgrading using: mysql_upgrade -u root -p
+    container_name: appwrite_mariadb
     restart: unless-stopped
     networks:
       - appwrite
@@ -101,6 +103,7 @@ services:
 
   maildev:
     image: djfarrelly/maildev
+    container_name: appwrite_maildev
     restart: unless-stopped
     ports:
       - '1080:80'
@@ -109,6 +112,7 @@ services:
 
   # smtp:
   #   image: appwrite/smtp:1.0.1
+  #   container_name: appwrite_smtp
   #   restart: unless-stopped
   #   networks:
   #     - appwrite
@@ -118,6 +122,7 @@ services:
 
   redis:
     image: redis:5.0
+    container_name: appwrite_redis
     restart: unless-stopped
     networks:
       - appwrite
@@ -125,7 +130,8 @@ services:
       - appwrite-redis:/data:rw
 
   clamav:
-    image: appwrite/clamav:1.0.8
+    image: appwrite/clamav:1.0.12
+    container_name: appwrite_clamav
     restart: unless-stopped
     networks:
       - appwrite
@@ -134,6 +140,7 @@ services:
 
   influxdb:
     image: influxdb:1.6
+    container_name: appwrite_influxdb
     restart: unless-stopped
     networks:
       - appwrite
@@ -142,6 +149,7 @@ services:
 
   telegraf:
     image: appwrite/telegraf:1.0.0
+    container_name: appwrite_telegraf
     restart: unless-stopped
     networks:
       - appwrite
@@ -171,6 +179,7 @@ services:
 
   chronograf:
     image: chronograf:1.5
+    container_name: appwrite_chronograf
     restart: unless-stopped
     networks:
     - appwrite

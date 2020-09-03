@@ -5,10 +5,9 @@ global $utopia, $request, $response, $register, $user, $consoleDB, $projectDB, $
 use Utopia\Exception;
 use Utopia\Response;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Domain as DomainValidator;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
@@ -18,15 +17,15 @@ use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Network\Validators\CNAME;
+use Appwrite\Network\Validator\CNAME;
+use Appwrite\Network\Validator\Domain as DomainValidator;
 use Cron\CronExpression;
-
-include_once __DIR__ . '/../shared/api.php';
 
 $scopes = include __DIR__.'/../../../app/config/scopes.php';
 
 $utopia->post('/v1/projects')
     ->desc('Create Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'create')
@@ -89,6 +88,7 @@ $utopia->post('/v1/projects')
 
 $utopia->get('/v1/projects')
     ->desc('List Projects')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'list')
@@ -107,11 +107,11 @@ $utopia->get('/v1/projects')
 
             foreach ($results as $project) {
                 foreach (Config::getParam('providers') as $provider => $node) {
-                    $secret = json_decode($project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}'), true);
+                    $secret = \json_decode($project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}'), true);
 
                     if (!empty($secret) && isset($secret['version'])) {
                         $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
-                        $project->setAttribute('usersOauth2'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
+                        $project->setAttribute('usersOauth2'.\ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, \hex2bin($secret['iv']), \hex2bin($secret['tag'])));
                     }
                 }
             }
@@ -122,6 +122,7 @@ $utopia->get('/v1/projects')
 
 $utopia->get('/v1/projects/:projectId')
     ->desc('Get Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'get')
@@ -135,11 +136,11 @@ $utopia->get('/v1/projects/:projectId')
             }
 
             foreach (Config::getParam('providers') as $provider => $node) {
-                $secret = json_decode($project->getAttribute('usersOauth2'.ucfirst($provider).'Secret', '{}'), true);
+                $secret = \json_decode($project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}'), true);
 
                 if (!empty($secret) && isset($secret['version'])) {
                     $key = $request->getServer('_APP_OPENSSL_KEY_V'.$secret['version']);
-                    $project->setAttribute('usersOauth2'.ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, hex2bin($secret['iv']), hex2bin($secret['tag'])));
+                    $project->setAttribute('usersOauth2'.\ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, \hex2bin($secret['iv']), \hex2bin($secret['tag'])));
                 }
             }
 
@@ -149,6 +150,7 @@ $utopia->get('/v1/projects/:projectId')
 
 $utopia->get('/v1/projects/:projectId/usage')
     ->desc('Get Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
@@ -164,23 +166,23 @@ $utopia->get('/v1/projects/:projectId/usage')
 
             $period = [
                 'daily' => [
-                    'start' => DateTime::createFromFormat('U', strtotime('today')),
-                    'end' => DateTime::createFromFormat('U', strtotime('tomorrow')),
+                    'start' => DateTime::createFromFormat('U', \strtotime('today')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
                     'group' => '1m',
                 ],
                 'monthly' => [
-                    'start' => DateTime::createFromFormat('U', strtotime('midnight first day of this month')),
-                    'end' => DateTime::createFromFormat('U', strtotime('midnight last day of this month')),
+                    'start' => DateTime::createFromFormat('U', \strtotime('midnight first day of this month')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('midnight last day of this month')),
                     'group' => '1d',
                 ],
                 'last30' => [
-                    'start' => DateTime::createFromFormat('U', strtotime('-30 days')),
-                    'end' => DateTime::createFromFormat('U', strtotime('tomorrow')),
+                    'start' => DateTime::createFromFormat('U', \strtotime('-30 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('tomorrow')),
                     'group' => '1d',
                 ],
                 'last90' => [
-                    'start' => DateTime::createFromFormat('U', strtotime('-90 days')),
-                    'end' => DateTime::createFromFormat('U', strtotime('today')),
+                    'start' => DateTime::createFromFormat('U', \strtotime('-90 days')),
+                    'end' => DateTime::createFromFormat('U', \strtotime('today')),
                     'group' => '1d',
                 ],
                 // 'yearly' => [
@@ -207,7 +209,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 foreach ($points as $point) {
                     $requests[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => strtotime($point['time']),
+                        'date' => \strtotime($point['time']),
                     ];
                 }
 
@@ -218,7 +220,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 foreach ($points as $point) {
                     $network[] = [
                         'value' => (!empty($point['value'])) ? $point['value'] : 0,
-                        'date' => strtotime($point['time']),
+                        'date' => \strtotime($point['time']),
                     ];
                 }
             }
@@ -262,18 +264,18 @@ $utopia->get('/v1/projects/:projectId/usage')
             }
 
             // Tasks
-            $tasksTotal = count($project->getAttribute('tasks', []));
+            $tasksTotal = \count($project->getAttribute('tasks', []));
 
             $response->json([
                 'requests' => [
                     'data' => $requests,
-                    'total' => array_sum(array_map(function ($item) {
+                    'total' => \array_sum(\array_map(function ($item) {
                         return $item['value'];
                     }, $requests)),
                 ],
                 'network' => [
                     'data' => $network,
-                    'total' => array_sum(array_map(function ($item) {
+                    'total' => \array_sum(\array_map(function ($item) {
                         return $item['value'];
                     }, $network)),
                 ],
@@ -283,7 +285,7 @@ $utopia->get('/v1/projects/:projectId/usage')
                 ],
                 'documents' => [
                     'data' => $documents,
-                    'total' => array_sum(array_map(function ($item) {
+                    'total' => \array_sum(\array_map(function ($item) {
                         return $item['total'];
                     }, $documents)),
                 ],
@@ -310,6 +312,7 @@ $utopia->get('/v1/projects/:projectId/usage')
 
 $utopia->patch('/v1/projects/:projectId')
     ->desc('Update Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'update')
@@ -332,7 +335,7 @@ $utopia->patch('/v1/projects/:projectId')
                 throw new Exception('Project not found', 404);
             }
 
-            $project = $consoleDB->updateDocument(array_merge($project->getArrayCopy(), [
+            $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
                 'name' => $name,
                 'description' => $description,
                 'logo' => $logo,
@@ -355,11 +358,12 @@ $utopia->patch('/v1/projects/:projectId')
 
 $utopia->patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateOAuth2')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('provider', '', function () { return new WhiteList(array_keys(Config::getParam('providers'))); }, 'Provider Name', false)
+    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'Provider Name', false)
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
     ->param('secret', '', function () { return new text(512); }, 'Provider secret key.', true)
     ->action(
@@ -373,17 +377,17 @@ $utopia->patch('/v1/projects/:projectId/oauth2')
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
-            $secret = json_encode([
+            $secret = \json_encode([
                 'data' => OpenSSL::encrypt($secret, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method' => OpenSSL::CIPHER_AES_128_GCM,
-                'iv' => bin2hex($iv),
-                'tag' => bin2hex($tag),
+                'iv' => \bin2hex($iv),
+                'tag' => \bin2hex($tag),
                 'version' => '1',
             ]);
 
-            $project = $consoleDB->updateDocument(array_merge($project->getArrayCopy(), [
-                'usersOauth2'.ucfirst($provider).'Appid' => $appId,
-                'usersOauth2'.ucfirst($provider).'Secret' => $secret,
+            $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
+                'usersOauth2'.\ucfirst($provider).'Appid' => $appId,
+                'usersOauth2'.\ucfirst($provider).'Secret' => $secret,
             ]));
 
             if (false === $project) {
@@ -396,6 +400,7 @@ $utopia->patch('/v1/projects/:projectId/oauth2')
 
 $utopia->delete('/v1/projects/:projectId')
     ->desc('Delete Project')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'delete')
@@ -415,7 +420,7 @@ $utopia->delete('/v1/projects/:projectId')
 
             $deletes->setParam('document', $project->getArrayCopy());
 
-            foreach(['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
+            foreach (['keys', 'webhooks', 'tasks', 'platforms', 'domains'] as $key) { // Delete all children (keys, webhooks, tasks [stop tasks?], platforms)
                 $list = $project->getAttribute('webhooks', []);
 
                 foreach ($list as $document) { /* @var $document Document */
@@ -423,6 +428,10 @@ $utopia->delete('/v1/projects/:projectId')
                         throw new Exception('Failed to remove project document ('.$key.')] from DB', 500);
                     }
                 }
+            }
+            
+            if (!$consoleDB->deleteDocument($project->getAttribute('teamId', null))) {
+                throw new Exception('Failed to remove project team from DB', 500);
             }
 
             if (!$consoleDB->deleteDocument($projectId)) {
@@ -437,6 +446,7 @@ $utopia->delete('/v1/projects/:projectId')
 
 $utopia->post('/v1/projects/:projectId/webhooks')
     ->desc('Create Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createWebhook')
@@ -444,7 +454,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name.')
     ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list.')
     ->param('url', null, function () { return new Text(2000); }, 'Webhook URL.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(
@@ -455,14 +465,15 @@ $utopia->post('/v1/projects/:projectId/webhooks')
                 throw new Exception('Project not found', 404);
             }
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
-            $httpPass = json_encode([
+            $httpPass = \json_encode([
                 'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method' => OpenSSL::CIPHER_AES_128_GCM,
-                'iv' => bin2hex($iv),
-                'tag' => bin2hex($tag),
+                'iv' => \bin2hex($iv),
+                'tag' => \bin2hex($tag),
                 'version' => '1',
             ]);
 
@@ -501,6 +512,7 @@ $utopia->post('/v1/projects/:projectId/webhooks')
 
 $utopia->get('/v1/projects/:projectId/webhooks')
     ->desc('List Webhooks')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listWebhooks')
@@ -516,7 +528,7 @@ $utopia->get('/v1/projects/:projectId/webhooks')
             $webhooks = $project->getAttribute('webhooks', []);
 
             foreach ($webhooks as $webhook) { /* @var $webhook Document */
-                $httpPass = json_decode($webhook->getAttribute('httpPass', '{}'), true);
+                $httpPass = \json_decode($webhook->getAttribute('httpPass', '{}'), true);
 
                 if (empty($httpPass) || !isset($httpPass['version'])) {
                     continue;
@@ -524,7 +536,7 @@ $utopia->get('/v1/projects/:projectId/webhooks')
 
                 $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
 
-                $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
+                $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
 
             $response->json($webhooks);
@@ -533,6 +545,7 @@ $utopia->get('/v1/projects/:projectId/webhooks')
 
 $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getWebhook')
@@ -552,11 +565,11 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
                 throw new Exception('Webhook not found', 404);
             }
 
-            $httpPass = json_decode($webhook->getAttribute('httpPass', '{}'), true);
+            $httpPass = \json_decode($webhook->getAttribute('httpPass', '{}'), true);
 
             if (!empty($httpPass) && isset($httpPass['version'])) {
                 $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-                $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
+                $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
 
             $response->json($webhook->getArrayCopy());
@@ -566,6 +579,7 @@ $utopia->get('/v1/projects/:projectId/webhooks/:webhookId')
 
 $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateWebhook')
@@ -574,8 +588,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('name', null, function () { return new Text(256); }, 'Webhook name.')
     ->param('events', null, function () { return new ArrayList(new Text(256)); }, 'Webhook events list.')
     ->param('url', null, function () { return new Text(2000); }, 'Webhook URL.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
-    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
     ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
     ->action(
         function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass) use ($request, $response, $consoleDB) {
@@ -585,14 +598,15 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
                 throw new Exception('Project not found', 404);
             }
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
-            $httpPass = json_encode([
+            $httpPass = \json_encode([
                 'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method' => OpenSSL::CIPHER_AES_128_GCM,
-                'iv' => bin2hex($iv),
-                'tag' => bin2hex($tag),
+                'iv' => \bin2hex($iv),
+                'tag' => \bin2hex($tag),
                 'version' => '1',
             ]);
 
@@ -621,6 +635,7 @@ $utopia->put('/v1/projects/:projectId/webhooks/:webhookId')
 
 $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete Webhook')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteWebhook')
@@ -652,6 +667,7 @@ $utopia->delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 $utopia->post('/v1/projects/:projectId/keys')
     ->desc('Create Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
@@ -674,7 +690,7 @@ $utopia->post('/v1/projects/:projectId/keys')
                 ],
                 'name' => $name,
                 'scopes' => $scopes,
-                'secret' => bin2hex(random_bytes(128)),
+                'secret' => \bin2hex(\random_bytes(128)),
             ]);
 
             if (false === $key) {
@@ -698,6 +714,7 @@ $utopia->post('/v1/projects/:projectId/keys')
 
 $utopia->get('/v1/projects/:projectId/keys')
     ->desc('List Keys')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
@@ -716,6 +733,7 @@ $utopia->get('/v1/projects/:projectId/keys')
 
 $utopia->get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
@@ -741,6 +759,7 @@ $utopia->get('/v1/projects/:projectId/keys/:keyId')
 
 $utopia->put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
@@ -777,6 +796,7 @@ $utopia->put('/v1/projects/:projectId/keys/:keyId')
 
 $utopia->delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete Key')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
@@ -808,6 +828,7 @@ $utopia->delete('/v1/projects/:projectId/keys/:keyId')
 
 $utopia->post('/v1/projects/:projectId/tasks')
     ->desc('Create Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createTask')
@@ -815,8 +836,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
     ->param('name', null, function () { return new Text(256); }, 'Task name.')
     ->param('status', null, function () { return new WhiteList(['play', 'pause']); }, 'Task status.')
     ->param('schedule', null, function () { return new Cron(); }, 'Task schedule CRON syntax.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
-    ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
     ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL')
     ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
     ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
@@ -832,14 +852,15 @@ $utopia->post('/v1/projects/:projectId/tasks')
             $cron = CronExpression::factory($schedule);
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
-            $httpPass = json_encode([
+            $httpPass = \json_encode([
                 'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method' => OpenSSL::CIPHER_AES_128_GCM,
-                'iv' => bin2hex($iv),
-                'tag' => bin2hex($tag),
+                'iv' => \bin2hex($iv),
+                'tag' => \bin2hex($tag),
                 'version' => '1',
             ]);
 
@@ -852,7 +873,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
                 'name' => $name,
                 'status' => $status,
                 'schedule' => $schedule,
-                'updated' => time(),
+                'updated' => \time(),
                 'previous' => null,
                 'next' => $next,
                 'security' => (int) $security,
@@ -890,6 +911,7 @@ $utopia->post('/v1/projects/:projectId/tasks')
 
 $utopia->get('/v1/projects/:projectId/tasks')
     ->desc('List Tasks')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listTasks')
@@ -905,7 +927,7 @@ $utopia->get('/v1/projects/:projectId/tasks')
             $tasks = $project->getAttribute('tasks', []);
 
             foreach ($tasks as $task) { /* @var $task Document */
-                $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
+                $httpPass = \json_decode($task->getAttribute('httpPass', '{}'), true);
 
                 if (empty($httpPass) || !isset($httpPass['version'])) {
                     continue;
@@ -913,7 +935,7 @@ $utopia->get('/v1/projects/:projectId/tasks')
 
                 $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
 
-                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
+                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
 
             $response->json($tasks);
@@ -922,6 +944,7 @@ $utopia->get('/v1/projects/:projectId/tasks')
 
 $utopia->get('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Get Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getTask')
@@ -941,11 +964,11 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
                 throw new Exception('Task not found', 404);
             }
 
-            $httpPass = json_decode($task->getAttribute('httpPass', '{}'), true);
+            $httpPass = \json_decode($task->getAttribute('httpPass', '{}'), true);
 
             if (!empty($httpPass) && isset($httpPass['version'])) {
                 $key = $request->getServer('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, hex2bin($httpPass['iv']), hex2bin($httpPass['tag'])));
+                $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
             }
 
             $response->json($task->getArrayCopy());
@@ -954,6 +977,7 @@ $utopia->get('/v1/projects/:projectId/tasks/:taskId')
 
 $utopia->put('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Update Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateTask')
@@ -962,7 +986,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
     ->param('name', null, function () { return new Text(256); }, 'Task name.')
     ->param('status', null, function () { return new WhiteList(['play', 'pause']); }, 'Task status.')
     ->param('schedule', null, function () { return new Cron(); }, 'Task schedule CRON syntax.')
-    ->param('security', null, function () { return new Range(0, 1); }, 'Certificate verification, 0 for disabled or 1 for enabled.')
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
     ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL.')
     ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
@@ -985,14 +1009,15 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
             $cron = CronExpression::factory($schedule);
             $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
+            $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
             $key = $request->getServer('_APP_OPENSSL_KEY_V1');
             $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
             $tag = null;
-            $httpPass = json_encode([
+            $httpPass = \json_encode([
                 'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
                 'method' => OpenSSL::CIPHER_AES_128_GCM,
-                'iv' => bin2hex($iv),
-                'tag' => bin2hex($tag),
+                'iv' => \bin2hex($iv),
+                'tag' => \bin2hex($tag),
                 'version' => '1',
             ]);
 
@@ -1000,7 +1025,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
                 ->setAttribute('name', $name)
                 ->setAttribute('status', $status)
                 ->setAttribute('schedule', $schedule)
-                ->setAttribute('updated', time())
+                ->setAttribute('updated', \time())
                 ->setAttribute('next', $next)
                 ->setAttribute('security', (int) $security)
                 ->setAttribute('httpMethod', $httpMethod)
@@ -1024,6 +1049,7 @@ $utopia->put('/v1/projects/:projectId/tasks/:taskId')
 
 $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
     ->desc('Delete Task')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteTask')
@@ -1055,6 +1081,7 @@ $utopia->delete('/v1/projects/:projectId/tasks/:taskId')
 
 $utopia->post('/v1/projects/:projectId/platforms')
     ->desc('Create Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
@@ -1083,8 +1110,8 @@ $utopia->post('/v1/projects/:projectId/platforms')
                 'key' => $key,
                 'store' => $store,
                 'hostname' => $hostname,
-                'dateCreated' => time(),
-                'dateUpdated' => time(),
+                'dateCreated' => \time(),
+                'dateUpdated' => \time(),
             ]);
 
             if (false === $platform) {
@@ -1108,6 +1135,7 @@ $utopia->post('/v1/projects/:projectId/platforms')
     
 $utopia->get('/v1/projects/:projectId/platforms')
     ->desc('List Platforms')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
@@ -1128,6 +1156,7 @@ $utopia->get('/v1/projects/:projectId/platforms')
 
 $utopia->get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
@@ -1153,6 +1182,7 @@ $utopia->get('/v1/projects/:projectId/platforms/:platformId')
 
 $utopia->put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
@@ -1178,7 +1208,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
 
             $platform
                 ->setAttribute('name', $name)
-                ->setAttribute('dateUpdated', time())
+                ->setAttribute('dateUpdated', \time())
                 ->setAttribute('key', $key)
                 ->setAttribute('store', $store)
                 ->setAttribute('hostname', $hostname)
@@ -1194,6 +1224,7 @@ $utopia->put('/v1/projects/:projectId/platforms/:platformId')
 
 $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete Platform')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
@@ -1225,6 +1256,7 @@ $utopia->delete('/v1/projects/:projectId/platforms/:platformId')
 
 $utopia->post('/v1/projects/:projectId/domains')
     ->desc('Create Domain')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createDomain')
@@ -1246,7 +1278,7 @@ $utopia->post('/v1/projects/:projectId/domains')
 
             $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
-            if(!$target->isKnown() || $target->isTest()) {
+            if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
             }
 
@@ -1258,7 +1290,7 @@ $utopia->post('/v1/projects/:projectId/domains')
                     'read' => ['team:'.$project->getAttribute('teamId', null)],
                     'write' => ['team:'.$project->getAttribute('teamId', null).'/owner', 'team:'.$project->getAttribute('teamId', null).'/developer'],
                 ],
-                'updated' => time(),
+                'updated' => \time(),
                 'domain' => $domain->get(),
                 'tld' => $domain->getSuffix(),
                 'registerable' => $domain->getRegisterable(),
@@ -1287,6 +1319,7 @@ $utopia->post('/v1/projects/:projectId/domains')
 
 $utopia->get('/v1/projects/:projectId/domains')
     ->desc('List Domains')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listDomains')
@@ -1307,6 +1340,7 @@ $utopia->get('/v1/projects/:projectId/domains')
 
 $utopia->get('/v1/projects/:projectId/domains/:domainId')
     ->desc('Get Domain')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getDomain')
@@ -1332,6 +1366,7 @@ $utopia->get('/v1/projects/:projectId/domains/:domainId')
 
 $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->desc('Update Domain Verification Status')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateDomainVerification')
@@ -1353,18 +1388,18 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
 
             $target = new Domain($request->getServer('_APP_DOMAIN_TARGET', ''));
 
-            if(!$target->isKnown() || $target->isTest()) {
+            if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target ('.$target->get().'), plesse use a domain with a public suffix.', 500);
             }
 
-            if($domain->getAttribute('verification') === true) {
+            if ($domain->getAttribute('verification') === true) {
                 return $response->json($domain->getArrayCopy());
             }
 
             // Verify Domain with DNS records
             $validator = new CNAME($target->get());
 
-            if(!$validator->isValid($domain->getAttribute('domain', ''))) {
+            if (!$validator->isValid($domain->getAttribute('domain', ''))) {
                 throw new Exception('Failed to verify domain', 401);
             }
 
@@ -1388,6 +1423,7 @@ $utopia->patch('/v1/projects/:projectId/domains/:domainId/verification')
 
 $utopia->delete('/v1/projects/:projectId/domains/:domainId')
     ->desc('Delete Domain')
+    ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteDomain')

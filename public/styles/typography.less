@@ -17,29 +17,64 @@ a, .link {
   text-decoration: none;
   border-left: 2px solid transparent;
   border-right: 2px solid transparent;
-  border-bottom: solid 1px transparent;
+  transition: 200ms;
+  cursor: pointer;
 
   &:hover {
-    border-bottom: dotted 1px var(--config-color-link);
-    cursor: pointer;
+    //transform: translateY(-2px);
   }
 
   &.disabled {
     opacity: .5;
   }
 
-  &.disabled:hover {
-    border-bottom: none;
-  }
-
   &.tag:hover {
-    border-bottom: none;
     opacity: .9;
   }
 
   &.danger {
     color: var(--config-color-danger);
   }
+}
+
+a.link-animation-enabled,
+.link.link-animation-enabled {
+  display: inline-block;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.func-link-return-animation(@pos) {
+  & > i {
+    display: inline-block;
+    transition: 200ms;
+  }
+  
+  &:hover > i {
+    transform: translateX(@pos);
+  }
+}
+
+@link-return-animation-offset: 2px;
+
+.link-return-animation--start {
+  .func-link-return-animation(
+    if((@config-start = right),
+      @link-return-animation-offset,
+      -@link-return-animation-offset
+    )
+  );
+}
+
+.link-return-animation--end {
+  .func-link-return-animation(
+    if((@config-start = right),
+      -@link-return-animation-offset,
+      @link-return-animation-offset
+    )
+  );
 }
 
 b, strong {
@@ -196,4 +231,12 @@ small {
 
 .icon-dot-3:before {
   .func-rotate(90deg);
+}
+
+// fix icons vertical alignment
+i[class^='icon-'], i[class*=' icon-']{
+  &:before {
+    display: inline;
+    line-height: unset;
+  }
 }

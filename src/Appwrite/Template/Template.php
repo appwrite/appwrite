@@ -23,13 +23,13 @@ class Template extends View
             return '';
         }
 
-        if (is_readable($this->path)) {
-            $template = file_get_contents($this->path); // Include template file
+        if (\is_readable($this->path)) {
+            $template = \file_get_contents($this->path); // Include template file
         } else {
             throw new Exception('"'.$this->path.'" template is not readable or not found');
         }
 
-        $template = str_replace(array_keys($this->params), array_values($this->params), $template);
+        $template = \str_replace(\array_keys($this->params), \array_values($this->params), $template);
 
         return $template;
     }
@@ -45,7 +45,7 @@ class Template extends View
      */
     public static function parseURL($url)
     {
-        return parse_url($url);
+        return \parse_url($url);
     }
 
     /**
@@ -89,10 +89,10 @@ class Template extends View
     {
         $parsed = [];
 
-        parse_str($query1, $parsed);
+        \parse_str($query1, $parsed);
 
-        $parsed = array_merge($parsed, $query2);
+        $parsed = \array_merge($parsed, $query2);
 
-        return http_build_query($parsed);
+        return \http_build_query($parsed);
     }
 }

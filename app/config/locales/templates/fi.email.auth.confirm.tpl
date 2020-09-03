@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Hei {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Varmista sähköpostiosoite tästä linkistä.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Jos et kysynyt tämän sähköpostiosoitteen varmistamista, voit sivuuttaa tämän viestin.
-    <br />
-    <br />
+</p>
+<p>
     kiitos,
     <br />
     {{project}} tiimi
-</div>
+</p>

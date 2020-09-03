@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Kamusta {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Sundun ang link na ito upang ma-verify ang iyong email address.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Kung hindi mo hiniling na i-verify ang address na ito, maaari mong balewalain ang mensaheng ito.
-    <br />
-    <br />
+</p>
+<p>
     Salamat,
     <br />
     Pangkat ng {{project}}
-</div>
+</p>

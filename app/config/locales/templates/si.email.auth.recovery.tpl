@@ -1,25 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     ආයුබෝවන් {{name}},
-    <br />
-    <br />
+</p>
+<p>
     ඔබගේ {{project}} ව්‍යාපෘතියෙහි මුරපදය නැවත සැකසීමට මෙම සබැඳිය අනුගමනය කරන්න
-   
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     ඔබගේ මුරපදය නැවත සැකසීමට ඔබ ඉල්ලා නොසිටියේ නම්, ඔබට මෙම පණිවිඩය නොසලකා හැරිය හැක.
-    <br />
-    <br />
+</p>
+<p>
     ස්තූතියි,
     <br />
     {{project}} කණ්ඩායම
-</div>
+</p>

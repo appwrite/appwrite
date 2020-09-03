@@ -115,10 +115,14 @@ class Teams extends Service {
      /// Get team members by the team unique ID. All team members have read access
      /// for this list of resources.
      ///
-    Future<Response> getMemberships({@required String teamId}) {
+    Future<Response> getMemberships({@required String teamId, String search = '', int limit = 25, int offset = 0, OrderType orderType = OrderType.asc}) {
         final String path = '/teams/{teamId}/memberships'.replaceAll(RegExp('{teamId}'), teamId);
 
         final Map<String, dynamic> params = {
+            'search': search,
+            'limit': limit,
+            'offset': offset,
+            'orderType': orderType.name(),
         };
 
         final Map<String, String> headers = {

@@ -1,6 +1,6 @@
 The Database service allows you to create structured collections of documents, query and filter lists of documents, and manage an advanced set of read and write access permissions.
 
-All the data in the database service is stored in structured JSON documents. The Appwrite database service also allows you to nest child documents in parent documents and use advanced filters to both search and query the database just like you would with a classic graph database.
+All the data in the database service is stored in structured JSON documents. The Appwrite database service also allows you to nest child documents in parent documents and use deep filters to both search and query your data.
 
 Each database document structure in your project is defined using the Appwrite [collection rules](/docs/rules). The collections rules help you ensure all your user-submitted data is validated and stored according to the collection structure.
 

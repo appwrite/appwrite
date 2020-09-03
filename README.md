@@ -2,13 +2,13 @@
     <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/github-logo.png" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] client app</b>
+    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
     <br />
     <br />
 </p>
 
 
-[![Discord](https://badgen.net/badge/discord/chat/green)](https://discord.gg/GSeTUeA)
+[![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://travis-ci.org/appwrite/appwrite)
 [![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.org/appwrite/appwrite)
 [![Twitter Account](https://badgen.net/twitter/follow/appwrite_io?label=twitter)](https://twitter.com/appwrite_io)

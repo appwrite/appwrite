@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Ողջույն, {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Անցեք հղումով, որպեսզի փոխեք գաղտնաբառը {{project}} պրոեկտի համար։
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Եթե չեք պահանջել գաղտնաբառի փոփոխություն, արհամարհեք այս նամակը։
-    <br />
-    <br />
+</p>
+<p>
     Շնորհակալություն
     <br />
     {{project}} թիմ
-</div>
+</p>

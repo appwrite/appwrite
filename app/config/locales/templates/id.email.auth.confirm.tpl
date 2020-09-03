@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halo {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Ikuti link ini untuk memverifikasi alamat email Anda.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Jika Anda tidak meminta untuk memverifikasi alamat ini, Anda dapat mengabaikan pesan ini.
-    <br />
-    <br />
+</p>
+<p>
     Terima kasih,
     <br />
     Tim {{project}}
-</div>
+</p>

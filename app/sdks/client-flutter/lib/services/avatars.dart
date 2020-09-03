@@ -165,6 +165,42 @@ class Avatars extends Service {
         return location.toString();
     }
 
+     /// Get User Initials
+     ///
+     /// Use this endpoint to show your user initials avatar icon on your website or
+     /// app. By default, this route will try to print your logged-in user name or
+     /// email initials. You can also overwrite the user name if you pass the 'name'
+     /// parameter. If no name is given and no user is logged, an empty avatar will
+     /// be returned.
+     /// 
+     /// You can use the color and background params to change the avatar colors. By
+     /// default, a random theme will be selected. The random theme will persist for
+     /// the user's initials when reloading the same theme will always return for
+     /// the same initials.
+     ///
+    String getInitials({String name = '', int width = 500, int height = 500, String color = '', String background = ''}) {
+        final String path = '/avatars/initials';
+
+        final Map<String, dynamic> params = {
+            'name': name,
+            'width': width,
+            'height': height,
+            'color': color,
+            'background': background,
+            'project': client.config['project'],
+        };
+
+        Uri endpoint = Uri.parse(client.endPoint);
+        Uri location = new Uri(scheme: endpoint.scheme,
+          host: endpoint.host,
+          port: endpoint.port,
+          path: endpoint.path + path,
+          queryParameters:params,
+        );
+
+        return location.toString();
+    }
+
      /// Get QR Code
      ///
      /// Converts a given plain text to a QR code image. You can use the query

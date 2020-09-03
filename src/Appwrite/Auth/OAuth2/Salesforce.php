@@ -38,7 +38,7 @@ class Salesforce extends OAuth2
      */
     public function parseState(string $state)
     {
-        return json_decode(html_entity_decode($state), true);
+        return \json_decode(\html_entity_decode($state), true);
     }
 
 
@@ -47,12 +47,12 @@ class Salesforce extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://login.salesforce.com/services/oauth2/authorize?'.http_build_query([
+        return 'https://login.salesforce.com/services/oauth2/authorize?'.\http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'redirect_uri'=> $this->callback,
-                'scope'=> implode(' ', $this->getScopes()),
-                'state' => json_encode($this->state)
+                'scope'=> \implode(' ', $this->getScopes()),
+                'state' => \json_encode($this->state)
             ]);
     }
 
@@ -64,7 +64,7 @@ class Salesforce extends OAuth2
     public function getAccessToken(string $code): string
     {
         $headers = [
-            "Authorization: Basic " . base64_encode($this->appID . ":" . $this->appSecret),
+            "Authorization: Basic " . \base64_encode($this->appID . ":" . $this->appSecret),
             "Content-Type: application/x-www-form-urlencoded",
         ];
 
@@ -72,13 +72,13 @@ class Salesforce extends OAuth2
             'POST',
             'https://login.salesforce.com/services/oauth2/token',
             $headers,
-            http_build_query([
+            \http_build_query([
                 'code' => $code,
                 'redirect_uri' => $this->callback ,
                 'grant_type' => 'authorization_code'
             ])
         );
-        $accessToken = json_decode($accessToken, true);
+        $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -143,8 +143,8 @@ class Salesforce extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo?access_token='.urlencode($accessToken));
-            $this->user = json_decode($user, true);
+            $user = $this->request('GET', 'https://login.salesforce.com/services/oauth2/userinfo?access_token='.\urlencode($accessToken));
+            $this->user = \json_decode($user, true);
         }
         return $this->user;
     }

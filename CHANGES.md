@@ -1,6 +1,55 @@
 # Version 0.7.0 (NOT-RELEASED)
 
-- New route in Locale API to fetch a list of languages
+## Features
+
+- New route in Locale API to fetch a list of languages (@TorstenDittmann)
+- Added Google Fonts to Appwrite for offline availability
+- Added a new route in the Avatars API to get user initials avatar
+- Added option to delete team from the console
+- Added option to view team members from the console
+- Added option to join a user to any team from the console
+- Added support for Brotli compression (@PedroCisnerosSantana, @Rohitub222)
+- New UI micro-interactions and CSS fixes (@AnatoleLucet)
+- UI performance & accessibility improvments (#406)
+- New Doctor CLI to debug the Appwrite server ([#415](https://github.com/appwrite/appwrite/issues/415))
+- All emails are now sent asynchronously for improved performance (@TorstenDittmann)
+- Updated grid for OAuth2 providers list in the console
+- Upgraded Redis Resque queue library to version 1.3.6
+- Added container names to docker-compose.yml (@drandell)
+- Upgraded ClamAV container image to version 1.0.11 ([#412](https://github.com/appwrite/appwrite/issues/412))
+- Optimised function execution by using fully-qualified function calls
+- Added support for boolean 'true' and 'false' in query strings alongside 1 and 0
+
+## Bug Fixes
+
+- Fixed output of /v1/health/queue/certificates returning wrong data
+- Fixed bug where team members count was wrong in some cases
+- Fixed network calculation for uploaded files
+- Fixed a UI bug preventing float values in numeric fields
+- Fixed scroll positioning when moving rules order up & down
+- Fixed missing validation for database documents key length (32 chars)
+- Grammer fix for pt-br email templates (@rubensdemelo)
+- Fixed update form labels and tooltips for Flutter Android apps
+- Fixed missing custom scopes param for OAuth2 session create API route
+- Fixed wrong JSON validation when creating and updating database documnets
+- Fixed bug where max file size was limited to max of 10MB
+- Fixed bug preventing the deletion of the project logo
+- Fixed Bug when trying to overwrite OAuth cookie in the Flutter SDK
+- Fixed OAuth redirect when using the self-hosted instance default success URL ([#454](https://github.com/appwrite/appwrite/issues/454))
+- Fixed bug denying authentication with Github OAuth provider
+- New OAuth adapter for Box.com
+- New OAuth adapter for PayPal sandbox
+- Fixed a bug making read permission overwrite write permission in some cases
+
+## Breaking Changes
+- **Deprecated** `first` and `last` query params for documents list route in the database API
+- **Deprecated** Deprectaed Pubjabi Translations ('pn')
+
+## Security
+
+- Access to Health API now requires authentication with an API Key with access to `health.read` scope allowed
+- Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
+- Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 
 # Version 0.6.2 (PRE-RELEASE)
 

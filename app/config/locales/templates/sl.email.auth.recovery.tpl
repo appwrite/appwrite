@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Pozdravljeni {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Za ponastavitev vašega {{project}} gesla sledite tej povezavi.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Če niste zahtevali ponastavitve gesla, lahko to sporočilo prezrete.
-    <br />
-    <br />
+</p>
+<p>
     Hvala,
     <br />
     {{project}} ekipa
-</div>
+</p>

@@ -1,27 +1,18 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Ahoj,
-    <br />
-    <br />
+</p>
+<p>
     Tento e-mail vám byl zaslán, protože vás <b>{{owner}}</b> chtěl pozvat, abyste se stali členem týmu v týmu <b>{{team}}</b> v {{project}}.
-    <br />
-    <br />
+</p>
+<p>
     Klepnutím na tento odkaz se připojíte k týmu <b>{{team}}</b>:
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Pokud vás nezajímá, můžete tuto zprávu ignorovat.
-    <br />
-    <br />
+</p>
+<p>
     Dík,
     <br />
     {{project}} tým
-</div>
+</p>

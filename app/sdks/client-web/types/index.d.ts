@@ -64,10 +64,10 @@ declare namespace Appwrite {
          *
          * Use this endpoint to allow a new user to register a new account in your
          * project. After the user registration completes successfully, you can use
-         * the [/account/verfication](/docs/account#createVerification) route to start
-         * verifying the user email address. To allow your new user to login to his
-         * new account, you need to create a new [account
-         * session](/docs/account#createSession).
+         * the [/account/verfication](/docs/client/account#createVerification) route
+         * to start verifying the user email address. To allow your new user to login
+         * to his new account, you need to create a new [account
+         * session](/docs/client/account#createSession).
 	     *
          * @param {string} email
          * @param {string} password
@@ -170,7 +170,7 @@ declare namespace Appwrite {
          * When the user clicks the confirmation link he is redirected back to your
          * app password reset URL with the secret key and email address values
          * attached to the URL query string. Use the query string params to submit a
-         * request to the [PUT /account/recovery](/docs/account#updateRecovery)
+         * request to the [PUT /account/recovery](/docs/client/account#updateRecovery)
          * endpoint to complete the process.
 	     *
          * @param {string} email
@@ -186,7 +186,7 @@ declare namespace Appwrite {
          * Use this endpoint to complete the user account password reset. Both the
          * **userId** and **secret** arguments will be passed as query parameters to
          * the redirect URL you have provided when sending your request to the [POST
-         * /account/recovery](/docs/account#createRecovery) endpoint.
+         * /account/recovery](/docs/client/account#createRecovery) endpoint.
          * 
          * Please note that in order to avoid a [Redirect
          * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -248,10 +248,11 @@ declare namespace Appwrite {
          * @param {string} provider
          * @param {string} success
          * @param {string} failure
+         * @param {string[]} scopes
          * @throws {Error}
          * @return {Promise}         
          */
-	    createOAuth2Session(provider: string, success: string, failure: string): Promise<object>;
+	    createOAuth2Session(provider: string, success: string, failure: string, scopes: string[]): Promise<object>;
 
         /**
          * Delete Account Session
@@ -276,7 +277,7 @@ declare namespace Appwrite {
          * should redirect the user back for your app and allow you to complete the
          * verification process by verifying both the **userId** and **secret**
          * parameters. Learn more about how to [complete the verification
-         * process](/docs/account#updateAccountVerification). 
+         * process](/docs/client/account#updateAccountVerification). 
          * 
          * Please note that in order to avoid a [Redirect
          * Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
@@ -387,6 +388,30 @@ declare namespace Appwrite {
 	    getImage(url: string, width: number, height: number): string;
 
         /**
+         * Get User Initials
+         *
+         * Use this endpoint to show your user initials avatar icon on your website or
+         * app. By default, this route will try to print your logged-in user name or
+         * email initials. You can also overwrite the user name if you pass the 'name'
+         * parameter. If no name is given and no user is logged, an empty avatar will
+         * be returned.
+         * 
+         * You can use the color and background params to change the avatar colors. By
+         * default, a random theme will be selected. The random theme will persist for
+         * the user's initials when reloading the same theme will always return for
+         * the same initials.
+	     *
+         * @param {string} name
+         * @param {number} width
+         * @param {number} height
+         * @param {string} color
+         * @param {string} background
+         * @throws {Error}
+         * @return {string}         
+         */
+	    getInitials(name: string, width: number, height: number, color: string, background: string): string;
+
+        /**
          * Get QR Code
          *
          * Converts a given plain text to a QR code image. You can use the query
@@ -431,7 +456,10 @@ declare namespace Appwrite {
         /**
          * Create Document
          *
-         * Create a new Document.
+         * Create a new Document. Before using this route, you should create a new
+         * collection resource using either a [server
+         * integration](/docs/server/database?sdk=nodejs#createCollection) API or
+         * directly from your database console.
 	     *
          * @param {string} collectionId
          * @param {object} data
@@ -552,14 +580,25 @@ declare namespace Appwrite {
         /**
          * List Currencies
          *
-         * List of all currencies, including currency symol, name, plural, and decimal
-         * digits for all major and minor currencies. You can use the locale header to
-         * get the data in a supported language.
+         * List of all currencies, including currency symbol, name, plural, and
+         * decimal digits for all major and minor currencies. You can use the locale
+         * header to get the data in a supported language.
 	     *
          * @throws {Error}
          * @return {Promise}         
          */
 	    getCurrencies(): Promise<object>;
+
+        /**
+         * List Languages
+         *
+         * List of all languages classified by ISO 639-1 including 2-letter code, name
+         * in English, and name in the respective language.
+	     *
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getLanguages(): Promise<object>;
 
 	}
 
@@ -758,10 +797,14 @@ declare namespace Appwrite {
          * for this list of resources.
 	     *
          * @param {string} teamId
+         * @param {string} search
+         * @param {number} limit
+         * @param {number} offset
+         * @param {string} orderType
          * @throws {Error}
          * @return {Promise}         
          */
-	    getMemberships(teamId: string): Promise<object>;
+	    getMemberships(teamId: string, search: string, limit: number, offset: number, orderType: string): Promise<object>;
 
         /**
          * Create Team Membership
@@ -772,8 +815,8 @@ declare namespace Appwrite {
          * 
          * Use the 'URL' parameter to redirect the user from the invitation email back
          * to your app. When the user is redirected, use the [Update Team Membership
-         * Status](/docs/teams#updateMembershipStatus) endpoint to allow the user to
-         * accept the invitation to the team.
+         * Status](/docs/client/teams#updateMembershipStatus) endpoint to allow the
+         * user to accept the invitation to the team.
          * 
          * Please note that in order to avoid a [Redirect
          * Attacks](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)

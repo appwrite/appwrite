@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Bonjour {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Cliquez sur le lien suivant pour réinitialiser votre mot de passe pour le projet {{project}}.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Si vous n'êtes pas à l'origine de cette demande de réinitialisation de mot de passe, vous pouvez ignorer ce message.
-    <br />
-    <br />
+</p>
+<p>
     Merci,
     <br />
     L'équipe {{project}}
-</div>
+</p>

@@ -6,7 +6,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
 ?>
 <div class="cover">
     <h1 class="zone xl margin-bottom-large">
-        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small"><i class="icon-left-open"></i> Home</a>
+        <a data-ls-attrs="href=/console/home?project={{router.params.project}}" class="back text-size-small link-return-animation--start"><i class="icon-left-open"></i> Home</a>
         <br />
 
         <span>Settings</span>
@@ -27,8 +27,10 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
             <li data-state="/console/settings?project={{router.params.project}}">
                 <h2>Overview</h2>
 
-                <div class="row responsive">
+                <div class="row responsive margin-top-negative">
                     <div class="col span-8 margin-bottom">
+                        <label>&nbsp;</label>
+
                         <div class="box margin-bottom-large">
                             <form
                                 data-analytics-event="submit"
@@ -53,7 +55,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                 <label for="logo">Project Logo</label>
 
                                 <div class="text-align-center clear">
-                                    <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-read="<?php echo $this->escape(json_encode(['*'])); ?>" data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>" data-accept="image/*" data-forms-upload="" data-label-button="Upload" data-scope="console" data-default="">
+                                    <input type="hidden" name="logo" data-ls-bind="{{console-project.logo}}" data-read="<?php echo $this->escape(json_encode(['*'])); ?>" data-write="<?php echo $this->escape(json_encode(['team:{{console-project.teamId}}'])); ?>" data-accept="image/*" data-forms-upload="" data-label-button="Upload" data-preview-alt="Project Logo" data-scope="console" data-default="">
                                 </div>
 
                                 <hr />
@@ -359,7 +361,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                     <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                                     <label for="name">Domain Name</label>
-                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" title="Enter a valid domain name" pattern="^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$" />
+                                    <input type="text" class="full-width" id="domain" name="domain" placeholder="appwrite.example.com" required autocomplete="off" title="Enter a valid domain name" pattern="^([a-zA-Z0-9][a-zA-Z0-9-_]*\.)*[a-zA-Z0-9]*[a-zA-Z0-9-_]*[[a-zA-Z0-9]+$" />
                                     
                                     <hr />
 
@@ -383,7 +385,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                     data-success-param-trigger-events="teams.getMemberships">
 
                     <div class="box margin-bottom">
-                        <ul data-ls-loop="members" data-ls-as="member" class="list">
+                        <ul data-ls-loop="members.memberships" data-ls-as="member" class="list">
                             <li class="clear">
                                 <form class="pull-end"
                                     data-analytics-event="submit"
@@ -430,10 +432,10 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                         data-scope="console"
                                         data-event="teams.deleteMembership.resend"
                                         data-success="alert,trigger"
-                                        data-success-param-alert-text="Invitation Sent Successfully"
+                                        data-success-param-alert-text="Invitation sent successfully"
                                         data-success-param-trigger-events="teams.createMembership.resent"
                                         data-failure="alert"
-                                        data-failure-param-alert-text="Failed to Send inivitation"
+                                        data-failure-param-alert-text="Failed to send inivitation"
                                         data-failure-param-alert-classname="error">
 
                                         <input name="teamId" type="hidden" data-ls-bind="{{member.teamId}}">
@@ -444,7 +446,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                     </form>
                                 </div>
 
-                                <img src="" data-ls-attrs="src={{member|gravatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
+                                <img src="" data-ls-attrs="src={{member|avatar}}" data-size="200" alt="User Avatar" class="avatar pull-start margin-end" loading="lazy" width="60" height="60" />
 
                                 <div class="margin-bottom-tiny">
                                     <span data-ls-bind="{{member.name}}"></span> &nbsp;&nbsp;<span class="tag" data-ls-bind="{{member.roles.0}}"></span> &nbsp;&nbsp;<span data-ls-if="false === {{member.confirm}}" class="tag red">Pending Approval</span>
@@ -468,10 +470,10 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                             data-event="submit"
                             data-loading="Sending invitation, please wait..."
                             data-success="alert,trigger,reset"
-                            data-success-param-alert-text="Invitation Sent Successfully"
+                            data-success-param-alert-text="Invitation sent successfully"
                             data-success-param-trigger-events="teams.createMembership"
                             data-failure="alert"
-                            data-failure-param-alert-text="Failed to Send Invite"
+                            data-failure-param-alert-text="Failed to send invite"
                             data-failure-param-alert-classname="error">
 
                             <input name="teamId" id="team-teamId" type="hidden" data-ls-bind="{{console-project.teamId}}">

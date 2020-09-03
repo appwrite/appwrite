@@ -10,7 +10,11 @@ Set your server running environment. By default, the var is set to 'development'
 
 ### _APP_OPTIONS_ABUSE
 
-Allows you to disable abuse checks and API rate limiting. By default, set to 'enabled'. To cancel the abuse checking, set to 'disabled'. It is not recommended to disable this check-in a production environment.
+Allows you to disable abuse checks and API rate limiting. By default, set to 'enabled'. To cancel the abuse checking, set to 'disabled'. It is not recommended to disable this feature in a production environment.
+
+### _APP_OPTIONS_FORCE_HTTPS
+
+Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the 'Strict-Transport-Security' header to all HTTP responses. By default, set to 'disabled'. To enable, set to 'enabled'. This feature will work only when your ports are set to default 80 and 443.
 
 ### _APP_OPENSSL_KEY_V1
 
@@ -92,11 +96,11 @@ InfluxDB server TCP port. Default value is: '8086'
 
 Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.
 
-### _APP_INFLUXDB_HOST
+### _APP_STATSD_HOST
 
 StatsD server host name address. Default value is: 'telegraf'
 
-### _APP_INFLUXDB_PORT
+### _APP_STATSD_PORT
 
 StatsD server TCP port. Default value is: '8125'
 

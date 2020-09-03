@@ -14,6 +14,7 @@ global $utopia;
 
 $utopia->post('/v1/graphql')
     ->desc('GraphQL Endpoint')
+    ->groups(['api', 'graphql'])
     ->label('scope', 'public')
     ->action(
         function () {

@@ -1,7 +1,5 @@
 <?php
 
-include_once __DIR__ . '/../shared/web.php';
-
 global $utopia, $response, $request, $layout, $projectDB;
 
 use Utopia\View;
@@ -14,9 +12,10 @@ use Appwrite\Storage\Storage;
 
 $utopia->init(function () use ($layout) {
     $layout
+        ->setParam('description', 'Appwrite Console allows you to easily manage, monitor, and control your entire backend API and tools.')
         ->setParam('analytics', 'UA-26264668-5')
     ;
-});
+}, 'console');
 
 $utopia->shutdown(function () use ($response, $request, $layout) {
     $header = new View(__DIR__.'/../../views/console/comps/header.phtml');
@@ -33,10 +32,10 @@ $utopia->shutdown(function () use ($response, $request, $layout) {
     ;
 
     $response->send($layout->render());
-});
+}, 'console');
 
 $utopia->get('/error/:code')
-    ->desc('Error page')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'home')
     ->param('code', null, new \Utopia\Validator\Numeric(), 'Valid status code number', false)
@@ -53,6 +52,7 @@ $utopia->get('/error/:code')
     });
 
 $utopia->get('/console')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout, $request) {
@@ -68,6 +68,7 @@ $utopia->get('/console')
     });
 
 $utopia->get('/console/account')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -85,7 +86,7 @@ $utopia->get('/console/account')
     });
 
 $utopia->get('/console/notifications')
-    ->desc('Platform console notifications')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -97,7 +98,7 @@ $utopia->get('/console/notifications')
     });
 
 $utopia->get('/console/home')
-    ->desc('Platform console project home')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -109,7 +110,7 @@ $utopia->get('/console/home')
     });
 
 $utopia->get('/console/settings')
-    ->desc('Platform console project settings')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($request, $layout) {
@@ -128,7 +129,7 @@ $utopia->get('/console/settings')
     });
 
 $utopia->get('/console/webhooks')
-    ->desc('Platform console project webhooks')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -144,7 +145,7 @@ $utopia->get('/console/webhooks')
     });
 
 $utopia->get('/console/keys')
-    ->desc('Platform console project keys')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -159,7 +160,7 @@ $utopia->get('/console/keys')
     });
 
 $utopia->get('/console/tasks')
-    ->desc('Platform console project tasks')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -171,7 +172,7 @@ $utopia->get('/console/tasks')
     });
 
 $utopia->get('/console/database')
-    ->desc('Platform console project settings')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -183,7 +184,7 @@ $utopia->get('/console/database')
     });
 
 $utopia->get('/console/database/collection')
-    ->desc('Platform console project database collection')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('id', '', function () { return new UID(); }, 'Collection unique ID.')
@@ -212,11 +213,10 @@ $utopia->get('/console/database/collection')
             ->addHeader('Expires', 0)
             ->addHeader('Pragma', 'no-cache')
         ;
-
     });
 
 $utopia->get('/console/database/document')
-    ->desc('Platform console project database document')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->param('collection', '', function () { return new UID(); }, 'Collection unique ID.')
@@ -246,7 +246,7 @@ $utopia->get('/console/database/document')
     });
 
 $utopia->get('/console/storage')
-    ->desc('Platform console project settings')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($request, $layout) {
@@ -264,7 +264,7 @@ $utopia->get('/console/storage')
     });
 
 $utopia->get('/console/users')
-    ->desc('Platform console project settings')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
@@ -277,14 +277,26 @@ $utopia->get('/console/users')
             ->setParam('body', $page);
     });
 
-$utopia->get('/console/users/view')
-    ->desc('Platform console project user')
+$utopia->get('/console/users/user')
+    ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
     ->action(function () use ($layout) {
-        $page = new View(__DIR__.'/../../views/console/users/view.phtml');
+        $page = new View(__DIR__.'/../../views/console/users/user.phtml');
 
         $layout
-            ->setParam('title', APP_NAME.' - View User')
+            ->setParam('title', APP_NAME.' - User')
+            ->setParam('body', $page);
+    });
+
+$utopia->get('/console/users/teams/team')
+    ->groups(['web', 'console'])
+    ->label('permission', 'public')
+    ->label('scope', 'console')
+    ->action(function () use ($layout) {
+        $page = new View(__DIR__.'/../../views/console/users/team.phtml');
+
+        $layout
+            ->setParam('title', APP_NAME.' - Team')
             ->setParam('body', $page);
     });

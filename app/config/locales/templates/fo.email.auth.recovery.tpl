@@ -1,24 +1,15 @@
-<style>
-    * {
-        font-family: sans-serif,Arial;
-        -webkit-font-smoothing: antialiased;
-        font-weight: lighter;
-    }
-</style>
-
-<div style="direction: {{direction}}">
+<p>
     Halló {{name}},
-    <br />
-    <br />
+</p>
+<p>
     Fylg hettar lenka fyrið at resette títt {{project}} passord.
-    <br />
-    <a href="{{redirect}}">{{redirect}}</a>
-    <br />
-    <br />
+</p>
+{{cta}}
+<p>
     Om tú ikke spurdi om at verifisera hesa telduposturin, kannst du ignorera hesa boð.
-    <br />
-    <br />
+</p>
+<p>
     Takk,
     <br />
     {{project}} lið
-</div>
+</p>

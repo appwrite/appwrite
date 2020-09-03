@@ -36,11 +36,11 @@ class Facebook extends OAuth2
      */
     public function getLoginURL():string
     {
-        return 'https://www.facebook.com/'.$this->version.'/dialog/oauth?'.http_build_query([
+        return 'https://www.facebook.com/'.$this->version.'/dialog/oauth?'.\http_build_query([
             'client_id'=> $this->appID,
             'redirect_uri' => $this->callback,
-            'scope' => implode(' ', $this->getScopes()),
-            'state' => json_encode($this->state)
+            'scope' => \implode(' ', $this->getScopes()),
+            'state' => \json_encode($this->state)
         ]);
     }
 
@@ -53,15 +53,15 @@ class Facebook extends OAuth2
     {
         $accessToken = $this->request(
             'GET',
-            'https://graph.facebook.com/'.$this->version.'/oauth/access_token?'.http_build_query([
+            'https://graph.facebook.com/'.$this->version.'/oauth/access_token?'.\http_build_query([
                 'client_id' => $this->appID,
                 'redirect_uri' => $this->callback,
                 'client_secret' => $this->appSecret,
                 'code' => $code
-            ])  
+            ])
         );
 
-        $accessToken = json_decode($accessToken, true);
+        $accessToken = \json_decode($accessToken, true);
 
         if (isset($accessToken['access_token'])) {
             return $accessToken['access_token'];
@@ -126,9 +126,9 @@ class Facebook extends OAuth2
     protected function getUser(string $accessToken):array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://graph.facebook.com/'.$this->version.'/me?fields=email,name&access_token='.urlencode($accessToken));
+            $user = $this->request('GET', 'https://graph.facebook.com/'.$this->version.'/me?fields=email,name&access_token='.\urlencode($accessToken));
 
-            $this->user = json_decode($user, true);
+            $this->user = \json_decode($user, true);
         }
 
         return $this->user;
