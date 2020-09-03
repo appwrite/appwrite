@@ -20,13 +20,13 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yml
 dependencies:
-  appwrite: ^0.3.0
+  appwrite_dev: ^0.3.0
 ```
 
 You can install packages from the command line:
 
 ```bash
-pub get appwrite
+pub get appwrite_dev
 ```
 
 ## Contribution
