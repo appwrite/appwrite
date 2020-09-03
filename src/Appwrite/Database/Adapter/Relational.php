@@ -768,11 +768,13 @@ class Relational extends Adapter
 
                 var_dump($columns[$key]);
                 var_dump($columns[$key]->getAttribute('array'));
-
                 if($columns[$key]->getAttribute('array') === true) {
                     $join[] = 'JOIN `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'` a'.$i.'
-                        ON a.uid IS NOT NULL AND a'.$i.'.uid = a.uid';
+                    ON a.uid IS NOT NULL AND a'.$i.'.uid = a.uid';
                     $where[] = '(a'.$i.'.col_'.$key.' '.$operator.' '.$value.')';
+                    $where[] = '(a'.$i.'.col_'.$key.' '.$operator.' '.$value.')';
+                    //AND a.uid NOT IN (SELECT a2.uid FROM `app_'.$this->getNamespace().'.collection.'.$collection->getId().'.'.$key.'` a'.$i.' a'.$i.' WHERE (a'.$i.'.col_langauges = '.$value.'))
+                    
                 }
                 else {
                     $where[] = "(col_{$key} {$operator} {$value})";
