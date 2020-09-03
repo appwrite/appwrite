@@ -1,10 +1,12 @@
-#!/bin/env php
 <?php
 
-require_once __DIR__.'/../init.php';
+
+use Utopia\App;
+use Utopia\CLI\CLI;
+
+
 
 use Utopia\Config\Config;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
 use Appwrite\SDK\SDK;
@@ -18,9 +20,10 @@ use Appwrite\SDK\Language\Deno;
 use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\Java;
+use Appwrite\SDK\Language\Swift;
 
+require_once __DIR__.'/../init.php';
 $cli = new CLI();
-
 $version = APP_VERSION_STABLE; // Server version
 $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
@@ -130,6 +133,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'java':
                         $config = new Java();
+                        break;
+                    case 'swift':
+                        $config = new Swift();
                         break;
                     default:
                         throw new Exception('Language "'.$language['key'].'" not supported');

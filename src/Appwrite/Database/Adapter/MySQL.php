@@ -351,6 +351,26 @@ class MySQL extends Adapter
     }
 
     /**
+     * Delete Unique Key.
+     *
+     * @param int $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function deleteUniqueKey($key)
+    {
+        $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.unique` WHERE `key` = :key');
+
+        $st1->bindValue(':key', $key, PDO::PARAM_STR);
+
+        $st1->execute();
+
+        return [];
+    }
+
+    /**
      * Create Relation.
      *
      * Adds a new relationship between different nodes
@@ -718,8 +738,8 @@ class MySQL extends Adapter
             $roles = ['1=1'];
         }
 
-        $query = 'SELECT SUM(b_func.value) as result
-            FROM `'.$this->getNamespace().".database.documents` a {$where}{$join}{$func}
+        $query = "SELECT SUM(b_func.value) as result
+            FROM `".$this->getNamespace().".database.documents` a {$where}{$join}{$func}
             WHERE status = 0
                AND (".\implode('||', $roles).')';
 

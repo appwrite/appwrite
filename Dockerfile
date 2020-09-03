@@ -148,8 +148,10 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/schedule && \
+    chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
@@ -175,4 +177,4 @@ RUN echo "opcache.jit=1235" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 
-CMD [ "php", "app/server.php", "-dopcache.preload=opcache.preload=/usr/src/code/app/preload.php" ]
+CMD [ "php", "app/http.php", "-dopcache.preload=opcache.preload=/usr/src/code/app/preload.php" ]

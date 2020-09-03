@@ -35,8 +35,8 @@ class DeletesV1
             case Database::SYSTEM_COLLECTION_PROJECTS:
                 $this->deleteProject($document);
                 break;
-            case Database::SYSTEM_COLLECTION_FUNCTIONS:
-                $this->deleteFunction($document, $projectId);
+            case Database::SYSTEM_COLLECTION_USERS:
+                $this->deleteUser($document);
                 break;
             
             default:
@@ -62,123 +62,31 @@ class DeletesV1
         $cache->delete($cache->getRoot(), true);
     }
 
-    protected function deleteFunction(Document $document, $projectId)
+    protected function deleteUser(Document $user)
     {
-        $projectDB = $this->getProjectDB($projectId);
-        $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
+        global $projectDB;
 
-        // Delete Tags
-        $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_TAGS,
-            'functionId='.$document->getId(),
-        ], $projectDB, function(Document $document) use ($device) {
+        $tokens = $user->getAttribute('tokens', []);
 
-            if ($device->delete($document->getAttribute('codePath', ''))) {
-                Console::success('Delete code tag: '.$document->getAttribute('codePath', ''));
-            }
-            else {
-                Console::error('Dailed to delete code tag: '.$document->getAttribute('codePath', ''));
-            }
-        });
-
-        // Delete Executions
-        $this->deleteByGroup([
-            '$collection='.Database::SYSTEM_COLLECTION_EXECUTIONS,
-            'functionId='.$document->getId(),
-        ], $projectDB);
-    }
-
-    protected function deleteById(Document $document, Database $database, callable $callback = null): bool
-    {
-        Authorization::disable();
-
-        if($database->deleteDocument($document->getId())) {
-            Console::success('Deleted document "'.$document->getId().'" successfully');
-
-            if(is_callable($callback)) {
-                $callback($document);
-            }
-
-            return true;
-        }
-        else {
-            Console::error('Failed to delete document: '.$document->getId());
-            return false;
-        }
-
-        Authorization::reset();
-    }
-
-    protected function deleteByGroup(array $filters, Database $database, callable $callback = null)
-    {
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $results = [];
-        $sum = $limit;
-
-        $executionStart = \microtime(true);
-        
-        while($sum === $limit) {
-            $chunk++;
-
-            Authorization::disable();
-
-            $results = $database->getCollection([
-                'limit' => $limit,
-                'offset' => 0,
-                'orderField' => '$id',
-                'orderType' => 'ASC',
-                'orderCast' => 'string',
-                'filters' => $filters,
-            ]);
-
-            Authorization::reset();
-
-            $sum = count($results);
-
-            Console::info('Deleting chunk #'.$chunk.'. Found '.$sum.' documents');
-
-            foreach ($results as $document) {
-                $this->deleteById($document, $database, $callback);
-                $count++;
+        foreach ($tokens as $token) {
+            if (!$projectDB->deleteDocument($token->getId())) {
+                throw new Exception('Failed to remove token from DB', 500);
             }
         }
 
-        $executionEnd = \microtime(true);
+        $memberships = $projectDB->getCollection([
+            'limit' => 2000, // TODO add members limit
+            'offset' => 0,
+            'filters' => [
+                '$collection='.Database::SYSTEM_COLLECTION_MEMBERSHIPS,
+                'userId='.$user->getId(),
+            ],
+        ]);
 
-        Console::info("Deleted {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
-    }
-
-    /**
-     * @return Database;
-     */
-    protected function getConsoleDB(): Database
-    {
-        global $register;
-
-        if($this->consoleDB === null) {
-            $this->consoleDB = new Database();
-            $this->consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-            $this->consoleDB->setNamespace('app_console'); // Main DB
-            $this->consoleDB->setMocks(Config::getParam('collections', []));
+        foreach ($memberships as $membership) {
+            if (!$projectDB->deleteDocument($membership->getId())) {
+                throw new Exception('Failed to remove team membership from DB', 500);
+            }
         }
-
-        return $this->consoleDB;
-    }
-
-    /**
-     * @return Database;
-     */
-    protected function getProjectDB($projectId): Database
-    {
-        global $register;
-        
-        $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-        $projectDB->setNamespace('app_'.$projectId); // Main DB
-        $projectDB->setMocks(Config::getParam('collections', []));
-
-        return $projectDB;
     }
 }

@@ -216,12 +216,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/ca-bundle.git",
-                "reference": "95c63ab2117a72f48f5a55da9740a3273d45b7fd"
+                "reference": "8a7ecad675253e4654ea05505233285377405215"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/95c63ab2117a72f48f5a55da9740a3273d45b7fd",
-                "reference": "95c63ab2117a72f48f5a55da9740a3273d45b7fd",
+                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/8a7ecad675253e4654ea05505233285377405215",
+                "reference": "8a7ecad675253e4654ea05505233285377405215",
                 "shasum": ""
             },
             "require": {
@@ -1832,16 +1832,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.8.3",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "e21725bdb52c93dc4b0acade33f03e098f0ceae7"
+                "reference": "2d40a89b6d5d6a9c08423bff1dcebe1809b0efc7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e21725bdb52c93dc4b0acade33f03e098f0ceae7",
-                "reference": "e21725bdb52c93dc4b0acade33f03e098f0ceae7",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/2d40a89b6d5d6a9c08423bff1dcebe1809b0efc7",
+                "reference": "2d40a89b6d5d6a9c08423bff1dcebe1809b0efc7",
                 "shasum": ""
             },
             "require": {
@@ -1872,7 +1872,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-07-09T06:39:23+00:00"
+            "time": "2020-08-26T17:18:23+00:00"
         },
         {
             "name": "utopia-php/locale",
@@ -2192,12 +2192,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "969b211f9a51aa1f6c01d1d2aef56d3bd91598e5"
+                "reference": "a3409d10079990eeb489c3fead0ac070b5b38895"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/969b211f9a51aa1f6c01d1d2aef56d3bd91598e5",
-                "reference": "969b211f9a51aa1f6c01d1d2aef56d3bd91598e5",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/a3409d10079990eeb489c3fead0ac070b5b38895",
+                "reference": "a3409d10079990eeb489c3fead0ac070b5b38895",
                 "shasum": ""
             },
             "require": {
@@ -3771,7 +3771,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.13-dev"
+                    "dev-master": "2.14-dev"
                 }
             },
             "autoload": {
