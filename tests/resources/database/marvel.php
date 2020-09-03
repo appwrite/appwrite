@@ -1157,7 +1157,7 @@ $movies = [
     [
         'name' => 'Arjun: The Warrior Prince',
         'releaseYear' => '2012',
-        'director' => 'Pete Docter',
+        'director' => 'Arnab Chaudhuri',
         'generes' => ['Action, Animation, Family'],
         'langauges' => ['English'],
     ],
