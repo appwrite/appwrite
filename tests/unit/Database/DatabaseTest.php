@@ -1867,8 +1867,9 @@ class DatabaseTest extends TestCase
         self::$object->find($collection->getId(), [
             'limit' => 5,
             'filters' => [
-                'text=Hello World',
-                'integer=1',
+                'name=Hello World',
+                'releaseYear=1999',
+                'langauges=English',
             ],
         ]);
         $this->assertEquals('1', '1');
