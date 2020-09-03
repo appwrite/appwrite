@@ -1,3 +1,8 @@
+## 0.3.0-dev.1
+
+- Updated package dependencies (@lohanidamodar)
+- Added Flutter for Web compatibility (@lohanidamodar)
+
 ## 0.2.3
 
 - Fixed OAuth2 cookie bug, where a new session cookie couldn't overwrite an old cookie
