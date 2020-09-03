@@ -1,5 +1,5 @@
 name: appwrite
-version: 0.2.3
+version: 0.3.0-dev.1
 description: Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API
 homepage: https://appwrite.io
 repository: https://github.com/appwrite/sdk-for-flutter
@@ -9,30 +9,15 @@ environment:
   sdk: '>=2.6.0 <3.0.0'
 dependencies:
   meta: ^1.1.8
-  path_provider: ^1.6.5
-  package_info: ^0.4.0+16
-  dio: ^3.0.0
-  cookie_jar: ^1.0.0
+  path_provider: ^1.6.14
+  package_info: ^0.4.3
+  dio: ^3.0.10
+  cookie_jar: ^1.0.1
   dio_cookie_manager: ^1.0.0
   flutter_web_auth: ^0.2.4
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.2
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter.
-flutter:
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
-  uses-material-design: true

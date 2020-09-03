@@ -1,4 +1,4 @@
-## 0.3.0
+## 0.3.0-dev.1
 
 - Updated package dependencies (@lohanidamodar)
 - Added Flutter for Web compatibility (@lohanidamodar)

@@ -30,7 +30,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.2.3',
+                'version' => '0.3.0-dev.1',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'enabled' => true,
                 'beta' => true,
