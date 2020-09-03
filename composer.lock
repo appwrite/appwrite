@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ca2e4fb385333ea71d2e19f76d244d77",
+    "content-hash": "7ae3ddbe2110564d58c48770cdfd63b0",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -270,11 +270,15 @@
                     "type": "custom"
                 },
                 {
+                    "url": "https://github.com/composer",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/composer/composer",
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-04-08T08:27:21+00:00"
+            "time": "2020-08-23T12:54:47+00:00"
         },
         {
             "name": "domnikl/statsd",
@@ -1975,7 +1979,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator",
-                "reference": "95e29472f8416eb8ce6a83f6b5af9c139ec73ea2"
+                "reference": "dddbc208ff429298f5c1b2b95fc507aa639c8def"
             },
             "require": {
                 "ext-curl": "*",
@@ -2005,7 +2009,7 @@
                 }
             ],
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
-            "time": "2020-08-17T18:12:07+00:00"
+            "time": "2020-09-03T13:22:30+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -2238,7 +2242,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-06-29T13:22:24+00:00"
+            "time": "2020-08-28T16:31:07+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -2397,12 +2401,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "13d9a6bb0b5bbb89d085c7d557c4b55499128eb9"
+                "reference": "f6075926e937828b180e02964e2d2062af8a9537"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/13d9a6bb0b5bbb89d085c7d557c4b55499128eb9",
-                "reference": "13d9a6bb0b5bbb89d085c7d557c4b55499128eb9",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/f6075926e937828b180e02964e2d2062af8a9537",
+                "reference": "f6075926e937828b180e02964e2d2062af8a9537",
                 "shasum": ""
             },
             "require": {
@@ -2441,7 +2445,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-08-22T07:19:02+00:00"
+            "time": "2020-09-02T21:38:01+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -2449,12 +2453,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "e878a14a65245fbe78f8080eba03b47c3b705651"
+                "reference": "e21c0bd532911ec05ebc258e4086ea61c86e0750"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/e878a14a65245fbe78f8080eba03b47c3b705651",
-                "reference": "e878a14a65245fbe78f8080eba03b47c3b705651",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/e21c0bd532911ec05ebc258e4086ea61c86e0750",
+                "reference": "e21c0bd532911ec05ebc258e4086ea61c86e0750",
                 "shasum": ""
             },
             "require": {
@@ -2486,7 +2490,7 @@
                 }
             ],
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
-            "time": "2020-06-27T10:12:23+00:00"
+            "time": "2020-09-02T21:29:45+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -3751,12 +3755,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "b531196d8cfaa485d7ff84d37b19668d8d6b254b"
+                "reference": "b48bd18dc6f967ad09af9eab521cdf0e68fb6a95"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/b531196d8cfaa485d7ff84d37b19668d8d6b254b",
-                "reference": "b531196d8cfaa485d7ff84d37b19668d8d6b254b",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/b48bd18dc6f967ad09af9eab521cdf0e68fb6a95",
+                "reference": "b48bd18dc6f967ad09af9eab521cdf0e68fb6a95",
                 "shasum": ""
             },
             "require": {
@@ -3818,7 +3822,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-08-13T14:11:59+00:00"
+            "time": "2020-08-23T15:56:05+00:00"
         },
         {
             "name": "webmozart/assert",
