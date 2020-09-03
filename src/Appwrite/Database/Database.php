@@ -10,6 +10,8 @@ use Appwrite\Database\Exception\Structure as StructureException;
 
 class Database
 {
+    static public $cache = [];
+
     // System Core
     const COLLECTION_COLLECTIONS = 'collections';
     const COLLECTION_RULES = 'rules';
@@ -302,6 +304,13 @@ class Database
     {
         if ($id === '') {
             return new Document([]);
+        }
+
+        if(isset(self::$cache[$this->getNamespace().'/'.$collection.'/'.$id])) {
+            self::$cache[$this->getNamespace().'/'.$collection.'/'.$id]++;
+        }
+        else {
+            self::$cache[$this->getNamespace().'/'.$collection.'/'.$id] = 0;
         }
 
         if($mock === true
