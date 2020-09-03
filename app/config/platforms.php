@@ -45,7 +45,7 @@ return [
             [
                 'key' => 'flutter-dev',
                 'name' => 'Flutter (Dev Channel)',
-                'version' => '0.2.3',
+                'version' => '0.3.0',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter-dev',
                 'enabled' => true,
                 'beta' => true,
