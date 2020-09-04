@@ -366,7 +366,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']);
+        $this->assertCount(1, $response['body']['sum']);
         
         /**
          * Test for FAILURE
@@ -589,7 +589,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']);
+        $this->assertCount(1, $response['body']['sum']);
         
         /**
          * Test for FAILURE
@@ -867,7 +867,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']);
+        $this->assertCount(1, $response['body']['sum']);
         
         /**
          * Test for FAILURE

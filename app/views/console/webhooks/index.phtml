@@ -21,14 +21,14 @@ $events = array_keys($this->getParam('events', []));
     data-success="trigger"
     data-success-param-trigger-events="projects.listWebhooks">
 
-    <div data-ls-if="0 == {{console-webhooks.length}} || undefined == {{console-webhooks.length}}" class="box margin-top margin-bottom">
+    <div data-ls-if="0 == {{console-webhooks.sum}} || undefined == {{console-webhooks.sum}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold">No Webhooks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any webhooks for your project yet.</p>
     </div>
 
-    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.length}}">
-        <ul data-ls-loop="console-webhooks" data-ls-as="webhook" class="list">
+    <div class="box margin-bottom" data-ls-if="0 != {{console-webhooks.sum}}">
+        <ul data-ls-loop="console-webhooks.webhooks" data-ls-as="webhook" class="list">
             <li class="clear">
 
                 <div data-ui-modal class="modal close sticky-footer" data-button-text="Update" data-button-class="pull-end">
@@ -136,7 +136,7 @@ $events = array_keys($this->getParam('events', []));
                     <button class="danger reverse">Delete</button>
                 </form>
 
-                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
+                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.sum}}"></span> events)
                 <span data-ls-if="false === {{webhook.security}}">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
