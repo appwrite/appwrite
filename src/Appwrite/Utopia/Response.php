@@ -3,11 +3,12 @@
 namespace Appwrite\Utopia;
 
 use Exception;
-use Appwrite\Database\Document;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
+use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\BaseList;
+use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -19,7 +20,9 @@ use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Tag;
+use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 class Response extends SwooleResponse
@@ -118,6 +121,9 @@ class Response extends SwooleResponse
             ->setModel(new Execution())
             ->setModel(new Webhook())
             ->setModel(new Key())
+            ->setModel(new Task())
+            ->setModel(new Domain())
+            ->setModel(new Platform())
             // Locale
             // Continent
             // Country

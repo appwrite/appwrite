@@ -5,36 +5,39 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class Webhook extends Model
+class Platform extends Model
 {
     public function __construct()
     {
         $this
             ->addRule('$id', [
                 'type' => 'string',
-                'description' => 'Webhook ID.',
+                'description' => 'Platform ID.',
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => 'string',
-                'description' => 'Webhook name.',
-                'example' => 'My Webhook',
+                'description' => 'Platform name.',
+                'example' => 'My Web App',
             ])
-            ->addRule('url', [
+            ->addRule('type', [
                 'type' => 'string',
-                'description' => 'Webhook URL endpoint.',
-                'example' => 'https://example.com/webhook',
+                'description' => 'Platform type. Possible values are: web, flutter-ios, flutter-android, ios, android, and unity.',
+                'example' => 'My Web App',
             ])
-            ->addRule('events', [
+            ->addRule('key', [
                 'type' => 'string',
-                'description' => 'Webhook trigger events.',
-                'default' => [],
-                'example' => ['database.collections.update', 'database.collections.delete'],
-                'array' => true,
+                'description' => 'Platform Key. iOS bundle ID or Android package name.  Empty string for other platforms.',
+                'example' => 'com.company.appname',
             ])
-            ->addRule('security', [
-                'type' => 'boolean',
-                'description' => 'Indicated if SSL / TLS Certificate verification is enabled.',
+            // ->addRule('store', [
+            //     'type' => 'string',
+            //     'description' => 'Link to platform store.',
+            //     'example' => '',
+            // ])
+            ->addRule('hostname', [
+                'type' => 'string',
+                'description' => 'Web app hostname. Empty string for other platforms.',
                 'example' => true,
             ])
             ->addRule('httpUser', [
@@ -59,7 +62,7 @@ class Webhook extends Model
      */
     public function getName():string
     {
-        return 'Webhook';
+        return 'Platform';
     }
 
     /**
@@ -69,6 +72,6 @@ class Webhook extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_WEBHOOK;
+        return Response::MODEL_PLATFORM;
     }
 }
