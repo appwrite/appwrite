@@ -55,24 +55,53 @@ class Task extends Model
                 'example' => 'password',
             ])
             ->addRule('duration', [
-                'type' => 'integer',
+                'type' => 'float',
                 'description' => 'Task duration in seconds.',
                 'default' => 0,
                 'example' => 1.2,
             ])
+            ->addRule('delay', [
+                'type' => 'float',
+                'description' => 'Task delay time in seconds.',
+                'default' => 0,
+                'example' => 1.2,
+            ])
+            ->addRule('failures', [
+                'type' => 'integer',
+                'description' => 'Number of recurring task failures.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('schedule', [
+                'type' => 'string',
+                'description' => 'Task schedule in CRON syntax.',
+                'example' => '* * * * *',
+            ])
+            ->addRule('status', [
+                'type' => 'string',
+                'description' => 'Task status. Possible values: play, pause', // TODO - change to enabled disabled
+                'example' => 'enabled',
+            ])
+            ->addRule('updated', [
+                'type' => 'integer',
+                'description' => 'Task last updated time in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('previous', [
+                'type' => 'integer',
+                'description' => 'Task previous run time in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981250,
+            ])
+            ->addRule('next', [
+                'type' => 'integer',
+                'description' => 'Task next run time in Unix timestamp.',
+                'default' => 0,
+                'example' => 1592981650,
+            ])
         ;
     }
-
-    /*
-    delay: 6
-    failures: 5
-    log: "[{"code":411,"duration":1.82,"delay":6,"errors":["Request failed with status code 411"],"headers":"HTTP\/1.1 411 Length Required\r\nContent-Type: text\/html\r\nContent-Length: 357\r\nConnection: close\r\nDate: Sat, 21 Mar 2020 21:22:08 GMT\r\nServer: ECSF (nyb\/1D33)\r\n\r\n","body":""},{"code":411,"duration":1.86,"delay":4,"errors":["Request failed with status code 411"],"headers":"HTTP\/1.1 411 Length Required\r\nContent-Type: text\/html\r\nContent-Length: 357\r\nConnection: close\r\nDate: Sat, 21 Mar 2020 21:21:06 GMT\r\nServer: ECSF (nyb\/1D32)\r\n\r\n","body":""},{"code":411,"duration":1.82,"delay":2,"errors":["Request failed with status code 411"],"headers":"HTTP\/1.1 411 Length Required\r\nContent-Type: text\/html\r\nContent-Length: 357\r\nConnection: close\r\nDate: Sat, 21 Mar 2020 21:20:04 GMT\r\nServer: ECSF (nyb\/1D0A)\r\n\r\n","body":""},{"code":411,"duration":1.49,"delay":6,"errors":["Request failed with status code 411"],"headers":"HTTP\/1.1 411 Length Required\r\nContent-Type: text\/html\r\nContent-Length: 357\r\nConnection: close\r\nDate: Sat, 21 Mar 2020 21:19:07 GMT\r\nServer: ECSF (nyb\/1D04)\r\n\r\n","body":""},{"code":411,"duration":2.18,"delay":4,"errors":["Request failed with status code 411"],"headers":"HTTP\/1.1 411 Length Required\r\nContent-Type: text\/html\r\nContent-Length: 357\r\nConnection: close\r\nDate: Sat, 21 Mar 2020 21:18:05 GMT\r\nServer: ECSF (nyb\/1D23)\r\n\r\n","body":""}]"
-    schedule: "* * * * *"
-    status: "pause"
-    updated: 1594494053
-    previous: 1584825726
-    next: "1597439760"
-    */
 
     /**
      * Get Name
@@ -81,7 +110,7 @@ class Task extends Model
      */
     public function getName():string
     {
-        return 'Webhook';
+        return 'Task';
     }
 
     /**
@@ -91,6 +120,6 @@ class Task extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_WEBHOOK;
+        return Response::MODEL_TASK;
     }
 }

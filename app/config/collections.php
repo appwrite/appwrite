@@ -4,7 +4,7 @@ use Utopia\App;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
 
-$providers = Config::getParam('providers');
+$providers = Config::getParam('providers', []);
 
 $collections = [
     'console' => [

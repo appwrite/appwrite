@@ -20,6 +20,7 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Tag;
+use Appwrite\Utopia\Response\Model\Task;
 use Appwrite\Utopia\Response\Model\Webhook;
 
 class Response extends SwooleResponse
@@ -118,6 +119,7 @@ class Response extends SwooleResponse
             ->setModel(new Execution())
             ->setModel(new Webhook())
             ->setModel(new Key())
+            ->setModel(new Task())
             // Locale
             // Continent
             // Country
