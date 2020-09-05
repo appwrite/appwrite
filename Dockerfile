@@ -16,7 +16,8 @@ FROM php:8.0.0beta2-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
     PHP_REDIS_VERSION=develop \
-    PHP_SWOOLE_VERSION=master \
+    PHP_SWOOLE_VERSION=v4.5.3 \
+    PHP_IMAGICK_VERSION=master \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
 RUN \
@@ -30,7 +31,9 @@ RUN \
   wget \
   git \
   zlib-dev \
-  brotli-dev
+  brotli-dev \
+  imagemagick \
+  imagemagick-dev
 
 RUN docker-php-ext-install sockets
 
@@ -49,6 +52,14 @@ RUN \
   git checkout $PHP_SWOOLE_VERSION && \
   phpize && \
   ./configure --enable-http2 && \
+  make && make install && \
+  cd .. && \
+  ## Imagick Extension
+  git clone https://github.com/Imagick/imagick && \
+  cd imagick && \
+  git checkout $PHP_IMAGICK_VERSION && \
+  phpize && \
+  ./configure && \
   make && make install && \
   cd ..
 
@@ -105,10 +116,11 @@ RUN \
   && apk add --no-cache \
   libstdc++ \
   yaml-dev \
-  imagemagick \
-  imagemagick-dev \
   certbot \
   docker-cli \
+  brotli-dev \
+  imagemagick \
+  imagemagick-dev \
   # && pecl install imagick yaml \ 
   # && docker-php-ext-enable imagick yaml \
   # && mkdir -p /usr/src/php/ext/imagick && curl -fsSL https://pecl.php.net/get/imagick | tar xvz -C "/usr/src/php/ext/imagick" --strip 1 && docker-php-ext-install imagick \
@@ -126,6 +138,7 @@ WORKDIR /usr/src/code
 COPY --from=step0 /usr/local/src/vendor /usr/src/code/vendor
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200804/swoole.so /usr/local/lib/php/extensions/no-debug-non-zts-20200804/
 COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200804/redis.so /usr/local/lib/php/extensions/no-debug-non-zts-20200804/
+COPY --from=step1 /usr/local/lib/php/extensions/no-debug-non-zts-20200804/imagick.so /usr/local/lib/php/extensions/no-debug-non-zts-20200804/
 
 # Add Source Code
 COPY ./app /usr/src/code/app
@@ -170,6 +183,7 @@ RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 # Enable Extensions
 RUN echo extension=swoole.so >> /usr/local/etc/php/conf.d/swoole.ini
 RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
+RUN echo extension=imagick.so >> /usr/local/etc/php/conf.d/imagick.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
