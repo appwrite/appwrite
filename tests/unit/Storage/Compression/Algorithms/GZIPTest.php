@@ -12,12 +12,12 @@ class GZIPTest extends TestCase
      */
     protected $object = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->object = new GZIP();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 

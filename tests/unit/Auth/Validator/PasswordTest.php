@@ -12,12 +12,12 @@ class PasswordTestTest extends TestCase
      */
     protected $object = null;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->object = new Password();
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 

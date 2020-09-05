@@ -14,7 +14,7 @@ class ComposeTest extends TestCase
     protected $object = null;
 
 
-    public function setUp()
+    public function setUp(): void
     {
         $data = @file_get_contents(__DIR__.'/../../resources/docker/docker-compose.yml');
 
@@ -25,7 +25,7 @@ class ComposeTest extends TestCase
         $this->object = new Compose($data);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
     }
 
