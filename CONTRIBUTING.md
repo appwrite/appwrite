@@ -172,7 +172,7 @@ From time to time, our team will add tutorials that will help contributors find 
 * [Running in Production](./docs/tutorials/running-in-production.md)
 
 
-## Other Ways to Helo
+## Other Ways to Help
 
 Pull requests are great, but there are many other areas where you can help Appwrite. 
 
