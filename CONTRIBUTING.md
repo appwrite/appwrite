@@ -6,37 +6,27 @@ We would ❤️ for you to contribute to Appwrite and help make it better! We wa
 
 If you are worried or don’t know where to start, check out our next section explaining what kind of help we could use and where can you get involved. You can reach out with questions to [Eldad Fux (@eldadfux)](https://twitter.com/eldadfux) or [@appwrite_io](https://twitter.com/appwrite_io) on Twitter, and anyone from the [Appwrite team on Discord](https://discord.gg/GSeTUeA). You can also submit an issue, and a maintainer can guide you!
 
-## Where to Start?
-
-Pull requests are great, but there are many other areas where you can help Appwrite. 
-
-### Blogging & Speaking
-
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite_io](https://twitter.com/appwrite_io) on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite]() repo on GitHub.
-
-### Presenting at Meetups
-
-Presenting at meetups and conferences about your Appwrite projects. Your unique challenges and successes in building things with Appwrite can provide great speaking material. We’d love to review your talk abstract/CFP, so get in touch with us if you’d like some help!
-
-### Sending Feedbacks & Reporting Bugs
-
-Sending feedback is a great way for us to understand your different use cases of Appwrite better. If you had any issues, bugs, or want to share about your experience, feel free to do so on our GitHub issues page or at our [Discord channel](https://discord.gg/GSeTUeA).
-
-### Submitting New Ideas
-
-If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and it's implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
-
-### Improving Documentation
-
-Submitting documentation updates, enhancements, designs, or bug fixes. Spelling or grammar fixes will be very much appreciated.
-
-### Helping Someone
-
-Searching for Appwrite on Discord, GitHub or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
-
 ## Code of Conduct
 
 Help us keep Appwrite open and inclusive. Please read and follow our [Code of Conduct](/CODE_OF_CONDUCT.md).
+
+## Setup From Source
+
+To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+
+> If you just want to install Appwrite for day-to-day usage and not as a code maintainer use this [installation guide](https://github.com/appwrite/appwrite#installation).
+
+Please note that these instructions are for setting a functional dev environment. If you want to set up an Appwrite instance to integrate into your app, you should probably try and install Appwrite by using the instructions in the [getting started guide](https://appwrite.io/docs/getting-started-for-web) or in the main [README](README.md) file.
+
+```bash
+git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
+
+cd appwrite
+
+docker-compose up -d
+```
+
+After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
 
 ## Technology Stack
 
@@ -125,24 +115,6 @@ This will allow the Appwrite community to have sufficient discussion about the n
 
 This is also important for the Appwrite lead developers to be able to give technical input and different emphasize regarding the feature design and architecture.
 
-## Setup From Source
-
-To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
-
-> If you just want to install Appwrite for day-to-day usage and not as a code maintainer use this [installation guide](https://github.com/appwrite/appwrite#installation).
-
-Please note that these instructions are for setting a functional dev environment. If you want to set up an Appwrite instance to integrate into your app, you should probably try and install Appwrite by using the instructions in the [getting started guide](https://appwrite.io/docs/getting-started-for-web) or in the main [README](README.md) file.
-
-```bash
-git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
-
-cd appwrite
-
-docker-compose up -d
-```
-
-After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
-
 ## Build
 
 To build a new version of the Appwrite server, all you need to do is run the build.sh file like this:
@@ -194,3 +166,33 @@ From time to time, our team will add tutorials that will help contributors find 
 * [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
 * [Appwrite Environment Variables](./docs/tutorials/environment-variables.md)
 * [Running in Production](./docs/tutorials/running-in-production.md)
+
+
+## Other Ways to Helo
+
+Pull requests are great, but there are many other areas where you can help Appwrite. 
+
+### Blogging & Speaking
+
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features. Mention [@appwrite_io](https://twitter.com/appwrite_io) on Twitter and/or email team [at] appwrite [dot] io so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite]() repo on GitHub.
+
+### Presenting at Meetups
+
+Presenting at meetups and conferences about your Appwrite projects. Your unique challenges and successes in building things with Appwrite can provide great speaking material. We’d love to review your talk abstract/CFP, so get in touch with us if you’d like some help!
+
+### Sending Feedbacks & Reporting Bugs
+
+Sending feedback is a great way for us to understand your different use cases of Appwrite better. If you had any issues, bugs, or want to share about your experience, feel free to do so on our GitHub issues page or at our [Discord channel](https://discord.gg/GSeTUeA).
+
+### Submitting New Ideas
+
+If you think Appwrite could use a new feature, please open an issue on our GitHub repository, stating as much information as you can think about your new idea and it's implications. We would also use this issue to gather more information, get more feedback from the community, and have a proper discussion about the new feature.
+
+### Improving Documentation
+
+Submitting documentation updates, enhancements, designs, or bug fixes. Spelling or grammar fixes will be very much appreciated.
+
+### Helping Someone
+
+Searching for Appwrite on Discord, GitHub or StackOverflow and helping someone else who needs help. You can also help by reaching others how to contribute to Appwrite's repo!
+
