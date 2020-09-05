@@ -7,7 +7,7 @@
     <br />
 </p>
 
-
+[![Hacktoberfest](https://badgen.net/badge/hacktoberfest/friendly/pink)](#contributing)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 [![Docker Pulls](https://badgen.net/docker/pulls/appwrite/appwrite)](https://travis-ci.org/appwrite/appwrite)
 [![Travis CI](https://badgen.net/travis/appwrite/appwrite?label=build)](https://travis-ci.org/appwrite/appwrite)
