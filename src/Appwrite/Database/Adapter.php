@@ -201,6 +201,15 @@ abstract class Adapter
     abstract public function deleteDocument(Document $collection, string $id);
 
     /**
+     * Delete Unique Key.
+     *
+     * @param int $key
+     *
+     * @return array
+     */
+    abstract public function deleteUniqueKey($key);
+
+    /**
      * Create Namespace.
      *
      * @param string $namespace
@@ -223,11 +232,12 @@ abstract class Adapter
      *
      * Filter data sets using chosen queries
      *
+     * @param Document $collection
      * @param array $options
      *
      * @return array
      */
-    abstract public function find(array $options);
+    abstract public function find(Document $collection, array $options);
 
     /**
      * @param array $options

@@ -27,7 +27,7 @@ class Webhook extends Model
             ])
             ->addRule('events', [
                 'type' => 'string',
-                'description' => 'Function trigger events.',
+                'description' => 'Webhook trigger events.',
                 'default' => [],
                 'example' => ['database.collections.update', 'database.collections.delete'],
                 'array' => true,

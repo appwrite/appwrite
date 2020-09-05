@@ -101,16 +101,13 @@ App::get('/v1/projects')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
 
-        $results = $consoleDB->find([
+        $results = $consoleDB->find(Database::COLLECTION_PROJECTS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'registration',
             'orderType' => $orderType,
             'orderCast' => 'int',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_PROJECTS,
-            ],
         ]);
         foreach ($results as $project) {
             foreach (Config::getParam('providers') as $provider => $node) {
@@ -245,24 +242,18 @@ App::get('/v1/projects/:projectId/usage')
 
         // Users
 
-        $projectDB->find([
+        $projectDB->find(Database::COLLECTION_USERS, [
             'limit' => 0,
             'offset' => 0,
-            'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
-            ],
         ]);
 
         $usersTotal = $projectDB->getSum();
 
         // Documents
 
-        $collections = $projectDB->find([
+        $collections = $projectDB->find(Database::COLLECTION_COLLECTIONS, [
             'limit' => 100,
             'offset' => 0,
-            'filters' => [
-                '$collection='.Database::COLLECTION_COLLECTIONS,
-            ],
         ]);
 
         $collectionsTotal = $projectDB->getSum();
@@ -270,12 +261,9 @@ App::get('/v1/projects/:projectId/usage')
         $documents = [];
 
         foreach ($collections as $collection) {
-            $result = $projectDB->find([
+            $result = $projectDB->find($collection['$id'], [
                 'limit' => 0,
                 'offset' => 0,
-                'filters' => [
-                    '$collection='.$collection['$id'],
-                ],
             ]);
 
             $documents[] = ['name' => $collection['name'], 'total' => $projectDB->getSum()];
@@ -901,7 +889,7 @@ App::post('/v1/projects/:projectId/tasks')
         }
 
         $cron = CronExpression::factory($schedule);
-        $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
+        $next = ($status == 'play') ? (int)$cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
@@ -1062,7 +1050,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         }
 
         $cron = CronExpression::factory($schedule);
-        $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
+        $next = ($status == 'play') ? (int)$cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');

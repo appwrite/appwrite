@@ -33,7 +33,7 @@ before_install:
 install:
 - docker --version
 - docker-compose up -d
-- sleep 90
+- sleep 10
 
 script:
 - docker ps

@@ -4,12 +4,12 @@ use Utopia\App;
 use Utopia\Config\Config;
 use Appwrite\Database\Database;
 
-$providers = Config::getParam('providers');
+$providers = Config::getParam('providers', []);
 
 $collections = [
     'console' => [
         '$id' => 'console',
-        '$collection' => 'projects',
+        '$collection' => Database::COLLECTION_PROJECTS,
         '$permissions' => ['read' => ['*']],
         'name' => 'Appwrite',
         'description' => 'Appwrite core engine',
@@ -1747,6 +1747,13 @@ $collections = [
                 ],
             ],
         ],
+    ],
+    Database::COLLECTION_RESERVED => [
+        '$collection' => Database::COLLECTION_COLLECTIONS,
+        '$id' => Database::COLLECTION_RESERVED,
+        '$permissions' => ['read' => ['*']],
+        'name' => 'Reserved',
+        'structure' => true,
     ],
 ];
 

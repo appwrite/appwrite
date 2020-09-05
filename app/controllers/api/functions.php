@@ -36,7 +36,10 @@ App::post('/v1/functions')
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
     ->action(function ($name, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
-        $function = $projectDB->createDocument([
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
+        $function = $projectDB->createDocument(Database::COLLECTION_FUNCTIONS, [
             '$collection' => Database::COLLECTION_FUNCTIONS,
             '$permissions' => [
                 'read' => [],
@@ -77,16 +80,16 @@ App::get('/v1/functions')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
-        $results = $projectDB->find([
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
+        $results = $projectDB->find(Database::COLLECTION_FUNCTIONS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
             'orderType' => $orderType,
             'orderCast' => 'int',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_FUNCTIONS,
-            ],
         ]);
 
         $response->dynamic(new Document([
@@ -105,6 +108,9 @@ App::get('/v1/functions/:functionId')
     ->label('sdk.description', '/docs/references/functions/get-function.md')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->action(function ($functionId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -242,6 +248,9 @@ App::put('/v1/functions/:functionId')
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
     ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
     ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -249,18 +258,20 @@ App::put('/v1/functions/:functionId')
         }
 
         $cron = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? CronExpression::factory($schedule) : null;
-        $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? $cron->getNextRunDate()->format('U') : null;
+        $next = (!empty($function->getAttribute('tag', null)) && !empty($schedule)) ? (int) $cron->getNextRunDate()->format('U') : null;
 
-        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
-            'dateUpdated' => time(),
-            'name' => $name,
-            'vars' => $vars,
-            'events' => $events,
-            'schedule' => $schedule,
-            'previous' => null,
-            'next' => $next,
-            'timeout' => $timeout,   
-        ]));
+        $function = $projectDB->updateDocument(Database::COLLECTION_FUNCTIONS, $functionId,
+            array_merge($function->getArrayCopy(), [
+                'dateUpdated' => time(),
+                'name' => $name,
+                'vars' => $vars,
+                'events' => $events,
+                'schedule' => $schedule,
+                'previous' => null,
+                'next' => $next,
+                'timeout' => $timeout,   
+            ])
+        );
 
         if (false === $function) {
             throw new Exception('Failed saving function to DB', 500);
@@ -280,6 +291,9 @@ App::patch('/v1/functions/:functionId/tag')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tag', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(function ($functionId, $tag, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
         $tag = $projectDB->getDocument(Database::COLLECTION_TAGS, $tag);
 
@@ -293,9 +307,9 @@ App::patch('/v1/functions/:functionId/tag')
 
         $schedule = $function->getAttribute('schedule', '');
         $cron = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? CronExpression::factory($schedule) : null;
-        $next = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? $cron->getNextRunDate()->format('U') : null;
+        $next = (!empty($function->getAttribute('tag')&& !empty($schedule))) ? (int) $cron->getNextRunDate()->format('U') : null;
 
-        $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+        $function = $projectDB->updateDocument(Database::COLLECTION_FUNCTIONS, $functionId, array_merge($function->getArrayCopy(), [
             'tag' => $tag->getId(),
             'next' => $next,
         ]));
@@ -333,7 +347,6 @@ App::delete('/v1/functions/:functionId')
         }
 
         $deletes
-            ->setParam('projectId', $project->getId())
             ->setParam('document', $function->getArrayCopy())
         ;
 
@@ -353,6 +366,10 @@ App::post('/v1/functions/:functionId/tags')
     ->param('code', [], function () { return new File(); }, 'Gzip file containing your code.', false)
     // ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
     ->action(function ($functionId, $command, $code, $request, $response, $projectDB, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $usage */
+
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -395,7 +412,7 @@ App::post('/v1/functions/:functionId/tags')
             throw new Exception('Failed moving file', 500);
         }
         
-        $tag = $projectDB->createDocument([
+        $tag = $projectDB->createDocument(Database::COLLECTION_TAGS, [
             '$collection' => Database::COLLECTION_TAGS,
             '$permissions' => [
                 'read' => [],
@@ -434,13 +451,16 @@ App::get('/v1/functions/:functionId/tags')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
         
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_TAGS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
@@ -448,7 +468,6 @@ App::get('/v1/functions/:functionId/tags')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::COLLECTION_TAGS,
                 'functionId='.$function->getId(),
             ],
         ]);
@@ -470,6 +489,9 @@ App::get('/v1/functions/:functionId/tags/:tagId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(function ($functionId, $tagId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -500,6 +522,10 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
     ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $usage */
+
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -519,13 +545,13 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
         $device = Storage::getDevice('functions');
 
         if ($device->delete($tag->getAttribute('path', ''))) {
-            if (!$projectDB->deleteDocument($tag->getId())) {
+            if (!$projectDB->deleteDocument(Database::COLLECTION_TAGS, $tag->getId())) {
                 throw new Exception('Failed to remove tag from DB', 500);
             }
         }
 
         if($function->getAttribute('tag') === $tag->getId()) { // Reset function tag
-            $function = $projectDB->updateDocument(array_merge($function->getArrayCopy(), [
+            $function = $projectDB->updateDocument(Database::COLLECTION_FUNCTIONS, $functionId, array_merge($function->getArrayCopy(), [
                 'tag' => '',
             ]));
     
@@ -618,13 +644,16 @@ App::get('/v1/functions/:functionId/executions')
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {
             throw new Exception('Function not found', 404);
         }
         
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_EXECUTIONS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'dateCreated',
@@ -632,7 +661,6 @@ App::get('/v1/functions/:functionId/executions')
             'orderCast' => 'int',
             'search' => $search,
             'filters' => [
-                '$collection='.Database::COLLECTION_EXECUTIONS,
                 'functionId='.$function->getId(),
             ],
         ]);
@@ -654,6 +682,9 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
     ->param('executionId', '', function () { return new UID(); }, 'Execution unique ID.')
     ->action(function ($functionId, $executionId, $response, $projectDB) {
+        /** @var Appwrite\Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        
         $function = $projectDB->getDocument(Database::COLLECTION_FUNCTIONS, $functionId);
 
         if (empty($function->getId()) || Database::COLLECTION_FUNCTIONS != $function->getCollection()) {

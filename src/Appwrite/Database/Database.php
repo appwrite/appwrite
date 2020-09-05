@@ -10,10 +10,13 @@ use Appwrite\Database\Exception\Structure as StructureException;
 
 class Database
 {
+    static public $cache = [];
+
     // System Core
     const COLLECTION_COLLECTIONS = 'collections';
     const COLLECTION_RULES = 'rules';
     const COLLECTION_INDEXES = 'indexes';
+    const COLLECTION_RESERVED = 'reserved';
     const COLLECTION_PROJECTS = 'projects';
     const COLLECTION_WEBHOOKS = 'webhooks';
     const COLLECTION_KEYS = 'keys';
@@ -138,11 +141,12 @@ class Database
     }
 
     /**
+     * @param string $collection
      * @param array $options
      *
      * @return Document[]
      */
-    public function find(array $options)
+    public function find(string $collection, array $options)
     {
         $options = \array_merge([
             'offset' => 0,
@@ -155,7 +159,7 @@ class Database
             'filters' => [],
         ], $options);
 
-        $results = $this->adapter->find($options);
+        $results = $this->adapter->find($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $options);
 
         foreach ($results as &$node) {
             $node = $this->decode(new Document($node));
@@ -165,24 +169,26 @@ class Database
     }
 
     /**
+     * @param string $collection
      * @param array $options
      *
      * @return Document
      */
-    public function findFirst(array $options)
+    public function findFirst(string $collection, array $options)
     {
-        $results = $this->find($options);
+        $results = $this->find($collection, $options);
         return \reset($results);
     }
 
     /**
+     * @param string $collection
      * @param array $options
      *
      * @return Document
      */
-    public function findLast(array $options)
+    public function findLast(string $collection, array $options)
     {
-        $results = $this->find($options);
+        $results = $this->find($collection, $options);
         return \end($results);
     }
 
@@ -298,6 +304,13 @@ class Database
     {
         if ($id === '') {
             return new Document([]);
+        }
+
+        if(isset(self::$cache[$this->getNamespace().'/'.$collection.'/'.$id])) {
+            self::$cache[$this->getNamespace().'/'.$collection.'/'.$id]++;
+        }
+        else {
+            self::$cache[$this->getNamespace().'/'.$collection.'/'.$id] = 0;
         }
 
         if($mock === true
@@ -466,6 +479,18 @@ class Database
         }
 
         return new Document($this->adapter->deleteDocument($this->getDocument(self::COLLECTION_COLLECTIONS, $collection), $id));
+    }
+
+    /**
+     * @param int $key
+     *
+     * @return Document|false
+     *
+     * @throws AuthorizationException
+     */
+    public function deleteUniqueKey($key)
+    {
+        return new Document($this->adapter->deleteUniqueKey($key));
     }
 
     /**

@@ -15,13 +15,13 @@
     data-success="trigger"
     data-success-param-trigger-events="projects.listTasks">
 
-    <div data-ls-if="0 === {{console-tasks.length}} || undefined === {{console-tasks.length}}" class="box margin-top margin-bottom">
+    <div data-ls-if="0 === {{console-tasks.sum}} || undefined === {{console-tasks.sum}}" class="box margin-top margin-bottom">
         <h3 class="margin-bottom-small text-bold">No Tasks Found</h3>
 
         <p class="margin-bottom-no">You haven't created any tasks for your project yet.</p>
     </div>
 
-    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.length}}">
+    <div class="box y-scroll margin-bottom" data-ls-if="0 != {{console-tasks.sum}}">
         <table class="full vertical">
             <thead>
                 <tr>
@@ -31,7 +31,7 @@
                     <th width="140"></th>
                 </tr>
             </thead>
-            <tbody data-ls-loop="console-tasks" data-ls-as="task" class="list">
+            <tbody data-ls-loop="console-tasks.tasks" data-ls-as="task" class="list">
                 <tr>
                     <td>
                         <div class="margin-bottom-tiny text-one-liner">

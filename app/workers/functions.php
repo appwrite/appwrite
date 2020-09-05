@@ -133,15 +133,12 @@ class FunctionsV1
 
                     Authorization::disable();
 
-                    $functions = $database->find([
+                    $functions = $database->find(Database::COLLECTION_FUNCTIONS, [
                         'limit' => $limit,
                         'offset' => $offset,
                         'orderField' => 'name',
                         'orderType' => 'ASC',
                         'orderCast' => 'string',
-                        'filters' => [
-                            '$collection='.Database::COLLECTION_FUNCTIONS,
-                        ],
                     ]);
 
                     Authorization::reset();

@@ -29,6 +29,7 @@ class DeletesV1
     {
         $projectId = $this->args['projectId'];
         $document = $this->args['document'];
+
         $document = new Document($document);
         
         switch ($document->getCollection()) {
@@ -37,6 +38,9 @@ class DeletesV1
                 break;
             case Database::COLLECTION_FUNCTIONS:
                 $this->deleteFunction($document, $projectId);
+                break;
+            case Database::COLLECTION_USERS:
+                $this->deleteUser($document, $projectId);
                 break;
             
             default:
@@ -62,14 +66,29 @@ class DeletesV1
         $cache->delete($cache->getRoot(), true);
     }
 
+    protected function deleteUser(Document $document, $projectId)
+    {
+        $tokens = $document->getAttribute('tokens', []);
+
+        foreach ($tokens as $token) {
+            if (!$this->getProjectDB($projectId)->deleteDocument(Database::COLLECTION_TOKENS, $token->getId())) {
+                throw new Exception('Failed to remove token from DB', 500);
+            }
+        }
+
+        // Delete Memberships
+        $this->deleteByGroup(Database::COLLECTION_MEMBERSHIPS, [
+            'userId='.$document->getId(),
+        ], $this->getProjectDB($projectId));
+    }
+
     protected function deleteFunction(Document $document, $projectId)
     {
         $projectDB = $this->getProjectDB($projectId);
         $device = new Local(APP_STORAGE_FUNCTIONS.'/app-'.$projectId);
 
         // Delete Tags
-        $this->deleteByGroup([
-            '$collection='.Database::COLLECTION_TAGS,
+        $this->deleteByGroup(Database::COLLECTION_TAGS, [
             'functionId='.$document->getId(),
         ], $projectDB, function(Document $document) use ($device) {
 
@@ -82,8 +101,7 @@ class DeletesV1
         });
 
         // Delete Executions
-        $this->deleteByGroup([
-            '$collection='.Database::COLLECTION_EXECUTIONS,
+        $this->deleteByGroup(Database::COLLECTION_EXECUTIONS, [
             'functionId='.$document->getId(),
         ], $projectDB);
     }
@@ -109,7 +127,7 @@ class DeletesV1
         Authorization::reset();
     }
 
-    protected function deleteByGroup(array $filters, Database $database, callable $callback = null)
+    protected function deleteByGroup(string $collection, array $filters, Database $database, callable $callback = null)
     {
         $count = 0;
         $chunk = 0;
@@ -124,7 +142,7 @@ class DeletesV1
 
             Authorization::disable();
 
-            $results = $database->find([
+            $results = $database->find($collection, [
                 'limit' => $limit,
                 'offset' => 0,
                 'orderField' => '$id',

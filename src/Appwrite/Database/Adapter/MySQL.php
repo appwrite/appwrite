@@ -316,7 +316,7 @@ class MySQL extends Adapter
                         continue;
                     }
 
-                    $data[$key][$i] = $this->createDocument($child['$collection'], $child);
+                    $data[$key][$i] = $this->createDocument(new Document([]), $child);
 
                     $this->createRelationship($revision, $data['$id'], $data[$key][$i]['$id'], $key, true, $i);
                 }
@@ -326,7 +326,7 @@ class MySQL extends Adapter
 
             // Handle relation
             if (self::DATA_TYPE_DICTIONARY === $type) {
-                $value = $this->createDocument($value['$collection'], $value);
+                $value = $this->createDocument(new Document([]), $value);
                 $this->createRelationship($revision, $data['$id'], $value['$id'], $key); //xxx
                 continue;
             }
@@ -419,6 +419,26 @@ class MySQL extends Adapter
         $st3->bindValue(':id', $id, PDO::PARAM_STR);
 
         $st3->execute();
+
+        return [];
+    }
+
+    /**
+     * Delete Unique Key.
+     *
+     * @param int $key
+     *
+     * @return array
+     *
+     * @throws Exception
+     */
+    public function deleteUniqueKey($key)
+    {
+        $st1 = $this->getPDO()->prepare('DELETE FROM `'.$this->getNamespace().'.database.unique` WHERE `key` = :key');
+
+        $st1->bindValue(':key', $key, PDO::PARAM_STR);
+
+        $st1->execute();
 
         return [];
     }
@@ -538,7 +558,7 @@ class MySQL extends Adapter
      *
      * @return array
      */
-    public function find(array $options)
+    public function find(Document $collection, array $options)
     {
         $start = \microtime(true);
         $orderCastMap = [
@@ -565,6 +585,8 @@ class MySQL extends Adapter
         $join = [];
         $sorts = [];
         $search = '';
+
+        $options['filters'][] = '$collection='.$collection->getId();
 
         // Filters
         foreach ($options['filters'] as $i => $filter) {

@@ -65,7 +65,7 @@ App::post('/v1/database/collections')
                 'rules' => $parsedRules,
             ]);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -110,16 +110,13 @@ App::get('/v1/database/collections')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_COLLECTIONS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'name',
             'orderType' => $orderType,
             'orderCast' => 'string',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_COLLECTIONS,
-            ],
         ]);
 
         $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
@@ -261,7 +258,7 @@ App::put('/v1/database/collections/:collectionId')
                 'rules' => $parsedRules,
             ]));
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -384,7 +381,7 @@ App::post('/v1/database/collections/:collectionId/documents')
         try {
             $data = $projectDB->createDocument($collectionId, $data);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -435,16 +432,14 @@ App::get('/v1/database/collections/:collectionId/documents')
             throw new Exception('Collection not found', 404);
         }
 
-        $list = $projectDB->find([
+        $list = $projectDB->find($collection->getId(), [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => $orderField,
             'orderType' => $orderType,
             'orderCast' => $orderCast,
             'search' => $search,
-            'filters' => \array_merge($filters, [
-                '$collection='.$collectionId,
-            ]),
+            'filters' => $filters,
         ]);
 
         if (App::isDevelopment()) {
@@ -571,7 +566,7 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             $data = $projectDB->updateDocument($collection->getId(), $document->getId(), $data);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {
@@ -624,7 +619,7 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
         try {
             $projectDB->deleteDocument($collectionId, $documentId);
         } catch (AuthorizationException $exception) {
-            throw new Exception('Unauthorized action', 401);
+            throw new Exception('Unauthorized permissions', 401);
         } catch (StructureException $exception) {
             throw new Exception('Bad structure. '.$exception->getMessage(), 400);
         } catch (\Exception $exception) {

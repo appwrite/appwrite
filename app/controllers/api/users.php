@@ -33,10 +33,9 @@ App::post('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $profile = $projectDB->findFirst([ // Get user by email address
+        $profile = $projectDB->findFirst(Database::COLLECTION_USERS, [ // Get user by email address
             'limit' => 1,
             'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
                 'email='.$email,
             ],
         ]);
@@ -85,16 +84,13 @@ App::get('/v1/users')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
 
-        $results = $projectDB->find([
+        $results = $projectDB->find(Database::COLLECTION_USERS, [
             'limit' => $limit,
             'offset' => $offset,
             'orderField' => 'registration',
             'orderType' => $orderType,
             'orderCast' => 'int',
             'search' => $search,
-            'filters' => [
-                '$collection='.Database::COLLECTION_USERS,
-            ],
         ]);
 
         $response->dynamic(new Document([
@@ -403,3 +399,50 @@ App::delete('/v1/users/:userId/sessions')
 
         $response->noContent();
     }, ['response', 'projectDB']);
+
+App::delete('/v1/users/:userId')
+    ->desc('Delete User')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.write')
+    ->label('sdk.platform', [APP_PLATFORM_SERVER])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'deleteUser')
+    ->label('sdk.description', '/docs/references/users/delete-user.md')
+    ->label('abuse-limit', 100)
+    ->param('userId', '', function () {return new UID();}, 'User unique ID.')
+    ->action(function ($userId, $response, $projectDB, $deletes) {
+        /** @var Utopia\Response $response */
+        /** @var Appwrite\Database\Database $projectDB */
+        /** @var Appwrite\Event\Event $deletes */
+        
+        $user = $projectDB->getDocument(Database::COLLECTION_USERS, $userId);
+
+        if (empty($user->getId()) || Database::COLLECTION_USERS != $user->getCollection()) {
+            throw new Exception('User not found', 404);
+        }
+        if (!$projectDB->deleteDocument(Database::COLLECTION_USERS, $userId)) {
+            throw new Exception('Failed to remove user from DB', 500);
+        }
+
+        if (!$projectDB->deleteUniqueKey(md5('users:email='.$user->getAttribute('email', null)))) {
+            throw new Exception('Failed to remove unique key from DB', 500);
+        }
+        
+        $reservedId = $projectDB->overwriteDocument([
+            '$collection' => Database::COLLECTION_RESERVED,
+            '$id' => $userId,
+            '$permissions' => [
+                'read' => ['*'],
+            ],
+        ]);
+
+        if (false === $reservedId) {
+            throw new Exception('Failed saving reserved id to DB', 500);
+        }
+
+        $deletes
+            ->setParam('document', $user)
+        ;
+
+        $response->noContent();
+    }, ['response', 'projectDB', 'deletes']);
