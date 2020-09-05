@@ -81,6 +81,10 @@ When contributing code, please take into account the following considerations:
 
 Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
 
+---
+![Appwrite](docs/specs/overview.drawio.svg)
+---
+
 ### The Monolithic Part
 
 Appwrite's main API container is designed as a monolithic app. This is a decision we made to allow us to develop the project faster while still being a very small team.
