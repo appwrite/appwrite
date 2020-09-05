@@ -28,6 +28,26 @@ docker-compose up -d
 
 After finishing the installation process, you can start writing and editing code. To compile new CSS and JS distribution files, use 'less' and 'build' tasks using gulp as a task manager.
 
+## Architecture
+
+Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
+
+---
+![Appwrite](docs/specs/overview.drawio.svg)
+---
+
+### The Monolithic Part
+
+Appwrite's main API container is designed as a monolithic app. This is a decision we made to allow us to develop the project faster while still being a very small team.
+
+Although the Appwrite API is a monolithic app, it has a very clear separation of concern as each internal service or worker is separated by its container, which will allow us as we grow to start breaking services for better maintenance and scalability.
+
+### The Microservice Part
+
+Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
+
+Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
+
 ## Technology Stack
 
 To start helping us to improve the Appwrite server by submitting code, prior knowledge of Appwrite's technology stack can help you with getting started.
@@ -76,26 +96,6 @@ When contributing code, please take into account the following considerations:
 * Browser Rendering
 * Background Jobs
 * Task Execution Time
-
-## Architecture
-
-Appwrite's current structure is a combination of both [Monolithic](https://en.wikipedia.org/wiki/Monolithic_application) and [Microservice](https://en.wikipedia.org/wiki/Microservices) architectures, but our final goal, as we grow, is to be using only microservices.
-
----
-![Appwrite](docs/specs/overview.drawio.svg)
----
-
-### The Monolithic Part
-
-Appwrite's main API container is designed as a monolithic app. This is a decision we made to allow us to develop the project faster while still being a very small team.
-
-Although the Appwrite API is a monolithic app, it has a very clear separation of concern as each internal service or worker is separated by its container, which will allow us as we grow to start breaking services for better maintenance and scalability.
-
-### The Microservice Part
-
-Each container in Appwrite is a microservice on its own. Each service is an independent process that can scale without regard to any of the other services.
-
-Currently, all of the Appwrite microservices are intended to communicate using the TCP protocol over a private network. You should be aware to not expose any of the services to the public-facing network, besides the public port 80 and 443, who, by default, are used to expose the Appwrite HTTP API.
 
 ## Security & Privacy
 
