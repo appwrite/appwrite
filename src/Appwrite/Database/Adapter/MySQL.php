@@ -316,7 +316,7 @@ class MySQL extends Adapter
                         continue;
                     }
 
-                    $data[$key][$i] = $this->createDocument($child['$collection'], $child);
+                    $data[$key][$i] = $this->createDocument(new Document([]), $child);
 
                     $this->createRelationship($revision, $data['$id'], $data[$key][$i]['$id'], $key, true, $i);
                 }
@@ -326,7 +326,7 @@ class MySQL extends Adapter
 
             // Handle relation
             if (self::DATA_TYPE_DICTIONARY === $type) {
-                $value = $this->createDocument($value['$collection'], $value);
+                $value = $this->createDocument(new Document([]), $value);
                 $this->createRelationship($revision, $data['$id'], $value['$id'], $key); //xxx
                 continue;
             }

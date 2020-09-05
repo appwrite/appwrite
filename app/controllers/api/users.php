@@ -428,7 +428,7 @@ App::delete('/v1/users/:userId')
             throw new Exception('Failed to remove unique key from DB', 500);
         }
         
-        $reservedId = $projectDB->createDocument(Database::COLLECTION_RESERVED, [
+        $reservedId = $projectDB->overwriteDocument([
             '$collection' => Database::COLLECTION_RESERVED,
             '$id' => $userId,
             '$permissions' => [

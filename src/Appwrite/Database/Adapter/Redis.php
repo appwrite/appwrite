@@ -162,7 +162,7 @@ class Redis extends Adapter
         foreach ($output['temp-relations'] as $i => $relationship) {
             $node = $relationship['end'];
 
-            $node = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument(new Document(), $node);
+            $node = (!empty($nodes[$i])) ? $this->parseRelations(\json_decode($nodes[$i], true)) : $this->getDocument(new Document([]), $node);
 
             if (empty($node)) {
                 continue;

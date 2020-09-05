@@ -889,7 +889,7 @@ App::post('/v1/projects/:projectId/tasks')
         }
 
         $cron = CronExpression::factory($schedule);
-        $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
+        $next = ($status == 'play') ? (int)$cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
@@ -1050,7 +1050,7 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         }
 
         $cron = CronExpression::factory($schedule);
-        $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
+        $next = ($status == 'play') ? (int)$cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V1');
