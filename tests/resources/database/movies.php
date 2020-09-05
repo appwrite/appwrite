@@ -61,7 +61,6 @@ $collections = [
         ]
     ]
 ];
-
 $movies = [
     // [
     //     'name' => '',
@@ -119,7 +118,6 @@ $movies = [
         'generes' => ['Action', 'Adventure'],
         'langauges' => ['English'],
     ],
-
     [
         'name' => 'Black Panther',
         'releaseYear' => 2018,
@@ -197,7 +195,6 @@ $movies = [
         'generes' => ['Action', 'Adventure'],
         'langauges' => ['English'],
     ],
-
     [
         'name' => 'Doctor Strange',
         'releaseYear' => 2016,
