@@ -234,18 +234,18 @@
                                     <th width="90">IP</th>
                                 </tr>
                             </thead>
-                            <tbody data-ls-loop="logs" data-ls-as="log">
+                            <tbody data-ls-loop="logs.logs" data-ls-as="log">
                                 <tr>
                                     <td data-title="Date: "><span data-ls-bind="{{log.time|dateTime}}"></span></td>
                                     <td data-title="Event: "><span data-ls-bind="{{log.event}}"></span></td>
                                     <td data-title="Client: ">
-                                        <img data-ls-if="({{log.client.short_name}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.client.short_name|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.client.name}},alt={{log.client.name}}" class="avatar xxs inline margin-end-small" />
-                                        <span data-ls-if="({{log.client.name}})" data-ls-bind="{{log.client.name}} {{log.client.version}} on {{log.model}} {{log.OS.name}} {{log.OS.version}}"></span>
-                                        <div data-ls-if="(!{{log.client.name}})" class="text-align-center text-fade">Unknown</div>
+                                        <img data-ls-if="({{log.clientCode}})" data-ls-attrs="src={{env.API}}/avatars/browsers/{{log.clientCode|lowercase}}?width=80&height=80&project={{env.PROJECT}},title={{log.clientName}},alt={{log.clientName}}" class="avatar xxs inline margin-end-small" />
+                                        <span data-ls-if="({{log.clientName}})" data-ls-bind="{{log.clientName}} {{log.clientVersion}} on {{log.model}} {{log.osName}} {{log.osVersion}}"></span>
+                                        <div data-ls-if="(!{{log.clientName}})" class="text-align-center text-fade">Unknown</div>
                                     </td>
                                     <td data-title="Location: ">
-                                        <img data-ls-if="{{session.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.geo.isoCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
-                                        <span data-ls-bind="{{log.geo.country}}"></span>
+                                        <img data-ls-if="{{log.countryCode}} !== '--'" data-ls-attrs="src={{env.API}}/avatars/flags/{{log.countryCode}}?width=80&height=80&project={{env.PROJECT}}" class="avatar xxs inline margin-end-small" />
+                                        <span data-ls-bind="{{log.countryName}}"></span>
                                     </td>
                                     <td data-title="IP: "><span data-ls-bind="{{log.ip}}"></span></td>
                                 </tr>

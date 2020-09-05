@@ -77,7 +77,7 @@ App::get('/v1/locale/countries')
 
         $list = $locale->getText('countries'); /* @var $list array */
 
-        \asort($list);
+        \asort($list); // sort by abc per language
 
         $response->json($list);
     }, ['response', 'locale']);
@@ -166,9 +166,9 @@ App::get('/v1/locale/currencies')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $currencies = Config::getParam('locale-currencies');
+        $list = Config::getParam('locale-currencies');
 
-        $response->json($currencies);
+        $response->json($list);
     }, ['response']);
 
 
@@ -183,7 +183,7 @@ App::get('/v1/locale/languages')
     ->action(function ($response) {
         /** @var Appwrite\Utopia\Response $response */
 
-        $languages = Config::getParam('locale-languages');
+        $list = Config::getParam('locale-languages');
 
-        $response->json($languages);
+        $response->json($list);
     }, ['response']);

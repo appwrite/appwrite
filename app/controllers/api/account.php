@@ -739,30 +739,49 @@ App::get('/v1/account/logs')
 
             $dd->parse();
 
+            $os = $dd->getOs();
+            $osCode = (isset($os['short_name'])) ? $os['short_name'] : '';
+            $osName = (isset($os['name'])) ? $os['name'] : '';
+            $osVersion = (isset($os['version'])) ? $os['version'] : '';
+
+            $client = $dd->getClient();
+            $clientType = (isset($client['type'])) ? $client['type'] : '';
+            $clientCode = (isset($client['short_name'])) ? $client['short_name'] : '';
+            $clientName = (isset($client['name'])) ? $client['name'] : '';
+            $clientVersion = (isset($client['version'])) ? $client['version'] : '';
+            $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
+            $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
+
             $output[$i] = [
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => \strtotime($log['time']),
-                'OS' => $dd->getOs(),
-                'client' => $dd->getClient(),
-                'device' => $dd->getDevice(),
-                'brand' => $dd->getBrand(),
-                'model' => $dd->getModel(),
-                'geo' => [],
+
+                'osCode' => $osCode,
+                'osName' => $osName,
+                'osVersion' => $osVersion,
+                'clientType' => $clientType,
+                'clientCode' => $clientCode,
+                'clientName' => $clientName,
+                'clientVersion' => $clientVersion,
+                'clientEngine' => $clientEngine,
+                'clientEngineVersion' => $clientEngineVersion,
+                'deviceName' => $dd->getDeviceName(),
+                'deviceBrand' => $dd->getBrandName(),
+                'deviceModel' => $dd->getModel(),
             ];
 
             try {
                 $record = $geodb->country($log['ip']);
-                $output[$i]['geo']['isoCode'] = \strtolower($record->country->isoCode);
-                $output[$i]['geo']['country'] = $record->country->name;
-                $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = \strtolower($record->country->isoCode);
+                $output[$i]['countryName'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
             } catch (\Exception $e) {
-                $output[$i]['geo']['isoCode'] = '--';
-                $output[$i]['geo']['country'] = $locale->getText('locale.country.unknown');
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
             }
         }
 
-        $response->json($output);
+        $response->dynamic(new Document(['logs' => $output]), Response::MODEL_LOG_LIST);
     }, ['response', 'register', 'project', 'user', 'locale', 'geodb']);
 
 App::patch('/v1/account/name')

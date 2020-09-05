@@ -18,7 +18,7 @@ class Log extends Model
      */
     public function getName():string
     {
-        return 'Session';
+        return 'Log';
     }
 
     /**
@@ -28,6 +28,6 @@ class Log extends Model
      */
     public function getType():string
     {
-        return Response::MODEL_LOCALE;
+        return Response::MODEL_LOG;
     }
 }
