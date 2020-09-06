@@ -209,11 +209,11 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as &$item) {
-                    if(!array_key_exists($rule['type'], $this->models)) {
-                        throw new Exception('Missing model for rule: '. $rule['type']);
-                    }
-
                     if($item instanceof Document) {
+                        if(!array_key_exists($rule['type'], $this->models)) {
+                            throw new Exception('Missing model for rule: '. $rule['type']);
+                        }
+
                         $item = $this->output($item, $rule['type']);
                     }
                 }
