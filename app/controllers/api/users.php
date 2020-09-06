@@ -264,8 +264,7 @@ App::get('/v1/users/:userId/logs')
             $clientEngine = (isset($client['engine'])) ? $client['engine'] : '';
             $clientEngineVersion = (isset($client['engine_version'])) ? $client['engine_version'] : '';
 
-
-            $output[$i] = [
+            $output[$i] = new Document([
                 'event' => $log['event'],
                 'ip' => $log['ip'],
                 'time' => \strtotime($log['time']),
@@ -282,15 +281,15 @@ App::get('/v1/users/:userId/logs')
                 'deviceName' => $dd->getDeviceName(),
                 'deviceBrand' => $dd->getBrandName(),
                 'deviceModel' => $dd->getModel(),
-            ];
+            ]);
 
             try {
                 $record = $geodb->country($log['ip']);
-                $output[$i]['countryCode'] = \strtolower($record->country->isoCode);
-                $output[$i]['countryName'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown');
+                $output[$i]->setAttribute('countryCode', \strtolower($record->country->isoCode));
+                $output[$i]->setAttribute('countryName', (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : $locale->getText('locale.country.unknown'));
             } catch (\Exception $e) {
-                $output[$i]['countryCode'] = '--';
-                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+                $output[$i]->setAttribute('countryCode', '--');
+                $output[$i]->setAttribute('countryName', $locale->getText('locale.country.unknown'));
             }
         }
 

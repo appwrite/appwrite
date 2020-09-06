@@ -19,6 +19,7 @@ use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
+use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Tag;
@@ -112,6 +113,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN))
             // Entities
+            ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Session())
             ->setModel(new Locale())
@@ -126,11 +128,9 @@ class Response extends SwooleResponse
             ->setModel(new Task())
             ->setModel(new Domain())
             ->setModel(new Platform())
-            // Locale
             // Continent
             // Country
             // Currency
-            // Log
             // Verification
             // Recovery
             // Language
@@ -209,7 +209,11 @@ class Response extends SwooleResponse
                 }
 
                 foreach ($data[$key] as &$item) {
-                    if(array_key_exists($rule['type'], $this->models) && $item instanceof Document) {
+                    if(!array_key_exists($rule['type'], $this->models)) {
+                        throw new Exception('Missing model for rule: '. $rule['type']);
+                    }
+
+                    if($item instanceof Document) {
                         $item = $this->output($item, $rule['type']);
                     }
                 }

@@ -23,7 +23,7 @@ class Session extends Model
             ])
             ->addRule('ip', [
                 'type' => 'string',
-                'description' => 'IP session in use when the session was created.',
+                'description' => 'IP in use when the session was created.',
                 'default' => '',
                 'example' => '127.0.0.1',
             ])
