@@ -76,10 +76,18 @@ App::get('/v1/locale/countries')
         /** @var Utopia\Locale\Locale $locale */
 
         $list = $locale->getText('countries'); /* @var $list array */
+        $output = [];
 
-        \asort($list); // sort by abc per language
+        \asort($list); // sort by abc per locale
 
-        $response->json($list);
+        foreach ($list as $key => $value) {
+            $output[] = new Document([
+                'name' => $value,
+                'code' => $key,
+            ]);
+        }
+
+        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     }, ['response', 'locale']);
 
 App::get('/v1/locale/countries/eu')
@@ -94,19 +102,22 @@ App::get('/v1/locale/countries/eu')
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\Locale\Locale $locale */
 
-        $countries = $locale->getText('countries'); /* @var $countries array */
+        $list = $locale->getText('countries'); /* @var $countries array */
         $eu = Config::getParam('locale-eu');
-        $list = [];
-
-        foreach ($eu as $code) {
-            if (\array_key_exists($code, $countries)) {
-                $list[$code] = $countries[$code];
-            }
-        }
+        $output = [];
 
         \asort($list);
 
-        $response->json($list);
+        foreach ($eu as $code) {
+            if (\array_key_exists($code, $list)) {
+                $output[] = new Document([
+                    'name' => $list[$code],
+                    'code' => $code,
+                ]);
+            }
+        }
+
+        $response->dynamic(new Document(['countries' => $output, 'sum' => \count($output)]), Response::MODEL_COUNTRY_LIST);
     }, ['response', 'locale']);
 
 App::get('/v1/locale/countries/phones')
@@ -122,18 +133,22 @@ App::get('/v1/locale/countries/phones')
         /** @var Utopia\Locale\Locale $locale */
 
         $list = Config::getParam('locale-phones'); /* @var $list array */
-
         $countries = $locale->getText('countries'); /* @var $countries array */
+        $output = [];
+        
+        \asort($list);
 
         foreach ($list as $code => $name) {
             if (\array_key_exists($code, $countries)) {
-                $list[$code] = '+'.$list[$code];
+                $output[] = new Document([
+                    'code' => '+'.$list[$code],
+                    'countryCode' => $code,
+                    'countryName' => $countries[$code],
+                ]);
             }
         }
 
-        \asort($list);
-
-        $response->json($list);
+        $response->dynamic(new Document(['phones' => $output, 'sum' => \count($output)]), Response::MODEL_PHONE_LIST);
     }, ['response', 'locale']);
 
 App::get('/v1/locale/continents')
@@ -151,8 +166,15 @@ App::get('/v1/locale/continents')
         $list = $locale->getText('continents'); /* @var $list array */
 
         \asort($list);
+        
+        foreach ($list as $key => $value) {
+            $output[] = new Document([
+                'name' => $value,
+                'code' => $key,
+            ]);
+        }
 
-        $response->json($list);
+        $response->dynamic(new Document(['continents' => $output, 'sum' => \count($output)]), Response::MODEL_CONTINENT_LIST);
     }, ['response', 'locale']);
 
 App::get('/v1/locale/currencies')
@@ -168,7 +190,11 @@ App::get('/v1/locale/currencies')
 
         $list = Config::getParam('locale-currencies');
 
-        $response->json($list);
+        $list = array_map(function($node) {
+            return new Document($node);
+        }, $list);
+
+        $response->dynamic(new Document(['currencies' => $list, 'sum' => \count($list)]), Response::MODEL_CURRENCY_LIST);
     }, ['response']);
 
 
@@ -185,5 +211,9 @@ App::get('/v1/locale/languages')
 
         $list = Config::getParam('locale-languages');
 
-        $response->json($list);
+        $list = array_map(function($node) {
+            return new Document($node);
+        }, $list);
+
+        $response->dynamic(new Document(['languages' => $list, 'sum' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
     }, ['response']);

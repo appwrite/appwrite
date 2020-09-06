@@ -43,7 +43,6 @@ class Locale extends Model
             ])
             ->addRule('currency', [
                 'type' => 'string',
-                'description' => 'ISO 4217 Email verification status.',
                 'description' => 'Currency code in [ISO 4217-1](http://en.wikipedia.org/wiki/ISO_4217) three-character format',
                 'example' => 'USD',
             ])

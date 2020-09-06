@@ -8,6 +8,9 @@ use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\BaseList;
+use Appwrite\Utopia\Response\Model\Continent;
+use Appwrite\Utopia\Response\Model\Country;
+use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
@@ -15,12 +18,14 @@ use Appwrite\Utopia\Response\Model\Execution;
 use Appwrite\Utopia\Response\Model\File;
 use Appwrite\Utopia\Response\Model\Func;
 use Appwrite\Utopia\Response\Model\Key;
+use Appwrite\Utopia\Response\Model\Language;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Session;
 use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
+use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
@@ -29,8 +34,8 @@ use Appwrite\Utopia\Response\Model\Webhook;
 class Response extends SwooleResponse
 {
     // General
-    const MODEL_LOG = 'log'; // - Missing
-    const MODEL_LOG_LIST = 'logList'; // - Missing
+    const MODEL_LOG = 'log';
+    const MODEL_LOG_LIST = 'logList';
     const MODEL_ERROR = 'error';
     const MODEL_ERROR_DEV = 'errorDev';
     const MODEL_BASE_LIST = 'baseList';
@@ -48,11 +53,16 @@ class Response extends SwooleResponse
     
     // Locale
     const MODEL_LOCALE = 'locale';
-    const MODEL_COUNTRY = 'country'; // - Missing
-    const MODEL_CONTINENT = 'continent'; // - Missing
+    const MODEL_COUNTRY = 'country';
+    const MODEL_COUNTRY_LIST = 'countryList';
+    const MODEL_CONTINENT = 'continent';
+    const MODEL_CONTINENT_LIST = 'continentList';
     const MODEL_CURRENCY = 'currency'; // - Missing
+    const MODEL_CURRENCY_LIST = 'currencyList'; // - Missing
     const MODEL_LANGUAGE = 'langauge'; // - Missing
+    const MODEL_LANGUAGE_LIST = 'langaugeList'; // - Missing
     const MODEL_PHONE = 'phone'; // - Missing
+    const MODEL_PHONE_LIST = 'phoneList'; // - Missing
 
     // Storage
     const MODEL_FILE = 'file';
@@ -112,6 +122,11 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Tasks List', self::MODEL_TASK_LIST, 'tasks', self::MODEL_TASK))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM))
             ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN))
+            ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
+            ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
+            ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
+            ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
+            ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             // Entities
             ->setModel(new Log())
             ->setModel(new User())
@@ -128,12 +143,15 @@ class Response extends SwooleResponse
             ->setModel(new Task())
             ->setModel(new Domain())
             ->setModel(new Platform())
-            // Continent
-            // Country
+            ->setModel(new Country())
+            ->setModel(new Continent())
+            ->setModel(new Language())
+            ->setModel(new Currency())
+            ->setModel(new Phone())
             // Currency
+            // Phone
             // Verification
             // Recovery
-            // Language
         ;
 
         parent::__construct($response);
