@@ -106,7 +106,7 @@ App::get('/v1/database/collections')
     ->label('sdk.platform', [APP_PLATFORM_SERVER])
     ->label('sdk.method', 'listCollections')
     ->label('sdk.description', '/docs/references/database/list-collections.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 40000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
@@ -472,7 +472,7 @@ App::get('/v1/database/collections/:collectionId/documents')
     ->param('orderField', '$id', function () { return new Text(128); }, 'Document field that results will be sorted by.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(array('DESC', 'ASC')); }, 'Order direction. Possible values are DESC for descending order, or ASC for ascending order.', true)
     ->param('orderCast', 'string', function () { return new WhiteList(array('int', 'string', 'date', 'time', 'datetime')); }, 'Order field type casting. Possible values are int, string, date, time or datetime. The database will attempt to cast the order field to the value you pass here. The default value is a string.', true)
-    ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children.', true)
+    ->param('search', '', function () { return new Text(256); }, 'Search query. Enter any free text search. The database will try to find a match against all document attributes and children. Max length: 256 chars.', true)
     ->action(function ($collectionId, $filters, $limit, $offset, $orderField, $orderType, $orderCast, $search, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */

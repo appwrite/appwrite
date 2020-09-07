@@ -29,15 +29,15 @@ App::post('/v1/projects')
     ->label('sdk.method', 'create')
     ->param('name', null, function () { return new Text(128); }, 'Project name. Max length: 128 chars.')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('description', '', function () { return new Text(255); }, 'Project description.', true)
+    ->param('description', '', function () { return new Text(256); }, 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', function () { return new Text(1024); }, 'Project logo.', true)
     ->param('url', '', function () { return new URL(); }, 'Project URL.', true)
-    ->param('legalName', '', function () { return new Text(256); }, 'Project legal Name.', true)
-    ->param('legalCountry', '', function () { return new Text(256); }, 'Project legal Country.', true)
-    ->param('legalState', '', function () { return new Text(256); }, 'Project legal State.', true)
-    ->param('legalCity', '', function () { return new Text(256); }, 'Project legal City.', true)
-    ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal Address.', true)
-    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal Tax ID.', true)
+    ->param('legalName', '', function () { return new Text(256); }, 'Project legal Name. Max length: 256 chars.', true)
+    ->param('legalCountry', '', function () { return new Text(256); }, 'Project legal Country. Max length: 256 chars.', true)
+    ->param('legalState', '', function () { return new Text(256); }, 'Project legal State. Max length: 256 chars.', true)
+    ->param('legalCity', '', function () { return new Text(256); }, 'Project legal City. Max length: 256 chars.', true)
+    ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal Address. Max length: 256 chars.', true)
+    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal Tax ID. Max length: 256 chars.', true)
     ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -92,7 +92,7 @@ App::get('/v1/projects')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'list')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
@@ -339,12 +339,12 @@ App::patch('/v1/projects/:projectId')
     ->param('description', '', function () { return new Text(256); }, 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', function () { return new Text(1024); }, 'Project logo.', true)
     ->param('url', '', function () { return new URL(); }, 'Project URL.', true)
-    ->param('legalName', '', function () { return new Text(256); }, 'Project legal name.', true)
-    ->param('legalCountry', '', function () { return new Text(256); }, 'Project legal country..', true)
-    ->param('legalState', '', function () { return new Text(256); }, 'Project legal state.', true)
-    ->param('legalCity', '', function () { return new Text(256); }, 'Project legal city.', true)
-    ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal address.', true)
-    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal tax ID.', true)
+    ->param('legalName', '', function () { return new Text(256); }, 'Project legal name. Max length: 256 chars.', true)
+    ->param('legalCountry', '', function () { return new Text(256); }, 'Project legal country. Max length: 256 chars.', true)
+    ->param('legalState', '', function () { return new Text(256); }, 'Project legal state. Max length: 256 chars.', true)
+    ->param('legalCity', '', function () { return new Text(256); }, 'Project legal city. Max length: 256 chars.', true)
+    ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal address. Max length: 256 chars.', true)
+    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal tax ID. Max length: 256 chars.', true)
     ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -383,8 +383,8 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('sdk.method', 'updateOAuth2')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
     ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'Provider Name', false)
-    ->param('appId', '', function () { return new Text(256); }, 'Provider app ID.', true)
-    ->param('secret', '', function () { return new text(512); }, 'Provider secret key.', true)
+    ->param('appId', '', function () { return new Text(256); }, 'Provider app ID. Max length: 256 chars.', true)
+    ->param('secret', '', function () { return new text(512); }, 'Provider secret key. Max length: 512 chars.', true)
     ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -478,8 +478,8 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Events list.')
     ->param('url', null, function () { return new URL(); }, 'Webhook URL.')
     ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
-    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
+    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -613,8 +613,9 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('name', null, function () { return new Text(128); }, 'Webhook name. Max length: 128 chars.')
     ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Events list.')
     ->param('url', null, function () { return new URL(); }, 'Webhook URL.')
-    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password.', true)
+    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
+    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -869,8 +870,8 @@ App::post('/v1/projects/:projectId/tasks')
     ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
     ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL')
     ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
-    ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
+    ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1023,8 +1024,8 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT']); }, 'Task HTTP method.')
     ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL.')
     ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
-    ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password.', true)
+    ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1123,9 +1124,9 @@ App::post('/v1/projects/:projectId/platforms')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('type', null, function () { return new WhiteList(['web', 'flutter-ios', 'flutter-android', 'ios', 'android', 'unity']); }, 'Platform type.')
     ->param('name', null, function () { return new Text(128); }, 'Platform name. Max length: 128 chars.')
-    ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS.', true)
-    ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
-    ->param('hostname', '', function () { return new Text(256); }, 'Platform client hostname.', true)
+    ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
+    ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID. Max length: 256 chars.', true)
+    ->param('hostname', '', function () { return new Text(256); }, 'Platform client hostname. Max length: 256 chars.', true)
     ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1227,9 +1228,9 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
     ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
     ->param('name', null, function () { return new Text(128); }, 'Platform name. Max length: 128 chars.')
-    ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS.', true)
-    ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID.', true)
-    ->param('hostname', '', function () { return new Text(256); }, 'Platform client URL.', true)
+    ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
+    ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID. Max length: 256 chars.', true)
+    ->param('hostname', '', function () { return new Text(256); }, 'Platform client URL. Max length: 256 chars.', true)
     ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
