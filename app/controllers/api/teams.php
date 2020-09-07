@@ -26,7 +26,7 @@ App::post('/v1/teams')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/teams/create-team.md')
-    ->param('name', null, function () { return new Text(100); }, 'Team name.')
+    ->param('name', null, function () { return new Text(128); }, 'Team name. Max length: 128 chars.')
     ->param('roles', ['owner'], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions).', true)
     ->action(function ($name, $roles, $response, $user, $projectDB, $mode) {
         /** @var Utopia\Response $response */
@@ -147,7 +147,7 @@ App::put('/v1/teams/:teamId')
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/teams/update-team.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('name', null, function () { return new Text(100); }, 'Team name.')
+    ->param('name', null, function () { return new Text(128); }, 'Team name. Max length: 128 chars.')
     ->action(function ($teamId, $name, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -220,7 +220,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
     ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
     ->param('email', '', function () { return new Email(); }, 'New team member email.')
-    ->param('name', '', function () { return new Text(100); }, 'New team member name.', true)
+    ->param('name', '', function () { return new Text(128); }, 'New team member name. Max length: 128 chars.', true)
     ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audits, $mails, $mode) {

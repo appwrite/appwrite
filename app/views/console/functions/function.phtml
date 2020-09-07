@@ -405,7 +405,7 @@ $timeout = $this->getParam('timeout', 900);
                             <div class="box">
                                 <section class="margin-bottom-large">
                                     <label for="name">Name</label>
-                                    <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" />
+                                    <input name="name" id="function-name" type="text" autocomplete="off" data-ls-bind="{{project-function.name}}" data-forms-text-direction required placeholder="Function Name" maxlength="128" />
                                     
                                     <label for="timeout">Timeout (seconds) <span class="tooltip small" data-tooltip="Limit the execution time of your function."><i class="icon-info-circled"></i></span></label>
                                     <input name="timeout" id="function-timeout" type="number" autocomplete="off" data-ls-bind="{{project-function.timeout}}" min="1" max="<?php echo $this->escape($timeout); ?>" />

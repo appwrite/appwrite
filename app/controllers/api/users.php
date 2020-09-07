@@ -28,7 +28,7 @@ App::post('/v1/users')
     ->label('sdk.description', '/docs/references/users/create-user.md')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->param('name', '', function () { return new Text(100); }, 'User name.', true)
+    ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.', true)
     ->action(function ($email, $password, $name, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
