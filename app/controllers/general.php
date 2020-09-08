@@ -274,11 +274,12 @@ App::shutdown(function ($utopia, $request, $response, $project, $webhooks, $audi
     /** @var bool $mode */
 
     if (!empty($functions->getParam('event'))) {
-        $functions->setParam('payload', $webhooks->getParam('payload'));
+        $functions->setParam('payload', $response->getPayload());
         $functions->trigger();
     }
 
     if (!empty($webhooks->getParam('event'))) {
+        $webhooks->setParam('payload', $response->getPayload());
         $webhooks->trigger();
     }
     
