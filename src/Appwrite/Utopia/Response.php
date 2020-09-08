@@ -98,6 +98,11 @@ class Response extends SwooleResponse
     const MODEL_DOMAIN_LIST = 'domainList';
 
     /**
+     * @var array
+     */
+    protected $payload = [];
+
+    /**
      * Response constructor.
      */
     public function __construct(SwooleHTTPResponse $response)
@@ -240,6 +245,8 @@ class Response extends SwooleResponse
             $output[$key] = $data[$key];
         }
 
+        $this->payload = $output;
+
         return $output;
     }
 
@@ -263,5 +270,13 @@ class Response extends SwooleResponse
             ->setContentType(Response::CONTENT_TYPE_YAML)
             ->send(yaml_emit($data, YAML_UTF8_ENCODING))
         ;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPayload():array
+    {
+        return $this->payload;
     }
 }
