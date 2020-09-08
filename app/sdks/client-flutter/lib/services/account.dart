@@ -4,6 +4,7 @@ import 'package:universal_html/html.dart' as html;
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_web_auth/flutter_web_auth.dart';
 
 import "../client.dart";
