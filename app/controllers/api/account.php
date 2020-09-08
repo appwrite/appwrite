@@ -40,8 +40,8 @@ App::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->param('name', '', function () { return new Text(100); }, 'User name.', true)
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) {
+    ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.', true)
+    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) use ($oauth2Keys) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -793,7 +793,7 @@ App::patch('/v1/account/name')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
-    ->param('name', '', function () { return new Text(100); }, 'User name.')
+    ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.')
     ->action(function ($name, $response, $user, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */

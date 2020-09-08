@@ -95,7 +95,7 @@
                                 <input type="hidden" name="taskId" data-ls-bind="{{task.$id}}" />
 
                                 <label data-ls-attrs="for=name-{{task.$id}}">Name</label>
-                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$id}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" />
+                                <input type="text" class="full-width" data-ls-attrs="id=name-{{task.$id}}" name="name" required autocomplete="off" data-ls-bind="{{task.name}}" maxlength="128" />
 
                                 <label data-ls-attrs="for=status-{{task.$id}}" class="margin-bottom">Status
                                     <div class="margin-top-small">
@@ -254,7 +254,7 @@
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name</label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <label data-ls-attrs="for=status" class="margin-bottom">Status
                     <div class="margin-top-small">
