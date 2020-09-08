@@ -1,3 +1,7 @@
+## 0.3.0-dev.2
+
+- Fix for an error when using a self-signed certificate for Web
+
 ## 0.3.0-dev.1
 
 - Updated package dependencies (@lohanidamodar)

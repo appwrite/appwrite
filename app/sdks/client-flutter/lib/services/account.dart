@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'package:universal_html/html.dart' as html;
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
@@ -337,19 +338,26 @@ class Account extends Service {
           query: query.join('&')
         );
 
-        return FlutterWebAuth.authenticate(
-          url: url.toString(),
-          callbackUrlScheme: "appwrite-callback-" + client.config['project']
-          ).then((value) async {
-              Uri url = Uri.parse(value);
-              Cookie cookie = new Cookie(url.queryParameters['key'], url.queryParameters['secret']);
-              cookie.domain = Uri.parse(client.endPoint).host;
-              cookie.httpOnly = true;
-              cookie.path = '/';
-              List<Cookie> cookies = [cookie];
-              await client.init();
-              client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
-          });
+        if(kIsWeb) {
+          html.window.location.href = url.toString();
+          return null;
+        }else{
+
+          return FlutterWebAuth.authenticate(
+            url: url.toString(),
+            callbackUrlScheme: "appwrite-callback-" + client.config['project']
+            ).then((value) async {
+                Uri url = Uri.parse(value);
+                Cookie cookie = new Cookie(url.queryParameters['key'], url.queryParameters['secret']);
+                cookie.domain = Uri.parse(client.endPoint).host;
+                cookie.httpOnly = true;
+                cookie.path = '/';
+                List<Cookie> cookies = [cookie];
+                await client.init();
+                client.cookieJar.saveFromResponse(Uri.parse(client.endPoint), cookies);
+            });
+        }
+
     }
 
      /// Delete Account Session
@@ -376,16 +384,17 @@ class Account extends Service {
      /// Use this endpoint to send a verification message to your user email address
      /// to confirm they are the valid owners of that address. Both the **userId**
      /// and **secret** arguments will be passed as query parameters to the URL you
-     /// have provider to be attached to the verification email. The provided URL
-     /// should redirect the user back for your app and allow you to complete the
+     /// have provided to be attached to the verification email. The provided URL
+     /// should redirect the user back to your app and allow you to complete the
      /// verification process by verifying both the **userId** and **secret**
      /// parameters. Learn more about how to [complete the verification
      /// process](/docs/client/account#updateAccountVerification). 
      /// 
      /// Please note that in order to avoid a [Redirect
-     /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md)
+     /// Attack](https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.md),
      /// the only valid redirect URLs are the ones from domains you have set when
      /// adding your platforms in the console interface.
+     /// 
      ///
     Future<Response> createVerification({@required String url}) {
         final String path = '/account/verification';
