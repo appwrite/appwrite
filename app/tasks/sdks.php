@@ -62,11 +62,8 @@ $cli
                     continue;
                 }
 
-                Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name']);
+                Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name'] . ' (version: '.$version.')');
                 
-                //$spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
-                // $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$language['family']);
-                // $spec = getSSLPage('https://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
                 $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
 
                 $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
