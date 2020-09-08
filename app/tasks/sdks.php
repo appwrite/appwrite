@@ -123,7 +123,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'flutter-dev':
                         $config = new Flutter();
-                        $config->setPackageName('appwrite-dev');
+                        $config->setPackageName('appwrite_dev');
                         break;
                     case 'dart':
                         $config = new Dart();
