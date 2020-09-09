@@ -210,7 +210,7 @@ class Response extends SwooleResponse
     /**
      * Generate valid response object from document data
      */
-    protected function output(Document $document, string $model): array
+    public function output(Document $document, string $model): array
     {
         $data       = $document;
         $model      = $this->getModel($model);
