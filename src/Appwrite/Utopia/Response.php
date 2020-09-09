@@ -7,6 +7,7 @@ use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Appwrite\Database\Document;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Any;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
@@ -34,6 +35,7 @@ use Appwrite\Utopia\Response\Model\Webhook;
 class Response extends SwooleResponse
 {
     // General
+    const MODEL_ANY = 'any';
     const MODEL_LOG = 'log';
     const MODEL_LOG_LIST = 'logList';
     const MODEL_ERROR = 'error';
@@ -133,6 +135,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Currencies List', self::MODEL_CURRENCY_LIST, 'currencies', self::MODEL_CURRENCY))
             ->setModel(new BaseList('Phones List', self::MODEL_PHONE_LIST, 'phones', self::MODEL_PHONE))
             // Entities
+            ->setModel(new Any())
             ->setModel(new Log())
             ->setModel(new User())
             ->setModel(new Session())
@@ -153,8 +156,6 @@ class Response extends SwooleResponse
             ->setModel(new Language())
             ->setModel(new Currency())
             ->setModel(new Phone())
-            // Currency
-            // Phone
             // Verification
             // Recovery
         ;
@@ -215,6 +216,10 @@ class Response extends SwooleResponse
         $data       = $document;
         $model      = $this->getModel($model);
         $output     = [];
+
+        if($model->isAny()) {
+            return $document->getArrayCopy();
+        }
 
         foreach($model->getRules() as $key => $rule) {
             if(!$document->isSet($key)) {
