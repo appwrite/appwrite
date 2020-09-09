@@ -382,7 +382,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateOAuth2')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'), true)); }, 'Provider Name', false)
+    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers')), true); }, 'Provider Name', false)
     ->param('appId', '', function () { return new Text(256); }, 'Provider app ID. Max length: 256 chars.', true)
     ->param('secret', '', function () { return new text(512); }, 'Provider secret key. Max length: 512 chars.', true)
     ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB) {
