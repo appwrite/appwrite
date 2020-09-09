@@ -28,7 +28,7 @@ App::post('/v1/users')
     ->label('sdk.description', '/docs/references/users/create-user.md')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->param('name', '', function () { return new Text(100); }, 'User name.', true)
+    ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.', true)
     ->action(function ($email, $password, $name, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -96,7 +96,7 @@ App::get('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/users/list-users.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results.', true)
+    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
     ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)

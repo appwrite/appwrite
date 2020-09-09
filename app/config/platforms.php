@@ -30,7 +30,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '0.2.3',
+                'version' => '0.3.0-dev.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'enabled' => true,
                 'beta' => true,
@@ -45,7 +45,7 @@ return [
             [
                 'key' => 'flutter-dev',
                 'name' => 'Flutter (Dev Channel)',
-                'version' => '0.2.3',
+                'version' => '0.3.2',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter-dev',
                 'enabled' => true,
                 'beta' => true,

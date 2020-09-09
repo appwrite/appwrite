@@ -4,8 +4,6 @@
 use Utopia\App;
 use Utopia\CLI\CLI;
 
-
-
 use Utopia\Config\Config;
 use Utopia\CLI\Console;
 use Appwrite\Spec\Swagger2;
@@ -24,12 +22,10 @@ use Appwrite\SDK\Language\Swift;
 
 require_once __DIR__.'/../init.php';
 $cli = new CLI();
-$version = APP_VERSION_STABLE; // Server version
-$warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
 
 $cli
     ->task('generate')
-    ->action(function () use ($warning, $version) {
+    ->action(function () {
         function getSSLPage($url)
         {
             $ch = \curl_init();
@@ -46,8 +42,14 @@ $cli
 
         $platforms = Config::getParam('platforms');
         $selected = \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+        $version = Console::confirm('Choose an Appwrite version');
         $message = Console::confirm('Please enter your commit message:');
         $production = (Console::confirm('Type "Appwrite" to deploy for production') == 'Appwrite');
+        $warning = '**This SDK is compatible with Appwrite server version ' . $version . '. For older versions, please check previous releases.**';
+
+        if(!in_array($version, ['0.6.2', '0.7.0'])) {
+            throw new Exception('Unknown version given');
+        }
 
         foreach($platforms as $key => $platform) {
             foreach($platform['languages'] as $language) {
@@ -60,11 +62,9 @@ $cli
                     continue;
                 }
 
-                Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name']);
+                Console::info('Fetching API Spec for '.$language['name'].' for '.$platform['name'] . ' (version: '.$version.')');
                 
-                //$spec = getSSLPage('http://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
-                $spec = getSSLPage('https://appwrite.io/v1/open-api-2.json?extensions=1&platform='.$language['family']);
-                $spec = getSSLPage('https://localhost/v1/open-api-2.json?extensions=1&platform='.$language['family']);
+                $spec = file_get_contents(__DIR__.'/../config/specs/'.$version.'.'.$language['family'].'.json');
 
                 $result = \realpath(__DIR__.'/..').'/sdks/'.$key.'-'.$language['key'];
                 $target = \realpath(__DIR__.'/..').'/sdks/git/'.$language['key'].'/';
@@ -123,7 +123,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'flutter-dev':
                         $config = new Flutter();
-                        $config->setPackageName('appwrite-dev');
+                        $config->setPackageName('appwrite_dev');
                         break;
                     case 'dart':
                         $config = new Dart();
