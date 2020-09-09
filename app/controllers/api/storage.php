@@ -141,10 +141,6 @@ App::post('/v1/storage/files')
             throw new Exception('Failed saving file to DB', 500);
         }
 
-        $webhooks
-            ->setParam('payload', $file->getArrayCopy())
-        ;
-
         $audits
             ->setParam('event', 'storage.files.create')
             ->setParam('resource', 'storage/files/'.$file->getId())
@@ -504,10 +500,6 @@ App::put('/v1/storage/files/:fileId')
             throw new Exception('Failed saving file to DB', 500);
         }
 
-        $webhooks
-            ->setParam('payload', $file->getArrayCopy())
-        ;
-
         $audits
             ->setParam('event', 'storage.files.update')
             ->setParam('resource', 'storage/files/'.$file->getId())
@@ -546,11 +538,7 @@ App::delete('/v1/storage/files/:fileId')
                 throw new Exception('Failed to remove file from DB', 500);
             }
         }
-
-        $webhooks
-            ->setParam('payload', $file->getArrayCopy())
-        ;
-
+        
         $audits
             ->setParam('event', 'storage.files.delete')
             ->setParam('resource', 'storage/files/'.$file->getId())
