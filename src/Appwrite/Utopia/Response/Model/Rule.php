@@ -55,6 +55,7 @@ class Rule extends Model
                 'type' => 'string',
                 'description' => 'List of allowed values',
                 'array' => true,
+                'default' => [],
                 'example' => ['5e5ea5c168099'],
             ])
         ;
