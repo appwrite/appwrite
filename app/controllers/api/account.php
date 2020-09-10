@@ -41,7 +41,7 @@ App::post('/v1/account')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.', true)
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) use ($oauth2Keys) {
+    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -106,13 +106,6 @@ App::post('/v1/account')
         if (false === $user) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
-        $webhooks
-            ->setParam('payload', [
-                'name' => $name,
-                'email' => $email,
-            ])
-        ;
 
         $audits
             ->setParam('userId', $user->getId())
@@ -237,14 +230,7 @@ App::post('/v1/account/sessions')
         if (false === $profile) {
             throw new Exception('Failed saving user to DB', 500);
         }
-
-        $webhooks
-            ->setParam('payload', [
-                'name' => $profile->getAttribute('name', ''),
-                'email' => $profile->getAttribute('email', ''),
-            ])
-        ;
-
+        
         $audits
             ->setParam('userId', $profile->getId())
             ->setParam('event', 'account.sessions.create')
@@ -990,10 +976,7 @@ App::delete('/v1/account')
         ;
 
         $webhooks
-            ->setParam('payload', [
-                'name' => $user->getAttribute('name', ''),
-                'email' => $user->getAttribute('email', ''),
-            ])
+            ->setParam('payload', $response->output($user, Response::MODEL_USER))
         ;
 
         if (!Config::getParam('domainVerification')) {
@@ -1048,10 +1031,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 ;
 
                 $webhooks
-                    ->setParam('payload', [
-                        'name' => $user->getAttribute('name', ''),
-                        'email' => $user->getAttribute('email', ''),
-                    ])
+                    ->setParam('payload', $response->output($user, Response::MODEL_USER))
                 ;
 
                 if (!Config::getParam('domainVerification')) {
@@ -1105,12 +1085,9 @@ App::delete('/v1/account/sessions')
                 ->setParam('event', 'account.sessions.delete')
                 ->setParam('resource', '/user/'.$user->getId())
             ;
-
+            
             $webhooks
-                ->setParam('payload', [
-                    'name' => $user->getAttribute('name', ''),
-                    'email' => $user->getAttribute('email', ''),
-                ])
+                ->setParam('payload', $response->output($user, Response::MODEL_USER))
             ;
 
             if (!Config::getParam('domainVerification')) {

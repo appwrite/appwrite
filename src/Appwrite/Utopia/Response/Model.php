@@ -4,6 +4,14 @@ namespace Appwrite\Utopia\Response;
 
 abstract class Model
 {
+    /**
+     * @var bool
+     */
+    protected $any = false;
+
+    /**
+     * @var array
+     */
     protected $rules = [];
 
     /**
@@ -44,5 +52,10 @@ abstract class Model
         ], $options);
 
         return $this;
+    }
+
+    public function isAny(): bool
+    {
+        return $this->any;
     }
 }

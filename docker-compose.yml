@@ -134,6 +134,7 @@ services:
     depends_on:
       - redis
       - mariadb
+      - request-catcher
     environment:
       - _APP_ENV
       - _APP_REDIS_HOST
@@ -292,12 +293,21 @@ services:
       - MYSQL_PASSWORD=password
     command: 'mysqld --innodb-flush-method=fsync' # add ' --query_cache_size=0' for DB tests
 
-  maildev:
+  maildev: # used mainly for dev tests
     image: djfarrelly/maildev
     container_name: appwrite-maildev
     restart: unless-stopped
     ports:
       - '1080:80'
+    networks:
+      - appwrite
+
+  request-catcher: # used mainly for dev tests
+    image: smarterdm/http-request-catcher
+    container_name: appwrite-request-catcher
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
     networks:
       - appwrite
 
