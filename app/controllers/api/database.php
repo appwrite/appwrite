@@ -77,22 +77,14 @@ App::post('/v1/database/collections')
             throw new Exception('Failed saving collection to DB', 500);
         }
 
-        $data = $data->getArrayCopy();
-
-        $webhooks
-            ->setParam('payload', $data)
-        ;
-
         $audits
             ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'database/collection/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('resource', 'database/collection/'.$data->getId())
+            ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($data)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($data, Response::MODEL_COLLECTION);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/database/collections')
@@ -123,7 +115,10 @@ App::get('/v1/database/collections')
             ],
         ]);
 
-        $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'collections' => $results
+        ]), Response::MODEL_COLLECTION_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/database/collections/:collectionId')
@@ -145,7 +140,7 @@ App::get('/v1/database/collections/:collectionId')
             throw new Exception('Collection not found', 404);
         }
 
-        $response->json($collection->getArrayCopy());
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     }, ['response', 'projectDB']);
 
 App::put('/v1/database/collections/:collectionId')
@@ -209,19 +204,13 @@ App::put('/v1/database/collections/:collectionId')
             throw new Exception('Failed saving collection to DB', 500);
         }
 
-        $data = $collection->getArrayCopy();
-
-        $webhooks
-            ->setParam('payload', $data)
-        ;
-
         $audits
             ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'database/collections/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
         ;
 
-        $response->json($collection->getArrayCopy());
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/database/collections/:collectionId')
@@ -250,16 +239,14 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500);
         }
         
-        $data = $collection->getArrayCopy();
-
         $webhooks
-            ->setParam('payload', $data)
+            ->setParam('payload', $collection->getArrayCopy())
         ;
 
         $audits
             ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'database/collections/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
         ;
 
         $response->noContent();

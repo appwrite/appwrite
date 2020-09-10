@@ -118,7 +118,7 @@ class Response extends SwooleResponse
             ->setModel(new Error())
             ->setModel(new ErrorDev())
             // Lists
-            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'users', self::MODEL_COLLECTION))
+            ->setModel(new BaseList('Collections List', self::MODEL_COLLECTION_LIST, 'collections', self::MODEL_COLLECTION))
             ->setModel(new BaseList('Users List', self::MODEL_USER_LIST, 'users', self::MODEL_USER))
             ->setModel(new BaseList('Sessions List', self::MODEL_SESSION_LIST, 'sessions', self::MODEL_SESSION))
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG, false))
