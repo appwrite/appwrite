@@ -2238,6 +2238,34 @@
                     .delete(path, {
                         'content-type': 'application/json',
                     }, payload);
+            },
+
+            /**
+             * Get Function Usage
+             *
+             *
+             * @param {string} functionId
+             * @param {string} range
+             * @throws {Error}
+             * @return {Promise}             
+             */
+            getUsage: function(functionId, range = 'last30') {
+                if(functionId === undefined) {
+                    throw new Error('Missing required parameter: "functionId"');
+                }
+                
+                let path = '/functions/{functionId}/usage'.replace(new RegExp('{functionId}', 'g'), functionId);
+
+                let payload = {};
+
+                if(range) {
+                    payload['range'] = range;
+                }
+
+                return http
+                    .get(path, {
+                        'content-type': 'application/json',
+                    }, payload);
             }
         };
 

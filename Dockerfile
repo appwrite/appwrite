@@ -15,7 +15,7 @@ RUN composer update --ignore-platform-reqs --optimize-autoloader \
 FROM php:7.4-cli-alpine as step1
 
 ENV TZ=Asia/Tel_Aviv \
-    PHP_REDIS_VERSION=5.3.0 \
+    PHP_REDIS_VERSION=5.3.1 \
     PHP_SWOOLE_VERSION=4.5.3 \
     PHP_XDEBUG_VERSION=sdebug_2_9-beta
 
@@ -68,7 +68,7 @@ ENV TZ=Asia/Tel_Aviv \
     _APP_OPTIONS_ABUSE=enabled \
     _APP_OPTIONS_FORCE_HTTPS=disabled \
     _APP_OPENSSL_KEY_V1=your-secret-key \
-    _APP_STORAGE_LIMIT=100000000 \
+    _APP_STORAGE_LIMIT=10000000 \
     _APP_STORAGE_ANTIVIRUS=enabled \
     _APP_REDIS_HOST=redis \
     _APP_REDIS_PORT=6379 \
@@ -148,6 +148,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
+    chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-deletes && \
@@ -166,7 +167,7 @@ RUN echo extension=redis.so >> /usr/local/etc/php/conf.d/redis.ini
 
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
-RUN echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/appwrite.ini
+RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
 
 EXPOSE 80
 

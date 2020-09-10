@@ -22,6 +22,8 @@
 - Added pagination for projects list on the console home page.
 - Updated storage calculation to match IEC standards
 - Now using Alpine as base Docker image
+- Upgraded device detctor to version 3.12.6
+- Upgraded MariaDB to version 10.5.5
 - User name max length is now 128 chars and not 100 for better API consistency
 - Team name max length is now 128 chars and not 100 for better API consistency
 - Collection name max length is now 128 chars and not 256 for better API consistency
@@ -30,6 +32,7 @@
 - API Key name max length is now 128 chars and not 256 for better API consistency
 - Task name max length is now 128 chars and not 256 for better API consistency
 - Platform name max length is now 128 chars and not 256 for better API consistency
+- Webhooks payloads are now exactly the same as any of the API response objects
 - New and consistent response format for all API object + new response examples in the docs
   - Removed user roles attribute from user object (can be fetched from /v1/teams/memberships) **
   - Removed type attribute from session object response (used only internally)
@@ -38,6 +41,8 @@
 ## Breaking Changes (Read before upgrading!)
 - **Deprecated** `first` and `last` query params for documents list route in the database API
 - **Deprecated** Deprectaed Pubjabi Translations ('pn')
+- **Deprecated** `PATCH /account/prefs` is now updating the prefs payload and not just merging it
+- **Deprecated** `PATCH /users/:userId/prefs` is now updating the prefs payload and not just merging it
 - Switched order of limit and offset params in all the SDKs `listDocuments` method for better consistency
 - Default `limit` param value in all the SDKs `listDocuments` method is now 25 for better consistency
 

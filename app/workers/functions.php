@@ -4,6 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 use Appwrite\Database\Database;
+use Appwrite\Database\Document;
 use Appwrite\Database\Adapter\MySQL as MySQLAdapter;
 use Appwrite\Database\Adapter\Redis as RedisAdapter;
 use Appwrite\Database\Validator\Authorization;
@@ -22,6 +23,8 @@ $environments = Config::getParam('environments');
 $warmupStart = \microtime(true);
 
 Co\run(function() use ($environments) {
+    Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+    
     foreach($environments as $environment) { // Warmup: make sure images are ready to run fast 🚀
         go(function() use ($environment) {
             $stdout = '';
@@ -69,8 +72,8 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
  *      + pass one-time api key
  * 4. Update execution status - DONE
  * 5. Update execution stdout & stderr - DONE
- * 6. Trigger audit log
- * 7. Trigger usage log
+ * 6. Trigger audit log - DONE
+ * 7. Trigger usage log - DONE
  */
 
 //TODO aviod scheduled execution if delay is bigger than X offest
@@ -88,16 +91,15 @@ Console::success('Finished warmup in '.$warmupTime.' seconds');
 /**
  * Get Usage Stats
  *  -> Network (docker stats --no-stream --format="{{.NetIO}}" appwrite)
- *  -> CPU Time 
- *  -> Invoctions (+1)
- * Report to usage worker
+ *  -> CPU Time - DONE
+ *  -> Invoctions (+1) - DONE
  */
-
-// Double-check Cleanup
 
 class FunctionsV1
 {
     public $args = [];
+
+    public $allowed = [];
 
     public function setUp()
     {
@@ -105,29 +107,105 @@ class FunctionsV1
 
     public function perform()
     {
-        global $environments, $register;
+        global $register;
 
         $projectId = $this->args['projectId'];
         $functionId = $this->args['functionId'];
-        $functionTag = $this->args['functionTag'];
         $executionId = $this->args['executionId'];
-        $functionTrigger = $this->args['functionTrigger'];
+        $trigger = $this->args['trigger'];
+        $event = $this->args['event'];
+        $payload = (!empty($this->args['payload'])) ? json_encode($this->args['payload']) : '';
 
-        $projectDB = new Database();
-        $projectDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
-        $projectDB->setNamespace('app_'.$projectId);
-        $projectDB->setMocks(Config::getParam('collections', []));
+        $database = new Database();
+        $database->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
+        $database->setNamespace('app_'.$projectId);
+        $database->setMocks(Config::getParam('collections', []));
 
-        Authorization::disable();
-        $function = $projectDB->getDocument($functionId);
-        Authorization::reset();
+        switch ($trigger) {
+            case 'event':
+                
+                $limit = 30;
+                $sum = 30;
+                $offset = 0;
+                $functions = []; /** @var Document[] $functions */
 
-        if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
-            throw new Exception('Function not found', 404);
+                while ($sum >= $limit) {
+
+                    Authorization::disable();
+
+                    $functions = $database->getCollection([
+                        'limit' => $limit,
+                        'offset' => $offset,
+                        'orderField' => 'name',
+                        'orderType' => 'ASC',
+                        'orderCast' => 'string',
+                        'filters' => [
+                            '$collection='.Database::SYSTEM_COLLECTION_FUNCTIONS,
+                        ],
+                    ]);
+
+                    Authorization::reset();
+
+                    $sum = \count($functions);
+                    $offset = $offset + $limit;
+
+                    Console::log('Fetched '.$sum.' functions...');
+
+                    foreach($functions as $function) {
+                        $events =  $function->getAttribute('events', []);
+                        $tag =  $function->getAttribute('tag', []);
+
+                        Console::success('Itterating function: '.$function->getAttribute('name'));
+
+                        if(!\in_array($event, $events) || empty($tag)) {
+                            continue;
+                        }
+
+                        Console::success('Triggered function: '.$event);
+
+                        $this->execute('event', $projectId, '', $database, $function, $event, $payload);
+                    }
+                }
+                break;
+
+            case 'schedule':
+                # code...
+                break;
+
+            case 'http':
+                Authorization::disable();
+                $function = $database->getDocument($functionId);
+                Authorization::reset();
+
+                if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
+                    throw new Exception('Function not found');
+                }
+
+                $this->execute($trigger, $projectId, $executionId, $database, $function);
+                break;
+            
+            default:
+                # code...
+                break;
         }
+    }
+
+    public function execute(
+        string $trigger,
+        string $projectId,
+        string $executionId,
+        Database $database,
+        Document $function,
+        string $event = '',
+        string $payload = ''
+    )
+    {
+        global $register;
+
+        $environments = Config::getParam('environments');
 
         Authorization::disable();
-        $tag = $projectDB->getDocument($functionTag);
+        $tag = $database->getDocument($function->getAttribute('tag', ''));
         Authorization::reset();
 
         if($tag->getAttribute('functionId') !== $function->getId()) {
@@ -136,27 +214,24 @@ class FunctionsV1
 
         Authorization::disable();
 
-        $execution = $projectDB->getDocument($executionId);
+        $execution = (!empty($executionId)) ? $database->getDocument($executionId) : $database->createDocument([
+            '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
+            '$permissions' => [
+                'read' => [],
+                'write' => [],
+            ],
+            'dateCreated' => time(),
+            'functionId' => $function->getId(),
+            'trigger' => $trigger, // http / schedule / event
+            'status' => 'processing', // waiting / processing / completed / failed
+            'exitCode' => 0,
+            'stdout' => '',
+            'stderr' => '',
+            'time' => 0,
+        ]);
 
-        if (empty($execution->getId()) || Database::SYSTEM_COLLECTION_EXECUTIONS != $execution->getCollection()) {
-            $execution = $projectDB->createDocument([
-                '$collection' => Database::SYSTEM_COLLECTION_EXECUTIONS,
-                '$permissions' => [
-                    'read' => [],
-                    'write' => [],
-                ],
-                'dateCreated' => \time(),
-                'functionId' => $function->getId(),
-                'status' => 'processing', // waiting / processing / completed / failed
-                'exitCode' => 0,
-                'stdout' => '',
-                'stderr' => '',
-                'time' => 0,
-            ]);
-    
-            if (false === $execution) {
-                throw new Exception('Failed saving execution to DB', 500);
-            }
+        if(false === $execution) {
+            throw new Exception('Failed to create execution');
         }
         
         Authorization::reset();
@@ -170,27 +245,35 @@ class FunctionsV1
         }
 
         $vars = \array_merge($function->getAttribute('vars', []), [
-            'APPWRITE_FUNCTION_ID' => $functionId,
+            'APPWRITE_FUNCTION_ID' => $function->getId(),
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name', ''),
-            'APPWRITE_FUNCTION_TAG' => $functionTag,
-            'APPWRITE_FUNCTION_TRIGGER' => $functionTrigger,
+            'APPWRITE_FUNCTION_TAG' => $tag->getId(),
+            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
             'APPWRITE_FUNCTION_ENV_NAME' => $environment['name'],
             'APPWRITE_FUNCTION_ENV_VERSION' => $environment['version'],
         ]);
 
+        if('event' === $trigger) {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_EVENT' => $event,
+                'APPWRITE_FUNCTION_EVENT_PAYLOAD' => $payload,
+            ]);
+        }
+
         \array_walk($vars, function (&$value, $key) {
-            $value = (empty($value)) ? 'null' : $value;
+            $key = $this->filterEnvKey($key);
+            $value = \escapeshellarg((empty($value)) ? 'null' : $value);
             $value = "\t\t\t--env {$key}={$value} \\";
         });
 
-        $tagPath = $tag->getAttribute('codePath', '');
+        $tagPath = $tag->getAttribute('path', '');
         $tagPathTarget = '/tmp/project-'.$projectId.'/'.$tag->getId().'/code.tar.gz';
         $tagPathTargetDir = \pathinfo($tagPathTarget, PATHINFO_DIRNAME);
         $container = 'appwrite-function-'.$tag->getId();
         $command = \escapeshellcmd($tag->getAttribute('command', ''));
 
         if(!\is_readable($tagPath)) {
-            throw new Exception('Code is not readable: '.$tag->getAttribute('codePath', ''));
+            throw new Exception('Code is not readable: '.$tag->getAttribute('path', ''));
         }
 
         if (!\file_exists($tagPathTargetDir)) {
@@ -296,22 +379,27 @@ class FunctionsV1
 
         $executionStart = \microtime(true);
         
-        $exitCode = Console::execute("docker exec {$container} {$command}"
+        $exitCode = Console::execute("docker exec \
+        ".\implode("\n", $vars)."
+        {$container} \
+        {$command}"
         , null, $stdout, $stderr, $function->getAttribute('timeout', (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)));
 
         $executionEnd = \microtime(true);
+        $executionTime = ($executionEnd - $executionStart);
+        $functionStatus = ($exitCode === 0) ? 'completed' : 'failed';
 
         Console::info("Function executed in " . ($executionEnd - $executionStart) . " seconds with exit code {$exitCode}");
 
         Authorization::disable();
         
-        $execution = $projectDB->updateDocument(array_merge($execution->getArrayCopy(), [
+        $execution = $database->updateDocument(array_merge($execution->getArrayCopy(), [
             'tagId' => $tag->getId(),
-            'status' => ($exitCode === 0) ? 'completed' : 'failed',
+            'status' => $functionStatus,
             'exitCode' => $exitCode,
-            'stdout' => mb_substr($stdout, -4000), // log last 4000 chars output
-            'stderr' => mb_substr($stderr, -4000), // log last 4000 chars output
-            'time' => ($executionEnd - $executionStart),
+            'stdout' => \mb_substr($stdout, -4000), // log last 4000 chars output
+            'stderr' => \mb_substr($stderr, -4000), // log last 4000 chars output
+            'time' => $executionTime,
         ]));
         
         Authorization::reset();
@@ -319,6 +407,20 @@ class FunctionsV1
         if (false === $function) {
             throw new Exception('Failed saving execution to DB', 500);
         }
+
+        $usage = $register->get('queue-usage');
+
+        $usage
+            ->setParam('projectId', $projectId)
+            ->setParam('functionId', $function->getId())
+            ->setParam('functionExecution', 1)
+            ->setParam('functionStatus', $functionStatus)
+            ->setParam('functionExecutionTime', $executionTime * 1000) // ms
+            ->setParam('networkRequestSize', 0)
+            ->setParam('networkResponseSize', 0)
+        ;
+
+        $usage->trigger();
 
         Console::success(count($list).' running containers counted');
 
@@ -352,6 +454,24 @@ class FunctionsV1
                 Console::info('Removed container: '.$first['name']);
             }
         }
+    }
+
+    public function filterEnvKey(string $string): string
+    {
+        if(empty($this->allowed)) {
+            $this->allowed = array_fill_keys(\str_split('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'), true);
+        }
+
+        $string     = \str_split($string);
+        $output     = '';
+
+        foreach ($string as $char) {
+            if(\array_key_exists($char, $this->allowed)) {
+                $output .= $char;
+            }
+        }
+
+        return $output;
     }
 
     public function tearDown()

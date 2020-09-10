@@ -36,7 +36,7 @@ const APP_EMAIL_SECURITY = 'security@localhost.test'; // Default security email 
 const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
-const APP_CACHE_BUSTER = 127;
+const APP_CACHE_BUSTER = 138;
 const APP_VERSION_STABLE = '0.7.0';
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
@@ -199,6 +199,9 @@ $register->set('smtp', function () {
 
     return $mail;
 });
+$register->set('geodb', function () {
+    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
+});
 $register->set('queue-webhooks', function () {
     return new Event('v1-webhooks', 'WebhooksV1');
 });
@@ -350,8 +353,8 @@ App::setResource('clients', function($console, $project) {
 }, ['console', 'project']);
 
 App::setResource('user', function($mode, $project, $console, $request, $response, $projectDB, $consoleDB) {
-    /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Utopia\Swoole\Request $request */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Appwrite\Database\Document $project */
     /** @var Appwrite\Database\Database $consoleDB */
     /** @var Appwrite\Database\Database $projectDB */
@@ -412,7 +415,7 @@ App::setResource('user', function($mode, $project, $console, $request, $response
 }, ['mode', 'project', 'console', 'request', 'response', 'projectDB', 'consoleDB']);
 
 App::setResource('project', function($consoleDB, $request) {
-    /** @var Appwrite\Swoole\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     /** @var Appwrite\Database\Database $consoleDB */
 
     Authorization::disable();
@@ -433,7 +436,6 @@ App::setResource('consoleDB', function($register) {
     $consoleDB = new Database();
     $consoleDB->setAdapter(new RedisAdapter(new MySQLAdapter($register), $register));
     $consoleDB->setNamespace('app_console'); // Should be replaced with param if we want to have parent projects
-    
     $consoleDB->setMocks(Config::getParam('collections', []));
 
     return $consoleDB;
@@ -449,11 +451,10 @@ App::setResource('projectDB', function($register, $project) {
 }, ['register', 'project']);
 
 App::setResource('mode', function($request) {
-    /** @var Utopia\Request $request */
+    /** @var Utopia\Swoole\Request $request */
     return $request->getParam('mode', $request->getHeader('x-appwrite-mode', 'default'));
 }, ['request']);
 
-App::setResource('geodb', function($request) {
-    /** @var Utopia\Request $request */
-    return new Reader(__DIR__.'/db/DBIP/dbip-country-lite-2020-01.mmdb');
-}, ['request']);
+App::setResource('geodb', function($register) {
+    return $register->get('geodb');
+}, ['register']);

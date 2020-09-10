@@ -767,6 +767,17 @@ declare namespace Appwrite {
          */
 	    deleteTag(functionId: string, tagId: string): Promise<object>;
 
+        /**
+         * Get Function Usage
+         *
+	     *
+         * @param {string} functionId
+         * @param {string} range
+         * @throws {Error}
+         * @return {Promise}         
+         */
+	    getUsage(functionId: string, range: string): Promise<object>;
+
 	}
 
     export interface Health {

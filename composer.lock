@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "922b399001a2c9109689c98307c6aa23",
+    "content-hash": "bda6fcbd3cdb4083ece7384f7cd39146",
     "packages": [
         {
             "name": "appwrite/php-clamav",
@@ -941,28 +941,32 @@
         },
         {
             "name": "piwik/device-detector",
-            "version": "3.5.1",
+            "version": "3.12.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "29830f9bd67c8300e37828db0688161dd6f5f7a5"
+                "reference": "4eb7b6d4d1a2ac1e8fee64fc73698fcb869d60f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/29830f9bd67c8300e37828db0688161dd6f5f7a5",
-                "reference": "29830f9bd67c8300e37828db0688161dd6f5f7a5",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/4eb7b6d4d1a2ac1e8fee64fc73698fcb869d60f3",
+                "reference": "4eb7b6d4d1a2ac1e8fee64fc73698fcb869d60f3",
                 "shasum": ""
             },
             "require": {
                 "mustangostang/spyc": "*",
-                "php": ">=5.3.2"
+                "php": ">=5.5"
             },
             "require-dev": {
                 "fabpot/php-cs-fixer": "~1.7",
-                "phpunit/phpunit": "4.1.*"
+                "matthiasmullie/scrapbook": "@stable",
+                "phpunit/phpunit": "^4.8.36",
+                "psr/cache": "^1.0",
+                "psr/simple-cache": "^1.0"
             },
             "suggest": {
-                "doctrine/cache": "Can directly be used for caching purpose"
+                "doctrine/cache": "Can directly be used for caching purpose",
+                "ext-yaml": "Necessary for using the Pecl YAML parser"
             },
             "type": "library",
             "autoload": {
@@ -972,23 +976,23 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "LGPL-3.0+"
+                "LGPL-3.0-or-later"
             ],
             "authors": [
                 {
-                    "name": "The Piwik Team",
-                    "email": "hello@piwik.org",
-                    "homepage": "http://piwik.org/the-piwik-team/"
+                    "name": "The Matomo Team",
+                    "email": "hello@matomo.org",
+                    "homepage": "https://matomo.org/team/"
                 }
             ],
             "description": "The Universal Device Detection library, that parses User Agents and detects devices (desktop, tablet, mobile, tv, cars, console, etc.), clients (browsers, media players, mobile apps, feed readers, libraries, etc), operating systems, devices, brands and models.",
-            "homepage": "http://piwik.org",
+            "homepage": "https://matomo.org",
             "keywords": [
                 "devicedetection",
                 "parser",
                 "useragent"
             ],
-            "time": "2016-01-21T22:26:37+00:00"
+            "time": "2020-06-16T12:10:46+00:00"
         },
         {
             "name": "psr/http-message",
@@ -1898,6 +1902,54 @@
             "time": "2020-06-29T20:53:16+00:00"
         },
         {
+            "name": "utopia-php/preloader",
+            "version": "0.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/preloader.git",
+                "reference": "e710e7cf38605dd67c6cc599dd1150735765ad2e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/e710e7cf38605dd67c6cc599dd1150735765ad2e",
+                "reference": "e710e7cf38605dd67c6cc599dd1150735765ad2e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Preloader\\": "src/Preloader"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "Utopia Preloader library is simple and lite library for managing PHP preloading configuration",
+            "keywords": [
+                "framework",
+                "php",
+                "preload",
+                "preloader",
+                "preloading",
+                "upf",
+                "utopia"
+            ],
+            "time": "2020-08-14T23:17:55+00:00"
+        },
+        {
             "name": "utopia-php/registry",
             "version": "0.2.3",
             "source": {
@@ -1943,6 +1995,56 @@
                 "utopia"
             ],
             "time": "2020-07-04T22:14:07+00:00"
+        },
+        {
+            "name": "utopia-php/swoole",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/swoole.git",
+                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/26965d8122cb42769a5543c3be1677321cdaebdb",
+                "reference": "26965d8122cb42769a5543c3be1677321cdaebdb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1",
+                "utopia-php/framework": "0.*.*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7.0",
+                "swoole/ide-helper": "4.5.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Swoole\\": "src/Swoole"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "An extension for Utopia Framework to work with PHP Swoole as a PHP FPM alternative",
+            "keywords": [
+                "framework",
+                "http",
+                "php",
+                "server",
+                "swoole",
+                "upf",
+                "utopia"
+            ],
+            "time": "2020-08-14T22:44:34+00:00"
         }
     ],
     "packages-dev": [
