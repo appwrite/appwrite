@@ -170,7 +170,7 @@ App::get('/v1/storage/files')
     ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC'], true); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -231,7 +231,7 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000.', true)
     ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('output', '', function () { return new WhiteList(\array_keys(Config::getParam('storage-outputs'))); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->param('output', '', function () { return new WhiteList(\array_keys(Config::getParam('storage-outputs')), true); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(function ($fileId, $width, $height, $quality, $background, $output, $request, $response, $project, $projectDB) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -408,7 +408,7 @@ App::get('/v1/storage/files/:fileId/view')
     ->label('sdk.response.type', '*')
     ->label('sdk.methodType', 'location')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->param('as', '', function () { return new WhiteList(['pdf', /*'html',*/ 'text']); }, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
+    ->param('as', '', function () { return new WhiteList(['pdf', /*'html',*/ 'text'], true); }, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(function ($fileId, $as, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
