@@ -34,6 +34,7 @@ class Rule extends Model
                 'type' => 'string',
                 'description' => 'Rule default value.',
                 'example' => 'Movie Name',
+                'default' => '',
             ])
             ->addRule('array', [
                 'type' => 'boolean',
