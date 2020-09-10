@@ -15,6 +15,11 @@ class Rule extends Model
                 'description' => 'Rule ID.',
                 'example' => '5e5ea5c16897e',
             ])
+            ->addRule('$collection', [ // TODO remove this from public response
+                'type' => 'string',
+                'description' => 'Rule Collection.',
+                'example' => '5e5e66c16897e',
+            ])
             ->addRule('type', [
                 'type' => 'string',
                 'description' => 'Rule type. Possible values: ',
@@ -45,6 +50,12 @@ class Rule extends Model
                 'type' => 'boolean',
                 'description' => 'Is required?',
                 'example' => true,
+            ])
+            ->addRule('list', [
+                'type' => 'string',
+                'description' => 'List of allowed values',
+                'array' => true,
+                'example' => ['5e5ea5c168099'],
             ])
         ;
     }
