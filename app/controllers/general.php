@@ -301,7 +301,7 @@ App::error(function ($error, $utopia, $request, $response, $layout, $project) {
     /** @var Exception $error */
     /** @var Utopia\App $utopia */
     /** @var Utopia\Request $request */
-    /** @var Utopia\Response $response */
+    /** @var Appwrite\Utopia\Response $response */
     /** @var Utopia\View $layout */
     /** @var Appwrite\Database\Document $project */
 
