@@ -240,7 +240,7 @@ App::delete('/v1/database/collections/:collectionId')
         }
         
         $webhooks
-            ->setParam('payload', $collection->getArrayCopy())
+            ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
@@ -564,6 +564,10 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Failed to remove document from DB', 500);
         }
 
+        $webhooks
+            ->setParam('payload', $response->output($document, Response::MODEL_ANY))
+        ;
+        
         $audits
             ->setParam('event', 'database.documents.delete')
             ->setParam('resource', 'database/document/'.$document->getId())
