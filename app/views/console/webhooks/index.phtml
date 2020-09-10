@@ -136,7 +136,7 @@ $events = array_keys($this->getParam('events', []));
                     <button class="danger reverse">Delete</button>
                 </form>
 
-                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.sum}}"></span> events)
+                <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
                 <span data-ls-if="false === {{webhook.security}}">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
