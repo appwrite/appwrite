@@ -30,7 +30,7 @@ App::post('/v1/functions')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/functions/create-function.md')
     ->param('name', '', function () { return new Text(128); }, 'Function name. Max length: 128 chars.')
-    ->param('env', '', function () { return new WhiteList(array_keys(Config::getParam('environments'))); }, 'Execution enviornment.')
+    ->param('env', '', function () { return new WhiteList(array_keys(Config::getParam('environments')), true); }, 'Execution enviornment.')
     ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
     ->param('events', [], function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Events list.', true)
     ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
@@ -75,7 +75,7 @@ App::get('/v1/functions')
     ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC'], true); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         $results = $projectDB->getCollection([
             'limit' => $limit,
@@ -431,7 +431,7 @@ App::get('/v1/functions/:functionId/tags')
     ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC'], true); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -615,7 +615,7 @@ App::get('/v1/functions/:functionId/executions')
     ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
     ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC'], true); }, 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 

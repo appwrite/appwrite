@@ -1813,16 +1813,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.9.0",
+            "version": "0.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "2d40a89b6d5d6a9c08423bff1dcebe1809b0efc7"
+                "reference": "1c33b92b9188fb11b2ae70a4b7cf51844e07aa2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/2d40a89b6d5d6a9c08423bff1dcebe1809b0efc7",
-                "reference": "2d40a89b6d5d6a9c08423bff1dcebe1809b0efc7",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/1c33b92b9188fb11b2ae70a4b7cf51844e07aa2e",
+                "reference": "1c33b92b9188fb11b2ae70a4b7cf51844e07aa2e",
                 "shasum": ""
             },
             "require": {
@@ -1853,7 +1853,7 @@
                 "php",
                 "upf"
             ],
-            "time": "2020-08-26T17:18:23+00:00"
+            "time": "2020-09-09T19:50:26+00:00"
         },
         {
             "name": "utopia-php/locale",
