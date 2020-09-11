@@ -37,12 +37,11 @@ App::post('/v1/storage/files')
     ->param('file', [], function () { return new File(); }, 'Binary file.', false)
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $webhooks, $audits, $usage) {
+    ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
         /** @var Appwrite\Event\Event $usage */
 
@@ -152,7 +151,7 @@ App::post('/v1/storage/files')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($file, Response::MODEL_FILE);
-    }, ['request', 'response', 'user', 'projectDB', 'webhooks', 'audits', 'usage']);
+    }, ['request', 'response', 'user', 'projectDB', 'audits', 'usage']);
 
 App::get('/v1/storage/files')
     ->desc('List Files')
@@ -476,10 +475,9 @@ App::put('/v1/storage/files/:fileId')
     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
     ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->action(function ($fileId, $read, $write, $response, $projectDB, $webhooks, $audits) {
+    ->action(function ($fileId, $read, $write, $response, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
 
         $file = $projectDB->getDocument($fileId);
@@ -546,6 +544,10 @@ App::delete('/v1/storage/files/:fileId')
 
         $usage
             ->setParam('storage', $file->getAttribute('size', 0) * -1)
+        ;
+
+        $webhooks
+            ->setParam('payload', $response->output($file, Response::MODEL_FILE))
         ;
 
         $response->noContent();

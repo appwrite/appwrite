@@ -41,12 +41,11 @@ App::post('/v1/account')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
     ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.', true)
-    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) {
+    ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
 
         if ('console' === $project->getId()) {
@@ -119,7 +118,7 @@ App::post('/v1/account')
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($user, Response::MODEL_USER);
-    }, ['request', 'response', 'project', 'projectDB', 'webhooks', 'audits']);
+    }, ['request', 'response', 'project', 'projectDB', 'audits']);
 
 App::post('/v1/account/sessions')
     ->desc('Create Account Session')
@@ -134,13 +133,12 @@ App::post('/v1/account/sessions')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', function () { return new Email(); }, 'User email.')
     ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->action(function ($email, $password, $request, $response, $projectDB, $locale, $geodb, $webhooks, $audits) {
+    ->action(function ($email, $password, $request, $response, $projectDB, $locale, $geodb, $audits) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
         /** @var Utopia\Locale\Locale $locale */
         /** @var GeoIp2\Database\Reader $geodb */
-        /** @var Appwrite\Event\Event $webhooks */
         /** @var Appwrite\Event\Event $audits */
 
         $protocol = $request->getProtocol();
@@ -255,7 +253,7 @@ App::post('/v1/account/sessions')
         ;
         
         $response->dynamic($session, Response::MODEL_SESSION);
-    }, ['request', 'response', 'projectDB', 'locale', 'geodb', 'webhooks', 'audits']);
+    }, ['request', 'response', 'projectDB', 'locale', 'geodb', 'audits']);
 
 App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create Account Session with OAuth2')
