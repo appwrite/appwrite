@@ -161,7 +161,7 @@ App::get('/v1/projects/:projectId/usage')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
     ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('range', '30d', function () { return new WhiteList(['24h', '7d', '30d', '90d']); }, 'Date range.', true)
+    ->param('range', '30d', function () { return new WhiteList(['24h', '7d', '30d', '90d'], true); }, 'Date range.', true)
     ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
