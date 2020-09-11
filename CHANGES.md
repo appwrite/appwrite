@@ -68,6 +68,7 @@
 - Added option to force HTTPS connection to the Appwrite server (_APP_OPTIONS_FORCE_HTTPS)
 - Now using your `_APP_SYSTEM_EMAIL_ADDRESS` as the email address for issuing and renewing SSL certificates
 - Block iframe access to Appwrite console using the `X-Frame-Options` header.
+- Fixed `roles` param input validator
 
 # Version 0.6.2 (PRE-RELEASE)
 
