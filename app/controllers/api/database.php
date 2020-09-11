@@ -2,7 +2,6 @@
 
 use Utopia\App;
 use Utopia\Exception;
-use Utopia\Response;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
@@ -20,6 +19,7 @@ use Appwrite\Database\Validator\Collection;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Authorization as AuthorizationException;
 use Appwrite\Database\Exception\Structure as StructureException;
+use Appwrite\Utopia\Response;
 
 App::post('/v1/database/collections')
     ->desc('Create Collection')
@@ -77,22 +77,14 @@ App::post('/v1/database/collections')
             throw new Exception('Failed saving collection to DB', 500);
         }
 
-        $data = $data->getArrayCopy();
-
-        $webhooks
-            ->setParam('payload', $data)
-        ;
-
         $audits
             ->setParam('event', 'database.collections.create')
-            ->setParam('resource', 'database/collection/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('resource', 'database/collection/'.$data->getId())
+            ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($data)
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($data, Response::MODEL_COLLECTION);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/database/collections')
@@ -123,7 +115,10 @@ App::get('/v1/database/collections')
             ],
         ]);
 
-        $response->json(['sum' => $projectDB->getSum(), 'collections' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $projectDB->getSum(),
+            'collections' => $results
+        ]), Response::MODEL_COLLECTION_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/database/collections/:collectionId')
@@ -145,73 +140,8 @@ App::get('/v1/database/collections/:collectionId')
             throw new Exception('Collection not found', 404);
         }
 
-        $response->json($collection->getArrayCopy());
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     }, ['response', 'projectDB']);
-
-// App::get('/v1/database/collections/:collectionId/logs')
-//     ->desc('Get Collection Logs')
-//     ->groups(['api', 'database'])
-//     ->label('scope', 'collections.read')
-//     ->label('sdk.platform', [APP_PLATFORM_SERVER])
-//     ->label('sdk.namespace', 'database')
-//     ->label('sdk.method', 'getCollectionLogs')
-//     ->label('sdk.description', '/docs/references/database/get-collection-logs.md')
-//     ->param('collectionId', '', function () { return new UID(); }, 'Collection unique ID.')
-//     ->action(
-//         function ($collectionId) use ($response, $register, $projectDB, $project) {
-//             $collection = $projectDB->getDocument($collectionId, false);
-
-//             if (empty($collection->getId()) || Database::SYSTEM_COLLECTION_COLLECTIONS != $collection->getCollection()) {
-//                 throw new Exception('Collection not found', 404);
-//             }
-
-//             $adapter = new AuditAdapter($register->get('db'));
-//             $adapter->setNamespace('app_'.$project->getId());
-
-//             $audit = new Audit($adapter);
-            
-//             $countries = Locale::getText('countries');
-
-//             $logs = $audit->getLogsByResource('database/collection/'.$collection->getId());
-
-//             $reader = new Reader(__DIR__.'/../../db/DBIP/dbip-country-lite-2020-01.mmdb');
-//             $output = [];
-
-//             foreach ($logs as $i => &$log) {
-//                 $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
-
-//                 $dd = new DeviceDetector($log['userAgent']);
-
-//                 $dd->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-//                 $dd->parse();
-
-//                 $output[$i] = [
-//                     'event' => $log['event'],
-//                     'ip' => $log['ip'],
-//                     'time' => strtotime($log['time']),
-//                     'OS' => $dd->getOs(),
-//                     'client' => $dd->getClient(),
-//                     'device' => $dd->getDevice(),
-//                     'brand' => $dd->getBrand(),
-//                     'model' => $dd->getModel(),
-//                     'geo' => [],
-//                 ];
-
-//                 try {
-//                     $record = $reader->country($log['ip']);
-//                     $output[$i]['geo']['isoCode'] = strtolower($record->country->isoCode);
-//                     $output[$i]['geo']['country'] = $record->country->name;
-//                     $output[$i]['geo']['country'] = (isset($countries[$record->country->isoCode])) ? $countries[$record->country->isoCode] : Locale::getText('locale.country.unknown');
-//                 } catch (\Exception $e) {
-//                     $output[$i]['geo']['isoCode'] = '--';
-//                     $output[$i]['geo']['country'] = Locale::getText('locale.country.unknown');
-//                 }
-//             }
-
-//             $response->json($output);
-//         }
-//     );
 
 App::put('/v1/database/collections/:collectionId')
     ->desc('Update Collection')
@@ -274,19 +204,13 @@ App::put('/v1/database/collections/:collectionId')
             throw new Exception('Failed saving collection to DB', 500);
         }
 
-        $data = $collection->getArrayCopy();
-
-        $webhooks
-            ->setParam('payload', $data)
-        ;
-
         $audits
             ->setParam('event', 'database.collections.update')
-            ->setParam('resource', 'database/collections/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
         ;
 
-        $response->json($collection->getArrayCopy());
+        $response->dynamic($collection, Response::MODEL_COLLECTION);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/database/collections/:collectionId')
@@ -315,16 +239,14 @@ App::delete('/v1/database/collections/:collectionId')
             throw new Exception('Failed to remove collection from DB', 500);
         }
         
-        $data = $collection->getArrayCopy();
-
         $webhooks
-            ->setParam('payload', $data)
+            ->setParam('payload', $response->output($collection, Response::MODEL_COLLECTION))
         ;
 
         $audits
             ->setParam('event', 'database.collections.delete')
-            ->setParam('resource', 'database/collections/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('resource', 'database/collections/'.$collection->getId())
+            ->setParam('data', $collection->getArrayCopy())
         ;
 
         $response->noContent();
@@ -433,22 +355,17 @@ App::post('/v1/database/collections/:collectionId/documents')
             throw new Exception('Failed saving document to DB'.$exception->getMessage(), 500);
         }
 
-        $data = $data->getArrayCopy();
-
-        $webhooks
-            ->setParam('payload', $data)
-        ;
-
         $audits
             ->setParam('event', 'database.documents.create')
             ->setParam('resource', 'database/document/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('data', $data->getArrayCopy())
         ;
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($data)
         ;
+
+        $response->dynamic($data, Response::MODEL_ANY);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::get('/v1/database/collections/:collectionId/documents')
@@ -531,27 +448,7 @@ App::get('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('No document found', 404);
         }
 
-        $output = $document->getArrayCopy();
-
-        $paths = \explode('/', $request->getParam('q', ''));
-        $paths = \array_slice($paths, 7, \count($paths));
-        
-        if (\count($paths) > 0) {
-            if (\count($paths) % 2 == 1) {
-                $output = $document->getAttribute(\implode('.', $paths));
-            } else {
-                $id = (int) \array_pop($paths);
-                $output = $document->search('$id', $id, $document->getAttribute(\implode('.', $paths)));
-            }
-
-            $output = ($output instanceof Document) ? $output->getArrayCopy() : $output;
-
-            if (!\is_array($output)) {
-                throw new Exception('No document found', 404);
-            }
-        }
-
-        $response->json($output);
+        $response->dynamic($document, Response::MODEL_ANY);
     }, ['request', 'response', 'projectDB']);
 
 App::patch('/v1/database/collections/:collectionId/documents/:documentId')
@@ -620,19 +517,13 @@ App::patch('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Failed saving document to DB', 500);
         }
 
-        $data = $data->getArrayCopy();
-
-        $webhooks
-            ->setParam('payload', $data)
-        ;
-
         $audits
             ->setParam('event', 'database.documents.update')
-            ->setParam('resource', 'database/document/'.$data['$id'])
-            ->setParam('data', $data)
+            ->setParam('resource', 'database/document/'.$data->getId())
+            ->setParam('data', $data->getArrayCopy())
         ;
 
-        $response->json($data);
+        $response->dynamic($data, Response::MODEL_ANY);
     }, ['response', 'projectDB', 'webhooks', 'audits']);
 
 App::delete('/v1/database/collections/:collectionId/documents/:documentId')
@@ -673,16 +564,14 @@ App::delete('/v1/database/collections/:collectionId/documents/:documentId')
             throw new Exception('Failed to remove document from DB', 500);
         }
 
-        $data = $document->getArrayCopy();
-
         $webhooks
-            ->setParam('payload', $data)
+            ->setParam('payload', $response->output($document, Response::MODEL_ANY))
         ;
-
+        
         $audits
             ->setParam('event', 'database.documents.delete')
-            ->setParam('resource', 'database/document/'.$data['$id'])
-            ->setParam('data', $data) // Audit document in case of malicious or disastrous action
+            ->setParam('resource', 'database/document/'.$document->getId())
+            ->setParam('data', $document->getArrayCopy()) // Audit document in case of malicious or disastrous action
         ;
 
         $response->noContent();
