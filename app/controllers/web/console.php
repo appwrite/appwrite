@@ -211,7 +211,7 @@ App::get('/console/database/collection')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->param('id', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->param('id', '', new UID(), 'Collection unique ID.')
     ->action(function ($id, $response, $layout, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Utopia\View $layout */
@@ -247,7 +247,7 @@ App::get('/console/database/document')
     ->groups(['web', 'console'])
     ->label('permission', 'public')
     ->label('scope', 'console')
-    ->param('collection', '', function () { return new UID(); }, 'Collection unique ID.')
+    ->param('collection', '', new UID(), 'Collection unique ID.')
     ->action(function ($collection, $layout, $projectDB) {
         /** @var Utopia\View $layout */
         /** @var Appwrite\Database\Database $projectDB */

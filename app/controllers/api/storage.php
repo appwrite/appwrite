@@ -34,9 +34,9 @@ App::post('/v1/storage/files')
     ->label('sdk.description', '/docs/references/storage/create-file.md')
     ->label('sdk.consumes', 'multipart/form-data')
     ->label('sdk.methodType', 'upload')
-    ->param('file', [], function () { return new File(); }, 'Binary file.', false)
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('file', [], new File(), 'Binary file.', false)
+    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(function ($file, $read, $write, $request, $response, $user, $projectDB, $audits, $usage) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -161,10 +161,10 @@ App::get('/v1/storage/files')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listFiles')
     ->label('sdk.description', '/docs/references/storage/list-files.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC'], true); }, 'Order result by ASC or DESC order.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -195,7 +195,7 @@ App::get('/v1/storage/files/:fileId')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFile')
     ->label('sdk.description', '/docs/references/storage/get-file.md')
-    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -219,12 +219,12 @@ App::get('/v1/storage/files/:fileId/preview')
     ->label('sdk.description', '/docs/references/storage/get-file-preview.md')
     ->label('sdk.response.type', 'image/*')
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', function () { return new UID(); }, 'File unique ID')
-    ->param('width', 0, function () { return new Range(0, 4000); }, 'Resize preview image width, Pass an integer between 0 to 4000.', true)
-    ->param('height', 0, function () { return new Range(0, 4000); }, 'Resize preview image height, Pass an integer between 0 to 4000.', true)
-    ->param('quality', 100, function () { return new Range(0, 100); }, 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
-    ->param('background', '', function () { return new HexColor(); }, 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('output', '', function () { return new WhiteList(\array_keys(Config::getParam('storage-outputs')), true); }, 'Output format type (jpeg, jpg, png, gif and webp).', true)
+    ->param('fileId', '', new UID(), 'File unique ID')
+    ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
+    ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
+    ->param('quality', 100, new Range(0, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
+    ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
+    ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
     ->action(function ($fileId, $width, $height, $quality, $background, $output, $request, $response, $project, $projectDB) {
         /** @var Utopia\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -345,7 +345,7 @@ App::get('/v1/storage/files/:fileId/download')
     ->label('sdk.description', '/docs/references/storage/get-file-download.md')
     ->label('sdk.response.type', '*')
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -400,8 +400,8 @@ App::get('/v1/storage/files/:fileId/view')
     ->label('sdk.description', '/docs/references/storage/get-file-view.md')
     ->label('sdk.response.type', '*')
     ->label('sdk.methodType', 'location')
-    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->param('as', '', function () { return new WhiteList(['pdf', /*'html',*/ 'text'], true); }, 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
+    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('as', '', new WhiteList(['pdf', /*'html',*/ 'text'], true), 'Choose a file format to convert your file to. Currently you can only convert word and pdf files to pdf or txt. This option is currently experimental only, use at your own risk.', true)
     ->action(function ($fileId, $as, $response, $projectDB) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -472,9 +472,9 @@ App::put('/v1/storage/files/:fileId')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateFile')
     ->label('sdk.description', '/docs/references/storage/update-file.md')
-    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-    ->param('read', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
-    ->param('write', [], function () { return new ArrayList(new Text(64)); }, 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('read', [], new ArrayList(new Text(64)), 'An array of strings with read permissions. By default no user is granted with any read permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
+    ->param('write', [], new ArrayList(new Text(64)), 'An array of strings with write permissions. By default no user is granted with any write permissions. [learn more about permissions](/docs/permissions) and get a full list of available permissions.')
     ->action(function ($fileId, $read, $write, $response, $projectDB, $audits) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -515,7 +515,7 @@ App::delete('/v1/storage/files/:fileId')
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteFile')
     ->label('sdk.description', '/docs/references/storage/delete-file.md')
-    ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
+    ->param('fileId', '', new UID(), 'File unique ID.')
     ->action(function ($fileId, $response, $projectDB, $webhooks, $audits, $usage) {
         /** @var Appwrite\Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -561,8 +561,8 @@ App::delete('/v1/storage/files/:fileId')
 //     ->label('sdk.namespace', 'storage')
 //     ->label('sdk.method', 'getFileScan')
 //     ->label('sdk.hide', true)
-//     ->param('fileId', '', function () { return new UID(); }, 'File unique ID.')
-//     ->param('storage', 'files', function () { return new WhiteList(['files']);})
+//     ->param('fileId', '', new UID(), 'File unique ID.')
+//     ->param('storage', 'files', new WhiteList(['files']);})
 //     ->action(
 //         function ($fileId, $storage) use ($response, $request, $projectDB) {
 //             $file = $projectDB->getDocument($fileId);
