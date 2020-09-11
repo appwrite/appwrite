@@ -184,9 +184,9 @@ App::get('/open-api-2.json')
     ->groups(['web', 'home'])
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('platform', APP_PLATFORM_CLIENT, function () {return new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true);}, 'Choose target platform.', true)
-    ->param('extensions', 0, function () {return new Range(0, 1);}, 'Show extra data.', true)
-    ->param('tests', 0, function () {return new Range(0, 1);}, 'Include only test services.', true)
+    ->param('platform', APP_PLATFORM_CLIENT, new WhiteList([APP_PLATFORM_CLIENT, APP_PLATFORM_SERVER, APP_PLATFORM_CONSOLE], true), 'Choose target platform.', true)
+    ->param('extensions', 0, new Range(0, 1), 'Show extra data.', true)
+    ->param('tests', 0, new Range(0, 1), 'Include only test services.', true)
     ->action(function ($platform, $extensions, $tests, $utopia, $request, $response) {
         /** @var Utopia\App $utopia */
         /** @var Utopia\Request $request */

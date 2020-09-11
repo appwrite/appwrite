@@ -27,17 +27,17 @@ App::post('/v1/projects')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'create')
-    ->param('name', null, function () { return new Text(128); }, 'Project name. Max length: 128 chars.')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('description', '', function () { return new Text(256); }, 'Project description. Max length: 256 chars.', true)
-    ->param('logo', '', function () { return new Text(1024); }, 'Project logo.', true)
-    ->param('url', '', function () { return new URL(); }, 'Project URL.', true)
-    ->param('legalName', '', function () { return new Text(256); }, 'Project legal Name. Max length: 256 chars.', true)
-    ->param('legalCountry', '', function () { return new Text(256); }, 'Project legal Country. Max length: 256 chars.', true)
-    ->param('legalState', '', function () { return new Text(256); }, 'Project legal State. Max length: 256 chars.', true)
-    ->param('legalCity', '', function () { return new Text(256); }, 'Project legal City. Max length: 256 chars.', true)
-    ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal Address. Max length: 256 chars.', true)
-    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal Tax ID. Max length: 256 chars.', true)
+    ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
+    ->param('logo', '', new Text(1024), 'Project logo.', true)
+    ->param('url', '', new URL(), 'Project URL.', true)
+    ->param('legalName', '', new Text(256), 'Project legal Name. Max length: 256 chars.', true)
+    ->param('legalCountry', '', new Text(256), 'Project legal Country. Max length: 256 chars.', true)
+    ->param('legalState', '', new Text(256), 'Project legal State. Max length: 256 chars.', true)
+    ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
+    ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
+    ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
     ->action(function ($name, $teamId, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -92,10 +92,10 @@ App::get('/v1/projects')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'list')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC'], true); }, 'Order result by ASC or DESC order.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -131,7 +131,7 @@ App::get('/v1/projects/:projectId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'get')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -160,8 +160,8 @@ App::get('/v1/projects/:projectId/usage')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getUsage')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('range', 'last30', function () { return new WhiteList(['daily', 'monthly', 'last30', 'last90'], true); }, 'Date range.', true)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('range', 'last30', new WhiteList(['daily', 'monthly', 'last30', 'last90'], true), 'Date range.', true)
     ->action(function ($projectId, $range, $response, $consoleDB, $projectDB, $register) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -334,17 +334,17 @@ App::patch('/v1/projects/:projectId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'update')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Project name. Max length: 128 chars.')
-    ->param('description', '', function () { return new Text(256); }, 'Project description. Max length: 256 chars.', true)
-    ->param('logo', '', function () { return new Text(1024); }, 'Project logo.', true)
-    ->param('url', '', function () { return new URL(); }, 'Project URL.', true)
-    ->param('legalName', '', function () { return new Text(256); }, 'Project legal name. Max length: 256 chars.', true)
-    ->param('legalCountry', '', function () { return new Text(256); }, 'Project legal country. Max length: 256 chars.', true)
-    ->param('legalState', '', function () { return new Text(256); }, 'Project legal state. Max length: 256 chars.', true)
-    ->param('legalCity', '', function () { return new Text(256); }, 'Project legal city. Max length: 256 chars.', true)
-    ->param('legalAddress', '', function () { return new Text(256); }, 'Project legal address. Max length: 256 chars.', true)
-    ->param('legalTaxId', '', function () { return new Text(256); }, 'Project legal tax ID. Max length: 256 chars.', true)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
+    ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
+    ->param('logo', '', new Text(1024), 'Project logo.', true)
+    ->param('url', '', new URL(), 'Project URL.', true)
+    ->param('legalName', '', new Text(256), 'Project legal name. Max length: 256 chars.', true)
+    ->param('legalCountry', '', new Text(256), 'Project legal country. Max length: 256 chars.', true)
+    ->param('legalState', '', new Text(256), 'Project legal state. Max length: 256 chars.', true)
+    ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
+    ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
+    ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
     ->action(function ($projectId, $name, $description, $logo, $url, $legalName, $legalCountry, $legalState, $legalCity, $legalAddress, $legalTaxId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -381,10 +381,10 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateOAuth2')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers')), true); }, 'Provider Name', false)
-    ->param('appId', '', function () { return new Text(256); }, 'Provider app ID. Max length: 256 chars.', true)
-    ->param('secret', '', function () { return new text(512); }, 'Provider secret key. Max length: 512 chars.', true)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'Provider Name', false)
+    ->param('appId', '', new Text(256), 'Provider app ID. Max length: 256 chars.', true)
+    ->param('secret', '', new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->action(function ($projectId, $provider, $appId, $secret, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -424,8 +424,8 @@ App::delete('/v1/projects/:projectId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'delete')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
-    ->param('password', '', function () { return new UID(); }, 'Your user password for confirmation. Must be between 6 to 32 chars.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('password', '', new UID(), 'Your user password for confirmation. Must be between 6 to 32 chars.')
     ->action(function ($projectId, $password, $response, $user, $consoleDB, $deletes) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -473,13 +473,13 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)); }, 'Events list.')
-    ->param('url', null, function () { return new URL(); }, 'Webhook URL.')
-    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
-    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user. Max length: 256 chars.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
+    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
+    ->param('url', null, new URL(), 'Webhook URL.')
+    ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
+    ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -540,7 +540,7 @@ App::get('/v1/projects/:projectId/webhooks')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listWebhooks')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -574,8 +574,8 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -608,14 +608,14 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Webhook name. Max length: 128 chars.')
-    ->param('events', null, function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)); }, 'Events list.')
-    ->param('url', null, function () { return new URL(); }, 'Webhook URL.')
-    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
-    ->param('httpUser', '', function () { return new Text(256); }, 'Webhook HTTP user. Max length: 256 chars.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
+    ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
+    ->param('events', null, new ArrayList(new WhiteList(array_keys(Config::getParam('events'), true), true)), 'Events list.')
+    ->param('url', null, new URL(), 'Webhook URL.')
+    ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
+    ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $webhookId, $name, $events, $url, $security, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -666,8 +666,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteWebhook')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('webhookId', null, function () { return new UID(); }, 'Webhook unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('webhookId', null, new UID(), 'Webhook unique ID.')
     ->action(function ($projectId, $webhookId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -699,9 +699,9 @@ App::post('/v1/projects/:projectId/keys')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'), true)); }, 'Key scopes list.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
+    ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list.')
     ->action(function ($projectId, $name, $scopes, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -747,7 +747,7 @@ App::get('/v1/projects/:projectId/keys')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listKeys')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -767,8 +767,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('keyId', null, new UID(), 'Key unique ID.')
     ->action(function ($projectId, $keyId, $response, $consoleDB) {
         $project = $consoleDB->getDocument($projectId);
 
@@ -791,10 +791,10 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, function () { return new ArrayList(new WhiteList(Config::getParam('scopes'), true)); }, 'Key scopes list')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('keyId', null, new UID(), 'Key unique ID.')
+    ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
+    ->param('scopes', null, new ArrayList(new WhiteList(Config::getParam('scopes'), true)), 'Key scopes list')
     ->action(function ($projectId, $keyId, $name, $scopes, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -829,8 +829,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteKey')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('keyId', null, function () { return new UID(); }, 'Key unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('keyId', null, new UID(), 'Key unique ID.')
     ->action(function ($projectId, $keyId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -862,16 +862,16 @@ App::post('/v1/projects/:projectId/tasks')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Task name. Max length: 128 chars.')
-    ->param('status', null, function () { return new WhiteList(['play', 'pause'], true); }, 'Task status.')
-    ->param('schedule', null, function () { return new Cron(); }, 'Task schedule CRON syntax.')
-    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
-    ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'], true); }, 'Task HTTP method.')
-    ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL')
-    ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
-    ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user. Max length: 256 chars.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password. Max length: 256 chars.', true)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('name', null, new Text(128), 'Task name. Max length: 128 chars.')
+    ->param('status', null, new WhiteList(['play', 'pause'], true), 'Task status.')
+    ->param('schedule', null, new Cron(), 'Task schedule CRON syntax.')
+    ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
+    ->param('httpMethod', '', new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'], true), 'Task HTTP method.')
+    ->param('httpUrl', '', new URL(), 'Task HTTP URL')
+    ->param('httpHeaders', null, new ArrayList(new Text(256)), 'Task HTTP headers list.', true)
+    ->param('httpUser', '', new Text(256), 'Task HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -947,7 +947,7 @@ App::get('/v1/projects/:projectId/tasks')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listTasks')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -981,8 +981,8 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('taskId', null, new UID(), 'Task unique ID.')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1015,17 +1015,17 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Task name. Max length: 128 chars.')
-    ->param('status', null, function () { return new WhiteList(['play', 'pause'], true); }, 'Task status.')
-    ->param('schedule', null, function () { return new Cron(); }, 'Task schedule CRON syntax.')
-    ->param('security', false, function () { return new Boolean(true); }, 'Certificate verification, false for disabled or true for enabled.')
-    ->param('httpMethod', '', function () { return new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'], true); }, 'Task HTTP method.')
-    ->param('httpUrl', '', function () { return new URL(); }, 'Task HTTP URL.')
-    ->param('httpHeaders', null, function () { return new ArrayList(new Text(256)); }, 'Task HTTP headers list.', true)
-    ->param('httpUser', '', function () { return new Text(256); }, 'Task HTTP user. Max length: 256 chars.', true)
-    ->param('httpPass', '', function () { return new Text(256); }, 'Task HTTP password. Max length: 256 chars.', true)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('taskId', null, new UID(), 'Task unique ID.')
+    ->param('name', null, new Text(128), 'Task name. Max length: 128 chars.')
+    ->param('status', null, new WhiteList(['play', 'pause'], true), 'Task status.')
+    ->param('schedule', null, new Cron(), 'Task schedule CRON syntax.')
+    ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
+    ->param('httpMethod', '', new WhiteList(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'], true), 'Task HTTP method.')
+    ->param('httpUrl', '', new URL(), 'Task HTTP URL.')
+    ->param('httpHeaders', null, new ArrayList(new Text(256)), 'Task HTTP headers list.', true)
+    ->param('httpUser', '', new Text(256), 'Task HTTP user. Max length: 256 chars.', true)
+    ->param('httpPass', '', new Text(256), 'Task HTTP password. Max length: 256 chars.', true)
     ->action(function ($projectId, $taskId, $name, $status, $schedule, $security, $httpMethod, $httpUrl, $httpHeaders, $httpUser, $httpPass, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1088,8 +1088,8 @@ App::delete('/v1/projects/:projectId/tasks/:taskId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteTask')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('taskId', null, function () { return new UID(); }, 'Task unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('taskId', null, new UID(), 'Task unique ID.')
     ->action(function ($projectId, $taskId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1121,12 +1121,12 @@ App::post('/v1/projects/:projectId/platforms')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createPlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('type', null, function () { return new WhiteList(['web', 'flutter-ios', 'flutter-android', 'ios', 'android', 'unity'], true); }, 'Platform type.')
-    ->param('name', null, function () { return new Text(128); }, 'Platform name. Max length: 128 chars.')
-    ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
-    ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', function () { return new Text(256); }, 'Platform client hostname. Max length: 256 chars.', true)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('type', null, new WhiteList(['web', 'flutter-ios', 'flutter-android', 'ios', 'android', 'unity'], true), 'Platform type.')
+    ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
+    ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
+    ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
+    ->param('hostname', '', new Text(256), 'Platform client hostname. Max length: 256 chars.', true)
     ->action(function ($projectId, $type, $name, $key, $store, $hostname, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1176,7 +1176,7 @@ App::get('/v1/projects/:projectId/platforms')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listPlatforms')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1198,8 +1198,8 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getPlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1225,12 +1225,12 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updatePlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Platform name. Max length: 128 chars.')
-    ->param('key', '', function () { return new Text(256); }, 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
-    ->param('store', '', function () { return new Text(256); }, 'App store or Google Play store ID. Max length: 256 chars.', true)
-    ->param('hostname', '', function () { return new Text(256); }, 'Platform client URL. Max length: 256 chars.', true)
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('platformId', null, new UID(), 'Platform unique ID.')
+    ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
+    ->param('key', '', new Text(256), 'Package name for android or bundle ID for iOS. Max length: 256 chars.', true)
+    ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
+    ->param('hostname', '', new Text(256), 'Platform client URL. Max length: 256 chars.', true)
     ->action(function ($projectId, $platformId, $name, $key, $store, $hostname, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1268,8 +1268,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deletePlatform')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('platformId', null, function () { return new UID(); }, 'Platform unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('platformId', null, new UID(), 'Platform unique ID.')
     ->action(function ($projectId, $platformId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1301,8 +1301,8 @@ App::post('/v1/projects/:projectId/domains')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createDomain')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('domain', null, function () { return new DomainValidator(); }, 'Domain name.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('domain', null, new DomainValidator(), 'Domain name.')
     ->action(function ($projectId, $domain, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1365,7 +1365,7 @@ App::get('/v1/projects/:projectId/domains')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'listDomains')
-    ->param('projectId', '', function () { return new UID(); }, 'Project unique ID.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
     ->action(function ($projectId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1387,8 +1387,8 @@ App::get('/v1/projects/:projectId/domains/:domainId')
     ->label('scope', 'projects.read')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'getDomain')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1414,8 +1414,8 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'updateDomainVerification')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
@@ -1472,8 +1472,8 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
     ->label('scope', 'projects.write')
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'deleteDomain')
-    ->param('projectId', null, function () { return new UID(); }, 'Project unique ID.')
-    ->param('domainId', null, function () { return new UID(); }, 'Domain unique ID.')
+    ->param('projectId', null, new UID(), 'Project unique ID.')
+    ->param('domainId', null, new UID(), 'Domain unique ID.')
     ->action(function ($projectId, $domainId, $response, $consoleDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $consoleDB */
