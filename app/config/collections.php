@@ -774,6 +774,7 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
+                'filter' => ['encrypt'],
             ],
         ],
     ],
@@ -944,6 +945,7 @@ $collections = [
                 'default' => '',
                 'required' => false,
                 'array' => false,
+                'filter' => ['encrypt'],
             ],
             [
                 '$collection' => Database::SYSTEM_COLLECTION_RULES,
@@ -1595,6 +1597,7 @@ foreach ($providers as $index => $provider) {
         'default' => '',
         'required' => false,
         'array' => false,
+        'filter' => ['encrypt'],
     ];
 
     $collections[Database::SYSTEM_COLLECTION_USERS]['rules'][] = [
