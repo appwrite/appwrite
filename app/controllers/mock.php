@@ -18,9 +18,9 @@ App::get('/v1/mock/tests/foo')
     ->label('sdk.method', 'get')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -32,9 +32,9 @@ App::post('/v1/mock/tests/foo')
     ->label('sdk.method', 'post')
     ->label('sdk.description', 'Mock a post request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -46,9 +46,9 @@ App::patch('/v1/mock/tests/foo')
     ->label('sdk.method', 'patch')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -60,9 +60,9 @@ App::put('/v1/mock/tests/foo')
     ->label('sdk.method', 'put')
     ->label('sdk.description', 'Mock a put request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -74,9 +74,9 @@ App::delete('/v1/mock/tests/foo')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', 'Mock a delete request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -88,9 +88,9 @@ App::get('/v1/mock/tests/bar')
     ->label('sdk.method', 'get')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -102,9 +102,9 @@ App::post('/v1/mock/tests/bar')
     ->label('sdk.method', 'post')
     ->label('sdk.description', 'Mock a post request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -116,9 +116,9 @@ App::patch('/v1/mock/tests/bar')
     ->label('sdk.method', 'patch')
     ->label('sdk.description', 'Mock a get request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -130,9 +130,9 @@ App::put('/v1/mock/tests/bar')
     ->label('sdk.method', 'put')
     ->label('sdk.description', 'Mock a put request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -144,9 +144,9 @@ App::delete('/v1/mock/tests/bar')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', 'Mock a delete request for SDK tests')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
     ->action(function ($x, $y, $z) {
     });
 
@@ -159,10 +159,10 @@ App::post('/v1/mock/tests/general/upload')
     ->label('sdk.description', 'Mock a delete request for SDK tests')
     ->label('sdk.consumes', 'multipart/form-data')
     ->label('sdk.mock', true)
-    ->param('x', '', function () { return new Text(100); }, 'Sample string param')
-    ->param('y', '', function () { return new Numeric(); }, 'Sample numeric param')
-    ->param('z', null, function () { return new ArrayList(new Text(256)); }, 'Sample array param')
-    ->param('file', [], function () { return new File(); }, 'Sample file param', false)
+    ->param('x', '', new Text(100), 'Sample string param')
+    ->param('y', '', new Numeric(), 'Sample numeric param')
+    ->param('z', null, new ArrayList(new Text(256)), 'Sample array param')
+    ->param('file', [], new File(), 'Sample file param', false)
     ->action(function ($x, $y, $z, $file, $request) {
         /** @var Utopia\Swoole\Request $request */
         
@@ -266,10 +266,10 @@ App::get('/v1/mock/tests/general/oauth2')
     ->label('scope', 'public')
     ->label('docs', false)
     ->label('sdk.mock', true)
-    ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['localhost']); }, 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
-    ->param('scope', '', function () { return new Text(100); }, 'OAuth2 scope list.')
-    ->param('state', '', function () { return new Text(1024); }, 'OAuth2 state.')
+    ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
+    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
+    ->param('scope', '', new Text(100), 'OAuth2 scope list.')
+    ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->action(function ($clientId, $redirectURI, $scope, $state, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -282,10 +282,10 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->label('scope', 'public')
     ->label('docs', false)
     ->label('sdk.mock', true)
-    ->param('client_id', '', function () { return new Text(100); }, 'OAuth2 Client ID.')
-    ->param('redirect_uri', '', function () { return new Host(['localhost']); }, 'OAuth2 Redirect URI.')
-    ->param('client_secret', '', function () { return new Text(100); }, 'OAuth2 scope list.')
-    ->param('code', '', function () { return new Text(100); }, 'OAuth2 state.')
+    ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
+    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.')
+    ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
+    ->param('code', '', new Text(100), 'OAuth2 state.')
     ->action(function ($clientId, $redirectURI, $clientSecret, $code, $response) {
         /** @var Appwrite\Utopia\Response $response */
 
@@ -309,7 +309,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('token', '', function () { return new Text(100); }, 'OAuth2 Access Token.')
+    ->param('token', '', new Text(100), 'OAuth2 Access Token.')
     ->action(function ($token, $response) {
         /** @var Appwrite\Utopia\Response $response */
 

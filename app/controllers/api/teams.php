@@ -15,6 +15,7 @@ use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
 use Appwrite\Database\Validator\Authorization;
 use Appwrite\Database\Exception\Duplicate;
+use Appwrite\Database\Validator\Key;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 
@@ -26,8 +27,8 @@ App::post('/v1/teams')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/teams/create-team.md')
-    ->param('name', null, function () { return new Text(128); }, 'Team name. Max length: 128 chars.')
-    ->param('roles', ['owner'], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions).', true)
+    ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
+    ->param('roles', ['owner'], new ArrayList(new Key()), 'Array of strings. Use this param to set the roles in the team for the user who created it. The default role is **owner**. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.', true)
     ->action(function ($name, $roles, $response, $user, $projectDB, $mode) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -93,10 +94,10 @@ App::get('/v1/teams')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/teams/list-teams.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -124,7 +125,7 @@ App::get('/v1/teams/:teamId')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/teams/get-team.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team unique ID.')
     ->action(function ($teamId, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -146,8 +147,8 @@ App::put('/v1/teams/:teamId')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/teams/update-team.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('name', null, function () { return new Text(128); }, 'Team name. Max length: 128 chars.')
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('name', null, new Text(128), 'Team name. Max length: 128 chars.')
     ->action(function ($teamId, $name, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -177,7 +178,7 @@ App::delete('/v1/teams/:teamId')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/teams/delete-team.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
+    ->param('teamId', '', new UID(), 'Team unique ID.')
     ->action(function ($teamId, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -218,10 +219,10 @@ App::post('/v1/teams/:teamId/memberships')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'createMembership')
     ->label('sdk.description', '/docs/references/teams/create-team-membership.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('email', '', function () { return new Email(); }, 'New team member email.')
-    ->param('name', '', function () { return new Text(128); }, 'New team member name. Max length: 128 chars.', true)
-    ->param('roles', [], function () { return new ArrayList(new Text(128)); }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions).')
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('email', '', new Email(), 'New team member email.')
+    ->param('name', '', new Text(128), 'New team member name. Max length: 128 chars.', true)
+    ->param('roles', [], new ArrayList(new Key()), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Max length for each role is 32 chars.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
     ->action(function ($teamId, $email, $name, $roles, $url, $response, $project, $user, $projectDB, $locale, $audits, $mails, $mode) {
         /** @var Utopia\Response $response */
@@ -415,11 +416,11 @@ App::get('/v1/teams/:teamId/memberships')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'getMemberships')
     ->label('sdk.description', '/docs/references/teams/get-team-members.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($teamId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -474,10 +475,10 @@ App::patch('/v1/teams/:teamId/memberships/:inviteId/status')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'updateMembershipStatus')
     ->label('sdk.description', '/docs/references/teams/update-team-membership-status.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('secret', '', function () { return new Text(256); }, 'Secret key.')
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('inviteId', '', new UID(), 'Invite unique ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('secret', '', new Text(256), 'Secret key.')
     ->action(function ($teamId, $inviteId, $userId, $secret, $request, $response, $user, $projectDB, $audits) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -604,8 +605,8 @@ App::delete('/v1/teams/:teamId/memberships/:inviteId')
     ->label('sdk.namespace', 'teams')
     ->label('sdk.method', 'deleteMembership')
     ->label('sdk.description', '/docs/references/teams/delete-team-membership.md')
-    ->param('teamId', '', function () { return new UID(); }, 'Team unique ID.')
-    ->param('inviteId', '', function () { return new UID(); }, 'Invite unique ID.')
+    ->param('teamId', '', new UID(), 'Team unique ID.')
+    ->param('inviteId', '', new UID(), 'Invite unique ID.')
     ->action(function ($teamId, $inviteId, $response, $projectDB, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */

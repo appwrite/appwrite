@@ -26,9 +26,9 @@ App::post('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/users/create-user.md')
-    ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.', true)
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->action(function ($email, $password, $name, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -96,10 +96,10 @@ App::get('/v1/users')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/users/list-users.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -152,7 +152,7 @@ App::get('/v1/users/:userId')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/users/get-user.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -195,7 +195,7 @@ App::get('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getPrefs')
     ->label('sdk.description', '/docs/references/users/get-user-prefs.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -226,7 +226,7 @@ App::get('/v1/users/:userId/sessions')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getSessions')
     ->label('sdk.description', '/docs/references/users/get-user-sessions.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB, $locale, $geodb) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -292,7 +292,7 @@ App::get('/v1/users/:userId/logs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getLogs')
     ->label('sdk.description', '/docs/references/users/get-user-logs.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $register, $project, $projectDB, $locale, $geodb) {
         /** @var Utopia\Response $response */
         /** @var Utopia\Registry\Registry $register */
@@ -377,8 +377,8 @@ App::patch('/v1/users/:userId/status')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updateStatus')
     ->label('sdk.description', '/docs/references/users/update-user-status.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('status', '', function () { return new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED]); }, 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('status', '', new WhiteList([Auth::USER_STATUS_ACTIVATED, Auth::USER_STATUS_BLOCKED, Auth::USER_STATUS_UNACTIVATED], true), 'User Status code. To activate the user pass '.Auth::USER_STATUS_ACTIVATED.', to block the user pass '.Auth::USER_STATUS_BLOCKED.' and for disabling the user pass '.Auth::USER_STATUS_UNACTIVATED)
     ->action(function ($userId, $status, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -427,8 +427,8 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'updatePrefs')
     ->label('sdk.description', '/docs/references/users/update-user-prefs.md')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->action(function ($userId, $prefs, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -471,8 +471,8 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/users/delete-user-session.md')
     ->label('abuse-limit', 100)
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('sessionId', null, function () { return new UID(); }, 'User unique session ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('sessionId', null, new UID(), 'User unique session ID.')
     ->action(function ($userId, $sessionId, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -505,7 +505,7 @@ App::delete('/v1/users/:userId/sessions')
     ->label('sdk.method', 'deleteSessions')
     ->label('sdk.description', '/docs/references/users/delete-user-sessions.md')
     ->label('abuse-limit', 100)
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
+    ->param('userId', '', new UID(), 'User unique ID.')
     ->action(function ($userId, $response, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */

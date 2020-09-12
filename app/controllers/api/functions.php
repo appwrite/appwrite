@@ -28,12 +28,12 @@ App::post('/v1/functions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/functions/create-function.md')
-    ->param('name', '', function () { return new Text(128); }, 'Function name. Max length: 128 chars.')
-    ->param('env', '', function () { return new WhiteList(array_keys(Config::getParam('environments'))); }, 'Execution enviornment.')
-    ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
-    ->param('events', [], function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Events list.', true)
-    ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
+    ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
+    ->param('env', '', new WhiteList(array_keys(Config::getParam('environments')), true), 'Execution enviornment.')
+    ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
+    ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
+    ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
+    ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->action(function ($name, $env, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_FUNCTIONS,
@@ -73,10 +73,10 @@ App::get('/v1/functions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'list')
     ->label('sdk.description', '/docs/references/functions/list-functions.md')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($search, $limit, $offset, $orderType, $response, $projectDB) {
         $results = $projectDB->getCollection([
             'limit' => $limit,
@@ -101,7 +101,7 @@ App::get('/v1/functions/:functionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'get')
     ->label('sdk.description', '/docs/references/functions/get-function.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
     ->action(function ($functionId, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -233,12 +233,12 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'update')
     ->label('sdk.description', '/docs/references/functions/update-function.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('name', '', function () { return new Text(128); }, 'Function name. Max length: 128 chars.')
-    ->param('vars', [], function () { return new Assoc();}, 'Key-value JSON object.', true)
-    ->param('events', [], function () { return new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)); }, 'Events list.', true)
-    ->param('schedule', '', function () { return new Cron(); }, 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, function () { return new Range(1, 900); }, 'Function maximum execution time in seconds.', true)
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
+    ->param('vars', [], new Assoc(), 'Key-value JSON object.', true)
+    ->param('events', [], new ArrayList(new WhiteList(array_keys(Config::getParam('events')), true)), 'Events list.', true)
+    ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
+    ->param('timeout', 15, new Range(1, 900), 'Function maximum execution time in seconds.', true)
     ->action(function ($functionId, $name, $vars, $events, $schedule, $timeout, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -275,8 +275,8 @@ App::patch('/v1/functions/:functionId/tag')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'updateTag')
     ->label('sdk.description', '/docs/references/functions/update-tag.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('tag', '', function () { return new UID(); }, 'Tag unique ID.')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('tag', '', new UID(), 'Tag unique ID.')
     ->action(function ($functionId, $tag, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
         $tag = $projectDB->getDocument($tag);
@@ -313,13 +313,8 @@ App::delete('/v1/functions/:functionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'delete')
     ->label('sdk.description', '/docs/references/functions/delete-function.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
     ->action(function ($functionId, $response, $project, $projectDB, $deletes) {
-        /** @var Utopia\Response $response */
-        /** @var Appwrite\Database\Document $project */
-        /** @var Appwrite\Database\Database $projectDB */
-        /** @var Appwrite\Event\Event $deletes */
-
         $function = $projectDB->getDocument($functionId);
 
         if (empty($function->getId()) || Database::SYSTEM_COLLECTION_FUNCTIONS != $function->getCollection()) {
@@ -346,10 +341,10 @@ App::post('/v1/functions/:functionId/tags')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createTag')
     ->label('sdk.description', '/docs/references/functions/create-tag.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('command', '', function () { return new Text('1028'); }, 'Code execution command.')
-    ->param('code', [], function () { return new File(); }, 'Gzip file containing your code.', false)
-    // ->param('code', '', function () { return new Text(128); }, 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('command', '', new Text('1028'), 'Code execution command.')
+    ->param('code', [], new File(), 'Gzip file containing your code.', false)
+    // ->param('code', '', new Text(128), 'Code package. Use the '.APP_NAME.' code packager to create a deployable package file.')
     ->action(function ($functionId, $command, $code, $request, $response, $projectDB, $usage) {
         $function = $projectDB->getDocument($functionId);
 
@@ -428,11 +423,11 @@ App::get('/v1/functions/:functionId/tags')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listTags')
     ->label('sdk.description', '/docs/references/functions/list-tags.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -464,8 +459,8 @@ App::get('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getTag')
     ->label('sdk.description', '/docs/references/functions/get-tag.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->action(function ($functionId, $tagId, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -494,8 +489,8 @@ App::delete('/v1/functions/:functionId/tags/:tagId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'deleteTag')
     ->label('sdk.description', '/docs/references/functions/delete-tag.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('tagId', '', function () { return new UID(); }, 'Tag unique ID.')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('tagId', '', new UID(), 'Tag unique ID.')
     ->action(function ($functionId, $tagId, $response, $projectDB, $usage) {
         $function = $projectDB->getDocument($functionId);
 
@@ -546,9 +541,9 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'createExecution')
     ->label('sdk.description', '/docs/references/functions/create-execution.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    // ->param('async', 1, function () { return new Range(0, 1); }, 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
-    ->action(function ($functionId, /*$async,*/ $response, $project, $projectDB) {
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('async', 1, new Range(0, 1), 'Execute code asynchronously. Pass 1 for true, 0 for false. Default value is 1.', true)
+    ->action(function ($functionId, $async, $response, $project, $projectDB) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */
@@ -612,11 +607,11 @@ App::get('/v1/functions/:functionId/executions')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'listExecutions')
     ->label('sdk.description', '/docs/references/functions/list-executions.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('search', '', function () { return new Text(256); }, 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('limit', 25, function () { return new Range(0, 100); }, 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
-    ->param('offset', 0, function () { return new Range(0, 2000); }, 'Results offset. The default value is 0. Use this param to manage pagination.', true)
-    ->param('orderType', 'ASC', function () { return new WhiteList(['ASC', 'DESC']); }, 'Order result by ASC or DESC order.', true)
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('limit', 25, new Range(0, 100), 'Results limit value. By default will return maximum 25 results. Maximum of 100 results allowed per request.', true)
+    ->param('offset', 0, new Range(0, 2000), 'Results offset. The default value is 0. Use this param to manage pagination.', true)
+    ->param('orderType', 'ASC', new WhiteList(['ASC', 'DESC'], true), 'Order result by ASC or DESC order.', true)
     ->action(function ($functionId, $search, $limit, $offset, $orderType, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 
@@ -648,8 +643,8 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'getExecution')
     ->label('sdk.description', '/docs/references/functions/get-execution.md')
-    ->param('functionId', '', function () { return new UID(); }, 'Function unique ID.')
-    ->param('executionId', '', function () { return new UID(); }, 'Execution unique ID.')
+    ->param('functionId', '', new UID(), 'Function unique ID.')
+    ->param('executionId', '', new UID(), 'Execution unique ID.')
     ->action(function ($functionId, $executionId, $response, $projectDB) {
         $function = $projectDB->getDocument($functionId);
 

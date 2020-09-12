@@ -51,9 +51,9 @@ App::post('/v1/account')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/account/create.md')
     ->label('abuse-limit', 10)
-    ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
-    ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.', true)
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->action(function ($email, $password, $name, $request, $response, $project, $projectDB, $webhooks, $audits) use ($oauth2Keys) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -157,8 +157,8 @@ App::post('/v1/account/sessions')
     ->label('sdk.description', '/docs/references/account/create-session.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->action(function ($email, $password, $request, $response, $projectDB, $webhooks, $audits) {
         /** @var Appwrite\Swoole\Request $request */
         /** @var Appwrite\Utopia\Response $response */
@@ -256,10 +256,10 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), function($node) {return (!$node['mock']);}))).'.')
     ->param('success', $oauthDefaultSuccess, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', $oauthDefaultFailure, function ($clients) { return new Host($clients); }, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('scopes', [], function () { return new ArrayList(new Text(128)); }, 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
+    ->param('scopes', [], new ArrayList(new Text(128)), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes.', true)
     ->action(function ($provider, $success, $failure, $scopes, $request, $response, $project) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -301,10 +301,10 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('error', __DIR__.'/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
-    ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID.')
-    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
-    ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
-    ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
+    ->param('projectId', '', new Text(1024), 'Project unique ID.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
+    ->param('code', '', new Text(1024), 'OAuth2 code.')
+    ->param('state', '', new Text(2048), 'Login state params.', true)
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -326,10 +326,10 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('scope', 'public')
     ->label('origin', '*')
     ->label('docs', false)
-    ->param('projectId', '', function () { return new Text(1024); }, 'Project unique ID.')
-    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
-    ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
-    ->param('state', '', function () { return new Text(2048); }, 'Login state params.', true)
+    ->param('projectId', '', new Text(1024), 'Project unique ID.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
+    ->param('code', '', new Text(1024), 'OAuth2 code.')
+    ->param('state', '', new Text(2048), 'Login state params.', true)
     ->action(function ($projectId, $provider, $code, $state, $request, $response) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -353,9 +353,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
-    ->param('provider', '', function () { return new WhiteList(\array_keys(Config::getParam('providers'))); }, 'OAuth2 provider.')
-    ->param('code', '', function () { return new Text(1024); }, 'OAuth2 code.')
-    ->param('state', '', function () { return new Text(2048); }, 'OAuth2 state params.', true)
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
+    ->param('code', '', new Text(1024), 'OAuth2 code.')
+    ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
     ->action(function ($provider, $code, $state, $request, $response, $project, $user, $projectDB, $audits) use ($oauthDefaultSuccess) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -738,7 +738,7 @@ App::patch('/v1/account/name')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateName')
     ->label('sdk.description', '/docs/references/account/update-name.md')
-    ->param('name', '', function () { return new Text(128); }, 'User name. Max length: 128 chars.')
+    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
     ->action(function ($name, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -779,8 +779,8 @@ App::patch('/v1/account/password')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePassword')
     ->label('sdk.description', '/docs/references/account/update-password.md')
-    ->param('password', '', function () { return new Password(); }, 'New user password. Must be between 6 to 32 chars.')
-    ->param('oldPassword', '', function () { return new Password(); }, 'Old user password. Must be between 6 to 32 chars.')
+    ->param('password', '', new Password(), 'New user password. Must be between 6 to 32 chars.')
+    ->param('oldPassword', '', new Password(), 'Old user password. Must be between 6 to 32 chars.')
     ->action(function ($password, $oldPassword, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -825,8 +825,8 @@ App::patch('/v1/account/email')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/account/update-email.md')
-    ->param('email', '', function () { return new Email(); }, 'User email.')
-    ->param('password', '', function () { return new Password(); }, 'User password. Must be between 6 to 32 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('password', '', new Password(), 'User password. Must be between 6 to 32 chars.')
     ->action(function ($email, $password, $response, $user, $projectDB, $audits) use ($oauth2Keys) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
@@ -885,7 +885,7 @@ App::patch('/v1/account/prefs')
     ->label('sdk.platform', [APP_PLATFORM_CLIENT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updatePrefs')
-    ->param('prefs', '', function () { return new Assoc();}, 'Prefs key-value JSON object.')
+    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->label('sdk.description', '/docs/references/account/update-prefs.md')
     ->action(function ($prefs, $response, $user, $projectDB, $audits) {
         /** @var Utopia\Response $response */
@@ -992,7 +992,7 @@ App::delete('/v1/account/sessions/:sessionId')
     ->label('sdk.method', 'deleteSession')
     ->label('sdk.description', '/docs/references/account/delete-session.md')
     ->label('abuse-limit', 100)
-    ->param('sessionId', null, function () { return new UID(); }, 'Session unique ID. Use the string \'current\' to delete the current device session.')
+    ->param('sessionId', null, new UID(), 'Session unique ID. Use the string \'current\' to delete the current device session.')
     ->action(function ($sessionId, $request, $response, $user, $projectDB, $audits, $webhooks) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
@@ -1113,7 +1113,7 @@ App::post('/v1/account/recovery')
     ->label('sdk.description', '/docs/references/account/create-recovery.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
-    ->param('email', '', function () { return new Email(); }, 'User email.')
+    ->param('email', '', new Email(), 'User email.')
     ->param('url', '', function ($clients) { return new Host($clients); }, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients'])
     ->action(function ($email, $url, $request, $response, $projectDB, $project, $locale, $mails, $audits) {
         /** @var Utopia\Request $request */
@@ -1219,10 +1219,10 @@ App::put('/v1/account/recovery')
     ->label('sdk.description', '/docs/references/account/update-recovery.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', function () { return new UID(); }, 'User account UID address.')
-    ->param('secret', '', function () { return new Text(256); }, 'Valid reset token.')
-    ->param('password', '', function () { return new Password(); }, 'New password. Must be between 6 to 32 chars.')
-    ->param('passwordAgain', '', function () {return new Password(); }, 'New password again. Must be between 6 to 32 chars.')
+    ->param('userId', '', new UID(), 'User account UID address.')
+    ->param('secret', '', new Text(256), 'Valid reset token.')
+    ->param('password', '', new Password(), 'New password. Must be between 6 to 32 chars.')
+    ->param('passwordAgain', '', new Password(), 'New password again. Must be between 6 to 32 chars.')
     ->action(function ($userId, $secret, $password, $passwordAgain, $response, $projectDB, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Database $projectDB */
@@ -1386,8 +1386,8 @@ App::put('/v1/account/verification')
     ->label('sdk.description', '/docs/references/account/update-verification.md')
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
-    ->param('userId', '', function () { return new UID(); }, 'User unique ID.')
-    ->param('secret', '', function () { return new Text(256); }, 'Valid verification token.')
+    ->param('userId', '', new UID(), 'User unique ID.')
+    ->param('secret', '', new Text(256), 'Valid verification token.')
     ->action(function ($userId, $secret, $response, $user, $projectDB, $audits) {
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $user */
