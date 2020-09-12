@@ -243,7 +243,7 @@ App::get('/v1/storage/files/:fileId/preview')
         /** @var Appwrite\Database\Document $project */
         /** @var Appwrite\Database\Database $projectDB */    
         
-        $storage = 'local';
+        $storage = 'files';
 
         if (!\extension_loaded('imagick')) {
             throw new Exception('Imagick extension is missing', 500);
