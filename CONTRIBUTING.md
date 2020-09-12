@@ -137,7 +137,7 @@ docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t appwrite/
 
 ## Tests
 
-To run tests manually, run phpunit from your command line:
+To run tests manually, use the Appwrite Docker CLI from your terminal:
 
 ```bash
 docker exec appwrite test
