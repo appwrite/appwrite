@@ -53,4 +53,16 @@ class TemplateTest extends TestCase
     {
         $this->assertEquals($this->object->mergeQuery('key1=value1&key2=value2', ['key1' => 'value3', 'key4' => 'value4']), 'key1=value3&key2=value2&key4=value4');
     }
+
+    public function testFromCamelCaseToSnake()
+    {
+        $this->assertEquals('app_write', Template::fromCamelCaseToSnake('appWrite'));
+        $this->assertEquals('app_write', Template::fromCamelCaseToSnake('App Write'));
+    }
+
+    public function testFromCamelCaseToDash()
+    {
+        $this->assertEquals('app-write', Template::fromCamelCaseToDash('appWrite'));
+        $this->assertEquals('app-write', Template::fromCamelCaseToDash('App Write'));
+    }
 }

@@ -38,12 +38,15 @@ const configApp  = {
 
         'public/scripts/views/forms/clone.js',
         'public/scripts/views/forms/add.js',
+        'public/scripts/views/forms/chart.js',
         'public/scripts/views/forms/code.js',
         'public/scripts/views/forms/color.js',
         'public/scripts/views/forms/copy.js',
         'public/scripts/views/forms/document.js',
         'public/scripts/views/forms/document-preview.js',
         'public/scripts/views/forms/filter.js',
+        'public/scripts/views/forms/headers.js',
+        'public/scripts/views/forms/key-value.js',
         'public/scripts/views/forms/move-down.js',
         'public/scripts/views/forms/move-up.js',
         'public/scripts/views/forms/nav.js',
@@ -66,6 +69,7 @@ const configApp  = {
         'public/scripts/views/general/setup.js',
         'public/scripts/views/general/switch.js',
         'public/scripts/views/general/theme.js',
+        'public/scripts/views/general/version.js',
         
         'public/scripts/views/paging/back.js',
         'public/scripts/views/paging/next.js',

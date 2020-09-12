@@ -54,13 +54,13 @@ $events = array_keys($this->getParam('events', []));
                         <input type="hidden" name="webhookId" data-ls-bind="{{webhook.$id}}" />
 
                         <label data-ls-attrs="for=name-{{webhook.$id}}">Name</label>
-                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" />
+                        <input type="text" class="full-width" data-ls-attrs="id=name-{{webhook.$id}}" name="name" required autocomplete="off" data-ls-bind="{{webhook.name}}" maxlength="128" />
 
                         <label data-ls-attrs="for=events-{{webhook.$id}}">Events</label>
                         <div class="row responsive thin">
                             <?php foreach ($events as $i => $event) : ?>
-                                <div class="col span-6 text-one-liner margin-bottom text-height-large">
-                                    <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?php echo $event; ?>" /> <?php echo $event; ?>
+                                <div class="col span-6 text-one-liner margin-bottom text-height-large" title="<?php echo $event; ?>">
+                                    <input type="checkbox" name="events" data-ls-bind="{{webhook.events}}" value="<?php echo $event; ?>" /> &nbsp; <?php echo $event; ?>
                                 </div>
                                 <?php if (($i + 1) % 2 === 0) : ?>
                                 </div>
@@ -85,8 +85,8 @@ $events = array_keys($this->getParam('events', []));
                             <label data-ls-attrs="for=security-{{task.$id}}" class="margin-bottom-small">
                                 <div class="margin-bottom-small text-bold">SSL / TLS (Certificate verification)</div>
                                         
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="1" /> &nbsp; <span>Enabled</span> &nbsp;
-                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="0" /> &nbsp; <span>Disabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-yes-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="true" data-cast-to="boolean" /> &nbsp; <span>Enabled</span> &nbsp;
+                                <input name="security" type="radio" required data-ls-attrs="id=secure-no-{{webhook.$id}}" data-ls-bind="{{webhook.security}}" value="false" data-cast-to="boolean" /> &nbsp; <span>Disabled</span> &nbsp;
                             </label>
 
                             <p class="margin-bottom text-size-small text-fade"><span class="text-red">Warning</span>: Untrusted or self-signed certificates may not be secure.
@@ -135,7 +135,7 @@ $events = array_keys($this->getParam('events', []));
                 </form>
 
                 <span data-ls-bind="{{webhook.name}}"></span> &nbsp; (<span data-ls-bind="{{webhook.events.length}}"></span> events)
-                <span data-ls-if="0 == {{webhook.security}}">
+                <span data-ls-if="false === {{webhook.security}}" data-debug="1">
                     &nbsp; <small class="text-danger">(SSL/TLS Disabled)</small>
                 </span>
                 <div class="margin-top-tiny">
@@ -168,13 +168,13 @@ $events = array_keys($this->getParam('events', []));
                 <input type="hidden" name="projectId" data-ls-bind="{{router.params.project}}" />
 
                 <label for="name">Name</label>
-                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" />
+                <input type="text" class="full-width" id="name" name="name" required autocomplete="off" maxlength="128" />
 
                 <label for="events">Events</label>
                 <div class="row responsive thin">
                     <?php foreach ($events as $i => $event) : ?>
-                        <div class="col span-6 text-one-liner margin-bottom text-height-large">
-                            <input type="checkbox" name="events" value="<?php echo $event; ?>" /> <?php echo $event; ?>
+                        <div class="col span-6 text-one-liner margin-bottom text-height-large" title="<?php echo $event; ?>">
+                            <input type="checkbox" name="events" value="<?php echo $event; ?>" /> &nbsp; <?php echo $event; ?>
                         </div>
                         <?php if (($i + 1) % 2 === 0) : ?>
                         </div>
