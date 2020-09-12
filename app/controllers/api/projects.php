@@ -16,7 +16,6 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
-use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Network\Validator\Domain as DomainValidator;
 use Cron\CronExpression;
@@ -111,16 +110,6 @@ App::get('/v1/projects')
                 '$collection='.Database::SYSTEM_COLLECTION_PROJECTS,
             ],
         ]);
-        foreach ($results as $project) {
-            foreach (Config::getParam('providers') as $provider => $node) {
-                $secret = \json_decode($project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}'), true);
-
-                if (!empty($secret) && isset($secret['version'])) {
-                    $key = App::getEnv('_APP_OPENSSL_KEY_V'.$secret['version']);
-                    $project->setAttribute('usersOauth2'.\ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, \hex2bin($secret['iv']), \hex2bin($secret['tag'])));
-                }
-            }
-        }
 
         $response->json(['sum' => $consoleDB->getSum(), 'projects' => $results]);
     }, ['response', 'consoleDB']);
@@ -140,15 +129,6 @@ App::get('/v1/projects/:projectId')
 
         if (empty($project->getId()) || Database::SYSTEM_COLLECTION_PROJECTS != $project->getCollection()) {
             throw new Exception('Project not found', 404);
-        }
-
-        foreach (Config::getParam('providers') as $provider => $node) {
-            $secret = \json_decode($project->getAttribute('usersOauth2'.\ucfirst($provider).'Secret', '{}'), true);
-
-            if (!empty($secret) && isset($secret['version'])) {
-                $key = App::getEnv('_APP_OPENSSL_KEY_V'.$secret['version']);
-                $project->setAttribute('usersOauth2'.\ucfirst($provider).'Secret', OpenSSL::decrypt($secret['data'], $secret['method'], $key, 0, \hex2bin($secret['iv']), \hex2bin($secret['tag'])));
-            }
         }
 
         $response->json($project->getArrayCopy());
@@ -395,17 +375,6 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Project not found', 404);
         }
 
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-        $secret = \json_encode([
-            'data' => OpenSSL::encrypt($secret, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag),
-            'version' => '1',
-        ]);
-
         $project = $consoleDB->updateDocument(\array_merge($project->getArrayCopy(), [
             'usersOauth2'.\ucfirst($provider).'Appid' => $appId,
             'usersOauth2'.\ucfirst($provider).'Secret' => $secret,
@@ -491,16 +460,6 @@ App::post('/v1/projects/:projectId/webhooks')
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-        $httpPass = \json_encode([
-            'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag),
-            'version' => '1',
-        ]);
 
         $webhook = $consoleDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_WEBHOOKS,
@@ -553,18 +512,6 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $webhooks = $project->getAttribute('webhooks', []);
 
-        foreach ($webhooks as $webhook) { /* @var $webhook Document */
-            $httpPass = \json_decode($webhook->getAttribute('httpPass', '{}'), true);
-
-            if (empty($httpPass) || !isset($httpPass['version'])) {
-                continue;
-            }
-
-            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-
-            $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
-        }
-
         $response->json($webhooks);
     }, ['response', 'consoleDB']);
 
@@ -590,13 +537,6 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
 
         if (empty($webhook) || !$webhook instanceof Document) {
             throw new Exception('Webhook not found', 404);
-        }
-
-        $httpPass = \json_decode($webhook->getAttribute('httpPass', '{}'), true);
-
-        if (!empty($httpPass) && isset($httpPass['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-            $webhook->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
         }
 
         $response->json($webhook->getArrayCopy());
@@ -627,16 +567,6 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-        $httpPass = \json_encode([
-            'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag),
-            'version' => '1',
-        ]);
 
         $webhook = $project->search('$id', $webhookId, $project->getAttribute('webhooks', []));
 
@@ -886,16 +816,6 @@ App::post('/v1/projects/:projectId/tasks')
         $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-        $httpPass = \json_encode([
-            'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag),
-            'version' => '1',
-        ]);
 
         $task = $consoleDB->createDocument([
             '$collection' => Database::SYSTEM_COLLECTION_TASKS,
@@ -960,18 +880,6 @@ App::get('/v1/projects/:projectId/tasks')
 
         $tasks = $project->getAttribute('tasks', []);
 
-        foreach ($tasks as $task) { /* @var $task Document */
-            $httpPass = \json_decode($task->getAttribute('httpPass', '{}'), true);
-
-            if (empty($httpPass) || !isset($httpPass['version'])) {
-                continue;
-            }
-
-            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-
-            $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
-        }
-
         $response->json($tasks);
     }, ['response', 'consoleDB']);
 
@@ -997,13 +905,6 @@ App::get('/v1/projects/:projectId/tasks/:taskId')
 
         if (empty($task) || !$task instanceof Document) {
             throw new Exception('Task not found', 404);
-        }
-
-        $httpPass = \json_decode($task->getAttribute('httpPass', '{}'), true);
-
-        if (!empty($httpPass) && isset($httpPass['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V'.$httpPass['version']);
-            $task->setAttribute('httpPass', OpenSSL::decrypt($httpPass['data'], $httpPass['method'], $key, 0, \hex2bin($httpPass['iv']), \hex2bin($httpPass['tag'])));
         }
 
         $response->json($task->getArrayCopy());
@@ -1046,16 +947,6 @@ App::put('/v1/projects/:projectId/tasks/:taskId')
         $next = ($status == 'play') ? $cron->getNextRunDate()->format('U') : null;
 
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V1');
-        $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
-        $tag = null;
-        $httpPass = \json_encode([
-            'data' => OpenSSL::encrypt($httpPass, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag),
-            'method' => OpenSSL::CIPHER_AES_128_GCM,
-            'iv' => \bin2hex($iv),
-            'tag' => \bin2hex($tag),
-            'version' => '1',
-        ]);
 
         $task
             ->setAttribute('name', $name)
