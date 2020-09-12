@@ -69,6 +69,115 @@ class Resize
     }
 
     /**
+     * @param integer $borderSize The size of the border in pixels
+     * @param string $borderColor The color of the border in hex format
+     * 
+     * @return Resize
+     *
+     * @throws \ImagickException
+     */
+    public function addBorder($borderSize, $borderColor){
+        try {
+            $width = $height = $borderSize;
+            $this->image->borderImage($borderColor, $width, $height);
+            return $this;
+
+        } catch (\Throwable $th) {
+            return $this;
+        }
+    }
+
+    /**
+      * Applies rounded corners, borders and background to an image
+      * @param integer $cornerRadius: The radius for the corners
+      * @param string $borderColor: A valid HEX string representing the border color
+      * @param integer $borderSize: An integer representing the broder size in pixels
+      * @param string $background: A valid HEX string representing the background color
+      * @return Resize $image: The processed image
+      *
+      * @throws \ImagickException
+      */
+    public function roundCornersAndBorder($cornerRadius, $borderColor, $borderSize, $background) {
+        try {
+            if (!method_exists($this->image, 'roundCorners')) {
+                throw new Exception('Your version of Imagick is not compiled against a recent enough ImageMagick library (> 6.2.8) to use the RoundCorners effect.');
+            }
+
+            $this->image->roundCorners($cornerRadius, $cornerRadius);
+
+            if (!empty($borderColor) && $borderColor != '#' && $borderSize > 0) {
+                $new = new Imagick();
+                $new->newImage($this->image->getImageWidth() + $borderSize, $this->image->getImageHeight() + $borderSize, $borderColor);
+                $new->setImageFormat($this->image->getImageFormat());
+                $new->roundCorners($cornerRadius, $cornerRadius);
+                $new->compositeImage($this->image, Imagick::COMPOSITE_OVER, round($borderSize / 2), round($borderSize / 2));
+                $this->image->clear();
+                $this->image->addImage($new);
+                $new->destroy();
+            }
+
+            if (!empty($background) && $background != '#') {
+                $new = new Imagick();
+                $new->newImage($this->image->getImageWidth(), $this->image->getImageHeight(), $background);
+                $new->setImageFormat($this->image->getImageFormat());
+                $new->compositeImage($this->image, Imagick::COMPOSITE_OVER, 0, 0);
+                $this->image->clear();
+                $this->image->addImage($new);
+                $new->destroy();
+            }
+
+        } catch (\Throwable $th) {
+            
+        }   
+        return $this;
+    }
+
+    /**
+     * @param float opacity The opacity of the image
+     * 
+     * @return Resize
+     *
+     * @throws \ImagickException
+     */
+    public function setOpacity($opacity){
+        
+        try {
+            if(empty($opacity) || $opacity == 1) {
+                return $this;
+            }
+
+            $this->image->setImageOpacity($opacity);
+            return $this;
+
+        } catch (\Throwable $th) {
+            return $this;
+        }
+    }
+
+     /**
+      * Rotates an image to $degree degree
+      * @param integer $degree: The amount to rotate in degrees
+      * @return Resize $image: The rotated image
+      *
+      * @throws \ImagickException
+      */
+    public function rotate($degree) {
+        
+        try {
+            if (empty($degree) || $degree == 0) {
+                return $this;
+            }
+            
+            $this->image->rotateImage('transparent', $degree);
+            return $this;
+
+        } catch (\Throwable $th) {
+            return $this;
+        }
+    }
+
+
+    /**
      * @param $color
      *
      * @return Resize
