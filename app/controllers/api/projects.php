@@ -71,6 +71,7 @@ App::post('/v1/projects')
                 'webhooks' => [],
                 'keys' => [],
                 'tasks' => [],
+                'domains' => [],
             ]
         );
 
@@ -80,10 +81,8 @@ App::post('/v1/projects')
 
         $consoleDB->createNamespace($project->getId());
 
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->json($project->getArrayCopy())
-        ;
+        $response->setStatusCode(Response::STATUS_CODE_CREATED);
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB', 'projectDB']);
 
 App::get('/v1/projects')
@@ -122,7 +121,10 @@ App::get('/v1/projects')
             }
         }
 
-        $response->json(['sum' => $consoleDB->getSum(), 'projects' => $results]);
+        $response->dynamic(new Document([
+            'sum' => $consoleDB->getSum(),
+            'projects' => $results
+        ]), Response::MODEL_PROJECT_LIST);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId')
@@ -151,7 +153,7 @@ App::get('/v1/projects/:projectId')
             }
         }
 
-        $response->json($project->getArrayCopy());
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB']);
 
 App::get('/v1/projects/:projectId/usage')
@@ -386,7 +388,7 @@ App::patch('/v1/projects/:projectId')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->json($project->getArrayCopy());
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB']);
 
 App::patch('/v1/projects/:projectId/oauth2')
@@ -429,7 +431,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception('Failed saving project to DB', 500);
         }
 
-        $response->json($project->getArrayCopy());
+        $response->dynamic($project, Response::MODEL_PROJECT);
     }, ['response', 'consoleDB']);
 
 App::delete('/v1/projects/:projectId')

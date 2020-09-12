@@ -29,6 +29,7 @@ use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
+use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Tag;
 use Appwrite\Utopia\Response\Model\Task;
@@ -153,6 +154,7 @@ class Response extends SwooleResponse
             ->setModel(new Func())
             ->setModel(new Tag())
             ->setModel(new Execution())
+            ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
             ->setModel(new Task())
