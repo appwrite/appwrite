@@ -7,9 +7,6 @@ use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
-// use Utopia\Locale\Locale;
-// use Utopia\Audit\Audit;
-// use Utopia\Audit\Adapters\MySQL as AuditAdapter;
 use Appwrite\Database\Database;
 use Appwrite\Database\Document;
 use Appwrite\Database\Validator\UID;
@@ -403,24 +400,24 @@ App::get('/v1/database/collections/:collectionId/documents')
             ]),
         ]);
 
-        if (App::isDevelopment()) {
-            $collection
-                ->setAttribute('debug', $projectDB->getDebug())
-                ->setAttribute('limit', $limit)
-                ->setAttribute('offset', $offset)
-                ->setAttribute('orderField', $orderField)
-                ->setAttribute('orderType', $orderType)
-                ->setAttribute('orderCast', $orderCast)
-                ->setAttribute('filters', $filters)
-            ;
-        }
+        // if (App::isDevelopment()) {
+        //     $collection
+        //         ->setAttribute('debug', $projectDB->getDebug())
+        //         ->setAttribute('limit', $limit)
+        //         ->setAttribute('offset', $offset)
+        //         ->setAttribute('orderField', $orderField)
+        //         ->setAttribute('orderType', $orderType)
+        //         ->setAttribute('orderCast', $orderCast)
+        //         ->setAttribute('filters', $filters)
+        //     ;
+        // }
 
         $collection
             ->setAttribute('sum', $projectDB->getSum())
             ->setAttribute('documents', $list)
         ;
 
-        $response->json($collection->getArrayCopy(/*['$id', '$collection', 'name', 'documents']*/[], ['rules']));
+        $response->dynamic($collection, Response::MODEL_DOCUMENT_LIST);
     }, ['response', 'projectDB']);
 
 App::get('/v1/database/collections/:collectionId/documents/:documentId')
