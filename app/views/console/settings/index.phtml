@@ -218,13 +218,13 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                         data-success="trigger"
                         data-success-param-trigger-events="projects.listDomains">
 
-                        <div data-ls-if="0 == {{console-domains.length}} || undefined == {{console-domains.length}}" class="box margin-top margin-bottom">
+                        <div data-ls-if="0 == {{console-domains.sum}} || undefined == {{console-domains.sum}}" class="box margin-top margin-bottom">
                             <h3 class="margin-bottom-small text-bold">No Custom Domains Added</h3>
 
                             <p class="margin-bottom-no">You haven't created any custom domains for your project yet.</p>
                         </div>
 
-                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.length}}">
+                        <div class="box margin-bottom" data-ls-if="0 != {{console-domains.sum}}">
                             <table class="vertical">
                                 <thead>
                                     <tr>
@@ -235,7 +235,7 @@ $customDomainsTarget = $this->getParam('customDomainsTarget', false);
                                         <th width="40"></th>
                                     </tr>
                                 </thead>
-                                <tbody data-ls-loop="console-domains" data-ls-as="domain">
+                                <tbody data-ls-loop="console-domains.domains" data-ls-as="domain">
                                     <tr>
                                         <td data-title="Status">
                                             <span class="text-size-small text-danger" data-ls-if="true !== {{domain.verification}}"><i class="icon-cancel-circled"></i> Unverified&nbsp;</span>
