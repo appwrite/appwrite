@@ -229,15 +229,15 @@ App::get('/v1/storage/files/:fileId/preview')
     ->param('fileId', '', new UID(), 'File unique ID')
     ->param('width', 0, new Range(0, 4000), 'Resize preview image width, Pass an integer between 0 to 4000.', true)
     ->param('height', 0, new Range(0, 4000), 'Resize preview image height, Pass an integer between 0 to 4000.', true)
-    ->param('borderColor', '', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
-    ->param('borderSize', 0, new Range(0, 100), 'Preview image border size in pixels. Enter an integer between 0 and 100', true)
-    ->param('opacity', 1, new Range(0, 1), 'Preview image opacity. Enter an value between 0 and 1', true)
+    ->param('borderColor', '000000', new HexColor(), 'Preview image border color. Use a valid HEX color, no # is needed for prefix.', true)
+    ->param('borderWidth', 0, new Range(0, 100), 'Preview image border size in pixels. Enter an integer between 0 and 100', true)
+    ->param('borderRadius', 0, new Range(0, 200), 'Preview image corner radius. Enter an value between 0 and 200', true) 
     ->param('rotation', 0, new Range(-180, 180), 'Preview image rotation angle. Enter an value between -180 and 180', true) 
-    ->param('cornerRadius', 0, new Range(0, 200), 'Preview image corner radius. Enter an value between 0 and 200', true) 
+    ->param('opacity', 1, new Range(0, 1), 'Preview image opacity. Enter an value between 0 and 1', true)
     ->param('quality', 100, new Range(0, 100), 'Preview image quality. Pass an integer between 0 to 100. Defaults to 100.', true)
     ->param('background', '', new HexColor(), 'Preview image background color. Only works with transparent images (png). Use a valid HEX color, no # is needed for prefix.', true)
     ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true)
-    ->action(function ($fileId, $width, $height, $borderColor, $borderSize, $opacity, $rotation, $cornerRadius, $quality, $background, $output, $request, $response, $project, $projectDB) {
+    ->action(function ($fileId, $width, $height, $borderColor, $borderWidth, $borderRadius, $rotation, $opacity, $quality, $background, $output, $request, $response, $project, $projectDB) {
         /** @var Utopia\Request $request */
         /** @var Utopia\Response $response */
         /** @var Appwrite\Database\Document $project */
@@ -262,7 +262,7 @@ App::get('/v1/storage/files/:fileId/preview')
         $fileLogos = Config::getParam('storage-logos');
 
         $date = \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)).' GMT';  // 45 days cache
-        $key = \md5($fileId.$width.$height.$quality.$background.$storage.$output);
+        $key = \md5(rand(0, 10000000).$fileId.$width.$height.$borderColor.$borderWidth.$opacity.$rotation.$borderRadius.$quality.$background.$storage.$output);
 
         $file = $projectDB->getDocument($fileId);
 
@@ -324,27 +324,28 @@ App::get('/v1/storage/files/:fileId/preview')
         }
 
         $resize = new Resize($source);
-
+        
         $resize->crop((int) $width, (int) $height);
+
+        if($borderRadius != 0) {
+            $resize->setBorderRadius($borderRadius);
+        }
+
+        if($borderWidth != 0 && !empty($borderColor)) {
+            $resize->setBorder($borderWidth, '#'.$borderColor);
+
+            if($borderRadius != 0) {
+                $resize->setBorderRadius($borderRadius);
+            }
+        }
 
         if(!empty($opacity)) {
             $resize->setOpacity($opacity);
         }
 
-        if($cornerRadius != 0) {
-            $resize->roundCornersAndBorder($cornerRadius, '#'.$borderColor, $borderSize, '#'.$background);
-        } else {
-            if($borderSize != 0 && !empty($borderColor)) {
-                $resize->addBorder($borderSize, '#'.$borderColor);
-            }
-
-            if (!empty($background)) {
-                $resize->setBackground('#'.$background);
-            }
-        }
-        
         if(!empty($rotation)) {
-            $resize->rotate($rotation);
+            $resize->setRotation($rotation);
+            $resize->crop((int) $width, (int) $height);
         }
 
         if (!empty($background)) {
