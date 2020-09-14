@@ -40,6 +40,7 @@ class Collection extends Model
                 'type' => Response::MODEL_RULE,
                 'description' => 'Collection rules.',
                 'example' => [],
+                'default' => [],
                 'array' => true,
             ])
         ;
